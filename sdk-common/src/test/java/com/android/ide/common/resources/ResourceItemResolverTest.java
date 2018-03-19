@@ -142,7 +142,6 @@ public class ResourceItemResolverTest extends TestCase {
             });
 
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
-        assertFalse(appResources.isFramework());
         assertNotNull(config);
 
         LayoutLog logger =

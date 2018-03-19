@@ -49,43 +49,48 @@ import org.jetbrains.uast.util.isArrayInitializer
 
 class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            RESTRICT_TO_ANNOTATION.oldName(),
-            RESTRICT_TO_ANNOTATION.newName(),
-            GMS_HIDE_ANNOTATION,
-            VISIBLE_FOR_TESTING_ANNOTATION.oldName(),
-            VISIBLE_FOR_TESTING_ANNOTATION.newName(),
-            GUAVA_VISIBLE_FOR_TESTING
+        RESTRICT_TO_ANNOTATION.oldName(),
+        RESTRICT_TO_ANNOTATION.newName(),
+        GMS_HIDE_ANNOTATION,
+        VISIBLE_FOR_TESTING_ANNOTATION.oldName(),
+        VISIBLE_FOR_TESTING_ANNOTATION.newName(),
+        GUAVA_VISIBLE_FOR_TESTING
     )
 
     override fun visitAnnotationUsage(
-            context: JavaContext,
-            usage: UElement,
-            type: AnnotationUsageType,
-            annotation: UAnnotation,
-            qualifiedName: String,
-            method: PsiMethod?,
-            annotations: List<UAnnotation>,
-            allMemberAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>,
-            allPackageAnnotations: List<UAnnotation>) {
+        context: JavaContext,
+        usage: UElement,
+        type: AnnotationUsageType,
+        annotation: UAnnotation,
+        qualifiedName: String,
+        method: PsiMethod?,
+        annotations: List<UAnnotation>,
+        allMemberAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>,
+        allPackageAnnotations: List<UAnnotation>
+    ) {
 
         when (qualifiedName) {
             RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName(),
             GMS_HIDE_ANNOTATION -> {
                 if (method != null) {
-                    checkRestrictTo(context, usage, method, annotation, allMemberAnnotations,
-                            allClassAnnotations)
+                    checkRestrictTo(
+                        context, usage, method, annotation, allMemberAnnotations,
+                        allClassAnnotations
+                    )
                 }
             }
             VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING -> {
                 if (method != null) {
-                    checkVisibleForTesting(context,
-                            usage,
-                            method,
-                            annotation,
-                            allMemberAnnotations,
-                            allClassAnnotations)
+                    checkVisibleForTesting(
+                        context,
+                        usage,
+                        method,
+                        annotation,
+                        allMemberAnnotations,
+                        allClassAnnotations
+                    )
                 }
             }
         }
@@ -94,8 +99,9 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     // Checks whether the client code is in the GMS codebase; if so, allow @Hide calls
     // there
     private fun isGmsContext(
-            context: JavaContext,
-            element: UElement): Boolean {
+        context: JavaContext,
+        element: UElement
+    ): Boolean {
         val evaluator = context.evaluator
         val pkg = evaluator.getPackage(element) ?: return false
 
@@ -110,8 +116,9 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun isTestContext(
-            context: JavaContext,
-            element: UElement): Boolean {
+        context: JavaContext,
+        element: UElement
+    ): Boolean {
         var current = element
         // (1) Is this compilation unit in a test source path?
         if (context.isTestSource) {
@@ -121,7 +128,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         // (2) Is this AST node surrounded by a test-only annotation?
         while (true) {
             val owner = current.getParentOfType<UAnnotated>(
-                    UAnnotated::class.java, true) ?: break
+                UAnnotated::class.java, true
+            ) ?: break
 
             for (annotation in owner.annotations) {
                 val name = annotation.qualifiedName
@@ -142,17 +150,20 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun checkVisibleForTesting(
-            context: JavaContext,
-            node: UElement,
-            method: PsiMethod,
-            annotation: UAnnotation,
-            allMethodAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>) {
+        context: JavaContext,
+        node: UElement,
+        method: PsiMethod,
+        annotation: UAnnotation,
+        allMethodAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>
+    ) {
 
         val visibility = getVisibilityForTesting(annotation)
         if (visibility == VISIBILITY_NONE) { // not the default
-            checkRestrictTo(context, node, method, annotation, allMethodAnnotations,
-                    allClassAnnotations, RESTRICT_TO_TESTS)
+            checkRestrictTo(
+                context, node, method, annotation, allMethodAnnotations,
+                allClassAnnotations, RESTRICT_TO_TESTS
+            )
         } else {
             // Check that the target method is available
             // (1) private is available in the same compilation unit
@@ -202,9 +213,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
             val qualifiedName = methodClass.qualifiedName
-            if (qualifiedName == null || evaluator.inheritsFrom(thisClass,
+            if (qualifiedName == null || evaluator.inheritsFrom(
+                    thisClass,
                     qualifiedName,
-                    false)) {
+                    false
+                )
+            ) {
                 return
             }
 
@@ -215,12 +229,14 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun reportVisibilityError(
-            context: JavaContext,
-            node: UElement,
-            desc: String) {
-        val message = String.format("This method should only be accessed from tests "
-                //+ "(intended visibility is %1$s)", desc);
-                + "or within %1\$s scope", desc)
+        context: JavaContext,
+        node: UElement,
+        desc: String
+    ) {
+        val message = String.format(
+            "This method should only be accessed from tests " +
+                    "or within %1\$s scope", desc
+        )
         val location: Location = if (node is UCallExpression) {
             context.getCallLocation(node, false, false)
         } else {
@@ -232,27 +248,31 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     // TODO: Test XML access of restricted classes
     private fun checkRestrictTo(
-            context: JavaContext,
-            node: UElement,
-            method: PsiMethod,
-            annotation: UAnnotation,
-            allMethodAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>) {
+        context: JavaContext,
+        node: UElement,
+        method: PsiMethod,
+        annotation: UAnnotation,
+        allMethodAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>
+    ) {
         val scope = getRestrictionScope(annotation)
         if (scope != 0) {
-            checkRestrictTo(context, node, method, annotation, allMethodAnnotations,
-                    allClassAnnotations, scope)
+            checkRestrictTo(
+                context, node, method, annotation, allMethodAnnotations,
+                allClassAnnotations, scope
+            )
         }
     }
 
     private fun checkRestrictTo(
-            context: JavaContext,
-            node: UElement,
-            method: PsiMethod,
-            annotation: UAnnotation,
-            allMethodAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>,
-            scope: Int) {
+        context: JavaContext,
+        node: UElement,
+        method: PsiMethod,
+        annotation: UAnnotation,
+        allMethodAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>,
+        scope: Int
+    ) {
 
         val containingClass = method.containingClass ?: return
 
@@ -289,10 +309,14 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (thisGroup != methodGroup && methodGroup != null) {
-                val where = String.format("from within the same library group " + "(groupId=%1\$s)",
-                        methodGroup)
-                reportRestriction(where, containingClass, method, context,
-                        node, isClassAnnotation)
+                val where = String.format(
+                    "from within the same library group (groupId=%1\$s)",
+                    methodGroup
+                )
+                reportRestriction(
+                    where, containingClass, method, context,
+                    node, isClassAnnotation
+                )
             }
         }
 
@@ -306,26 +330,34 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val thisArtifact = thisCoordinates?.artifactId
                 val methodArtifact = methodCoordinates.artifactId
                 if (thisArtifact != methodArtifact) {
-                    val where = String.format("from within the same library " + "(%1\$s:%2\$s)",
-                            methodGroup,
-                            methodArtifact)
-                    reportRestriction(where, containingClass, method, context,
-                            node, isClassAnnotation)
+                    val where = String.format(
+                        "from within the same library (%1\$s:%2\$s)",
+                        methodGroup,
+                        methodArtifact
+                    )
+                    reportRestriction(
+                        where, containingClass, method, context,
+                        node, isClassAnnotation
+                    )
                 }
             }
         }
 
         if (scope and RESTRICT_TO_TESTS != 0) {
             if (!isTestContext(context, node)) {
-                reportRestriction("from tests", containingClass, method, context,
-                        node, isClassAnnotation)
+                reportRestriction(
+                    "from tests", containingClass, method, context,
+                    node, isClassAnnotation
+                )
             }
         }
 
         if (scope and RESTRICT_TO_ALL != 0) {
             if (!isGmsContext(context, node)) {
-                reportRestriction(null, containingClass, method, context,
-                        node, isClassAnnotation)
+                reportRestriction(
+                    null, containingClass, method, context,
+                    node, isClassAnnotation
+                )
             }
         }
 
@@ -355,20 +387,23 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
 
                 if (!isSubClass) {
-                    reportRestriction("from subclasses", containingClass, method,
-                            context, node, isClassAnnotation)
+                    reportRestriction(
+                        "from subclasses", containingClass, method,
+                        context, node, isClassAnnotation
+                    )
                 }
             }
         }
     }
 
     private fun reportRestriction(
-            where: String?,
-            containingClass: PsiClass,
-            method: PsiMethod,
-            context: JavaContext,
-            node: UElement,
-            isClassAnnotation: Boolean) {
+        where: String?,
+        containingClass: PsiClass,
+        method: PsiMethod,
+        context: JavaContext,
+        node: UElement,
+        isClassAnnotation: Boolean
+    ) {
         var api: String
         api = if (method.isConstructor) {
             method.name + " constructor"
@@ -398,15 +433,16 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
         var message: String
         if (where == null) {
-            message = api + " is marked as internal and should not be accessed from apps"
+            message = "$api is marked as internal and should not be accessed from apps"
         } else {
-            message = api + " can only be called " + where
+            message = "$api can only be called $where"
 
             // Most users will encounter this for the support library; let's have a clearer error message
             // for that specific scenario
             if (where == "from within the same library (groupId=com.android.support)") {
                 // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
-                message = "This API is marked as internal to the support library and should not be accessed from apps"
+                message =
+                        "This API is marked as internal to the support library and should not be accessed from apps"
             }
         }
 
@@ -420,12 +456,17 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun containsRestrictionAnnotation(list: List<UAnnotation>): Boolean {
-        return containsAnnotation(list, RESTRICT_TO_ANNOTATION.oldName()) || containsAnnotation(list, RESTRICT_TO_ANNOTATION.newName())
+        return containsAnnotation(
+            list,
+            RESTRICT_TO_ANNOTATION.oldName()
+        ) || containsAnnotation(list, RESTRICT_TO_ANNOTATION.newName())
     }
 
     companion object {
-        private val IMPLEMENTATION = Implementation(RestrictToDetector::class.java,
-                Scope.JAVA_FILE_SCOPE)
+        private val IMPLEMENTATION = Implementation(
+            RestrictToDetector::class.java,
+            Scope.JAVA_FILE_SCOPE
+        )
 
         private const val ATTR_OTHERWISE = "otherwise"
 
@@ -459,14 +500,14 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
-        private val RESTRICT_TO_LIBRARY_GROUP = 1 shl 0
+        private const val RESTRICT_TO_LIBRARY_GROUP = 1 shl 0
         /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
-        private val RESTRICT_TO_LIBRARY = 1 shl 1
+        private const val RESTRICT_TO_LIBRARY = 1 shl 1
         /** `RestrictTo(RestrictTo.Scope.TESTS`  */
-        private val RESTRICT_TO_TESTS = 1 shl 2
+        private const val RESTRICT_TO_TESTS = 1 shl 2
         /** `RestrictTo(RestrictTo.Scope.SUBCLASSES`  */
-        private val RESTRICT_TO_SUBCLASSES = 1 shl 3
-        private val RESTRICT_TO_ALL = 1 shl 4
+        private const val RESTRICT_TO_SUBCLASSES = 1 shl 3
+        private const val RESTRICT_TO_ALL = 1 shl 4
 
         private fun getRestrictionScope(annotation: UAnnotation): Int {
             val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
@@ -510,40 +551,42 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Using a restricted API */
         @JvmField
         val RESTRICTED = Issue.create(
-                "RestrictedApi",
-                "Restricted API",
+            "RestrictedApi",
+            "Restricted API",
 
-                "This API has been flagged with a restriction that has not been met.\n" +
-                        "\n" +
-                        "Examples of API restrictions:\n" +
-                        "* Method can only be invoked by a subclass\n" +
-                        "* Method can only be accessed from within the same library (defined by " +
-                        " the Gradle library group id)\n." +
-                        "* Method can only be accessed from tests.\n." +
-                        "\n" +
-                        "You can add your own API restrictions with the `@RestrictTo` annotation.",
+            "This API has been flagged with a restriction that has not been met.\n" +
+                    "\n" +
+                    "Examples of API restrictions:\n" +
+                    "* Method can only be invoked by a subclass\n" +
+                    "* Method can only be accessed from within the same library (defined by " +
+                    " the Gradle library group id)\n." +
+                    "* Method can only be accessed from tests.\n." +
+                    "\n" +
+                    "You can add your own API restrictions with the `@RestrictTo` annotation.",
 
-                Category.CORRECTNESS,
-                4,
-                Severity.ERROR,
-                IMPLEMENTATION)
+            Category.CORRECTNESS,
+            4,
+            Severity.ERROR,
+            IMPLEMENTATION
+        )
 
         /** Using an intended-for-tests API */
         @JvmField
         val TEST_VISIBILITY = Issue.create(
-                "VisibleForTests",
-                "Visible Only For Tests",
+            "VisibleForTests",
+            "Visible Only For Tests",
 
-                "With the `@VisibleForTesting` annotation you can specify an `otherwise=` " +
-                        "attribute which specifies the intended visibility if the method had not " +
-                        "been made more widely visible for the tests.\n" +
-                        "\n" +
-                        "This check looks for accesses from production code (e.g. not tests) where " +
-                        "the access would not have been allowed with the intended production visibility.",
+            "With the `@VisibleForTesting` annotation you can specify an `otherwise=` " +
+                    "attribute which specifies the intended visibility if the method had not " +
+                    "been made more widely visible for the tests.\n" +
+                    "\n" +
+                    "This check looks for accesses from production code (e.g. not tests) where " +
+                    "the access would not have been allowed with the intended production visibility.",
 
-                Category.CORRECTNESS,
-                4,
-                Severity.WARNING,
-                IMPLEMENTATION)
+            Category.CORRECTNESS,
+            4,
+            Severity.WARNING,
+            IMPLEMENTATION
+        )
     }
 }

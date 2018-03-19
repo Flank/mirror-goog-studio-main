@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 322;
+    static final int INITIAL_CAPACITY = 327;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -88,6 +88,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ChromeOsDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
         issues.add(ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE);
         issues.add(CipherGetInstanceDetector.ISSUE);
+        issues.add(CipherGetInstanceDetector.DEPRECATED_PROVIDER);
         issues.add(CleanupDetector.APPLY_SHARED_PREF);
         issues.add(CleanupDetector.COMMIT_FRAGMENT);
         issues.add(CleanupDetector.RECYCLE_RESOURCE);
@@ -100,6 +101,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CustomViewDetector.ISSUE);
         issues.add(CutPasteDetector.ISSUE);
         issues.add(DateFormatDetector.DATE_FORMAT);
+        issues.add(DeletedProviderDetector.ISSUE);
         issues.add(DeprecationDetector.ISSUE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
         issues.add(DosLineEndingDetector.ISSUE);
@@ -251,6 +253,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ProguardDetector.WRONG_KEEP);
         issues.add(PropertyFileDetector.ESCAPE);
         issues.add(PropertyFileDetector.HTTP);
+        issues.add(PropertyFileDetector.PROXY_PASSWORD);
         issues.add(PxUsageDetector.DP_ISSUE);
         issues.add(PxUsageDetector.IN_MM_ISSUE);
         issues.add(PxUsageDetector.PX_ISSUE);
@@ -297,6 +300,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SignatureOrSystemDetector.ISSUE);
         issues.add(SslCertificateSocketFactoryDetector.CREATE_SOCKET);
         issues.add(SslCertificateSocketFactoryDetector.GET_INSECURE);
+        issues.add(StartDestinationDetector.ISSUE);
         issues.add(StateListDetector.ISSUE);
         issues.add(StringAuthLeakDetector.AUTH_LEAK);
         issues.add(StringFormatDetector.ARG_COUNT);
@@ -316,6 +320,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TranslationDetector.MISSING);
         issues.add(TranslationDetector.MISSING_BASE);
         issues.add(TranslationDetector.TRANSLATED_UNTRANSLATABLE);
+        issues.add(TranslucentViewDetector.ISSUE);
         issues.add(TrustAllX509TrustManagerDetector.ISSUE);
         issues.add(TypedefDetector.TYPE_DEF);
         issues.add(TypoDetector.ISSUE);
@@ -362,11 +367,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         sIssues = Collections.unmodifiableList(issues);
     }
 
-    /**
-     * Constructs a new {@link BuiltinIssueRegistry}
-     */
-    public BuiltinIssueRegistry() {
-    }
+    /** Constructs a new {@link BuiltinIssueRegistry} */
+    public BuiltinIssueRegistry() {}
 
     @NonNull
     @Override
@@ -406,8 +408,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
 
     /**
      * Reset the registry such that it recomputes its available issues.
-     * <p>
-     * NOTE: This is only intended for testing purposes.
+     *
+     * <p>NOTE: This is only intended for testing purposes.
      */
     @VisibleForTesting
     public static void reset() {

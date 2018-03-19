@@ -32,15 +32,21 @@ public class SizeConstraintTest {
         assertThat(range(1, 5).describe()).isEqualTo("Size must be at least 1 and at most 5");
         assertThat(atLeast(5).describe()).isEqualTo("Size must be at least 5");
         assertThat(atMost(5).describe()).isEqualTo("Size must be at most 5");
-        assertThat(range(1, 5).describe(3)).isEqualTo("Size must be at least 1 and at most 5 (was 3)");
+        assertThat(range(1, 5).describe(3))
+                .isEqualTo("Size must be at least 1 and at most 5 (was 3)");
         assertThat(range(1, 5).describe(0)).isEqualTo("Expected Size ≥ 1 (was 0)");
         assertThat(range(1, 5).describe(15)).isEqualTo("Expected Size ≤ 5 (was 15)");
         assertThat(exactly(42).describe()).isEqualTo("Size must be exactly 42");
         assertThat(multiple(4).describe()).isEqualTo("Size must be a multiple of 4");
-        assertThat(rangeWithMultiple(20, 100, 5).describe()).isEqualTo("Size must be at least 20 and at most 100 and a multiple of 5");
-        assertThat(rangeWithMultiple(20, 100, 5).describe(10)).isEqualTo("Expected Size ≥ 20 (was 10)");
-        assertThat(rangeWithMultiple(20, 100, 5).describe(200)).isEqualTo("Expected Size ≤ 100 (was 200)");
-        assertThat(rangeWithMultiple(20, 100, 5).describe(51)).isEqualTo("Expected Size to be a multiple of 5 (was 51 and should be either 50 or 55)");
+        assertThat(rangeWithMultiple(20, 100, 5).describe())
+                .isEqualTo("Size must be at least 20 and at most 100 and a multiple of 5");
+        assertThat(rangeWithMultiple(20, 100, 5).describe(10))
+                .isEqualTo("Expected Size ≥ 20 (was 10)");
+        assertThat(rangeWithMultiple(20, 100, 5).describe(200))
+                .isEqualTo("Expected Size ≤ 100 (was 200)");
+        assertThat(rangeWithMultiple(20, 100, 5).describe(51))
+                .isEqualTo(
+                        "Expected Size to be a multiple of 5 (was 51 and should be either 50 or 55)");
     }
 
     @Test

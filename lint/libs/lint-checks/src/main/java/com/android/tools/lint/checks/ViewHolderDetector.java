@@ -46,38 +46,33 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-/**
- * Looks for ListView scrolling performance: should use view holder pattern
- */
+/** Looks for ListView scrolling performance: should use view holder pattern */
 public class ViewHolderDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            ViewHolderDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(ViewHolderDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Using a view inflater unconditionally in an AdapterView */
-    public static final Issue ISSUE = Issue.create(
-            "ViewHolder",
-            "View Holder Candidates",
-
-            "When implementing a view Adapter, you should avoid unconditionally inflating a " +
-            "new layout; if an available item is passed in for reuse, you should try to " +
-            "use that one instead. This helps make for example ListView scrolling much " +
-            "smoother.",
-
-            Category.PERFORMANCE,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-            "http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "ViewHolder",
+                            "View Holder Candidates",
+                            "When implementing a view Adapter, you should avoid unconditionally inflating a "
+                                    + "new layout; if an available item is passed in for reuse, you should try to "
+                                    + "use that one instead. This helps make for example ListView scrolling much "
+                                    + "smoother.",
+                            Category.PERFORMANCE,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder");
 
     private static final String GET_VIEW = "getView";
     static final String INFLATE = "inflate";
 
     /** Constructs a new {@link ViewHolderDetector} check */
-    public ViewHolderDetector() {
-    }
+    public ViewHolderDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -90,7 +85,6 @@ public class ViewHolderDetector extends Detector implements SourceCodeScanner {
     public UElementHandler createUastHandler(@NonNull JavaContext context) {
         return new ViewAdapterVisitor(context);
     }
-
 
     private static class ViewAdapterVisitor extends UElementHandler {
         private final JavaContext context;
@@ -114,8 +108,8 @@ public class ViewHolderDetector extends Detector implements SourceCodeScanner {
          */
         private static boolean isViewAdapterMethod(JavaContext context, PsiMethod node) {
             JavaEvaluator evaluator = context.getEvaluator();
-            return GET_VIEW.equals(node.getName()) && evaluator.parametersMatch(node,
-                    TYPE_INT, CLASS_VIEW, CLASS_VIEWGROUP);
+            return GET_VIEW.equals(node.getName())
+                    && evaluator.parametersMatch(node, TYPE_INT, CLASS_VIEW, CLASS_VIEWGROUP);
         }
     }
 
@@ -141,13 +135,13 @@ public class ViewHolderDetector extends Detector implements SourceCodeScanner {
             //noinspection VariableNotUsedInsideIf
             if (receiver != null) {
                 String methodName = getMethodName(node);
-                if (INFLATE.equals(methodName)
-                        && node.getValueArgumentCount() >= 1) {
+                if (INFLATE.equals(methodName) && node.getValueArgumentCount() >= 1) {
                     // See if we're inside a conditional
                     boolean insideIf = false;
                     //noinspection unchecked
-                    if (UastUtils.getParentOfType(node, true, UIfExpression.class,
-                            USwitchExpression.class) != null) {
+                    if (UastUtils.getParentOfType(
+                                    node, true, UIfExpression.class, USwitchExpression.class)
+                            != null) {
                         insideIf = true;
                         haveConditional = true;
                     }
@@ -173,10 +167,11 @@ public class ViewHolderDetector extends Detector implements SourceCodeScanner {
         public void finish() {
             if (!haveConditional && nodes != null) {
                 for (UCallExpression node : nodes) {
-                    String message = "Unconditional layout inflation from view adapter: "
-                            + "Should use View Holder pattern (use recycled view passed "
-                            + "into this method as the second parameter) for smoother "
-                            + "scrolling";
+                    String message =
+                            "Unconditional layout inflation from view adapter: "
+                                    + "Should use View Holder pattern (use recycled view passed "
+                                    + "into this method as the second parameter) for smoother "
+                                    + "scrolling";
                     context.report(ISSUE, node, context.getLocation(node), message);
                 }
             }

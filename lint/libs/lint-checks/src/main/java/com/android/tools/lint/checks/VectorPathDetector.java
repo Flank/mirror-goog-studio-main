@@ -44,52 +44,45 @@ import java.util.Locale;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-/**
- * Looks for issues with long vector paths
- */
+/** Looks for issues with long vector paths */
 public class VectorPathDetector extends ResourceXmlDetector {
     /** Paths that are too long */
-    public static final Issue PATH_LENGTH = Issue.create(
-            "VectorPath",
-            "Long vector paths",
-            "Using long vector paths is bad for performance. There are several ways to " +
-            "make the `pathData` shorter:\n" +
-            "* Using less precision\n" +
-            "* Removing some minor details\n" +
-            "* Using the Android Studio vector conversion tool\n" +
-            "* Rasterizing the image (converting to PNG)",
-
-            Category.PERFORMANCE,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    VectorPathDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue PATH_LENGTH =
+            Issue.create(
+                    "VectorPath",
+                    "Long vector paths",
+                    "Using long vector paths is bad for performance. There are several ways to "
+                            + "make the `pathData` shorter:\n"
+                            + "* Using less precision\n"
+                            + "* Removing some minor details\n"
+                            + "* Using the Android Studio vector conversion tool\n"
+                            + "* Rasterizing the image (converting to PNG)",
+                    Category.PERFORMANCE,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(VectorPathDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Path validation */
-    public static final Issue PATH_VALID = Issue.create(
-            "InvalidVectorPath",
-            "Invalid vector paths",
-            "This check ensures that vector paths are valid. For example, it makes " +
-                    "sure that the numbers are not using scientific notation (such as 1.0e3) " +
-                    "which can lead to runtime crashes on older devices. As another example, " +
-                    "it flags numbers like `.5` which should be written as `0.5` instead to " +
-                    "avoid crashes on some pre-Marshmallow devices.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.ERROR,
-            new Implementation(
-                    VectorPathDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("https://code.google.com/p/android/issues/detail?id=78162");
+    public static final Issue PATH_VALID =
+            Issue.create(
+                            "InvalidVectorPath",
+                            "Invalid vector paths",
+                            "This check ensures that vector paths are valid. For example, it makes "
+                                    + "sure that the numbers are not using scientific notation (such as 1.0e3) "
+                                    + "which can lead to runtime crashes on older devices. As another example, "
+                                    + "it flags numbers like `.5` which should be written as `0.5` instead to "
+                                    + "avoid crashes on some pre-Marshmallow devices.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.ERROR,
+                            new Implementation(VectorPathDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo("https://code.google.com/p/android/issues/detail?id=78162");
 
     // Arbitrary limit suggested in https://code.google.com/p/android/issues/detail?id=235219
     private static final int MAX_PATH_DATA_LENGTH = 800;
 
     /** Constructs a new {@link VectorPathDetector} */
-    public VectorPathDetector() {
-    }
+    public VectorPathDetector() {}
 
     @Nullable
     @Override
@@ -105,8 +98,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (url == null || url.isFramework()) {
                 return;
             }
-            AbstractResourceRepository repository = context.getClient()
-                    .getResourceRepository(context.getProject(), true, true);
+            AbstractResourceRepository repository =
+                    context.getClient().getResourceRepository(context.getProject(), true, true);
             if (repository == null) {
                 return;
             }
@@ -137,9 +130,12 @@ public class VectorPathDetector extends ResourceXmlDetector {
             return;
         }
 
-        String message = String.format("Very long vector path (%1$d characters), which is bad for "
-                + "performance. Considering reducing precision, removing minor details or "
-                + "rasterizing vector.", value.length());
+        String message =
+                String.format(
+                        "Very long vector path (%1$d characters), which is bad for "
+                                + "performance. Considering reducing precision, removing minor details or "
+                                + "rasterizing vector.",
+                        value.length());
         context.report(PATH_LENGTH, attribute, context.getValueLocation(attribute), message);
     }
 
@@ -169,13 +165,11 @@ public class VectorPathDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Check the given path data and throw a number format exception (containing the
-     * exact invalid string) if it finds a problem
+     * Check the given path data and throw a number format exception (containing the exact invalid
+     * string) if it finds a problem
      */
     public void validatePath(
-            @NonNull XmlContext context,
-            @NonNull Attr attribute,
-            @NonNull String path) {
+            @NonNull XmlContext context, @NonNull Attr attribute, @NonNull String path) {
         if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 23) {
             // Fixed in lollipop
             return;
@@ -206,8 +200,12 @@ public class VectorPathDetector extends ResourceXmlDetector {
     // resemble the original code.
     // (frameworks/support/compat/java/android/support/v4/graphics/PathParser.java)
 
-    private void checkFloats(@NonNull XmlContext context, @NonNull Attr attribute,
-            @NonNull String s, int start, int end) {
+    private void checkFloats(
+            @NonNull XmlContext context,
+            @NonNull Attr attribute,
+            @NonNull String s,
+            int start,
+            int end) {
         if (s.charAt(start) == 'z' || s.charAt(start) == 'Z') {
             return;
         }
@@ -255,7 +253,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
             }
 
             // Scientific notation not supported everywhere
-            if (hasExponential && startPosition < currentIndex
+            if (hasExponential
+                    && startPosition < currentIndex
                     // This was fixed in Lollipop
                     && context.getMainProject().getMinSdkVersion().getFeatureLevel() < 21) {
                 String number = s.substring(startPosition, currentIndex);
@@ -265,36 +264,51 @@ public class VectorPathDetector extends ResourceXmlDetector {
                     // See http://stackoverflow.com/questions/16098046/
                     //    how-to-print-double-value-without-scientific-notation-using-java
                     // for an explanation for why we do this big workaround
-                    DecimalFormat df = new DecimalFormat("0",
-                            DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+                    DecimalFormat df =
+                            new DecimalFormat(
+                                    "0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
                     // DecimalFormat.DOUBLE_FRACTION_DIGITS = 340 but is package private
                     df.setMaximumFractionDigits(340);
                     converted = df.format(Double.parseDouble(number));
                 } catch (NumberFormatException ignore) {
                 }
 
-                String message = String.format("Avoid scientific notation (`%1$s`) in vector "
-                        + "paths because it can lead to crashes on some devices.", number);
+                String message =
+                        String.format(
+                                "Avoid scientific notation (`%1$s`) in vector "
+                                        + "paths because it can lead to crashes on some devices.",
+                                number);
                 if (converted != null) {
                     message += " Use `" + converted + "` instead.";
                 }
-                reportInvalidPathData(context, attribute, s, startPosition, currentIndex, number,
-                        converted, message);
+                reportInvalidPathData(
+                        context,
+                        attribute,
+                        s,
+                        startPosition,
+                        currentIndex,
+                        number,
+                        converted,
+                        message);
             }
 
             if ((s.startsWith(".", startPosition)
                     || s.startsWith("-.", startPosition)
-                    // This was fixed in Marshmallow
-                    && context.getMainProject().getMinSdkVersion().getFeatureLevel() < 23)) {
+                            // This was fixed in Marshmallow
+                            && context.getMainProject().getMinSdkVersion().getFeatureLevel()
+                                    < 23)) {
                 String number = s.substring(startPosition, currentIndex);
-                String replace = number.startsWith(".")
-                        ? ("0" + number) : ("-0." + number.substring(2));
+                String replace =
+                        number.startsWith(".") ? ("0" + number) : ("-0." + number.substring(2));
 
-                String message = String.format("Use %1$s instead of %2$s to avoid crashes "
-                        + "on some devices", replace, number);
+                String message =
+                        String.format(
+                                "Use %1$s instead of %2$s to avoid crashes on some devices",
+                                replace, number);
 
-                if (number.startsWith(".") &&
-                        startPosition > 0 && Character.isDigit(s.charAt(startPosition-1))) {
+                if (number.startsWith(".")
+                        && startPosition > 0
+                        && Character.isDigit(s.charAt(startPosition - 1))) {
                     // Some SVG files pack numbers adjacent to each other without a separating
                     // space when the dot implies a space, e.g. "1.2.3" is the number "1.2"
                     // followed by ".3" (0.3). If we just replace the ".3" with "0.3" we end
@@ -303,8 +317,15 @@ public class VectorPathDetector extends ResourceXmlDetector {
                     replace = " " + replace;
                 }
 
-                reportInvalidPathData(context, attribute, s, startPosition, currentIndex, number,
-                        replace, message);
+                reportInvalidPathData(
+                        context,
+                        attribute,
+                        s,
+                        startPosition,
+                        currentIndex,
+                        number,
+                        replace,
+                        message);
             }
 
             int endPosition = currentIndex;
@@ -317,9 +338,15 @@ public class VectorPathDetector extends ResourceXmlDetector {
         }
     }
 
-    private void reportInvalidPathData(@NonNull XmlContext context, @NonNull Attr attribute,
-            @NonNull String s, int startPosition, int currentIndex, @NonNull String number,
-            @Nullable String replace, @NonNull String message) {
+    private void reportInvalidPathData(
+            @NonNull XmlContext context,
+            @NonNull Attr attribute,
+            @NonNull String s,
+            int startPosition,
+            int currentIndex,
+            @NonNull String number,
+            @Nullable String replace,
+            @NonNull String message) {
         Location location = context.getValueLocation(attribute);
         Position startPos = location.getStart();
         assert startPos != null;
@@ -328,17 +355,20 @@ public class VectorPathDetector extends ResourceXmlDetector {
         // reference) point to the specific location
         LintFix lintFix = null;
         if (s.equals(attribute.getValue())) {
-            location = Location.create(context.file, context.getContents(),
-                    startPos.getOffset() + startPosition,
-                    startPos.getOffset() + currentIndex);
+            location =
+                    Location.create(
+                            context.file,
+                            context.getContents(),
+                            startPos.getOffset() + startPosition,
+                            startPos.getOffset() + currentIndex);
             if (replace != null) {
-                lintFix = fix()
-                        .name("Replace with " + replace.trim())
-                        .replace()
-                        .text(number)
-                        .with(replace)
-                        .range(location)
-                        .build();
+                lintFix =
+                        fix().name("Replace with " + replace.trim())
+                                .replace()
+                                .text(number)
+                                .with(replace)
+                                .range(location)
+                                .build();
             }
         }
 
@@ -349,7 +379,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
         while (end < s.length()) {
             char c = s.charAt(end);
             if ((((c - 'A') * (c - 'Z') <= 0) || ((c - 'a') * (c - 'z') <= 0))
-                    && c != 'e' && c != 'E') {
+                    && c != 'e'
+                    && c != 'E') {
                 return end;
             }
             end++;

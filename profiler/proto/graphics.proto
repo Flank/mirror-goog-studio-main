@@ -29,12 +29,12 @@ service GraphicsService {
 
   // Starts collecting execution metrics of a running app's SurfaceView Activity, such
   // as frame stats. Does nothing if the app is already being monitored.
-  rpc StartMonitoringApp(GraphicsStartRequest) returns (GraphicsStartResponse) {
+  rpc StartMonitoringGraphics(GraphicsStartRequest) returns (GraphicsStartResponse) {
   }
 
   // Stops monitoring a running app. Does nothing if the app is not being
   // monitored.
-  rpc StopMonitoringApp(GraphicsStopRequest) returns (GraphicsStopResponse) {
+  rpc StopMonitoringGraphics(GraphicsStopRequest) returns (GraphicsStopResponse) {
   }
 }
 
@@ -42,11 +42,9 @@ service GraphicsService {
 // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
 // mathematically written as in interval (start_timestamp, end_timestamp].
 message GraphicsDataRequest {
-  string app_package_name = 1;
-  string activity_name = 2;
-  Session session = 3;
-  int64 start_timestamp = 4;  // Use -2^63 if no data is too old to return.
-  int64 end_timestamp = 5;  // Use 2^63 - 1 if no data is too recent to return.
+  Session session = 1;
+  int64 start_timestamp = 2;  // Use -2^63 if no data is too old to return.
+  int64 end_timestamp = 3;  // Use 2^63 - 1 if no data is too recent to return.
 }
 
 // Response contains data on the frames rendered within the requested time.
@@ -55,9 +53,7 @@ message GraphicsDataResponse {
 }
 
 message GraphicsStartRequest {
-  string app_package_name = 1;
-  string activity_name = 2;
-  Session session = 3;
+  Session session = 1;
 }
 
 message GraphicsStartResponse {
@@ -70,9 +66,7 @@ message GraphicsStartResponse {
 }
 
 message GraphicsStopRequest {
-  string app_package_name = 1;
-  string activity_name = 2;
-  Session session = 3;
+  Session session = 1;
 }
 
 message GraphicsStopResponse {

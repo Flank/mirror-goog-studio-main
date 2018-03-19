@@ -40,33 +40,27 @@ import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 
-/**
- * Checks for missing view tag detectors
- */
+/** Checks for missing view tag detectors */
 public class ViewTagDetector extends Detector implements SourceCodeScanner {
     /** Using setTag and leaking memory */
-    public static final Issue ISSUE = Issue.create(
-            "ViewTag",
-            "Tagged object leaks",
-
-            "Prior to Android 4.0, the implementation of `View.setTag(int, Object)` would " +
-            "store the objects in a static map, where the values were strongly referenced. " +
-            "This means that if the object contains any references pointing back to the " +
-            "context, the context (which points to pretty much everything else) will leak. " +
-            "If you pass a view, the view provides a reference to the context " +
-            "that created it. Similarly, view holders typically contain a view, and cursors " +
-            "are sometimes also associated with views.",
-
-            Category.PERFORMANCE,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    ViewTagDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ViewTag",
+                    "Tagged object leaks",
+                    "Prior to Android 4.0, the implementation of `View.setTag(int, Object)` would "
+                            + "store the objects in a static map, where the values were strongly referenced. "
+                            + "This means that if the object contains any references pointing back to the "
+                            + "context, the context (which points to pretty much everything else) will leak. "
+                            + "If you pass a view, the view provides a reference to the context "
+                            + "that created it. Similarly, view holders typically contain a view, and cursors "
+                            + "are sometimes also associated with views.",
+                    Category.PERFORMANCE,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(ViewTagDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link ViewTagDetector} */
-    public ViewTagDetector() {
-    }
+    public ViewTagDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -77,7 +71,9 @@ public class ViewTagDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         // The leak behavior is fixed in ICS:
         // http://code.google.com/p/android/issues/detail?id=18273
@@ -118,9 +114,11 @@ public class ViewTagDetector extends Detector implements SourceCodeScanner {
         } else {
             return;
         }
-        String message = String.format("Avoid setting %1$s as values for `setTag`: " +
-                        "Can lead to memory leaks in versions older than Android 4.0",
-                objectType);
+        String message =
+                String.format(
+                        "Avoid setting %1$s as values for `setTag`: "
+                                + "Can lead to memory leaks in versions older than Android 4.0",
+                        objectType);
 
         context.report(ISSUE, call, context.getLocation(tagArgument), message);
     }

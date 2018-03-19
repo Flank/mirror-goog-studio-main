@@ -30,13 +30,16 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         val client = createClient(loggedWarnings)
         getSingleRegistry(client, File("bogus"))
         assertThat(loggedWarnings.toString()).contains(
-                "Could not load custom lint check jar files: bogus")
+            "Could not load custom lint check jar files: bogus"
+        )
     }
 
     fun testCached() {
         val targetDir = TestUtils.createTempDirDeletedOnExit()
-        val file1 = base64gzip("lint.jar",
-                CustomRuleTest.LINT_JAR_BASE64_GZIP).createFile(targetDir)
+        val file1 = base64gzip(
+            "lint.jar",
+            CustomRuleTest.LINT_JAR_BASE64_GZIP
+        ).createFile(targetDir)
         val file2 = jar("unsupported.jar").createFile(targetDir)
         assertTrue(file1.path, file1.exists())
         val loggedWarnings = StringWriter()
@@ -57,14 +60,17 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         assertNotNull(applicableCallNames)
         assertTrue(applicableCallNames!!.contains("getActionBar"))
 
-        assertEquals("Custom lint rule jar " + file2.path + " does not contain a valid "
-                + "registry manifest key (Lint-Registry-v2).\n"
-                + "Either the custom jar is invalid, or it uses an outdated API not "
-                + "supported this lint client", loggedWarnings.toString())
+        assertEquals(
+            "Custom lint rule jar " + file2.path + " does not contain a valid " +
+                    "registry manifest key (Lint-Registry-v2).\n" +
+                    "Either the custom jar is invalid, or it uses an outdated API not " +
+                    "supported this lint client", loggedWarnings.toString()
+        )
 
         // Make sure we handle up to date checks properly too
         val composite = CompositeIssueRegistry(
-                Arrays.asList<IssueRegistry>(registry1, registry2))
+            Arrays.asList<IssueRegistry>(registry1, registry2)
+        )
         assertThat(composite.isUpToDate).isTrue()
 
         assertThat(registry1.isUpToDate).isTrue()
@@ -75,10 +81,14 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
 
     fun testDeduplicate() {
         val targetDir = TestUtils.createTempDirDeletedOnExit()
-        val file1 = base64gzip("lint1.jar",
-                CustomRuleTest.LINT_JAR_BASE64_GZIP).createFile(targetDir)
-        val file2 = base64gzip("lint2.jar",
-                CustomRuleTest.LINT_JAR_BASE64_GZIP).createFile(targetDir)
+        val file1 = base64gzip(
+            "lint1.jar",
+            CustomRuleTest.LINT_JAR_BASE64_GZIP
+        ).createFile(targetDir)
+        val file2 = base64gzip(
+            "lint2.jar",
+            CustomRuleTest.LINT_JAR_BASE64_GZIP
+        ).createFile(targetDir)
         assertTrue(file1.path, file1.exists())
         assertTrue(file2.path, file2.exists())
 
@@ -110,8 +120,12 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 }
             }
 
-            override fun log(severity: Severity, exception: Throwable?,
-                    format: String?, vararg args: Any) {
+            override fun log(
+                severity: Severity,
+                exception: Throwable?,
+                format: String?,
+                vararg args: Any
+            ) {
                 if (format != null) {
                     loggedWarnings.append(String.format(format, *args))
                 }

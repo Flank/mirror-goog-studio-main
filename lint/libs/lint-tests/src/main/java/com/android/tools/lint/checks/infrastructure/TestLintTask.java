@@ -141,13 +141,12 @@ public class TestLintTask {
      */
     public TestLintTask files(@NonNull TestFile... files) {
         ensurePreRun();
-        this.projects = new ProjectDescription[]{ new ProjectDescription(files) };
+        this.projects = new ProjectDescription[] {new ProjectDescription(files)};
         return this;
     }
 
     /**
-     * Configures the test task to allow compilation errors in the test files (normally not
-     * allowed)
+     * Configures the test task to allow compilation errors in the test files (normally not allowed)
      *
      * @return this, for constructor chaining
      */
@@ -169,8 +168,8 @@ public class TestLintTask {
     }
 
     /**
-     * Sets whether the test task should allow lint custom checks; if not, these
-     * will be flagged with an extra warning ({@link IssueRegistry#OBSOLETE_LINT_CHECK}).
+     * Sets whether the test task should allow lint custom checks; if not, these will be flagged
+     * with an extra warning ({@link IssueRegistry#OBSOLETE_LINT_CHECK}).
      *
      * @return this, for constructor chaining
      */
@@ -181,8 +180,8 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to allow the SDK to be missing.
-     * To set a specific SDK home, use {@link #sdkHome(File)}.
+     * Configures the test task to allow the SDK to be missing. To set a specific SDK home, use
+     * {@link #sdkHome(File)}.
      *
      * @return this, for constructor chaining
      */
@@ -191,8 +190,8 @@ public class TestLintTask {
     }
 
     /**
-     * Sets whether the test task should allow the SDK to be missing. Normally false.
-     * To set a specific SDK home, use {@link #sdkHome(File)}.
+     * Sets whether the test task should allow the SDK to be missing. Normally false. To set a
+     * specific SDK home, use {@link #sdkHome(File)}.
      *
      * @param allowMissingSdk whether the SDK should be allowed to be missing
      * @return this, for constructor chaining
@@ -204,8 +203,8 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to require that the compileSdkVersion (specified
-     * in the project description) must be installed.
+     * Configures the test task to require that the compileSdkVersion (specified in the project
+     * description) must be installed.
      *
      * @return this, for constructor chaining
      */
@@ -214,8 +213,8 @@ public class TestLintTask {
     }
 
     /**
-     * Sets whether the test requires that the compileSdkVersion (specified
-     * in the project description) must be installed.
+     * Sets whether the test requires that the compileSdkVersion (specified in the project
+     * description) must be installed.
      *
      * @param requireCompileSdk true to require the compileSdkVersion SDK to be installed
      * @return this, for constructor chaining
@@ -227,8 +226,8 @@ public class TestLintTask {
     }
 
     /**
-     * Sets whether the test task should silently ignore lint infrastructure errors
-     * (such as missing .class files etc)
+     * Sets whether the test task should silently ignore lint infrastructure errors (such as missing
+     * .class files etc)
      *
      * @return this, for constructor chaining
      */
@@ -239,8 +238,7 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to run incrementally, with the given file as
-     * the current file
+     * Configures the test task to run incrementally, with the given file as the current file
      *
      * @param currentFileName the relative path to the current file
      * @return this, for constructor chaining
@@ -252,12 +250,10 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to use the given detector when
-     * determining which issues to run. If you're calling
-     * {@link #issues(Issue...)} you do not need to call this method,
-     * but for detectors that report a lot of issues, this is more
-     * convenient. (This requires the set of issues produced by a detector
-     * to be static fields in the detector class.)
+     * Configures the test task to use the given detector when determining which issues to run. If
+     * you're calling {@link #issues(Issue...)} you do not need to call this method, but for
+     * detectors that report a lot of issues, this is more convenient. (This requires the set of
+     * issues produced by a detector to be static fields in the detector class.)
      *
      * @param detector the detector to use to discover the set of issues
      * @return this, for constructor chaining
@@ -307,12 +303,11 @@ public class TestLintTask {
     }
 
     /**
-     * Normally you're forced to pick issue id's to register up front. However, for
-     * custom views you may not want those issues to be discovered until the project
-     * has been initialized and the custom views read from lint.jar files provided
-     * by the project dependencies. In that case, you can disable the check which
-     * enforces that at least one issue is registered (which in normal scenarios helps
-     * catch incorrect lint test setups.)
+     * Normally you're forced to pick issue id's to register up front. However, for custom views you
+     * may not want those issues to be discovered until the project has been initialized and the
+     * custom views read from lint.jar files provided by the project dependencies. In that case, you
+     * can disable the check which enforces that at least one issue is registered (which in normal
+     * scenarios helps catch incorrect lint test setups.)
      *
      * @param allowDelayedIssueRegistration if true, allow delayed issue registration
      * @return this, for constructor chaining
@@ -324,12 +319,11 @@ public class TestLintTask {
     }
 
     /**
-     * Normally you're forced to pick issue id's to register up front. However, for
-     * custom views you may not want those issues to be discovered until the project
-     * has been initialized and the custom views read from lint.jar files provided
-     * by the project dependencies. In that case, you can disable the check which
-     * enforces that at least one issue is registered (which in normal scenarios helps
-     * catch incorrect lint test setups.)
+     * Normally you're forced to pick issue id's to register up front. However, for custom views you
+     * may not want those issues to be discovered until the project has been initialized and the
+     * custom views read from lint.jar files provided by the project dependencies. In that case, you
+     * can disable the check which enforces that at least one issue is registered (which in normal
+     * scenarios helps catch incorrect lint test setups.)
      *
      * @return this, for constructor chaining
      */
@@ -351,18 +345,18 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to run incrementally. This method can be
-     * called if the project only contains a single file, which will be
-     * considered the current file. If there are multiple files in the
-     * project you must call {@link #incremental(String)} instead.
+     * Configures the test task to run incrementally. This method can be called if the project only
+     * contains a single file, which will be considered the current file. If there are multiple
+     * files in the project you must call {@link #incremental(String)} instead.
      *
      * @return this, for constructor chaining
      */
     public TestLintTask incremental() {
         ensurePreRun();
-        if (projects != null && projects.length == 1 &&
-                projects[0].getFiles() != null &&
-                projects[0].getFiles().length == 1) {
+        if (projects != null
+                && projects.length == 1
+                && projects[0].getFiles() != null
+                && projects[0].getFiles().length == 1) {
             this.incrementalFileName = projects[0].getFiles()[0].getTargetPath();
         } else if (projects == null || projects.length == 0) {
             assert false : "Can't use incremental mode without any projects!";
@@ -377,9 +371,11 @@ public class TestLintTask {
                     sb.append(file.getTargetPath());
                 }
             }
-            assert false : "Can only use implicit incremental mode when there is a single "
-                    + "source file; use incremental(relativePath) instead. Perhaps you "
-                    + "meant one of the following: " + sb.toString();
+            assert false
+                    : "Can only use implicit incremental mode when there is a single "
+                            + "source file; use incremental(relativePath) instead. Perhaps you "
+                            + "meant one of the following: "
+                            + sb.toString();
         }
         return this;
     }
@@ -398,8 +394,7 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the lint task with a given SDK home to use instead of the
-     * default one.
+     * Configures the lint task with a given SDK home to use instead of the default one.
      *
      * @param sdkHomeOverride the root directory of a custom SDK to use
      * @return this, for constructor chaining
@@ -411,9 +406,8 @@ public class TestLintTask {
     }
 
     /**
-     * This method allows you to add a hook which you can run on a mock
-     * builder model to tweak it, such as changing or augmenting the builder model
-     * classes
+     * This method allows you to add a hook which you can run on a mock builder model to tweak it,
+     * such as changing or augmenting the builder model classes
      */
     public TestLintTask modifyGradleMocks(@NonNull GradleMockModifier mockModifier) {
         ensurePreRun();
@@ -458,10 +452,9 @@ public class TestLintTask {
     }
 
     /**
-     * Configures a custom error message checker to invoke on each reported error.
-     * Typically used to make sure that code which parses error messages (such as
-     * quick fix handlers) are staying up to date with the messages generated
-     * by the lint check.
+     * Configures a custom error message checker to invoke on each reported error. Typically used to
+     * make sure that code which parses error messages (such as quick fix handlers) are staying up
+     * to date with the messages generated by the lint check.
      *
      * @param checker the checker to invoke
      * @return this, for constructor chaining
@@ -473,8 +466,7 @@ public class TestLintTask {
     }
 
     /**
-     * Configures lint to run with a custom lint client instead of the
-     * default one.
+     * Configures lint to run with a custom lint client instead of the default one.
      *
      * @param client the custom client to use
      * @return this, for constructor chaining
@@ -486,8 +478,7 @@ public class TestLintTask {
     }
 
     /**
-     * Tells lint to select a particular Gradle variant. This only applies
-     * when using Gradle mocks.
+     * Tells lint to select a particular Gradle variant. This only applies when using Gradle mocks.
      *
      * @param variantName the name of the variant to use
      * @return this, for constructor chaining
@@ -511,9 +502,8 @@ public class TestLintTask {
     }
 
     /**
-     * Tells the lint infrastructure to silently ignore any unknown Gradle constructs
-     * it encounters when processing a Gradle file and attempting to build up mocks
-     * for the Gradle builder model
+     * Tells the lint infrastructure to silently ignore any unknown Gradle constructs it encounters
+     * when processing a Gradle file and attempting to build up mocks for the Gradle builder model
      *
      * @return this, for constructor chaining
      */
@@ -524,11 +514,10 @@ public class TestLintTask {
     }
 
     /**
-     * Tells the lint infrastructure to simulate symbol resolution errors.
-     * This is used in some rare occurrences where you have a lint check
-     * which AST results and falls back to bytecode analysis if symbol
-     * resolution fails; this lets you test both behaviors on all the same
-     * test files without having to insert actual errors in the files.
+     * Tells the lint infrastructure to simulate symbol resolution errors. This is used in some rare
+     * occurrences where you have a lint check which AST results and falls back to bytecode analysis
+     * if symbol resolution fails; this lets you test both behaviors on all the same test files
+     * without having to insert actual errors in the files.
      *
      * @return this, for constructor chaining
      */
@@ -539,29 +528,24 @@ public class TestLintTask {
     }
 
     /**
-     * Normally the lint test infrastructure ensures that all reported errors
-     * are unique (which means that no error has the exact same message for
-     * the exact same error range in the source file). That's normally a sign
-     * of a bug in the detector. If you're trying to report multiple issues that
-     * happen to overlap the same region for the same issue id, make sure that
-     * the error message is unique; the common way to do that is to include
-     * parameters in the error message, such as the name of the variable or
-     * expression in question, and so on.
+     * Normally the lint test infrastructure ensures that all reported errors are unique (which
+     * means that no error has the exact same message for the exact same error range in the source
+     * file). That's normally a sign of a bug in the detector. If you're trying to report multiple
+     * issues that happen to overlap the same region for the same issue id, make sure that the error
+     * message is unique; the common way to do that is to include parameters in the error message,
+     * such as the name of the variable or expression in question, and so on.
      *
-     * There <b>are</b> some cases where it's very difficult to avoid reporting
-     * the same error message twice. For example, the ResourceTypeDetector,
-     * when it discovers that an expression has a certain resource type
-     * (e.g. "R.drawable.foo" is a @DrawableRes, as is "getResources().getDrawable(x)")
-     * it sees if this expression is used in a surrounding binary expression
-     * for comparison purposes and warns if you're performing some suspicious
-     * comparisons (for resource types only equals/not-equals is expected;
-     * making number-range comparisons is usually a bug.)   If you report
-     * this bug on the binary expression, you could end up reporting it twice
-     * if we reach the expression both from the left operand and from the right
-     * operand. But you don't want to limit reporting the error to just one of
-     * those branches since it needs to work for both the case when both sides
-     * have a known resource type as when either only the left or only the right
-     * have a known resource type. In these scenarios you can turn off the
+     * <p>There <b>are</b> some cases where it's very difficult to avoid reporting the same error
+     * message twice. For example, the ResourceTypeDetector, when it discovers that an expression
+     * has a certain resource type (e.g. "R.drawable.foo" is a @DrawableRes, as is
+     * "getResources().getDrawable(x)") it sees if this expression is used in a surrounding binary
+     * expression for comparison purposes and warns if you're performing some suspicious comparisons
+     * (for resource types only equals/not-equals is expected; making number-range comparisons is
+     * usually a bug.) If you report this bug on the binary expression, you could end up reporting
+     * it twice if we reach the expression both from the left operand and from the right operand.
+     * But you don't want to limit reporting the error to just one of those branches since it needs
+     * to work for both the case when both sides have a known resource type as when either only the
+     * left or only the right have a known resource type. In these scenarios you can turn off the
      * duplicate check.
      *
      * @return this, for constructor chaining
@@ -572,11 +556,11 @@ public class TestLintTask {
     }
 
     /**
-     * Normally resource repositories are only provided in incremental/single-file
-     * lint runs. This method allows you to add support for this in the test.
+     * Normally resource repositories are only provided in incremental/single-file lint runs. This
+     * method allows you to add support for this in the test.
      *
      * @param supportResourceRepository if true, provide a resource repository to detectors that ask
-     *                                  for it.
+     *     for it.
      * @return this, for constructor chaining
      */
     public TestLintTask supportResourceRepository(boolean supportResourceRepository) {
@@ -589,8 +573,8 @@ public class TestLintTask {
         getCheckedIssues(); // ensures that you've used one of the many DSL options to set issues
 
         if (projects == null) {
-            throw new RuntimeException("No test files to check lint in: call "
-                    + "files() or projects()");
+            throw new RuntimeException(
+                    "No test files to check lint in: call files() or projects()");
         }
     }
 
@@ -601,8 +585,7 @@ public class TestLintTask {
     }
 
     private static void addProjects(
-            @NonNull List<ProjectDescription> target,
-            @NonNull ProjectDescription... projects) {
+            @NonNull List<ProjectDescription> target, @NonNull ProjectDescription... projects) {
         for (ProjectDescription project : projects) {
             if (!target.contains(project)) {
                 target.add(project);
@@ -649,7 +632,8 @@ public class TestLintTask {
 
                     int index = 1;
                     for (ProjectDescription dependency : project.getDependsOn()) {
-                        propertyFile.property("android.library.reference." + (index++),
+                        propertyFile.property(
+                                "android.library.reference." + (index++),
                                 "../" + dependency.getName());
                     }
                 }
@@ -686,7 +670,7 @@ public class TestLintTask {
 
         List<File> projectDirs = createProjects(rootDir);
         try {
-            Pair<String,List<Warning>> result = checkLint(rootDir, projectDirs);
+            Pair<String, List<Warning>> result = checkLint(rootDir, projectDirs);
             String output = result.getFirst();
             List<Warning> warnings = result.getSecond();
             return new TestLintResult(this, output, null, warnings);
@@ -700,11 +684,10 @@ public class TestLintTask {
     }
 
     /**
-     * Creates lint test projects according to the configured project descriptions.
-     * Note that these are not the same projects that will be used if the
-     * {@link #run()} method is called. This method is intended mainly for testing
-     * the lint infrastructure itself. Most detector tests will just want to
-     * use {@link #run()}.
+     * Creates lint test projects according to the configured project descriptions. Note that these
+     * are not the same projects that will be used if the {@link #run()} method is called. This
+     * method is intended mainly for testing the lint infrastructure itself. Most detector tests
+     * will just want to use {@link #run()}.
      *
      * @param keepFiles if true, don't delete the generated temporary project source files
      */
@@ -738,8 +721,8 @@ public class TestLintTask {
     }
 
     @NonNull
-    private Pair<String,List<Warning>> checkLint(@NonNull File rootDir,
-            @NonNull List<File> files) throws Exception {
+    private Pair<String, List<Warning>> checkLint(@NonNull File rootDir, @NonNull List<File> files)
+            throws Exception {
         TestLintClient lintClient = createClient();
         lintClient.addCleanupDir(rootDir);
         lintClient.setLintTask(this);
@@ -766,7 +749,8 @@ public class TestLintTask {
     public void populateProjectDirectory(
             @NonNull ProjectDescription project,
             @NonNull File projectDir,
-            @NonNull TestFile... testFiles) throws IOException {
+            @NonNull TestFile... testFiles)
+            throws IOException {
         if (!projectDir.exists()) {
             boolean ok = projectDir.mkdirs();
             if (!ok) {
@@ -787,10 +771,12 @@ public class TestLintTask {
                     // The default should be src/main/AndroidManifest.xml, not just AndroidManifest.xml
                     //fp.to("src/main/AndroidManifest.xml");
                     fp.within("src/main");
-                } else if (fp instanceof JavaTestFile && fp.targetRootFolder != null
+                } else if (fp instanceof JavaTestFile
+                        && fp.targetRootFolder != null
                         && fp.targetRootFolder.equals("src")) {
                     fp.within("src/main/java");
-                } else if (fp instanceof TestFile.KotlinTestFile && fp.targetRootFolder != null
+                } else if (fp instanceof TestFile.KotlinTestFile
+                        && fp.targetRootFolder != null
                         && fp.targetRootFolder.equals("src")) {
                     fp.within("src/main/kotlin");
                 }
@@ -829,8 +815,8 @@ public class TestLintTask {
     }
 
     /**
-     * All Android projects must have a manifest file; this one creates it if the test
-     * file didn't add an explicit one.
+     * All Android projects must have a manifest file; this one creates it if the test file didn't
+     * add an explicit one.
      */
     private static void addManifestFileIfNecessary(@NonNull File manifest) throws IOException {
         // Ensure that there is at least a manifest file there to make it a valid project
@@ -842,21 +828,21 @@ public class TestLintTask {
                 assertTrue("Couldn't create directory " + parentFile, ok);
             }
             try (FileWriter fw = new FileWriter(manifest)) {
-                fw.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    package=\"foo.bar2\"\n" +
-                        "    android:versionCode=\"1\"\n" +
-                        "    android:versionName=\"1.0\" >\n" +
-                        "</manifest>\n");
+                fw.write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"foo.bar2\"\n"
+                                + "    android:versionCode=\"1\"\n"
+                                + "    android:versionName=\"1.0\" >\n"
+                                + "</manifest>\n");
             }
         }
     }
 
     /**
-     * Returns the list of issues to be checked by this run.
-     * If {@link #issues(Issue...)} is called to register issues, this will be the
-     * exact set of issues used, otherwise the issues found as fields in the
-     * detector passed to {@link #detector(Detector)} is used.
+     * Returns the list of issues to be checked by this run. If {@link #issues(Issue...)} is called
+     * to register issues, this will be the exact set of issues used, otherwise the issues found as
+     * fields in the detector passed to {@link #detector(Detector)} is used.
      */
     @NonNull
     public List<Issue> getCheckedIssues() {
@@ -869,14 +855,13 @@ public class TestLintTask {
                 TestLintClient client = createClient();
                 client.task = this;
                 List<JarFileIssueRegistry> registries =
-                        JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules),
-                                null);
+                        JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules), null);
                 IssueRegistry[] array = registries.toArray(new IssueRegistry[0]);
                 IssueRegistry all = JarFileIssueRegistry.Factory.join(array);
                 return checkedIssues = all.getIssues();
             }
 
-            if (detector != null){
+            if (detector != null) {
                 checkedIssues = Lists.newArrayList();
                 // Find issues defined in the class
                 Class<? extends Detector> detectorClass = detector.getClass();
@@ -890,9 +875,12 @@ public class TestLintTask {
                     }
                 }
                 if (checkedIssues.isEmpty()) {
-                    throw new RuntimeException("Could not find any Issue field instances in "
-                            + "detector " + detector.getClass().getSimpleName() + ": call "
-                            + "issues() to configure exact issues to check instead");
+                    throw new RuntimeException(
+                            "Could not find any Issue field instances in "
+                                    + "detector "
+                                    + detector.getClass().getSimpleName()
+                                    + ": call "
+                                    + "issues() to configure exact issues to check instead");
                 }
                 return checkedIssues;
             }
@@ -914,17 +902,18 @@ public class TestLintTask {
                 return checkedIssues = Collections.emptyList();
             }
 
-            throw new RuntimeException("No issues configured; you must call either issues(), "
-                    + "detector() or customRules() to tell the lint infrastructure which checks "
-                    + "should be performed");
+            throw new RuntimeException(
+                    "No issues configured; you must call either issues(), "
+                            + "detector() or customRules() to tell the lint infrastructure which checks "
+                            + "should be performed");
         }
 
         return checkedIssues;
     }
 
     /** Adds issue fields found in the given class */
-    private static void addIssuesFromClass(@NonNull List<Issue> checkedIssues,
-            @NonNull Class<?> detectorClass) {
+    private static void addIssuesFromClass(
+            @NonNull List<Issue> checkedIssues, @NonNull Class<?> detectorClass) {
         addIssuesFromFields(checkedIssues, detectorClass.getFields());
 
         // Use getDeclaredFields to also pick up private fields (e.g. backing fields
@@ -968,9 +957,8 @@ public class TestLintTask {
     }
 
     /**
-     * Provides mock data to feed back to the URL connection if a detector calls
-     * {@link LintClient#openConnection(URL)} and then attempts to read data from
-     * that connection
+     * Provides mock data to feed back to the URL connection if a detector calls {@link
+     * LintClient#openConnection(URL)} and then attempts to read data from that connection
      */
     @NonNull
     public TestLintTask networkData(@NonNull String url, @NonNull byte[] data) {
@@ -982,9 +970,8 @@ public class TestLintTask {
     }
 
     /**
-     * Provides mock data to feed back to the URL connection if a detector calls
-     * {@link LintClient#openConnection(URL, int)} and then attempts to read data from
-     * that connection.
+     * Provides mock data to feed back to the URL connection if a detector calls {@link
+     * LintClient#openConnection(URL, int)} and then attempts to read data from that connection.
      *
      * @return this, for constructor chaining
      */
@@ -994,12 +981,11 @@ public class TestLintTask {
     }
 
     /**
-     * Normally lint will refuse to access the network (via the
-     * {@link LintClient#openConnection(URL, int)} API; it cannot prevent detectors
-     * from directly access networking libraries on its own). This is because
-     * from tests you normally want to provide mock data instead. If you deliberately
-     * want to access the network (perhaps because you have your own deeper mocking
-     * framework) you can turn this on.
+     * Normally lint will refuse to access the network (via the {@link
+     * LintClient#openConnection(URL, int)} API; it cannot prevent detectors from directly access
+     * networking libraries on its own). This is because from tests you normally want to provide
+     * mock data instead. If you deliberately want to access the network (perhaps because you have
+     * your own deeper mocking framework) you can turn this on.
      *
      * @param allowNetworkAccess whether network access should be allowed (default is false)
      * @return this, for constructor chaining
@@ -1010,10 +996,9 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the root directory to create projects in when running lint.
-     * Normally lint creates it in the temporary folder, but this allows you
-     * to specify a specific location. When this is set, lint will not delete
-     * the contents after running.
+     * Configures the root directory to create projects in when running lint. Normally lint creates
+     * it in the temporary folder, but this allows you to specify a specific location. When this is
+     * set, lint will not delete the contents after running.
      *
      * @param rootDirectory the root directory to create lint files under
      * @return this, for constructor chaining
@@ -1024,37 +1009,33 @@ public class TestLintTask {
     }
 
     /**
-     * Interface to implement to modify the Gradle builder model that is mocked
-     * from a {@link TestFiles#gradle(String)} test file.
-     * <p>
-     * Register this modifier via {@link #modifyGradleMocks(GradleMockModifier)}.
+     * Interface to implement to modify the Gradle builder model that is mocked from a {@link
+     * TestFiles#gradle(String)} test file.
+     *
+     * <p>Register this modifier via {@link #modifyGradleMocks(GradleMockModifier)}.
      */
     public interface GradleMockModifier {
         void modify(@NonNull AndroidProject project, @NonNull Variant variant);
     }
 
     /**
-     * Interface to implement to configure the lint driver before lint starts
-     * running.
-     * <p>
-     * Register this configurator via {@link #driverConfigurator)}.
+     * Interface to implement to configure the lint driver before lint starts running.
+     *
+     * <p>Register this configurator via {@link #driverConfigurator)}.
      */
     public interface LintDriverConfigurator {
         void configure(@NonNull LintDriver driver);
     }
 
-    /**
-     * Interface to implement a lint test task which customizes the command line flags
-     */
+    /** Interface to implement a lint test task which customizes the command line flags */
     public interface OptionSetter {
         void set(@NonNull LintCliFlags flags);
     }
 
     /**
-     * Interface to implement to configure the lint driver to check all reported error
-     * messages.
-     * <p>
-     * Register this checker via {@link #checkMessage(ErrorMessageChecker)})}.
+     * Interface to implement to configure the lint driver to check all reported error messages.
+     *
+     * <p>Register this checker via {@link #checkMessage(ErrorMessageChecker)})}.
      */
     public interface ErrorMessageChecker {
         void checkReportedError(

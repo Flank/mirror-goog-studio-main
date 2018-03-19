@@ -27,45 +27,54 @@ public class InvalidImeActionIdDetectorTest extends AbstractCheckTest {
 
     public void testNoWarnings() throws Exception {
         //noinspection all // Sample code
-        assertEquals("No warnings.",
-
-                lintFiles(xml("res/layout/namespace.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
-                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"6\"/>\n"
-                        + "</LinearLayout>\n"
-                        + "\n")));
+        assertEquals(
+                "No warnings.",
+                lintFiles(
+                        xml(
+                                "res/layout/namespace.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
+                                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"6\"/>\n"
+                                        + "</LinearLayout>\n"
+                                        + "\n")));
     }
 
     public void testInvalidResourceType() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
-                + "res/layout/namespace.xml:3: Error: Invalid resource type, expected integer value [InvalidImeActionId]\n"
-                + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"@+id/login\"/>\n"
-                + "                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-            lintFiles(xml("res/layout/namespace.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
-                            + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"@+id/login\"/>\n"
-                            + "</LinearLayout>\n"
-                            + "\n")));
+        assertEquals(
+                ""
+                        + "res/layout/namespace.xml:3: Error: Invalid resource type, expected integer value [InvalidImeActionId]\n"
+                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"@+id/login\"/>\n"
+                        + "                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+                lintFiles(
+                        xml(
+                                "res/layout/namespace.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
+                                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"@+id/login\"/>\n"
+                                        + "</LinearLayout>\n"
+                                        + "\n")));
     }
 
     public void testInvalidResourceValue() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
+        assertEquals(
+                ""
                         + "res/layout/namespace.xml:3: Error: \"mmm\" is not an integer [InvalidImeActionId]\n"
                         + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"mmm\"/>\n"
                         + "                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n",
-
-                lintFiles(xml("res/layout/namespace.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
-                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"mmm\"/>\n"
-                        + "</LinearLayout>\n"
-                        + "\n")));
+                lintFiles(
+                        xml(
+                                "res/layout/namespace.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
+                                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"mmm\"/>\n"
+                                        + "</LinearLayout>\n"
+                                        + "\n")));
     }
 }

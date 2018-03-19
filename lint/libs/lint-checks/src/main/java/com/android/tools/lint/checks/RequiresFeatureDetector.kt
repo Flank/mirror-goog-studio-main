@@ -80,7 +80,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
         method ?: return
 
         if (type != AnnotationUsageType.METHOD_CALL && type != AnnotationUsageType.METHOD_CALL_CLASS
-            && type != AnnotationUsageType.METHOD_CALL_PACKAGE) {
+            && type != AnnotationUsageType.METHOD_CALL_PACKAGE
+        ) {
             return
         }
 
@@ -91,7 +92,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
 
         val checker = EnforcementChecker(name, reference)
         if (!checker.isWithinNameCheckConditional(context.evaluator, usage) &&
-            !checker.isPrecededByFeatureCheck(usage)) {
+            !checker.isPrecededByFeatureCheck(usage)
+        ) {
             context.report(
                 REQUIRES_FEATURE, usage, context.getLocation(usage),
                 "`${method.name}` should only be called if the feature `$name` is " +
@@ -277,7 +279,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                 } else if (current is UPolyadicExpression && (isAndedWithConditional(
                         current,
                         prev
-                    ) || isOredWithConditional(current, prev))) {
+                    ) || isOredWithConditional(current, prev))
+                ) {
                     return true
                 } else if (current is USwitchClauseExpressionWithBody) {
                     for (condition in current.caseValues) {
@@ -326,7 +329,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                             val newApiLookup = NameLookup(call.valueArguments)
                             if (lambdaInvocation != null && isWithinNameCheckConditional(
                                     evaluator, lambdaInvocation, newApiLookup
-                                )) {
+                                )
+                            ) {
                                 return true
                             }
                         }
@@ -365,12 +369,14 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                 val resolved = element.resolve()
                 if (resolved is PsiMethod &&
                     element is UQualifiedReferenceExpression &&
-                    element.selector is UCallExpression) {
+                    element.selector is UCallExpression
+                ) {
                     val call = element.selector as UCallExpression
                     return isValidFeatureCheckCall(and, call, nameLookup)
                 } else if (resolved is PsiMethod &&
                     element is UQualifiedReferenceExpression &&
-                    element.receiver is UReferenceExpression) {
+                    element.receiver is UReferenceExpression
+                ) {
                     // Method call via Kotlin property syntax
                     return isValidFeatureCheckCall(and, element, resolved, nameLookup)
                 }
@@ -421,7 +427,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                         // of the checker method.
                         val expressionType = first.getExpressionType()
                         if (expressionType == null ||
-                            expressionType.canonicalText == JAVA_LANG_STRING) {
+                            expressionType.canonicalText == JAVA_LANG_STRING
+                        ) {
                             val argString = ConstantEvaluator.evaluateString(null, first, false)
                             if (featureName == argString) {
                                 return true
@@ -463,7 +470,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                         if (arguments.isEmpty()) {
                             if (returnValue is UPolyadicExpression
                                 || returnValue is UCallExpression
-                                || returnValue is UQualifiedReferenceExpression) {
+                                || returnValue is UQualifiedReferenceExpression
+                            ) {
                                 val isConditional = isNameCheckConditional(
                                     returnValue,
                                     and,

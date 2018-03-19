@@ -56,9 +56,9 @@ public class LintSyntaxHighlighter {
     private final String source;
 
     // Map from offset to STYLE_ constant
-    private final Map<Integer,Integer> styles;
+    private final Map<Integer, Integer> styles;
     // Map from line start offset to line number
-    private final HashBiMap<Integer,Integer> lineNumbers;
+    private final HashBiMap<Integer, Integer> lineNumbers;
     private int lineCount;
 
     private List<Integer> sortedOffsets;
@@ -107,9 +107,8 @@ public class LintSyntaxHighlighter {
     }
 
     /**
-     * Sets whether we force the error range to be limited to a single line
-     * in {@link #generateHtml(HtmlBuilder, int, int, boolean)}
-     * @param forceSingleLineRange
+     * Sets whether we force the error range to be limited to a single line in {@link
+     * #generateHtml(HtmlBuilder, int, int, boolean)}
      */
     @SuppressWarnings("unused")
     public LintSyntaxHighlighter setForceSingleLineRange(boolean forceSingleLineRange) {
@@ -130,16 +129,16 @@ public class LintSyntaxHighlighter {
     }
 
     /**
-     * Whether the highlighter should dedent the code (removing shared whitespace on the left)
-     * to make as much code visible as possible
+     * Whether the highlighter should dedent the code (removing shared whitespace on the left) to
+     * make as much code visible as possible
      */
     public boolean isDedent() {
         return dedent;
     }
 
     /**
-     * Whether the highlighter should dedent the code (removing shared whitespace on the left)
-     * to make as much code visible as possible
+     * Whether the highlighter should dedent the code (removing shared whitespace on the left) to
+     * make as much code visible as possible
      */
     public void setDedent(boolean dedent) {
         this.dedent = dedent;
@@ -169,170 +168,185 @@ public class LintSyntaxHighlighter {
         while (offset < length) {
             char c = source.charAt(offset);
             switch (state) {
-                case STATE_INITIAL: {
-                    if (c == '/') {
-                        state = STATE_SLASH;
-                        offset++;
-                        continue;
-                    } else if (c == '"') {
-                        state = STATE_STRING_DOUBLE_QUOTE;
-                        styles.put(offset, STYLE_STRING);
-                        // Look for triple-quoted strings (Groovy and Kotlin)
-                        if (source.startsWith("\"\"\"", offset)) {
-                            state = STATE_STRING_TRIPLE_DOUBLE_QUOTE;
-                            offset += 3;
-                            continue;
-                        }
-                    } else if (c == '\'') {
-                        state = STATE_STRING_SINGLE_QUOTE;
-                        styles.put(offset, STYLE_STRING);
-                        // Look for triple-quoted strings (Groovy and Kotlin)
-                        if (source.startsWith("'''", offset)) {
-                            state = STATE_STRING_TRIPLE_SINGLE_QUOTE;
-                            offset += 3;
-                            continue;
-                        }
-                    } else if (Character.isDigit(c)) {
-                        state = STATE_NUMBER;
-                        styles.put(offset, STYLE_NUMBER);
-                    } else if (Character.isJavaIdentifierStart(c)) {
-                        state = STATE_IDENTIFIER;
-                        identifierStart = offset;
-                    }
-                    offset++;
-                    continue;
-                }
-
-                case STATE_NUMBER: {
-                    if (Character.isDigit(c)
-                            || c == '.' || c == '_'
-                            || c == 'l' || c == 'L'
-                            || c == 'x' || c == 'X'
-                            || c >= 'a' && c <= 'f'
-                            || c >= 'A' && c <= 'F') {
-                        offset++;
-                        continue;
-                    }
-                    styles.put(offset, STYLE_PLAIN_TEXT);
-                    state = STATE_INITIAL;
-                    continue;
-                }
-
-                case STATE_IDENTIFIER: {
-                    if (Character.isJavaIdentifierPart(c)) {
-                        offset++;
-                        continue;
-                    }
-                    assert identifierStart != -1 : identifierStart;
-                    // See if the identifier was a keyword, and if so highlight it
-                    String identifier = source.substring(identifierStart, offset);
-                    if (keywordLookup.isKeyword(identifier)) {
-                        styles.put(identifierStart, STYLE_KEYWORD);
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                    } else if (identifierStart > 0 && source.charAt(identifierStart - 1) == '@') {
-                        styles.put(identifierStart - 1, STYLE_ANNOTATION);
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                    }
-
-                    state = STATE_INITIAL;
-                    identifierStart = -1;
-                    continue;
-                }
-
-                case STATE_SLASH: {
-                    if (c == '/') {
-                        state = STATE_LINE_COMMENT;
-                        styles.put(offset - 1, STYLE_COMMENT);
-                    } else if (c == '*') {
-                        state = STATE_BLOCK_COMMENT;
-                        if (offset < source.length() - 1 && source.charAt(offset + 1) == '*') {
-                            styles.put(offset - 1, STYLE_JAVADOC_COMMENT);
+                case STATE_INITIAL:
+                    {
+                        if (c == '/') {
+                            state = STATE_SLASH;
                             offset++;
-                        } else {
-                            styles.put(offset - 1, STYLE_COMMENT);
+                            continue;
+                        } else if (c == '"') {
+                            state = STATE_STRING_DOUBLE_QUOTE;
+                            styles.put(offset, STYLE_STRING);
+                            // Look for triple-quoted strings (Groovy and Kotlin)
+                            if (source.startsWith("\"\"\"", offset)) {
+                                state = STATE_STRING_TRIPLE_DOUBLE_QUOTE;
+                                offset += 3;
+                                continue;
+                            }
+                        } else if (c == '\'') {
+                            state = STATE_STRING_SINGLE_QUOTE;
+                            styles.put(offset, STYLE_STRING);
+                            // Look for triple-quoted strings (Groovy and Kotlin)
+                            if (source.startsWith("'''", offset)) {
+                                state = STATE_STRING_TRIPLE_SINGLE_QUOTE;
+                                offset += 3;
+                                continue;
+                            }
+                        } else if (Character.isDigit(c)) {
+                            state = STATE_NUMBER;
+                            styles.put(offset, STYLE_NUMBER);
+                        } else if (Character.isJavaIdentifierStart(c)) {
+                            state = STATE_IDENTIFIER;
+                            identifierStart = offset;
                         }
-                    } else {
-                        state = STATE_INITIAL;
-                        continue;
-                    }
-                    offset++;
-                    continue;
-                }
-
-                case STATE_LINE_COMMENT: {
-                    if (c == '\n') {
-                        state = STATE_INITIAL;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                    }
-                    offset++;
-                    continue;
-                }
-
-                case STATE_BLOCK_COMMENT: {
-                    if (c == '*' && offset < source.length() - 1 &&
-                            source.charAt(offset + 1) == '/') {
-                        state = STATE_INITIAL;
-                        offset += 2;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                        continue;
-                    }
-                    offset++;
-                    continue;
-                }
-
-                case STATE_STRING_DOUBLE_QUOTE: {
-                    if (c == '\\') {
-                        offset += 2;
-                        continue;
-                    } else if (c == '"') {
-                        state = STATE_INITIAL;
                         offset++;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
                         continue;
                     }
 
-                    // Worry about Groovy substitution strings?
-
-                    offset++;
-                    continue;
-                }
-
-                case STATE_STRING_SINGLE_QUOTE: {
-                    if (c == '\\') {
-                        offset += 2;
-                        continue;
-                    } else if (c == '\'') {
+                case STATE_NUMBER:
+                    {
+                        if (Character.isDigit(c)
+                                || c == '.'
+                                || c == '_'
+                                || c == 'l'
+                                || c == 'L'
+                                || c == 'x'
+                                || c == 'X'
+                                || c >= 'a' && c <= 'f'
+                                || c >= 'A' && c <= 'F') {
+                            offset++;
+                            continue;
+                        }
+                        styles.put(offset, STYLE_PLAIN_TEXT);
                         state = STATE_INITIAL;
+                        continue;
+                    }
+
+                case STATE_IDENTIFIER:
+                    {
+                        if (Character.isJavaIdentifierPart(c)) {
+                            offset++;
+                            continue;
+                        }
+                        assert identifierStart != -1 : identifierStart;
+                        // See if the identifier was a keyword, and if so highlight it
+                        String identifier = source.substring(identifierStart, offset);
+                        if (keywordLookup.isKeyword(identifier)) {
+                            styles.put(identifierStart, STYLE_KEYWORD);
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                        } else if (identifierStart > 0
+                                && source.charAt(identifierStart - 1) == '@') {
+                            styles.put(identifierStart - 1, STYLE_ANNOTATION);
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                        }
+
+                        state = STATE_INITIAL;
+                        identifierStart = -1;
+                        continue;
+                    }
+
+                case STATE_SLASH:
+                    {
+                        if (c == '/') {
+                            state = STATE_LINE_COMMENT;
+                            styles.put(offset - 1, STYLE_COMMENT);
+                        } else if (c == '*') {
+                            state = STATE_BLOCK_COMMENT;
+                            if (offset < source.length() - 1 && source.charAt(offset + 1) == '*') {
+                                styles.put(offset - 1, STYLE_JAVADOC_COMMENT);
+                                offset++;
+                            } else {
+                                styles.put(offset - 1, STYLE_COMMENT);
+                            }
+                        } else {
+                            state = STATE_INITIAL;
+                            continue;
+                        }
                         offset++;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
                         continue;
                     }
 
-                    offset++;
-                    continue;
-                }
-
-                case STATE_STRING_TRIPLE_DOUBLE_QUOTE: {
-                    if (c == '"' && source.startsWith("\"\"\"", offset)) {
-                        offset += 3;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                        state = STATE_INITIAL;
+                case STATE_LINE_COMMENT:
+                    {
+                        if (c == '\n') {
+                            state = STATE_INITIAL;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                        }
+                        offset++;
                         continue;
                     }
-                    offset++;
-                    continue;
-                }
 
-                case STATE_STRING_TRIPLE_SINGLE_QUOTE: {
-                    if (c == '\'' && source.startsWith("'''", offset)) {
-                        offset += 3;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                        state = STATE_INITIAL;
+                case STATE_BLOCK_COMMENT:
+                    {
+                        if (c == '*'
+                                && offset < source.length() - 1
+                                && source.charAt(offset + 1) == '/') {
+                            state = STATE_INITIAL;
+                            offset += 2;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            continue;
+                        }
+                        offset++;
                         continue;
                     }
-                    offset++;
-                    continue;
-                }
+
+                case STATE_STRING_DOUBLE_QUOTE:
+                    {
+                        if (c == '\\') {
+                            offset += 2;
+                            continue;
+                        } else if (c == '"') {
+                            state = STATE_INITIAL;
+                            offset++;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            continue;
+                        }
+
+                        // Worry about Groovy substitution strings?
+
+                        offset++;
+                        continue;
+                    }
+
+                case STATE_STRING_SINGLE_QUOTE:
+                    {
+                        if (c == '\\') {
+                            offset += 2;
+                            continue;
+                        } else if (c == '\'') {
+                            state = STATE_INITIAL;
+                            offset++;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            continue;
+                        }
+
+                        offset++;
+                        continue;
+                    }
+
+                case STATE_STRING_TRIPLE_DOUBLE_QUOTE:
+                    {
+                        if (c == '"' && source.startsWith("\"\"\"", offset)) {
+                            offset += 3;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            state = STATE_INITIAL;
+                            continue;
+                        }
+                        offset++;
+                        continue;
+                    }
+
+                case STATE_STRING_TRIPLE_SINGLE_QUOTE:
+                    {
+                        if (c == '\'' && source.startsWith("'''", offset)) {
+                            offset += 3;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            state = STATE_INITIAL;
+                            continue;
+                        }
+                        offset++;
+                        continue;
+                    }
 
                 default:
                     assert false : state;
@@ -443,109 +457,115 @@ public class LintSyntaxHighlighter {
 
             char c = source.charAt(offset);
             switch (state) {
-                case STATE_TEXT: {
-                    if (c == '<') {
-                        state = STATE_SLASH;
+                case STATE_TEXT:
+                    {
+                        if (c == '<') {
+                            state = STATE_SLASH;
+                            offset++;
+                            continue;
+                        }
+
+                        // Other text is just ignored
                         offset++;
-                        continue;
+                        break;
                     }
 
-                    // Other text is just ignored
-                    offset++;
-                    break;
-                }
+                case STATE_SLASH:
+                    {
+                        if (c == '!') {
+                            if (source.startsWith("!--", offset)) {
+                                styles.put(offset - 1, STYLE_COMMENT);
+                                // Comment
+                                int end = source.indexOf("-->", offset + 3);
+                                if (end == -1) {
+                                    offset = length;
+                                    styles.put(offset, STYLE_PLAIN_TEXT);
+                                    break;
+                                }
+                                offset = end + 3;
+                                styles.put(offset, STYLE_PLAIN_TEXT);
+                                state = STATE_TEXT;
+                                continue;
+                            } else if (source.startsWith("![CDATA[", offset)) {
+                                // TODO: Syntax higlight this better
+                                //styles.put(offset - 1, STYLE_COMMENT);
 
-                case STATE_SLASH: {
-                    if (c == '!') {
-                        if (source.startsWith("!--", offset)) {
-                            styles.put(offset - 1, STYLE_COMMENT);
-                            // Comment
-                            int end = source.indexOf("-->", offset + 3);
+                                // Skip CDATA text content; HTML text is irrelevant to this tokenizer
+                                // anyway
+                                int end = source.indexOf("]]>", offset + 8);
+                                if (end == -1) {
+                                    offset = length;
+                                    break;
+                                }
+                                state = STATE_TEXT;
+                                offset = end + 3;
+                                continue;
+                            }
+                        } else if (c == '/') {
+                            styles.put(offset - 1, STYLE_TAG);
+                            state = STATE_CLOSE_TAG;
+                            offset++;
+                            continue;
+                        } else if (c == '?') {
+                            styles.put(offset - 1, STYLE_PROLOGUE);
+                            // XML Prologue
+                            int end = source.indexOf('>', offset + 2);
                             if (end == -1) {
                                 offset = length;
-                                styles.put(offset, STYLE_PLAIN_TEXT);
+                                state = STATE_TEXT;
                                 break;
                             }
-                            offset = end + 3;
+                            offset = end + 1;
                             styles.put(offset, STYLE_PLAIN_TEXT);
                             state = STATE_TEXT;
                             continue;
-                        } else if (source.startsWith("![CDATA[", offset)) {
-                            // TODO: Syntax higlight this better
-                            //styles.put(offset - 1, STYLE_COMMENT);
-
-                            // Skip CDATA text content; HTML text is irrelevant to this tokenizer
-                            // anyway
-                            int end = source.indexOf("]]>", offset + 8);
-                            if (end == -1) {
-                                offset = length;
-                                break;
-                            }
-                            state = STATE_TEXT;
-                            offset = end + 3;
-                            continue;
                         }
-                    } else if (c == '/') {
                         styles.put(offset - 1, STYLE_TAG);
-                        state = STATE_CLOSE_TAG;
-                        offset++;
-                        continue;
-                    } else if (c == '?') {
-                        styles.put(offset - 1, STYLE_PROLOGUE);
-                        // XML Prologue
-                        int end = source.indexOf('>', offset + 2);
-                        if (end == -1) {
-                            offset = length;
+                        state = STATE_IN_TAG;
+                        break;
+                    }
+
+                case STATE_CLOSE_TAG:
+                    {
+                        if (c == '>') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
                             state = STATE_TEXT;
-                            break;
                         }
-                        offset = end + 1;
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                        continue;
-                    }
-                    styles.put(offset - 1, STYLE_TAG);
-                    state = STATE_IN_TAG;
-                    break;
-                }
-
-                case STATE_CLOSE_TAG: {
-                    if (c == '>') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                    }
-                    offset++;
-                    break;
-                }
-
-                case STATE_IN_TAG: {
-                    if (Character.isWhitespace(c)) {
-                        state = STATE_BEFORE_ATTRIBUTE;
-                        styles.put(offset, STYLE_ATTRIBUTE);
-                    } else if (c == '>') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                    } else if (c == '/') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_ENDING_TAG;
-                    }
-                    offset++;
-                    break;
-                }
-
-                case STATE_ENDING_TAG: {
-                    if (c == '>') {
                         offset++;
-                        state = STATE_TEXT;
+                        break;
                     }
-                    break;
-                }
 
-                case STATE_BEFORE_ATTRIBUTE: {
-                    if (c == '>') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                    } else //noinspection StatementWithEmptyBody
+                case STATE_IN_TAG:
+                    {
+                        if (Character.isWhitespace(c)) {
+                            state = STATE_BEFORE_ATTRIBUTE;
+                            styles.put(offset, STYLE_ATTRIBUTE);
+                        } else if (c == '>') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_TEXT;
+                        } else if (c == '/') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_ENDING_TAG;
+                        }
+                        offset++;
+                        break;
+                    }
+
+                case STATE_ENDING_TAG:
+                    {
+                        if (c == '>') {
+                            offset++;
+                            state = STATE_TEXT;
+                        }
+                        break;
+                    }
+
+                case STATE_BEFORE_ATTRIBUTE:
+                    {
+                        if (c == '>') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_TEXT;
+                        } else //noinspection StatementWithEmptyBody
                         if (c == '/') {
                             // we expect an '>' next to close the tag
                         } else if (!Character.isWhitespace(c)) {
@@ -553,86 +573,92 @@ public class LintSyntaxHighlighter {
                             state = STATE_ATTRIBUTE_NAME;
                             attributeStart = offset;
                         }
-                    offset++;
-                    break;
-                }
-                case STATE_ATTRIBUTE_NAME: {
-                    if (c == '>') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                    } else if (c == '=') {
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                        state = STATE_ATTRIBUTE_AFTER_EQUALS;
-                    } else if (Character.isWhitespace(c)) {
-                        styles.put(offset, STYLE_PLAIN_TEXT);
-                        state = STATE_ATTRIBUTE_BEFORE_EQUALS;
-                    } else if (c == ':') {
-                        styles.put(attributeStart, STYLE_PREFIX);
-                        styles.put(offset + 1, STYLE_ATTRIBUTE);
+                        offset++;
+                        break;
                     }
-                    offset++;
-                    break;
-                }
-                case STATE_ATTRIBUTE_BEFORE_EQUALS: {
-                    if (c == '=') {
-                        state = STATE_ATTRIBUTE_AFTER_EQUALS;
-                    } else if (c == '>') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                    } else if (!Character.isWhitespace(c)) {
-                        // Attribute value not specified (used for some boolean attributes)
-                        state = STATE_ATTRIBUTE_NAME;
-                        attributeStart = offset;
+                case STATE_ATTRIBUTE_NAME:
+                    {
+                        if (c == '>') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_TEXT;
+                        } else if (c == '=') {
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            state = STATE_ATTRIBUTE_AFTER_EQUALS;
+                        } else if (Character.isWhitespace(c)) {
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            state = STATE_ATTRIBUTE_BEFORE_EQUALS;
+                        } else if (c == ':') {
+                            styles.put(attributeStart, STYLE_PREFIX);
+                            styles.put(offset + 1, STYLE_ATTRIBUTE);
+                        }
+                        offset++;
+                        break;
                     }
-                    offset++;
-                    break;
-                }
+                case STATE_ATTRIBUTE_BEFORE_EQUALS:
+                    {
+                        if (c == '=') {
+                            state = STATE_ATTRIBUTE_AFTER_EQUALS;
+                        } else if (c == '>') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_TEXT;
+                        } else if (!Character.isWhitespace(c)) {
+                            // Attribute value not specified (used for some boolean attributes)
+                            state = STATE_ATTRIBUTE_NAME;
+                            attributeStart = offset;
+                        }
+                        offset++;
+                        break;
+                    }
 
-                case STATE_ATTRIBUTE_AFTER_EQUALS: {
-                    if (c == '\'') {
-                        // a='b'
-                        styles.put(offset, STYLE_VALUE);
-                        state = STATE_ATTRIBUTE_VALUE_SINGLE;
-                    } else if (c == '"') {
-                        // a="b"
-                        styles.put(offset, STYLE_VALUE);
-                        state = STATE_ATTRIBUTE_VALUE_DOUBLE;
-                    } else if (!Character.isWhitespace(c)) {
-                        // a=b
-                        styles.put(offset, STYLE_VALUE);
-                        state = STATE_ATTRIBUTE_VALUE_NONE;
+                case STATE_ATTRIBUTE_AFTER_EQUALS:
+                    {
+                        if (c == '\'') {
+                            // a='b'
+                            styles.put(offset, STYLE_VALUE);
+                            state = STATE_ATTRIBUTE_VALUE_SINGLE;
+                        } else if (c == '"') {
+                            // a="b"
+                            styles.put(offset, STYLE_VALUE);
+                            state = STATE_ATTRIBUTE_VALUE_DOUBLE;
+                        } else if (!Character.isWhitespace(c)) {
+                            // a=b
+                            styles.put(offset, STYLE_VALUE);
+                            state = STATE_ATTRIBUTE_VALUE_NONE;
+                        }
+                        offset++;
+                        break;
                     }
-                    offset++;
-                    break;
-                }
 
-                case STATE_ATTRIBUTE_VALUE_SINGLE: {
-                    if (c == '\'') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_BEFORE_ATTRIBUTE;
+                case STATE_ATTRIBUTE_VALUE_SINGLE:
+                    {
+                        if (c == '\'') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_BEFORE_ATTRIBUTE;
+                        }
+                        offset++;
+                        break;
                     }
-                    offset++;
-                    break;
-                }
-                case STATE_ATTRIBUTE_VALUE_DOUBLE: {
-                    if (c == '"') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_BEFORE_ATTRIBUTE;
+                case STATE_ATTRIBUTE_VALUE_DOUBLE:
+                    {
+                        if (c == '"') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_BEFORE_ATTRIBUTE;
+                        }
+                        offset++;
+                        break;
                     }
-                    offset++;
-                    break;
-                }
-                case STATE_ATTRIBUTE_VALUE_NONE: {
-                    if (c == '>') {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_TEXT;
-                    } else if (Character.isWhitespace(c)) {
-                        styles.put(offset + 1, STYLE_PLAIN_TEXT);
-                        state = STATE_BEFORE_ATTRIBUTE;
+                case STATE_ATTRIBUTE_VALUE_NONE:
+                    {
+                        if (c == '>') {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_TEXT;
+                        } else if (Character.isWhitespace(c)) {
+                            styles.put(offset + 1, STYLE_PLAIN_TEXT);
+                            state = STATE_BEFORE_ATTRIBUTE;
+                        }
+                        offset++;
+                        break;
                     }
-                    offset++;
-                    break;
-                }
                 default:
                     assert false : state;
             }
@@ -774,7 +800,8 @@ public class LintSyntaxHighlighter {
         return maxLineLength;
     }
 
-    public void generateHtml(@NonNull HtmlBuilder builder,
+    public void generateHtml(
+            @NonNull HtmlBuilder builder,
             int startHighlightOffset,
             int endHighlightOffset,
             boolean error) {
@@ -849,17 +876,15 @@ public class LintSyntaxHighlighter {
             if (isNewLine) {
                 // new line
                 builder.beginClassSpan("lineno");
-                String lineString = String.format(Locale.ROOT, " %" + lineWidth + "d ",
-                        currentLine++);
+                String lineString =
+                        String.format(Locale.ROOT, " %" + lineWidth + "d ", currentLine++);
                 builder.addHtml(lineString);
                 builder.endSpan();
 
                 if (dedent > 0) {
                     cropTo = begin;
                     int column = 0;
-                    for (int s = begin, n = Math.min(s + dedent, source.length());
-                            s < n;
-                            s++) {
+                    for (int s = begin, n = Math.min(s + dedent, source.length()); s < n; s++) {
                         char c = source.charAt(s);
                         if (c == '\t') {
                             column += TAB_WIDTH;
@@ -942,8 +967,8 @@ public class LintSyntaxHighlighter {
     }
 
     /**
-     * Returns a style class for a given style that matches the styles
-     * available in {@link HtmlReporter#CSS_STYLES}
+     * Returns a style class for a given style that matches the styles available in {@link
+     * HtmlReporter#CSS_STYLES}
      */
     @Nullable
     private static String getStyleClass(int style) {

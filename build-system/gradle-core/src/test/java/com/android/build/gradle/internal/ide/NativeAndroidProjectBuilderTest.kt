@@ -21,6 +21,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.gson.stream.JsonReader
 import java.io.StringReader
 import org.junit.Test
+import java.io.File
 
 class NativeAndroidProjectBuilderTest {
     @Test
@@ -71,7 +72,7 @@ class NativeAndroidProjectBuilderTest {
         val sourceFiles = result.artifacts.toTypedArray()[0].sourceFiles
         assertThat(sourceFiles.size).isEqualTo(1)
         assertThat(sourceFiles.toTypedArray()[0].filePath.toString()
-            .endsWith("cpp/native-lib.cpp"))
+            .endsWith("cpp" + File.separatorChar + "native-lib.cpp"))
             .isTrue()
     }
 }

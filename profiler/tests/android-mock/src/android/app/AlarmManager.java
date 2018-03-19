@@ -20,9 +20,27 @@ import android.os.Handler;
 import android.os.WorkSource;
 
 public class AlarmManager {
-    public interface OnAlarmListener {}
+    public interface OnAlarmListener {
+        void onAlarm();
+    }
 
     public static final class AlarmClockInfo {}
+
+    final class ListenerWrapper implements Runnable {
+        final OnAlarmListener mListener;
+
+        public ListenerWrapper(OnAlarmListener listener) {
+            mListener = listener;
+        }
+
+        @Override
+        public void run() {
+            mListener.onAlarm();
+        }
+    }
+
+    private ListenerWrapper mListenerWrapper;
+    private PendingIntent mOperation;
 
     private void setImpl(
             int type,
@@ -35,7 +53,13 @@ public class AlarmManager {
             String listenerTag,
             Handler targetHandler,
             WorkSource workSource,
-            AlarmClockInfo alarmClock) {}
+            AlarmClockInfo alarmClock) {
+        if (operation != null) {
+            mOperation = operation;
+        } else if (listener != null) {
+            mListenerWrapper = new ListenerWrapper(listener);
+        }
+    }
 
     public void set(int type, long triggerAtMillis, PendingIntent operation) {
         setImpl(type, triggerAtMillis, -1, 0, 0, operation, null, null, null, null, null);
@@ -53,4 +77,13 @@ public class AlarmManager {
     public void cancel(PendingIntent operation) {}
 
     public void cancel(OnAlarmListener listener) {}
+
+    /** This is not really how an alarm is fired but we'll pretend for testing purposes. */
+    public void fire() {
+        if (mOperation != null) {
+            // TODO: Send intent.
+        } else if (mListenerWrapper != null) {
+            new Thread(mListenerWrapper).start();
+        }
+    }
 }

@@ -43,38 +43,34 @@ import org.jetbrains.uast.UObjectLiteralExpression;
 import org.jetbrains.uast.UastUtils;
 
 /**
- * Checks that Handler implementations are top level classes or static.
- * See the corresponding check in the android.os.Handler source code.
+ * Checks that Handler implementations are top level classes or static. See the corresponding check
+ * in the android.os.Handler source code.
  */
 public class HandlerDetector extends Detector implements SourceCodeScanner {
 
     /** Potentially leaking handlers */
-    public static final Issue ISSUE = Issue.create(
-            "HandlerLeak",
-            "Handler reference leaks",
-
-            "Since this Handler is declared as an inner class, it may prevent the outer " +
-            "class from being garbage collected. If the Handler is using a Looper or " +
-            "MessageQueue for a thread other than the main thread, then there is no issue. " +
-            "If the Handler is using the Looper or MessageQueue of the main thread, you " +
-            "need to fix your Handler declaration, as follows: Declare the Handler as a " +
-            "static class; In the outer class, instantiate a WeakReference to the outer " +
-            "class and pass this object to your Handler when you instantiate the Handler; " +
-            "Make all references to members of the outer class using the WeakReference object.",
-
-            Category.PERFORMANCE,
-            4,
-            Severity.WARNING,
-            new Implementation(
-                    HandlerDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "HandlerLeak",
+                    "Handler reference leaks",
+                    "Since this Handler is declared as an inner class, it may prevent the outer "
+                            + "class from being garbage collected. If the Handler is using a Looper or "
+                            + "MessageQueue for a thread other than the main thread, then there is no issue. "
+                            + "If the Handler is using the Looper or MessageQueue of the main thread, you "
+                            + "need to fix your Handler declaration, as follows: Declare the Handler as a "
+                            + "static class; In the outer class, instantiate a WeakReference to the outer "
+                            + "class and pass this object to your Handler when you instantiate the Handler; "
+                            + "Make all references to members of the outer class using the WeakReference object.",
+                    Category.PERFORMANCE,
+                    4,
+                    Severity.WARNING,
+                    new Implementation(HandlerDetector.class, Scope.JAVA_FILE_SCOPE));
 
     private static final String LOOPER_CLS = "android.os.Looper";
     private static final String HANDLER_CLS = "android.os.Handler";
 
     /** Constructs a new {@link HandlerDetector} */
-    public HandlerDetector() {
-    }
+    public HandlerDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -96,8 +92,9 @@ public class HandlerDetector extends Detector implements SourceCodeScanner {
         }
 
         //noinspection unchecked
-        UCallExpression invocation = UastUtils.getParentOfType(
-                declaration, UObjectLiteralExpression.class, true, UMethod.class);
+        UCallExpression invocation =
+                UastUtils.getParentOfType(
+                        declaration, UObjectLiteralExpression.class, true, UMethod.class);
 
         // Only flag handlers using the default looper
         if (invocation != null) {
@@ -118,21 +115,28 @@ public class HandlerDetector extends Detector implements SourceCodeScanner {
         }
         String name;
         if (isAnonymous) {
-            name = "anonymous " + ((UAnonymousClass)declaration).getBaseClassReference().getQualifiedName();
+            name =
+                    "anonymous "
+                            + ((UAnonymousClass) declaration)
+                                    .getBaseClassReference()
+                                    .getQualifiedName();
         } else {
             name = declaration.getQualifiedName();
         }
 
-        context.report(ISSUE, declaration, location, String.format(
-                "This Handler class should be static or leaks might occur (%1$s)", name));
+        context.report(
+                ISSUE,
+                declaration,
+                location,
+                String.format(
+                        "This Handler class should be static or leaks might occur (%1$s)", name));
     }
 
     private static boolean hasLooperArgument(@NonNull UCallExpression invocation) {
         if (invocation.getValueArgumentCount() > 0) {
             for (UExpression expression : invocation.getValueArguments()) {
                 PsiType type = expression.getExpressionType();
-                if (type instanceof PsiClassType
-                        && LOOPER_CLS.equals(type.getCanonicalText())) {
+                if (type instanceof PsiClassType && LOOPER_CLS.equals(type.getCanonicalText())) {
                     return true;
                 }
             }

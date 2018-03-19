@@ -31,36 +31,48 @@ import junit.framework.TestCase;
 
 public class CompositeIssueRegistryTest extends TestCase {
     public void test() {
-        IssueRegistry registry1 = new IssueRegistry() {
-            @NonNull
-            @Override
-            public List<Issue> getIssues() {
-                return Collections.singletonList(ISSUE);
-            }
-        };
-        IssueRegistry registry2 = new IssueRegistry() {
-            @NonNull
-            @Override
-            public List<Issue> getIssues() {
-                return Arrays.asList(APPLICATION_ICON, DEVICE_ADMIN, DUPLICATE_ACTIVITY);
-            }
-        };
-        IssueRegistry registry3 = new IssueRegistry() {
-            @NonNull
-            @Override
-            public List<Issue> getIssues() {
-                return Arrays.asList(ICON_COLORS, ICON_DIP_SIZE);
-            }
-        };
+        IssueRegistry registry1 =
+                new IssueRegistry() {
+                    @NonNull
+                    @Override
+                    public List<Issue> getIssues() {
+                        return Collections.singletonList(ISSUE);
+                    }
+                };
+        IssueRegistry registry2 =
+                new IssueRegistry() {
+                    @NonNull
+                    @Override
+                    public List<Issue> getIssues() {
+                        return Arrays.asList(APPLICATION_ICON, DEVICE_ADMIN, DUPLICATE_ACTIVITY);
+                    }
+                };
+        IssueRegistry registry3 =
+                new IssueRegistry() {
+                    @NonNull
+                    @Override
+                    public List<Issue> getIssues() {
+                        return Arrays.asList(ICON_COLORS, ICON_DIP_SIZE);
+                    }
+                };
 
-        assertEquals(Collections.singletonList(ISSUE),
+        assertEquals(
+                Collections.singletonList(ISSUE),
                 new CompositeIssueRegistry(Collections.singletonList(registry1)).getIssues());
 
-        assertEquals(Arrays.asList(ISSUE, ICON_COLORS, ICON_DIP_SIZE),
+        assertEquals(
+                Arrays.asList(ISSUE, ICON_COLORS, ICON_DIP_SIZE),
                 new CompositeIssueRegistry(Arrays.asList(registry1, registry3)).getIssues());
 
-        assertEquals(Arrays.asList(ISSUE, APPLICATION_ICON, DEVICE_ADMIN, DUPLICATE_ACTIVITY,
-                ICON_COLORS, ICON_DIP_SIZE), new CompositeIssueRegistry(Arrays.asList(registry1,
-                registry2, registry3)).getIssues());
+        assertEquals(
+                Arrays.asList(
+                        ISSUE,
+                        APPLICATION_ICON,
+                        DEVICE_ADMIN,
+                        DUPLICATE_ACTIVITY,
+                        ICON_COLORS,
+                        ICON_DIP_SIZE),
+                new CompositeIssueRegistry(Arrays.asList(registry1, registry2, registry3))
+                        .getIssues());
     }
 }

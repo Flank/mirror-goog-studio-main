@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.res.namespaced.getAapt2FromMaven
@@ -33,7 +32,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.Aapt
@@ -101,11 +100,13 @@ open class LinkAndroidResForBundleTask
     lateinit var featureResourcePackages: FileCollection
         private set
 
-    @get:InputFiles
+    private var resOffsetSupplier: Supplier<Int>? = null
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    @get:Input
     @get:Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    var packageIdsFiles: FileCollection? = null
-        private set
+    val resOffset: Int?
+        get() = resOffsetSupplier?.get()
 
     @get:Internal lateinit var versionNameSupplier: Supplier<String?>
         private set
@@ -145,13 +146,6 @@ open class LinkAndroidResForBundleTask
 
         FileUtils.mkdirs(bundledResFile.parentFile)
 
-        val packageIdFileSet = packageIdsFiles?.files
-        var packageId: Int? = null
-        if (packageIdFileSet != null && FeatureSplitPackageIds.getOutputFile(packageIdFileSet) != null) {
-            val featurePackageIds = FeatureSplitPackageIds.load(packageIdFileSet)
-            packageId = featurePackageIds.getIdFor(project.path)
-        }
-
         val featurePackagesBuilder = ImmutableList.builder<File>()
         for (featurePackage in featureResourcePackages) {
             val buildElements =
@@ -171,7 +165,7 @@ open class LinkAndroidResForBundleTask
                 resourceOutputApk = bundledResFile,
                 variantType = VariantTypeImpl.BASE_APK,
                 debuggable = debuggable,
-                packageId =  packageId,
+                packageId =  resOffset,
                 dependentFeatures = featurePackagesBuilder.build(),
                 pseudoLocalize = getPseudoLocalesEnabled(),
                 resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))
@@ -286,12 +280,12 @@ open class LinkAndroidResForBundleTask
             processResources.featureResourcePackages = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG)
 
-            if (!variantScope.type.isBaseModule) {
-                // sets the packageIds list.
-                processResources.packageIdsFiles = variantScope.getArtifactFileCollection(
-                    COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION)
+            if (variantScope.type.isFeatureSplit) {
+                // get the res offset supplier
+                processResources.resOffsetSupplier =
+                        FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
+                            variantScope, processResources)
             }
-
 
             processResources.debuggable = config.buildType.isDebuggable
             processResources.aaptOptions = variantScope.globalScope.extension.aaptOptions

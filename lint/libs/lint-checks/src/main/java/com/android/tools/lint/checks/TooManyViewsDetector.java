@@ -28,45 +28,45 @@ import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
 import org.w3c.dom.Element;
 
-/**
- * Checks whether a view hierarchy has too many views or has a suspiciously deep hierarchy
- */
+/** Checks whether a view hierarchy has too many views or has a suspiciously deep hierarchy */
 public class TooManyViewsDetector extends LayoutDetector {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            TooManyViewsDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(TooManyViewsDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** Issue of having too many views in a single layout */
-    public static final Issue TOO_MANY = Issue.create(
-            "TooManyViews",
-            "Layout has too many views",
-            "Using too many views in a single layout is bad for " +
-            "performance. Consider using compound drawables or other tricks for " +
-            "reducing the number of views in this layout.\n" +
-            "\n" +
-            "The maximum view count defaults to 80 but can be configured with the " +
-            "environment variable `ANDROID_LINT_MAX_VIEW_COUNT`.",
-            Category.PERFORMANCE,
-            1,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue TOO_MANY =
+            Issue.create(
+                    "TooManyViews",
+                    "Layout has too many views",
+                    "Using too many views in a single layout is bad for "
+                            + "performance. Consider using compound drawables or other tricks for "
+                            + "reducing the number of views in this layout.\n"
+                            + "\n"
+                            + "The maximum view count defaults to 80 but can be configured with the "
+                            + "environment variable `ANDROID_LINT_MAX_VIEW_COUNT`.",
+                    Category.PERFORMANCE,
+                    1,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Issue of having too deep hierarchies in layouts */
-    public static final Issue TOO_DEEP = Issue.create(
-            "TooDeepLayout",
-            "Layout hierarchy is too deep",
-            "Layouts with too much nesting is bad for performance. " +
-            "Consider using a flatter layout (such as `RelativeLayout` or `GridLayout`)." +
-            "The default maximum depth is 10 but can be configured with the environment " +
-            "variable `ANDROID_LINT_MAX_DEPTH`.",
-            Category.PERFORMANCE,
-            1,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue TOO_DEEP =
+            Issue.create(
+                    "TooDeepLayout",
+                    "Layout hierarchy is too deep",
+                    "Layouts with too much nesting is bad for performance. "
+                            + "Consider using a flatter layout (such as `RelativeLayout` or `GridLayout`)."
+                            + "The default maximum depth is 10 but can be configured with the environment "
+                            + "variable `ANDROID_LINT_MAX_DEPTH`.",
+                    Category.PERFORMANCE,
+                    1,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     private static final int MAX_VIEW_COUNT;
     private static final int MAX_DEPTH;
+
     static {
         int maxViewCount = 0;
         int maxDepth = 0;
@@ -103,8 +103,7 @@ public class TooManyViewsDetector extends LayoutDetector {
     private boolean mWarnedAboutDepth;
 
     /** Constructs a new {@link TooManyViewsDetector} */
-    public TooManyViewsDetector() {
-    }
+    public TooManyViewsDetector() {}
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {
@@ -128,13 +127,17 @@ public class TooManyViewsDetector extends LayoutDetector {
             // for the view count error since we'll only have view count exactly equal the
             // max just once.
             mWarnedAboutDepth = true;
-            String msg = String.format("`%1$s` has more than %2$d levels, bad for performance",
-                    context.file.getName(), MAX_DEPTH);
+            String msg =
+                    String.format(
+                            "`%1$s` has more than %2$d levels, bad for performance",
+                            context.file.getName(), MAX_DEPTH);
             context.report(TOO_DEEP, element, context.getElementLocation(element), msg);
         }
         if (mViewCount == MAX_VIEW_COUNT) {
-            String msg = String.format("`%1$s` has more than %2$d views, bad for performance",
-                    context.file.getName(), MAX_VIEW_COUNT);
+            String msg =
+                    String.format(
+                            "`%1$s` has more than %2$d views, bad for performance",
+                            context.file.getName(), MAX_VIEW_COUNT);
             context.report(TOO_MANY, element, context.getElementLocation(element), msg);
         }
     }

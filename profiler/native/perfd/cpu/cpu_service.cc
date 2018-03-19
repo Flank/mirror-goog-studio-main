@@ -17,8 +17,8 @@
 
 #include <stdio.h>
 
-#include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/profiling_app.h"
+#include "perfd/cpu/simpleperf_manager.h"
 #include "proto/common.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/file_reader.h"
@@ -191,7 +191,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     ProfilingApp profiling_app;
     profiling_app.app_pkg_name = app_pkg_name;
     profiling_app.trace_path = trace_path;
-    profiling_app.start_timestamp = clock_.GetCurrentTime();
+    profiling_app.start_timestamp = clock_->GetCurrentTime();
     profiling_app.configuration = configuration;
     cache_.AddProfilingStart(pid, profiling_app);
   } else {
@@ -262,7 +262,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   ProfilingApp* app = cache_.GetProfilingApp(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
-  response->set_check_timestamp(clock_.GetCurrentTime());
+  response->set_check_timestamp(clock_->GetCurrentTime());
   bool is_being_profiled = app != nullptr;
   response->set_being_profiled(is_being_profiled);
 
@@ -283,7 +283,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     profiler::proto::StartupProfilingResponse* response) {
   ProfilingApp app;
   app.app_pkg_name = request->app_package();
-  app.start_timestamp = clock_.GetCurrentTime();
+  app.start_timestamp = clock_->GetCurrentTime();
   app.configuration = request->configuration();
   app.is_startup_profiling = true;
 
@@ -301,9 +301,19 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     manager->StartProfiling(mode, app.app_pkg_name,
                             app.configuration.sampling_interval_us(),
                             &app.trace_path, &error, true);
+    response->set_file_path(app.trace_path);
+  } else if (profiler_type == CpuProfilerType::SIMPLEPERF) {
+    simpleperf_manager_.StartProfiling(app.app_pkg_name,
+                                       request->abi_cpu_arch(),
+                                       app.configuration.sampling_interval_us(),
+                                       &app.trace_path, &error, true);
+  } else if (profiler_type == CpuProfilerType::ATRACE) {
+    atrace_manager_.StartProfiling(app.app_pkg_name,
+                                   app.configuration.sampling_interval_us(),
+                                   &app.trace_path, &error);
   }
+
   cache_.AddStartupProfilingStart(app.app_pkg_name, app);
-  response->set_file_path(app.trace_path);
   return Status::OK;
 }
 

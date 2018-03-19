@@ -45,24 +45,19 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /** Detector looking for Toast.makeText() without a corresponding show() call */
 public class ToastDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "ShowToast",
-            "Toast created but not shown",
-
-            "`Toast.makeText()` creates a `Toast` but does **not** show it. You must call " +
-            "`show()` on the resulting object to actually make the `Toast` appear.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    ToastDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
-
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ShowToast",
+                    "Toast created but not shown",
+                    "`Toast.makeText()` creates a `Toast` but does **not** show it. You must call "
+                            + "`show()` on the resulting object to actually make the `Toast` appear.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(ToastDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link ToastDetector} check */
-    public ToastDetector() {
-    }
+    public ToastDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -72,7 +67,9 @@ public class ToastDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         if (!context.getEvaluator().isMemberInClass(method, "android.widget.Toast")) {
             return;
@@ -85,24 +82,28 @@ public class ToastDetector extends Detector implements SourceCodeScanner {
         if (args.size() == 3) {
             UExpression duration = args.get(2);
             if (duration instanceof ULiteralExpression) {
-                context.report(ISSUE, duration, context.getLocation(duration),
-                        "Expected duration `Toast.LENGTH_SHORT` or `Toast.LENGTH_LONG`, a custom " +
-                        "duration value is not supported");
+                context.report(
+                        ISSUE,
+                        duration,
+                        context.getLocation(duration),
+                        "Expected duration `Toast.LENGTH_SHORT` or `Toast.LENGTH_LONG`, a custom "
+                                + "duration value is not supported");
             }
         }
 
         @SuppressWarnings("unchecked")
-        UElement surroundingDeclaration = UastUtils.getParentOfType(
-                call, true,
-                UMethod.class, UBlockExpression.class, ULambdaExpression.class);
+        UElement surroundingDeclaration =
+                UastUtils.getParentOfType(
+                        call, true, UMethod.class, UBlockExpression.class, ULambdaExpression.class);
 
         if (surroundingDeclaration == null) {
             return;
         }
 
         UElement parent = call.getUastParent();
-        if (parent instanceof UMethod || parent instanceof UReferenceExpression &&
-                parent.getUastParent() instanceof UMethod) {
+        if (parent instanceof UMethod
+                || parent instanceof UReferenceExpression
+                        && parent.getUastParent() instanceof UMethod) {
             // Kotlin expression body
             return;
         }
@@ -110,7 +111,10 @@ public class ToastDetector extends Detector implements SourceCodeScanner {
         ShowFinder finder = new ShowFinder(call);
         surroundingDeclaration.accept(finder);
         if (!finder.isShowCalled()) {
-            context.report(ISSUE, call, context.getCallLocation(call, true, false),
+            context.report(
+                    ISSUE,
+                    call,
+                    context.getCallLocation(call, true, false),
                     "Toast created but not shown: did you forget to call `show()` ?");
         }
     }

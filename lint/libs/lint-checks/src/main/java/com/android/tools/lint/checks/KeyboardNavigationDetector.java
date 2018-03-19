@@ -43,15 +43,17 @@ public class KeyboardNavigationDetector extends LayoutDetector {
 
     public static final String MESSAGE = "'clickable' attribute found, please also add 'focusable'";
 
-    public static final Issue ISSUE = Issue.create(
-        "KeyboardInaccessibleWidget",
-        "Keyboard inaccessible widget",
-        "A widget that is declared to be clickable but not declared to be focusable is not "
-            + "accessible via the keyboard. Please add the `focusable` attribute as well.",
-        Category.A11Y,
-        3 /* priority */,
-        Severity.WARNING,
-        new Implementation(KeyboardNavigationDetector.class, Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "KeyboardInaccessibleWidget",
+                    "Keyboard inaccessible widget",
+                    "A widget that is declared to be clickable but not declared to be focusable is not "
+                            + "accessible via the keyboard. Please add the `focusable` attribute as well.",
+                    Category.A11Y,
+                    3 /* priority */,
+                    Severity.WARNING,
+                    new Implementation(
+                            KeyboardNavigationDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     @Override
     public Collection<String> getApplicableAttributes() {

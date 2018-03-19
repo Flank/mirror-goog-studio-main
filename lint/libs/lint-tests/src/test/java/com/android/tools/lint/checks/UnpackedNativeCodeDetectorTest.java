@@ -30,176 +30,188 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
         return new UnpackedNativeCodeDetector();
     }
 
-    /**
-     * Test that a manifest without extractNativeLibs produces warnings for Runtime.loadLibrary
-     */
+    /** Test that a manifest without extractNativeLibs produces warnings for Runtime.loadLibrary */
     public void testRuntimeLoadLibrary() {
-        String expected = ""
-                + "src/main/AndroidManifest.xml:4: Warning: Missing attribute "
-                + "android:extractNativeLibs=\"false\" on the "
-                + "<application> tag. [UnpackedNativeCode]\n"
-                + "    <application android:allowBackup=\"true\">\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
-
-        //noinspection all // Sample code
-        lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
-                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-                        + "\n"
+        String expected =
+                ""
+                        + "src/main/AndroidManifest.xml:4: Warning: Missing attribute "
+                        + "android:extractNativeLibs=\"false\" on the "
+                        + "<application> tag. [UnpackedNativeCode]\n"
                         + "    <application android:allowBackup=\"true\">\n"
-                        + "    </application>\n"
-                        + "</manifest>"),
-                java("src/main/java/test/pkg/Load.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import java.lang.Runtime;\n"
-                        + "\n"
-                        + "public class Load {\n"
-                        + "    public static void foo() {\n"
-                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); \n"
-                        + "    }\n"
-                        + "}\n"),
-                gradle(""
-                        + "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "android {\n"
-                        + "    compileSdkVersion 23\n"
-                        + "}"))
-                .run()
-                .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for src/main/AndroidManifest.xml line 3: Set extractNativeLibs=\"false\":\n"
-                        + "@@ -5 +5\n"
-                        + "-     <application android:allowBackup=\"true\" >\n"
-                        + "+     <application\n"
-                        + "+         android:allowBackup=\"true\"\n"
-                        + "+         android:extractNativeLibs=\"false\" >\n");
-    }
-
-    /**
-     * Test that a manifest without extractNativeLibs produces warnings for System.loadLibrary
-     */
-    public void testSystemLoadLibrary() {
-        String expected = ""
-                + "src/main/AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag. [UnpackedNativeCode]\n"
-                + "    <application>\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+                        + "    ^\n"
+                        + "0 errors, 1 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
-                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-                        + "\n"
-                        + "    <application>\n"
-                        + "    </application>\n"
-                        + "</manifest>"),
-                java("src/main/java/test/pkg/Load.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import java.lang.System;\n"
-                        + "\n"
-                        + "public class Load {\n"
-                        + "    public static void foo() {\n"
-                        + "            System.loadLibrary(\"hello\"); \n"
-                        + "    }\n"
-                        + "}\n"),
-                gradle(""
-                        + "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "android {\n"
-                        + "    compileSdkVersion 23\n"
-                        + "}"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
+                                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+                                        + "\n"
+                                        + "    <application android:allowBackup=\"true\">\n"
+                                        + "    </application>\n"
+                                        + "</manifest>"),
+                        java(
+                                "src/main/java/test/pkg/Load.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import java.lang.Runtime;\n"
+                                        + "\n"
+                                        + "public class Load {\n"
+                                        + "    public static void foo() {\n"
+                                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); \n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 23\n"
+                                        + "}"))
                 .run()
                 .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for src/main/AndroidManifest.xml line 3: Set extractNativeLibs=\"false\":\n"
-                        + "@@ -5 +5\n"
-                        + "-     <application>\n"
-                        + "+     <application android:extractNativeLibs=\"false\" >\n");
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/main/AndroidManifest.xml line 3: Set extractNativeLibs=\"false\":\n"
+                                + "@@ -5 +5\n"
+                                + "-     <application android:allowBackup=\"true\" >\n"
+                                + "+     <application\n"
+                                + "+         android:allowBackup=\"true\"\n"
+                                + "+         android:extractNativeLibs=\"false\" >\n");
     }
 
-    /**
-     * Test that a manifest with extractNativeLibs has no warnings.
-     */
+    /** Test that a manifest without extractNativeLibs produces warnings for System.loadLibrary */
+    public void testSystemLoadLibrary() {
+        String expected =
+                ""
+                        + "src/main/AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag. [UnpackedNativeCode]\n"
+                        + "    <application>\n"
+                        + "    ^\n"
+                        + "0 errors, 1 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
+                                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+                                        + "\n"
+                                        + "    <application>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>"),
+                        java(
+                                "src/main/java/test/pkg/Load.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import java.lang.System;\n"
+                                        + "\n"
+                                        + "public class Load {\n"
+                                        + "    public static void foo() {\n"
+                                        + "            System.loadLibrary(\"hello\"); \n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 23\n"
+                                        + "}"))
+                .run()
+                .expect(expected)
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/main/AndroidManifest.xml line 3: Set extractNativeLibs=\"false\":\n"
+                                + "@@ -5 +5\n"
+                                + "-     <application>\n"
+                                + "+     <application android:extractNativeLibs=\"false\" >\n");
+    }
+
+    /** Test that a manifest with extractNativeLibs has no warnings. */
     public void testHasExtractNativeLibs() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
-                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application android:extractNativeLibs=\"false\">\n"
-                        + "    </application>\n"
-                        + "</manifest>"),
-                java("src/main/java/test/pkg/Load.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import java.lang.Runtime;\n"
-                        + "\n"
-                        + "public class Load {\n"
-                        + "    public static void foo() {\n"
-                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
-                        + "    }\n"
-                        + "}\n"),
-                gradle(""
-                        + "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "android {\n"
-                        + "    compileSdkVersion 23\n"
-                        + "}"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
+                                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <application android:extractNativeLibs=\"false\">\n"
+                                        + "    </application>\n"
+                                        + "</manifest>"),
+                        java(
+                                "src/main/java/test/pkg/Load.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import java.lang.Runtime;\n"
+                                        + "\n"
+                                        + "public class Load {\n"
+                                        + "    public static void foo() {\n"
+                                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 23\n"
+                                        + "}"))
                 .run()
                 .expectClean();
     }
 
-    /**
-     * Test that suppressing the lint check using tools:ignore works.
-     */
+    /** Test that suppressing the lint check using tools:ignore works. */
     public void testSuppress() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-                        + "\n"
-                        + "    <application tools:ignore=\"UnpackedNativeCode\">\n"
-                        + "    </application>\n"
-                        + "</manifest>"),
-                java("src/main/java/test/pkg/Load.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import java.lang.Runtime;\n"
-                        + "\n"
-                        + "public class Load {\n"
-                        + "    public static void foo() {\n"
-                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
-                        + "    }\n"
-                        + "}\n"),
-                gradle(""
-                        + "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "android {\n"
-                        + "    compileSdkVersion 23\n"
-                        + "}"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest package=\"com.example.android.custom-lint-rules\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "          xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+                                        + "\n"
+                                        + "    <application tools:ignore=\"UnpackedNativeCode\">\n"
+                                        + "    </application>\n"
+                                        + "</manifest>"),
+                        java(
+                                "src/main/java/test/pkg/Load.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import java.lang.Runtime;\n"
+                                        + "\n"
+                                        + "public class Load {\n"
+                                        + "    public static void foo() {\n"
+                                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.2.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 23\n"
+                                        + "}"))
                 .run()
                 .expectClean();
     }

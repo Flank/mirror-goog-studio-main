@@ -52,7 +52,7 @@ abstract class XmlParser {
      * occurs (does **not** throw parsing exceptions). Most clients should
      * call [.parseXml] instead.
      *
-     * @param xml  the parsing string
+     * @param xml the parsing string
      * @param file the file corresponding to the XML string, **if known**.
      * May be null.
      * @return the parsed DOM document, or null if parsing fails
@@ -103,8 +103,12 @@ abstract class XmlParser {
      * @param end the ending position within the node, exclusive
      * @return a location for the given node
      */
-    abstract fun getLocation(context: XmlContext, node: Node,
-            start: Int, end: Int): Location
+    abstract fun getLocation(
+        context: XmlContext,
+        node: Node,
+        start: Int,
+        end: Int
+    ): Location
 
     /**
      * Returns a [Location] for the given DOM node
@@ -192,8 +196,10 @@ abstract class XmlParser {
      * for
      * @return a location handle
      */
-    abstract fun createLocationHandle(context: XmlContext,
-            node: Node): Location.Handle
+    abstract fun createLocationHandle(
+        context: XmlContext,
+        node: Node
+    ): Location.Handle
 
     /**
      * Dispose any data structures held for the given context.

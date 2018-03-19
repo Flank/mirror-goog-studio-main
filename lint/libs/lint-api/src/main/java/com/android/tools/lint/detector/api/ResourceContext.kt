@@ -46,18 +46,19 @@ open class ResourceContext
  * @param file the file being checked
  * @param resourceFolderType the [com.android.resources.ResourceFolderType] of this file, if any
  */
-(
-        driver: LintDriver,
-        project: Project,
-        main: Project?,
-        file: File,
-        /**
-         * Returns the resource folder type of this XML file, if any.
-         *
-         * @return the resource folder type or null
-         */
-        val resourceFolderType: ResourceFolderType?,
-        contents: String?) : Context(driver, project, main, file, contents) {
+    (
+    driver: LintDriver,
+    project: Project,
+    main: Project?,
+    file: File,
+    /**
+     * Returns the resource folder type of this XML file, if any.
+     *
+     * @return the resource folder type or null
+     */
+    val resourceFolderType: ResourceFolderType?,
+    contents: String?
+) : Context(driver, project, main, file, contents) {
     private var folderConfiguration: FolderConfiguration? = null
 
     /**

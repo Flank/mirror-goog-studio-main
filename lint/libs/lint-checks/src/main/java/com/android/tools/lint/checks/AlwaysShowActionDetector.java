@@ -46,39 +46,37 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.w3c.dom.Attr;
 
 /**
- * Check which looks for usage of showAsAction="always" in menus (or
- * MenuItem.SHOW_AS_ACTION_ALWAYS in code), which is usually a style guide violation.
- * (Use ifRoom instead).
+ * Check which looks for usage of showAsAction="always" in menus (or MenuItem.SHOW_AS_ACTION_ALWAYS
+ * in code), which is usually a style guide violation. (Use ifRoom instead).
  */
 public class AlwaysShowActionDetector extends ResourceXmlDetector implements SourceCodeScanner {
 
     /** The main issue discovered by this detector */
     @SuppressWarnings("unchecked")
-    public static final Issue ISSUE = Issue.create(
-            "AlwaysShowAction",
-            "Usage of `showAsAction=always`",
-
-            "Using `showAsAction=\"always\"` in menu XML, or `MenuItem.SHOW_AS_ACTION_ALWAYS` in " +
-            "Java code is usually a deviation from the user interface style guide." +
-            "Use `ifRoom` or the corresponding `MenuItem.SHOW_AS_ACTION_IF_ROOM` instead.\n" +
-            "\n" +
-            "If `always` is used sparingly there are usually no problems and behavior is " +
-            "roughly equivalent to `ifRoom` but with preference over other `ifRoom` " +
-            "items. Using it more than twice in the same menu is a bad idea.\n" +
-            "\n" +
-            "This check looks for menu XML files that contain more than two `always` " +
-            "actions, or some `always` actions and no `ifRoom` actions. In Java code, " +
-            "it looks for projects that contain references to `MenuItem.SHOW_AS_ACTION_ALWAYS` " +
-            "and no references to `MenuItem.SHOW_AS_ACTION_IF_ROOM`.",
-
-            Category.USABILITY,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    AlwaysShowActionDetector.class,
-                    Scope.JAVA_AND_RESOURCE_FILES,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("http://developer.android.com/design/patterns/actionbar.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "AlwaysShowAction",
+                            "Usage of `showAsAction=always`",
+                            "Using `showAsAction=\"always\"` in menu XML, or `MenuItem.SHOW_AS_ACTION_ALWAYS` in "
+                                    + "Java code is usually a deviation from the user interface style guide."
+                                    + "Use `ifRoom` or the corresponding `MenuItem.SHOW_AS_ACTION_IF_ROOM` instead.\n"
+                                    + "\n"
+                                    + "If `always` is used sparingly there are usually no problems and behavior is "
+                                    + "roughly equivalent to `ifRoom` but with preference over other `ifRoom` "
+                                    + "items. Using it more than twice in the same menu is a bad idea.\n"
+                                    + "\n"
+                                    + "This check looks for menu XML files that contain more than two `always` "
+                                    + "actions, or some `always` actions and no `ifRoom` actions. In Java code, "
+                                    + "it looks for projects that contain references to `MenuItem.SHOW_AS_ACTION_ALWAYS` "
+                                    + "and no references to `MenuItem.SHOW_AS_ACTION_IF_ROOM`.",
+                            Category.USABILITY,
+                            3,
+                            Severity.WARNING,
+                            new Implementation(
+                                    AlwaysShowActionDetector.class,
+                                    Scope.JAVA_AND_RESOURCE_FILES,
+                                    Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo("http://developer.android.com/design/patterns/actionbar.html");
 
     /** List of showAsAction attributes appearing in the current menu XML file */
     private List<Attr> mFileAttributes;
@@ -90,8 +88,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Sou
     private boolean mHasIfRoomRefs;
 
     /** Constructs a new {@link AlwaysShowActionDetector} */
-    public AlwaysShowActionDetector() {
-    }
+    public AlwaysShowActionDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -154,10 +151,12 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Sou
                         }
                     }
                     if (location != null) {
-                        LintFix fix = fix().replace().pattern("(always)")
-                                .with("ifRoom").build();
-                        context.report(ISSUE, location,
-                                "Prefer \"`ifRoom`\" instead of \"`always`\"", fix);
+                        LintFix fix = fix().replace().pattern("(always)").with("ifRoom").build();
+                        context.report(
+                                ISSUE,
+                                location,
+                                "Prefer \"`ifRoom`\" instead of \"`always`\"",
+                                fix);
                     }
                 }
             }
@@ -168,8 +167,10 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Sou
     public void afterCheckProject(@NonNull Context context) {
         if (mAlwaysFields != null && !mHasIfRoomRefs) {
             for (Location location : mAlwaysFields) {
-                context.report(ISSUE, location,
-                    "Prefer \"`SHOW_AS_ACTION_IF_ROOM`\" instead of \"`SHOW_AS_ACTION_ALWAYS`\"");
+                context.report(
+                        ISSUE,
+                        location,
+                        "Prefer \"`SHOW_AS_ACTION_IF_ROOM`\" instead of \"`SHOW_AS_ACTION_ALWAYS`\"");
             }
         }
     }
@@ -198,11 +199,13 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Sou
     }
 
     @Override
-    public void visitReference(@NonNull JavaContext context,
-            @NonNull UReferenceExpression reference, @NonNull PsiElement resolved) {
+    public void visitReference(
+            @NonNull JavaContext context,
+            @NonNull UReferenceExpression reference,
+            @NonNull PsiElement resolved) {
         if (resolved instanceof PsiField
-                && context.getEvaluator().isMemberInClass((PsiField) resolved,
-                "android.view.MenuItem")) {
+                && context.getEvaluator()
+                        .isMemberInClass((PsiField) resolved, "android.view.MenuItem")) {
             if ("SHOW_AS_ACTION_ALWAYS".equals(reference.getResolvedName())) {
                 if (context.getDriver().isSuppressed(context, ISSUE, reference)) {
                     return;

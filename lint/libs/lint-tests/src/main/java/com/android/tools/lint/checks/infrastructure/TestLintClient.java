@@ -120,8 +120,8 @@ import org.w3c.dom.NodeList;
 /**
  * A {@link LintClient} class for use in lint unit tests.
  *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 public class TestLintClient extends LintCliClient {
     protected final StringWriter writer = new StringWriter();
@@ -164,20 +164,22 @@ public class TestLintClient extends LintCliClient {
             return;
         }
 
-        message = "This test requires an Android SDK: " + message + "\n"
-                    + "If this test does not really need an SDK, set "
-                    + "TestLintTask#allowMissingSdk(). Otherwise, make sure an SDK is "
-                    + "available either by specifically pointing to one via "
-                    + "TestLintTask#sdkHome(File), or configure $ANDROID_HOME in the "
-                    + "environment";
+        message =
+                "This test requires an Android SDK: "
+                        + message
+                        + "\n"
+                        + "If this test does not really need an SDK, set "
+                        + "TestLintTask#allowMissingSdk(). Otherwise, make sure an SDK is "
+                        + "available either by specifically pointing to one via "
+                        + "TestLintTask#sdkHome(File), or configure $ANDROID_HOME in the "
+                        + "environment";
         fail(message);
     }
 
     /**
-     * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea
-     * (because it enables some special support in lint for checking code in AOSP
-     * itself.) However, some lint tests (particularly custom lint checks) may not care
-     * about this.
+     * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea (because it enables
+     * some special support in lint for checking code in AOSP itself.) However, some lint tests
+     * (particularly custom lint checks) may not care about this.
      */
     @SuppressWarnings("MethodMayBeStatic")
     protected boolean allowAndroidBuildEnvironment() {
@@ -198,8 +200,8 @@ public class TestLintClient extends LintCliClient {
         if (files.size() > 1) {
             for (File dir : files) {
                 File root = dir.getParentFile(); // Allow the project name to be part of the name
-                File current = new File(root,
-                        task.incrementalFileName.replace('/', File.separatorChar));
+                File current =
+                        new File(root, task.incrementalFileName.replace('/', File.separatorChar));
                 if (current.exists()) {
                     return dir;
                 }
@@ -207,8 +209,7 @@ public class TestLintClient extends LintCliClient {
         }
 
         for (File dir : files) {
-            File current = new File(dir,
-                    task.incrementalFileName.replace('/', File.separatorChar));
+            File current = new File(dir, task.incrementalFileName.replace('/', File.separatorChar));
             if (current.exists()) {
                 return dir;
             }
@@ -228,19 +229,21 @@ public class TestLintClient extends LintCliClient {
         return null;
     }
 
-    protected Pair<String,List<Warning>> checkLint(List<File> files, List<Issue> issues)
+    protected Pair<String, List<Warning>> checkLint(List<File> files, List<Issue> issues)
             throws Exception {
         if (task.incrementalFileName != null) {
             boolean found = false;
 
             File dir = findIncrementalProject(files);
             if (dir != null) {
-                File current = new File(dir,
-                        task.incrementalFileName.replace('/', File.separatorChar));
+                File current =
+                        new File(dir, task.incrementalFileName.replace('/', File.separatorChar));
                 if (!current.exists()) {
                     // Specified the project name as part of the name to disambiguate
-                    current = new File(dir.getParentFile(),
-                            task.incrementalFileName.replace('/', File.separatorChar));
+                    current =
+                            new File(
+                                    dir.getParentFile(),
+                                    task.incrementalFileName.replace('/', File.separatorChar));
                 }
                 if (current.exists()) {
                     setIncremental(current);
@@ -254,15 +257,19 @@ public class TestLintClient extends LintCliClient {
                 }
 
                 String all = allFiles.toString();
-                fail("Could not find incremental file " + task.incrementalFileName
-                        + " in the test project folders; did you mean one of " + all);
+                fail(
+                        "Could not find incremental file "
+                                + task.incrementalFileName
+                                + " in the test project folders; did you mean one of "
+                                + all);
             }
         }
 
         if (!allowAndroidBuildEnvironment() && System.getenv("ANDROID_BUILD_TOP") != null) {
-            fail("Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
-                    + "special support for detecting AOSP projects (looking for .class "
-                    + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
+            fail(
+                    "Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
+                            + "special support for detecting AOSP projects (looking for .class "
+                            + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
         }
 
         // Reset state here in case a client is reused for multiple runs
@@ -347,7 +354,7 @@ public class TestLintClient extends LintCliClient {
         } catch (IOException ignore) {
             mocker = task.projectMocks.get(dir);
         }
-        if (mocker != null && mocker.getProject() != null)  {
+        if (mocker != null && mocker.getProject() != null) {
             syncLintOptionsToFlags(mocker.getProject().getLintOptions(), flags);
             if (task.variantName != null) {
                 mocker.setVariantName(task.variantName);
@@ -387,9 +394,7 @@ public class TestLintClient extends LintCliClient {
     @SuppressWarnings("StringBufferField")
     private StringBuilder output = null;
 
-    private void syncLintOptionsToFlags(
-            @NonNull LintOptions options,
-            @NonNull LintCliFlags flags) {
+    private void syncLintOptionsToFlags(@NonNull LintOptions options, @NonNull LintCliFlags flags) {
         flags.getSuppressedIds().addAll(options.getDisable());
         flags.getEnabledIds().addAll(options.getEnable());
         if (options.getCheck() != null && !options.getCheck().isEmpty()) {
@@ -417,13 +422,26 @@ public class TestLintClient extends LintCliClient {
                 String id = entry.getKey();
                 Severity severity;
                 switch (entry.getValue()) {
-                    case LintOptions.SEVERITY_FATAL: severity = Severity.FATAL; break;
-                    case LintOptions.SEVERITY_ERROR: severity = Severity.ERROR; break;
-                    case LintOptions.SEVERITY_WARNING: severity = Severity.WARNING; break;
-                    case LintOptions.SEVERITY_INFORMATIONAL: severity = Severity.INFORMATIONAL; break;
-                    case LintOptions.SEVERITY_IGNORE: severity = Severity.IGNORE; break;
-                    case LintOptions.SEVERITY_DEFAULT_ENABLED: severity = Severity.WARNING; break;
-                    default: continue;
+                    case LintOptions.SEVERITY_FATAL:
+                        severity = Severity.FATAL;
+                        break;
+                    case LintOptions.SEVERITY_ERROR:
+                        severity = Severity.ERROR;
+                        break;
+                    case LintOptions.SEVERITY_WARNING:
+                        severity = Severity.WARNING;
+                        break;
+                    case LintOptions.SEVERITY_INFORMATIONAL:
+                        severity = Severity.INFORMATIONAL;
+                        break;
+                    case LintOptions.SEVERITY_IGNORE:
+                        severity = Severity.IGNORE;
+                        break;
+                    case LintOptions.SEVERITY_DEFAULT_ENABLED:
+                        severity = Severity.WARNING;
+                        break;
+                    default:
+                        continue;
                 }
                 overrides.put(id, severity);
             }
@@ -467,15 +485,16 @@ public class TestLintClient extends LintCliClient {
         }
 
         if (task.mockModifier != null) {
-            driver.addLintListener((driver, type, project, context) -> {
-                if (type == LintListener.EventType.REGISTERED_PROJECT && project != null) {
-                    AndroidProject model = project.getGradleProjectModel();
-                    Variant variant = project.getCurrentVariant();
-                    if (model != null && variant != null) {
-                        task.mockModifier.modify(model, variant);
-                    }
-                }
-            });
+            driver.addLintListener(
+                    (driver, type, project, context) -> {
+                        if (type == LintListener.EventType.REGISTERED_PROJECT && project != null) {
+                            AndroidProject model = project.getGradleProjectModel();
+                            Variant variant = project.getCurrentVariant();
+                            if (model != null && variant != null) {
+                                task.mockModifier.modify(model, variant);
+                            }
+                        }
+                    });
         }
 
         validateIssueIds();
@@ -541,8 +560,8 @@ public class TestLintClient extends LintCliClient {
 
     @NonNull
     @Override
-    protected LintDriver createDriver(@NonNull IssueRegistry registry,
-            @NonNull LintRequest request) {
+    protected LintDriver createDriver(
+            @NonNull IssueRegistry registry, @NonNull LintRequest request) {
         LintDriver driver = super.createDriver(registry, request);
         driver.setFatalOnlyMode(task.vital);
         return driver;
@@ -563,16 +582,17 @@ public class TestLintClient extends LintCliClient {
     protected String cleanup(String result) {
         List<File> sorted = new ArrayList<>(cleanupDirs);
         // Process dirs in order such that we match longest substrings first
-        sorted.sort((file1, file2) -> {
-            String path1 = file1.getPath();
-            String path2 = file2.getPath();
-            int delta = path2.length() - path1.length();
-            if (delta != 0) {
-                return delta;
-            } else {
-                return path1.compareTo(path2);
-            }
-        });
+        sorted.sort(
+                (file1, file2) -> {
+                    String path1 = file1.getPath();
+                    String path2 = file2.getPath();
+                    int delta = path2.length() - path1.length();
+                    if (delta != 0) {
+                        return delta;
+                    } else {
+                        return path1.compareTo(path2);
+                    }
+                });
 
         for (File dir : sorted) {
             String path = dir.getPath();
@@ -603,12 +623,17 @@ public class TestLintClient extends LintCliClient {
                     try {
                         return PositionXmlParser.parse(xml.toString());
                     } catch (Exception e) {
-                        String message = e.getCause() != null
-                                ? e.getCause().getLocalizedMessage()
-                                : e.getLocalizedMessage();
-                        fail(message + " : Failure processing source " + file + ".\n" +
-                                "If you want your test to work with broken XML sources, add " +
-                                "`allowCompilationErrors()` on the TestLintTask.\n");
+                        String message =
+                                e.getCause() != null
+                                        ? e.getCause().getLocalizedMessage()
+                                        : e.getLocalizedMessage();
+                        fail(
+                                message
+                                        + " : Failure processing source "
+                                        + file
+                                        + ".\n"
+                                        + "If you want your test to work with broken XML sources, add "
+                                        + "`allowCompilationErrors()` on the TestLintTask.\n");
                         return null;
                     }
                 }
@@ -623,7 +648,8 @@ public class TestLintClient extends LintCliClient {
     public UastParser getUastParser(@Nullable Project project) {
         return new LintCliUastParser(project) {
             @Override
-            public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+            public boolean prepare(
+                    @NonNull List<? extends JavaContext> contexts,
                     @NonNull List<? extends JavaContext> testContexts) {
                 boolean ok = super.prepare(contexts, testContexts);
                 if (task.forceSymbolResolutionErrors) {
@@ -639,15 +665,16 @@ public class TestLintClient extends LintCliClient {
 
                 if (!task.allowCompilationErrors) {
                     if (file != null) {
-                        PsiErrorElement error = PsiTreeUtil
-                                .findChildOfType(file.getPsi(), PsiErrorElement.class);
+                        PsiErrorElement error =
+                                PsiTreeUtil.findChildOfType(file.getPsi(), PsiErrorElement.class);
                         if (error != null) {
                             fail("Found error element " + error);
                         }
                     } else {
-                        fail("Failure processing source " +
-                                context.getProject().getRelativePath(context.file) +
-                                ": No UAST AST created");
+                        fail(
+                                "Failure processing source "
+                                        + context.getProject().getRelativePath(context.file)
+                                        + ": No UAST AST created");
                     }
                 }
 
@@ -680,8 +707,13 @@ public class TestLintClient extends LintCliClient {
         }
 
         if (task.messageChecker != null) {
-            task.messageChecker.checkReportedError(context, issue, severity,
-                    location, format.convertTo(message, TextFormat.TEXT), fix);
+            task.messageChecker.checkReportedError(
+                    context,
+                    issue,
+                    severity,
+                    location,
+                    format.convertTo(message, TextFormat.TEXT),
+                    fix);
         }
 
         if (severity == Severity.FATAL) {
@@ -714,8 +746,8 @@ public class TestLintClient extends LintCliClient {
             Warning prev = null;
             for (Warning warning : warnings) {
                 assertNotSame(warning, prev);
-                assert prev == null || !warning.equals(prev) :
-                        "Warning (message, location) reported more than once: " + warning;
+                assert prev == null || !warning.equals(prev)
+                        : "Warning (message, location) reported more than once: " + warning;
                 prev = warning;
             }
         }
@@ -735,14 +767,24 @@ public class TestLintClient extends LintCliClient {
             if (oldString != null) {
                 int startIndex = contents.indexOf(oldString, start.getOffset());
                 if (startIndex == -1 || startIndex > end.getOffset()) {
-                    fail("Did not find \"" + oldString + "\" in \"" + locationRange
-                            + "\" as suggested in the quickfix for issue " + issue);
+                    fail(
+                            "Did not find \""
+                                    + oldString
+                                    + "\" in \""
+                                    + locationRange
+                                    + "\" as suggested in the quickfix for issue "
+                                    + issue);
                 }
             } else if (oldPattern != null) {
                 Pattern pattern = Pattern.compile(oldPattern);
                 if (!pattern.matcher(locationRange).find()) {
-                    fail("Did not match pattern \"" + oldPattern + "\" in \"" + locationRange
-                                    + "\" as suggested in the quickfix for issue " + issue);
+                    fail(
+                            "Did not match pattern \""
+                                    + oldPattern
+                                    + "\" in \""
+                                    + locationRange
+                                    + "\" as suggested in the quickfix for issue "
+                                    + issue);
                 }
             }
         }
@@ -771,8 +813,7 @@ public class TestLintClient extends LintCliClient {
 
     @NonNull
     @Override
-    public Configuration getConfiguration(@NonNull Project project,
-            @Nullable LintDriver driver) {
+    public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
         return new TestConfiguration(task, this, project, null);
     }
 
@@ -808,8 +849,8 @@ public class TestLintClient extends LintCliClient {
         } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
             File file = super.findResource(relativePath);
             if (file == null || !file.exists()) {
-                throw new RuntimeException("File "
-                        + (file == null ? relativePath : file.getPath()) + " not found");
+                throw new RuntimeException(
+                        "File " + (file == null ? relativePath : file.getPath()) + " not found");
             }
             return file;
         }
@@ -843,8 +884,8 @@ public class TestLintClient extends LintCliClient {
 
     @Nullable
     @Override
-    public AbstractResourceRepository getResourceRepository(Project project,
-            boolean includeDependencies, boolean includeLibraries) {
+    public AbstractResourceRepository getResourceRepository(
+            Project project, boolean includeDependencies, boolean includeLibraries) {
         if (!supportsProjectResources()) {
             return null;
         }
@@ -856,10 +897,7 @@ public class TestLintClient extends LintCliClient {
         ResourceNamespace namespace = project.getResourceNamespace();
         ResourceSet resourceSet =
                 new ResourceSet(
-                        project.getName(),
-                        namespace,
-                        getProjectResourceLibraryName(),
-                        true) {
+                        project.getName(), namespace, getProjectResourceLibraryName(), true) {
                     @Override
                     protected void checkItems() {
                         // No checking in ProjectResources; duplicates can happen, but
@@ -904,8 +942,8 @@ public class TestLintClient extends LintCliClient {
                         addIds(ids, document); // TODO: pull parser
                         if (!ids.isEmpty()) {
                             ListMultimap<String, ResourceItem> idMap =
-                                    items.computeIfAbsent(ResourceType.ID,
-                                            k -> ArrayListMultimap.create());
+                                    items.computeIfAbsent(
+                                            ResourceType.ID, k -> ArrayListMultimap.create());
                             for (String id : ids) {
                                 ResourceItem idItem =
                                         new ResourceItem(
@@ -933,8 +971,7 @@ public class TestLintClient extends LintCliClient {
                     }
                 }
             }
-        }
-        catch (MergingException e) {
+        } catch (MergingException e) {
             fail(e.getMessage());
         }
 
@@ -972,13 +1009,18 @@ public class TestLintClient extends LintCliClient {
         IAndroidTarget compileTarget = super.getCompileTarget(project);
         if (compileTarget == null) {
             if (task.requireCompileSdk && project.getBuildTargetHash() != null) {
-                fail("Could not find SDK to compile with (" + project.getBuildTargetHash() + "). "
-                        + "Either allow the test to use any installed SDK (it defaults to the "
-                        + "highest version) via TestLintTask#requireCompileSdk(false), or make "
-                        + "sure the SDK being used is the right  one via "
-                        + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
-                        + "platform (platforms/" + project.getBuildTargetHash() + " is installed "
-                        + "there");
+                fail(
+                        "Could not find SDK to compile with ("
+                                + project.getBuildTargetHash()
+                                + "). "
+                                + "Either allow the test to use any installed SDK (it defaults to the "
+                                + "highest version) via TestLintTask#requireCompileSdk(false), or make "
+                                + "sure the SDK being used is the right  one via "
+                                + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
+                                + "platform (platforms/"
+                                + project.getBuildTargetHash()
+                                + " is installed "
+                                + "there");
             }
 
             IAndroidTarget[] targets = getTargets();
@@ -1017,8 +1059,7 @@ public class TestLintClient extends LintCliClient {
             if (bytes != null) {
                 return new URLConnection(url) {
                     @Override
-                    public void connect() {
-                    }
+                    public void connect() {}
 
                     @Override
                     public InputStream getInputStream() {
@@ -1029,22 +1070,25 @@ public class TestLintClient extends LintCliClient {
         }
 
         if (!task.allowNetworkAccess) {
-            fail("Lint detector test attempted to read from the network. Normally this means "
-                    + "that you have forgotten to set up mock data (calling networkData() on the "
-                    + "lint task) or the URL no longer matches. The URL encountered was " +
-                    url);
+            fail(
+                    "Lint detector test attempted to read from the network. Normally this means "
+                            + "that you have forgotten to set up mock data (calling networkData() on the "
+                            + "lint task) or the URL no longer matches. The URL encountered was "
+                            + url);
         }
 
         return super.openConnection(url, timeout);
     }
 
     public static class TestProject extends Project {
-        @Nullable
-        public final GradleModelMocker mocker;
+        @Nullable public final GradleModelMocker mocker;
         private final ProjectDescription projectDescription;
 
-        public TestProject(@NonNull LintClient client, @NonNull File dir,
-                @NonNull File referenceDir, @Nullable ProjectDescription projectDescription,
+        public TestProject(
+                @NonNull LintClient client,
+                @NonNull File dir,
+                @NonNull File referenceDir,
+                @Nullable ProjectDescription projectDescription,
                 @Nullable GradleModelMocker mocker) {
             super(client, dir, referenceDir);
             this.projectDescription = projectDescription;
@@ -1076,8 +1120,9 @@ public class TestLintClient extends LintCliClient {
                 return true;
             }
 
-            return super.isLibrary()  || projectDescription != null
-                    && projectDescription.getType() == ProjectDescription.Type.LIBRARY;
+            return super.isLibrary()
+                    || projectDescription != null
+                            && projectDescription.getType() == ProjectDescription.Type.LIBRARY;
         }
 
         @Override
@@ -1086,8 +1131,8 @@ public class TestLintClient extends LintCliClient {
                 return false;
             }
 
-            return projectDescription == null ||
-                    projectDescription.getType() != ProjectDescription.Type.JAVA;
+            return projectDescription == null
+                    || projectDescription.getType() != ProjectDescription.Type.JAVA;
         }
 
         @Nullable
@@ -1112,9 +1157,9 @@ public class TestLintClient extends LintCliClient {
 
         private boolean libraryMatches(@NonNull String artifact, Library lib) {
             MavenCoordinates coordinates = lib.getResolvedCoordinates();
-            return artifact.startsWith(coordinates.getGroupId()) &&
-                    artifact.equals(coordinates.getGroupId() + ':'
-                            + coordinates.getArtifactId());
+            return artifact.startsWith(coordinates.getGroupId())
+                    && artifact.equals(
+                            coordinates.getGroupId() + ':' + coordinates.getArtifactId());
         }
 
         @Override
@@ -1256,7 +1301,6 @@ public class TestLintClient extends LintCliClient {
                 if (resourceFolders == null) {
                     resourceFolders = super.getResourceFolders();
                 }
-
             }
             return resourceFolders;
         }
@@ -1295,10 +1339,12 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedSourceFolders =
-                            mocker.getVariant().getMainArtifact().
-                                    getGeneratedSourceFolders().stream()
-                            .filter(File::exists)
-                            .collect(Collectors.toList());
+                            mocker.getVariant()
+                                    .getMainArtifact()
+                                    .getGeneratedSourceFolders()
+                                    .stream()
+                                    .filter(File::exists)
+                                    .collect(Collectors.toList());
                 }
                 if (generatedSourceFolders == null || generatedSourceFolders.isEmpty()) {
                     generatedSourceFolders = super.getGeneratedSourceFolders();
@@ -1316,10 +1362,12 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedResourceFolders =
-                            mocker.getVariant().getMainArtifact().
-                            getGeneratedResourceFolders().stream()
-                            .filter(File::exists)
-                            .collect(Collectors.toList());
+                            mocker.getVariant()
+                                    .getMainArtifact()
+                                    .getGeneratedResourceFolders()
+                                    .stream()
+                                    .filter(File::exists)
+                                    .collect(Collectors.toList());
                 }
                 if (generatedResourceFolders == null || generatedResourceFolders.isEmpty()) {
                     generatedResourceFolders = super.getGeneratedResourceFolders();
@@ -1336,8 +1384,9 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     testSourceFolders = Lists.newArrayList();
-                    for (SourceProvider provider : LintUtils
-                            .getTestSourceProviders(mocker.getProject(), mocker.getVariant())) {
+                    for (SourceProvider provider :
+                            LintUtils.getTestSourceProviders(
+                                    mocker.getProject(), mocker.getVariant())) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
                         List<File> list = new ArrayList<>();

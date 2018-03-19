@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.detector.api;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiClass;
@@ -38,19 +37,19 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
- * Evaluates the types of nodes. It analyzes the
- * flow and for example figures out that if you ask for the type of {@code var}
- * in this code snippet:
+ * Evaluates the types of nodes. It analyzes the flow and for example figures out that if you ask
+ * for the type of {@code var} in this code snippet:
+ *
  * <pre>
  *     Object o = new StringBuilder();
  *     Object var = o;
  * </pre>
+ *
  * it will return "java.lang.StringBuilder".
- * <p>
- * <b>NOTE:</b> This type evaluator does not (yet) compute the correct
- * types when involving implicit type conversions, so be careful
- * if using this for primitives; e.g. for "int * long" it might return
- * the type "int".
+ *
+ * <p><b>NOTE:</b> This type evaluator does not (yet) compute the correct types when involving
+ * implicit type conversions, so be careful if using this for primitives; e.g. for "int * long" it
+ * might return the type "int".
  */
 public class TypeEvaluator {
     private final JavaContext context;
@@ -64,10 +63,7 @@ public class TypeEvaluator {
         this.context = context;
     }
 
-
-    /**
-     * Returns the inferred type of the given node
-     */
+    /** Returns the inferred type of the given node */
     @Nullable
     public PsiType evaluate(@Nullable PsiElement node) {
         if (node == null) {
@@ -151,12 +147,11 @@ public class TypeEvaluator {
     }
 
     /**
-     * Evaluates the given node and returns the likely type of the instance. Convenience
-     * wrapper which creates a new {@linkplain TypeEvaluator}, evaluates the node and returns
-     * the result.
+     * Evaluates the given node and returns the likely type of the instance. Convenience wrapper
+     * which creates a new {@linkplain TypeEvaluator}, evaluates the node and returns the result.
      *
      * @param context the context to use to resolve field references, if any
-     * @param node    the node to compute the type for
+     * @param node the node to compute the type for
      * @return the corresponding type descriptor, if found
      */
     @Nullable

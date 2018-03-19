@@ -44,50 +44,51 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 /**
- * Looks for getter calls within the same class that could be replaced by
- * direct field references instead.
+ * Looks for getter calls within the same class that could be replaced by direct field references
+ * instead.
  */
 public class FieldGetterDetector extends Detector implements ClassScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "FieldGetter",
-            "Using getter instead of field",
+    public static final Issue ISSUE =
+            Issue.create(
+                            "FieldGetter",
+                            "Using getter instead of field",
+                            "Accessing a field within the class that defines a getter for that field is "
+                                    + "at least 3 times faster than calling the getter. For simple getters that do "
+                                    + "nothing other than return the field, you might want to just reference the "
+                                    + "local field directly instead.\n"
+                                    + "\n"
+                                    + "**NOTE**: As of Android 2.3 (Gingerbread), this optimization is performed "
+                                    + "automatically by Dalvik, so there is no need to change your code; this is "
+                                    + "only relevant if you are targeting older versions of Android.",
+                            Category.PERFORMANCE,
+                            4,
+                            Severity.WARNING,
+                            new Implementation(FieldGetterDetector.class, Scope.CLASS_FILE_SCOPE))
+                    .
+                    // This is a micro-optimization: not enabled by default
+                    setEnabledByDefault(false)
+                    .addMoreInfo(
+                            "http://developer.android.com/guide/practices/design/performance.html#internal_get_set");
 
-            "Accessing a field within the class that defines a getter for that field is " +
-            "at least 3 times faster than calling the getter. For simple getters that do " +
-            "nothing other than return the field, you might want to just reference the " +
-            "local field directly instead.\n" +
-            "\n" +
-            "**NOTE**: As of Android 2.3 (Gingerbread), this optimization is performed " +
-            "automatically by Dalvik, so there is no need to change your code; this is " +
-            "only relevant if you are targeting older versions of Android.",
-
-            Category.PERFORMANCE,
-            4,
-            Severity.WARNING,
-            new Implementation(
-                    FieldGetterDetector.class,
-                    Scope.CLASS_FILE_SCOPE)).
-            // This is a micro-optimization: not enabled by default
-            setEnabledByDefault(false).
-            addMoreInfo(
-            "http://developer.android.com/guide/practices/design/performance.html#internal_get_set");
     private ArrayList<Entry> mPendingCalls;
 
     /** Constructs a new {@link FieldGetterDetector} check */
-    public FieldGetterDetector() {
-    }
+    public FieldGetterDetector() {}
 
     // ---- Implements ClassScanner ----
 
     @Override
     public int[] getApplicableAsmNodeTypes() {
-        return new int[] { AbstractInsnNode.METHOD_INSN };
+        return new int[] {AbstractInsnNode.METHOD_INSN};
     }
 
     @Override
-    public void checkInstruction(@NonNull ClassContext context, @NonNull ClassNode classNode,
-            @NonNull MethodNode method, @NonNull AbstractInsnNode instruction) {
+    public void checkInstruction(
+            @NonNull ClassContext context,
+            @NonNull ClassNode classNode,
+            @NonNull MethodNode method,
+            @NonNull AbstractInsnNode instruction) {
         // As of Gingerbread/API 9, Dalvik performs this optimization automatically
         if (context.getProject().getMinSdk() >= 9) {
             return;
@@ -115,10 +116,10 @@ public class FieldGetterDetector extends Detector implements ClassScanner {
             return;
         }
 
-        if (((name.startsWith("get") && name.length() > 3
-                && Character.isUpperCase(name.charAt(3)))
-            || (name.startsWith("is") && name.length() > 2
-                && Character.isUpperCase(name.charAt(2))))
+        if (((name.startsWith("get") && name.length() > 3 && Character.isUpperCase(name.charAt(3)))
+                        || (name.startsWith("is")
+                                && name.length() > 2
+                                && Character.isUpperCase(name.charAt(2))))
                 && owner.equals(classNode.name)) {
             // Calling a potential getter method on self. We now need to
             // investigate the method body of the getter call and make sure
@@ -161,10 +162,15 @@ public class FieldGetterDetector extends Detector implements ClassScanner {
                             if (fieldName == null) {
                                 fieldName = "";
                             }
-                            context.report(ISSUE, entry.method, entry.call, location,
-                                String.format(
-                                "Calling getter method `%1$s()` on self is " +
-                                "slower than field access (`%2$s`)", getter, fieldName));
+                            context.report(
+                                    ISSUE,
+                                    entry.method,
+                                    entry.call,
+                                    location,
+                                    String.format(
+                                            "Calling getter method `%1$s()` on self is "
+                                                    + "slower than field access (`%2$s`)",
+                                            getter, fieldName));
                         }
                     }
                 }
@@ -212,8 +218,7 @@ public class FieldGetterDetector extends Detector implements ClassScanner {
         checkMethod:
         for (Object methodObject : methods) {
             MethodNode method = (MethodNode) methodObject;
-            if (names.contains(method.name)
-                    && method.desc.startsWith("()")) {  // (): No arguments
+            if (names.contains(method.name) && method.desc.startsWith("()")) { // (): No arguments
                 InsnList instructions = method.instructions;
                 int mState = 1;
                 for (AbstractInsnNode curr = instructions.getFirst();

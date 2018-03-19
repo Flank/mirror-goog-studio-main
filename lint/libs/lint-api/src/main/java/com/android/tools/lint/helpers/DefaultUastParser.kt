@@ -48,10 +48,11 @@ import org.jetbrains.uast.psi.UElementWithLocation
 import java.io.File
 
 open class DefaultUastParser(
-        // Fully qualified names here:
-        // class traffics in Project from both lint and openapi so be explicit
-        project: com.android.tools.lint.detector.api.Project?,
-        p: com.intellij.openapi.project.Project) : UastParser() {
+    // Fully qualified names here:
+    // class traffics in Project from both lint and openapi so be explicit
+    project: com.android.tools.lint.detector.api.Project?,
+    p: com.intellij.openapi.project.Project
+) : UastParser() {
     private val uContext: UastContext?
     private val javaEvaluator: JavaEvaluator
 
@@ -69,7 +70,7 @@ open class DefaultUastParser(
         project: Project?,
         p: com.intellij.openapi.project.Project
     ): DefaultJavaEvaluator =
-            DefaultJavaEvaluator(p, project!!)
+        DefaultJavaEvaluator(p, project!!)
 
     /**
      * Prepare to parse the given contexts. This method will be called before
@@ -85,8 +86,9 @@ open class DefaultUastParser(
      * @return true if the preparation succeeded; false if there were errors
      */
     override fun prepare(
-            contexts: List<JavaContext>,
-            testContexts: List<JavaContext>): Boolean = true
+        contexts: List<JavaContext>,
+        testContexts: List<JavaContext>
+    ): Boolean = true
 
     /**
      * Returns an evaluator which can perform various resolution tasks,
@@ -117,15 +119,17 @@ open class DefaultUastParser(
         }
 
         val virtualFile = StandardFileSystems.local()
-                .findFileByPath(context.file.absolutePath) ?: return null
+            .findFileByPath(context.file.absolutePath) ?: return null
 
         val psiFile = PsiManager.getInstance(ideaProject).findFile(virtualFile) ?: return null
 
         if (psiFile.language == Language.ANY && context.file.path.endsWith(DOT_KT)) {
             // Expected to get Kotlin language back here!
-            context.client.log(Severity.ERROR, null, "Could not process " +
-                context.project.getRelativePath(context.file) +
-                    ": Kotlin not configured correctly")
+            context.client.log(
+                Severity.ERROR, null, "Could not process " +
+                        context.project.getRelativePath(context.file) +
+                        ": Kotlin not configured correctly"
+            )
         }
 
         if (psiFile is PsiPlainTextFile) { // plain text: file too large to process with PSI
@@ -133,21 +137,24 @@ open class DefaultUastParser(
                 warnedAboutLargeFiles = true
                 val max = FileUtilRt.getUserFileSizeLimit()
                 val size = context.file.length() / 1024
-                val sizeRoundedUp = Math.pow(2.0,
-                        Math.ceil(Math.log10(size.toDouble()) / Math.log10(2.0) + 0.2)).toInt()
+                val sizeRoundedUp = Math.pow(
+                    2.0,
+                    Math.ceil(Math.log10(size.toDouble()) / Math.log10(2.0) + 0.2)
+                ).toInt()
                 context.report(
-                        issue = IssueRegistry.LINT_ERROR,
-                        location = Location.create(context.file),
-                        message = "Source file too large for lint to process (${size}KB); the " +
-                                "current max size is ${max}KB. You can increase the limit by " +
-                                "setting this system property: " +
-                                "`idea.max.intellisense.filesize=$sizeRoundedUp` (or even higher)")
+                    issue = IssueRegistry.LINT_ERROR,
+                    location = Location.create(context.file),
+                    message = "Source file too large for lint to process (${size}KB); the " +
+                            "current max size is ${max}KB. You can increase the limit by " +
+                            "setting this system property: " +
+                            "`idea.max.intellisense.filesize=$sizeRoundedUp` (or even higher)"
+                )
             }
             return null
         }
 
-        return uast.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?:
-                // No need to log this; the parser should be reporting
+        return uast.convertElementWithParent(psiFile, UFile::class.java) as? UFile
+                ?: // No need to log this; the parser should be reporting
                 // a full warning (such as IssueRegistry#PARSER_ERROR)
                 // with details, location, etc.
                 return null
@@ -215,7 +222,7 @@ open class DefaultUastParser(
         }
 
         return Location.create(file, contents, range.startOffset, range.endOffset)
-                .setSource(element)
+            .setSource(element)
     }
 
     override // subclasses may want to override/optimize
@@ -242,8 +249,12 @@ open class DefaultUastParser(
     }
 
     override // subclasses may want to override/optimize
-    fun getCallLocation(context: JavaContext, call: UCallExpression,
-                        includeReceiver: Boolean, includeArguments: Boolean): Location {
+    fun getCallLocation(
+        context: JavaContext,
+        call: UCallExpression,
+        includeReceiver: Boolean,
+        includeArguments: Boolean
+    ): Location {
         val receiver = call.receiver
         if (!includeReceiver || receiver == null) {
             if (includeArguments) {
@@ -282,7 +293,7 @@ open class DefaultUastParser(
         val file = getFile(containingFile) ?: return Location.NONE
         contents = getFileContents(containingFile)
         return Location.create(file, contents, range.startOffset, range.endOffset)
-                .setSource(element)
+            .setSource(element)
     }
 
     override fun createLocation(element: UElement): Location {
@@ -290,8 +301,10 @@ open class DefaultUastParser(
             val file = element.getContainingUFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
             val text = file.psi.text
-            val location = Location.create(ioFile, text, element.startOffset,
-                    element.endOffset)
+            val location = Location.create(
+                ioFile, text, element.startOffset,
+                element.endOffset
+            )
             location.setSource(element)
             return location
         } else {
@@ -312,29 +325,36 @@ open class DefaultUastParser(
      * Returns a [Location] for the given node range (from the starting offset of the first
      * node to the ending offset of the second node).
      *
-     * @param context   information about the file being parsed
+     * @param context information about the file being parsed
      *
-     * @param from      the AST node to get a starting location from
+     * @param from the AST node to get a starting location from
      *
      * @param fromDelta Offset delta to apply to the starting offset
      *
-     * @param to        the AST node to get a ending location from
+     * @param to the AST node to get a ending location from
      *
-     * @param toDelta   Offset delta to apply to the ending offset
+     * @param toDelta Offset delta to apply to the ending offset
      *
      * @return a location for the given node
      */
-    override fun getRangeLocation(context: JavaContext, from: PsiElement,
-                         fromDelta: Int, to: PsiElement, toDelta: Int): Location {
+    override fun getRangeLocation(
+        context: JavaContext,
+        from: PsiElement,
+        fromDelta: Int,
+        to: PsiElement,
+        toDelta: Int
+    ): Location {
         val contents = context.getContents()
         val fromRange = from.textRange
         val start = Math.max(0, fromRange.startOffset + fromDelta)
-        val end = Math.min(contents?.length ?: Integer.MAX_VALUE,
-                to.textRange.endOffset + toDelta)
+        val end = Math.min(
+            contents?.length ?: Integer.MAX_VALUE,
+            to.textRange.endOffset + toDelta
+        )
         if (end <= start) {
             // Some AST nodes don't have proper bounds, such as empty parameter lists
             return Location.create(context.file, contents, start, fromRange.endOffset)
-                    .setSource(from)
+                .setSource(from)
         }
         return Location.create(context.file, contents, start, end).setSource(from)
     }
@@ -352,8 +372,13 @@ open class DefaultUastParser(
         return null
     }
 
-    override fun getRangeLocation(context: JavaContext, from: UElement,
-                         fromDelta: Int, to: UElement, toDelta: Int): Location {
+    override fun getRangeLocation(
+        context: JavaContext,
+        from: UElement,
+        fromDelta: Int,
+        to: UElement,
+        toDelta: Int
+    ): Location {
         var contents = context.getContents()
         val fromRange = getTextRange(from)
         val toRange = getTextRange(to)
@@ -378,12 +403,14 @@ open class DefaultUastParser(
 
         if (fromRange != null && toRange != null) {
             val start = Math.max(0, fromRange.startOffset + fromDelta)
-            val end = Math.min(if (contents == null) Integer.MAX_VALUE else contents.length,
-                    toRange.endOffset + toDelta)
+            val end = Math.min(
+                if (contents == null) Integer.MAX_VALUE else contents.length,
+                toRange.endOffset + toDelta
+            )
             if (end <= start) {
                 // Some AST nodes don't have proper bounds, such as empty parameter lists
                 return Location.create(file, contents, start, fromRange.endOffset)
-                        .setSource(from)
+                    .setSource(from)
             }
             return Location.create(file, contents, start, end).setSource(from)
         }
@@ -409,26 +436,36 @@ open class DefaultUastParser(
      * sometimes more convenient than operating relative to the ending offset when you
      * have a fixed range in mind.
      *
-     * @param context   information about the file being parsed
+     * @param context information about the file being parsed
      *
-     * @param from      the AST node to get a starting location from
+     * @param from the AST node to get a starting location from
      *
      * @param fromDelta Offset delta to apply to the starting offset
      *
-     * @param toDelta   Offset delta to apply to the starting offset
+     * @param toDelta Offset delta to apply to the starting offset
      *
      * @return a location for the given node
      */
-    override fun getRangeLocation(context: JavaContext, from: PsiElement,
-                         fromDelta: Int, toDelta: Int): Location =
-            getRangeLocation(context, from, fromDelta, from, -(from.textRange.length - toDelta))
+    override fun getRangeLocation(
+        context: JavaContext,
+        from: PsiElement,
+        fromDelta: Int,
+        toDelta: Int
+    ): Location =
+        getRangeLocation(context, from, fromDelta, from, -(from.textRange.length - toDelta))
 
-    override fun getRangeLocation(context: JavaContext, from: UElement,
-                         fromDelta: Int, toDelta: Int): Location {
+    override fun getRangeLocation(
+        context: JavaContext,
+        from: UElement,
+        fromDelta: Int,
+        toDelta: Int
+    ): Location {
         val fromRange = getTextRange(from)
         if (fromRange != null) {
-            return getRangeLocation(context, from, fromDelta, from,
-                    -(fromRange.length - toDelta))
+            return getRangeLocation(
+                context, from, fromDelta, from,
+                -(fromRange.length - toDelta)
+            )
         }
         return Location.create(context.file).setSource(from)
     }

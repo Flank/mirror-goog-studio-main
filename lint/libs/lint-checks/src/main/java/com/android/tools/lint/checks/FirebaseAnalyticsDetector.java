@@ -53,27 +53,24 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
 
     private static final int EVENT_NAME_MAX_LENGTH = 32;
     private static final int EVENT_PARAM_NAME_MAX_LENGTH = 24;
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            FirebaseAnalyticsDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(FirebaseAnalyticsDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue INVALID_NAME = Issue.create(
-            "InvalidAnalyticsName",
-            "Invalid Analytics Name",
-            "Event names and parameters must follow the naming conventions defined in the" +
-                    "`FirebaseAnalytics#logEvent()` documentation.",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION)
-            .addMoreInfo(
-                    "http://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics#logEvent(java.lang.String,%20android.os.Bundle)");
+    public static final Issue INVALID_NAME =
+            Issue.create(
+                            "InvalidAnalyticsName",
+                            "Invalid Analytics Name",
+                            "Event names and parameters must follow the naming conventions defined in the"
+                                    + "`FirebaseAnalytics#logEvent()` documentation.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics#logEvent(java.lang.String,%20android.os.Bundle)");
 
-    /**
-     * Constructs a new {@link FirebaseAnalyticsDetector}
-     */
-    public FirebaseAnalyticsDetector() {
-    }
+    /** Constructs a new {@link FirebaseAnalyticsDetector} */
+    public FirebaseAnalyticsDetector() {}
 
     // This list is taken from:
     // https://developers.google.com/android/reference/com/google/firebase/analytics/FirebaseAnalytics.Event
@@ -99,7 +96,9 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         String firebaseAnalytics = "com.google.firebase.analytics.FirebaseAnalytics";
         if (!context.getEvaluator().isMemberInClass(method, firebaseAnalytics)) {
@@ -124,31 +123,33 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         UExpression secondParameter = expressions.get(1);
-        List<BundleModification> bundleModifications = getBundleModifications(context,
-                secondParameter);
+        List<BundleModification> bundleModifications =
+                getBundleModifications(context, secondParameter);
 
         if (bundleModifications != null && !bundleModifications.isEmpty()) {
             validateEventParameters(context, bundleModifications, call);
         }
     }
 
-    private static void validateEventParameters(JavaContext context,
-            List<BundleModification> parameters,
-            UCallExpression call) {
+    private static void validateEventParameters(
+            JavaContext context, List<BundleModification> parameters, UCallExpression call) {
         for (BundleModification bundleModification : parameters) {
             String error = getErrorForEventParameterName(bundleModification.mName);
             if (error != null) {
                 Location location = context.getLocation(call);
                 location.withSecondary(context.getLocation(bundleModification.mLocation), error);
-                context.report(INVALID_NAME, call, location,
+                context.report(
+                        INVALID_NAME,
+                        call,
+                        location,
                         "Bundle with invalid Analytics event parameters passed to logEvent.");
             }
         }
     }
 
     @Nullable
-    private static List<BundleModification> getBundleModifications(JavaContext context,
-            UExpression secondParameter) {
+    private static List<BundleModification> getBundleModifications(
+            JavaContext context, UExpression secondParameter) {
         PsiType type = secondParameter.getExpressionType();
         if (type != null && !type.getCanonicalText().equals(SdkConstants.CLASS_BUNDLE)) {
             return null;
@@ -172,7 +173,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
      * Given a reference to an instance of Bundle, find the putString method calls that modify the
      * bundle.
      *
-     * This will recursively search across files within the project.
+     * <p>This will recursively search across files within the project.
      */
     private static class BundleModificationFinder extends AbstractUastVisitor {
 
@@ -180,8 +181,8 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         private final JavaContext mContext;
         private final List<BundleModification> mParameters = new ArrayList<>();
 
-        private BundleModificationFinder(JavaContext context,
-                UReferenceExpression bundleReference) {
+        private BundleModificationFinder(
+                JavaContext context, UReferenceExpression bundleReference) {
             mContext = context;
             mBundleReference = bundleReference.asSourceString();
         }
@@ -215,8 +216,9 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                     continue;
                 }
                 if (resolvedMethod != null) {
-                    UReferenceExpression returnReference = ReturnReferenceExpressionFinder
-                            .find(mContext.getUastContext().getMethod(resolvedMethod));
+                    UReferenceExpression returnReference =
+                            ReturnReferenceExpressionFinder.find(
+                                    mContext.getUastContext().getMethod(resolvedMethod));
                     if (returnReference != null) {
                         addParams(find(mContext, returnReference));
                     }
@@ -232,11 +234,12 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
             return super.visitCallExpression(expression);
         }
 
-         private void checkMethodCall(UCallExpression expression) {
+        private void checkMethodCall(UCallExpression expression) {
             String method = getMethodName(expression);
-            if (method == null ||
-                     (!method.equals("putString") && !method.equals("putLong")
-                    && !method.equals("putDouble"))) {
+            if (method == null
+                    || (!method.equals("putString")
+                            && !method.equals("putLong")
+                            && !method.equals("putDouble"))) {
                 return;
             }
 
@@ -246,8 +249,8 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
             }
 
             List<UExpression> expressions = expression.getValueArguments();
-            String evaluatedName = ConstantEvaluator.evaluateString(mContext,
-                    expressions.get(0), false);
+            String evaluatedName =
+                    ConstantEvaluator.evaluateString(mContext, expressions.get(0), false);
 
             if (evaluatedName != null) {
                 addParam(evaluatedName, expressions.get(1).asSourceString(), expression);
@@ -263,12 +266,11 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         @NonNull
-        static List<BundleModification> find(JavaContext context,
-                UReferenceExpression bundleReference) {
-            BundleModificationFinder scanner = new BundleModificationFinder(context,
-                    bundleReference);
-            UMethod enclosingMethod = UastUtils
-                    .getParentOfType(bundleReference, UMethod.class);
+        static List<BundleModification> find(
+                JavaContext context, UReferenceExpression bundleReference) {
+            BundleModificationFinder scanner =
+                    new BundleModificationFinder(context, bundleReference);
+            UMethod enclosingMethod = UastUtils.getParentOfType(bundleReference, UMethod.class);
             if (enclosingMethod == null) {
                 return Collections.emptyList();
             }
@@ -277,9 +279,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
     }
 
-    /**
-     * Given a method, find the last `return` expression that returns a reference.
-     */
+    /** Given a method, find the last `return` expression that returns a reference. */
     @SuppressWarnings("UnsafeReturnStatementVisitor")
     private static class ReturnReferenceExpressionFinder extends AbstractUastVisitor {
 
@@ -306,12 +306,13 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
     private static class BundleModification {
 
         public final String mName;
+
         @SuppressWarnings("unused")
         public final String mValue;
+
         public final UCallExpression mLocation;
 
-        public BundleModification(String name, String value,
-                UCallExpression location) {
+        public BundleModification(String name, String value, UCallExpression location) {
             mName = name;
             mValue = value;
             mLocation = location;
@@ -336,13 +337,14 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         if (!Character.isAlphabetic(eventName.charAt(0))) {
-            String message
-                    = "Analytics event name must start with an alphabetic character (found %1$s)";
+            String message =
+                    "Analytics event name must start with an alphabetic character (found %1$s)";
             return String.format(message, eventName);
         }
 
-        String message = "Analytics event name must only consist of letters, numbers and " +
-                "underscores (found %1$s)";
+        String message =
+                "Analytics event name must only consist of letters, numbers and "
+                        + "underscores (found %1$s)";
         for (int i = 0; i < eventName.length(); i++) {
             char character = eventName.charAt(i);
             if (!Character.isLetterOrDigit(character) && character != '_') {
@@ -355,8 +357,8 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         if (isReservedEventName(eventName)) {
-            return String.format("`%1$s` is a reserved Analytics event name and cannot be used",
-                    eventName);
+            return String.format(
+                    "`%1$s` is a reserved Analytics event name and cannot be used", eventName);
         }
 
         return null;
@@ -375,13 +377,15 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         }
 
         if (!Character.isAlphabetic(eventParameterName.charAt(0))) {
-            String message = "Analytics event parameter name must start with an alphabetic " +
-                    "character (found %1$s)";
+            String message =
+                    "Analytics event parameter name must start with an alphabetic "
+                            + "character (found %1$s)";
             return String.format(message, eventParameterName);
         }
 
-        String message = "Analytics event name must only consist of letters, numbers and " +
-                "underscores (found %1$s)";
+        String message =
+                "Analytics event name must only consist of letters, numbers and "
+                        + "underscores (found %1$s)";
         for (int i = 0; i < eventParameterName.length(); i++) {
             char character = eventParameterName.charAt(i);
             if (!Character.isLetterOrDigit(character) && character != '_') {

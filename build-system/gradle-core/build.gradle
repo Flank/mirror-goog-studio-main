@@ -44,6 +44,8 @@ dependencies {
     compile libs.jopt
     compile libs.proguard
     compile libs.smali_dexlib
+    compile libs.bundle_tool
+
 
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report

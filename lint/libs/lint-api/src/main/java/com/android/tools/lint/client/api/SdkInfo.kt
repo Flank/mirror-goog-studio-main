@@ -45,7 +45,7 @@ abstract class SdkInfo {
                 return true
             }
             val parent = getParentViewClass(current) ?: // Unknown view - err on the side of caution
-                    return true
+            return true
             current = parent
         }
 

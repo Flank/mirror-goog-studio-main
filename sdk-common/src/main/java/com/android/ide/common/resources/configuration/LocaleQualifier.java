@@ -23,6 +23,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * A locale qualifier, which can be constructed from:
@@ -584,9 +585,7 @@ public final class LocaleQualifier extends ResourceQualifier {
         if (qualifier instanceof LocaleQualifier) {
             LocaleQualifier other = (LocaleQualifier)qualifier;
 
-            if (mLanguage != null
-                    && other.mLanguage != null
-                    && !mLanguage.equals(other.mLanguage)) {
+            if (!Objects.equals(mLanguage, other.mLanguage)) {
                 return false;
             }
 

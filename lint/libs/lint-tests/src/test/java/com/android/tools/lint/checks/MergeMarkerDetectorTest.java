@@ -26,56 +26,61 @@ public class MergeMarkerDetectorTest extends AbstractCheckTest {
     }
 
     public void testMergeMarker() throws Exception {
-        assertEquals(""
-                + "src/test/pkg/Test.java:2: Error: Missing merge marker? [MergeMarker]\n"
-                + "<<<<<<< HEAD\n"
-                + "~~~~~~~\n"
-                + "src/test/pkg/Test.java:4: Error: Missing merge marker? [MergeMarker]\n"
-                + "=======\n"
-                + "~~~~~~~\n"
-                + "src/test/pkg/Test.java:5: Error: Missing merge marker? [MergeMarker]\n"
-                + ">>>>>>> branch-a\n"
-                + "~~~~~~~\n"
-                + "res/values/strings.xml:5: Error: Missing merge marker? [MergeMarker]\n"
-                + "<<<<<<< HEAD\n"
-                + "~~~~~~~\n"
-                + "res/values/strings.xml:7: Error: Missing merge marker? [MergeMarker]\n"
-                + "=======\n"
-                + "~~~~~~~\n"
-                + "res/values/strings.xml:9: Error: Missing merge marker? [MergeMarker]\n"
-                + ">>>>>>> branch-a    \n"
-                + "~~~~~~~\n"
-                + "6 errors, 0 warnings\n",
+        assertEquals(
+                ""
+                        + "src/test/pkg/Test.java:2: Error: Missing merge marker? [MergeMarker]\n"
+                        + "<<<<<<< HEAD\n"
+                        + "~~~~~~~\n"
+                        + "src/test/pkg/Test.java:4: Error: Missing merge marker? [MergeMarker]\n"
+                        + "=======\n"
+                        + "~~~~~~~\n"
+                        + "src/test/pkg/Test.java:5: Error: Missing merge marker? [MergeMarker]\n"
+                        + ">>>>>>> branch-a\n"
+                        + "~~~~~~~\n"
+                        + "res/values/strings.xml:5: Error: Missing merge marker? [MergeMarker]\n"
+                        + "<<<<<<< HEAD\n"
+                        + "~~~~~~~\n"
+                        + "res/values/strings.xml:7: Error: Missing merge marker? [MergeMarker]\n"
+                        + "=======\n"
+                        + "~~~~~~~\n"
+                        + "res/values/strings.xml:9: Error: Missing merge marker? [MergeMarker]\n"
+                        + ">>>>>>> branch-a    \n"
+                        + "~~~~~~~\n"
+                        + "6 errors, 0 warnings\n",
                 lintProject(
-                        source("src/test/pkg/Test.java", ""
-                                + "package test.pkg;\n"
-                                + "<<<<<<< HEAD\n"
-                                + "import java.util.List;\n"
-                                + "=======\n"
-                                + ">>>>>>> branch-a\n"
-                                + "class Test {\n"
-                                + "    PrintTitle('<<<<<<< ', 'X509 certificate chain', name)\n"
-                                + "}"),
-                        source("res/values/strings.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<resources>\n"
-                                + "\n"
-                                + "    <string name=\"app_name\">LibraryProject</string>\n"
-                                + "<<<<<<< HEAD\n"
-                                + "    <string name=\"string1\">String 1</string>\n"
-                                + "=======\n"
-                                + "    <string name=\"string2\">String 2</string>\n"
-                                + ">>>>>>> branch-a    \n"
-                                + "    <string name=\"string3\">String 3</string>\n"
-                                + "\n"
-                                + "</resources>\n"),
+                        source(
+                                "src/test/pkg/Test.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "<<<<<<< HEAD\n"
+                                        + "import java.util.List;\n"
+                                        + "=======\n"
+                                        + ">>>>>>> branch-a\n"
+                                        + "class Test {\n"
+                                        + "    PrintTitle('<<<<<<< ', 'X509 certificate chain', name)\n"
+                                        + "}"),
+                        source(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "\n"
+                                        + "    <string name=\"app_name\">LibraryProject</string>\n"
+                                        + "<<<<<<< HEAD\n"
+                                        + "    <string name=\"string1\">String 1</string>\n"
+                                        + "=======\n"
+                                        + "    <string name=\"string2\">String 2</string>\n"
+                                        + ">>>>>>> branch-a    \n"
+                                        + "    <string name=\"string3\">String 3</string>\n"
+                                        + "\n"
+                                        + "</resources>\n"),
                         // Make sure we don't try to read binary contents
-                        source("res/drawable-mdpi/my_icon.png", ""
-                                + "<<<<<<< HEAD\n"
-                                + "=======\n"
-                                + ">>>>>>> branch-a    \n"
-                                + "</resources>\n")
-
-                ));
+                        source(
+                                "res/drawable-mdpi/my_icon.png",
+                                ""
+                                        + "<<<<<<< HEAD\n"
+                                        + "=======\n"
+                                        + ">>>>>>> branch-a    \n"
+                                        + "</resources>\n")));
     }
 }

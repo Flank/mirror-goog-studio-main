@@ -28,10 +28,11 @@ import com.android.tools.lint.detector.api.Severity
 import org.junit.Assert.fail
 
 class TestConfiguration(
-        private val task: TestLintTask,
-        client: LintClient,
-        project: Project,
-        parent: Configuration?) : DefaultConfiguration(client, project, parent) {
+    private val task: TestLintTask,
+    client: LintClient,
+    project: Project,
+    parent: Configuration?
+) : DefaultConfiguration(client, project, parent) {
 
     override fun getDefaultSeverity(issue: Issue): Severity {
         // In unit tests, include issues that are ignored by default
@@ -61,8 +62,12 @@ class TestConfiguration(
         return task.checkedIssues.contains(issue)
     }
 
-    override fun ignore(context: Context, issue: Issue,
-                        location: Location?, message: String) = fail("Not supported in tests.")
+    override fun ignore(
+        context: Context,
+        issue: Issue,
+        location: Location?,
+        message: String
+    ) = fail("Not supported in tests.")
 
     override fun setSeverity(issue: Issue, severity: Severity?) = fail("Not supported in tests.")
 }

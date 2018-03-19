@@ -28,9 +28,9 @@
 #include "utils/config.h"
 #include "utils/log.h"
 
-#include "instrumentation.h"
-#include "reader.h"
-#include "writer.h"
+#include "slicer/instrumentation.h"
+#include "slicer/reader.h"
+#include "slicer/writer.h"
 
 using profiler::Agent;
 using profiler::Log;
@@ -73,9 +73,15 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
           cpu_api_tracing_enabled) ||
          (energy_profiler_enabled &&
           (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
+               0 ||
            strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
+               0 ||
+           strcmp(sig_mutf8, "Landroid/location/LocationManager;") == 0 ||
+           strcmp(sig_mutf8,
+                  "Landroid/location/LocationManager$ListenerTransport;") ==
                0 ||
            strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0));
@@ -250,6 +256,17 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                          "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
       Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
     }
+  } else if (strcmp(name, "android/app/AlarmManager$ListenerWrapper") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::DetourInterfaceInvoke>(
+        ir::MethodId("Landroid/app/AlarmManager$OnAlarmListener;", "onAlarm",
+                     "()V"),
+        ir::MethodId(
+            "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
+            "wrapListenerOnAlarm"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "run", "()V"))) {
+      Log::E("Error instrumenting ListenerWrapper.run");
+    }
   } else if (strcmp(name, "android/app/JobSchedulerImpl") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::EntryHook>(
@@ -296,6 +313,118 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
             ir::MethodId(desc.c_str(), "ackStopMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
       Log::E("Error instrumenting JobHandler.ackStopMessage");
+    }
+  } else if (strcmp(name, "android/location/LocationManager") == 0) {
+    // Instrument all versions of requestLocationUpdates.
+    slicer::MethodInstrumenter mi_req(dex_ir);
+    mi_req.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
+        "wrapRequestLocationUpdates"));
+    if (!mi_req.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestLocationUpdates",
+                         "(Ljava/lang/String;JFLandroid/location/"
+                         "LocationListener;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(String, "
+          "long, float, LocationListener)");
+    }
+    if (!mi_req.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestLocationUpdates",
+                         "(JFLandroid/location/Criteria;Landroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(long, "
+          "float, Criteria, LocationListener, Looper)");
+    }
+    if (!mi_req.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestLocationUpdates",
+                         "(Ljava/lang/String;JFLandroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(String, "
+          "long, float, LocationListener, Looper)");
+    }
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(long, "
+          "float, Criteria, PendingIntent)");
+    }
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(Ljava/lang/String;JFLandroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(String, "
+          "long, float, PendingIntent)");
+    }
+
+    // Instrument all versions of requestSingleUpdate.
+    slicer::MethodInstrumenter mi_req_s(dex_ir);
+    mi_req_s.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
+        "wrapRequestSingleUpdate"));
+    if (!mi_req_s.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestSingleUpdate",
+                         "(Ljava/lang/String;Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(String, "
+          "PendingIntent)");
+    }
+    if (!mi_req_s.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestSingleUpdate",
+            "(Landroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
+          "PendingIntent)");
+    }
+    if (!mi_req_s.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestSingleUpdate",
+                         "(Ljava/lang/String;Landroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(String, "
+          "LocationListener, Looper)");
+    }
+    if (!mi_req_s.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestSingleUpdate",
+                         "(Landroid/location/Criteria;Landroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
+          "LocationListener, Looper)");
+    }
+
+    // Instrument all versions of removeUpdates
+    slicer::MethodInstrumenter mi_remove(dex_ir);
+    mi_remove.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
+        "wrapRemoveUpdates"));
+    if (!mi_remove.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "removeUpdates",
+                         "(Landroid/location/LocationListener;)V"))) {
+      Log::E(
+          "Error instrumenting "
+          "LocationManager.removeUpdates(LocationListener)");
+    }
+    if (!mi_remove.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "removeUpdates", "(Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.removeUpdates(PendingIntent)");
+    }
+  } else if (strcmp(name,
+                    "android/location/LocationManager$ListenerTransport") ==
+             0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::DetourInterfaceInvoke>(
+        ir::MethodId("Landroid/location/LocationListener;", "onLocationChanged",
+                     "(Landroid/location/Location;)V"),
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/"
+                     "LocationManagerWrapper;",
+                     "wrapOnLocationChanged"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "_handleMessage",
+                                          "(Landroid/os/Message;)V"))) {
+      Log::E("Error instrumenting LocationListener.onLocationChanged");
     }
   } else {
     Log::V("No transformation applied for class: %s", name);
@@ -357,20 +486,23 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmScheduled", "(IIJJJLjava/lang/String;I)V");
+        "sendIntentAlarmScheduled", "(IIJJJLjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmScheduled", "(IIJJJLjava/lang/String;)V");
+        "sendListenerAlarmScheduled", "(IIJJJLjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmCancelled", "(ILjava/lang/String;I)V");
+        "sendIntentAlarmCancelled", "(ILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmCancelled", "(ILjava/lang/String;)V");
+        "sendListenerAlarmCancelled", "(ILjava/lang/String;Ljava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
+        "sendListenerAlarmFired", "(ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobScheduled",
                   "(IILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
-                  "Ljava/lang/String;Ljava/lang/String;I)V");
+                  "Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobStarted",
                   "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
@@ -382,7 +514,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobFinished",
                   "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
-                  "Ljava/lang/String;Z)V");
+                  "Ljava/lang/String;ZLjava/lang/String;)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {

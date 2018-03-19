@@ -80,8 +80,10 @@ open class UElementHandler {
     internal open fun error(parameterType: Class<out UElement>) {
         val name = parameterType.simpleName
         assert(name.startsWith("U")) { name }
-        throw RuntimeException("You must override visit${name.substring(1)} " +
-                "(and don't call super.visit${name.substring(1)}!)")
+        throw RuntimeException(
+            "You must override visit${name.substring(1)} " +
+                    "(and don't call super.visit${name.substring(1)}!)"
+        )
     }
 
     open fun visitAnnotation(node: UAnnotation) {

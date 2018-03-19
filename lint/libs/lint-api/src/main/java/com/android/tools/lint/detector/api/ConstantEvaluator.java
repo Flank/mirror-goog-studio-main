@@ -88,12 +88,8 @@ public class ConstantEvaluator {
     private boolean allowUnknown;
     private boolean allowFieldInitializers;
 
-    /**
-     * Creates a new constant evaluator
-     *
-     */
-    public ConstantEvaluator() {
-    }
+    /** Creates a new constant evaluator */
+    public ConstantEvaluator() {}
 
     /**
      * Whether we allow computing values where some terms are unknown. For example, the expression
@@ -192,8 +188,8 @@ public class ConstantEvaluator {
             if (result != null) {
                 return result;
             }
-        } else if (node instanceof UBinaryExpressionWithType &&
-                ((UBinaryExpressionWithType) node).getOperationKind() == TYPE_CAST) {
+        } else if (node instanceof UBinaryExpressionWithType
+                && ((UBinaryExpressionWithType) node).getOperationKind() == TYPE_CAST) {
             UBinaryExpressionWithType cast = (UBinaryExpressionWithType) node;
             Object operandValue = evaluate(cast.getOperand());
             if (operandValue instanceof Number) {
@@ -228,9 +224,10 @@ public class ConstantEvaluator {
                     if (value != null) {
                         return value;
                     }
-                    if (field.getInitializer() != null && (allowFieldInitializers
-                            || (field.hasModifierProperty(PsiModifier.STATIC)
-                            && field.hasModifierProperty(PsiModifier.FINAL)))) {
+                    if (field.getInitializer() != null
+                            && (allowFieldInitializers
+                                    || (field.hasModifierProperty(PsiModifier.STATIC)
+                                            && field.hasModifierProperty(PsiModifier.FINAL)))) {
                         value = evaluate(field.getInitializer());
                         if (value != null) {
                             if (surroundedByVariableCheck(node, field)) {
@@ -261,7 +258,6 @@ public class ConstantEvaluator {
                     }
 
                     return initializedValue;
-
                 }
                 return null;
             }
@@ -271,8 +267,7 @@ public class ConstantEvaluator {
             if (arrayType instanceof PsiArrayType) {
                 PsiType componentType = ((PsiArrayType) arrayType).getComponentType();
                 // Single-dimension array
-                if (!(componentType instanceof PsiArrayType)
-                        && call.getValueArgumentCount() == 1) {
+                if (!(componentType instanceof PsiArrayType) && call.getValueArgumentCount() == 1) {
                     Object lengthObj = evaluate(call.getValueArguments().get(0));
                     if (lengthObj instanceof Number) {
                         int length = ((Number) lengthObj).intValue();
@@ -470,10 +465,13 @@ public class ConstantEvaluator {
             Number left = (Number) operandLeft;
             Number right = (Number) operandRight;
             boolean isInteger =
-                    !(left instanceof Float || left instanceof Double
-                            || right instanceof Float || right instanceof Double);
+                    !(left instanceof Float
+                            || left instanceof Double
+                            || right instanceof Float
+                            || right instanceof Double);
             boolean isWide =
-                    isInteger ? (left instanceof Long || right instanceof Long)
+                    isInteger
+                            ? (left instanceof Long || right instanceof Long)
                             : (left instanceof Double || right instanceof Double);
 
             if (operator == UastBinaryOperator.BITWISE_OR) {
@@ -629,8 +627,7 @@ public class ConstantEvaluator {
     }
 
     private static boolean surroundedByVariableCheck(
-            @Nullable UElement node,
-            @NonNull PsiVariable variable) {
+            @Nullable UElement node, @NonNull PsiVariable variable) {
         if (node == null) {
             return false;
         }
@@ -759,9 +756,10 @@ public class ConstantEvaluator {
                 UExpression rightOperand = node.getRightOperand();
                 ConstantEvaluator constantEvaluator = mConstantEvaluator;
 
-                mCurrentValue = (constantEvaluator != null)
-                        ? constantEvaluator.evaluate(rightOperand)
-                        : null;
+                mCurrentValue =
+                        (constantEvaluator != null)
+                                ? constantEvaluator.evaluate(rightOperand)
+                                : null;
                 mLastAssignment = rightOperand;
             }
 
@@ -777,8 +775,7 @@ public class ConstantEvaluator {
         }
 
         private static boolean elementHasLevel(UElement node) {
-            return !(node instanceof UBlockExpression
-                    || node instanceof UDeclarationsExpression);
+            return !(node instanceof UBlockExpression || node instanceof UDeclarationsExpression);
         }
     }
 
@@ -794,7 +791,7 @@ public class ConstantEvaluator {
             return null;
         }
         if (node instanceof PsiLiteral) {
-            return ((PsiLiteral)node).getValue();
+            return ((PsiLiteral) node).getValue();
         } else if (node instanceof PsiPrefixExpression) {
             IElementType operator = ((PsiPrefixExpression) node).getOperationTokenType();
             Object operand = evaluate(((PsiPrefixExpression) node).getOperand());
@@ -892,10 +889,13 @@ public class ConstantEvaluator {
                 Number left = (Number) operandLeft;
                 Number right = (Number) operandRight;
                 boolean isInteger =
-                        !(left instanceof Float || left instanceof Double
-                                || right instanceof Float || right instanceof Double);
+                        !(left instanceof Float
+                                || left instanceof Double
+                                || right instanceof Float
+                                || right instanceof Double);
                 boolean isWide =
-                        isInteger ? (left instanceof Long || right instanceof Long)
+                        isInteger
+                                ? (left instanceof Long || right instanceof Long)
                                 : (left instanceof Double || right instanceof Double);
 
                 if (operator == JavaTokenType.OR) {
@@ -1881,13 +1881,15 @@ public class ConstantEvaluator {
                 if (value != null) {
                     return value;
                 }
-                if (field.getInitializer() != null && (allowFieldInitializers
-                        || (field.hasModifierProperty(PsiModifier.STATIC)
-                        && field.hasModifierProperty(PsiModifier.FINAL)))) {
+                if (field.getInitializer() != null
+                        && (allowFieldInitializers
+                                || (field.hasModifierProperty(PsiModifier.STATIC)
+                                        && field.hasModifierProperty(PsiModifier.FINAL)))) {
                     value = evaluate(field.getInitializer());
                     if (value != null) {
                         // See if it looks like the value has been clamped locally
-                        PsiIfStatement curr = PsiTreeUtil.getParentOfType(node, PsiIfStatement.class);
+                        PsiIfStatement curr =
+                                PsiTreeUtil.getParentOfType(node, PsiIfStatement.class);
                         while (curr != null) {
                             if (curr.getCondition() != null
                                     && references(curr.getCondition(), field)) {
@@ -1911,7 +1913,7 @@ public class ConstantEvaluator {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
                 PsiExpression last = findLastAssignment(node, variable);
                 if (last != null) {
-// TODO: Clamp value as is done for UAST?
+                    // TODO: Clamp value as is done for UAST?
                     return evaluate(last);
                 }
             }
@@ -2059,7 +2061,7 @@ public class ConstantEvaluator {
                     if (arrayDimensions.length == 1) {
                         Object fixedSize = evaluate(arrayDimensions[0]);
                         if (fixedSize instanceof Number) {
-                            size = ((Number)fixedSize).intValue();
+                            size = ((Number) fixedSize).intValue();
                             if (size > 30) {
                                 size = 30;
                             }
@@ -2114,51 +2116,50 @@ public class ConstantEvaluator {
 
     /** Returns true if the given variable is referenced from within the given element */
     private static boolean references(
-            @NonNull PsiExpression element,
-            @NonNull PsiVariable variable) {
+            @NonNull PsiExpression element, @NonNull PsiVariable variable) {
         AtomicBoolean found = new AtomicBoolean();
-        element.accept(new JavaRecursiveElementVisitor() {
-            @Override
-            public void visitReferenceElement(PsiJavaCodeReferenceElement reference) {
-                PsiElement refersTo = reference.resolve();
-                if (variable.equals(refersTo)) {
-                    found.set(true);
-                }
-                super.visitReferenceElement(reference);
-            }
-        });
+        element.accept(
+                new JavaRecursiveElementVisitor() {
+                    @Override
+                    public void visitReferenceElement(PsiJavaCodeReferenceElement reference) {
+                        PsiElement refersTo = reference.resolve();
+                        if (variable.equals(refersTo)) {
+                            found.set(true);
+                        }
+                        super.visitReferenceElement(reference);
+                    }
+                });
 
         return found.get();
     }
 
     /** Returns true if the given variable is referenced from within the given element */
-    private static boolean references(
-            @NonNull UExpression element,
-            @NonNull PsiVariable variable) {
+    private static boolean references(@NonNull UExpression element, @NonNull PsiVariable variable) {
         AtomicBoolean found = new AtomicBoolean();
-        element.accept(new AbstractUastVisitor() {
-            @Override
-            public boolean visitSimpleNameReferenceExpression(USimpleNameReferenceExpression node) {
-                PsiElement refersTo = node.resolve();
-                if (variable.equals(refersTo)) {
-                    found.set(true);
-                }
+        element.accept(
+                new AbstractUastVisitor() {
+                    @Override
+                    public boolean visitSimpleNameReferenceExpression(
+                            USimpleNameReferenceExpression node) {
+                        PsiElement refersTo = node.resolve();
+                        if (variable.equals(refersTo)) {
+                            found.set(true);
+                        }
 
-                return super.visitSimpleNameReferenceExpression(node);
-            }
+                        return super.visitSimpleNameReferenceExpression(node);
+                    }
 
-            @Override
-            public boolean visitQualifiedReferenceExpression(UQualifiedReferenceExpression node) {
-                return super.visitQualifiedReferenceExpression(node);
-            }
-        });
+                    @Override
+                    public boolean visitQualifiedReferenceExpression(
+                            UQualifiedReferenceExpression node) {
+                        return super.visitQualifiedReferenceExpression(node);
+                    }
+                });
 
         return found.get();
     }
 
-    /**
-     * Returns true if the node is pointing to a an array literal
-     */
+    /** Returns true if the node is pointing to a an array literal */
     public static boolean isArrayLiteral(@Nullable PsiElement node) {
         if (node instanceof PsiReference) {
             PsiElement resolved = ((PsiReference) node).resolve();
@@ -2200,16 +2201,13 @@ public class ConstantEvaluator {
         return false;
     }
 
-    /**
-     * Returns true if the node is pointing to a an array literal
-     */
+    /** Returns true if the node is pointing to a an array literal */
     public static boolean isArrayLiteral(@Nullable UElement node) {
         if (node instanceof UReferenceExpression) {
             PsiElement resolved = ((UReferenceExpression) node).resolve();
             if (resolved instanceof PsiVariable) {
                 PsiVariable variable = (PsiVariable) resolved;
-                UExpression lastAssignment =
-                        UastLintUtils.findLastAssignment(variable, node);
+                UExpression lastAssignment = UastLintUtils.findLastAssignment(variable, node);
 
                 if (lastAssignment != null) {
                     return isArrayLiteral(lastAssignment);
@@ -2239,7 +2237,7 @@ public class ConstantEvaluator {
      * the result.
      *
      * @param context the context to use to resolve field references, if any
-     * @param node    the node to compute the constant value for
+     * @param node the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
      */
     @Nullable
@@ -2285,8 +2283,8 @@ public class ConstantEvaluator {
      * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
      * the result.
      *
-     * @param context     the context to use to resolve field references, if any
-     * @param element     the node to compute the constant value for
+     * @param context the context to use to resolve field references, if any
+     * @param element the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
      */
     @Nullable
@@ -2302,15 +2300,15 @@ public class ConstantEvaluator {
      * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
      * the result if the result is a string.
      *
-     * @param context      the context to use to resolve field references, if any
-     * @param node         the node to compute the constant value for
+     * @param context the context to use to resolve field references, if any
+     * @param node the node to compute the constant value for
      * @param allowUnknown whether we should construct the string even if some parts of it are
-     *                     unknown
+     *     unknown
      * @return the corresponding string, if any
      */
     @Nullable
-    public static String evaluateString(@Nullable JavaContext context, @NonNull PsiElement node,
-            boolean allowUnknown) {
+    public static String evaluateString(
+            @Nullable JavaContext context, @NonNull PsiElement node, boolean allowUnknown) {
         ConstantEvaluator evaluator = new ConstantEvaluator();
         if (allowUnknown) {
             evaluator.allowUnknowns();
@@ -2320,53 +2318,48 @@ public class ConstantEvaluator {
     }
 
     /**
-     * Computes the last assignment to a given variable counting backwards from
-     * the given context element
+     * Computes the last assignment to a given variable counting backwards from the given context
+     * element
      *
-     * @param usage    the usage site to search backwards from
+     * @param usage the usage site to search backwards from
      * @param variable the variable
      * @return the last assignment or null
      */
     @Nullable
-    public static PsiExpression findLastAssignment(@NonNull PsiElement usage,
-            @NonNull PsiVariable variable) {
+    public static PsiExpression findLastAssignment(
+            @NonNull PsiElement usage, @NonNull PsiVariable variable) {
         // Walk backwards through assignments to find the most recent initialization
         // of this variable
-        PsiStatement statement = PsiTreeUtil.getParentOfType(usage, PsiStatement.class,
-                false);
+        PsiStatement statement = PsiTreeUtil.getParentOfType(usage, PsiStatement.class, false);
         if (statement != null) {
-            PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement,
-                    PsiStatement.class);
+            PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement, PsiStatement.class);
             String targetName = variable.getName();
             if (targetName == null) {
                 return null;
             }
             while (prev != null) {
                 if (prev instanceof PsiDeclarationStatement) {
-                    for (PsiElement element : ((PsiDeclarationStatement) prev)
-                            .getDeclaredElements()) {
+                    for (PsiElement element :
+                            ((PsiDeclarationStatement) prev).getDeclaredElements()) {
                         if (variable.equals(element)) {
                             return variable.getInitializer();
                         }
                     }
                 } else if (prev instanceof PsiExpressionStatement) {
-                    PsiExpression expression = ((PsiExpressionStatement) prev)
-                            .getExpression();
+                    PsiExpression expression = ((PsiExpressionStatement) prev).getExpression();
                     if (expression instanceof PsiAssignmentExpression) {
-                        PsiAssignmentExpression assign
-                                = (PsiAssignmentExpression) expression;
+                        PsiAssignmentExpression assign = (PsiAssignmentExpression) expression;
                         PsiExpression lhs = assign.getLExpression();
                         if (lhs instanceof PsiReferenceExpression) {
                             PsiReferenceExpression reference = (PsiReferenceExpression) lhs;
-                            if (targetName.equals(reference.getReferenceName()) &&
-                                    reference.getQualifier() == null) {
+                            if (targetName.equals(reference.getReferenceName())
+                                    && reference.getQualifier() == null) {
                                 return assign.getRExpression();
                             }
                         }
                     }
                 }
-                prev = PsiTreeUtil.getPrevSiblingOfType(prev,
-                        PsiStatement.class);
+                prev = PsiTreeUtil.getPrevSiblingOfType(prev, PsiStatement.class);
             }
         }
 
@@ -2378,15 +2371,15 @@ public class ConstantEvaluator {
      * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
      * the result if the result is a string.
      *
-     * @param context      the context to use to resolve field references, if any
-     * @param element      the node to compute the constant value for
+     * @param context the context to use to resolve field references, if any
+     * @param element the node to compute the constant value for
      * @param allowUnknown whether we should construct the string even if some parts of it are
-     *                     unknown
+     *     unknown
      * @return the corresponding string, if any
      */
     @Nullable
-    public static String evaluateString(@Nullable JavaContext context, @NonNull UElement element,
-            boolean allowUnknown) {
+    public static String evaluateString(
+            @Nullable JavaContext context, @NonNull UElement element, boolean allowUnknown) {
         ConstantEvaluator evaluator = new ConstantEvaluator();
         if (allowUnknown) {
             evaluator.allowUnknowns();

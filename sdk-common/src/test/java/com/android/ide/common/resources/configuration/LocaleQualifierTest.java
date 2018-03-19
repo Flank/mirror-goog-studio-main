@@ -22,9 +22,8 @@ import static com.android.ide.common.resources.configuration.LocaleQualifier.isN
 import static com.android.ide.common.resources.configuration.LocaleQualifier.normalizeCase;
 import static com.android.ide.common.resources.configuration.LocaleQualifier.parseBcp47;
 
-import junit.framework.TestCase;
-
 import java.util.Locale;
+import junit.framework.TestCase;
 
 public class LocaleQualifierTest extends TestCase {
 
@@ -339,5 +338,11 @@ public class LocaleQualifierTest extends TestCase {
         assertFalse(LocaleQualifier.getQualifier("b+en").hasRegion());
         assertFalse(new LocaleQualifier(FAKE_VALUE).hasRegion());
         assertFalse(new LocaleQualifier("", FAKE_VALUE, FAKE_VALUE, null).hasRegion());
+    }
+
+    public void testDefaultMatch() {
+        assertFalse(lq.isMatchFor(getQualifier("ko")));
+        assertFalse(getQualifier("fr").isMatchFor(lq));
+        assertTrue(lq.isMatchFor(new LocaleQualifier()));
     }
 }

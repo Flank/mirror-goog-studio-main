@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.checks
 
-import com.android.support.AndroidxName
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.support.AndroidxName
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
@@ -42,23 +42,26 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 class CallSuperDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
-                CallSuperDetector::class.java,
-                Scope.JAVA_FILE_SCOPE)
+            CallSuperDetector::class.java,
+            Scope.JAVA_FILE_SCOPE
+        )
 
         /** Missing call to super  */
-        @JvmField val ISSUE = Issue.create(
-                "MissingSuperCall",
-                "Missing Super Call",
+        @JvmField
+        val ISSUE = Issue.create(
+            "MissingSuperCall",
+            "Missing Super Call",
 
-                """
+            """
 Some methods, such as `View#onDetachedFromWindow`, require that you also call the super
 implementation as part of your method.
 """,
 
-                Category.CORRECTNESS,
-                9,
-                Severity.ERROR,
-                IMPLEMENTATION)
+            Category.CORRECTNESS,
+            9,
+            Severity.ERROR,
+            IMPLEMENTATION
+        )
 
         private val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")
         private const val ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow"
@@ -66,26 +69,28 @@ implementation as part of your method.
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-            listOf<Class<out UElement>>(UMethod::class.java)
+        listOf<Class<out UElement>>(UMethod::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? =
-            object : UElementHandler() {
-                override fun visitMethod(node: UMethod) {
-                    val superMethod = getRequiredSuperMethod(context, node) ?: return
-                    if (!callsSuper(node, superMethod)) {
-                        val message = "Overriding method should call `super.${node.name}`"
-                        val location = context.getNameLocation(node)
-                        context.report(ISSUE, node, location, message)
-                    }
+        object : UElementHandler() {
+            override fun visitMethod(node: UMethod) {
+                val superMethod = getRequiredSuperMethod(context, node) ?: return
+                if (!callsSuper(node, superMethod)) {
+                    val message = "Overriding method should call `super.${node.name}`"
+                    val location = context.getNameLocation(node)
+                    context.report(ISSUE, node, location, message)
                 }
             }
+        }
 
     /**
      * Checks whether the given method overrides a method which requires the super method
      * to be invoked, and if so, returns it (otherwise returns null)
      */
-    private fun getRequiredSuperMethod(context: JavaContext,
-                                       method: UMethod): PsiMethod? {
+    private fun getRequiredSuperMethod(
+        context: JavaContext,
+        method: UMethod
+    ): PsiMethod? {
 
         val evaluator = context.evaluator
         val directSuper = evaluator.getSuperMethod(method) ?: return null
@@ -106,8 +111,11 @@ implementation as part of your method.
             // but we want to enforce this right away until the AAR
             // is updated to supply it once @CallSuper is available in
             // the support library
-            if (!evaluator.isMemberInSubClassOf(method,
-                    "android.support.wearable.watchface.WatchFaceService.Engine", false)) {
+            if (!evaluator.isMemberInSubClassOf(
+                    method,
+                    "android.support.wearable.watchface.WatchFaceService.Engine", false
+                )
+            ) {
                 return null
             }
             return directSuper
@@ -117,8 +125,9 @@ implementation as part of your method.
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
             if (CALL_SUPER_ANNOTATION.isEquals(signature) || signature != null &&
-                    (signature.endsWith(".OverrideMustInvoke") ||
-                            signature.endsWith(".OverridingMethodsMustInvokeSuper"))) {
+                (signature.endsWith(".OverrideMustInvoke") ||
+                        signature.endsWith(".OverridingMethodsMustInvokeSuper"))
+            ) {
                 return directSuper
             }
         }
@@ -126,15 +135,18 @@ implementation as part of your method.
         return null
     }
 
-    private fun callsSuper(method: UMethod,
-                           superMethod: PsiMethod): Boolean {
+    private fun callsSuper(
+        method: UMethod,
+        superMethod: PsiMethod
+    ): Boolean {
         val visitor = SuperCallVisitor(superMethod)
         method.accept(visitor)
         return visitor.callsSuper
     }
 
     /** Visits a method and determines whether the method calls its super method  */
-    private class SuperCallVisitor constructor(private val targetMethod: PsiMethod) : AbstractUastVisitor() {
+    private class SuperCallVisitor constructor(private val targetMethod: PsiMethod) :
+        AbstractUastVisitor() {
         var callsSuper: Boolean = false
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
@@ -143,7 +155,8 @@ implementation as part of your method.
                 val resolved = parent.resolve()
                 if (targetMethod == resolved
                     // Avoid false positives when there are type resolution problems
-                    || resolved == null) {
+                    || resolved == null
+                ) {
                     callsSuper = true
                 }
             }

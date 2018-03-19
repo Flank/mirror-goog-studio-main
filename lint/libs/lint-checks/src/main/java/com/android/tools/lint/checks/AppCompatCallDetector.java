@@ -39,17 +39,18 @@ import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UastUtils;
 
 public class AppCompatCallDetector extends Detector implements SourceCodeScanner {
-    public static final Issue ISSUE = Issue.create(
-            "AppCompatMethod",
-            "Using Wrong AppCompat Method",
-            "When using the appcompat library, there are some methods you should be calling " +
-            "instead of the normal ones; for example, `getSupportActionBar()` instead of " +
-            "`getActionBar()`. This lint check looks for calls to the wrong method.",
-            Category.CORRECTNESS, 6, Severity.WARNING,
-            new Implementation(
-                    AppCompatCallDetector.class,
-                    Scope.JAVA_FILE_SCOPE)).
-            addMoreInfo("http://developer.android.com/tools/support-library/index.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "AppCompatMethod",
+                            "Using Wrong AppCompat Method",
+                            "When using the appcompat library, there are some methods you should be calling "
+                                    + "instead of the normal ones; for example, `getSupportActionBar()` instead of "
+                                    + "`getActionBar()`. This lint check looks for calls to the wrong method.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(AppCompatCallDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo("http://developer.android.com/tools/support-library/index.html");
 
     private static final String GET_ACTION_BAR = "getActionBar";
     private static final String START_ACTION_MODE = "startActionMode";
@@ -60,8 +61,7 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
 
     private boolean mDependsOnAppCompat;
 
-    public AppCompatCallDetector() {
-    }
+    public AppCompatCallDetector() {}
 
     @Override
     public void beforeCheckProject(@NonNull Context context) {
@@ -82,7 +82,9 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         if (mDependsOnAppCompat && isAppBarActivityCall(context, node, method)) {
             String name = method.getName();
@@ -102,25 +104,32 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
             }
 
             if (replace != null) {
-                String message = String.format("Should use `%1$s` instead of `%2$s` name", replace,
-                        name);
-                LintFix fix = fix().name("Replace with " + replace + "()").replace()
-                        .text(name).with(replace).build();
+                String message =
+                        String.format("Should use `%1$s` instead of `%2$s` name", replace, name);
+                LintFix fix =
+                        fix().name("Replace with " + replace + "()")
+                                .replace()
+                                .text(name)
+                                .with(replace)
+                                .build();
                 context.report(ISSUE, node, context.getLocation(node), message, fix);
             }
         }
     }
 
-    private static boolean isAppBarActivityCall(@NonNull JavaContext context,
-            @NonNull UCallExpression node, @NonNull PsiMethod method) {
+    private static boolean isAppBarActivityCall(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (evaluator.isMemberInSubClassOf(method, CLASS_ACTIVITY, false)) {
             // Make sure that the calling context is a subclass of ActionBarActivity;
             // we don't want to flag these calls if they are in non-appcompat activities
             // such as PreferenceActivity (see b.android.com/58512)
             UClass cls = UastUtils.getParentOfType(node, UClass.class, true);
-            return cls != null && evaluator.extendsClass(cls,
-                    "android.support.v7.app.ActionBarActivity", false);
+            return cls != null
+                    && evaluator.extendsClass(
+                            cls, "android.support.v7.app.ActionBarActivity", false);
         }
         return false;
     }

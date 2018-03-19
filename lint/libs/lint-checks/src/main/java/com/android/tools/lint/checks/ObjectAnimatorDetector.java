@@ -67,59 +67,53 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.UastUtils;
 
-/**
- * Looks for issues around ObjectAnimator usages
- */
+/** Looks for issues around ObjectAnimator usages */
 public class ObjectAnimatorDetector extends Detector implements SourceCodeScanner {
     public static final AndroidxName KEEP_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "Keep");
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            ObjectAnimatorDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(ObjectAnimatorDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Missing @Keep */
-    public static final Issue MISSING_KEEP = Issue.create(
-            "AnimatorKeep",
-            "Missing @Keep for Animated Properties",
-
-            "When you use property animators, properties can be accessed via reflection. "
-                    + "Those methods should be annotated with @Keep to ensure that during "
-                    + "release builds, the methods are not potentially treated as unused "
-                    + "and removed, or treated as internal only and get renamed to something "
-                    + "shorter.\n"
-                    + "\n"
-                    + "This check will also flag other potential reflection problems it "
-                    + "encounters, such as a missing property, wrong argument types, etc.",
-
-            Category.PERFORMANCE,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue MISSING_KEEP =
+            Issue.create(
+                    "AnimatorKeep",
+                    "Missing @Keep for Animated Properties",
+                    "When you use property animators, properties can be accessed via reflection. "
+                            + "Those methods should be annotated with @Keep to ensure that during "
+                            + "release builds, the methods are not potentially treated as unused "
+                            + "and removed, or treated as internal only and get renamed to something "
+                            + "shorter.\n"
+                            + "\n"
+                            + "This check will also flag other potential reflection problems it "
+                            + "encounters, such as a missing property, wrong argument types, etc.",
+                    Category.PERFORMANCE,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Incorrect ObjectAnimator binding */
-    public static final Issue BROKEN_PROPERTY = Issue.create(
-            "ObjectAnimatorBinding",
-            "Incorrect ObjectAnimator Property",
-
-            "This check cross references properties referenced by String from `ObjectAnimator` "
-                    + "and `PropertyValuesHolder` method calls and ensures that the corresponding "
-                    + "setter methods exist and have the right signatures.",
-
-            Category.CORRECTNESS,
-            4,
-            Severity.ERROR,
-            IMPLEMENTATION);
+    public static final Issue BROKEN_PROPERTY =
+            Issue.create(
+                    "ObjectAnimatorBinding",
+                    "Incorrect ObjectAnimator Property",
+                    "This check cross references properties referenced by String from `ObjectAnimator` "
+                            + "and `PropertyValuesHolder` method calls and ensures that the corresponding "
+                            + "setter methods exist and have the right signatures.",
+                    Category.CORRECTNESS,
+                    4,
+                    Severity.ERROR,
+                    IMPLEMENTATION);
 
     /**
-     * Multiple properties might all point back to the same setter; we don't want to
-     * highlight these more than once (duplicate warnings etc) so keep track of them here
+     * Multiple properties might all point back to the same setter; we don't want to highlight these
+     * more than once (duplicate warnings etc) so keep track of them here
      */
     private Set<Object> mAlreadyWarned;
 
     /** Constructs a new {@link ObjectAnimatorDetector} */
-    public ObjectAnimatorDetector() {
-    }
+    public ObjectAnimatorDetector() {}
 
     @Nullable
     @Override
@@ -135,12 +129,14 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
-        if (!evaluator.isMemberInClass(method, "android.animation.ObjectAnimator") &&
-                !(method.getName().equals("ofPropertyValuesHolder")
-                    && evaluator.isMemberInClass(method, "android.animation.ValueAnimator"))) {
+        if (!evaluator.isMemberInClass(method, "android.animation.ObjectAnimator")
+                && !(method.getName().equals("ofPropertyValuesHolder")
+                        && evaluator.isMemberInClass(method, "android.animation.ValueAnimator"))) {
             return;
         }
 
@@ -180,9 +176,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
     }
 
     @Nullable
-    private static String getExpectedType(
-            @NonNull UCallExpression method,
-            int evaluatorIndex) {
+    private static String getExpectedType(@NonNull UCallExpression method, int evaluatorIndex) {
         String methodName = LintUtils.getMethodName(method);
 
         if (methodName == null) {
@@ -191,32 +185,38 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
 
         switch (methodName) {
             case "ofArgb":
-            case "ofInt" : return "int";
-            case "ofFloat" : return "float";
-            case "ofMultiInt" : return "int[]";
-            case "ofMultiFloat" : return "float[]";
-            case "ofKeyframe" : return "android.animation.Keyframe";
-            case "ofObject" : {
-                List<UExpression> args = method.getValueArguments();
-                if (args.size() > evaluatorIndex) {
-                    PsiType evaluatorType = TypeEvaluator.evaluate(args.get(evaluatorIndex));
-                    if (evaluatorType != null) {
-                        String typeName = evaluatorType.getCanonicalText();
-                        if ("android.animation.FloatEvaluator".equals(typeName)) {
-                            return "float";
-                        } else if ("android.animation.FloatArrayEvaluator".equals(typeName)) {
-                            return "float[]";
-                        } else if ("android.animation.IntEvaluator".equals(typeName)
-                                || "android.animation.ArgbEvaluator".equals(typeName)) {
-                            return "int";
-                        } else if ("android.animation.IntArrayEvaluator".equals(typeName)) {
-                            return "int[]";
-                        } else if ("android.animation.PointFEvaluator".equals(typeName)) {
-                            return "android.graphics.PointF";
+            case "ofInt":
+                return "int";
+            case "ofFloat":
+                return "float";
+            case "ofMultiInt":
+                return "int[]";
+            case "ofMultiFloat":
+                return "float[]";
+            case "ofKeyframe":
+                return "android.animation.Keyframe";
+            case "ofObject":
+                {
+                    List<UExpression> args = method.getValueArguments();
+                    if (args.size() > evaluatorIndex) {
+                        PsiType evaluatorType = TypeEvaluator.evaluate(args.get(evaluatorIndex));
+                        if (evaluatorType != null) {
+                            String typeName = evaluatorType.getCanonicalText();
+                            if ("android.animation.FloatEvaluator".equals(typeName)) {
+                                return "float";
+                            } else if ("android.animation.FloatArrayEvaluator".equals(typeName)) {
+                                return "float[]";
+                            } else if ("android.animation.IntEvaluator".equals(typeName)
+                                    || "android.animation.ArgbEvaluator".equals(typeName)) {
+                                return "int";
+                            } else if ("android.animation.IntArrayEvaluator".equals(typeName)) {
+                                return "int[]";
+                            } else if ("android.animation.PointFEvaluator".equals(typeName)) {
+                                return "android.graphics.PointF";
+                            }
                         }
                     }
                 }
-            }
         }
 
         return null;
@@ -246,8 +246,8 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
     }
 
     @Nullable
-    private static UCallExpression findHolderConstruction(@NonNull JavaContext context,
-            @Nullable UExpression arg) {
+    private static UCallExpression findHolderConstruction(
+            @NonNull JavaContext context, @Nullable UExpression arg) {
         if (arg == null) {
             return null;
         }
@@ -274,14 +274,14 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
             if (resolved instanceof PsiVariable) {
                 PsiVariable variable = (PsiVariable) resolved;
 
-                UExpression lastAssignment = UastLintUtils.findLastAssignment(
-                        variable, arg);
+                UExpression lastAssignment = UastLintUtils.findLastAssignment(variable, arg);
                 // Resolve variable reassignments
                 while (lastAssignment instanceof USimpleNameReferenceExpression) {
-                    PsiElement el = ((USimpleNameReferenceExpression)lastAssignment).resolve();
+                    PsiElement el = ((USimpleNameReferenceExpression) lastAssignment).resolve();
                     if (el instanceof PsiLocalVariable) {
-                        lastAssignment = UastLintUtils.findLastAssignment(
-                                (PsiLocalVariable)el, lastAssignment);
+                        lastAssignment =
+                                UastLintUtils.findLastAssignment(
+                                        (PsiLocalVariable) el, lastAssignment);
                     } else {
                         break;
                     }
@@ -293,8 +293,8 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
                         return callExpression;
                     }
                 } else if (lastAssignment instanceof UQualifiedReferenceExpression) {
-                    UQualifiedReferenceExpression expression
-                            = (UQualifiedReferenceExpression) lastAssignment;
+                    UQualifiedReferenceExpression expression =
+                            (UQualifiedReferenceExpression) lastAssignment;
                     if (expression.getSelector() instanceof UCallExpression) {
                         UCallExpression callExpression = (UCallExpression) expression.getSelector();
                         if (isHolderConstructionMethod(context, callExpression)) {
@@ -307,15 +307,17 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
         return null;
     }
 
-    private static boolean isHolderConstructionMethod(@NonNull JavaContext context,
-            @NonNull UCallExpression callExpression) {
+    private static boolean isHolderConstructionMethod(
+            @NonNull JavaContext context, @NonNull UCallExpression callExpression) {
         String referenceName = LintUtils.getMethodName(callExpression);
-        if (referenceName != null && referenceName.startsWith("of")
+        if (referenceName != null
+                && referenceName.startsWith("of")
                 // This will require more indirection; see unit test
                 && !referenceName.equals("ofKeyframe")) {
             PsiMethod resolved = callExpression.resolve();
-            if (resolved != null && context.getEvaluator().isMemberInClass(resolved,
-                    "android.animation.PropertyValuesHolder")) {
+            if (resolved != null
+                    && context.getEvaluator()
+                            .isMemberInClass(resolved, "android.animation.PropertyValuesHolder")) {
                 return true;
             }
         }
@@ -361,21 +363,39 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
         }
 
         if (bestMethod == null) {
-            report(context, BROKEN_PROPERTY, propertyNameExpression, null,
-                    String.format("Could not find property setter method `%1$s` on `%2$s`",
-                            methodName, qualifiedName), null);
+            report(
+                    context,
+                    BROKEN_PROPERTY,
+                    propertyNameExpression,
+                    null,
+                    String.format(
+                            "Could not find property setter method `%1$s` on `%2$s`",
+                            methodName, qualifiedName),
+                    null);
             return;
         }
 
         if (!isExactMatch) {
-            report(context, BROKEN_PROPERTY, propertyNameExpression, bestMethod,
-                    String.format("The setter for this property does not match the "
+            report(
+                    context,
+                    BROKEN_PROPERTY,
+                    propertyNameExpression,
+                    bestMethod,
+                    String.format(
+                            "The setter for this property does not match the "
                                     + "expected signature (`public void %1$s(%2$s arg`)",
-                            methodName, expectedType), null);
+                            methodName, expectedType),
+                    null);
         } else if (context.getEvaluator().isStatic(bestMethod)) {
-            report(context, BROKEN_PROPERTY, propertyNameExpression, bestMethod,
-                    String.format("The setter for this property (%1$s.%2$s) should not be static",
-                            qualifiedName, methodName), null);
+            report(
+                    context,
+                    BROKEN_PROPERTY,
+                    propertyNameExpression,
+                    bestMethod,
+                    String.format(
+                            "The setter for this property (%1$s.%2$s) should not be static",
+                            qualifiedName, methodName),
+                    null);
         } else {
             PsiModifierListOwner owner = bestMethod;
             while (owner != null) {
@@ -396,10 +416,16 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
                 return;
             }
 
-            report(context, MISSING_KEEP, propertyNameExpression, bestMethod, ""
-                  + "This method is accessed from an ObjectAnimator so it should be "
-                  + "annotated with `@Keep` to ensure that it is not discarded or "
-                  + "renamed in release builds", fix().data(bestMethod));
+            report(
+                    context,
+                    MISSING_KEEP,
+                    propertyNameExpression,
+                    bestMethod,
+                    ""
+                            + "This method is accessed from an ObjectAnimator so it should be "
+                            + "annotated with `@Keep` to ensure that it is not discarded or "
+                            + "renamed in release builds",
+                    fix().data(bestMethod));
         }
     }
 
@@ -428,9 +454,11 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
 
         Location methodLocation = null;
         if (method != null && !(method instanceof PsiCompiledElement)) {
-            methodLocation = method.getNameIdentifier() != null
-                    ? context.getRangeLocation(method.getNameIdentifier(), 0, method.getParameterList(), 0)
-                    : context.getNameLocation(method);
+            methodLocation =
+                    method.getNameIdentifier() != null
+                            ? context.getRangeLocation(
+                                    method.getNameIdentifier(), 0, method.getParameterList(), 0)
+                            : context.getNameLocation(method);
         }
 
         Location location;
@@ -449,10 +477,12 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
             } else {
                 //noinspection ConstantConditions
                 assert issue == MISSING_KEEP;
-                String secondaryMessage = String.format("The method referenced here (%1$s) has "
-                                + "not been annotated with `@Keep` which means it could be "
-                                + "discarded or renamed in release builds",
-                        method.getName());
+                String secondaryMessage =
+                        String.format(
+                                "The method referenced here (%1$s) has "
+                                        + "not been annotated with `@Keep` which means it could be "
+                                        + "discarded or renamed in release builds",
+                                method.getName());
 
                 // If on the other hand we're in a separate compilation unit, we should
                 // draw attention to the problem
@@ -475,8 +505,8 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
 
         // Allow suppressing at either the property binding site *or* the property site
         // (we report errors on both)
-        UElement owner = UastUtils.getParentOfType(propertyNameExpression, UDeclaration.class,
-                false);
+        UElement owner =
+                UastUtils.getParentOfType(propertyNameExpression, UDeclaration.class, false);
         if (owner != null && context.getDriver().isSuppressed(context, issue, owner)) {
             return;
         }
@@ -485,8 +515,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
     }
 
     private static boolean isInSameCompilationUnit(
-            @NonNull UElement element1,
-            @NonNull PsiElement element2) {
+            @NonNull UElement element1, @NonNull PsiElement element2) {
         UFile containingFile = UastUtils.getContainingFile(element1);
         PsiFile file = containingFile != null ? containingFile.getPsi() : null;
         if (file == null) {

@@ -28,6 +28,10 @@ fun <T> Iterable<T>.toImmutableList(): ImmutableList<T> {
     return ImmutableList.copyOf(this)
 }
 
+fun <T> Sequence<T>.toImmutableList(): ImmutableList<T> {
+    return ImmutableList.copyOf(this.iterator())
+}
+
 fun <T> Iterable<T>.toImmutableSet(): ImmutableSet<T> {
     return ImmutableSet.copyOf(this)
 }

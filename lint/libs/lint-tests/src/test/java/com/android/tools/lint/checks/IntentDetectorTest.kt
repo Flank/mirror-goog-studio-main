@@ -98,10 +98,8 @@ class IntentDetectorTest : AbstractCheckTest() {
                         }
                 }"""
             ).indented()
-        )
-            .run()
-            .expect(
-                """
+        ).run().expect(
+            """
                     src/test/pkg/IntentTest.java:19: Warning: Calling setType after calling setData will clear the data: Call setDataAndType instead? [IntentReset]
                                 intent.setType(type); // ERROR
                                 ~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +109,7 @@ class IntentDetectorTest : AbstractCheckTest() {
                                 ~~~~~~~~~~~~~~~~~~~
                         src/test/pkg/IntentTest.java:25: Originally set here
                     0 errors, 2 warnings"""
-            )
+        )
     }
 
     fun testConstructor() {
@@ -139,15 +137,13 @@ class IntentDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        )
-            .run()
-            .expect(
-                """
+        ).run().expect(
+            """
                 src/test/pkg/IntentReset.java:13: Warning: Calling setType after setting URI in Intent constructor will clear the data: Call setDataAndType instead? [IntentReset]
                         myIntent.setType("text/plain");
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     src/test/pkg/IntentReset.java:12: Originally set here
                 0 errors, 1 warnings"""
-            )
+        )
     }
 }

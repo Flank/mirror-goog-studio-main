@@ -26,34 +26,36 @@ public class NonInternationalizedSmsDetectorTest extends AbstractCheckTest {
     }
 
     public void test() {
-        String expected = ""
-                + "src/test/pkg/NonInternationalizedSmsDetectorTest.java:18: Warning: To make sure the SMS can be sent by all users, please start the SMS number with a + and a country code or restrict the code invocation to people in the country you are targeting. [UnlocalizedSms]\n"
-                + "  sms.sendMultipartTextMessage(\"001234567890\", null, null, null, null);\n"
-                + "                               ~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n";
+        String expected =
+                ""
+                        + "src/test/pkg/NonInternationalizedSmsDetectorTest.java:18: Warning: To make sure the SMS can be sent by all users, please start the SMS number with a + and a country code or restrict the code invocation to people in the country you are targeting. [UnlocalizedSms]\n"
+                        + "  sms.sendMultipartTextMessage(\"001234567890\", null, null, null, null);\n"
+                        + "                               ~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(
-                java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.app.Activity;\n"
-                        + "import android.content.Context;\n"
-                        + "import android.os.Bundle;\n"
-                        + "import android.telephony.SmsManager;\n"
-                        + "\n"
-                        + "public class NonInternationalizedSmsDetectorTest {\n"
-                        + "    private void sendLocalizedMessage(Context context) {\n"
-                        + "  // Don't warn here\n"
-                        + "  SmsManager sms = SmsManager.getDefault();\n"
-                        + "  sms.sendTextMessage(\"+1234567890\", null, null, null, null);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private void sendAlternativeCountryPrefix(Context context) {\n"
-                        + "  // Do warn here\n"
-                        + "  SmsManager sms = SmsManager.getDefault();\n"
-                        + "  sms.sendMultipartTextMessage(\"001234567890\", null, null, null, null);\n"
-                        + "    }\n"
-                        + "}\n"))
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.app.Activity;\n"
+                                        + "import android.content.Context;\n"
+                                        + "import android.os.Bundle;\n"
+                                        + "import android.telephony.SmsManager;\n"
+                                        + "\n"
+                                        + "public class NonInternationalizedSmsDetectorTest {\n"
+                                        + "    private void sendLocalizedMessage(Context context) {\n"
+                                        + "  // Don't warn here\n"
+                                        + "  SmsManager sms = SmsManager.getDefault();\n"
+                                        + "  sms.sendTextMessage(\"+1234567890\", null, null, null, null);\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private void sendAlternativeCountryPrefix(Context context) {\n"
+                                        + "  // Do warn here\n"
+                                        + "  SmsManager sms = SmsManager.getDefault();\n"
+                                        + "  sms.sendMultipartTextMessage(\"001234567890\", null, null, null, null);\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
                 .expect(expected);
     }

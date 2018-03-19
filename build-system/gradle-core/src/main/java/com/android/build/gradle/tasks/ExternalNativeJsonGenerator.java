@@ -316,6 +316,11 @@ public abstract class ExternalNativeJsonGenerator {
                     Files.write(
                             configuration.getCommandFile().toPath(),
                             currentBuildCommand.getBytes(Charsets.UTF_8));
+
+                    // Record the outcome. JSON was built.
+                    variantStats.setOutcome(
+                            GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
+                                    .SUCCESS_BUILT);
                 } else {
                     diagnostic("JSON '%s' was up-to-date", configuration.getExpectedJson());
                     variantStats.setOutcome(

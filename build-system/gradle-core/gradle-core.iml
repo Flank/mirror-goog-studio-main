@@ -64,5 +64,6 @@
     <orderEntry type="library" scope="TEST" name="intellij-annotations" level="project" />
     <orderEntry type="library" name="commons-io" level="project" />
     <orderEntry type="library" name="dexlib2" level="project" />
+    <orderEntry type="library" name="bundletool" level="project" />
   </component>
 </module>

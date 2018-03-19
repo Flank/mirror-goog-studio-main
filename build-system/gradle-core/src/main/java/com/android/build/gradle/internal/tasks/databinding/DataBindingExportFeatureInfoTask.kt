@@ -19,14 +19,16 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
@@ -34,6 +36,7 @@ import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
+import java.util.function.Supplier
 
 import javax.inject.Inject
 
@@ -55,10 +58,13 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
 ) : DefaultTask() {
     @get:OutputDirectory lateinit var outFolder: File
         private set
-    @get:Input lateinit var uniqueIdentifier: String
-        private set
-    @get:InputFiles lateinit var featurePackageIds: FileCollection
-        private set
+
+    private lateinit var resOffsetSupplier: Supplier<Int>
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    @get:Input
+    val resOffset: Int
+        get() = resOffsetSupplier.get()
 
     /**
      * In a feature, we only need to generate code for its Runtime dependencies as compile
@@ -75,8 +81,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
             it.setParams(
                     ExportFeatureInfoParams(
                             outFolder = outFolder,
-                            uniqueIdentifier = uniqueIdentifier,
-                            featurePackageIds = featurePackageIds.asFileTree.files,
+                            resOffset = resOffset,
                             directDependencies = directDependencies.asFileTree.files
                     )
             )
@@ -84,8 +89,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
     }
 
     class ConfigAction(
-        private val variantScope: VariantScope,
-        private var outFolder: File
+        private val variantScope: VariantScope
     ) : TaskConfigAction<DataBindingExportFeatureInfoTask> {
         override fun getName() =
             variantScope.getTaskName("dataBindingExportFeatureInfo")
@@ -93,26 +97,21 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
         override fun getType() = DataBindingExportFeatureInfoTask::class.java
 
         override fun execute(task: DataBindingExportFeatureInfoTask) {
-            task.outFolder = outFolder
+            task.outFolder = variantScope.buildArtifactsHolder
+                .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
+                    task)
             task.directDependencies = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT
-            )
-            task.featurePackageIds = variantScope.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.MODULE,
-                    AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION
-            )
-            task.uniqueIdentifier = variantScope.globalScope.project.path
+                    AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT)
+            task.resOffsetSupplier = FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(variantScope, task)
         }
     }
 }
 
 data class ExportFeatureInfoParams(
     val outFolder: File,
-    val uniqueIdentifier: String,
-    val featurePackageIds: Set<File>,
+    val resOffset: Int,
     val directDependencies: Set<File>
 ) : Serializable
 
@@ -120,9 +119,6 @@ class ExportFeatureInfoRunnable @Inject constructor(
     val params: ExportFeatureInfoParams
 ) : Runnable {
     override fun run() {
-        val packageIdFileSet = params.featurePackageIds
-        val allDeclarations = FeatureSplitPackageIds.load(packageIdFileSet)
-        val packageId = allDeclarations.getIdFor(params.uniqueIdentifier)
         FileUtils.cleanOutputDir(params.outFolder)
         params.outFolder.mkdirs()
         params.directDependencies.filter {
@@ -131,7 +127,7 @@ class ExportFeatureInfoRunnable @Inject constructor(
             FileUtils.copyFile(it, File(params.outFolder, it.name))
         }
         // save the package id offset
-        FeaturePackageInfo(packageId = packageId ?: 0).serialize(
+        FeaturePackageInfo(packageId = params.resOffset).serialize(
                 File(params.outFolder, DataBindingBuilder.FEATURE_BR_OFFSET_FILE_NAME)
         )
     }

@@ -61,6 +61,9 @@ public class Workspace {
         if (rel.startsWith("bazel-genfiles")) {
             rel = rel.substring("bazel-genfiles".length() + 1);
         }
+        if (rel.startsWith("bazel-bin")) {
+            rel = rel.substring("bazel-bin".length() + 1);
+        }
 
         File pkg = findBuildDirectory(new File(directory, rel));
         return loadPackage(pkg);

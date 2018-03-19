@@ -68,45 +68,46 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Check if the App Link which needs auto verification is correctly set.
- */
+/** Check if the App Link which needs auto verification is correctly set. */
 public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            AppLinksAutoVerifyDetector.class, Scope.MANIFEST_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(AppLinksAutoVerifyDetector.class, Scope.MANIFEST_SCOPE);
 
-    public static final Issue ISSUE_ERROR = Issue.create(
-            "AppLinksAutoVerifyError",
-            "App Links Auto Verification Failure",
-            "Ensures that app links are correctly set and associated with website.",
-            Category.CORRECTNESS, 5, Severity.ERROR, IMPLEMENTATION)
-            .addMoreInfo("https://g.co/appindexing/applinks").setEnabledByDefault(false);
+    public static final Issue ISSUE_ERROR =
+            Issue.create(
+                            "AppLinksAutoVerifyError",
+                            "App Links Auto Verification Failure",
+                            "Ensures that app links are correctly set and associated with website.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .addMoreInfo("https://g.co/appindexing/applinks")
+                    .setEnabledByDefault(false);
 
-    public static final Issue ISSUE_WARNING = Issue.create(
-            "AppLinksAutoVerifyWarning",
-            "Potential App Links Auto Verification Failure",
-            "Ensures that app links are correctly set and associated with website.",
-            Category.CORRECTNESS, 5, Severity.WARNING, IMPLEMENTATION)
-            .addMoreInfo("https://g.co/appindexing/applinks").setEnabledByDefault(false);
+    public static final Issue ISSUE_WARNING =
+            Issue.create(
+                            "AppLinksAutoVerifyWarning",
+                            "Potential App Links Auto Verification Failure",
+                            "Ensures that app links are correctly set and associated with website.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo("https://g.co/appindexing/applinks")
+                    .setEnabledByDefault(false);
 
     private static final String ATTRIBUTE_AUTO_VERIFY = "autoVerify";
     private static final String JSON_RELATIVE_PATH = "/.well-known/assetlinks.json";
 
-    @VisibleForTesting
-    static final int STATUS_HTTP_CONNECT_FAIL = -1;
-    @VisibleForTesting
-    static final int STATUS_MALFORMED_URL = -2;
-    @VisibleForTesting
-    static final int STATUS_UNKNOWN_HOST = -3;
-    @VisibleForTesting
-    static final int STATUS_NOT_FOUND = -4;
-    @VisibleForTesting
-    static final int STATUS_WRONG_JSON_SYNTAX = -5;
-    @VisibleForTesting
-    static final int STATUS_JSON_PARSE_FAIL = -6;
-    @VisibleForTesting
-    static final int STATUS_HTTP_OK = 200;
+    @VisibleForTesting static final int STATUS_HTTP_CONNECT_FAIL = -1;
+    @VisibleForTesting static final int STATUS_MALFORMED_URL = -2;
+    @VisibleForTesting static final int STATUS_UNKNOWN_HOST = -3;
+    @VisibleForTesting static final int STATUS_NOT_FOUND = -4;
+    @VisibleForTesting static final int STATUS_WRONG_JSON_SYNTAX = -5;
+    @VisibleForTesting static final int STATUS_JSON_PARSE_FAIL = -6;
+    @VisibleForTesting static final int STATUS_HTTP_OK = 200;
 
     /* Maps website host url to a future task which will send HTTP request to fetch the JSON file
      * and also return the status code during the fetching process. */
@@ -130,10 +131,10 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
             }
 
             for (Element intent : intents) {
-                boolean actionView = hasNamedSubTag(intent, NODE_ACTION,
-                        "android.intent.action.VIEW");
-                boolean browsableCategory = hasNamedSubTag(intent, NODE_CATEGORY,
-                        "android.intent.category.BROWSABLE");
+                boolean actionView =
+                        hasNamedSubTag(intent, NODE_ACTION, "android.intent.action.VIEW");
+                boolean browsableCategory =
+                        hasNamedSubTag(intent, NODE_CATEGORY, "android.intent.category.BROWSABLE");
                 if (!actionView || !browsableCategory) {
                     continue;
                 }
@@ -155,45 +156,75 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
             String jsonPath = result.getKey() + JSON_RELATIVE_PATH;
             switch (result.getValue().mStatus) {
                 case STATUS_HTTP_OK:
-                    List<String> packageNames = getPackageNameFromJson(
-                            result.getValue().mJsonFile);
+                    List<String> packageNames = getPackageNameFromJson(result.getValue().mJsonFile);
                     if (!packageNames.contains(packageName)) {
-                        context.report(ISSUE_ERROR, host, context.getLocation(host), String.format(
-                                "This host does not support app links to your app. Checks the Digital Asset Links JSON file: %s",
-                                jsonPath));
+                        context.report(
+                                ISSUE_ERROR,
+                                host,
+                                context.getLocation(host),
+                                String.format(
+                                        "This host does not support app links to your app. Checks the Digital Asset Links JSON file: %s",
+                                        jsonPath));
                     }
                     break;
                 case STATUS_HTTP_CONNECT_FAIL:
-                    context.report(ISSUE_WARNING, host, context.getLocation(host),
-                            String.format("Connection to Digital Asset Links JSON file %s fails",
+                    context.report(
+                            ISSUE_WARNING,
+                            host,
+                            context.getLocation(host),
+                            String.format(
+                                    "Connection to Digital Asset Links JSON file %s fails",
                                     jsonPath));
                     break;
                 case STATUS_MALFORMED_URL:
-                    context.report(ISSUE_ERROR, host, context.getLocation(host), String.format(
-                            "Malformed URL of Digital Asset Links JSON file: %s. An unknown protocol is specified",
-                            jsonPath));
+                    context.report(
+                            ISSUE_ERROR,
+                            host,
+                            context.getLocation(host),
+                            String.format(
+                                    "Malformed URL of Digital Asset Links JSON file: %s. An unknown protocol is specified",
+                                    jsonPath));
                     break;
                 case STATUS_UNKNOWN_HOST:
-                    context.report(ISSUE_WARNING, host, context.getLocation(host), String.format(
-                            "Unknown host: %s. Check if the host exists, and check your network connection",
-                            result.getKey()));
+                    context.report(
+                            ISSUE_WARNING,
+                            host,
+                            context.getLocation(host),
+                            String.format(
+                                    "Unknown host: %s. Check if the host exists, and check your network connection",
+                                    result.getKey()));
                     break;
                 case STATUS_NOT_FOUND:
-                    context.report(ISSUE_ERROR, host, context.getLocation(host), String.format(
-                            "Digital Asset Links JSON file %s is not found on the host", jsonPath));
+                    context.report(
+                            ISSUE_ERROR,
+                            host,
+                            context.getLocation(host),
+                            String.format(
+                                    "Digital Asset Links JSON file %s is not found on the host",
+                                    jsonPath));
                     break;
                 case STATUS_WRONG_JSON_SYNTAX:
-                    context.report(ISSUE_ERROR, host, context.getLocation(host),
+                    context.report(
+                            ISSUE_ERROR,
+                            host,
+                            context.getLocation(host),
                             String.format("%s has incorrect JSON syntax", jsonPath));
                     break;
                 case STATUS_JSON_PARSE_FAIL:
-                    context.report(ISSUE_ERROR, host, context.getLocation(host),
+                    context.report(
+                            ISSUE_ERROR,
+                            host,
+                            context.getLocation(host),
                             String.format("Parsing JSON file %s fails", jsonPath));
                     break;
                 default:
-                    context.report(ISSUE_WARNING, host, context.getLocation(host), String.format(
-                            "HTTP request for Digital Asset Links JSON file %1$s fails. HTTP response code: %2$s",
-                            jsonPath, result.getValue().mStatus));
+                    context.report(
+                            ISSUE_WARNING,
+                            host,
+                            context.getLocation(host),
+                            String.format(
+                                    "HTTP request for Digital Asset Links JSON file %1$s fails. HTTP response code: %2$s",
+                                    jsonPath, result.getValue().mStatus));
             }
         }
     }
@@ -230,7 +261,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
      */
     private static boolean needAutoVerification(@NonNull List<Element> intents) {
         for (Element intent : intents) {
-            if (intent.getAttributeNS(ANDROID_URI, ATTRIBUTE_AUTO_VERIFY).equals(SdkConstants.VALUE_TRUE)) {
+            if (intent.getAttributeNS(ANDROID_URI, ATTRIBUTE_AUTO_VERIFY)
+                    .equals(SdkConstants.VALUE_TRUE)) {
                 return true;
             }
         }
@@ -240,13 +272,13 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
     /**
      * Checks if the element has a sub tag with specific name and specific name attribute.
      *
-     * @param element       The tag element.
-     * @param tagName       The name of the sub tag.
+     * @param element The tag element.
+     * @param tagName The name of the sub tag.
      * @param nameAttrValue The value of the name attribute.
      * @return If the element has such a sub tag.
      */
-    private static boolean hasNamedSubTag(@NonNull Element element, @NonNull String tagName,
-            @NonNull String nameAttrValue) {
+    private static boolean hasNamedSubTag(
+            @NonNull Element element, @NonNull String tagName, @NonNull String nameAttrValue) {
         NodeList children = element.getElementsByTagName(tagName);
         for (int i = 0; i < children.getLength(); i++) {
             Element e = (Element) children.item(i);
@@ -264,8 +296,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
      * @return List of JSON file urls.
      */
     @NonNull
-    private static Map<String, Attr> getJsonUrl(@NonNull XmlContext context,
-            @NonNull Element intent) {
+    private static Map<String, Attr> getJsonUrl(
+            @NonNull XmlContext context, @NonNull Element intent) {
         List<String> schemes = Lists.newArrayList();
         List<Attr> hosts = Lists.newArrayList();
         NodeList dataTags = intent.getElementsByTagName(NODE_DATA);
@@ -297,14 +329,16 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
     }
 
     @Nullable
-    private static String resolvePlaceHolder(@NonNull XmlContext context,
-            @NonNull String hostname) {
+    private static String resolvePlaceHolder(
+            @NonNull XmlContext context, @NonNull String hostname) {
         assert hostname.startsWith(SdkConstants.MANIFEST_PLACEHOLDER_PREFIX);
         Variant variant = context.getProject().getCurrentVariant();
         if (variant != null) {
             Map<String, Object> placeHolders = variant.getMergedFlavor().getManifestPlaceholders();
-            String name = hostname.substring(MANIFEST_PLACEHOLDER_PREFIX.length(),
-                    hostname.length() - MANIFEST_PLACEHOLDER_SUFFIX.length());
+            String name =
+                    hostname.substring(
+                            MANIFEST_PLACEHOLDER_PREFIX.length(),
+                            hostname.length() - MANIFEST_PLACEHOLDER_SUFFIX.length());
             Object value = placeHolders.get(name);
             if (value instanceof String) {
                 return value.toString();
@@ -314,9 +348,7 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
     }
 
     /* Normally null. Used for testing. */
-    @Nullable
-    @VisibleForTesting
-    static Map<String, HttpResult> sMockData;
+    @Nullable @VisibleForTesting static Map<String, HttpResult> sMockData;
 
     /**
      * Gets all the Digital Asset Links JSON file asynchronously.
@@ -330,8 +362,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
 
         ExecutorService executorService = Executors.newCachedThreadPool();
         for (final Map.Entry<String, Attr> url : mJsonHost.entrySet()) {
-            Future<HttpResult> future = executorService.submit(
-                    () -> getJson(url.getKey() + JSON_RELATIVE_PATH));
+            Future<HttpResult> future =
+                    executorService.submit(() -> getJson(url.getKey() + JSON_RELATIVE_PATH));
             mFutures.put(url.getKey(), future);
         }
         executorService.shutdown();
@@ -365,8 +397,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                 if (inputStream == null) {
                     return new HttpResult(connection.getResponseCode(), null);
                 }
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(inputStream, UTF_8))) {
+                try (BufferedReader reader =
+                        new BufferedReader(new InputStreamReader(inputStream, UTF_8))) {
                     String line;
                     StringBuilder response = new StringBuilder();
                     while ((line = reader.readLine()) != null) {
@@ -415,7 +447,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                         // Checks namespace to ensure it is an app statement.
                         JsonElement namespace = target.get("namespace");
                         JsonElement packageName = target.get("package_name");
-                        if (namespace != null && namespace.getAsString().equals("android_app")
+                        if (namespace != null
+                                && namespace.getAsString().equals("android_app")
                                 && packageName != null) {
                             packageNames.add(packageName.getAsString());
                         }

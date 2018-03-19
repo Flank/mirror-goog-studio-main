@@ -24,9 +24,10 @@ public class DefaultSdkInfoTest extends TestCase {
         DefaultSdkInfo info = new DefaultSdkInfo();
         assertNull(info.getParentViewClass("android.view.View"));
         assertEquals("android.view.View", info.getParentViewClass("android.view.ViewGroup"));
-        assertEquals("android.view.ViewGroup",
-                info.getParentViewClass("android.widget.LinearLayout"));
-        assertEquals("android.widget.LinearLayout",
+        assertEquals(
+                "android.view.ViewGroup", info.getParentViewClass("android.widget.LinearLayout"));
+        assertEquals(
+                "android.widget.LinearLayout",
                 info.getParentViewClass("android.widget.TableLayout"));
     }
 

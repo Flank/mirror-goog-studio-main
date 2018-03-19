@@ -39,30 +39,26 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Check which makes sure that a full-backup-content descriptor file is valid and logical
- */
+/** Check which makes sure that a full-backup-content descriptor file is valid and logical */
 public class FullBackupContentDetector extends ResourceXmlDetector {
-    /**
-     * Validation of {@code <full-backup-content>} XML elements
-     */
-    public static final Issue ISSUE = Issue.create(
-            "FullBackupContent",
-            "Valid Full Backup Content File",
-
-            "Ensures that a `<full-backup-content>` file, which is pointed to by a " +
-            "`android:fullBackupContent attribute` in the manifest file, is valid",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.FATAL,
-            new Implementation(
-                    FullBackupContentDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("http://android-developers.blogspot.com/2015/07/auto-backup-for-apps-made-simple.html");
+    /** Validation of {@code <full-backup-content>} XML elements */
+    public static final Issue ISSUE =
+            Issue.create(
+                            "FullBackupContent",
+                            "Valid Full Backup Content File",
+                            "Ensures that a `<full-backup-content>` file, which is pointed to by a "
+                                    + "`android:fullBackupContent attribute` in the manifest file, is valid",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.FATAL,
+                            new Implementation(
+                                    FullBackupContentDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://android-developers.blogspot.com/2015/07/auto-backup-for-apps-made-simple.html");
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DOMAIN_SHARED_PREF = "sharedpref";
+
     private static final String DOMAIN_ROOT = "root";
     private static final String DOMAIN_FILE = "file";
     private static final String DOMAIN_DATABASE = "database";
@@ -73,11 +69,8 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
     private static final String ATTR_PATH = "path";
     private static final String ATTR_DOMAIN = "domain";
 
-    /**
-     * Constructs a new {@link FullBackupContentDetector}
-     */
-    public FullBackupContentDetector() {
-    }
+    /** Constructs a new {@link FullBackupContentDetector} */
+    public FullBackupContentDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -108,7 +101,10 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
                     excludes.add(element);
                 } else {
                     // See FullBackup#validateInnerTagContents
-                    context.report(ISSUE, element, context.getNameLocation(element),
+                    context.report(
+                            ISSUE,
+                            element,
+                            context.getNameLocation(element),
                             String.format("Unexpected element `<%1$s>`", tag));
                 }
             }
@@ -163,7 +159,10 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
                                 location.setSecondary(earlier);
                             }
                         }
-                        context.report(ISSUE, exclude, location,
+                        context.report(
+                                ISSUE,
+                                exclude,
+                                location,
                                 String.format("Include `%1$s` is also excluded", excludePath));
                     }
                     hasPrefix = true;
@@ -173,7 +172,10 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
             if (!hasPrefix) {
                 Attr pathNode = exclude.getAttributeNode(ATTR_PATH);
                 assert pathNode != null;
-                context.report(ISSUE, exclude, context.getValueLocation(pathNode),
+                context.report(
+                        ISSUE,
+                        exclude,
+                        context.getValueLocation(pathNode),
                         String.format("`%1$s` is not in an included path", excludePath));
             }
         }
@@ -187,17 +189,25 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
         }
         String value = pathNode.getValue();
         if (value.contains("//")) {
-            context.report(ISSUE, element, context.getValueLocation(pathNode),
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getValueLocation(pathNode),
                     "Paths are not allowed to contain `//`");
         } else if (value.contains("..")) {
-            context.report(ISSUE, element, context.getValueLocation(pathNode),
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getValueLocation(pathNode),
                     "Paths are not allowed to contain `..`");
         } else if (value.contains("/")) {
             String domain = element.getAttribute(ATTR_DOMAIN);
             if (DOMAIN_SHARED_PREF.equals(domain) || DOMAIN_DATABASE.equals(domain)) {
-                context.report(ISSUE, element, context.getValueLocation(pathNode),
-                        String.format("Subdirectories are not allowed for domain `%1$s`",
-                                domain));
+                context.report(
+                        ISSUE,
+                        element,
+                        context.getValueLocation(pathNode),
+                        String.format("Subdirectories are not allowed for domain `%1$s`", domain));
             }
         }
         return value;
@@ -207,9 +217,13 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
     private static String validateDomain(@NonNull XmlContext context, @NonNull Element element) {
         Attr domainNode = element.getAttributeNode(ATTR_DOMAIN);
         if (domainNode == null) {
-            context.report(ISSUE, element, context.getElementLocation(element),
-                String.format("Missing domain attribute, expected one of %1$s",
-                        Joiner.on(", ").join(VALID_DOMAINS)));
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getElementLocation(element),
+                    String.format(
+                            "Missing domain attribute, expected one of %1$s",
+                            Joiner.on(", ").join(VALID_DOMAINS)));
             return null;
         }
         String domain = domainNode.getValue();
@@ -218,15 +232,20 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
                 return domain;
             }
         }
-        context.report(ISSUE, element, context.getValueLocation(domainNode),
-                String.format("Unexpected domain `%1$s`, expected one of %2$s", domain,
-                        Joiner.on(", ").join(VALID_DOMAINS)));
+        context.report(
+                ISSUE,
+                element,
+                context.getValueLocation(domainNode),
+                String.format(
+                        "Unexpected domain `%1$s`, expected one of %2$s",
+                        domain, Joiner.on(", ").join(VALID_DOMAINS)));
 
         return domain;
     }
 
     /** Valid domains; see FullBackup#getTokenForXmlDomain for authoritative list */
-    private static final String[] VALID_DOMAINS = new String[] {
-            DOMAIN_ROOT, DOMAIN_FILE, DOMAIN_DATABASE, DOMAIN_SHARED_PREF, DOMAIN_EXTERNAL
-    };
+    private static final String[] VALID_DOMAINS =
+            new String[] {
+                DOMAIN_ROOT, DOMAIN_FILE, DOMAIN_DATABASE, DOMAIN_SHARED_PREF, DOMAIN_EXTERNAL
+            };
 }

@@ -231,6 +231,7 @@ platform_filegroup(
 platform_filegroup(
     name = "platforms/android-24",
     visibility = [
+        "//tools/adt/idea/android-uitests:__pkg__",
         "//tools/base/build-system/gradle:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
         "//tools/data-binding:__pkg__",

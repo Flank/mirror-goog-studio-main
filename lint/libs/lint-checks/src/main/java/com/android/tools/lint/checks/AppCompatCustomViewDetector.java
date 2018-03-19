@@ -41,34 +41,28 @@ import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UClass;
 
-/**
- * Looks for subclasses of custom widgets in projects using app compat
- */
+/** Looks for subclasses of custom widgets in projects using app compat */
 public class AppCompatCustomViewDetector extends Detector implements SourceCodeScanner {
 
     /** Copy/pasted item decorator code */
-    public static final Issue ISSUE = Issue.create(
-            "AppCompatCustomView",
-            "Appcompat Custom Widgets",
-
-            "In order to support features such as tinting, the appcompat library will "
-                    + "automatically load special appcompat replacements for the builtin "
-                    + "widgets. However, this does not work for your own custom views.\n"
-                    + "\n"
-                    + "Instead of extending the `android.widget` classes directly, you should "
-                    + "instead extend one of the delegate classes in "
-                    + "`android.support.v7.widget.AppCompat`.",
-
-            Category.CORRECTNESS,
-            4,
-            Severity.ERROR,
-            new Implementation(
-                    AppCompatCustomViewDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "AppCompatCustomView",
+                    "Appcompat Custom Widgets",
+                    "In order to support features such as tinting, the appcompat library will "
+                            + "automatically load special appcompat replacements for the builtin "
+                            + "widgets. However, this does not work for your own custom views.\n"
+                            + "\n"
+                            + "Instead of extending the `android.widget` classes directly, you should "
+                            + "instead extend one of the delegate classes in "
+                            + "`android.support.v7.widget.AppCompat`.",
+                    Category.CORRECTNESS,
+                    4,
+                    Severity.ERROR,
+                    new Implementation(AppCompatCustomViewDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link AppCompatCustomViewDetector} */
-    public AppCompatCustomViewDetector() {
-    }
+    public AppCompatCustomViewDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -101,8 +95,12 @@ public class AppCompatCustomViewDetector extends Detector implements SourceCodeS
         Location location = context.getNameLocation(locationNode);
         String suggested = getAppCompatDelegate(superClass);
         String message = String.format("This custom view should extend `%1$s` instead", suggested);
-        LintFix fix = fix().name("Extend AppCompat widget instead").replace().all()
-                .with(suggested).build();
+        LintFix fix =
+                fix().name("Extend AppCompat widget instead")
+                        .replace()
+                        .all()
+                        .with(suggested)
+                        .build();
         context.report(ISSUE, declaration, location, message, fix);
     }
 
@@ -111,8 +109,8 @@ public class AppCompatCustomViewDetector extends Detector implements SourceCodeS
         return "android.support.v7.widget.AppCompat" + superClass.getName();
     }
 
-    private static boolean hasAppCompatDelegate(@NonNull JavaContext context,
-            @Nullable PsiClass superClass) {
+    private static boolean hasAppCompatDelegate(
+            @NonNull JavaContext context, @Nullable PsiClass superClass) {
         if (superClass == null) {
             return false;
         }

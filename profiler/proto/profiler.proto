@@ -75,6 +75,10 @@ service ProfilerService {
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
   }
 
+  // Import a session
+  rpc ImportSession(ImportSessionRequest) returns (ImportSessionResponse) {
+  }
+
   // Request a session's meta data by ID.
   // Metadatas are only used on Studio-side to retrieve display-related info.
   rpc GetSessionMetaData(GetSessionMetaDataRequest)
@@ -179,6 +183,21 @@ message GetSessionRequest {
 message GetSessionResponse {
   // Will not be set if no session with a matching ID was found.
   Session session = 1;
+}
+
+message ImportSessionRequest {
+  Session session = 1;
+  string session_name = 2;
+  SessionMetaData.SessionType sessionType = 3;
+}
+
+message ImportSessionResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+  Status status = 1;
 }
 
 message GetSessionMetaDataRequest {

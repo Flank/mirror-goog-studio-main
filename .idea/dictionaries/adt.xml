@@ -2,6 +2,7 @@
   <dictionary name="adt">
     <words>
       <w>&amp;amp</w>
+      <w>Parcelize</w>
       <w>aapt</w>
       <w>aarrggbb</w>
       <w>abis</w>
@@ -15,6 +16,7 @@
       <w>aidl</w>
       <w>aload</w>
       <w>androiddebugkey</w>
+      <w>androidx</w>
       <w>anim</w>
       <w>antlr</w>
       <w>anydpi</w>
@@ -286,6 +288,7 @@
       <w>resampling</w>
       <w>resizability</w>
       <w>resized</w>
+      <w>retriggered</w>
       <w>robolectric</w>
       <w>rrggbb</w>
       <w>runnables</w>
@@ -327,6 +330,7 @@
       <w>testcase</w>
       <w>testroot</w>
       <w>testsuite</w>
+      <w>theming</w>
       <w>tmpdir</w>
       <w>traceview</w>
       <w>tuple</w>
@@ -353,6 +357,7 @@
       <w>versioncode</w>
       <w>vert</w>
       <w>vmsig</w>
+      <w>vrheadset</w>
       <w>waitable</w>
       <w>wakelock</w>
       <w>wakelocks</w>

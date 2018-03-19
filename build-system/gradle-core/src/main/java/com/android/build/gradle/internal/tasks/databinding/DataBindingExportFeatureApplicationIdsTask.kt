@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.FeatureInfoList
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
@@ -65,16 +66,16 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
     }
 
     class ConfigAction(
-        private val variantScope: VariantScope,
-        private var logArtifactFolder: File
-    ) : TaskConfigAction<DataBindingExportFeatureApplicationIdsTask> {
+        private val variantScope: VariantScope) :
+        TaskConfigAction<DataBindingExportFeatureApplicationIdsTask> {
         override fun getName() =
             variantScope.getTaskName("dataBindingExportFeaturePackageIds")
 
         override fun getType() = DataBindingExportFeatureApplicationIdsTask::class.java
 
         override fun execute(task: DataBindingExportFeatureApplicationIdsTask) {
-            task.packageListOutFolder = logArtifactFolder
+            task.packageListOutFolder = variantScope.buildArtifactsHolder
+                .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO, task)
             task.featureDeclarations = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                     AndroidArtifacts.ArtifactScope.MODULE,

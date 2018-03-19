@@ -46,9 +46,10 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
 
     /** Analyze other files in the given project  */
     fun scan(
-            driver: LintDriver,
-            project: Project,
-            main: Project?) {
+        driver: LintDriver,
+        project: Project,
+        main: Project?
+    ) {
         // Collect all project files
         val projectFolder = project.dir
 
@@ -69,12 +70,16 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
             if (subset != null && !subset.isEmpty()) {
                 val files = ArrayList<File>(subset.size)
                 for (file in subset) {
-                    if (SdkUtils.endsWith(file.path, DOT_XML) && file.name != ANDROID_MANIFEST_XML) {
+                    if (SdkUtils.endsWith(
+                            file.path,
+                            DOT_XML
+                        ) && file.name != ANDROID_MANIFEST_XML
+                    ) {
                         files.add(file)
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.RESOURCE_FILE, files)
+                    this.files[Scope.RESOURCE_FILE] = files
                 }
             } else {
                 val files = Lists.newArrayListWithExpectedSize<File>(100)
@@ -86,7 +91,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     collectFiles(files, assets)
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.RESOURCE_FILE, files)
+                    this.files[Scope.RESOURCE_FILE] = files
                 }
             }
         }
@@ -100,7 +105,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.JAVA_FILE, files)
+                    this.files[Scope.JAVA_FILE] = files
                 }
             } else {
                 val files = Lists.newArrayListWithExpectedSize<File>(100)
@@ -108,7 +113,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     collectFiles(files, srcFolder)
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.JAVA_FILE, files)
+                    this.files[Scope.JAVA_FILE] = files
                 }
             }
         }
@@ -122,7 +127,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.CLASS_FILE, files)
+                    this.files[Scope.CLASS_FILE] = files
                 }
             } else {
                 val files = Lists.newArrayListWithExpectedSize<File>(100)
@@ -130,7 +135,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     collectFiles(files, classFolder)
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.CLASS_FILE, files)
+                    this.files[Scope.CLASS_FILE] = files
                 }
             }
         }
@@ -144,11 +149,11 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.MANIFEST, files)
+                    this.files[Scope.MANIFEST] = files
                 }
             } else {
                 val manifestFiles = project.manifestFiles
-                files.put(Scope.MANIFEST, manifestFiles)
+                files[Scope.MANIFEST] = manifestFiles
             }
         }
 
@@ -161,11 +166,11 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.GRADLE_FILE, files)
+                    this.files[Scope.GRADLE_FILE] = files
                 }
             } else {
                 val manifestFiles = project.gradleBuildScripts
-                files.put(Scope.GRADLE_FILE, manifestFiles)
+                files[Scope.GRADLE_FILE] = manifestFiles
             }
         }
 
@@ -178,11 +183,11 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.PROPERTY_FILE, files)
+                    this.files[Scope.PROPERTY_FILE] = files
                 }
             } else {
                 val manifestFiles = project.proguardFiles
-                files.put(Scope.PROGUARD_FILE, manifestFiles)
+                files[Scope.PROGUARD_FILE] = manifestFiles
             }
         }
 
@@ -195,11 +200,11 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                     }
                 }
                 if (!files.isEmpty()) {
-                    this.files.put(Scope.PROPERTY_FILE, files)
+                    this.files[Scope.PROPERTY_FILE] = files
                 }
             } else {
                 val propertyFiles = project.propertyFiles
-                files.put(Scope.PROPERTY_FILE, propertyFiles)
+                files[Scope.PROPERTY_FILE] = propertyFiles
             }
         }
 

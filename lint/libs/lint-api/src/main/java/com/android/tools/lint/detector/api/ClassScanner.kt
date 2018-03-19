@@ -44,8 +44,12 @@ interface ClassScanner : FileScanner {
      * @param method the method node containing the call
      * @param instruction the actual instruction
      */
-    fun checkInstruction(context: ClassContext, classNode: ClassNode,
-            method: MethodNode, instruction: AbstractInsnNode)
+    fun checkInstruction(
+        context: ClassContext,
+        classNode: ClassNode,
+        method: MethodNode,
+        instruction: AbstractInsnNode
+    )
 
     /**
      * Return the list of method call names (in VM format, e.g. `"<init>"` for
@@ -107,8 +111,12 @@ interface ClassScanner : FileScanner {
      * @param method the method node containing the call
      * @param call the actual method call node
      */
-    fun checkCall(context: ClassContext, classNode: ClassNode,
-            method: MethodNode, call: MethodInsnNode)
+    fun checkCall(
+        context: ClassContext,
+        classNode: ClassNode,
+        method: MethodNode,
+        call: MethodInsnNode
+    )
 
     /**
      * Checks the given class' bytecode for issues.

@@ -64,15 +64,16 @@ public abstract class RangeConstraint {
     }
 
     /**
-     * Checks whether the given range is compatible with this one.
-     * We err on the side of caution. E.g. if we have
+     * Checks whether the given range is compatible with this one. We err on the side of caution.
+     * E.g. if we have
+     *
      * <pre>
      *    method(x)
      * </pre>
-     * and the parameter declaration says that x is between 0 and 10,
-     * and then we have a parameter which is known to be in the range 5 to 15,
-     * here we consider this a compatible range; we don't flag this as
-     * an error. If however, the ranges don't overlap, *then* we complain.
+     *
+     * and the parameter declaration says that x is between 0 and 10, and then we have a parameter
+     * which is known to be in the range 5 to 15, here we consider this a compatible range; we don't
+     * flag this as an error. If however, the ranges don't overlap, *then* we complain.
      */
     @Nullable
     public Boolean contains(@NonNull RangeConstraint other) {

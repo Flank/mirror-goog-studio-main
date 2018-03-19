@@ -35,37 +35,34 @@ import org.w3c.dom.Document;
 
 /**
  * Checks that the encoding used in resource files is always UTF-8
- * <p>
- * TODO: Add a check which looks at files which do not specify the encoding
- * and check the contents to see if it contains characters where it's ambiguous.
+ *
+ * <p>TODO: Add a check which looks at files which do not specify the encoding and check the
+ * contents to see if it contains characters where it's ambiguous.
  */
 public class Utf8Detector extends ResourceXmlDetector {
 
     /** Detects non-utf8 encodings */
-    public static final Issue ISSUE = Issue.create(
-            "EnforceUTF8",
-            "Encoding used in resource files is not UTF-8",
-            "XML supports encoding in a wide variety of character sets. However, not all " +
-            "tools handle the XML encoding attribute correctly, and nearly all Android " +
-            "apps use UTF-8, so by using UTF-8 you can protect yourself against subtle " +
-            "bugs when using non-ASCII characters.\n" +
-            "\n" +
-            "In particular, the Android Gradle build system will merge resource XML files " +
-            "assuming the resource files are using UTF-8 encoding.\n",
-            Category.I18N,
-            5,
-            Severity.FATAL,
-            new Implementation(
-                    Utf8Detector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "EnforceUTF8",
+                    "Encoding used in resource files is not UTF-8",
+                    "XML supports encoding in a wide variety of character sets. However, not all "
+                            + "tools handle the XML encoding attribute correctly, and nearly all Android "
+                            + "apps use UTF-8, so by using UTF-8 you can protect yourself against subtle "
+                            + "bugs when using non-ASCII characters.\n"
+                            + "\n"
+                            + "In particular, the Android Gradle build system will merge resource XML files "
+                            + "assuming the resource files are using UTF-8 encoding.\n",
+                    Category.I18N,
+                    5,
+                    Severity.FATAL,
+                    new Implementation(Utf8Detector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
-    private static final Pattern ENCODING_PATTERN =
-            Pattern.compile("encoding=['\"](\\S*)['\"]");
+    private static final Pattern ENCODING_PATTERN = Pattern.compile("encoding=['\"](\\S*)['\"]");
 
     /** Constructs a new {@link Utf8Detector} */
-    public Utf8Detector() {
-    }
+    public Utf8Detector() {}
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
@@ -102,12 +99,18 @@ public class Utf8Detector extends ResourceXmlDetector {
             Matcher matcher = ENCODING_PATTERN.matcher(xml);
             if (matcher.find(encodingIndex)) {
                 String encoding = matcher.group(1);
-                Location location = Location.create(context.file, xml,
-                        matcher.start(1), matcher.end(1));
+                Location location =
+                        Location.create(context.file, xml, matcher.start(1), matcher.end(1));
                 LintFix fix = fix().replace().all().with("utf-8").build();
-                context.report(ISSUE, null, location, String.format(
-                        "%1$s: Not using UTF-8 as the file encoding. This can lead to subtle " +
-                                "bugs with non-ascii characters", encoding), fix);
+                context.report(
+                        ISSUE,
+                        null,
+                        location,
+                        String.format(
+                                "%1$s: Not using UTF-8 as the file encoding. This can lead to subtle "
+                                        + "bugs with non-ascii characters",
+                                encoding),
+                        fix);
             }
         }
     }

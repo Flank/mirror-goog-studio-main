@@ -40,41 +40,37 @@ import java.util.Collection;
 import org.w3c.dom.Attr;
 
 /**
- * Check which looks at the children of ScrollViews and ensures that they fill/match
- * the parent width instead of setting wrap_content.
- * <p>
- * TODO: Consider looking at the localization="suggested" attribute in the platform attrs.xml
- * to catch future recommended attributes.
+ * Check which looks at the children of ScrollViews and ensures that they fill/match the parent
+ * width instead of setting wrap_content.
+ *
+ * <p>TODO: Consider looking at the localization="suggested" attribute in the platform attrs.xml to
+ * catch future recommended attributes.
  */
 public class HardcodedValuesDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "HardcodedText",
-            "Hardcoded text",
-
-            "Hardcoding text attributes directly in layout files is bad for several reasons:\n" +
-            "\n" +
-            "* When creating configuration variations (for example for landscape or portrait)" +
-            "you have to repeat the actual text (and keep it up to date when making changes)\n" +
-            "\n" +
-            "* The application cannot be translated to other languages by just adding new " +
-            "translations for existing string resources.\n" +
-            "\n" +
-            "There are quickfixes to automatically extract this hardcoded string into a " +
-            "resource lookup.",
-
-            Category.I18N,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    HardcodedValuesDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "HardcodedText",
+                    "Hardcoded text",
+                    "Hardcoding text attributes directly in layout files is bad for several reasons:\n"
+                            + "\n"
+                            + "* When creating configuration variations (for example for landscape or portrait)"
+                            + "you have to repeat the actual text (and keep it up to date when making changes)\n"
+                            + "\n"
+                            + "* The application cannot be translated to other languages by just adding new "
+                            + "translations for existing string resources.\n"
+                            + "\n"
+                            + "There are quickfixes to automatically extract this hardcoded string into a "
+                            + "resource lookup.",
+                    Category.I18N,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(HardcodedValuesDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     // TODO: Add additional issues here, such as hardcoded colors, hardcoded sizes, etc
 
     /** Constructs a new {@link HardcodedValuesDetector} */
-    public HardcodedValuesDetector() {
-    }
+    public HardcodedValuesDetector() {}
 
     @Override
     public Collection<String> getApplicableAttributes() {
@@ -92,8 +88,7 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 ATTR_TITLE,
 
                 // App restrictions
-                ATTR_DESCRIPTION
-        );
+                ATTR_DESCRIPTION);
     }
 
     @Override
@@ -120,10 +115,13 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 // welcome to Android development greeting.
                 return;
             }
-            if (value.equals("Large Text") || value.equals("Medium Text") ||
-                    value.equals("Small Text") || value.startsWith("New ") &&
-                    (value.equals("New Text")
-                            || value.equals("New " + attribute.getOwnerElement().getTagName()))) {
+            if (value.equals("Large Text")
+                    || value.equals("Medium Text")
+                    || value.equals("Small Text")
+                    || value.startsWith("New ")
+                            && (value.equals("New Text")
+                                    || value.equals(
+                                            "New " + attribute.getOwnerElement().getTagName()))) {
                 // The layout editor initially places the label "New Button", "New TextView",
                 // etc on widgets dropped on the layout editor. Again, users are unlikely
                 // to leave it that way, so let's not flag it until they change it.
@@ -140,9 +138,12 @@ public class HardcodedValuesDetector extends LayoutDetector {
                 }
             }
 
-            context.report(ISSUE, attribute, context.getLocation(attribute),
-                String.format("Hardcoded string \"%1$s\", should use `@string` resource",
-                              value));
+            context.report(
+                    ISSUE,
+                    attribute,
+                    context.getLocation(attribute),
+                    String.format(
+                            "Hardcoded string \"%1$s\", should use `@string` resource", value));
         }
     }
 }

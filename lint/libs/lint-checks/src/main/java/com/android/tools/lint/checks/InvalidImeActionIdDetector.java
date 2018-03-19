@@ -35,36 +35,34 @@ import java.util.Collections;
 import org.w3c.dom.Attr;
 
 /**
- * Check android:imeActionId for valid values, as defined by <a href="https://developer.android.com/reference/android/view/inputmethod/EditorInfo.html">EditorInfo</a>
+ * Check android:imeActionId for valid values, as defined by <a
+ * href="https://developer.android.com/reference/android/view/inputmethod/EditorInfo.html">EditorInfo</a>
  */
 public class InvalidImeActionIdDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "InvalidImeActionId",
-            "Invalid imeActionId declaration",
-
-            PREFIX_ANDROID + ATTR_IME_ACTION_ID + " should not be a resourceId such as " +
-                    "@+id/resName. It must be an integer constant, or an integer resource " +
-                    "reference, as defined in EditorInfo.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            new Implementation(
-                    InvalidImeActionIdDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo(
-                    "https://developer.android.com/reference/android/view/inputmethod/EditorInfo.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "InvalidImeActionId",
+                            "Invalid imeActionId declaration",
+                            PREFIX_ANDROID
+                                    + ATTR_IME_ACTION_ID
+                                    + " should not be a resourceId such as "
+                                    + "@+id/resName. It must be an integer constant, or an integer resource "
+                                    + "reference, as defined in EditorInfo.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(
+                                    InvalidImeActionIdDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo(
+                            "https://developer.android.com/reference/android/view/inputmethod/EditorInfo.html");
 
     /** Constructs a new {@link InvalidImeActionIdDetector} check */
-    public InvalidImeActionIdDetector() {
-    }
+    public InvalidImeActionIdDetector() {}
 
     @Override
     public Collection<String> getApplicableAttributes() {
-        return Collections.singletonList(
-                ATTR_IME_ACTION_ID
-        );
+        return Collections.singletonList(ATTR_IME_ACTION_ID);
     }
 
     @Override
@@ -80,11 +78,17 @@ public class InvalidImeActionIdDetector extends LayoutDetector {
                 //noinspection ResultOfMethodCallIgnored
                 Integer.parseInt(value);
             } catch (Throwable ex) {
-                context.report(ISSUE, attribute, context.getLocation(attribute),
+                context.report(
+                        ISSUE,
+                        attribute,
+                        context.getLocation(attribute),
                         String.format("\"%1$s\" is not an integer", value));
             }
         } else if (url.type != ResourceType.INTEGER) {
-            context.report(ISSUE, attribute, context.getLocation(attribute),
+            context.report(
+                    ISSUE,
+                    attribute,
+                    context.getLocation(attribute),
                     "Invalid resource type, expected integer value");
         }
     }

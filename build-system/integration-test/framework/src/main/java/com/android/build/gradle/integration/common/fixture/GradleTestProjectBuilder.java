@@ -67,6 +67,9 @@ public final class GradleTestProjectBuilder {
     // list of included builds, relative to the main testDir
     private List<String> withIncludedBuilds = Lists.newArrayList();
 
+    /** Whether or not to output the log of the last build result when a test fails */
+    private boolean outputLogOnFailure = true;
+
     /** Create a GradleTestProject. */
     @NonNull
     public GradleTestProject create() {
@@ -125,7 +128,8 @@ public final class GradleTestProjectBuilder {
                 androidHome,
                 androidNdkHome,
                 gradleDistributionDirectory,
-                kotlinVersion);
+                kotlinVersion,
+                outputLogOnFailure);
     }
 
     /**
@@ -292,6 +296,10 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
+    public GradleTestProjectBuilder dontOutputLogOnFailure() {
+        this.outputLogOnFailure = false;
+        return this;
+    }
 
     /**
      * Enable profile output generation. Typically used in benchmark tests. By default, places the

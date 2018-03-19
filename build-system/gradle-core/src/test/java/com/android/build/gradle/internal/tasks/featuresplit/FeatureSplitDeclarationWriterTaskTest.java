@@ -61,6 +61,6 @@ public class FeatureSplitDeclarationWriterTaskTest {
         assertThat(files).hasLength(1);
 
         FeatureSplitDeclaration loadedDecl = FeatureSplitDeclaration.load(files[0]);
-        assertThat("unique_split").isEqualTo(loadedDecl.getUniqueIdentifier());
+        assertThat("unique_split").isEqualTo(loadedDecl.getModulePath());
     }
 }

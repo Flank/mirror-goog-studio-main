@@ -24,6 +24,7 @@ import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EnergyProfiler.AlarmCancelled.CancelActionCase;
+import com.android.tools.profiler.proto.EnergyProfiler.AlarmFired.FireActionCase;
 import com.android.tools.profiler.proto.EnergyProfiler.AlarmSet.SetActionCase;
 import com.android.tools.profiler.proto.EnergyProfiler.AlarmSet.Type;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
@@ -167,5 +168,32 @@ public class AlarmTest {
         assertThat(cancelEvent.getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.LISTENER);
         assertThat(cancelEvent.getAlarmCancelled().getListener().getTag()).isEqualTo("bar");
+    }
+
+    @Test
+    public void testFireListenerAlarm() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "fireListenerAlarm");
+        assertThat(myAndroidDriver.waitForInput("LISTENER ALARM FIRED")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 2);
+        assertThat(response.getEventsCount()).isEqualTo(2);
+
+        EnergyEvent setEvent = response.getEvents(0);
+        assertThat(setEvent.getEventId()).isGreaterThan(0);
+        assertThat(setEvent.getIsTerminal()).isFalse();
+        assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
+        assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.LISTENER);
+        String tag = setEvent.getAlarmSet().getListener().getTag();
+
+        EnergyEvent cancelEvent = response.getEvents(1);
+        assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
+        assertThat(cancelEvent.getIsTerminal()).isTrue();
+        assertThat(cancelEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_FIRED);
+        assertThat(cancelEvent.getAlarmFired().getFireActionCase())
+                .isEqualTo(FireActionCase.LISTENER);
+        assertThat(cancelEvent.getAlarmFired().getListener().getTag()).isEqualTo(tag);
     }
 }

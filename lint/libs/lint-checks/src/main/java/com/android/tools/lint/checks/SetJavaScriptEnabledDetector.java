@@ -32,43 +32,42 @@ import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 
-/**
- * Looks for invocations of android.webkit.WebSettings.setJavaScriptEnabled.
- */
+/** Looks for invocations of android.webkit.WebSettings.setJavaScriptEnabled. */
 public class SetJavaScriptEnabledDetector extends Detector implements SourceCodeScanner {
     /** Invocations of setJavaScriptEnabled */
-    public static final Issue ISSUE = Issue.create("SetJavaScriptEnabled",
-            "Using `setJavaScriptEnabled`",
-
-            "Your code should not invoke `setJavaScriptEnabled` if you are not sure that " +
-            "your app really requires JavaScript support.",
-
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    SetJavaScriptEnabledDetector.class,
-                    Scope.JAVA_FILE_SCOPE))
-            .addMoreInfo(
-            "http://developer.android.com/guide/practices/security.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "SetJavaScriptEnabled",
+                            "Using `setJavaScriptEnabled`",
+                            "Your code should not invoke `setJavaScriptEnabled` if you are not sure that "
+                                    + "your app really requires JavaScript support.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(
+                                    SetJavaScriptEnabledDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo("http://developer.android.com/guide/practices/security.html");
 
     /** Constructs a new {@link SetJavaScriptEnabledDetector} check */
-    public SetJavaScriptEnabledDetector() {
-    }
+    public SetJavaScriptEnabledDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         List<UExpression> arguments = call.getValueArguments();
         if (arguments.size() == 1) {
-            Object constant = ConstantEvaluator.evaluate(context, arguments.get(0)
-            );
+            Object constant = ConstantEvaluator.evaluate(context, arguments.get(0));
             if (constant != null && !Boolean.FALSE.equals(constant)) {
-                context.report(ISSUE, call, context.getLocation(call),
-                        "Using `setJavaScriptEnabled` can introduce XSS vulnerabilities " +
-                                "into your application, review carefully.");
+                context.report(
+                        ISSUE,
+                        call,
+                        context.getLocation(call),
+                        "Using `setJavaScriptEnabled` can introduce XSS vulnerabilities "
+                                + "into your application, review carefully.");
             }
         }
     }

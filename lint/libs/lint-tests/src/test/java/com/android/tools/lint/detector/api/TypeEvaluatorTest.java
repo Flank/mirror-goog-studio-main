@@ -35,8 +35,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class TypeEvaluatorTest extends TestCase {
-    private static void checkUast(Object expected, @Language("JAVA") String source,
-            final String targetVariable) {
+    private static void checkUast(
+            Object expected, @Language("JAVA") String source, final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
                 LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
@@ -48,25 +48,25 @@ public class TypeEvaluatorTest extends TestCase {
 
         // Find the expression
         final AtomicReference<UExpression> reference = new AtomicReference<>();
-        uFile.accept(new AbstractUastVisitor() {
-            @Override
-            public boolean visitVariable(UVariable variable) {
-                String name = variable.getName();
-                if (name != null && name.equals(targetVariable)) {
-                    reference.set(variable.getUastInitializer());
-                }
+        uFile.accept(
+                new AbstractUastVisitor() {
+                    @Override
+                    public boolean visitVariable(UVariable variable) {
+                        String name = variable.getName();
+                        if (name != null && name.equals(targetVariable)) {
+                            reference.set(variable.getUastInitializer());
+                        }
 
-                return super.visitVariable(variable);
-            }
-        });
+                        return super.visitVariable(variable);
+                    }
+                });
 
         UExpression expression = reference.get();
         PsiType actual = TypeEvaluator.evaluate(expression);
         if (expected == null) {
             assertNull(actual);
         } else {
-            assertNotNull("Couldn't compute type for " + source + ", expected " + expected,
-                    actual);
+            assertNotNull("Couldn't compute type for " + source + ", expected " + expected, actual);
 
             if (expected instanceof PsiType) {
                 assertEquals(expected, actual);
@@ -81,8 +81,8 @@ public class TypeEvaluatorTest extends TestCase {
         Disposer.dispose(disposable);
     }
 
-    private static void checkPsi(Object expected, @Language("JAVA") String source,
-            final String targetVariable) {
+    private static void checkPsi(
+            Object expected, @Language("JAVA") String source, final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
                 LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
@@ -93,23 +93,23 @@ public class TypeEvaluatorTest extends TestCase {
 
         // Find the expression
         final AtomicReference<PsiExpression> reference = new AtomicReference<>();
-        javaFile.accept(new JavaRecursiveElementVisitor() {
-            @Override
-            public void visitLocalVariable(PsiLocalVariable variable) {
-                super.visitLocalVariable(variable);
-                String name = variable.getName();
-                if (name != null && name.equals(targetVariable)) {
-                    reference.set(variable.getInitializer());
-                }
-            }
-        });
+        javaFile.accept(
+                new JavaRecursiveElementVisitor() {
+                    @Override
+                    public void visitLocalVariable(PsiLocalVariable variable) {
+                        super.visitLocalVariable(variable);
+                        String name = variable.getName();
+                        if (name != null && name.equals(targetVariable)) {
+                            reference.set(variable.getInitializer());
+                        }
+                    }
+                });
         PsiExpression expression = reference.get();
         PsiType actual = TypeEvaluator.evaluate(context, expression);
         if (expected == null) {
             assertNull(actual);
         } else {
-            assertNotNull("Couldn't compute type for " + source + ", expected " + expected,
-                    actual);
+            assertNotNull("Couldn't compute type for " + source + ", expected " + expected, actual);
 
             if (expected instanceof PsiType) {
                 assertEquals(expected, actual);
@@ -124,43 +124,49 @@ public class TypeEvaluatorTest extends TestCase {
         Disposer.dispose(disposable);
     }
 
-    private static void check(Object expected, @Language("JAVA") String source,
-            final String targetVariable) {
+    private static void check(
+            Object expected, @Language("JAVA") String source, final String targetVariable) {
         checkUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
     }
 
-    private static void checkStatements(Object expected, String statementsSource,
-            final String targetVariable) {
+    private static void checkStatements(
+            Object expected, String statementsSource, final String targetVariable) {
         @Language("JAVA")
-        String source = ""
-                + "package test.pkg;\n"
-                + "public class Test {\n"
-                + "    public void test() {\n"
-                + "        " + statementsSource + "\n"
-                + "    }\n"
-                + "    public static final int MY_INT_FIELD = 5;\n"
-                + "    public static final boolean MY_BOOLEAN_FIELD = true;\n"
-                + "    public static final String MY_STRING_FIELD = \"test\";\n"
-                + "    public static final String MY_OBJECT_FIELD = \"test\";\n"
-                + "}\n";
+        String source =
+                ""
+                        + "package test.pkg;\n"
+                        + "public class Test {\n"
+                        + "    public void test() {\n"
+                        + "        "
+                        + statementsSource
+                        + "\n"
+                        + "    }\n"
+                        + "    public static final int MY_INT_FIELD = 5;\n"
+                        + "    public static final boolean MY_BOOLEAN_FIELD = true;\n"
+                        + "    public static final String MY_STRING_FIELD = \"test\";\n"
+                        + "    public static final String MY_OBJECT_FIELD = \"test\";\n"
+                        + "}\n";
 
         check(expected, source, targetVariable);
     }
 
     private static void checkExpression(Object expected, String expressionSource) {
         @Language("JAVA")
-        String source = ""
-                + "package test.pkg;\n"
-                + "public class Test {\n"
-                + "    public void test() {\n"
-                + "        Object expression = " + expressionSource + ";\n"
-                + "    }\n"
-                + "    public static final int MY_INT_FIELD = 5;\n"
-                + "    public static final boolean MY_BOOLEAN_FIELD = true;\n"
-                + "    public static final String MY_STRING_FIELD = \"test\";\n"
-                + "    public static final String MY_OBJECT_FIELD = \"test\";\n"
-                + "}\n";
+        String source =
+                ""
+                        + "package test.pkg;\n"
+                        + "public class Test {\n"
+                        + "    public void test() {\n"
+                        + "        Object expression = "
+                        + expressionSource
+                        + ";\n"
+                        + "    }\n"
+                        + "    public static final int MY_INT_FIELD = 5;\n"
+                        + "    public static final boolean MY_BOOLEAN_FIELD = true;\n"
+                        + "    public static final String MY_STRING_FIELD = \"test\";\n"
+                        + "    public static final String MY_OBJECT_FIELD = \"test\";\n"
+                        + "}\n";
 
         check(expected, source, "expression");
     }
@@ -236,14 +242,18 @@ public class TypeEvaluatorTest extends TestCase {
     }
 
     public void testStatements() {
-        checkStatements(Integer.TYPE, ""
+        checkStatements(
+                Integer.TYPE,
+                ""
                         + "int x = +5;\n"
                         + "int y = x;\n"
                         + "int w;\n"
                         + "w = -1;\n"
                         + "int z = x + 5 + w;\n",
                 "z");
-        checkStatements(String.class, ""
+        checkStatements(
+                String.class,
+                ""
                         + "String initial = \"hello\";\n"
                         + "String other;\n"
                         + "other = \" world\";\n"
@@ -252,28 +262,24 @@ public class TypeEvaluatorTest extends TestCase {
     }
 
     public void testConditionals() {
-        checkStatements(Integer.TYPE, ""
+        checkStatements(
+                Integer.TYPE,
+                ""
                         + "boolean condition = false;\n"
                         + "condition = !condition;\n"
                         + "int z = condition ? -5 : 4;\n",
                 "z");
-        checkStatements(Integer.TYPE, ""
-                        + "boolean condition = true && false;\n"
-                        + "int z = condition ? 5 : -4;\n",
+        checkStatements(
+                Integer.TYPE,
+                "boolean condition = true && false;\nint z = condition ? 5 : -4;\n",
                 "z");
     }
 
     public void testConstructorInvocation() {
-        checkStatements(String.class, ""
-                        + "Object o = new String(\"test\");\n"
-                        + "Object bar = o;\n",
-                "bar");
+        checkStatements(String.class, "Object o = new String(\"test\");\nObject bar = o;\n", "bar");
     }
 
     public void testFieldInitializerType() {
-        checkStatements(String.class, ""
-                        + "Object o = MY_OBJECT_FIELD;\n"
-                        + "Object bar = o;\n",
-                "bar");
+        checkStatements(String.class, "Object o = MY_OBJECT_FIELD;\nObject bar = o;\n", "bar");
     }
 }

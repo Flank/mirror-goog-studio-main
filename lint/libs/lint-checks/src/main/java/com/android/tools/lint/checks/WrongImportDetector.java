@@ -35,39 +35,40 @@ import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UImportStatement;
 
 /**
- * Checks for "import android.R", which seems to be a common source of confusion
- * (see for example http://stackoverflow.com/questions/885009/r-cannot-be-resolved-android-error
- * and many other forums).
- * <p>
- * The root cause is probably this (from http://source.android.com/source/using-eclipse.html) :
- * <blockquote> Note: Eclipse sometimes likes to add an import android.R
- * statement at the top of your files that use resources, especially when you
- * ask eclipse to sort or otherwise manage imports. This will cause your make to
- * break. Look out for these erroneous import statements and delete them.
+ * Checks for "import android.R", which seems to be a common source of confusion (see for example
+ * http://stackoverflow.com/questions/885009/r-cannot-be-resolved-android-error and many other
+ * forums).
+ *
+ * <p>The root cause is probably this (from http://source.android.com/source/using-eclipse.html) :
+ *
+ * <blockquote>
+ *
+ * Note: Eclipse sometimes likes to add an import android.R statement at the top of your files that
+ * use resources, especially when you ask eclipse to sort or otherwise manage imports. This will
+ * cause your make to break. Look out for these erroneous import statements and delete them.
+ *
  * </blockquote>
  */
 public class WrongImportDetector extends Detector implements SourceCodeScanner {
     /** Is android.R being imported? */
-    public static final Issue ISSUE = Issue.create(
-            "SuspiciousImport",
-            "'`import android.R`' statement",
-            "Importing `android.R` is usually not intentional; it sometimes happens when " +
-                    "you use an IDE and ask it to automatically add imports at a time when your " +
-                    "project's R class it not present.\n" +
-                    "\n" +
-                    "Once the import is there you might get a lot of \"confusing\" error messages " +
-                    "because of course the fields available on `android.R` are not the ones you'd " +
-                    "expect from just looking at your own `R` class.",
-            Category.CORRECTNESS,
-            9,
-            Severity.WARNING,
-            new Implementation(
-                    WrongImportDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "SuspiciousImport",
+                    "'`import android.R`' statement",
+                    "Importing `android.R` is usually not intentional; it sometimes happens when "
+                            + "you use an IDE and ask it to automatically add imports at a time when your "
+                            + "project's R class it not present.\n"
+                            + "\n"
+                            + "Once the import is there you might get a lot of \"confusing\" error messages "
+                            + "because of course the fields available on `android.R` are not the ones you'd "
+                            + "expect from just looking at your own `R` class.",
+                    Category.CORRECTNESS,
+                    9,
+                    Severity.WARNING,
+                    new Implementation(WrongImportDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link WrongImportDetector} check */
-    public WrongImportDetector() {
-    }
+    public WrongImportDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -96,9 +97,12 @@ public class WrongImportDetector extends Detector implements SourceCodeScanner {
                 String qualifiedName = ((PsiClass) resolved).getQualifiedName();
                 if ("android.R".equals(qualifiedName)) {
                     Location location = context.getLocation(statement);
-                    context.report(ISSUE, statement, location,
-                        "Don't include `android.R` here; use a fully qualified name for "
-                                + "each usage instead");
+                    context.report(
+                            ISSUE,
+                            statement,
+                            location,
+                            "Don't include `android.R` here; use a fully qualified name for "
+                                    + "each usage instead");
                 }
             }
         }

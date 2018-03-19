@@ -48,7 +48,7 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
-  explicit SimpleperfManager(const Clock &clock, const Simpleperf &simpleperf)
+  explicit SimpleperfManager(Clock* clock, const Simpleperf &simpleperf)
       : clock_(clock), simpleperf_(simpleperf) {}
   ~SimpleperfManager();
 
@@ -56,10 +56,12 @@ class SimpleperfManager {
   // |trace_path| is also set to where the trace file will be made available
   // once profiling of this app is stopped. To call this method on an already
   // profiled app is a noop. The simpleperf binary used to profile should
-  // correspond to the given |abi_arch|.
+  // correspond to the given |abi_arch|. If |is_startup_profiling| is true,
+  // it means that the application hasn't launched and pid is not available
+  // yet, so it will use "--app" flag instead of "--pid".
   bool StartProfiling(const std::string &app_name, const std::string &abi_arch,
                       int sampling_interval_us, std::string *trace_path,
-                      std::string *error);
+                      std::string *error, bool is_startup_profiling = false);
   // Stops simpleperf process that is currently profiling |app_name|.
   // If |need_result|, convert the raw data to the processed data in a file.
   // Always cleans up raw data file and log file.
@@ -70,7 +72,7 @@ class SimpleperfManager {
   bool IsProfiling(const std::string &app_name);
 
  private:
-  const Clock &clock_;
+  Clock* clock_;
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
   const Simpleperf &simpleperf_;

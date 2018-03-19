@@ -38,41 +38,35 @@ import org.jetbrains.uast.UAnonymousClass;
 import org.jetbrains.uast.UClass;
 
 /**
- * Checks that Fragment subclasses can be instantiated via
- * {link {@link Class#newInstance()}}: the class is public, static, and has
- * a public null constructor.
- * <p>
- * This helps track down issues like
- *   http://stackoverflow.com/questions/8058809/fragment-activity-crashes-on-screen-rotate
- * (and countless duplicates)
+ * Checks that Fragment subclasses can be instantiated via {link {@link Class#newInstance()}}: the
+ * class is public, static, and has a public null constructor.
+ *
+ * <p>This helps track down issues like
+ * http://stackoverflow.com/questions/8058809/fragment-activity-crashes-on-screen-rotate (and
+ * countless duplicates)
  */
 public class FragmentDetector extends Detector implements SourceCodeScanner {
     /** Are fragment subclasses instantiatable? */
-    public static final Issue ISSUE = Issue.create(
-        "ValidFragment",
-        "Fragment not instantiatable",
-
-        "From the Fragment documentation:\n" +
-        "**Every** fragment must have an empty constructor, so it can be instantiated when " +
-        "restoring its activity's state. It is strongly recommended that subclasses do not " +
-        "have other constructors with parameters, since these constructors will not be " +
-        "called when the fragment is re-instantiated; instead, arguments can be supplied " +
-        "by the caller with `setArguments(Bundle)` and later retrieved by the Fragment " +
-        "with `getArguments()`.",
-
-        Category.CORRECTNESS,
-        6,
-        Severity.FATAL,
-        new Implementation(
-                FragmentDetector.class,
-                Scope.JAVA_FILE_SCOPE)
-        ).addMoreInfo(
-            "http://developer.android.com/reference/android/app/Fragment.html#Fragment()");
-
+    public static final Issue ISSUE =
+            Issue.create(
+                            "ValidFragment",
+                            "Fragment not instantiatable",
+                            "From the Fragment documentation:\n"
+                                    + "**Every** fragment must have an empty constructor, so it can be instantiated when "
+                                    + "restoring its activity's state. It is strongly recommended that subclasses do not "
+                                    + "have other constructors with parameters, since these constructors will not be "
+                                    + "called when the fragment is re-instantiated; instead, arguments can be supplied "
+                                    + "by the caller with `setArguments(Bundle)` and later retrieved by the Fragment "
+                                    + "with `getArguments()`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.FATAL,
+                            new Implementation(FragmentDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://developer.android.com/reference/android/app/Fragment.html#Fragment()");
 
     /** Constructs a new {@link FragmentDetector} */
-    public FragmentDetector() {
-    }
+    public FragmentDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -86,8 +80,9 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
     @Override
     public void visitClass(@NonNull JavaContext context, @NonNull UClass node) {
         if (node instanceof UAnonymousClass) {
-            String message = "Fragments should be static such that they can be re-instantiated by " +
-                    "the system, and anonymous classes are not static";
+            String message =
+                    "Fragments should be static such that they can be re-instantiated by "
+                            + "the system, and anonymous classes are not static";
             context.report(ISSUE, node, context.getNameLocation(node), message);
             return;
         }
@@ -98,15 +93,18 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
         }
 
         if (!evaluator.isPublic(node)) {
-            String message = String.format("This fragment class should be public (%1$s)",
-                    node.getQualifiedName());
+            String message =
+                    String.format(
+                            "This fragment class should be public (%1$s)", node.getQualifiedName());
             context.report(ISSUE, node, context.getNameLocation(node), message);
             return;
         }
 
         if (node.getContainingClass() != null && !evaluator.isStatic(node)) {
-            String message = String.format(
-                    "This fragment inner class should be static (%1$s)", node.getQualifiedName());
+            String message =
+                    String.format(
+                            "This fragment inner class should be static (%1$s)",
+                            node.getQualifiedName());
             context.report(ISSUE, node, context.getNameLocation(node), message);
             return;
         }
@@ -120,8 +118,8 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
                     hasDefaultConstructor = true;
                 } else {
                     Location location = context.getNameLocation(constructor);
-                    context.report(ISSUE, constructor, location,
-                            "The default constructor must be public");
+                    context.report(
+                            ISSUE, constructor, location, "The default constructor must be public");
                     // Also mark that we have a constructor so we don't complain again
                     // below since we've already emitted a more specific error related
                     // to the default constructor
@@ -130,18 +128,20 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
             } else {
                 Location location = context.getNameLocation(constructor);
                 // TODO: Use separate issue for this which isn't an error
-                String message = "Avoid non-default constructors in fragments: "
-                        + "use a default constructor plus "
-                        + "`Fragment#setArguments(Bundle)` instead";
+                String message =
+                        "Avoid non-default constructors in fragments: "
+                                + "use a default constructor plus "
+                                + "`Fragment#setArguments(Bundle)` instead";
                 context.report(ISSUE, constructor, location, message);
             }
         }
 
         if (!hasDefaultConstructor && hasConstructor) {
-            String message = String.format(
-                    "This fragment should provide a default constructor (a public " +
-                            "constructor with no arguments) (`%1$s`)",
-                    node.getQualifiedName());
+            String message =
+                    String.format(
+                            "This fragment should provide a default constructor (a public "
+                                    + "constructor with no arguments) (`%1$s`)",
+                            node.getQualifiedName());
             context.report(ISSUE, node, context.getNameLocation(node), message);
         }
     }

@@ -32,27 +32,24 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
 import java.util.EnumSet;
 
-/**
- * Looks for merge markers left behind in the source files.
- */
+/** Looks for merge markers left behind in the source files. */
 public class MergeMarkerDetector extends Detector implements OtherFileScanner {
     /** Packaged private key files */
-    public static final Issue ISSUE = Issue.create(
-            "MergeMarker",
-            "Code contains merge marker",
-
-            "Many version control systems leave unmerged files with markers such as <<< in "
-                    + "the source code. This check looks for these markers, which are sometimes "
-                    + "accidentally left in, particularly in resource files where they don't "
-                    + "break compilation.",
-            Category.CORRECTNESS,
-            8,
-            Severity.ERROR,
-            new Implementation(MergeMarkerDetector.class, Scope.OTHER_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "MergeMarker",
+                    "Code contains merge marker",
+                    "Many version control systems leave unmerged files with markers such as <<< in "
+                            + "the source code. This check looks for these markers, which are sometimes "
+                            + "accidentally left in, particularly in resource files where they don't "
+                            + "break compilation.",
+                    Category.CORRECTNESS,
+                    8,
+                    Severity.ERROR,
+                    new Implementation(MergeMarkerDetector.class, Scope.OTHER_SCOPE));
 
     /** Constructs a new {@link MergeMarkerDetector} check */
-    public MergeMarkerDetector() {
-    }
+    public MergeMarkerDetector() {}
 
     // ---- Implements OtherFileScanner ----
 

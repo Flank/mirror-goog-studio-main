@@ -100,8 +100,10 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         val baseline = LintBaseline(createClient(), baselineFile)
 
         var found: Boolean
-        found = baseline.findAndMark(ManifestDetector.USES_SDK,
-                Location.create(File("bogus")), "Unrelated)", Severity.WARNING, null)
+        found = baseline.findAndMark(
+            ManifestDetector.USES_SDK,
+            Location.create(File("bogus")), "Unrelated)", Severity.WARNING, null
+        )
         assertThat(found).isFalse()
         assertThat(baseline.foundWarningCount).isEqualTo(0)
         assertThat(baseline.foundErrorCount).isEqualTo(0)
@@ -110,27 +112,33 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(baseline.fixedCount).isEqualTo(3)
 
         // Wrong issue
-        found = baseline.findAndMark(ManifestDetector.USES_SDK,
-                Location.create(File("bogus")),
-                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null)
+        found = baseline.findAndMark(
+            ManifestDetector.USES_SDK,
+            Location.create(File("bogus")),
+            "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null
+        )
         assertThat(found).isFalse()
         assertThat(baseline.foundWarningCount).isEqualTo(0)
         assertThat(baseline.foundErrorCount).isEqualTo(0)
         assertThat(baseline.fixedCount).isEqualTo(3)
 
         // Wrong file
-        found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
-                Location.create(File("res/layout-port/main.xml")),
-                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null)
+        found = baseline.findAndMark(
+            HardcodedValuesDetector.ISSUE,
+            Location.create(File("res/layout-port/main.xml")),
+            "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null
+        )
         assertThat(found).isFalse()
         assertThat(baseline.foundWarningCount).isEqualTo(0)
         assertThat(baseline.foundErrorCount).isEqualTo(0)
         assertThat(baseline.fixedCount).isEqualTo(3)
 
         // Match
-        found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
-                Location.create(File("res/layout/main.xml")),
-                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null)
+        found = baseline.findAndMark(
+            HardcodedValuesDetector.ISSUE,
+            Location.create(File("res/layout/main.xml")),
+            "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null
+        )
         assertThat(found).isTrue()
         assertThat(baseline.fixedCount).isEqualTo(2)
         assertThat(baseline.foundWarningCount).isEqualTo(1)
@@ -138,19 +146,26 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(baseline.fixedCount).isEqualTo(2)
 
         // Search for the same error once it's already been found: no longer there
-        found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
-                Location.create(File("res/layout/main.xml")),
-                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null)
+        found = baseline.findAndMark(
+            HardcodedValuesDetector.ISSUE,
+            Location.create(File("res/layout/main.xml")),
+            "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING, null
+        )
         assertThat(found).isFalse()
         assertThat(baseline.foundWarningCount).isEqualTo(1)
         assertThat(baseline.foundErrorCount).isEqualTo(0)
         assertThat(baseline.fixedCount).isEqualTo(2)
 
         // Match
-        found = baseline.findAndMark(RangeDetector.RANGE,
-                Location.create(File(
-                        "java/android/support/v4/widget/SlidingPaneLayout.java")),
-                "Value must be \u2265 0 (was -1)", Severity.WARNING, null)
+        found = baseline.findAndMark(
+            RangeDetector.RANGE,
+            Location.create(
+                File(
+                    "java/android/support/v4/widget/SlidingPaneLayout.java"
+                )
+            ),
+            "Value must be \u2265 0 (was -1)", Severity.WARNING, null
+        )
         assertThat(found).isTrue()
         assertThat(baseline.fixedCount).isEqualTo(1)
         assertThat(baseline.foundWarningCount).isEqualTo(2)
@@ -179,22 +194,27 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         baseline.isWriteOnClose = true
         assertThat(baseline.isWriteOnClose).isTrue()
 
-        baseline.findAndMark(HardcodedValuesDetector.ISSUE,
-                Location.create(File("my/source/file.txt"), "", 0),
-                "Hardcoded string \"Fooo\", should use `@string` resource",
-                Severity.WARNING, null)
         baseline.findAndMark(
-                ManifestDetector.USES_SDK,
-                Location.create(File("/foo/bar/Foo/AndroidManifest.xml"),
-                        DefaultPosition(6, 4, 198), DefaultPosition(6, 42, 236)),
-                "<uses-sdk> tag should specify a target API level (the highest verified \n"
-                        + "version; when running on later versions, compatibility behaviors may \n"
-                        + "be enabled) with android:targetSdkVersion=\"?\"",
-                Severity.WARNING, null)
+            HardcodedValuesDetector.ISSUE,
+            Location.create(File("my/source/file.txt"), "", 0),
+            "Hardcoded string \"Fooo\", should use `@string` resource",
+            Severity.WARNING, null
+        )
+        baseline.findAndMark(
+            ManifestDetector.USES_SDK,
+            Location.create(
+                File("/foo/bar/Foo/AndroidManifest.xml"),
+                DefaultPosition(6, 4, 198), DefaultPosition(6, 42, 236)
+            ),
+            "<uses-sdk> tag should specify a target API level (the highest verified \n" +
+                    "version; when running on later versions, compatibility behaviors may \n" +
+                    "be enabled) with android:targetSdkVersion=\"?\"",
+            Severity.WARNING, null
+        )
         baseline.close()
 
-        var actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read().
-                replace(File.separatorChar, '/')
+        var actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read()
+            .replace(File.separatorChar, '/')
 
         @Language("XML")
         val expected = ("""<?xml version="1.0" encoding="UTF-8"?>
@@ -226,24 +246,29 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(baseline.isRemoveFixed).isFalse()
 
         var found: Boolean
-        found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
-                Location.create(File("my/source/file.txt"), "", 0),
-                "Hardcoded string \"Fooo\", should use `@string` resource",
-                Severity.WARNING, null)
+        found = baseline.findAndMark(
+            HardcodedValuesDetector.ISSUE,
+            Location.create(File("my/source/file.txt"), "", 0),
+            "Hardcoded string \"Fooo\", should use `@string` resource",
+            Severity.WARNING, null
+        )
         assertThat(found).isTrue()
         found = baseline.findAndMark(
-                ManifestDetector.USES_SDK,
-                Location.create(File("/foo/bar/Foo/AndroidManifest.xml"),
-                        DefaultPosition(6, 4, 198), DefaultPosition(6, 42, 236)),
-                "<uses-sdk> tag should specify a target API level (the highest verified \n"
-                        + "version; when running on later versions, compatibility behaviors may \n"
-                        + "be enabled) with android:targetSdkVersion=\"?\"",
-                Severity.WARNING, null)
+            ManifestDetector.USES_SDK,
+            Location.create(
+                File("/foo/bar/Foo/AndroidManifest.xml"),
+                DefaultPosition(6, 4, 198), DefaultPosition(6, 42, 236)
+            ),
+            "<uses-sdk> tag should specify a target API level (the highest verified \n" +
+                    "version; when running on later versions, compatibility behaviors may \n" +
+                    "be enabled) with android:targetSdkVersion=\"?\"",
+            Severity.WARNING, null
+        )
         assertThat(found).isTrue()
         baseline.close()
 
-        actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read().
-                replace(File.separatorChar, '/')
+        actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read()
+            .replace(File.separatorChar, '/')
         assertThat(actual).isEqualTo(expected)
 
         // Test the skip fix flag
@@ -252,41 +277,48 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         baseline.isRemoveFixed = true
         assertThat(baseline.isRemoveFixed).isTrue()
 
-        found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
-                Location.create(File("my/source/file.txt"), "", 0),
-                "Hardcoded string \"Fooo\", should use `@string` resource",
-                Severity.WARNING, null)
+        found = baseline.findAndMark(
+            HardcodedValuesDetector.ISSUE,
+            Location.create(File("my/source/file.txt"), "", 0),
+            "Hardcoded string \"Fooo\", should use `@string` resource",
+            Severity.WARNING, null
+        )
         assertThat(found).isTrue()
 
         // Note that this is a different, unrelated issue
         found = baseline.findAndMark(
-                ManifestDetector.APPLICATION_ICON,
-                Location.create(File("/foo/bar/Foo/AndroidManifest.xml"),
-                        DefaultPosition(4, 4, 198), DefaultPosition(4, 42, 236)),
-                "Should explicitly set `android:icon`, there is no default",
-                Severity.WARNING, null)
+            ManifestDetector.APPLICATION_ICON,
+            Location.create(
+                File("/foo/bar/Foo/AndroidManifest.xml"),
+                DefaultPosition(4, 4, 198), DefaultPosition(4, 42, 236)
+            ),
+            "Should explicitly set `android:icon`, there is no default",
+            Severity.WARNING, null
+        )
         assertThat(found).isFalse()
         baseline.close()
 
-        actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read().
-                replace(File.separatorChar, '/')
+        actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read()
+            .replace(File.separatorChar, '/')
 
         // This time we should ONLY get the initial baseline issue back; we should
         // NOT see the new issue, and the fixed issue (the uses sdk error reported in the baseline
         // before but not repeated now) should be missing.
-        assertThat(actual).isEqualTo(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<issues format=\"4\" by=\"lint unittest\">\n"
-                + "\n"
-                + "    <issue\n"
-                + "        id=\"HardcodedText\"\n"
-                + "        message=\"Hardcoded string &quot;Fooo&quot;, should use `@string` resource\">\n"
-                + "        <location\n"
-                + "            file=\"my/source/file.txt\"\n"
-                + "            line=\"1\"/>\n"
-                + "    </issue>\n"
-                + "\n"
-                + "</issues>\n")
+        assertThat(actual).isEqualTo(
+            "" +
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<issues format=\"4\" by=\"lint unittest\">\n" +
+                    "\n" +
+                    "    <issue\n" +
+                    "        id=\"HardcodedText\"\n" +
+                    "        message=\"Hardcoded string &quot;Fooo&quot;, should use `@string` resource\">\n" +
+                    "        <location\n" +
+                    "            file=\"my/source/file.txt\"\n" +
+                    "            line=\"1\"/>\n" +
+                    "    </issue>\n" +
+                    "\n" +
+                    "</issues>\n"
+        )
     }
 
     override fun getDetector(): Detector? {

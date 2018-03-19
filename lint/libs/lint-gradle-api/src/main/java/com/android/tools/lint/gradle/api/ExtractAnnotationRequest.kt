@@ -21,29 +21,30 @@ import org.gradle.api.logging.Logger
 import java.io.File
 
 class ExtractAnnotationRequest(
-        /**
-         * The output .txt file to write the typedef recipe file to. A "recipe" file
-         * is a file which describes typedef classes, typically ones that should
-         * be deleted.
-         */
-        val typedefFile: File,
+    /**
+     * The output .txt file to write the typedef recipe file to. A "recipe" file
+     * is a file which describes typedef classes, typically ones that should
+     * be deleted.
+     */
+    val typedefFile: File,
 
-        /**
-         * A logger to write warnings to
-         */
-        val logger: Logger,
+    /**
+     * A logger to write warnings to
+     */
+    val logger: Logger,
 
-        /**
-         * Location of class files. If set, any non-public typedef source retention annotations
-         * will be removed prior to .jar packaging.
-         */
-        val classDir: FileCollection,
+    /**
+     * Location of class files. If set, any non-public typedef source retention annotations
+     * will be removed prior to .jar packaging.
+     */
+    val classDir: FileCollection,
 
-        /** The output .zip file to write the annotations database to, if any */
-        val output: File? = null,
+    /** The output .zip file to write the annotations database to, if any */
+    val output: File? = null,
 
-        /** Source files to extract annotations from */
-        val sourceFiles: List<File>,
+    /** Source files to extract annotations from */
+    val sourceFiles: List<File>,
 
-        /** The roots from the source files */
-        val roots: List<File>)
+    /** The roots from the source files */
+    val roots: List<File>
+)

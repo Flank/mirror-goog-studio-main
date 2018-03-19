@@ -27,22 +27,23 @@ public class WrongImportDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         //noinspection all // Sample code
-        assertEquals(""
-                + "src/test/pkg/BadImport.java:5: Warning: Don't include android.R here; use a fully qualified name for each usage instead [SuspiciousImport]\n"
-                + "import android.R;\n"
-                + "~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-
-            lintProject(
-                java(""
-                            + "package test.pkg;\n"
-                            + "\n"
-                            + "import android.app.Activity;\n"
-                            + "import android.os.Bundle;\n"
-                            + "import android.R;\n"
-                            + "import android.widget.*;\n"
-                            + "\n"
-                            + "public class BadImport {\n"
-                            + "}\n")));
+        assertEquals(
+                ""
+                        + "src/test/pkg/BadImport.java:5: Warning: Don't include android.R here; use a fully qualified name for each usage instead [SuspiciousImport]\n"
+                        + "import android.R;\n"
+                        + "~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
+                lintProject(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.app.Activity;\n"
+                                        + "import android.os.Bundle;\n"
+                                        + "import android.R;\n"
+                                        + "import android.widget.*;\n"
+                                        + "\n"
+                                        + "public class BadImport {\n"
+                                        + "}\n")));
     }
 }

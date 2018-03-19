@@ -77,71 +77,62 @@ import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
- * Checks for missing {@code recycle} calls on resources that encourage it, and
- * for missing {@code commit} calls on FragmentTransactions, etc.
+ * Checks for missing {@code recycle} calls on resources that encourage it, and for missing {@code
+ * commit} calls on FragmentTransactions, etc.
  */
 public class CleanupDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            CleanupDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Problems with missing recycle calls */
-    public static final Issue RECYCLE_RESOURCE = Issue.create(
-        "Recycle",
-        "Missing `recycle()` calls",
-
-        "Many resources, such as TypedArrays, VelocityTrackers, etc., " +
-        "should be recycled (with a `recycle()` call) after use. This lint check looks " +
-        "for missing `recycle()` calls.",
-
-        Category.PERFORMANCE,
-        7,
-        Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue RECYCLE_RESOURCE =
+            Issue.create(
+                    "Recycle",
+                    "Missing `recycle()` calls",
+                    "Many resources, such as TypedArrays, VelocityTrackers, etc., "
+                            + "should be recycled (with a `recycle()` call) after use. This lint check looks "
+                            + "for missing `recycle()` calls.",
+                    Category.PERFORMANCE,
+                    7,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Problems with missing commit calls. */
-    public static final Issue COMMIT_FRAGMENT = Issue.create(
-            "CommitTransaction",
-            "Missing `commit()` calls",
-
-            "After creating a `FragmentTransaction`, you typically need to commit it as well",
-
-            Category.CORRECTNESS,
-            7,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue COMMIT_FRAGMENT =
+            Issue.create(
+                    "CommitTransaction",
+                    "Missing `commit()` calls",
+                    "After creating a `FragmentTransaction`, you typically need to commit it as well",
+                    Category.CORRECTNESS,
+                    7,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Failing to commit a shared preference */
-    public static final Issue SHARED_PREF = Issue.create(
-            "CommitPrefEdits",
-            "Missing `commit()` on `SharedPreference` editor",
-
-            "After calling `edit()` on a `SharedPreference`, you must call `commit()` " +
-            "or `apply()` on the editor to save the results.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    CleanupDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue SHARED_PREF =
+            Issue.create(
+                    "CommitPrefEdits",
+                    "Missing `commit()` on `SharedPreference` editor",
+                    "After calling `edit()` on a `SharedPreference`, you must call `commit()` "
+                            + "or `apply()` on the editor to save the results.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Using commit instead of apply on a shared preference */
-    public static final Issue APPLY_SHARED_PREF = Issue.create(
-            "ApplySharedPref",
-            "Use `apply()` on `SharedPreferences`",
-
-            "Consider using `apply()` instead of `commit` on shared preferences. Whereas "
-                    + "`commit` blocks and writes its data to persistent storage immediately, "
-                    + "`apply` will handle it in the background.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    CleanupDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue APPLY_SHARED_PREF =
+            Issue.create(
+                    "ApplySharedPref",
+                    "Use `apply()` on `SharedPreferences`",
+                    "Consider using `apply()` instead of `commit` on shared preferences. Whereas "
+                            + "`commit` blocks and writes its data to persistent storage immediately, "
+                            + "`apply` will handle it in the background.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE));
 
     // Target method names
     private static final String RECYCLE = "recycle";
@@ -170,26 +161,24 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     private static final String PARCEL_CLS = "android.os.Parcel";
     private static final String VELOCITY_TRACKER_CLS = "android.view.VelocityTracker";
     private static final String DIALOG_FRAGMENT = "android.app.DialogFragment";
-    private static final String DIALOG_V4_FRAGMENT =
-            "android.support.v4.app.DialogFragment";
+    private static final String DIALOG_V4_FRAGMENT = "android.support.v4.app.DialogFragment";
     private static final String FRAGMENT_MANAGER_CLS = "android.app.FragmentManager";
-    private static final String FRAGMENT_MANAGER_V4_CLS =
-            "android.support.v4.app.FragmentManager";
-    private static final String FRAGMENT_TRANSACTION_CLS =
-            "android.app.FragmentTransaction";
+    private static final String FRAGMENT_MANAGER_V4_CLS = "android.support.v4.app.FragmentManager";
+    private static final String FRAGMENT_TRANSACTION_CLS = "android.app.FragmentTransaction";
     private static final String FRAGMENT_TRANSACTION_V4_CLS =
             "android.support.v4.app.FragmentTransaction";
 
     public static final String SURFACE_CLS = "android.view.Surface";
     public static final String SURFACE_TEXTURE_CLS = "android.graphics.SurfaceTexture";
 
-    public static final String CONTENT_PROVIDER_CLIENT_CLS
-            = "android.content.ContentProviderClient";
+    public static final String CONTENT_PROVIDER_CLIENT_CLS =
+            "android.content.ContentProviderClient";
 
     public static final String CONTENT_RESOLVER_CLS = "android.content.ContentResolver";
 
     @SuppressWarnings("SpellCheckingInspection")
     public static final String SQLITE_DATABASE_CLS = "android.database.sqlite.SQLiteDatabase";
+
     public static final String CURSOR_CLS = "android.database.Cursor";
 
     public static final String ANDROID_CONTENT_SHARED_PREFERENCES =
@@ -198,8 +187,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             "android.content.SharedPreferences.Editor";
 
     /** Constructs a new {@link CleanupDetector} */
-    public CleanupDetector() {
-    }
+    public CleanupDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -211,7 +199,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                 BEGIN_TRANSACTION,
 
                 // Recycle check
-                OBTAIN, OBTAIN_NO_HISTORY,
+                OBTAIN,
+                OBTAIN_NO_HISTORY,
                 OBTAIN_STYLED_ATTRIBUTES,
                 OBTAIN_ATTRIBUTES,
                 OBTAIN_TYPED_ARRAY,
@@ -220,11 +209,13 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                 ACQUIRE_CPC,
 
                 // Cursor close check
-                QUERY, RAW_QUERY, QUERY_WITH_FACTORY, RAW_QUERY_WITH_FACTORY,
+                QUERY,
+                RAW_QUERY,
+                QUERY_WITH_FACTORY,
+                RAW_QUERY_WITH_FACTORY,
 
                 // SharedPreferences check
-                EDIT
-        );
+                EDIT);
     }
 
     @Nullable
@@ -234,7 +225,9 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         String name = method.getName();
         if (BEGIN_TRANSACTION.equals(name)) {
@@ -247,7 +240,9 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitConstructor(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitConstructor(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod constructor) {
         PsiClass containingClass = constructor.getContainingClass();
         if (containingClass != null) {
@@ -258,8 +253,10 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         }
     }
 
-    private static void checkResourceRecycled(@NonNull JavaContext context,
-            @NonNull UCallExpression node, @NonNull PsiMethod method) {
+    private static void checkResourceRecycled(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull PsiMethod method) {
         String name = method.getName();
         // Recycle detector
         PsiClass containingClass = method.getContainingClass();
@@ -267,37 +264,40 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             return;
         }
         JavaEvaluator evaluator = context.getEvaluator();
-        if ((OBTAIN.equals(name) || OBTAIN_NO_HISTORY.equals(name)) &&
-                evaluator.extendsClass(containingClass, MOTION_EVENT_CLS, false)) {
+        if ((OBTAIN.equals(name) || OBTAIN_NO_HISTORY.equals(name))
+                && evaluator.extendsClass(containingClass, MOTION_EVENT_CLS, false)) {
             checkRecycled(context, node, MOTION_EVENT_CLS, RECYCLE);
-        } else if (OBTAIN.equals(name) && evaluator.extendsClass(containingClass, PARCEL_CLS, false)) {
+        } else if (OBTAIN.equals(name)
+                && evaluator.extendsClass(containingClass, PARCEL_CLS, false)) {
             checkRecycled(context, node, PARCEL_CLS, RECYCLE);
-        } else if (OBTAIN.equals(name) &&
-                evaluator.extendsClass(containingClass, VELOCITY_TRACKER_CLS, false)) {
+        } else if (OBTAIN.equals(name)
+                && evaluator.extendsClass(containingClass, VELOCITY_TRACKER_CLS, false)) {
             checkRecycled(context, node, VELOCITY_TRACKER_CLS, RECYCLE);
         } else if ((OBTAIN_STYLED_ATTRIBUTES.equals(name)
-                || OBTAIN_ATTRIBUTES.equals(name)
-                || OBTAIN_TYPED_ARRAY.equals(name)) &&
-                (evaluator.extendsClass(containingClass, CLASS_CONTEXT, false) ||
-                        evaluator.extendsClass(containingClass, SdkConstants.CLASS_RESOURCES, false))) {
+                        || OBTAIN_ATTRIBUTES.equals(name)
+                        || OBTAIN_TYPED_ARRAY.equals(name))
+                && (evaluator.extendsClass(containingClass, CLASS_CONTEXT, false)
+                        || evaluator.extendsClass(
+                                containingClass, SdkConstants.CLASS_RESOURCES, false))) {
             PsiType returnType = method.getReturnType();
             if (returnType instanceof PsiClassType) {
-                PsiClass cls = ((PsiClassType)returnType).resolve();
+                PsiClass cls = ((PsiClassType) returnType).resolve();
                 if (cls != null && SdkConstants.CLS_TYPED_ARRAY.equals(cls.getQualifiedName())) {
                     checkRecycled(context, node, SdkConstants.CLS_TYPED_ARRAY, RECYCLE);
                 }
             }
-        } else if (ACQUIRE_CPC.equals(name) && evaluator.extendsClass(containingClass,
-                CONTENT_RESOLVER_CLS, false)) {
+        } else if (ACQUIRE_CPC.equals(name)
+                && evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
             checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE);
         } else if ((QUERY.equals(name)
-                || RAW_QUERY.equals(name)
-                || QUERY_WITH_FACTORY.equals(name)
-                || RAW_QUERY_WITH_FACTORY.equals(name))
-                && (evaluator.extendsClass(containingClass, SQLITE_DATABASE_CLS, false) ||
-                    evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
-                    evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false) ||
-                    evaluator.extendsClass(containingClass, CONTENT_PROVIDER_CLIENT_CLS, false))) {
+                        || RAW_QUERY.equals(name)
+                        || QUERY_WITH_FACTORY.equals(name)
+                        || RAW_QUERY_WITH_FACTORY.equals(name))
+                && (evaluator.extendsClass(containingClass, SQLITE_DATABASE_CLS, false)
+                        || evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)
+                        || evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false)
+                        || evaluator.extendsClass(
+                                containingClass, CONTENT_PROVIDER_CLIENT_CLS, false))) {
             // Other potential cursors-returning methods that should be tracked:
             //    android.app.DownloadManager#query
             //    android.content.ContentProviderClient#query
@@ -331,8 +331,10 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         }
     }
 
-    private static void checkRecycled(@NonNull final JavaContext context,
-            @NonNull UCallExpression node, @NonNull final String recycleType,
+    private static void checkRecycled(
+            @NonNull final JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull final String recycleType,
             @NonNull final String recycleName) {
         PsiVariable boundVariable = getVariableElement(node);
         if (boundVariable == null) {
@@ -343,48 +345,51 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         if (method == null) {
             return;
         }
-        FinishVisitor visitor = new FinishVisitor(context, boundVariable) {
-            @Override
-            protected boolean isCleanupCall(@NonNull UCallExpression call) {
-                String methodName = getMethodName(call);
+        FinishVisitor visitor =
+                new FinishVisitor(context, boundVariable) {
+                    @Override
+                    protected boolean isCleanupCall(@NonNull UCallExpression call) {
+                        String methodName = getMethodName(call);
 
-                if ("use".equals(methodName) && CLOSE.equals(recycleName)) {
-                    // Kotlin: "use" calls close; see issue 62377185
-                    // Can't call call.resolve() to check it's the runtime because
-                    // resolve returns null on these usages.
-                    // Now make sure we're calling it on the right variable
-                    UExpression operand = call.getReceiver();
-                    if (operand instanceof UReferenceExpression) {
-                        PsiElement resolved = ((UReferenceExpression) operand).resolve();
-                        //noinspection SuspiciousMethodCalls
-                        if (resolved != null && mVariables.contains(resolved)) {
-                            return true;
-                        }
-                    }
-                }
-
-                if (!recycleName.equals(methodName)) {
-                    return false;
-                }
-                PsiMethod method = call.resolve();
-                if (method != null) {
-                    PsiClass containingClass = method.getContainingClass();
-                    if (mContext.getEvaluator().extendsClass(containingClass, recycleType, false)) {
-                        // Yes, called the right recycle() method; now make sure
-                        // we're calling it on the right variable
-                        UExpression operand = call.getReceiver();
-                        if (operand instanceof UReferenceExpression) {
-                            PsiElement resolved = ((UReferenceExpression) operand).resolve();
-                            //noinspection SuspiciousMethodCalls
-                            if (resolved != null && mVariables.contains(resolved)) {
-                                return true;
+                        if ("use".equals(methodName) && CLOSE.equals(recycleName)) {
+                            // Kotlin: "use" calls close; see issue 62377185
+                            // Can't call call.resolve() to check it's the runtime because
+                            // resolve returns null on these usages.
+                            // Now make sure we're calling it on the right variable
+                            UExpression operand = call.getReceiver();
+                            if (operand instanceof UReferenceExpression) {
+                                PsiElement resolved = ((UReferenceExpression) operand).resolve();
+                                //noinspection SuspiciousMethodCalls
+                                if (resolved != null && mVariables.contains(resolved)) {
+                                    return true;
+                                }
                             }
                         }
+
+                        if (!recycleName.equals(methodName)) {
+                            return false;
+                        }
+                        PsiMethod method = call.resolve();
+                        if (method != null) {
+                            PsiClass containingClass = method.getContainingClass();
+                            if (mContext.getEvaluator()
+                                    .extendsClass(containingClass, recycleType, false)) {
+                                // Yes, called the right recycle() method; now make sure
+                                // we're calling it on the right variable
+                                UExpression operand = call.getReceiver();
+                                if (operand instanceof UReferenceExpression) {
+                                    PsiElement resolved =
+                                            ((UReferenceExpression) operand).resolve();
+                                    //noinspection SuspiciousMethodCalls
+                                    if (resolved != null && mVariables.contains(resolved)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        return false;
                     }
-                }
-                return false;
-            }
-        };
+                };
 
         method.accept(visitor);
         if (visitor.isCleanedUp() || visitor.variableEscapes()) {
@@ -394,12 +399,15 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         String className = recycleType.substring(recycleType.lastIndexOf('.') + 1);
         String message;
         if (RECYCLE.equals(recycleName)) {
-            message = String.format(
-                    "This `%1$s` should be recycled after use with `#recycle()`", className);
+            message =
+                    String.format(
+                            "This `%1$s` should be recycled after use with `#recycle()`",
+                            className);
         } else {
-            message = String.format(
-                    "This `%1$s` should be freed up after use with `#%2$s()`", className,
-                    recycleName);
+            message =
+                    String.format(
+                            "This `%1$s` should be freed up after use with `#%2$s()`",
+                            className, recycleName);
         }
 
         UElement locationNode = node.getMethodIdentifier();
@@ -410,8 +418,10 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         context.report(RECYCLE_RESOURCE, node, location, message);
     }
 
-    private static void checkTransactionCommits(@NonNull JavaContext context,
-            @NonNull UCallExpression node, @NonNull PsiMethod calledMethod) {
+    private static void checkTransactionCommits(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull PsiMethod calledMethod) {
         if (isBeginTransaction(context, calledMethod)) {
             PsiVariable boundVariable = getVariableElement(node, true, true);
             if (isCommittedInChainedCalls(context, node)) {
@@ -424,53 +434,57 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                     return;
                 }
 
-                FinishVisitor commitVisitor = new FinishVisitor(context, boundVariable) {
-                    @Override
-                    protected boolean isCleanupCall(@NonNull UCallExpression call) {
-                        if (isTransactionCommitMethodCall(mContext, call)) {
-                            List<UExpression> chain = getQualifiedChain(getOutermostQualified(call));
-                            if (chain.isEmpty()) {
-                                return false;
-                            }
-
-                            UExpression operand = chain.get(0);
-                            if (operand != null) {
-                                PsiElement resolved = UastUtils.tryResolve(operand);
-                                //noinspection SuspiciousMethodCalls
-                                if (resolved != null && mVariables.contains(resolved)) {
-                                    return true;
-                                } else if (resolved instanceof PsiMethod
-                                        && operand instanceof UCallExpression
-                                        && isCommittedInChainedCalls(mContext,
-                                        (UCallExpression) operand)) {
-                                    // Check that the target of the committed chains is the
-                                    // right variable!
-                                    while (operand instanceof UCallExpression) {
-                                        operand = ((UCallExpression) operand).getReceiver();
+                FinishVisitor commitVisitor =
+                        new FinishVisitor(context, boundVariable) {
+                            @Override
+                            protected boolean isCleanupCall(@NonNull UCallExpression call) {
+                                if (isTransactionCommitMethodCall(mContext, call)) {
+                                    List<UExpression> chain =
+                                            getQualifiedChain(getOutermostQualified(call));
+                                    if (chain.isEmpty()) {
+                                        return false;
                                     }
-                                    if (operand instanceof UReferenceExpression) {
-                                        resolved = ((UReferenceExpression) operand).resolve();
+
+                                    UExpression operand = chain.get(0);
+                                    if (operand != null) {
+                                        PsiElement resolved = UastUtils.tryResolve(operand);
+                                        //noinspection SuspiciousMethodCalls
+                                        if (resolved != null && mVariables.contains(resolved)) {
+                                            return true;
+                                        } else if (resolved instanceof PsiMethod
+                                                && operand instanceof UCallExpression
+                                                && isCommittedInChainedCalls(
+                                                        mContext, (UCallExpression) operand)) {
+                                            // Check that the target of the committed chains is the
+                                            // right variable!
+                                            while (operand instanceof UCallExpression) {
+                                                operand = ((UCallExpression) operand).getReceiver();
+                                            }
+                                            if (operand instanceof UReferenceExpression) {
+                                                resolved =
+                                                        ((UReferenceExpression) operand).resolve();
+                                                //noinspection SuspiciousMethodCalls
+                                                if (resolved != null
+                                                        && mVariables.contains(resolved)) {
+                                                    return true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else if (isShowFragmentMethodCall(mContext, call)) {
+                                    List<UExpression> arguments = call.getValueArguments();
+                                    if (arguments.size() == 2) {
+                                        UExpression first = arguments.get(0);
+                                        PsiElement resolved = UastUtils.tryResolve(first);
                                         //noinspection SuspiciousMethodCalls
                                         if (resolved != null && mVariables.contains(resolved)) {
                                             return true;
                                         }
                                     }
                                 }
+                                return false;
                             }
-                        } else if (isShowFragmentMethodCall(mContext, call)) {
-                            List<UExpression> arguments = call.getValueArguments();
-                            if (arguments.size() == 2) {
-                                UExpression first = arguments.get(0);
-                                PsiElement resolved = UastUtils.tryResolve(first);
-                                //noinspection SuspiciousMethodCalls
-                                if (resolved != null && mVariables.contains(resolved)) {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    }
-                };
+                        };
 
                 method.accept(commitVisitor);
                 if (commitVisitor.isCleanedUp() || commitVisitor.variableEscapes()) {
@@ -483,38 +497,37 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         }
     }
 
-    private static boolean isCommittedInChainedCalls(@NonNull JavaContext context,
-            @NonNull UCallExpression node) {
+    private static boolean isCommittedInChainedCalls(
+            @NonNull JavaContext context, @NonNull UCallExpression node) {
         // Look for chained calls since the FragmentManager methods all return "this"
         // to allow constructor chaining, e.g.
         //    getFragmentManager().beginTransaction().addToBackStack("test")
         //            .disallowAddToBackStack().hide(mFragment2).setBreadCrumbShortTitle("test")
         //            .show(mFragment2).setCustomAnimations(0, 0).commit();
-        CommitCallChecker checker = (c,call) -> isTransactionCommitMethodCall(c, call)
-                || isShowFragmentMethodCall(c, call);
+        CommitCallChecker checker =
+                (c, call) ->
+                        isTransactionCommitMethodCall(c, call) || isShowFragmentMethodCall(c, call);
         return isCommittedInChainedCalls(context, node, checker);
     }
 
-    private static boolean isTransactionCommitMethodCall(@NonNull JavaContext context,
-            @NonNull UCallExpression call) {
+    private static boolean isTransactionCommitMethodCall(
+            @NonNull JavaContext context, @NonNull UCallExpression call) {
 
         String methodName = getMethodName(call);
         return (COMMIT.equals(methodName)
-                    || COMMIT_ALLOWING_LOSS.equals(methodName)
-                    || COMMIT_NOW_ALLOWING_LOSS.equals(methodName)
-                    || COMMIT_NOW.equals(methodName)) &&
-                isMethodOnFragmentClass(context, call,
-                        FRAGMENT_TRANSACTION_CLS,
-                        FRAGMENT_TRANSACTION_V4_CLS,
-                        true);
+                        || COMMIT_ALLOWING_LOSS.equals(methodName)
+                        || COMMIT_NOW_ALLOWING_LOSS.equals(methodName)
+                        || COMMIT_NOW.equals(methodName))
+                && isMethodOnFragmentClass(
+                        context, call, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true);
     }
 
-    private static boolean isShowFragmentMethodCall(@NonNull JavaContext context,
-            @NonNull UCallExpression call) {
+    private static boolean isShowFragmentMethodCall(
+            @NonNull JavaContext context, @NonNull UCallExpression call) {
         String methodName = getMethodName(call);
         return SHOW.equals(methodName)
-                && isMethodOnFragmentClass(context, call,
-                DIALOG_FRAGMENT, DIALOG_V4_FRAGMENT, true);
+                && isMethodOnFragmentClass(
+                        context, call, DIALOG_FRAGMENT, DIALOG_V4_FRAGMENT, true);
     }
 
     private static boolean isMethodOnFragmentClass(
@@ -527,8 +540,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         if (method != null) {
             PsiClass containingClass = method.getContainingClass();
             JavaEvaluator evaluator = context.getEvaluator();
-            return evaluator.extendsClass(containingClass, fragmentClass, false) ||
-                    evaluator.extendsClass(containingClass, v4FragmentClass, false);
+            return evaluator.extendsClass(containingClass, fragmentClass, false)
+                    || evaluator.extendsClass(containingClass, v4FragmentClass, false);
         } else {
             // If we *can't* resolve the method call, caller can decide
             // whether to consider the method called or not
@@ -536,8 +549,10 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         }
     }
 
-    private void checkEditorApplied(@NonNull JavaContext context,
-            @NonNull UCallExpression node, @NonNull PsiMethod calledMethod) {
+    private void checkEditorApplied(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull PsiMethod calledMethod) {
         if (isSharedEditorCreation(context, calledMethod)) {
             PsiVariable boundVariable = getVariableElement(node, true, true);
             if (isEditorCommittedInChainedCalls(context, node)) {
@@ -550,44 +565,48 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                     return;
                 }
 
-                FinishVisitor commitVisitor = new FinishVisitor(context, boundVariable) {
-                    @Override
-                    protected boolean isCleanupCall(@NonNull UCallExpression call) {
-                        if (isEditorApplyMethodCall(mContext, call)
-                                || isEditorCommitMethodCall(mContext, call)) {
-                            List<UExpression> chain = getQualifiedChain(getOutermostQualified(call));
-                            if (chain.isEmpty()) {
-                                return false;
-                            }
-
-                            UExpression operand = chain.get(0);
-                            if (operand != null) {
-                                PsiElement resolved = UastUtils.tryResolve(operand);
-                                //noinspection SuspiciousMethodCalls
-                                if (resolved != null && mVariables.contains(resolved)) {
-                                    return true;
-                                } else if (resolved instanceof PsiMethod
-                                        && operand instanceof UCallExpression
-                                        && isEditorCommittedInChainedCalls(mContext,
-                                        (UCallExpression) operand)) {
-                                    // Check that the target of the committed chains is the
-                                    // right variable!
-                                    while (operand instanceof UCallExpression) {
-                                        operand = ((UCallExpression)operand).getReceiver();
+                FinishVisitor commitVisitor =
+                        new FinishVisitor(context, boundVariable) {
+                            @Override
+                            protected boolean isCleanupCall(@NonNull UCallExpression call) {
+                                if (isEditorApplyMethodCall(mContext, call)
+                                        || isEditorCommitMethodCall(mContext, call)) {
+                                    List<UExpression> chain =
+                                            getQualifiedChain(getOutermostQualified(call));
+                                    if (chain.isEmpty()) {
+                                        return false;
                                     }
-                                    if (operand instanceof UReferenceExpression) {
-                                        resolved = ((UReferenceExpression) operand).resolve();
+
+                                    UExpression operand = chain.get(0);
+                                    if (operand != null) {
+                                        PsiElement resolved = UastUtils.tryResolve(operand);
                                         //noinspection SuspiciousMethodCalls
                                         if (resolved != null && mVariables.contains(resolved)) {
                                             return true;
+                                        } else if (resolved instanceof PsiMethod
+                                                && operand instanceof UCallExpression
+                                                && isEditorCommittedInChainedCalls(
+                                                        mContext, (UCallExpression) operand)) {
+                                            // Check that the target of the committed chains is the
+                                            // right variable!
+                                            while (operand instanceof UCallExpression) {
+                                                operand = ((UCallExpression) operand).getReceiver();
+                                            }
+                                            if (operand instanceof UReferenceExpression) {
+                                                resolved =
+                                                        ((UReferenceExpression) operand).resolve();
+                                                //noinspection SuspiciousMethodCalls
+                                                if (resolved != null
+                                                        && mVariables.contains(resolved)) {
+                                                    return true;
+                                                }
+                                            }
                                         }
                                     }
                                 }
+                                return false;
                             }
-                        }
-                        return false;
-                    }
-                };
+                        };
 
                 method.accept(commitVisitor);
                 if (commitVisitor.isCleanedUp() || commitVisitor.variableEscapes()) {
@@ -598,37 +617,40 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                 return;
             }
 
-            String message = "`SharedPreferences.edit()` without a corresponding `commit()` or "
-                    + "`apply()` call";
+            String message =
+                    "`SharedPreferences.edit()` without a corresponding `commit()` or "
+                            + "`apply()` call";
             context.report(SHARED_PREF, node, context.getLocation(node), message);
         }
     }
 
-    private static boolean isSharedEditorCreation(@NonNull JavaContext context,
-            @NonNull PsiMethod method) {
+    private static boolean isSharedEditorCreation(
+            @NonNull JavaContext context, @NonNull PsiMethod method) {
         String methodName = method.getName();
         if (EDIT.equals(methodName)) {
             PsiClass containingClass = method.getContainingClass();
             JavaEvaluator evaluator = context.getEvaluator();
-            return containingClass != null &&
-                    evaluator.implementsInterface(containingClass,
-                            ANDROID_CONTENT_SHARED_PREFERENCES,false) &&
-                    evaluator.typeMatches(method.getReturnType(),
-                            ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR);
+            return containingClass != null
+                    && evaluator.implementsInterface(
+                            containingClass, ANDROID_CONTENT_SHARED_PREFERENCES, false)
+                    && evaluator.typeMatches(
+                            method.getReturnType(), ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR);
         }
 
         return false;
     }
 
-    private static boolean isEditorCommittedInChainedCalls(@NonNull JavaContext context,
-            @NonNull UCallExpression node) {
-        CommitCallChecker checker = (c,call) -> isEditorCommitMethodCall(c, call)
-                || isEditorApplyMethodCall(c, call);
+    private static boolean isEditorCommittedInChainedCalls(
+            @NonNull JavaContext context, @NonNull UCallExpression node) {
+        CommitCallChecker checker =
+                (c, call) -> isEditorCommitMethodCall(c, call) || isEditorApplyMethodCall(c, call);
         return isCommittedInChainedCalls(context, node, checker);
     }
 
-    private static boolean isCommittedInChainedCalls(@NonNull JavaContext context,
-            @NonNull UCallExpression node, CommitCallChecker checker) {
+    private static boolean isCommittedInChainedCalls(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            CommitCallChecker checker) {
         List<UExpression> chain = getQualifiedChain(getOutermostQualified(node));
         if (!chain.isEmpty()) {
             UExpression lastExpression = chain.get(chain.size() - 1);
@@ -651,29 +673,29 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             String methodName = getMethodName(parentCall);
             if ("with".equals(methodName)) {
                 List<UExpression> args = parentCall.getValueArguments();
-                return args.size() == 2 &&
-                        CommitCallVisitor.lastArgCallsCommit(context, parentCall, checker);
+                return args.size() == 2
+                        && CommitCallVisitor.lastArgCallsCommit(context, parentCall, checker);
             }
         }
 
         return false;
     }
 
-    private static boolean isEditorCommitMethodCall(@NonNull JavaContext context,
-            @NonNull UCallExpression call) {
+    private static boolean isEditorCommitMethodCall(
+            @NonNull JavaContext context, @NonNull UCallExpression call) {
         String methodName = getMethodName(call);
         if (COMMIT.equals(methodName)) {
             PsiMethod method = call.resolve();
             if (method != null) {
                 PsiClass containingClass = method.getContainingClass();
                 JavaEvaluator evaluator = context.getEvaluator();
-                if (evaluator.extendsClass(containingClass,
-                        ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false)) {
+                if (evaluator.extendsClass(
+                        containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false)) {
                     suggestApplyIfApplicable(context, call);
                     return true;
                 }
             } else //noinspection RedundantIfStatement
-                if (call.getValueArgumentCount() == 0) {
+            if (call.getValueArgumentCount() == 0) {
                 // Couldn't find method but it *looks* like an apply call
                 return true;
             }
@@ -682,18 +704,18 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         return false;
     }
 
-    private static boolean isEditorApplyMethodCall(@NonNull JavaContext context,
-            @NonNull UCallExpression call) {
+    private static boolean isEditorApplyMethodCall(
+            @NonNull JavaContext context, @NonNull UCallExpression call) {
         String methodName = getMethodName(call);
         if (APPLY.equals(methodName)) {
             PsiMethod method = call.resolve();
             if (method != null) {
                 PsiClass containingClass = method.getContainingClass();
                 JavaEvaluator evaluator = context.getEvaluator();
-                return evaluator.extendsClass(containingClass,
-                        ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false);
+                return evaluator.extendsClass(
+                        containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false);
             } else //noinspection RedundantIfStatement
-                if (call.getValueArgumentCount() == 0) {
+            if (call.getValueArgumentCount() == 0) {
                 // Couldn't find method but it *looks* like an apply call
                 return true;
             }
@@ -702,8 +724,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         return false;
     }
 
-    private static void suggestApplyIfApplicable(@NonNull JavaContext context,
-            @NonNull UCallExpression node) {
+    private static void suggestApplyIfApplicable(
+            @NonNull JavaContext context, @NonNull UCallExpression node) {
         if (context.getProject().getMinSdkVersion().getApiLevel() >= 9) {
             // See if the return value is read: can only replace commit with
             // apply if the return value is not considered
@@ -734,12 +756,18 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             }
 
             if (returnValueIgnored) {
-                String message = "Consider using `apply()` instead; `commit` writes "
-                        + "its data to persistent storage immediately, whereas "
-                        + "`apply` will handle it in the background";
+                String message =
+                        "Consider using `apply()` instead; `commit` writes "
+                                + "its data to persistent storage immediately, whereas "
+                                + "`apply` will handle it in the background";
                 Location location = context.getLocation(node);
-                LintFix fix = LintFix.create().name("Replace commit() with apply()").replace()
-                        .pattern("(commit)\\s*\\(").with("apply").build();
+                LintFix fix =
+                        LintFix.create()
+                                .name("Replace commit() with apply()")
+                                .replace()
+                                .pattern("(commit)\\s*\\(")
+                                .with("apply")
+                                .build();
                 context.report(APPLY_SHARED_PREF, node, location, message, fix);
             }
         }
@@ -752,10 +780,9 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     }
 
     @Nullable
-    public static PsiVariable getVariableElement(@NonNull UCallExpression rhs,
-            boolean allowChainedCalls, boolean allowFields) {
-        UElement parent = skipParentheses(
-                UastUtils.getQualifiedParentOrThis(rhs).getUastParent());
+    public static PsiVariable getVariableElement(
+            @NonNull UCallExpression rhs, boolean allowChainedCalls, boolean allowFields) {
+        UElement parent = skipParentheses(UastUtils.getQualifiedParentOrThis(rhs).getUastParent());
 
         // Handle some types of chained calls; e.g. you might have
         //    var = prefs.edit().put(key,value)
@@ -791,8 +818,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                     return ((PsiVariable) resolved);
                 }
             }
-        } else if (parent instanceof UVariable
-                && (allowFields || !(parent instanceof UField))) {
+        } else if (parent instanceof UVariable && (allowFields || !(parent instanceof UField))) {
             // Handle elvis operators in Kotlin. A statement like this:
             //   val transaction = f.beginTransaction() ?: return
             // is turned into
@@ -802,8 +828,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             //   }
             // and here we want to record "transaction", not "var8633f9d5", as the variable
             // to track.
-            if (parent.getUastParent() instanceof UDeclarationsExpression &&
-                    parent.getUastParent().getUastParent() instanceof UExpressionList) {
+            if (parent.getUastParent() instanceof UDeclarationsExpression
+                    && parent.getUastParent().getUastParent() instanceof UExpressionList) {
                 UExpressionList exp = (UExpressionList) parent.getUastParent().getUastParent();
                 UastSpecialExpressionKind kind = exp.getKind();
                 if (kind.getName().equals("elvis") && exp.getUastParent() instanceof UVariable) {
@@ -817,7 +843,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         return null;
     }
 
-    private static boolean isBeginTransaction(@NonNull JavaContext context, @NonNull PsiMethod method) {
+    private static boolean isBeginTransaction(
+            @NonNull JavaContext context, @NonNull PsiMethod method) {
         String methodName = method.getName();
         if (BEGIN_TRANSACTION.equals(methodName)) {
             PsiClass containingClass = method.getContainingClass();
@@ -832,10 +859,9 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     }
 
     /**
-     * Visitor which checks whether an operation is "finished"; in the case
-     * of a FragmentTransaction we're looking for a "commit" call; in the
-     * case of a TypedArray we're looking for a "recycle", call, in the
-     * case of a database cursor we're looking for a "close" call, etc.
+     * Visitor which checks whether an operation is "finished"; in the case of a FragmentTransaction
+     * we're looking for a "commit" call; in the case of a TypedArray we're looking for a "recycle",
+     * call, in the case of a database cursor we're looking for a "close" call, etc.
      */
     private abstract static class FinishVisitor extends AbstractUastVisitor {
         protected final JavaContext mContext;
@@ -894,8 +920,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                             // doesn't escape
                             if (OBTAIN.equals(getMethodName(call))) {
                                 PsiMethod method = call.resolve();
-                                if (mContext.getEvaluator().
-                                        isMemberInClass(method, MOTION_EVENT_CLS)) {
+                                if (mContext.getEvaluator()
+                                        .isMemberInClass(method, MOTION_EVENT_CLS)) {
                                     mEscapes = wasEscaped;
                                 }
                             }
@@ -956,8 +982,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                 // If we reassign one of the variables, clear it out
                 PsiElement lhs = UastUtils.tryResolve(expression.getLeftOperand());
                 //noinspection SuspiciousMethodCalls
-                if (lhs != null && !lhs.equals(mOriginalVariableNode)
-                        && mVariables.contains(lhs)) {
+                if (lhs != null && !lhs.equals(mOriginalVariableNode) && mVariables.contains(lhs)) {
                     //noinspection SuspiciousMethodCalls
                     mVariables.remove(lhs);
                 }
@@ -990,9 +1015,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         private boolean found;
         private CommitCallChecker checker;
 
-        public CommitCallVisitor(
-                @NonNull JavaContext context,
-                @NonNull CommitCallChecker checker) {
+        public CommitCallVisitor(@NonNull JavaContext context, @NonNull CommitCallChecker checker) {
             this.context = context;
             this.checker = checker;
         }

@@ -17,7 +17,9 @@
 package com.android.ide.common.repository
 
 import com.android.ide.common.resources.BaseTestCase
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -34,7 +36,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
          * This way tests don't break when we update.
          */
         private val builtInData = mapOf(
-                "master-index.xml" to """
+            "master-index.xml" to """
                 <?xml version='1.0' encoding='UTF-8'?>
                 <metadata>
                   <com.android.support.constraint/>
@@ -60,7 +62,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
                   <com.android.tools.lint/>
                 </metadata>
             """.trimIndent(),
-                "com/android/support/group-index.xml" to """
+            "com/android/support/group-index.xml" to """
                 <?xml version='1.0' encoding='UTF-8'?>
                 <com.android.support>
                   <support-compat versions="25.3.1,26.0.0-beta1"/>
@@ -102,12 +104,12 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
                 </com.android.support>
             """.trimIndent()
         )
-
     }
 
     @Test
     fun testBuiltin() {
-        val repo = StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
+        val repo =
+            StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
         val version = repo.findVersion("com.android.support", "appcompat-v7", allowPreview = true)
         assertNotNull(version)
         assertEquals("26.0.0-beta1", version.toString())
@@ -115,7 +117,8 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
 
     @Test
     fun testBuiltinStableOnly() {
-        val repo = StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
+        val repo =
+            StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
         val version = repo.findVersion("com.android.support", "appcompat-v7", allowPreview = false)
         assertNotNull(version)
         assertEquals("25.3.1", version.toString())
@@ -123,8 +126,10 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
 
     @Test
     fun testBuiltinFiltered() {
-        val repo = StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
-        val version = repo.findVersion("com.android.support", "appcompat-v7", filter = { it.major == 12 })
+        val repo =
+            StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
+        val version =
+            repo.findVersion("com.android.support", "appcompat-v7", filter = { it.major == 12 })
         assertNull(version)
     }
 
@@ -132,7 +137,8 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
     fun testReadingFromUrl() {
         val repo = StubGoogleMavenRepository(
             cacheDir = temp.root,
-            urls = mapOf("https://maven.google.com/master-index.xml" to """
+            urls = mapOf(
+                "https://maven.google.com/master-index.xml" to """
                  <?xml version='1.0' encoding='UTF-8'?>
                  <metadata>
                    <foo.bar/>
@@ -143,7 +149,8 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
                  <foo.bar>
                    <my-artifact versions="1.0.1-alpha1"/>
                    <another-artifact versions="2.5.0,2.6.0-rc1"/>
-                 </foo.bar>""".trimIndent())
+                 </foo.bar>""".trimIndent()
+            )
         )
         val version = repo.findVersion("foo.bar", "my-artifact", allowPreview = true)
         assertNotNull(version)

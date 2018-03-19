@@ -31,34 +31,28 @@ import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UClass;
 
-/**
- * Looks for copy/paste versions of the divider item decorator.
- */
+/** Looks for copy/paste versions of the divider item decorator. */
 public class ItemDecoratorDetector extends Detector implements SourceCodeScanner {
 
     /** Copy/pasted item decorator code */
-    public static final Issue ISSUE = Issue.create(
-            "DuplicateDivider",
-            "Unnecessary Divider Copy",
-
-            "Older versions of the RecyclerView library did not include a divider decorator, "
-                    + "but one was provided as a sample in the support demos. This divider "
-                    + "class has been widely copy/pasted into various projects.\n"
-                    + "\n"
-                    + "In recent versions of the support library, the divider decorator is now "
-                    + "included, so you can replace custom copies with the \"built-in\" "
-                    + "version, `android.support.v7.widget.DividerItemDecoration`.",
-
-            Category.PERFORMANCE,
-            4,
-            Severity.WARNING,
-            new Implementation(
-                    ItemDecoratorDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "DuplicateDivider",
+                    "Unnecessary Divider Copy",
+                    "Older versions of the RecyclerView library did not include a divider decorator, "
+                            + "but one was provided as a sample in the support demos. This divider "
+                            + "class has been widely copy/pasted into various projects.\n"
+                            + "\n"
+                            + "In recent versions of the support library, the divider decorator is now "
+                            + "included, so you can replace custom copies with the \"built-in\" "
+                            + "version, `android.support.v7.widget.DividerItemDecoration`.",
+                    Category.PERFORMANCE,
+                    4,
+                    Severity.WARNING,
+                    new Implementation(ItemDecoratorDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link ItemDecoratorDetector} */
-    public ItemDecoratorDetector() {
-    }
+    public ItemDecoratorDetector() {}
 
     // ---- Implements SourceCodeScanner ----
 
@@ -75,8 +69,8 @@ public class ItemDecoratorDetector extends Detector implements SourceCodeScanner
             return;
         }
 
-        if (declaration.findFieldByName("HORIZONTAL_LIST", false) == null ||
-                declaration.findFieldByName("VERTICAL_LIST", false) == null) {
+        if (declaration.findFieldByName("HORIZONTAL_LIST", false) == null
+                || declaration.findFieldByName("VERTICAL_LIST", false) == null) {
             return;
         }
 
@@ -87,7 +81,10 @@ public class ItemDecoratorDetector extends Detector implements SourceCodeScanner
         }
 
         Location location = context.getNameLocation(declaration);
-        context.report(ISSUE, declaration, location,
+        context.report(
+                ISSUE,
+                declaration,
+                location,
                 "Replace with `android.support.v7.widget.DividerItemDecoration`?");
     }
 }

@@ -44,46 +44,49 @@ import org.jetbrains.uast.UCallExpression;
 
 public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            UnsafeNativeCodeDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(UnsafeNativeCodeDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue LOAD = Issue.create(
-            "UnsafeDynamicallyLoadedCode",
-            "`load` used to dynamically load code",
-            "Dynamically loading code from locations other than the application's library " +
-            "directory or the Android platform's built-in library directories is dangerous, " +
-            "as there is an increased risk that the code could have been tampered with. " +
-            "Applications should use `loadLibrary` when possible, which provides increased " +
-            "assurance that libraries are loaded from one of these safer locations. " +
-            "Application developers should use the features of their development " +
-            "environment to place application native libraries into the lib directory " +
-            "of their compiled APKs.",
-            Category.SECURITY,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue LOAD =
+            Issue.create(
+                    "UnsafeDynamicallyLoadedCode",
+                    "`load` used to dynamically load code",
+                    "Dynamically loading code from locations other than the application's library "
+                            + "directory or the Android platform's built-in library directories is dangerous, "
+                            + "as there is an increased risk that the code could have been tampered with. "
+                            + "Applications should use `loadLibrary` when possible, which provides increased "
+                            + "assurance that libraries are loaded from one of these safer locations. "
+                            + "Application developers should use the features of their development "
+                            + "environment to place application native libraries into the lib directory "
+                            + "of their compiled APKs.",
+                    Category.SECURITY,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
-    public static final Issue UNSAFE_NATIVE_CODE_LOCATION = Issue.create(
-            "UnsafeNativeCodeLocation",
-            "Native code outside library directory",
-            "In general, application native code should only be placed in the application's " +
-            "library directory, not in other locations such as the res or assets directories. " +
-            "Placing the code in the library directory provides increased assurance that the " +
-            "code will not be tampered with after application installation. Application " +
-            "developers should use the features of their development environment to place " +
-            "application native libraries into the lib directory of their compiled " +
-            "APKs. Embedding non-shared library native executables into applications should " +
-            "be avoided when possible.",
-            Category.SECURITY,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue UNSAFE_NATIVE_CODE_LOCATION =
+            Issue.create(
+                    "UnsafeNativeCodeLocation",
+                    "Native code outside library directory",
+                    "In general, application native code should only be placed in the application's "
+                            + "library directory, not in other locations such as the res or assets directories. "
+                            + "Placing the code in the library directory provides increased assurance that the "
+                            + "code will not be tampered with after application installation. Application "
+                            + "developers should use the features of their development environment to place "
+                            + "application native libraries into the lib directory of their compiled "
+                            + "APKs. Embedding non-shared library native executables into applications should "
+                            + "be avoided when possible.",
+                    Category.SECURITY,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     private static final String RUNTIME_CLASS = "java.lang.Runtime";
     private static final String SYSTEM_CLASS = "java.lang.System";
 
-    private static final byte[] ELF_MAGIC_VALUE = { (byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46 };
+    private static final byte[] ELF_MAGIC_VALUE = {
+        (byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46
+    };
 
     // ---- Implements SourceCodeScanner ----
 
@@ -94,16 +97,21 @@ public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScan
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         // Report calls to Runtime.load() and System.load()
         if ("load".equals(method.getName())) {
             JavaEvaluator evaluator = context.getEvaluator();
-            if (evaluator.isMemberInSubClassOf(method, RUNTIME_CLASS, false) ||
-                    evaluator.isMemberInSubClassOf(method, SYSTEM_CLASS, false)) {
-                context.report(LOAD, call, context.getLocation(call),
-                        "Dynamically loading code using `load` is risky, please use " +
-                                "`loadLibrary` instead when possible");
+            if (evaluator.isMemberInSubClassOf(method, RUNTIME_CLASS, false)
+                    || evaluator.isMemberInSubClassOf(method, SYSTEM_CLASS, false)) {
+                context.report(
+                        LOAD,
+                        call,
+                        context.getLocation(call),
+                        "Dynamically loading code using `load` is risky, please use "
+                                + "`loadLibrary` instead when possible");
             }
         }
     }
@@ -182,19 +190,23 @@ public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScan
     private static void checkFile(@NonNull Context context, @NonNull File file) {
         if (isNativeCode(file)) {
             if (LintUtils.endsWith(file.getPath(), DOT_NATIVE_LIBS)) {
-                context.report(UNSAFE_NATIVE_CODE_LOCATION, Location.create(file),
-                        "Shared libraries should not be placed in the res or assets " +
-                        "directories. Please use the features of your development " +
-                        "environment to place shared libraries in the lib directory of " +
-                        "the compiled APK.");
+                context.report(
+                        UNSAFE_NATIVE_CODE_LOCATION,
+                        Location.create(file),
+                        "Shared libraries should not be placed in the res or assets "
+                                + "directories. Please use the features of your development "
+                                + "environment to place shared libraries in the lib directory of "
+                                + "the compiled APK.");
             } else {
-                context.report(UNSAFE_NATIVE_CODE_LOCATION, Location.create(file),
-                        "Embedding non-shared library native executables into applications " +
-                        "should be avoided when possible, as there is an increased risk that " +
-                        "the executables could be tampered with after installation. Instead, " +
-                        "native code should be placed in a shared library, and the features of " +
-                        "the development environment should be used to place the shared library " +
-                        "in the lib directory of the compiled APK.");
+                context.report(
+                        UNSAFE_NATIVE_CODE_LOCATION,
+                        Location.create(file),
+                        "Embedding non-shared library native executables into applications "
+                                + "should be avoided when possible, as there is an increased risk that "
+                                + "the executables could be tampered with after installation. Instead, "
+                                + "native code should be placed in a shared library, and the features of "
+                                + "the development environment should be used to place the shared library "
+                                + "in the lib directory of the compiled APK.");
             }
         }
     }

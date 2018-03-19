@@ -82,7 +82,7 @@ class LintFixTest : TestCase() {
 
     fun testSetAttribute() {
         val fixData = LintFix.create().set().namespace("namespace")
-                .attribute("attribute").value("value").build() as SetAttribute
+            .attribute("attribute").value("value").build() as SetAttribute
         assertThat(fixData.namespace).isEqualTo("namespace")
         assertThat(fixData.attribute).isEqualTo("attribute")
         assertThat(fixData.value).isEqualTo("value")
@@ -90,19 +90,19 @@ class LintFixTest : TestCase() {
 
     fun testReplaceString() {
         var fixData = LintFix.create().replace().text("old")
-                .with("new").build() as ReplaceString
+            .with("new").build() as ReplaceString
         assertThat(fixData.oldString).isEqualTo("old")
         assertThat(fixData.replacement).isEqualTo("new")
         assertThat(fixData.oldPattern).isNull()
 
         fixData = LintFix.create().replace().pattern("(oldPattern)")
-                .with("new").build() as ReplaceString
+            .with("new").build() as ReplaceString
         assertThat(fixData.oldPattern).isEqualTo("(oldPattern)")
         assertThat(fixData.replacement).isEqualTo("new")
         assertThat(fixData.oldString).isNull()
 
         fixData = LintFix.create().replace().pattern("oldPattern").with("new")
-                .build() as ReplaceString
+            .build() as ReplaceString
         assertThat(fixData.oldPattern).isEqualTo("(oldPattern)")
         assertThat(fixData.replacement).isEqualTo("new")
         assertThat(fixData.oldString).isNull()
@@ -110,7 +110,7 @@ class LintFixTest : TestCase() {
 
     fun testGroupMatching() {
         val fix = LintFix.create().replace().pattern("abc\\((\\d+)\\)def")
-                .with("Number was \\k<1>! I said \\k<1>!").build() as ReplaceString
+            .with("Number was \\k<1>! I said \\k<1>!").build() as ReplaceString
         TestCase.assertTrue(fix.oldPattern != null)
         val matcher = Pattern.compile(fix.oldPattern).matcher("abc(42)def")
         TestCase.assertTrue(matcher.matches())
@@ -120,28 +120,35 @@ class LintFixTest : TestCase() {
 
     fun testMatching() {
         lint().files(
-                java("" +
+            java(
+                "" +
                         "package test.pkg;\n" +
                         "import android.util.Log;\n" +
                         "public class Test {\n" +
                         "    void test() {\n" +
                         "        Log.d(\"TAG\", \"msg\");\n" +
                         "    }\n" +
-                        "}"))
-                .detector(SampleTestDetector())
-                .sdkHome(TestUtils.getSdk())
-                .run()
-                .expect("src/test/pkg/Test.java:5: Warning: Sample test message [TestIssueId]\n" +
+                        "}"
+            )
+        )
+            .detector(SampleTestDetector())
+            .sdkHome(TestUtils.getSdk())
+            .run()
+            .expect(
+                "src/test/pkg/Test.java:5: Warning: Sample test message [TestIssueId]\n" +
                         "        Log.d(\"TAG\", \"msg\");\n" +
                         "        ~~~\n" +
-                        "0 errors, 1 warnings\n")
-                .verifyFixes().window(1).expectFixDiffs("" +
-                "Fix for src/test/pkg/Test.java line 4: Fix Description:\n" +
-                "@@ -5 +5\n" +
-                "      void test() {\n" +
-                "-         Log.d(\"TAG\", \"msg\");\n" +
-                "+         MyLogger.d(\"msg\"); // Was: Log.d(\"TAG\", \"msg\");\n" +
-                "      }\n")
+                        "0 errors, 1 warnings\n"
+            )
+            .verifyFixes().window(1).expectFixDiffs(
+                "" +
+                        "Fix for src/test/pkg/Test.java line 4: Fix Description:\n" +
+                        "@@ -5 +5\n" +
+                        "      void test() {\n" +
+                        "-         Log.d(\"TAG\", \"msg\");\n" +
+                        "+         MyLogger.d(\"msg\"); // Was: Log.d(\"TAG\", \"msg\");\n" +
+                        "      }\n"
+            )
     }
 
     /**
@@ -154,9 +161,10 @@ class LintFixTest : TestCase() {
         }
 
         override fun visitMethod(
-                context: JavaContext,
-                node: UCallExpression,
-                method: PsiMethod) {
+            context: JavaContext,
+            node: UCallExpression,
+            method: PsiMethod
+        ) {
             val evaluator = context.evaluator
 
             if (evaluator.isMemberInClass(method, "android.util.Log")) {
@@ -164,26 +172,34 @@ class LintFixTest : TestCase() {
                 @Language("RegExp")
                 val oldPattern = "(${Pattern.quote(source)})"
                 val receiver = node.receiver!!
-                var replacement = source.replace(receiver.asSourceString(),
-                        "MyLogger") + "; // Was: \\k<1>"
+                var replacement = source.replace(
+                    receiver.asSourceString(),
+                    "MyLogger"
+                ) + "; // Was: \\k<1>"
                 replacement = replacement.replace("\"TAG\", ", "")
 
                 val fix = LintFix.create()
-                        .name("Fix Description")
-                        .replace().pattern(oldPattern).with(replacement)
-                        .range(context.getLocation(node))
-                        .shortenNames()
-                        .build()
-                context.report(SAMPLE_ISSUE, context.getLocation(receiver),
-                        "Sample test message", fix)
+                    .name("Fix Description")
+                    .replace().pattern(oldPattern).with(replacement)
+                    .range(context.getLocation(node))
+                    .shortenNames()
+                    .build()
+                context.report(
+                    SAMPLE_ISSUE, context.getLocation(receiver),
+                    "Sample test message", fix
+                )
             }
         }
 
         companion object {
-            val SAMPLE_ISSUE = Issue.create("TestIssueId", "Not applicable", "Not applicable",
-                    Category.MESSAGES, 5, Severity.WARNING,
-                    Implementation(SampleTestDetector::class.java,
-                            Scope.JAVA_FILE_SCOPE))
+            val SAMPLE_ISSUE = Issue.create(
+                "TestIssueId", "Not applicable", "Not applicable",
+                Category.MESSAGES, 5, Severity.WARNING,
+                Implementation(
+                    SampleTestDetector::class.java,
+                    Scope.JAVA_FILE_SCOPE
+                )
+            )
         }
     }
 }

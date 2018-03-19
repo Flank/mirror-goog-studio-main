@@ -34,16 +34,16 @@ import junit.framework.TestCase;
 /**
  * Base test case for lint tests.
  *
- * <p>Contains a number of general utility methods
- * to help writing test cases, such as looking up a temporary directory, comparing golden
- * files, computing string diffs, etc.
+ * <p>Contains a number of general utility methods to help writing test cases, such as looking up a
+ * temporary directory, comparing golden files, computing string diffs, etc.
  */
 @SuppressWarnings("javadoc")
-public abstract class BaseLintDetectorTest extends TestCase implements TestResourceProvider  {
+public abstract class BaseLintDetectorTest extends TestCase implements TestResourceProvider {
     /** Update golden files if different from the actual results */
     private static final boolean UPDATE_DIFFERENT_FILES = false;
     /** Create golden files if missing */
     private static final boolean UPDATE_MISSING_FILES = true;
+
     private static File sTempDir = null;
     protected static final Set<File> sCleanDirs = Sets.newHashSet();
 
@@ -66,31 +66,38 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
             assertTrue(caretLocation, caretLocation.startsWith("[^", caretDelta));
             int caretRangeEnd = caretLocation.indexOf(']', caretDelta + 2);
             assertTrue(caretLocation, caretRangeEnd != -1);
-            caretContext = caretLocation.substring(0, caretDelta)
-                    + caretLocation.substring(caretDelta + 2, caretRangeEnd)
-                    + caretLocation.substring(caretRangeEnd + 1);
+            caretContext =
+                    caretLocation.substring(0, caretDelta)
+                            + caretLocation.substring(caretDelta + 2, caretRangeEnd)
+                            + caretLocation.substring(caretRangeEnd + 1);
         } else {
-            caretContext = caretLocation.substring(0, caretDelta)
-                    + caretLocation.substring(caretDelta + 1); // +1: skip "^"
+            caretContext =
+                    caretLocation.substring(0, caretDelta)
+                            + caretLocation.substring(caretDelta + 1); // +1: skip "^"
         }
 
         int caretContextIndex = fileContent.indexOf(caretContext);
-        assertTrue("Caret content " + caretContext + " not found in file",
-                caretContextIndex != -1);
+        assertTrue("Caret content " + caretContext + " not found in file", caretContextIndex != -1);
         return caretContextIndex + caretDelta;
     }
 
-    public static String addSelection(String newFileContents, int selectionBegin, int selectionEnd) {
+    public static String addSelection(
+            String newFileContents, int selectionBegin, int selectionEnd) {
         // Insert selection markers -- [ ] for the selection range, ^ for the caret
         String newFileWithCaret;
         if (selectionBegin < selectionEnd) {
-            newFileWithCaret = newFileContents.substring(0, selectionBegin) + "[^"
-                    + newFileContents.substring(selectionBegin, selectionEnd) + "]"
-                    + newFileContents.substring(selectionEnd);
+            newFileWithCaret =
+                    newFileContents.substring(0, selectionBegin)
+                            + "[^"
+                            + newFileContents.substring(selectionBegin, selectionEnd)
+                            + "]"
+                            + newFileContents.substring(selectionEnd);
         } else {
             // Selected range
-            newFileWithCaret = newFileContents.substring(0, selectionBegin) + "^"
-                    + newFileContents.substring(selectionBegin);
+            newFileWithCaret =
+                    newFileContents.substring(0, selectionBegin)
+                            + "^"
+                            + newFileContents.substring(selectionBegin);
         }
 
         return newFileWithCaret;
@@ -116,8 +123,8 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
         if (sdk != null) {
             File sdkPath = new File(sdk);
             if (sdkPath.exists()) {
-                File testData = new File(sdkPath, getTestDataRelPath().replace('/',
-                        File.separatorChar));
+                File testData =
+                        new File(sdkPath, getTestDataRelPath().replace('/', File.separatorChar));
                 if (testData.exists()) {
                     addCleanupDir(testData);
                     return testData;
@@ -210,32 +217,40 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
         if (newExtension == null) {
             newExtension = extension;
         }
-        expectedName = basename.substring(0, basename.indexOf('.'))
-                + "-expected-" + testName + '.' + newExtension;
+        expectedName =
+                basename.substring(0, basename.indexOf('.'))
+                        + "-expected-"
+                        + testName
+                        + '.'
+                        + newExtension;
         String expected = readTestFile(expectedName, false);
         if (expected == null) {
-            File expectedPath = new File(
-                    UPDATE_MISSING_FILES ? getTargetDir() : getTempDir(), expectedName);
+            File expectedPath =
+                    new File(UPDATE_MISSING_FILES ? getTargetDir() : getTempDir(), expectedName);
             Files.write(actual, expectedPath, Charsets.UTF_8);
             System.out.println("Expected - written to " + expectedPath + ":\n");
             System.out.println(actual);
-            fail("Did not find golden file (" + expectedName + "): Wrote contents as "
-                    + expectedPath);
+            fail(
+                    "Did not find golden file ("
+                            + expectedName
+                            + "): Wrote contents as "
+                            + expectedPath);
         } else {
             if (!expected.replaceAll("\r\n", "\n").equals(actual.replaceAll("\r\n", "\n"))) {
                 File expectedPath = new File(getTempDir(), expectedName);
-                File actualPath = new File(getTempDir(),
-                        expectedName.replace("expected", "actual"));
+                File actualPath =
+                        new File(getTempDir(), expectedName.replace("expected", "actual"));
                 Files.write(expected, expectedPath, Charsets.UTF_8);
                 Files.write(actual, actualPath, Charsets.UTF_8);
                 // Also update data dir with the current value
                 if (UPDATE_DIFFERENT_FILES) {
                     Files.write(actual, new File(getTargetDir(), expectedName), Charsets.UTF_8);
                 }
-                System.out.println("The files differ: diff " + expectedPath + " "
-                        + actualPath);
-                assertEquals("The files differ - see " + expectedPath + " versus " + actualPath,
-                        expected, actual);
+                System.out.println("The files differ: diff " + expectedPath + " " + actualPath);
+                assertEquals(
+                        "The files differ - see " + expectedPath + " versus " + actualPath,
+                        expected,
+                        actual);
             }
         }
     }
@@ -244,8 +259,8 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
         TestUtils.deleteFile(dir);
     }
 
-    protected static File makeTestFile(File dir, String name, String relative,
-            final InputStream contents) throws IOException {
+    protected static File makeTestFile(
+            File dir, String name, String relative, final InputStream contents) throws IOException {
         if (relative != null) {
             dir = new File(dir, relative);
             if (!dir.exists()) {
@@ -307,16 +322,17 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
     protected String cleanup(String result) {
         List<File> sorted = new ArrayList<>(sCleanDirs);
         // Process dirs in order such that we match longest substrings first
-        sorted.sort((file1, file2) -> {
-            String path1 = file1.getPath();
-            String path2 = file2.getPath();
-            int delta = path2.length() - path1.length();
-            if (delta != 0) {
-                return delta;
-            } else {
-                return path1.compareTo(path2);
-            }
-        });
+        sorted.sort(
+                (file1, file2) -> {
+                    String path1 = file1.getPath();
+                    String path2 = file2.getPath();
+                    int delta = path2.length() - path1.length();
+                    if (delta != 0) {
+                        return delta;
+                    } else {
+                        return path1.compareTo(path2);
+                    }
+                });
 
         for (File dir : sorted) {
             if (result.contains(dir.getPath())) {

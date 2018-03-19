@@ -25,8 +25,8 @@ import junit.framework.TestCase;
 public class PermissionHolderTest extends TestCase {
     public void test() {
         assertTrue(new SetPermissionLookup(Sets.newHashSet("foo")).hasPermission("foo"));
-        assertTrue(new SetPermissionLookup(Sets.newHashSet("foo","bar")).hasPermission("foo"));
-        assertTrue(new SetPermissionLookup(Sets.newHashSet("foo","bar")).hasPermission("bar"));
+        assertTrue(new SetPermissionLookup(Sets.newHashSet("foo", "bar")).hasPermission("foo"));
+        assertTrue(new SetPermissionLookup(Sets.newHashSet("foo", "bar")).hasPermission("bar"));
         assertFalse(new SetPermissionLookup(Sets.newHashSet("foo")).hasPermission("bar"));
         assertFalse(new SetPermissionLookup(Sets.newHashSet("foo")).hasPermission(""));
         assertFalse(new SetPermissionLookup(Sets.newHashSet()).hasPermission(""));
@@ -43,9 +43,21 @@ public class PermissionHolderTest extends TestCase {
         assertFalse(SetPermissionLookup.join(lookup1, Sets.newHashSet("baz")).hasPermission("a"));
 
         AndroidVersion version = new AndroidVersion(5, null);
-        assertSame(version, new SetPermissionLookup(Sets.newHashSet("foo"), Sets.newHashSet("bar"),
-                version, AndroidVersion.DEFAULT).getMinSdkVersion());
-        assertSame(version, new SetPermissionLookup(Sets.newHashSet("foo"), Sets.newHashSet("bar"),
-                AndroidVersion.DEFAULT, version).getTargetSdkVersion());
+        assertSame(
+                version,
+                new SetPermissionLookup(
+                                Sets.newHashSet("foo"),
+                                Sets.newHashSet("bar"),
+                                version,
+                                AndroidVersion.DEFAULT)
+                        .getMinSdkVersion());
+        assertSame(
+                version,
+                new SetPermissionLookup(
+                                Sets.newHashSet("foo"),
+                                Sets.newHashSet("bar"),
+                                AndroidVersion.DEFAULT,
+                                version)
+                        .getTargetSdkVersion());
     }
 }

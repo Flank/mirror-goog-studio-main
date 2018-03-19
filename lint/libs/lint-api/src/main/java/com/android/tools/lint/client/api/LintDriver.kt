@@ -112,7 +112,6 @@ import java.net.URLConnection
 import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.Arrays
-import java.util.Collections
 import java.util.Deque
 import java.util.EnumMap
 import java.util.EnumSet
@@ -141,9 +140,10 @@ class LintDriver
  *
  * @param client the tool wrapping the analyzer, such as an IDE or a CLI
  */
-(var registry: IssueRegistry, client: LintClient, val request: LintRequest) {
+    (var registry: IssueRegistry, client: LintClient, val request: LintRequest) {
     /** True if execution has been canceled  */
-    @Volatile internal var isCanceled: Boolean = false
+    @Volatile
+    internal var isCanceled: Boolean = false
         private set
 
     /** The original client (not the wrapped one intended to pass to detectors */
@@ -291,9 +291,11 @@ class LintDriver
             val project = it.project
             if (project != null) {
                 currentProject = project
-                LintClient.report(client = client, issue = IssueRegistry.LINT_ERROR,
-                        message = it.message ?: "Circular project dependencies",
-                        project = project, driver = this, location = it.location)
+                LintClient.report(
+                    client = client, issue = IssueRegistry.LINT_ERROR,
+                    message = it.message ?: "Circular project dependencies",
+                    project = project, driver = this, location = it.location
+                )
                 currentProject = null
             }
             circularProjectError = null
@@ -385,10 +387,12 @@ class LintDriver
         jarFiles.addAll(client.findGlobalRuleJars())
 
         if (!jarFiles.isEmpty()) {
-            val extraRegistries = JarFileIssueRegistry.get(client, jarFiles,
-                    currentProject ?: projects.firstOrNull())
+            val extraRegistries = JarFileIssueRegistry.get(
+                client, jarFiles,
+                currentProject ?: projects.firstOrNull()
+            )
             if (extraRegistries.isNotEmpty()) {
-                val registries = ArrayList<IssueRegistry>(jarFiles.size+1)
+                val registries = ArrayList<IssueRegistry>(jarFiles.size + 1)
                 // Include the builtin checks too
                 registries.add(registry)
                 for (extraRegistry in extraRegistries) {
@@ -415,8 +419,10 @@ class LintDriver
 
         do {
             phase++
-            fireEvent(EventType.NEW_PHASE,
-                    Context(this, project, null, project.dir))
+            fireEvent(
+                EventType.NEW_PHASE,
+                Context(this, project, null, project.dir)
+            )
 
             // Narrow the scope down to the set of scopes requested by
             // the rules.
@@ -466,7 +472,7 @@ class LintDriver
 
         val detectorToScope = HashMap<Class<out Detector>, EnumSet<Scope>>()
         val scopeToDetectors: MutableMap<Scope, MutableList<Detector>> =
-                EnumMap<Scope, MutableList<Detector>>(Scope::class.java)
+            EnumMap<Scope, MutableList<Detector>>(Scope::class.java)
 
         val detectorList = ArrayList<Detector>()
         // Compute the list of detectors (narrowed down from repeatingDetectors),
@@ -494,11 +500,11 @@ class LintDriver
                     val s = detectorToScope[detectorClass]
                     val issueScope = issue.implementation.scope
                     if (s == null) {
-                        detectorToScope.put(detectorClass, issueScope)
+                        detectorToScope[detectorClass] = issueScope
                     } else if (!s.containsAll(issueScope)) {
                         val union = EnumSet.copyOf(s)
                         union.addAll(issueScope)
-                        detectorToScope.put(detectorClass, union)
+                        detectorToScope[detectorClass] = union
                     }
                 }
 
@@ -510,7 +516,7 @@ class LintDriver
                             var list: MutableList<Detector>? = scopeToDetectors[s]
                             if (list == null) {
                                 list = ArrayList()
-                                scopeToDetectors.put(s, list)
+                                scopeToDetectors[s] = list
                             }
                             list.add(detector)
                         }
@@ -561,16 +567,14 @@ class LintDriver
             val javaCodeDetectors = scopeDetectors[Scope.ALL_JAVA_FILES]
             if (javaCodeDetectors != null) {
                 for (detector in javaCodeDetectors) {
-                    assert(detector is SourceCodeScanner)
-                    { detector }
+                    assert(detector is SourceCodeScanner) { detector }
                 }
             }
 
             val javaFileDetectors = scopeDetectors[Scope.JAVA_FILE]
             if (javaFileDetectors != null) {
                 for (detector in javaFileDetectors) {
-                    assert(detector is SourceCodeScanner)
-                    { detector }
+                    assert(detector is SourceCodeScanner) { detector }
                 }
             }
 
@@ -619,11 +623,12 @@ class LintDriver
     }
 
     private fun registerProjectFile(
-            fileToProject: MutableMap<File, Project>,
-            file: File,
-            projectDir: File,
-            rootDir: File) {
-        fileToProject.put(file, client.getProject(projectDir, rootDir))
+        fileToProject: MutableMap<File, Project>,
+        file: File,
+        projectDir: File,
+        rootDir: File
+    ) {
+        fileToProject[file] = client.getProject(projectDir, rootDir)
     }
 
     private fun computeProjects(relativeFiles: List<File>): Collection<Project> {
@@ -721,7 +726,6 @@ class LintDriver
                     } catch (ioe: IOException) {
                         // pass
                     }
-
                 }
 
                 project.addFile(file)
@@ -753,9 +757,9 @@ class LintDriver
             // initialized from the library project dependency list
             val projects = IdentityHashMap<Project, Project>()
             for (project in roots) {
-                projects.put(project, project)
+                projects[project] = project
                 for (library in project.allLibraries) {
-                    projects.put(library, library)
+                    projects[library] = library
                 }
             }
             val dirs = HashSet<File>()
@@ -769,9 +773,10 @@ class LintDriver
     }
 
     private fun addProjects(
-            dir: File,
-            fileToProject: MutableMap<File, Project>,
-            rootDir: File) {
+        dir: File,
+        fileToProject: MutableMap<File, Project>,
+        rootDir: File
+    ) {
         if (isCanceled) {
             return
         }
@@ -856,12 +861,13 @@ class LintDriver
 
         if (isCanceled) {
             client.report(
-                    projectContext,
-                    // Must provide an issue since API guarantees that the issue parameter
-                    IssueRegistry.CANCELLED,
-                    Severity.INFORMATIONAL,
-                    Location.create(project.dir),
-                    "Lint canceled by user", TextFormat.RAW, null)
+                projectContext,
+                // Must provide an issue since API guarantees that the issue parameter
+                IssueRegistry.CANCELLED,
+                Severity.INFORMATIONAL,
+                Location.create(project.dir),
+                "Lint canceled by user", TextFormat.RAW, null
+            )
         }
 
         currentProjects = null
@@ -876,8 +882,9 @@ class LintDriver
                 if (context != null) {
                     try {
                         project.readManifest(context.document)
-                        if ((!project.isLibrary || main != null
-                                && main.isMergingManifests) && scope.contains(Scope.MANIFEST)) {
+                        if ((!project.isLibrary || main != null &&
+                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
+                        ) {
                             val detectors = scopeDetectors[Scope.MANIFEST]
                             if (detectors != null) {
                                 val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
@@ -901,13 +908,16 @@ class LintDriver
             // Process both Scope.RESOURCE_FILE and Scope.ALL_RESOURCE_FILES detectors together
             // in a single pass through the resource directories.
             if (scope.contains(Scope.ALL_RESOURCE_FILES)
-                    || scope.contains(Scope.RESOURCE_FILE)
-                    || scope.contains(Scope.RESOURCE_FOLDER)
-                    || scope.contains(Scope.BINARY_RESOURCE_FILE)) {
+                || scope.contains(Scope.RESOURCE_FILE)
+                || scope.contains(Scope.RESOURCE_FOLDER)
+                || scope.contains(Scope.BINARY_RESOURCE_FILE)
+            ) {
                 val dirChecks = scopeDetectors[Scope.RESOURCE_FOLDER]
                 val binaryChecks = scopeDetectors[Scope.BINARY_RESOURCE_FILE]
-                val checks = union(scopeDetectors[Scope.RESOURCE_FILE],
-                        scopeDetectors[Scope.ALL_RESOURCE_FILES]) ?: emptyList()
+                val checks = union(
+                    scopeDetectors[Scope.RESOURCE_FILE],
+                    scopeDetectors[Scope.ALL_RESOURCE_FILES]
+                ) ?: emptyList()
                 var haveXmlChecks = !checks.isEmpty()
                 val xmlDetectors: MutableList<XmlScanner>
                 if (haveXmlChecks) {
@@ -922,26 +932,33 @@ class LintDriver
                     xmlDetectors = mutableListOf()
                 }
                 if (haveXmlChecks
-                        || dirChecks != null && !dirChecks.isEmpty()
-                        || binaryChecks != null && !binaryChecks.isEmpty()) {
+                    || dirChecks != null && !dirChecks.isEmpty()
+                    || binaryChecks != null && !binaryChecks.isEmpty()
+                ) {
                     val files = project.subset
                     if (files != null) {
-                        checkIndividualResources(project, main, xmlDetectors, dirChecks,
-                                binaryChecks, files)
+                        checkIndividualResources(
+                            project, main, xmlDetectors, dirChecks,
+                            binaryChecks, files
+                        )
                     } else {
                         val resourceFolders = project.resourceFolders
                         if (!resourceFolders.isEmpty()) {
                             for (res in resourceFolders) {
-                                checkResFolder(project, main, res, xmlDetectors, dirChecks,
-                                        binaryChecks)
+                                checkResFolder(
+                                    project, main, res, xmlDetectors, dirChecks,
+                                    binaryChecks
+                                )
                             }
                         }
                         if (isCheckGeneratedSources) {
                             val generatedResourceFolders = project.generatedResourceFolders
                             if (!generatedResourceFolders.isEmpty()) {
                                 for (res in generatedResourceFolders) {
-                                    checkResFolder(project, main, res, xmlDetectors, dirChecks,
-                                        binaryChecks)
+                                    checkResFolder(
+                                        project, main, res, xmlDetectors, dirChecks,
+                                        binaryChecks
+                                    )
                                 }
                             }
                         }
@@ -955,8 +972,10 @@ class LintDriver
         }
 
         if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.ALL_JAVA_FILES)) {
-            val checks = union(scopeDetectors[Scope.JAVA_FILE],
-                    scopeDetectors[Scope.ALL_JAVA_FILES])
+            val checks = union(
+                scopeDetectors[Scope.JAVA_FILE],
+                scopeDetectors[Scope.ALL_JAVA_FILES]
+            )
             if (checks != null && !checks.isEmpty()) {
                 val files = project.subset
                 if (files != null) {
@@ -965,13 +984,11 @@ class LintDriver
                     val sourceFolders = project.javaSourceFolders
                     val testFolders = if (scope.contains(Scope.TEST_SOURCES))
                         project.testSourceFolders
-                    else
-                        emptyList<File>()
+                    else emptyList<File>()
 
                     val generatedFolders = if (isCheckGeneratedSources)
                         project.generatedSourceFolders
-                    else
-                        emptyList<File>()
+                    else emptyList<File>()
                     checkJava(project, main, sourceFolders, testFolders, generatedFolders, checks)
                 }
             }
@@ -982,8 +999,9 @@ class LintDriver
         }
 
         if (scope.contains(Scope.CLASS_FILE)
-                || scope.contains(Scope.ALL_CLASS_FILES)
-                || scope.contains(Scope.JAVA_LIBRARIES)) {
+            || scope.contains(Scope.ALL_CLASS_FILES)
+            || scope.contains(Scope.JAVA_LIBRARIES)
+        ) {
             checkClasses(project, main)
         }
 
@@ -1012,7 +1030,8 @@ class LintDriver
         }
 
         if (project === main && scope.contains(Scope.PROGUARD_FILE) &&
-                project.isAndroidProject) {
+            project.isAndroidProject
+        ) {
             checkProGuard(project, main)
         }
 
@@ -1159,11 +1178,15 @@ class LintDriver
         val classFolders = project.javaClassFolders
         val classEntries: List<ClassEntry>
         classEntries = if (classFolders.isEmpty()) {
-            val message = String.format("No `.class` files were found in project \"%1\$s\", "
-                    + "so none of the classfile based checks could be run. "
-                    + "Does the project need to be built first?", project.name)
-            LintClient.report(client = client, issue = IssueRegistry.LINT_ERROR, message = message,
-                    project = project, mainProject = main, driver = this)
+            val message = String.format(
+                "No `.class` files were found in project \"%1\$s\", " +
+                        "so none of the classfile based checks could be run. " +
+                        "Does the project need to be built first?", project.name
+            )
+            LintClient.report(
+                client = client, issue = IssueRegistry.LINT_ERROR, message = message,
+                project = project, mainProject = main, driver = this
+            )
             emptyList()
         } else {
             ClassEntry.fromClassPath(client, classFolders, true)
@@ -1182,9 +1205,10 @@ class LintDriver
     }
 
     private fun checkIndividualClassFiles(
-            project: Project,
-            main: Project?,
-            files: List<File>) {
+        project: Project,
+        main: Project?,
+        files: List<File>
+    ) {
         val classFiles = ArrayList<File>(files.size)
         val classFolders = project.javaClassFolders
         if (!classFolders.isEmpty()) {
@@ -1196,10 +1220,12 @@ class LintDriver
             }
         }
 
-        val entries = ClassEntry.fromClassFiles(client, classFiles, classFolders,
-                true)
+        val entries = ClassEntry.fromClassFiles(
+            client, classFiles, classFolders,
+            true
+        )
         if (!entries.isEmpty()) {
-            Collections.sort(entries)
+            entries.sort()
             runClassDetectors(Scope.CLASS_FILE, entries, project, main)
         }
     }
@@ -1212,8 +1238,12 @@ class LintDriver
      */
     private var outerClasses: Deque<ClassNode>? = null
 
-    private fun runClassDetectors(scope: Scope, entries: List<ClassEntry>,
-                                  project: Project, main: Project?) {
+    private fun runClassDetectors(
+        scope: Scope,
+        entries: List<ClassEntry>,
+        project: Project,
+        main: Project?
+    ) {
         if (this.scope.contains(scope)) {
             val classDetectors = scopeDetectors[scope]
             if (classDetectors != null && !classDetectors.isEmpty() && !entries.isEmpty()) {
@@ -1237,8 +1267,10 @@ class LintDriver
                         classNode = ClassNode()
                         reader.accept(classNode, 0 /* flags */)
                     } catch (t: Throwable) {
-                        client.log(null,
-                            "Error processing ${entry.path()}: broken class file? (${t.message})")
+                        client.log(
+                            null,
+                            "Error processing ${entry.path()}: broken class file? (${t.message})"
+                        )
                         continue
                     }
 
@@ -1275,15 +1307,23 @@ class LintDriver
                         if (oldRootLength == -1) {
                             oldRootLength = sourceName.length
                         }
-                        if (newRootLength != oldRootLength || !sourceName.regionMatches(0, newName, 0, newRootLength)) {
+                        if (newRootLength != oldRootLength || !sourceName.regionMatches(
+                                0,
+                                newName,
+                                0,
+                                newRootLength
+                            )
+                        ) {
                             sourceContents = null
                         }
                     }
 
-                    val context = ClassContext(this, project, main,
-                            entry.file, entry.jarFile, entry.binDir, entry.bytes,
-                            classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/,
-                            sourceContents)
+                    val context = ClassContext(
+                        this, project, main,
+                        entry.file, entry.jarFile, entry.binDir, entry.bytes,
+                        classNode, scope == Scope.JAVA_LIBRARIES /*fromLibrary*/,
+                        sourceContents
+                    )
 
                     try {
                         visitor.runClassDetectors(context)
@@ -1359,10 +1399,11 @@ class LintDriver
 
                 return classNode
             } catch (t: Throwable) {
-                client.log(null,
-                        "Error processing ${classFile.path}: broken class file? (${t.message})")
+                client.log(
+                    null,
+                    "Error processing ${classFile.path}: broken class file? (${t.message})"
+                )
             }
-
         }
 
         return null
@@ -1396,12 +1437,13 @@ class LintDriver
     }
 
     private fun checkJava(
-            project: Project,
-            main: Project?,
-            sourceFolders: List<File>,
-            testSourceFolders: List<File>,
-            generatedSources: List<File>,
-            checks: List<Detector>) {
+        project: Project,
+        main: Project?,
+        sourceFolders: List<File>,
+        testSourceFolders: List<File>,
+        generatedSources: List<File>,
+        checks: List<Detector>
+    ) {
         assert(!checks.isEmpty())
 
         // Gather all Java source files in a single pass; more efficient.
@@ -1437,11 +1479,13 @@ class LintDriver
         }
     }
 
-    private fun visitJavaFiles(checks: List<Detector>,
-                               project: Project,
-                               main: Project?,
-                               contexts: List<JavaContext>,
-                               testContexts: List<JavaContext>) {
+    private fun visitJavaFiles(
+        checks: List<Detector>,
+        project: Project,
+        main: Project?,
+        contexts: List<JavaContext>,
+        testContexts: List<JavaContext>
+    ) {
         val allContexts: List<JavaContext>
         if (testContexts.isEmpty()) {
             allContexts = contexts
@@ -1459,12 +1503,14 @@ class LintDriver
         }
     }
 
-    private fun visitJavaFiles(checks: List<Detector>,
-                               project: Project,
-                               main: Project?,
-                               allContexts: List<JavaContext>,
-                               srcContexts: List<JavaContext>,
-                               testContexts: List<JavaContext>) {
+    private fun visitJavaFiles(
+        checks: List<Detector>,
+        project: Project,
+        main: Project?,
+        allContexts: List<JavaContext>,
+        srcContexts: List<JavaContext>,
+        testContexts: List<JavaContext>
+    ) {
         // Temporary: we still have some builtin checks that aren't migrated to
         // PSI. Until that's complete, remove them from the list here
         val uastScanners = ArrayList<Detector>(checks.size)
@@ -1520,7 +1566,7 @@ class LintDriver
         val testScanners = ArrayList<Detector>(scanners.size)
         // Compute intersection of Java and test scanners
         var sourceScanners: Collection<Detector> =
-                scopeDetectors[Scope.TEST_SOURCES] ?: return emptyList()
+            scopeDetectors[Scope.TEST_SOURCES] ?: return emptyList()
         if (sourceScanners.size > 15 && scanners.size > 15) {
             sourceScanners = Sets.newHashSet(sourceScanners) // switch from list to set
         }
@@ -1533,10 +1579,11 @@ class LintDriver
     }
 
     private fun checkIndividualJavaFiles(
-            project: Project,
-            main: Project?,
-            checks: List<Detector>,
-            files: List<File>) {
+        project: Project,
+        main: Project?,
+        checks: List<Detector>,
+        files: List<File>
+    ) {
 
         val contexts = ArrayList<JavaContext>(files.size)
         val testContexts = ArrayList<JavaContext>(files.size)
@@ -1575,9 +1622,10 @@ class LintDriver
     private var currentVisitor: ResourceVisitor? = null
 
     private fun getVisitor(
-            type: ResourceFolderType,
-            checks: List<XmlScanner>,
-            binaryChecks: List<Detector>?): ResourceVisitor? {
+        type: ResourceFolderType,
+        checks: List<XmlScanner>,
+        binaryChecks: List<Detector>?
+    ): ResourceVisitor? {
         if (type != currentFolderType) {
             currentFolderType = type
 
@@ -1600,7 +1648,8 @@ class LintDriver
 
             // If the list of detectors hasn't changed, then just use the current visitor!
             if (currentXmlDetectors != null && currentXmlDetectors == applicableXmlChecks
-                    && Objects.equal(currentBinaryDetectors, applicableBinaryChecks)) {
+                && Objects.equal(currentBinaryDetectors, applicableBinaryChecks)
+            ) {
                 return currentVisitor
             }
 
@@ -1608,26 +1657,30 @@ class LintDriver
             currentBinaryDetectors = applicableBinaryChecks
 
             if (applicableXmlChecks.isEmpty() &&
-                    (applicableBinaryChecks == null || applicableBinaryChecks.isEmpty())) {
+                (applicableBinaryChecks == null || applicableBinaryChecks.isEmpty())
+            ) {
                 currentVisitor = null
                 return null
             }
 
             val parser = client.xmlParser
-            currentVisitor = ResourceVisitor(parser, applicableXmlChecks,
-                    applicableBinaryChecks)
+            currentVisitor = ResourceVisitor(
+                parser, applicableXmlChecks,
+                applicableBinaryChecks
+            )
         }
 
         return currentVisitor
     }
 
     private fun checkResFolder(
-            project: Project,
-            main: Project?,
-            res: File,
-            xmlChecks: List<XmlScanner>,
-            dirChecks: List<Detector>?,
-            binaryChecks: List<Detector>?) {
+        project: Project,
+        main: Project?,
+        res: File,
+        xmlChecks: List<XmlScanner>,
+        dirChecks: List<Detector>?,
+        binaryChecks: List<Detector>?
+    ) {
         val resourceDirs = res.listFiles() ?: return
 
         // Sort alphabetically such that we can process related folder types at the
@@ -1649,13 +1702,14 @@ class LintDriver
     }
 
     private fun checkResourceFolder(
-            project: Project,
-            main: Project?,
-            dir: File,
-            type: ResourceFolderType,
-            xmlChecks: List<XmlScanner>,
-            dirChecks: List<Detector>?,
-            binaryChecks: List<Detector>?) {
+        project: Project,
+        main: Project?,
+        dir: File,
+        type: ResourceFolderType,
+        xmlChecks: List<XmlScanner>,
+        dirChecks: List<Detector>?,
+        binaryChecks: List<Detector>?
+    ) {
 
         // Process the resource folder
 
@@ -1697,10 +1751,11 @@ class LintDriver
                         disposeXmlContext(context)
                     }
                 } else if (binaryChecks != null &&
-                        (isBitmapFile(file) || type == ResourceFolderType.RAW)) {
+                    (isBitmapFile(file) || type == ResourceFolderType.RAW)
+                ) {
                     val context = object : ResourceContext(this, project, main, file, type, "") {
                         override val resourceFolder: File?
-                            // Like super, but for the parent folder instead of the context file
+                        // Like super, but for the parent folder instead of the context file
                             get() = if (resourceFolderType != null) file.parentFile else null
                     }
                     fireEvent(EventType.SCANNING_FILE, context)
@@ -1714,14 +1769,15 @@ class LintDriver
     }
 
     private fun disposeXmlContext(context: XmlContext) =
-            context.parser.dispose(context, context.document)
+        context.parser.dispose(context, context.document)
 
     private fun createXmlContext(
-            project: Project,
-            main: Project?,
-            file: File,
-            type: ResourceFolderType?,
-            parser: XmlParser): XmlContext? {
+        project: Project,
+        main: Project?,
+        file: File,
+        type: ResourceFolderType?,
+        parser: XmlParser
+    ): XmlContext? {
         assert(LintUtils.isXmlFile(file))
         val contents = client.readFile(file)
         if (contents.isEmpty()) {
@@ -1738,20 +1794,23 @@ class LintDriver
 
     /** Checks individual resources  */
     private fun checkIndividualResources(
-            project: Project,
-            main: Project?,
-            xmlDetectors: List<XmlScanner>,
-            dirChecks: List<Detector>?,
-            binaryChecks: List<Detector>?,
-            files: List<File>) {
+        project: Project,
+        main: Project?,
+        xmlDetectors: List<XmlScanner>,
+        dirChecks: List<Detector>?,
+        binaryChecks: List<Detector>?,
+        files: List<File>
+    ) {
         for (file in files) {
             if (file.isDirectory) {
                 // Is it a resource folder?
                 val type = ResourceFolderType.getFolderType(file.name)
                 if (type != null && File(file.parentFile, RES_FOLDER).exists()) {
                     // Yes.
-                    checkResourceFolder(project, main, file, type, xmlDetectors, dirChecks,
-                            binaryChecks)
+                    checkResourceFolder(
+                        project, main, file, type, xmlDetectors, dirChecks,
+                        binaryChecks
+                    )
                 } else if (file.name == RES_FOLDER) { // Is it the res folder?
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
@@ -1820,9 +1879,10 @@ class LintDriver
 
     /** Notifies listeners, if any, that the given event has occurred  */
     private fun fireEvent(
-            type: LintListener.EventType,
-            context: Context? = null,
-            project: Project? = context?.project) {
+        type: LintListener.EventType,
+        context: Context? = null,
+        project: Project? = context?.project
+    ) {
         if (listeners != null) {
             for (listener in listeners!!) {
                 listener.update(this, type, project, context)
@@ -1837,30 +1897,35 @@ class LintDriver
      * and lint clients don't have to make sure they check for ignored issues or
      * filtered out warnings.
      */
-    private inner class LintClientWrapper(private val delegate: LintClient) : LintClient(clientName) {
+    private inner class LintClientWrapper(private val delegate: LintClient) :
+        LintClient(clientName) {
 
         override fun getMergedManifest(project: Project): Document? =
-                delegate.getMergedManifest(project)
+            delegate.getMergedManifest(project)
 
-        override fun resolveMergeManifestSources(mergedManifest: Document,
-                                                 reportFile: Any) =
-                delegate.resolveMergeManifestSources(mergedManifest, reportFile)
+        override fun resolveMergeManifestSources(
+            mergedManifest: Document,
+            reportFile: Any
+        ) =
+            delegate.resolveMergeManifestSources(mergedManifest, reportFile)
 
         override fun findManifestSourceNode(
-                mergedNode: org.w3c.dom.Node): Pair<File, out org.w3c.dom.Node>? =
-                delegate.findManifestSourceNode(mergedNode)
+            mergedNode: org.w3c.dom.Node
+        ): Pair<File, out org.w3c.dom.Node>? =
+            delegate.findManifestSourceNode(mergedNode)
 
         override fun findManifestSourceLocation(mergedNode: org.w3c.dom.Node): Location? =
-                delegate.findManifestSourceLocation(mergedNode)
+            delegate.findManifestSourceLocation(mergedNode)
 
         override fun report(
-                context: Context,
-                issue: Issue,
-                severity: Severity,
-                location: Location,
-                message: String,
-                format: TextFormat,
-                fix: LintFix?) {
+            context: Context,
+            issue: Issue,
+            severity: Severity,
+            location: Location,
+            message: String,
+            format: TextFormat,
+            fix: LintFix?
+        ) {
 
             if (currentProject != null && currentProject?.reportIssues == false) {
                 return
@@ -1869,8 +1934,10 @@ class LintDriver
             val configuration = context.configuration
             if (!configuration.isEnabled(issue)) {
                 if (issue.category !== Category.LINT) {
-                    delegate.log(null, "Incorrect detector reported disabled issue %1\$s",
-                            issue.toString())
+                    delegate.log(
+                        null, "Incorrect detector reported disabled issue %1\$s",
+                        issue.toString()
+                    )
                 }
                 return
             }
@@ -1884,8 +1951,10 @@ class LintDriver
             }
 
             if (baseline != null) {
-                val filtered = baseline!!.findAndMark(issue, location, message, severity,
-                        context.project)
+                val filtered = baseline!!.findAndMark(
+                    issue, location, message, severity,
+                    context.project
+                )
                 if (filtered) {
                     return
                 }
@@ -1895,28 +1964,37 @@ class LintDriver
         }
 
         private fun unsupported(): Nothing =
-                throw UnsupportedOperationException("This method should not be called by lint " +
-                        "detectors; it is intended only for usage by the lint infrastructure")
+            throw UnsupportedOperationException(
+                "This method should not be called by lint " +
+                        "detectors; it is intended only for usage by the lint infrastructure"
+            )
 
         // Everything else just delegates to the embedding lint client
 
-        override fun getConfiguration(project: Project,
-                                      driver: LintDriver?): Configuration =
-                delegate.getConfiguration(project, driver)
+        override fun getConfiguration(
+            project: Project,
+            driver: LintDriver?
+        ): Configuration =
+            delegate.getConfiguration(project, driver)
 
         override fun getDisplayPath(file: File): String = delegate.getDisplayPath(file)
 
-        override fun log(severity: Severity, exception: Throwable?,
-                         format: String?, vararg args: Any) = delegate.log(exception, format, *args)
+        override fun log(
+            severity: Severity,
+            exception: Throwable?,
+            format: String?,
+            vararg args: Any
+        ) = delegate.log(exception, format, *args)
 
         override fun getTestLibraries(project: Project): List<File> =
-                delegate.getTestLibraries(project)
+            delegate.getTestLibraries(project)
 
         override fun getClientRevision(): String? = delegate.getClientRevision()
 
         override fun runReadAction(runnable: Runnable) = delegate.runReadAction(runnable)
 
-        override fun <T> runReadAction(computable: Computable<T>): T = delegate.runReadAction(computable)
+        override fun <T> runReadAction(computable: Computable<T>): T =
+            delegate.runReadAction(computable)
 
         override fun readFile(file: File): CharSequence = delegate.readFile(file)
 
@@ -1924,53 +2002,57 @@ class LintDriver
         override fun readBytes(file: File): ByteArray = delegate.readBytes(file)
 
         override fun getJavaSourceFolders(project: Project): List<File> =
-                delegate.getJavaSourceFolders(project)
+            delegate.getJavaSourceFolders(project)
 
         override fun getGeneratedSourceFolders(project: Project): List<File> =
-                delegate.getGeneratedSourceFolders(project)
+            delegate.getGeneratedSourceFolders(project)
 
         override fun getJavaClassFolders(project: Project): List<File> =
-                delegate.getJavaClassFolders(project)
+            delegate.getJavaClassFolders(project)
 
         override fun getJavaLibraries(project: Project, includeProvided: Boolean): List<File> =
-                delegate.getJavaLibraries(project, includeProvided)
+            delegate.getJavaLibraries(project, includeProvided)
 
         override fun getTestSourceFolders(project: Project): List<File> =
-                delegate.getTestSourceFolders(project)
+            delegate.getTestSourceFolders(project)
 
         override fun getBuildTools(project: Project): BuildToolInfo? =
-                delegate.getBuildTools(project)
+            delegate.getBuildTools(project)
 
         override fun createSuperClassMap(project: Project): Map<String, String> =
-                delegate.createSuperClassMap(project)
+            delegate.createSuperClassMap(project)
 
         override fun getResourceFolders(project: Project): List<File> =
-                delegate.getResourceFolders(project)
+            delegate.getResourceFolders(project)
 
         override val xmlParser: XmlParser
             get() = delegate.xmlParser
 
         override fun replaceDetector(
-                detectorClass: Class<out Detector>): Class<out Detector> =
-                delegate.replaceDetector(detectorClass)
+            detectorClass: Class<out Detector>
+        ): Class<out Detector> =
+            delegate.replaceDetector(detectorClass)
 
         override fun getSdkInfo(project: Project): SdkInfo = delegate.getSdkInfo(project)
 
         override fun getProject(dir: File, referenceDir: File): Project =
-                delegate.getProject(dir, referenceDir)
+            delegate.getProject(dir, referenceDir)
 
         override fun getUastParser(project: Project?): UastParser = delegate.getUastParser(project)
 
         override fun findResource(relativePath: String): File? = delegate.findResource(relativePath)
 
         override fun getCacheDir(name: String?, create: Boolean): File? =
-                delegate.getCacheDir(name, create)
+            delegate.getCacheDir(name, create)
 
         override fun getClassPath(project: Project): LintClient.ClassPathInfo =
-                delegate.performGetClassPath(project)
+            delegate.performGetClassPath(project)
 
-        override fun log(exception: Throwable?, format: String?,
-                         vararg args: Any) = delegate.log(exception, format, *args)
+        override fun log(
+            exception: Throwable?,
+            format: String?,
+            vararg args: Any
+        ) = delegate.log(exception, format, *args)
 
         override fun initializeProjects(knownProjects: Collection<Project>): Unit = unsupported()
 
@@ -1983,14 +2065,17 @@ class LintDriver
         override fun getSdk(): AndroidSdkHandler? = delegate.getSdk()
 
         override fun getCompileTarget(project: Project): IAndroidTarget? =
-                delegate.getCompileTarget(project)
+            delegate.getCompileTarget(project)
 
         override fun getSuperClass(project: Project, name: String): String? =
-                delegate.getSuperClass(project, name)
+            delegate.getSuperClass(project, name)
 
-        override fun isSubclassOf(project: Project, name: String,
-                                  superClassName: String): Boolean? =
-                delegate.isSubclassOf(project, name, superClassName)
+        override fun isSubclassOf(
+            project: Project,
+            name: String,
+            superClassName: String
+        ): Boolean? =
+            delegate.isSubclassOf(project, name, superClassName)
 
         override fun getProjectName(project: Project): String = delegate.getProjectName(project)
 
@@ -2007,41 +2092,45 @@ class LintDriver
         override fun registerProject(dir: File, project: Project): Unit = unsupported()
 
         override fun addCustomLintRules(registry: IssueRegistry): IssueRegistry =
-                delegate.addCustomLintRules(registry)
+            delegate.addCustomLintRules(registry)
 
         override fun getAssetFolders(project: Project): List<File> =
-                delegate.getAssetFolders(project)
+            delegate.getAssetFolders(project)
 
         override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader =
-                delegate.createUrlClassLoader(urls, parent)
+            delegate.createUrlClassLoader(urls, parent)
 
         override fun checkForSuppressComments(): Boolean = delegate.checkForSuppressComments()
 
         override fun supportsProjectResources(): Boolean = delegate.supportsProjectResources()
 
-        override fun getResourceRepository(project: Project,
-                                           includeModuleDependencies: Boolean,
-                                           includeLibraries: Boolean): AbstractResourceRepository? =
-                delegate.getResourceRepository(project, includeModuleDependencies,
-                        includeLibraries)
+        override fun getResourceRepository(
+            project: Project,
+            includeModuleDependencies: Boolean,
+            includeLibraries: Boolean
+        ): AbstractResourceRepository? =
+            delegate.getResourceRepository(
+                project, includeModuleDependencies,
+                includeLibraries
+            )
 
         override fun getRepositoryLogger(): ProgressIndicator = delegate.getRepositoryLogger()
 
         override fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider =
-                delegate.getResourceVisibilityProvider()
+            delegate.getResourceVisibilityProvider()
 
         override fun createResourceItemHandle(item: ResourceItem): Location.Handle =
-                delegate.createResourceItemHandle(item)
+            delegate.createResourceItemHandle(item)
 
         @Throws(IOException::class)
         override fun openConnection(url: URL): URLConnection? = delegate.openConnection(url)
 
         @Throws(IOException::class)
         override fun openConnection(url: URL, timeout: Int): URLConnection? =
-                delegate.openConnection(url, timeout)
+            delegate.openConnection(url, timeout)
 
         override fun closeConnection(connection: URLConnection) =
-                delegate.closeConnection(connection)
+            delegate.closeConnection(connection)
     }
 
     /**
@@ -2097,10 +2186,11 @@ class LintDriver
      *         issue on this method
      */
     fun isSuppressed(
-            issue: Issue?,
-            classNode: ClassNode,
-            method: MethodNode,
-            instruction: AbstractInsnNode?): Boolean {
+        issue: Issue?,
+        classNode: ClassNode,
+        method: MethodNode,
+        instruction: AbstractInsnNode?
+    ): Boolean {
         if (method.invisibleAnnotations != null) {
             @Suppress("UNCHECKED_CAST")
             val annotations = method.invisibleAnnotations as List<AnnotationNode>
@@ -2117,8 +2207,9 @@ class LintDriver
                 if (field != null && isSuppressed(issue, field)) {
                     return true
                 }
-            } else if (classNode.outerClass != null && classNode.outerMethod == null
-                    && isAnonymousClass(classNode)) {
+            } else if (classNode.outerClass != null && classNode.outerMethod == null &&
+                isAnonymousClass(classNode)
+            ) {
                 if (isSuppressed(issue, classNode)) {
                     return true
                 }
@@ -2129,9 +2220,10 @@ class LintDriver
     }
 
     private fun findField(
-            classNode: ClassNode,
-            owner: String,
-            name: String): FieldNode? {
+        classNode: ClassNode,
+        owner: String,
+        name: String
+    ): FieldNode? {
         var current: ClassNode? = classNode
         while (current != null) {
             if (owner == current.name) {
@@ -2150,9 +2242,10 @@ class LintDriver
     }
 
     private fun findMethod(
-            classNode: ClassNode,
-            name: String,
-            includeInherited: Boolean): MethodNode? {
+        classNode: ClassNode,
+        name: String,
+        includeInherited: Boolean
+    ): MethodNode? {
         var current: ClassNode? = classNode
         while (current != null) {
             val methodList = current.methods// ASM API
@@ -2210,8 +2303,9 @@ class LintDriver
             return isSuppressed(issue, annotations)
         }
 
-        if (classNode.outerClass != null && classNode.outerMethod == null
-                && isAnonymousClass(classNode)) {
+        if (classNode.outerClass != null && classNode.outerMethod == null &&
+            isAnonymousClass(classNode)
+        ) {
             val outer = getOuterClassNode(classNode)
             if (outer != null) {
                 var m = findMethod(outer, CONSTRUCTOR_NAME, false)
@@ -2276,8 +2370,11 @@ class LintDriver
         return false
     }
 
-    fun isSuppressed(context: JavaContext?, issue: Issue,
-                     scope: UElement?): Boolean {
+    fun isSuppressed(
+        context: JavaContext?,
+        issue: Issue,
+        scope: UElement?
+    ): Boolean {
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
@@ -2289,7 +2386,8 @@ class LintDriver
             }
 
             if (checkComments && context != null &&
-                    context.isSuppressedWithComment(currentScope, issue)) {
+                context.isSuppressedWithComment(currentScope, issue)
+            ) {
                 return true
             }
 
@@ -2302,8 +2400,11 @@ class LintDriver
         return false
     }
 
-    fun isSuppressed(context: JavaContext?, issue: Issue,
-                     scope: PsiElement?): Boolean {
+    fun isSuppressed(
+        context: JavaContext?,
+        issue: Issue,
+        scope: PsiElement?
+    ): Boolean {
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
@@ -2337,8 +2438,11 @@ class LintDriver
      * @return true if there is a suppress annotation covering the specific
      *         issue in this class
      */
-    fun isSuppressed(context: XmlContext?, issue: Issue,
-                     node: org.w3c.dom.Node?): Boolean {
+    fun isSuppressed(
+        context: XmlContext?,
+        issue: Issue,
+        node: org.w3c.dom.Node?
+    ): Boolean {
         var currentNode = node
         if (currentNode is Attr) {
             currentNode = currentNode.ownerElement
@@ -2419,7 +2523,7 @@ class LintDriver
             private set
 
         /** Max number of logs to include  */
-        private val MAX_REPORTED_CRASHES = 20
+        private const val MAX_REPORTED_CRASHES = 20
 
         /**
          * Handles an exception and returns whether the lint analysis can continue (true means
@@ -2427,9 +2531,10 @@ class LintDriver
          */
         @JvmStatic
         fun handleDetectorError(
-                context: Context?,
-                driver: LintDriver,
-                throwable: Throwable): Boolean {
+            context: Context?,
+            driver: LintDriver,
+            throwable: Throwable
+        ): Boolean {
             when {
                 throwable is IndexNotReadyException -> {
                     // Attempting to access PSI during startup before indices are ready;
@@ -2473,15 +2578,20 @@ class LintDriver
             sb.append(':')
             appendStackTraceSummary(throwable, sb)
             sb.append("`")
-            sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
-                    "dump a full stacktrace to stdout.")
+            sb.append(
+                "\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
+                        "dump a full stacktrace to stdout."
+            )
 
             val throwableMessage = throwable.message
             if (throwableMessage != null && throwableMessage.startsWith(
-                    "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader")) {
+                    "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
+                )
+            ) {
                 // Rewrite error message
                 sb.setLength(0)
-                sb.append("""
+                sb.append(
+                    """
                     Lint crashed because it is being invoked with the wrong version of Guava
                     (the Android version instead of the JRE version, which is required in the
                     Gradle plugin).
@@ -2494,7 +2604,8 @@ class LintDriver
                     proper way to install a dependency resolution strategy.
 
                     (Note that this breaks a lot of lint analysis so this report is incomplete.)
-                    """.trimIndent())
+                    """.trimIndent()
+                )
             }
 
             val project = when {
@@ -2504,11 +2615,19 @@ class LintDriver
             }
             val message = sb.toString()
             when {
-                context != null -> context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
+                context != null -> context.report(
+                    IssueRegistry.LINT_ERROR,
+                    Location.create(context.file),
+                    message
+                )
                 project != null -> {
                     val projectDir = project.dir
                     val projectContext = Context(driver, project, null, projectDir)
-                    projectContext.report(IssueRegistry.LINT_ERROR, Location.create(project.dir), message)
+                    projectContext.report(
+                        IssueRegistry.LINT_ERROR,
+                        Location.create(project.dir),
+                        message
+                    )
                 }
                 else -> driver.client.log(throwable, message)
             }
@@ -2553,22 +2672,23 @@ class LintDriver
 
         @Contract("!null,_->!null")
         private fun union(
-                list1: List<Detector>?,
-                list2: List<Detector>?): List<Detector>? =
-                when {
-                    list1 == null -> list2
-                    list2 == null -> list1
-                    else -> {
-                        // Use set to pick out unique detectors, since it's possible for there to be overlap,
-                        // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
-                        // single-file issue, so it shows up on both scope lists:
-                        val set = HashSet<Detector>(list1.size + list2.size)
-                        set.addAll(list1)
-                        set.addAll(list2)
+            list1: List<Detector>?,
+            list2: List<Detector>?
+        ): List<Detector>? =
+            when {
+                list1 == null -> list2
+                list2 == null -> list1
+                else -> {
+                    // Use set to pick out unique detectors, since it's possible for there to be overlap,
+                    // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
+                    // single-file issue, so it shows up on both scope lists:
+                    val set = HashSet<Detector>(list1.size + list2.size)
+                    set.addAll(list1)
+                    set.addAll(list2)
 
-                        ArrayList(set)
-                    }
+                    ArrayList(set)
                 }
+            }
 
         private fun gatherJavaFiles(dir: File, result: MutableList<File>) {
             val files = dir.listFiles()
@@ -2587,8 +2707,9 @@ class LintDriver
         }
 
         private fun findConstructorInvocation(
-                method: MethodNode,
-                className: String): MethodInsnNode? {
+            method: MethodNode,
+            className: String
+        ): MethodInsnNode? {
             val nodes = method.instructions
             var i = 0
             val n = nodes.size()
@@ -2617,8 +2738,15 @@ class LintDriver
                     return true
                 }
                 if (id.startsWith(STUDIO_ID_PREFIX)
-                        && id.regionMatches(STUDIO_ID_PREFIX.length, issueId, 0, issueId.length, ignoreCase = true)
-                        && id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)) {
+                    && id.regionMatches(
+                        STUDIO_ID_PREFIX.length,
+                        issueId,
+                        0,
+                        issueId.length,
+                        ignoreCase = true
+                    )
+                    && id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
+                ) {
                     return true
                 }
             }
@@ -2631,7 +2759,7 @@ class LintDriver
          * is typically the same as the issue id, but is allowed to not match case sensitively,
          * and is allowed to be a comma separated list, and can be the string "all"
          *
-         * @param issue  the issue id to match
+         * @param issue the issue id to match
          *
          * @param string the suppress string -- typically the id, or "all", or a comma separated list
          *               of ids
@@ -2672,8 +2800,10 @@ class LintDriver
          *         modifier
          */
         @JvmStatic
-        fun isSuppressed(issue: Issue,
-                         modifierList: PsiModifierList?): Boolean {
+        fun isSuppressed(
+            issue: Issue,
+            modifierList: PsiModifierList?
+        ): Boolean {
             if (modifierList == null) {
                 return false
             }
@@ -2681,9 +2811,10 @@ class LintDriver
             for (annotation in modifierList.annotations) {
                 val fqcn = annotation.qualifiedName
                 if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
-                        || fqcn == SUPPRESS_WARNINGS_FQCN
-                        || fqcn == KOTLIN_SUPPRESS
-                        || fqcn == SUPPRESS_LINT)) { // when missing imports
+                            || fqcn == SUPPRESS_WARNINGS_FQCN
+                            || fqcn == KOTLIN_SUPPRESS
+                            || fqcn == SUPPRESS_LINT)
+                ) { // when missing imports
                     val parameterList = annotation.parameterList
                     for (pair in parameterList.attributes) {
                         if (isSuppressed(issue, pair.value)) {
@@ -2717,9 +2848,10 @@ class LintDriver
             for (annotation in annotations) {
                 val fqcn = annotation.qualifiedName
                 if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
-                        || fqcn == SUPPRESS_WARNINGS_FQCN
-                        || fqcn == KOTLIN_SUPPRESS
-                        || fqcn == SUPPRESS_LINT)) { // when missing imports
+                            || fqcn == SUPPRESS_WARNINGS_FQCN
+                            || fqcn == KOTLIN_SUPPRESS
+                            || fqcn == SUPPRESS_LINT)
+                ) { // when missing imports
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {
                         if (isSuppressedExpression(issue, attribute.expression)) {
@@ -2736,8 +2868,9 @@ class LintDriver
                     }
                     val text = psi.text
                     if (text.contains("SuppressLint(") ||
-                            text.contains("SuppressWarnings(") ||
-                            text.contains("Suppress(")) {
+                        text.contains("SuppressWarnings(") ||
+                        text.contains("Suppress(")
+                    ) {
                         val start = text.indexOf('(')
                         val end = text.indexOf(')', start + 1)
                         if (end != -1) {
@@ -2772,13 +2905,15 @@ class LintDriver
          *
          * @param issue the issue to be checked
          *
-         * @param value     the member value to check
+         * @param value the member value to check
          *
          * @return true if the issue or all issues should be suppressed for this modifier
          */
         @JvmStatic
-        fun isSuppressed(issue: Issue,
-                         value: PsiAnnotationMemberValue?): Boolean {
+        fun isSuppressed(
+            issue: Issue,
+            value: PsiAnnotationMemberValue?
+        ): Boolean {
             if (value is PsiLiteral) {
                 val literalValue = value.value
                 if (literalValue is String) {
@@ -2810,7 +2945,7 @@ class LintDriver
          *
          * @param issue the issue to be checked
          *
-         * @param value     the member value to check
+         * @param value the member value to check
          *
          * @return true if the issue or all issues should be suppressed for this modifier
          */
@@ -2837,5 +2972,4 @@ class LintDriver
         /** Pattern for version qualifiers  */
         private val VERSION_PATTERN = Pattern.compile("^v(\\d+)$")
     }
-
 }

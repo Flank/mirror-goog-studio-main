@@ -47,19 +47,21 @@ import org.intellij.lang.annotations.Language;
 public class DefaultConfigurationTest extends AbstractCheckTest {
 
     public void testBasic() throws Exception {
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"ObsoleteLayoutParam\">\n"
-                + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
-                + "    </issue>\n"
-                + "    <issue id=\"FloatMath\" severity=\"ignore\" />\n"
-                + "    <issue id=\"FieldGetter\" severity=\"error\" />\n"
-                + "    <issue id=\"SdCardPath,ContentDescription\" severity=\"ignore\" />"
-                + "    <issue id=\"NewApi\">\n"
-                + "        <ignore path=\"res/layout-xlarge\" />\n"
-                + "    </issue>\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
+                                + "    </issue>\n"
+                                + "    <issue id=\"FloatMath\" severity=\"ignore\" />\n"
+                                + "    <issue id=\"FieldGetter\" severity=\"error\" />\n"
+                                + "    <issue id=\"SdCardPath,ContentDescription\" severity=\"ignore\" />"
+                                + "    <issue id=\"NewApi\">\n"
+                                + "        <ignore path=\"res/layout-xlarge\" />\n"
+                                + "    </issue>\n"
+                                + "</lint>");
         assertTrue(configuration.isEnabled(ObsoleteLayoutParamsDetector.ISSUE));
         assertFalse(configuration.isEnabled(SdCardDetector.ISSUE));
         assertFalse(configuration.isEnabled(MathDetector.ISSUE));
@@ -72,12 +74,14 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
     }
 
     public void testAllIds() throws Exception {
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"all\" severity=\"ignore\" />\n"
-                + "    <issue id=\"FloatMath\" severity=\"error\" />\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"all\" severity=\"ignore\" />\n"
+                                + "    <issue id=\"FloatMath\" severity=\"error\" />\n"
+                                + "</lint>");
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(FieldGetterDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(HardcodedValuesDetector.ISSUE));
@@ -85,29 +89,33 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
     }
 
     public void testNoFlags() throws Exception {
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "</lint>");
         assertThat(configuration.getAbortOnError()).isNull();
     }
 
     public void testFlags() throws Exception {
-        DefaultConfiguration configuration = getConfiguration("" +
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<lint\n" +
-                "    checkAllWarnings='true'\n" +
-                "    ignoreWarnings='true'\n" +
-                "    warningsAsErrors='true'\n" +
-                "    fatalOnly='true'\n" +
-                "    checkTestSources='true'\n" +
-                "    checkGeneratedSources='true'\n" +
-                "    checkDependencies='true'\n" +
-                "    explainIssues='true'\n" +
-                "    removeFixedBaselineIssues='true'\n" +
-                "    abortOnError='true'\n" +
-                ">\n" +
-                "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint\n"
+                                + "    checkAllWarnings='true'\n"
+                                + "    ignoreWarnings='true'\n"
+                                + "    warningsAsErrors='true'\n"
+                                + "    fatalOnly='true'\n"
+                                + "    checkTestSources='true'\n"
+                                + "    checkGeneratedSources='true'\n"
+                                + "    checkDependencies='true'\n"
+                                + "    explainIssues='true'\n"
+                                + "    removeFixedBaselineIssues='true'\n"
+                                + "    abortOnError='true'\n"
+                                + ">\n"
+                                + "</lint>");
         assertThat(configuration.getCheckAllWarnings()).isTrue();
         assertThat(configuration.getIgnoreWarnings()).isTrue();
         assertThat(configuration.getWarningsAsErrors()).isTrue();
@@ -121,26 +129,34 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
     }
 
     public void testPathIgnore() throws Exception {
-        File projectDir = getProjectDir(null,
-                mOnclick,
-                mOnclick2,
-                mOnclick3
-        );
+        File projectDir = getProjectDir(null, mOnclick, mOnclick2, mOnclick3);
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
-        File plainFile = new File(projectDir,
-                "res" + File.separator + "layout" + File.separator + "onclick.xml");
+        File plainFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
-        File largeFile = new File(projectDir,
-                "res" + File.separator + "layout-xlarge" + File.separator + "onclick.xml");
+        File largeFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout-xlarge" + File.separator + "onclick.xml");
         assertTrue(largeFile.exists());
-        File windowsFile = new File(projectDir,
-                "res" + File.separator + "layout-xlarge" + File.separator + "activation.xml");
+        File windowsFile =
+                new File(
+                        projectDir,
+                        "res"
+                                + File.separator
+                                + "layout-xlarge"
+                                + File.separator
+                                + "activation.xml");
         assertTrue(windowsFile.exists());
-        File stringsFile = new File(projectDir,
-                "res" + File.separator + "values" + File.separator + "strings.xml");
+        File stringsFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "values" + File.separator + "strings.xml");
         Context plainContext = new Context(driver, project, project, plainFile, null);
         Context largeContext = new Context(driver, project, project, largeFile, null);
         Context windowsContext = new Context(driver, project, project, windowsFile, null);
@@ -152,64 +168,74 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, ApiDetector.UNSUPPORTED.getDefaultSeverity());
 
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"all\">\n"
-                + "        <ignore path=\"res/values/strings.xml\" />\n"
-                + "    </issue>\n"
-                + "    <issue id=\"ObsoleteLayoutParam\">\n"
-                + "        <ignore path=\"res/layout-xlarge/onclick.xml\" />\n"
-                + "        <ignore path=\"res\\layout-xlarge\\activation.xml\" />\n"
-                + "    </issue>\n"
-                + "    <issue id=\"NewApi\">\n"
-                + "        <ignore path=\"res/layout-xlarge\" />\n"
-                + "    </issue>\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"all\">\n"
+                                + "        <ignore path=\"res/values/strings.xml\" />\n"
+                                + "    </issue>\n"
+                                + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "        <ignore path=\"res/layout-xlarge/onclick.xml\" />\n"
+                                + "        <ignore path=\"res\\layout-xlarge\\activation.xml\" />\n"
+                                + "    </issue>\n"
+                                + "    <issue id=\"NewApi\">\n"
+                                + "        <ignore path=\"res/layout-xlarge\" />\n"
+                                + "    </issue>\n"
+                                + "</lint>");
 
-        assertFalse(configuration
-                .isIgnored(plainContext, ApiDetector.UNSUPPORTED, plainLocation, ""));
-        assertFalse(configuration
-                .isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE, plainLocation,
-                        ""));
+        assertFalse(
+                configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED, plainLocation, ""));
+        assertFalse(
+                configuration.isIgnored(
+                        plainContext, ObsoleteLayoutParamsDetector.ISSUE, plainLocation, ""));
 
-        assertTrue(configuration
-                .isIgnored(windowsContext, ObsoleteLayoutParamsDetector.ISSUE, windowsLocation,
-                        ""));
         assertTrue(
-                configuration
-                        .isIgnored(largeContext, ApiDetector.UNSUPPORTED, largeLocation, ""));
-        assertTrue(configuration
-                .isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE, largeLocation,
-                        ""));
-        assertTrue(configuration
-                .isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE, stringsLocation,
-                        ""));
-        assertTrue(configuration
-                .isIgnored(plainContext, ApiDetector.UNSUPPORTED, stringsLocation, ""));
+                configuration.isIgnored(
+                        windowsContext, ObsoleteLayoutParamsDetector.ISSUE, windowsLocation, ""));
+        assertTrue(
+                configuration.isIgnored(largeContext, ApiDetector.UNSUPPORTED, largeLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        largeContext, ObsoleteLayoutParamsDetector.ISSUE, largeLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        plainContext, ObsoleteLayoutParamsDetector.ISSUE, stringsLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        plainContext, ApiDetector.UNSUPPORTED, stringsLocation, ""));
     }
 
     public void testPatternIgnore() throws Exception {
-        File projectDir = getProjectDir(null,
-                mOnclick,
-                mOnclick2,
-                mOnclick3
-        );
+        File projectDir = getProjectDir(null, mOnclick, mOnclick2, mOnclick3);
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
-        File plainFile = new File(projectDir,
-                "res" + File.separator + "layout" + File.separator + "onclick.xml");
+        File plainFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
-        File largeFile = new File(projectDir,
-                "res" + File.separator + "layout-xlarge" + File.separator + "onclick.xml");
+        File largeFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout-xlarge" + File.separator + "onclick.xml");
         assertTrue(largeFile.exists());
-        File windowsFile = new File(projectDir,
-                "res" + File.separator + "layout-xlarge" + File.separator + "activation.xml");
+        File windowsFile =
+                new File(
+                        projectDir,
+                        "res"
+                                + File.separator
+                                + "layout-xlarge"
+                                + File.separator
+                                + "activation.xml");
         assertTrue(windowsFile.exists());
-        File stringsFile = new File(projectDir,
-                "res" + File.separator + "values" + File.separator + "strings.xml");
+        File stringsFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "values" + File.separator + "strings.xml");
         Context plainContext = new Context(driver, project, project, plainFile, null);
         Context largeContext = new Context(driver, project, project, largeFile, null);
         Context windowsContext = new Context(driver, project, project, windowsFile, null);
@@ -221,50 +247,63 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, ApiDetector.UNSUPPORTED.getDefaultSeverity());
 
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"all\">\n"
-                + "        <ignore regexp=\"st.*gs\" />\n"
-                + "    </issue>\n"
-                + "    <issue id=\"ObsoleteLayoutParam\">\n"
-                + "        <ignore regexp=\"x.*onclick\" />\n"
-                + "        <ignore regexp=\"res/.*layout.*/activation.xml\" />\n"
-                + "    </issue>\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"all\">\n"
+                                + "        <ignore regexp=\"st.*gs\" />\n"
+                                + "    </issue>\n"
+                                + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "        <ignore regexp=\"x.*onclick\" />\n"
+                                + "        <ignore regexp=\"res/.*layout.*/activation.xml\" />\n"
+                                + "    </issue>\n"
+                                + "</lint>");
 
-        assertFalse(configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED,
-                plainLocation, ""));
-        assertFalse(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                plainLocation, ""));
-        assertTrue(configuration.isIgnored(windowsContext, ObsoleteLayoutParamsDetector.ISSUE,
-                windowsLocation, ""));
-        assertTrue(configuration.isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE,
-                largeLocation, ""));
-        assertTrue(configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED,
-                stringsLocation, ""));
-        assertTrue(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                stringsLocation, ""));
+        assertFalse(
+                configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED, plainLocation, ""));
+        assertFalse(
+                configuration.isIgnored(
+                        plainContext, ObsoleteLayoutParamsDetector.ISSUE, plainLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        windowsContext, ObsoleteLayoutParamsDetector.ISSUE, windowsLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        largeContext, ObsoleteLayoutParamsDetector.ISSUE, largeLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        plainContext, ApiDetector.UNSUPPORTED, stringsLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        plainContext, ObsoleteLayoutParamsDetector.ISSUE, stringsLocation, ""));
     }
 
     public void testGlobbing() throws Exception {
-        File projectDir = getProjectDir(null,
-                mOnclick,
-                mOnclick2,
-                mOnclick3
-        );
+        File projectDir = getProjectDir(null, mOnclick, mOnclick2, mOnclick3);
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
-        File plainFile = new File(projectDir,
-                "res" + File.separator + "layout" + File.separator + "onclick.xml");
+        File plainFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
-        File largeFile = new File(projectDir,
-                "res" + File.separator + "layout-xlarge" + File.separator + "onclick.xml");
+        File largeFile =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout-xlarge" + File.separator + "onclick.xml");
         assertTrue(largeFile.exists());
-        File windowsFile = new File(projectDir,
-                "res" + File.separator + "layout-xlarge" + File.separator + "activation.xml");
+        File windowsFile =
+                new File(
+                        projectDir,
+                        "res"
+                                + File.separator
+                                + "layout-xlarge"
+                                + File.separator
+                                + "activation.xml");
         assertTrue(windowsFile.exists());
         Context plainContext = new Context(driver, project, project, plainFile, null);
         Context largeContext = new Context(driver, project, project, largeFile, null);
@@ -276,96 +315,118 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, ApiDetector.UNSUPPORTED.getDefaultSeverity());
 
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"ObsoleteLayoutParam\">\n"
-                + "        <ignore path=\"**/layout-x*/onclick.xml\" />\n"
-                + "        <ignore path=\"res/**/activation.xml\" />\n"
-                + "    </issue>\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "        <ignore path=\"**/layout-x*/onclick.xml\" />\n"
+                                + "        <ignore path=\"res/**/activation.xml\" />\n"
+                                + "    </issue>\n"
+                                + "</lint>");
 
-        assertFalse(configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED,
-                plainLocation, ""));
-        assertFalse(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                plainLocation, ""));
-        assertTrue(configuration.isIgnored(windowsContext, ObsoleteLayoutParamsDetector.ISSUE,
-                windowsLocation, ""));
-        assertTrue(configuration.isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE,
-                largeLocation, ""));
+        assertFalse(
+                configuration.isIgnored(plainContext, ApiDetector.UNSUPPORTED, plainLocation, ""));
+        assertFalse(
+                configuration.isIgnored(
+                        plainContext, ObsoleteLayoutParamsDetector.ISSUE, plainLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        windowsContext, ObsoleteLayoutParamsDetector.ISSUE, windowsLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        largeContext, ObsoleteLayoutParamsDetector.ISSUE, largeLocation, ""));
     }
 
     public void testMessagePatternIgnore() throws Exception {
-        File projectDir = getProjectDir(null,
-                mOnclick
-        );
+        File projectDir = getProjectDir(null, mOnclick);
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
-        File file = new File(projectDir,
-                "res" + File.separator + "layout" + File.separator + "onclick.xml");
+        File file =
+                new File(
+                        projectDir,
+                        "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(file.exists());
         Context plainContext = new Context(driver, project, project, file, null);
         Location location = Location.create(file);
 
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
 
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"ObsoleteLayoutParam\">\n"
-                + "        <ignore regexp=\"sample_icon\\.gif\" />\n"
-                + "        <ignore regexp=\"javax\\.swing\" />\n"
-                + "    </issue>\n"
-                + "</lint>");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "        <ignore regexp=\"sample_icon\\.gif\" />\n"
+                                + "        <ignore regexp=\"javax\\.swing\" />\n"
+                                + "    </issue>\n"
+                                + "</lint>");
 
-        assertFalse(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                location,
-                "Missing the following drawables in drawable-hdpi: some_random.gif (found in drawable-mdpi)"));
-        assertTrue(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                location,
-                "Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi)"));
+        assertFalse(
+                configuration.isIgnored(
+                        plainContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        location,
+                        "Missing the following drawables in drawable-hdpi: some_random.gif (found in drawable-mdpi)"));
+        assertTrue(
+                configuration.isIgnored(
+                        plainContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        location,
+                        "Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi)"));
 
-        assertFalse(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                location,
-                "Invalid package reference in library; not included in Android: java.awt. Referenced from test.pkg.LibraryClass."));
-        assertTrue(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                location,
-                "Invalid package reference in library; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass."));
+        assertFalse(
+                configuration.isIgnored(
+                        plainContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        location,
+                        "Invalid package reference in library; not included in Android: java.awt. Referenced from test.pkg.LibraryClass."));
+        assertTrue(
+                configuration.isIgnored(
+                        plainContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        location,
+                        "Invalid package reference in library; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass."));
     }
 
     public void testWriteLintXml() throws Exception {
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "  <issue id=\"ObsoleteLayoutParam\">\n"
-                + "      <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
-                + "      <ignore path=\"res\\layout-xlarge\\activation2.xml\" />\n"
-                + "      <ignore regexp=\"res/.*/activation2.xml\" />\n"
-                + "  </issue>\n"
-                + "  <issue id=\"FloatMath\" severity=\"ignore\" />\n"
-                + "  <issue id=\"SdCardPath\" severity=\"ignore\" />"
-                + "</lint>\n");
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "  <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "      <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
+                                + "      <ignore path=\"res\\layout-xlarge\\activation2.xml\" />\n"
+                                + "      <ignore regexp=\"res/.*/activation2.xml\" />\n"
+                                + "  </issue>\n"
+                                + "  <issue id=\"FloatMath\" severity=\"ignore\" />\n"
+                                + "  <issue id=\"SdCardPath\" severity=\"ignore\" />"
+                                + "</lint>\n");
         configuration.startBulkEditing();
         configuration.setSeverity(TypoDetector.ISSUE, Severity.ERROR);
         configuration.ignore(TypoDetector.ISSUE, new File("foo/bar/Baz.java"));
         configuration.finishBulkEditing();
         String updated = Files.toString(configuration.getConfigFile(), Charsets.UTF_8);
-        assertEquals(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "    <issue id=\"FloatMath\" severity=\"ignore\" />\n"
-                + "    <issue id=\"ObsoleteLayoutParam\">\n"
-                + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
-                + "        <ignore path=\"res/layout-xlarge/activation2.xml\" />\n"
-                + "        <ignore regexp=\"res/.*/activation2.xml\" />\n"
-                + "    </issue>\n"
-                + "    <issue id=\"SdCardPath\" severity=\"ignore\" />\n"
-                + "    <issue id=\"Typos\" severity=\"error\">\n"
-                + "        <ignore path=\"foo/bar/Baz.java\" />\n"
-                + "    </issue>\n"
-                + "</lint>\n",
+        assertEquals(
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                        + "<lint>\n"
+                        + "    <issue id=\"FloatMath\" severity=\"ignore\" />\n"
+                        + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                        + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
+                        + "        <ignore path=\"res/layout-xlarge/activation2.xml\" />\n"
+                        + "        <ignore regexp=\"res/.*/activation2.xml\" />\n"
+                        + "    </issue>\n"
+                        + "    <issue id=\"SdCardPath\" severity=\"ignore\" />\n"
+                        + "    <issue id=\"Typos\" severity=\"error\">\n"
+                        + "        <ignore path=\"foo/bar/Baz.java\" />\n"
+                        + "    </issue>\n"
+                        + "</lint>\n",
                 updated);
     }
 
@@ -388,49 +449,48 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             return;
         }
-        DefaultConfiguration configuration = getConfiguration(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<lint>\n"
-                + "  <issue id=\"ObsoleteLayoutParam\">\n"
-                + "      <ignore path=\"res/layout/onclick.xml\" />\n"
-                + "      <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
-                + "      <ignore path=\"res\\layout-xlarge\\activation2.xml\" />\n"
-                + "      <ignore path=\"res/layout-land\" />\n"
-                + "  </issue>\n"
-                + "</lint>");
-        File projectDir = getProjectDir(null,
-                mOnclick4,
-                mOnclick5,
-                mOnclick6,
-                mOnclick7
-        );
-        LintClient client = new TestLintClient() {
-            @Override
-            @NonNull
-            public List<File> getResourceFolders(@NonNull Project project) {
-                return Arrays.asList(
-                        new File(project.getDir(),
-                                "src" + File.separator + "main" + File.separator + "res"),
-                        new File(project.getDir(), "generated-res"));
-            }
-        };
+        DefaultConfiguration configuration =
+                getConfiguration(
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                + "<lint>\n"
+                                + "  <issue id=\"ObsoleteLayoutParam\">\n"
+                                + "      <ignore path=\"res/layout/onclick.xml\" />\n"
+                                + "      <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
+                                + "      <ignore path=\"res\\layout-xlarge\\activation2.xml\" />\n"
+                                + "      <ignore path=\"res/layout-land\" />\n"
+                                + "  </issue>\n"
+                                + "</lint>");
+        File projectDir = getProjectDir(null, mOnclick4, mOnclick5, mOnclick6, mOnclick7);
+        LintClient client =
+                new TestLintClient() {
+                    @Override
+                    @NonNull
+                    public List<File> getResourceFolders(@NonNull Project project) {
+                        return Arrays.asList(
+                                new File(
+                                        project.getDir(),
+                                        "src" + File.separator + "main" + File.separator + "res"),
+                                new File(project.getDir(), "generated-res"));
+                    }
+                };
 
         Project project = Project.create(client, projectDir, projectDir);
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         // Main resource dir => src/main/res
-        File resourceDir = new File(projectDir, "src" + File.separator +
-                "main" + File.separator + "res");
+        File resourceDir =
+                new File(projectDir, "src" + File.separator + "main" + File.separator + "res");
         File plainFile = new File(resourceDir, "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
 
         // Generated resource dir
         File resourceDir2 = new File(projectDir, "generated-res");
-        File largeFile = new File(resourceDir2,
-                "layout-xlarge" + File.separator + "activation.xml");
+        File largeFile =
+                new File(resourceDir2, "layout-xlarge" + File.separator + "activation.xml");
         assertTrue(largeFile.exists());
-        File windowsFile = new File(resourceDir2,
-                "layout-xlarge" + File.separator + "activation2.xml");
+        File windowsFile =
+                new File(resourceDir2, "layout-xlarge" + File.separator + "activation2.xml");
         assertTrue(windowsFile.exists());
 
         File landscapeFile = new File(resourceDir2, "layout-land" + File.separator + "foo.xml");
@@ -451,23 +511,36 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                         Location.create(plainFile),
                         ""));
 
-        assertTrue(configuration.isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE,
-                Location.create(largeFile), ""));
-        assertTrue(configuration.isIgnored(windowsContext, ObsoleteLayoutParamsDetector.ISSUE,
-                Location.create(windowsFile), ""));
+        assertTrue(
+                configuration.isIgnored(
+                        largeContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        Location.create(largeFile),
+                        ""));
+        assertTrue(
+                configuration.isIgnored(
+                        windowsContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        Location.create(windowsFile),
+                        ""));
         // directory whitelist
-        assertTrue(configuration.isIgnored(landscapeContext, ObsoleteLayoutParamsDetector.ISSUE,
-                landscapeLocation, ""));
+        assertTrue(
+                configuration.isIgnored(
+                        landscapeContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        landscapeLocation,
+                        ""));
     }
 
     @SuppressWarnings("all") // Sample code
     @Language("XML")
-    private static final String LAYOUT_XML = ""
-            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-            + "    android:layout_width=\"match_parent\"\n"
-            + "    android:layout_height=\"match_parent\"\n"
-            + "    android:orientation=\"vertical\" />\n";
+    private static final String LAYOUT_XML =
+            ""
+                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                    + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                    + "    android:layout_width=\"match_parent\"\n"
+                    + "    android:layout_height=\"match_parent\"\n"
+                    + "    android:orientation=\"vertical\" />\n";
 
     private TestFile mOnclick = xml("res/layout/onclick.xml", LAYOUT_XML);
 

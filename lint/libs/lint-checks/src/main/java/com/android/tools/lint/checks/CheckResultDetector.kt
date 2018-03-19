@@ -43,26 +43,27 @@ import org.jetbrains.uast.getParentOfType
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            CHECK_RESULT_ANNOTATION.oldName(),
-            CHECK_RESULT_ANNOTATION.newName(),
-            FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,
-            JAVAX_ANNOTATION_CHECK_RETURN_VALUE,
-            ERRORPRONE_CAN_IGNORE_RETURN_VALUE,
-            "io.reactivex.annotations.CheckReturnValue",
-            "com.google.errorprone.annotations.CheckReturnValue"
+        CHECK_RESULT_ANNOTATION.oldName(),
+        CHECK_RESULT_ANNOTATION.newName(),
+        FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,
+        JAVAX_ANNOTATION_CHECK_RETURN_VALUE,
+        ERRORPRONE_CAN_IGNORE_RETURN_VALUE,
+        "io.reactivex.annotations.CheckReturnValue",
+        "com.google.errorprone.annotations.CheckReturnValue"
     )
 
     override fun visitAnnotationUsage(
-            context: JavaContext,
-            usage: UElement,
-            type: AnnotationUsageType,
-            annotation: UAnnotation,
-            qualifiedName: String,
-            method: PsiMethod?,
-            annotations: List<UAnnotation>,
-            allMemberAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>,
-            allPackageAnnotations: List<UAnnotation>) {
+        context: JavaContext,
+        usage: UElement,
+        type: AnnotationUsageType,
+        annotation: UAnnotation,
+        qualifiedName: String,
+        method: PsiMethod?,
+        annotations: List<UAnnotation>,
+        allMemberAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>,
+        allPackageAnnotations: List<UAnnotation>
+    ) {
         method ?: return
 
         // Don't inherit CheckResult from packages for now; see
@@ -77,26 +78,37 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         }
 
-        checkResult(context, usage, method, annotation,
-                allMemberAnnotations, allClassAnnotations)
+        checkResult(
+            context, usage, method, annotation,
+            allMemberAnnotations, allClassAnnotations
+        )
     }
 
-    private fun checkResult(context: JavaContext, element: UElement,
-            method: PsiMethod, annotation: UAnnotation,
-            allMemberAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>) {
+    private fun checkResult(
+        context: JavaContext,
+        element: UElement,
+        method: PsiMethod,
+        annotation: UAnnotation,
+        allMemberAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>
+    ) {
         if (isExpressionValueUnused(element)) {
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
             if (containsAnnotation(allMemberAnnotations, ERRORPRONE_CAN_IGNORE_RETURN_VALUE)
-                    || containsAnnotation(allClassAnnotations,
-                    ERRORPRONE_CAN_IGNORE_RETURN_VALUE)) {
+                || containsAnnotation(
+                    allClassAnnotations,
+                    ERRORPRONE_CAN_IGNORE_RETURN_VALUE
+                )
+            ) {
                 return
             }
 
             val methodName = JavaContext.getMethodName(element)
-            val suggested = getAnnotationStringValue(annotation,
-                    AnnotationDetector.ATTR_SUGGEST)
+            val suggested = getAnnotationStringValue(
+                annotation,
+                AnnotationDetector.ATTR_SUGGEST
+            )
 
             // Failing to check permissions is a potential security issue (and had an existing
             // dedicated issue id before which people may already have configured with a
@@ -104,20 +116,27 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // (which also has category Security rather than Correctness) for these:
             var issue = CHECK_RESULT
             if (methodName != null && methodName.startsWith("check")
-                    && methodName.contains("Permission")) {
+                && methodName.contains("Permission")
+            ) {
                 issue = PermissionDetector.CHECK_PERMISSION
             }
 
-            var message = String.format("The result of `%1\$s` is not used",
-                    methodName)
+            var message = String.format(
+                "The result of `%1\$s` is not used",
+                methodName
+            )
             if (suggested != null) {
                 // TODO: Resolve suggest attribute (e.g. prefix annotation class if it starts
                 // with "#" etc?
                 message = String.format(
-                        "The result of `%1\$s` is not used; did you mean to call `%2\$s`?",
-                        methodName, suggested)
-            } else if ("intersect" == methodName && context.evaluator.isMemberInClass(method,
-                    "android.graphics.Rect")) {
+                    "The result of `%1\$s` is not used; did you mean to call `%2\$s`?",
+                    methodName, suggested
+                )
+            } else if ("intersect" == methodName && context.evaluator.isMemberInClass(
+                    method,
+                    "android.graphics.Rect"
+                )
+            ) {
                 message += ". If the rectangles do not intersect, no change is made and the " +
                         "original rectangle is not modified. These methods return false to " +
                         "indicate that this has happened."
@@ -136,7 +155,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun isExpressionValueUnused(element: UElement): Boolean {
         var prev = element.getParentOfType<UExpression>(
-            UExpression::class.java, false) ?: return true
+            UExpression::class.java, false
+        ) ?: return true
 
         var curr = prev.uastParent ?: return true
         while (curr is UQualifiedReferenceExpression && curr.selector === prev) {
@@ -190,22 +210,24 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     companion object {
-        private val IMPLEMENTATION = Implementation(CheckResultDetector::class.java,
-                Scope.JAVA_FILE_SCOPE)
+        private val IMPLEMENTATION = Implementation(
+            CheckResultDetector::class.java,
+            Scope.JAVA_FILE_SCOPE
+        )
 
         /** Method result should be used  */
         @JvmField
         val CHECK_RESULT = Issue.create(
-                "CheckResult",
-                "Ignoring results",
+            "CheckResult",
+            "Ignoring results",
 
-                "Some methods have no side effects, an calling them without doing something " +
-                        "without the result is suspicious. ",
+            "Some methods have no side effects, an calling them without doing something " +
+                    "without the result is suspicious. ",
 
-                Category.CORRECTNESS,
-                6,
-                Severity.WARNING,
-                IMPLEMENTATION)
-
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            IMPLEMENTATION
+        )
     }
 }

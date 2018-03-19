@@ -37,41 +37,34 @@ import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Element;
 
-/**
- * Checks whether the current node can be replaced by a TextView using compound
- * drawables.
- */
+/** Checks whether the current node can be replaced by a TextView using compound drawables. */
 public class UseCompoundDrawableDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "UseCompoundDrawables",
-            "Node can be replaced by a `TextView` with compound drawables",
-
-            "A `LinearLayout` which contains an `ImageView` and a `TextView` can be more " +
-            "efficiently handled as a compound drawable (a single TextView, using the " +
-            "`drawableTop`, `drawableLeft`, `drawableRight` and/or `drawableBottom` attributes " +
-            "to draw one or more images adjacent to the text).\n" +
-            "\n" +
-            "If the two widgets are offset from each other with " +
-            "margins, this can be replaced with a `drawablePadding` attribute.\n" +
-            "\n" +
-            "There's a lint quickfix to perform this conversion in the Eclipse plugin.",
-            Category.PERFORMANCE,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    UseCompoundDrawableDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "UseCompoundDrawables",
+                    "Node can be replaced by a `TextView` with compound drawables",
+                    "A `LinearLayout` which contains an `ImageView` and a `TextView` can be more "
+                            + "efficiently handled as a compound drawable (a single TextView, using the "
+                            + "`drawableTop`, `drawableLeft`, `drawableRight` and/or `drawableBottom` attributes "
+                            + "to draw one or more images adjacent to the text).\n"
+                            + "\n"
+                            + "If the two widgets are offset from each other with "
+                            + "margins, this can be replaced with a `drawablePadding` attribute.\n"
+                            + "\n"
+                            + "There's a lint quickfix to perform this conversion in the Eclipse plugin.",
+                    Category.PERFORMANCE,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(
+                            UseCompoundDrawableDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link UseCompoundDrawableDetector} */
-    public UseCompoundDrawableDetector() {
-    }
+    public UseCompoundDrawableDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(
-                LINEAR_LAYOUT
-        );
+        return Collections.singletonList(LINEAR_LAYOUT);
     }
 
     @Override
@@ -89,12 +82,12 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
             return;
         }
 
-        if ((first.getTagName().equals(IMAGE_VIEW) &&
-                second.getTagName().equals(TEXT_VIEW) &&
-                !first.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)) ||
-            ((second.getTagName().equals(IMAGE_VIEW) &&
-                    first.getTagName().equals(TEXT_VIEW) &&
-                    !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
+        if ((first.getTagName().equals(IMAGE_VIEW)
+                        && second.getTagName().equals(TEXT_VIEW)
+                        && !first.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT))
+                || ((second.getTagName().equals(IMAGE_VIEW)
+                        && first.getTagName().equals(TEXT_VIEW)
+                        && !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
             // If the layout has a background, ignore since it would disappear from
             // the TextView
             if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
@@ -102,17 +95,21 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
             }
 
             // Certain scale types cannot be done with compound drawables
-            String scaleType = first.getTagName().equals(IMAGE_VIEW)
-                    ? first.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE)
-                    : second.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
+            String scaleType =
+                    first.getTagName().equals(IMAGE_VIEW)
+                            ? first.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE)
+                            : second.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
             if (scaleType != null && !scaleType.isEmpty()) {
                 // For now, ignore if any scale type is set
                 return;
             }
 
-            context.report(ISSUE, element, context.getElementLocation(element),
-                    "This tag and its children can be replaced by one `<TextView/>` and " +
-                            "a compound drawable");
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getElementLocation(element),
+                    "This tag and its children can be replaced by one `<TextView/>` and "
+                            + "a compound drawable");
         }
     }
 }

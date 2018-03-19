@@ -321,8 +321,9 @@ abstract class SymbolTable protected constructor() {
          *  source-set afterwards etc).
          * @param packageName the package name for the merged symbol table.
          */
-        @JvmStatic fun mergePartialTables(tables: List<File>, packageName: String?): SymbolTable {
+        @JvmStatic fun mergePartialTables(tables: List<File>, packageName: String): SymbolTable {
             val builder = SymbolTable.builder()
+            builder.tablePackage(packageName)
 
             // A set to keep the names of the visited layout files.
             val visitedFiles = HashSet<String>()
@@ -352,7 +353,6 @@ abstract class SymbolTable protected constructor() {
                         "An error occurred during merging of the partial R files", e)
             }
 
-            builder.tablePackage(packageName ?: "")
 
             return builder.build()
         }

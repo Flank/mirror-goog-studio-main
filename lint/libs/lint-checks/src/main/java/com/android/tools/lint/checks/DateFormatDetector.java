@@ -35,44 +35,39 @@ import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 
-/**
- * Checks for errors related to Date Formats
- */
+/** Checks for errors related to Date Formats */
 public class DateFormatDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            DateFormatDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(DateFormatDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Constructing SimpleDateFormat without an explicit locale */
-    public static final Issue DATE_FORMAT = Issue.create(
-            "SimpleDateFormat",
-            "Implied locale in date format",
-
-            "Almost all callers should use `getDateInstance()`, `getDateTimeInstance()`, or " +
-            "`getTimeInstance()` to get a ready-made instance of SimpleDateFormat suitable " +
-            "for the user's locale. The main reason you'd create an instance this class " +
-            "directly is because you need to format/parse a specific machine-readable format, " +
-            "in which case you almost certainly want to explicitly ask for US to ensure that " +
-            "you get ASCII digits (rather than, say, Arabic digits).\n" +
-            "\n" +
-            "Therefore, you should either use the form of the SimpleDateFormat constructor " +
-            "where you pass in an explicit locale, such as Locale.US, or use one of the " +
-            "get instance methods, or suppress this error if really know what you are doing.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-            "http://developer.android.com/reference/java/text/SimpleDateFormat.html");
+    public static final Issue DATE_FORMAT =
+            Issue.create(
+                            "SimpleDateFormat",
+                            "Implied locale in date format",
+                            "Almost all callers should use `getDateInstance()`, `getDateTimeInstance()`, or "
+                                    + "`getTimeInstance()` to get a ready-made instance of SimpleDateFormat suitable "
+                                    + "for the user's locale. The main reason you'd create an instance this class "
+                                    + "directly is because you need to format/parse a specific machine-readable format, "
+                                    + "in which case you almost certainly want to explicitly ask for US to ensure that "
+                                    + "you get ASCII digits (rather than, say, Arabic digits).\n"
+                                    + "\n"
+                                    + "Therefore, you should either use the form of the SimpleDateFormat constructor "
+                                    + "where you pass in an explicit locale, such as Locale.US, or use one of the "
+                                    + "get instance methods, or suppress this error if really know what you are doing.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/reference/java/text/SimpleDateFormat.html");
 
     public static final String LOCALE_CLS = "java.util.Locale";
     public static final String SIMPLE_DATE_FORMAT_CLS = "java.text.SimpleDateFormat";
 
     /** Constructs a new {@link DateFormatDetector} */
-    public DateFormatDetector() {
-    }
+    public DateFormatDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -83,14 +78,16 @@ public class DateFormatDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitConstructor(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitConstructor(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod constructor) {
         if (!specifiesLocale(constructor)) {
             Location location = context.getLocation(node);
             String message =
-                    "To get local formatting use `getDateInstance()`, `getDateTimeInstance()`, " +
-                    "or `getTimeInstance()`, or use `new SimpleDateFormat(String template, " +
-                    "Locale locale)` with for example `Locale.US` for ASCII dates.";
+                    "To get local formatting use `getDateInstance()`, `getDateTimeInstance()`, "
+                            + "or `getTimeInstance()`, or use `new SimpleDateFormat(String template, "
+                            + "Locale locale)` with for example `Locale.US` for ASCII dates.";
             context.report(DATE_FORMAT, node, location, message);
         }
     }
@@ -101,7 +98,7 @@ public class DateFormatDetector extends Detector implements SourceCodeScanner {
         for (PsiParameter parameter : parameters) {
             PsiType type = parameter.getType();
             if (type.getCanonicalText().equals(LOCALE_CLS)) {
-                    return true;
+                return true;
             }
         }
 

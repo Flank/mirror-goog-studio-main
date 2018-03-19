@@ -41,42 +41,62 @@ public class TextReporterTest extends AbstractCheckTest {
             file.getParentFile().mkdirs();
             FileWriter writer = new FileWriter(file);
             TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
-            Project project = Project.create(client, new File("/foo/bar/Foo"),
-                    new File("/foo/bar/Foo"));
+            Project project =
+                    Project.create(client, new File("/foo/bar/Foo"), new File("/foo/bar/Foo"));
             client.flags.setShowEverything(true);
 
-            Warning warning1 = new Warning(ManifestDetector.USES_SDK,
-                    "<uses-sdk> tag should specify a target API level (the highest verified " +
-                            "version; when running on later versions, compatibility behaviors may " +
-                            "be enabled) with android:targetSdkVersion=\"?\"",
-                    Severity.WARNING, project);
+            Warning warning1 =
+                    new Warning(
+                            ManifestDetector.USES_SDK,
+                            "<uses-sdk> tag should specify a target API level (the highest verified "
+                                    + "version; when running on later versions, compatibility behaviors may "
+                                    + "be enabled) with android:targetSdkVersion=\"?\"",
+                            Severity.WARNING,
+                            project);
             warning1.line = 6;
             warning1.file = new File("/foo/bar/Foo/AndroidManifest.xml");
             warning1.errorLine = "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n";
             warning1.path = "AndroidManifest.xml";
-            warning1.location = Location.create(warning1.file,
-                    new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
-            Location secondary = Location.create(warning1.file,
-                    new DefaultPosition(7, 4, 198), new DefaultPosition(7, 42, 236));
+            warning1.location =
+                    Location.create(
+                            warning1.file,
+                            new DefaultPosition(6, 4, 198),
+                            new DefaultPosition(6, 42, 236));
+            Location secondary =
+                    Location.create(
+                            warning1.file,
+                            new DefaultPosition(7, 4, 198),
+                            new DefaultPosition(7, 42, 236));
             secondary.setMessage("Secondary location");
             warning1.location.setSecondary(secondary);
 
-            Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "Hardcoded string \"Fooo\", should use @string resource",
-                    Severity.WARNING, project);
+            Warning warning2 =
+                    new Warning(
+                            HardcodedValuesDetector.ISSUE,
+                            "Hardcoded string \"Fooo\", should use @string resource",
+                            Severity.WARNING,
+                            project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
-            warning2.errorLine = "        android:text=\"Fooo\" />\n" +
-                    "        ~~~~~~~~~~~~~~~~~~~\n";
+            warning2.errorLine = "        android:text=\"Fooo\" />\n        ~~~~~~~~~~~~~~~~~~~\n";
             warning2.path = "res/layout/main.xml".replace('/', File.separatorChar);
-            warning2.location = Location.create(warning2.file,
-                    new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
-            secondary = Location.create(warning1.file,
-                    new DefaultPosition(7, 4, 198), new DefaultPosition(7, 42, 236));
+            warning2.location =
+                    Location.create(
+                            warning2.file,
+                            new DefaultPosition(11, 8, 377),
+                            new DefaultPosition(11, 27, 396));
+            secondary =
+                    Location.create(
+                            warning1.file,
+                            new DefaultPosition(7, 4, 198),
+                            new DefaultPosition(7, 42, 236));
             secondary.setMessage("Secondary location");
             warning2.location.setSecondary(secondary);
-            Location tertiary = Location.create(warning2.file,
-                    new DefaultPosition(5, 4, 198), new DefaultPosition(5, 42, 236));
+            Location tertiary =
+                    Location.create(
+                            warning2.file,
+                            new DefaultPosition(5, 4, 198),
+                            new DefaultPosition(5, 42, 236));
             secondary.setSecondary(tertiary);
 
             List<Warning> warnings = new ArrayList<>();
@@ -87,17 +107,18 @@ public class TextReporterTest extends AbstractCheckTest {
             reporter.write(new Reporter.Stats(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
-            assertEquals(""
-                    + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
-                    + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
-                    + "    ^\n"
-                    + "    AndroidManifest.xml:8: Secondary location\n"
-                    + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
-                    + "        android:text=\"Fooo\" />\n"
-                    + "        ~~~~~~~~~~~~~~~~~~~\n"
-                    + "    AndroidManifest.xml:8: Secondary location\n"
-                    + "Also affects: res/layout/main.xml:6\n"
-                    + "0 errors, 2 warnings\n",
+            assertEquals(
+                    ""
+                            + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
+                            + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
+                            + "    ^\n"
+                            + "    AndroidManifest.xml:8: Secondary location\n"
+                            + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
+                            + "        android:text=\"Fooo\" />\n"
+                            + "        ~~~~~~~~~~~~~~~~~~~\n"
+                            + "    AndroidManifest.xml:8: Secondary location\n"
+                            + "Also affects: res/layout/main.xml:6\n"
+                            + "0 errors, 2 warnings\n",
                     report.replace(File.separatorChar, '/'));
         } finally {
             //noinspection ResultOfMethodCallIgnored
@@ -114,58 +135,84 @@ public class TextReporterTest extends AbstractCheckTest {
             FileWriter writer = new FileWriter(file);
             TextReporter reporter = new TextReporter(client, client.flags, file, writer, true);
             client.flags.setExplainIssues(true);
-            Project project = Project.create(client, new File("/foo/bar/Foo"),
-                    new File("/foo/bar/Foo"));
+            Project project =
+                    Project.create(client, new File("/foo/bar/Foo"), new File("/foo/bar/Foo"));
             client.flags.setShowEverything(true);
 
-            Warning warning1 = new Warning(ManifestDetector.USES_SDK,
-                    "<uses-sdk> tag should specify a target API level (the highest verified " +
-                            "version; when running on later versions, compatibility behaviors may " +
-                            "be enabled) with android:targetSdkVersion=\"?\"",
-                    Severity.WARNING, project);
+            Warning warning1 =
+                    new Warning(
+                            ManifestDetector.USES_SDK,
+                            "<uses-sdk> tag should specify a target API level (the highest verified "
+                                    + "version; when running on later versions, compatibility behaviors may "
+                                    + "be enabled) with android:targetSdkVersion=\"?\"",
+                            Severity.WARNING,
+                            project);
             warning1.line = 6;
             warning1.file = new File("/foo/bar/Foo/AndroidManifest.xml");
             warning1.errorLine = "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n";
             warning1.path = "AndroidManifest.xml";
-            warning1.location = Location.create(warning1.file,
-                    new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
-            Location secondary = Location.create(warning1.file,
-                    new DefaultPosition(7, 4, 198), new DefaultPosition(7, 42, 236));
+            warning1.location =
+                    Location.create(
+                            warning1.file,
+                            new DefaultPosition(6, 4, 198),
+                            new DefaultPosition(6, 42, 236));
+            Location secondary =
+                    Location.create(
+                            warning1.file,
+                            new DefaultPosition(7, 4, 198),
+                            new DefaultPosition(7, 42, 236));
             secondary.setMessage("Secondary location");
             warning1.location.setSecondary(secondary);
 
-            Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "Hardcoded string \"Fooo\", should use @string resource",
-                    Severity.WARNING, project);
+            Warning warning2 =
+                    new Warning(
+                            HardcodedValuesDetector.ISSUE,
+                            "Hardcoded string \"Fooo\", should use @string resource",
+                            Severity.WARNING,
+                            project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
-            warning2.errorLine = "        android:text=\"Fooo\" />\n" +
-                    "        ~~~~~~~~~~~~~~~~~~~\n";
+            warning2.errorLine = "        android:text=\"Fooo\" />\n        ~~~~~~~~~~~~~~~~~~~\n";
             warning2.path = "res/layout/main.xml";
-            warning2.location = Location.create(warning2.file,
-                    new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
-            secondary = Location.create(warning1.file,
-                    new DefaultPosition(7, 4, 198), new DefaultPosition(7, 42, 236));
+            warning2.location =
+                    Location.create(
+                            warning2.file,
+                            new DefaultPosition(11, 8, 377),
+                            new DefaultPosition(11, 27, 396));
+            secondary =
+                    Location.create(
+                            warning1.file,
+                            new DefaultPosition(7, 4, 198),
+                            new DefaultPosition(7, 42, 236));
             secondary.setMessage("Secondary location");
             warning2.location.setSecondary(secondary);
-            Location tertiary = Location.create(warning2.file,
-                    new DefaultPosition(5, 4, 198), new DefaultPosition(5, 42, 236));
+            Location tertiary =
+                    Location.create(
+                            warning2.file,
+                            new DefaultPosition(5, 4, 198),
+                            new DefaultPosition(5, 42, 236));
             secondary.setSecondary(tertiary);
 
             // Add another warning of the same type as warning 1 to make sure we
             // (1) sort the warnings of the same issue together and (2) only print
             // the explanation twice1
-            Warning warning3 = new Warning(ManifestDetector.USES_SDK,
-                    "<uses-sdk> tag should specify a target API level (the highest verified " +
-                            "version; when running on later versions, compatibility behaviors may " +
-                            "be enabled) with android:targetSdkVersion=\"?\"",
-                    Severity.WARNING, project);
+            Warning warning3 =
+                    new Warning(
+                            ManifestDetector.USES_SDK,
+                            "<uses-sdk> tag should specify a target API level (the highest verified "
+                                    + "version; when running on later versions, compatibility behaviors may "
+                                    + "be enabled) with android:targetSdkVersion=\"?\"",
+                            Severity.WARNING,
+                            project);
             warning3.line = 8;
             warning3.file = new File("/foo/bar/Foo/AndroidManifest.xml");
             warning3.errorLine = "    <uses-sdk android:minSdkVersion=\"8\" />\n    ^\n";
             warning3.path = "AndroidManifest.xml";
-            warning3.location = Location.create(warning3.file,
-                    new DefaultPosition(8, 4, 198), new DefaultPosition(8, 42, 236));
+            warning3.location =
+                    Location.create(
+                            warning3.file,
+                            new DefaultPosition(8, 4, 198),
+                            new DefaultPosition(8, 42, 236));
 
             List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
@@ -176,43 +223,44 @@ public class TextReporterTest extends AbstractCheckTest {
             reporter.write(new Reporter.Stats(0, 3), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
-            assertEquals(""
-                    + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
-                    + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
-                    + "    ^\n"
-                    + "    AndroidManifest.xml:8: Secondary location\n"
-                    + "AndroidManifest.xml:9: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
-                    + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
-                    + "    ^\n"
-                    + "\n"
-                    + "   Explanation for issues of type \"UsesMinSdkAttributes\":\n"
-                    + "   The manifest should contain a <uses-sdk> element which defines the minimum\n"
-                    + "   API Level required for the application to run, as well as the target\n"
-                    + "   version (the highest API level you have tested the version for).\n"
-                    + "\n"
-                    + "   http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\n"
-                    + "\n"
-                    + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
-                    + "        android:text=\"Fooo\" />\n"
-                    + "        ~~~~~~~~~~~~~~~~~~~\n"
-                    + "    AndroidManifest.xml:8: Secondary location\n"
-                    + "Also affects: res/layout/main.xml:6\n"
-                    + "\n"
-                    + "   Explanation for issues of type \"HardcodedText\":\n"
-                    + "   Hardcoding text attributes directly in layout files is bad for several\n"
-                    + "   reasons:\n"
-                    + "\n"
-                    + "   * When creating configuration variations (for example for landscape or\n"
-                    + "   portrait)you have to repeat the actual text (and keep it up to date when\n"
-                    + "   making changes)\n"
-                    + "\n"
-                    + "   * The application cannot be translated to other languages by just adding\n"
-                    + "   new translations for existing string resources.\n"
-                    + "\n"
-                    + "   There are quickfixes to automatically extract this hardcoded string into a\n"
-                    + "   resource lookup.\n"
-                    + "\n"
-                    + "0 errors, 3 warnings\n",
+            assertEquals(
+                    ""
+                            + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
+                            + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
+                            + "    ^\n"
+                            + "    AndroidManifest.xml:8: Secondary location\n"
+                            + "AndroidManifest.xml:9: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
+                            + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
+                            + "    ^\n"
+                            + "\n"
+                            + "   Explanation for issues of type \"UsesMinSdkAttributes\":\n"
+                            + "   The manifest should contain a <uses-sdk> element which defines the minimum\n"
+                            + "   API Level required for the application to run, as well as the target\n"
+                            + "   version (the highest API level you have tested the version for).\n"
+                            + "\n"
+                            + "   http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\n"
+                            + "\n"
+                            + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
+                            + "        android:text=\"Fooo\" />\n"
+                            + "        ~~~~~~~~~~~~~~~~~~~\n"
+                            + "    AndroidManifest.xml:8: Secondary location\n"
+                            + "Also affects: res/layout/main.xml:6\n"
+                            + "\n"
+                            + "   Explanation for issues of type \"HardcodedText\":\n"
+                            + "   Hardcoding text attributes directly in layout files is bad for several\n"
+                            + "   reasons:\n"
+                            + "\n"
+                            + "   * When creating configuration variations (for example for landscape or\n"
+                            + "   portrait)you have to repeat the actual text (and keep it up to date when\n"
+                            + "   making changes)\n"
+                            + "\n"
+                            + "   * The application cannot be translated to other languages by just adding\n"
+                            + "   new translations for existing string resources.\n"
+                            + "\n"
+                            + "   There are quickfixes to automatically extract this hardcoded string into a\n"
+                            + "   resource lookup.\n"
+                            + "\n"
+                            + "0 errors, 3 warnings\n",
                     report.replace(File.separatorChar, '/'));
         } finally {
             //noinspection ResultOfMethodCallIgnored

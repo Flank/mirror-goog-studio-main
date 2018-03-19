@@ -33,7 +33,7 @@ TEST(MemoryCache, TrackAllocations) {
       std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
       "/");
   profiler::FakeClock fake_clock(0);
-  profiler::MemoryCache cache(fake_clock, &file_cache, 2);
+  profiler::MemoryCache cache(&fake_clock, &file_cache, 2);
   TrackAllocationsResponse response;
 
   // Ensure stopping does nothing if no current tracking is enabled.
@@ -113,7 +113,7 @@ TEST(MemoryCache, HeapDump) {
       std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
       "/");
   profiler::FakeClock fake_clock(0);
-  profiler::MemoryCache cache(fake_clock, &file_cache, 2);
+  profiler::MemoryCache cache(&fake_clock, &file_cache, 2);
   TriggerHeapDumpResponse response;
 
   // Ensure EndHeapDump does nothing if no in-progress heap dump

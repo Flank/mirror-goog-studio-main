@@ -33,7 +33,16 @@ public class AlarmActivity extends PerfdTestActivity {
     }
 
     public void setListenerAlarm() {
-        getAlarmManager().set(0x0, 2000, "foo", new OnAlarmListener() {}, new Handler());
+        getAlarmManager()
+                .set(
+                        0x0,
+                        2000,
+                        "foo",
+                        new OnAlarmListener() {
+                            @Override
+                            public void onAlarm() {}
+                        },
+                        new Handler());
         System.out.println("LISTENER ALARM SET");
     }
 
@@ -41,15 +50,32 @@ public class AlarmActivity extends PerfdTestActivity {
         AlarmManager alarmManager = getAlarmManager();
         PendingIntent pendingIntent = new PendingIntent("foo.bar", 2);
         alarmManager.set(0x0, 1000, pendingIntent);
-        getAlarmManager().cancel(pendingIntent);
+        alarmManager.cancel(pendingIntent);
         System.out.println("INTENT ALARM CANCELLED");
     }
 
     public void cancelListenerAlarm() {
         AlarmManager alarmManager = getAlarmManager();
-        OnAlarmListener listener = new OnAlarmListener() {};
+        OnAlarmListener listener =
+                new OnAlarmListener() {
+                    @Override
+                    public void onAlarm() {}
+                };
         alarmManager.set(0x0, 1000, "bar", listener, new Handler());
-        getAlarmManager().cancel(listener);
+        alarmManager.cancel(listener);
         System.out.println("LISTENER ALARM CANCELLED");
+    }
+
+    public void fireListenerAlarm() {
+        AlarmManager alarmManager = getAlarmManager();
+        OnAlarmListener listener =
+                new OnAlarmListener() {
+                    @Override
+                    public void onAlarm() {
+                        System.out.println("LISTENER ALARM FIRED");
+                    }
+                };
+        alarmManager.set(0x0, 1000, "bar", listener, new Handler());
+        alarmManager.fire();
     }
 }

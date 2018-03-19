@@ -108,21 +108,17 @@ import org.w3c.dom.Element;
 @SuppressWarnings("javadoc")
 public class LintUtilsTest extends TestCase {
     public void testPrintList() {
-        assertEquals("bar, baz, foo",
-                formatList(Arrays.asList("foo", "bar", "baz"), 3));
-        assertEquals("foo, bar, baz",
-                formatList(Arrays.asList("foo", "bar", "baz"), 3, false));
-        assertEquals("foo, bar, baz",
-                formatList(Arrays.asList("foo", "bar", "baz"), 5, false));
+        assertEquals("bar, baz, foo", formatList(Arrays.asList("foo", "bar", "baz"), 3));
+        assertEquals("foo, bar, baz", formatList(Arrays.asList("foo", "bar", "baz"), 3, false));
+        assertEquals("foo, bar, baz", formatList(Arrays.asList("foo", "bar", "baz"), 5, false));
 
-        assertEquals("foo, bar, baz... (3 more)",
-                formatList(
-                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 3, false));
-        assertEquals("foo... (5 more)",
-                formatList(
-                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1, false));
-        assertEquals("foo, bar, baz",
-                formatList(Arrays.asList("foo", "bar", "baz"), 0, false));
+        assertEquals(
+                "foo, bar, baz... (3 more)",
+                formatList(Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 3, false));
+        assertEquals(
+                "foo... (5 more)",
+                formatList(Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1, false));
+        assertEquals("foo, bar, baz", formatList(Arrays.asList("foo", "bar", "baz"), 0, false));
     }
 
     public void testIsDataBindingExpression() {
@@ -200,77 +196,94 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testSplitPath() {
-        assertTrue(Arrays.equals(new String[] { "/foo", "/bar", "/baz" },
-                Iterables.toArray(splitPath("/foo:/bar:/baz"), String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"/foo", "/bar", "/baz"},
+                        Iterables.toArray(splitPath("/foo:/bar:/baz"), String.class)));
 
-        assertTrue(Arrays.equals(new String[] { "/foo", "/bar" },
-                Iterables.toArray(splitPath("/foo;/bar"), String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"/foo", "/bar"},
+                        Iterables.toArray(splitPath("/foo;/bar"), String.class)));
 
-        assertTrue(Arrays.equals(new String[] { "/foo", "/bar:baz" },
-                Iterables.toArray(splitPath("/foo;/bar:baz"), String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"/foo", "/bar:baz"},
+                        Iterables.toArray(splitPath("/foo;/bar:baz"), String.class)));
 
-        assertTrue(Arrays.equals(new String[] { "\\foo\\bar", "\\bar\\foo" },
-                Iterables.toArray(splitPath("\\foo\\bar;\\bar\\foo"), String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"\\foo\\bar", "\\bar\\foo"},
+                        Iterables.toArray(splitPath("\\foo\\bar;\\bar\\foo"), String.class)));
 
-        assertTrue(Arrays.equals(new String[] { "${sdk.dir}\\foo\\bar", "\\bar\\foo" },
-                Iterables.toArray(splitPath("${sdk.dir}\\foo\\bar;\\bar\\foo"),
-                        String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"${sdk.dir}\\foo\\bar", "\\bar\\foo"},
+                        Iterables.toArray(
+                                splitPath("${sdk.dir}\\foo\\bar;\\bar\\foo"), String.class)));
 
-        assertTrue(Arrays.equals(new String[] { "${sdk.dir}/foo/bar", "/bar/foo" },
-                Iterables.toArray(splitPath("${sdk.dir}/foo/bar:/bar/foo"),
-                        String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"${sdk.dir}/foo/bar", "/bar/foo"},
+                        Iterables.toArray(splitPath("${sdk.dir}/foo/bar:/bar/foo"), String.class)));
 
-        assertTrue(Arrays.equals(new String[] { "C:\\foo", "/bar" },
-                Iterables.toArray(splitPath("C:\\foo:/bar"), String.class)));
+        assertTrue(
+                Arrays.equals(
+                        new String[] {"C:\\foo", "/bar"},
+                        Iterables.toArray(splitPath("C:\\foo:/bar"), String.class)));
     }
 
     public void testCommonParen1() {
-        assertEquals(new File("/a"), (getCommonParent(
-                new File("/a/b/c/d/e"), new File("/a/c"))));
-        assertEquals(new File("/a"), (getCommonParent(
-                new File("/a/c"), new File("/a/b/c/d/e"))));
+        assertEquals(new File("/a"), (getCommonParent(new File("/a/b/c/d/e"), new File("/a/c"))));
+        assertEquals(new File("/a"), (getCommonParent(new File("/a/c"), new File("/a/b/c/d/e"))));
 
-        assertEquals(new File("/"), getCommonParent(
-                new File("/foo/bar"), new File("/bar/baz")));
-        assertEquals(new File("/"), getCommonParent(
-                new File("/foo/bar"), new File("/")));
-        assertNull(getCommonParent(
-               new File("C:\\Program Files"), new File("F:\\")));
-        assertNull(getCommonParent(
-                new File("C:/Program Files"), new File("F:/")));
+        assertEquals(new File("/"), getCommonParent(new File("/foo/bar"), new File("/bar/baz")));
+        assertEquals(new File("/"), getCommonParent(new File("/foo/bar"), new File("/")));
+        assertNull(getCommonParent(new File("C:\\Program Files"), new File("F:\\")));
+        assertNull(getCommonParent(new File("C:/Program Files"), new File("F:/")));
 
-        assertEquals(new File("/foo/bar/baz"), getCommonParent(
-                new File("/foo/bar/baz"), new File("/foo/bar/baz")));
-        assertEquals(new File("/foo/bar"), getCommonParent(
-                new File("/foo/bar/baz"), new File("/foo/bar")));
-        assertEquals(new File("/foo/bar"), getCommonParent(
-                new File("/foo/bar/baz"), new File("/foo/bar/foo")));
-        assertEquals(new File("/foo"), getCommonParent(
-                new File("/foo/bar"), new File("/foo/baz")));
-        assertEquals(new File("/foo"), getCommonParent(
-                new File("/foo/bar"), new File("/foo/baz")));
-        assertEquals(new File("/foo/bar"), getCommonParent(
-                new File("/foo/bar"), new File("/foo/bar/baz")));
+        assertEquals(
+                new File("/foo/bar/baz"),
+                getCommonParent(new File("/foo/bar/baz"), new File("/foo/bar/baz")));
+        assertEquals(
+                new File("/foo/bar"),
+                getCommonParent(new File("/foo/bar/baz"), new File("/foo/bar")));
+        assertEquals(
+                new File("/foo/bar"),
+                getCommonParent(new File("/foo/bar/baz"), new File("/foo/bar/foo")));
+        assertEquals(new File("/foo"), getCommonParent(new File("/foo/bar"), new File("/foo/baz")));
+        assertEquals(new File("/foo"), getCommonParent(new File("/foo/bar"), new File("/foo/baz")));
+        assertEquals(
+                new File("/foo/bar"),
+                getCommonParent(new File("/foo/bar"), new File("/foo/bar/baz")));
     }
 
     public void testCommonParent2() {
-        assertEquals(new File("/"), getCommonParent(
-                Arrays.asList(new File("/foo/bar"), new File("/bar/baz"))));
-        assertEquals(new File("/"), getCommonParent(
-                Arrays.asList(new File("/foo/bar"), new File("/"))));
-        assertNull(getCommonParent(
-                Arrays.asList(new File("C:\\Program Files"), new File("F:\\"))));
-        assertNull(getCommonParent(
-                Arrays.asList(new File("C:/Program Files"), new File("F:/"))));
+        assertEquals(
+                new File("/"),
+                getCommonParent(Arrays.asList(new File("/foo/bar"), new File("/bar/baz"))));
+        assertEquals(
+                new File("/"), getCommonParent(Arrays.asList(new File("/foo/bar"), new File("/"))));
+        assertNull(getCommonParent(Arrays.asList(new File("C:\\Program Files"), new File("F:\\"))));
+        assertNull(getCommonParent(Arrays.asList(new File("C:/Program Files"), new File("F:/"))));
 
-        assertEquals(new File("/foo"), getCommonParent(
-                Arrays.asList(new File("/foo/bar"), new File("/foo/baz"))));
-        assertEquals(new File("/foo"), getCommonParent(
-                Arrays.asList(new File("/foo/bar"), new File("/foo/baz"),
-                        new File("/foo/baz/f"))));
-        assertEquals(new File("/foo/bar"), getCommonParent(
-                Arrays.asList(new File("/foo/bar"), new File("/foo/bar/baz"),
-                        new File("/foo/bar/foo2/foo3"))));
+        assertEquals(
+                new File("/foo"),
+                getCommonParent(Arrays.asList(new File("/foo/bar"), new File("/foo/baz"))));
+        assertEquals(
+                new File("/foo"),
+                getCommonParent(
+                        Arrays.asList(
+                                new File("/foo/bar"),
+                                new File("/foo/baz"),
+                                new File("/foo/baz/f"))));
+        assertEquals(
+                new File("/foo/bar"),
+                getCommonParent(
+                        Arrays.asList(
+                                new File("/foo/bar"),
+                                new File("/foo/bar/baz"),
+                                new File("/foo/bar/foo2/foo3"))));
     }
 
     public void testStripIdPrefix() {
@@ -308,8 +321,15 @@ public class LintUtilsTest extends TestCase {
 
         // Norwegian extra vowel characters such as "latin small letter a with ring above"
         String value = "\u00e6\u00d8\u00e5";
-        String expected = "First line." + lineEnding + "Second line." + lineEnding
-                + "Third line." + lineEnding + value + lineEnding;
+        String expected =
+                "First line."
+                        + lineEnding
+                        + "Second line."
+                        + lineEnding
+                        + "Third line."
+                        + lineEnding
+                        + value
+                        + lineEnding;
         sb.append(expected);
         File file = File.createTempFile("getEncodingTest" + encoding + writeBom, ".txt");
         file.deleteOnExit();
@@ -396,33 +416,34 @@ public class LintUtilsTest extends TestCase {
         assertEquals("zh", getLocale("values-zh-rCN-keyshidden").getLanguage());
     }
 
-
     public void testGetLocale2() {
         LintDetectorTest.TestFile xml;
         XmlContext context;
 
-        xml = TestFiles.xml("res/values/strings.xml", ""
-                + "<resources>\n"
-                + "</resources>\n");
+        xml = TestFiles.xml("res/values/strings.xml", "<resources>\n</resources>\n");
         context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
         assertNull(getLocale(context));
 
-        xml = TestFiles.xml("res/values-no/strings.xml", ""
-                + "<resources>\n"
-                + "</resources>\n");
+        xml = TestFiles.xml("res/values-no/strings.xml", "<resources>\n</resources>\n");
         context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
         assertEquals("no", getLocale(context).getLanguage());
 
-        xml = TestFiles.xml("res/values/strings.xml", ""
-                + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                + "</resources>\n");
+        xml =
+                TestFiles.xml(
+                        "res/values/strings.xml",
+                        ""
+                                + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                + "</resources>\n");
         context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
         assertEquals("nb", getLocale(context).getLanguage());
 
         // tools:locale wins over folder location
-        xml = TestFiles.xml("res/values-fr/strings.xml", ""
-                + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                + "</resources>\n");
+        xml =
+                TestFiles.xml(
+                        "res/values-fr/strings.xml",
+                        ""
+                                + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                + "</resources>\n");
         context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
         assertEquals("nb", getLocale(context).getLanguage());
     }
@@ -447,9 +468,16 @@ public class LintUtilsTest extends TestCase {
         assertEquals("PrefixName", computeResourceName("prefix", "Name", null));
         assertEquals("PrefixName", computeResourceName("prefix_", "Name", null));
         assertEquals("MyPrefixName", computeResourceName("myPrefix", "Name", null));
-        assertEquals("my_prefix_name", computeResourceName("myPrefix", "name", ResourceFolderType.LAYOUT));
-        assertEquals("UnitTestPrefixContentFrame", computeResourceName("unit_test_prefix_", "ContentFrame", ResourceFolderType.VALUES));
-        assertEquals("MyPrefixMyStyle", computeResourceName("myPrefix_", "MyStyle", ResourceFolderType.VALUES));
+        assertEquals(
+                "my_prefix_name",
+                computeResourceName("myPrefix", "name", ResourceFolderType.LAYOUT));
+        assertEquals(
+                "UnitTestPrefixContentFrame",
+                computeResourceName(
+                        "unit_test_prefix_", "ContentFrame", ResourceFolderType.VALUES));
+        assertEquals(
+                "MyPrefixMyStyle",
+                computeResourceName("myPrefix_", "MyStyle", ResourceFolderType.VALUES));
     }
 
     private static Project createTestProjectForFile(File dir, File relativePath, String source) {
@@ -460,36 +488,37 @@ public class LintUtilsTest extends TestCase {
         } catch (IOException e) {
             fail(e.getMessage());
         }
-        LintCliClient client = new LintCliClient() {
-            @NonNull
-            @Override
-            public CharSequence readFile(@NonNull File file) {
-                if (file.getPath().equals(fullPath.getPath())) {
-                    return source;
-                }
-                return super.readFile(file);
-            }
-
-            @Nullable
-            @Override
-            public IAndroidTarget getCompileTarget(@NonNull Project project) {
-                IAndroidTarget[] targets = getTargets();
-                for (int i = targets.length - 1; i >= 0; i--) {
-                    IAndroidTarget target = targets[i];
-                    if (target.isPlatform()) {
-                        return target;
+        LintCliClient client =
+                new LintCliClient() {
+                    @NonNull
+                    @Override
+                    public CharSequence readFile(@NonNull File file) {
+                        if (file.getPath().equals(fullPath.getPath())) {
+                            return source;
+                        }
+                        return super.readFile(file);
                     }
-                }
 
-                return super.getCompileTarget(project);
-            }
+                    @Nullable
+                    @Override
+                    public IAndroidTarget getCompileTarget(@NonNull Project project) {
+                        IAndroidTarget[] targets = getTargets();
+                        for (int i = targets.length - 1; i >= 0; i--) {
+                            IAndroidTarget target = targets[i];
+                            if (target.isPlatform()) {
+                                return target;
+                            }
+                        }
 
-            @NonNull
-            @Override
-            public File getSdkHome() {
-                return TestUtils.getSdk();
-            }
-        };
+                        return super.getCompileTarget(project);
+                    }
+
+                    @NonNull
+                    @Override
+                    public File getSdkHome() {
+                        return TestUtils.getSdk();
+                    }
+                };
         Project project = client.getProject(dir, dir);
         client.initializeProjects(Collections.singletonList(project));
         return project;
@@ -502,48 +531,59 @@ public class LintUtilsTest extends TestCase {
         LintCliClient client = (LintCliClient) project.getClient();
 
         LintRequest request = new LintRequest(client, Collections.singletonList(fullPath));
-        LintDriver driver = new LintDriver(new TestIssueRegistry(),
-                new LintCliClient(), request);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), new LintCliClient(), request);
         driver.setScope(Scope.JAVA_FILE_SCOPE);
-        ResourceFolderType folderType = ResourceFolderType.getFolderType(
-                relativePath.getParentFile().getName());
+        ResourceFolderType folderType =
+                ResourceFolderType.getFolderType(relativePath.getParentFile().getName());
 
         XmlParser parser = client.getXmlParser();
         Document document = parser.parseXml(xml, fullPath);
         return new XmlTestContext(driver, project, xml, fullPath, folderType, parser, document);
     }
 
-    public static Pair<JavaContext,Disposable> parse(@Language("JAVA") String javaSource,
-            @Nullable File relativePath) {
+    public static Pair<JavaContext, Disposable> parse(
+            @Language("JAVA") String javaSource, @Nullable File relativePath) {
         if (relativePath == null) {
             ClassName className = new ClassName(javaSource);
             String pkg = className.getPackageName();
             String name = className.getClassName();
             assert pkg != null;
             assert name != null;
-            relativePath = new File("src" + File.separatorChar +
-                    pkg.replace('.', File.separatorChar) + File.separatorChar + name + DOT_JAVA);
+            relativePath =
+                    new File(
+                            "src"
+                                    + File.separatorChar
+                                    + pkg.replace('.', File.separatorChar)
+                                    + File.separatorChar
+                                    + name
+                                    + DOT_JAVA);
         }
 
         return doParse(javaSource, relativePath);
     }
 
-    public static Pair<JavaContext,Disposable> parseKotlin(@Language("Kt") String kotlinSource,
-            @Nullable File relativePath) {
+    public static Pair<JavaContext, Disposable> parseKotlin(
+            @Language("Kt") String kotlinSource, @Nullable File relativePath) {
         if (relativePath == null) {
             ClassName className = new ClassName(kotlinSource);
             String pkg = className.getPackageName();
             String name = className.getClassName();
             assert pkg != null;
             assert name != null;
-            relativePath = new File("src" + File.separatorChar +
-                    pkg.replace('.', File.separatorChar) + File.separatorChar + name + DOT_KT);
+            relativePath =
+                    new File(
+                            "src"
+                                    + File.separatorChar
+                                    + pkg.replace('.', File.separatorChar)
+                                    + File.separatorChar
+                                    + name
+                                    + DOT_KT);
         }
 
         return doParse(kotlinSource, relativePath);
     }
-    public static Pair<JavaContext,Disposable> doParse(String source,
-            final File relativePath) {
+
+    public static Pair<JavaContext, Disposable> doParse(String source, final File relativePath) {
         // TODO: Clean up -- but where?
         File dir = Files.createTempDir();
         final File fullPath = new File(dir, relativePath.getPath());
@@ -557,8 +597,7 @@ public class LintUtilsTest extends TestCase {
         LintCliClient client = (LintCliClient) project.getClient();
         LintRequest request = new LintRequest(client, Collections.singletonList(fullPath));
 
-        LintDriver driver = new LintDriver(new TestIssueRegistry(),
-                new LintCliClient(), request);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), new LintCliClient(), request);
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         JavaTestContext context = new JavaTestContext(driver, client, project, source, fullPath);
         UastParser uastParser = client.getUastParser(project);
@@ -574,14 +613,15 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testConvertVersion() {
-        assertEquals(new AndroidVersion(5, null), convertVersion(new DefaultApiVersion(5, null),
-                null));
-        assertEquals(new AndroidVersion(19, null), convertVersion(new DefaultApiVersion(19, null),
-                null));
+        assertEquals(
+                new AndroidVersion(5, null), convertVersion(new DefaultApiVersion(5, null), null));
+        assertEquals(
+                new AndroidVersion(19, null),
+                convertVersion(new DefaultApiVersion(19, null), null));
         //noinspection SpellCheckingInspection
-        assertEquals(new AndroidVersion(18, "KITKAT"), // a preview platform API level is not final
-                convertVersion(new DefaultApiVersion(0, "KITKAT"),
-                null));
+        assertEquals(
+                new AndroidVersion(18, "KITKAT"), // a preview platform API level is not final
+                convertVersion(new DefaultApiVersion(0, "KITKAT"), null));
     }
 
     public void testIsModelOlderThan() {
@@ -647,16 +687,17 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testFindSubstring() {
-       assertEquals("foo", findSubstring("foo", null, null));
-       assertEquals("foo", findSubstring("foo  ", null, "  "));
-       assertEquals("foo", findSubstring("  foo", "  ", null));
-       assertEquals("foo", findSubstring("[foo]", "[", "]"));
+        assertEquals("foo", findSubstring("foo", null, null));
+        assertEquals("foo", findSubstring("foo  ", null, "  "));
+        assertEquals("foo", findSubstring("  foo", "  ", null));
+        assertEquals("foo", findSubstring("[foo]", "[", "]"));
     }
 
     public void testGetFormattedParameters() {
-        assertEquals(Arrays.asList("foo","bar"),
-                getFormattedParameters("Prefix %1$s Divider %2$s Suffix",
-                        "Prefix foo Divider bar Suffix"));
+        assertEquals(
+                Arrays.asList("foo", "bar"),
+                getFormattedParameters(
+                        "Prefix %1$s Divider %2$s Suffix", "Prefix foo Divider bar Suffix"));
     }
 
     public void testEscapePropertyValue() {
@@ -666,31 +707,33 @@ public class LintUtilsTest extends TestCase {
         assertEquals("\\!\\#\\:\\\\a\\\\b\\\\c", escapePropertyValue("!#:\\a\\b\\c"));
         assertEquals(
                 "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo\\#foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
-                escapePropertyValue("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo#foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"));
+                escapePropertyValue(
+                        "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo#foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"));
     }
 
     public void testGetAutoBoxedType() {
         assertEquals(TYPE_INTEGER_WRAPPER, getAutoBoxedType(TYPE_INT));
         assertEquals(TYPE_INT, getPrimitiveType(TYPE_INTEGER_WRAPPER));
 
-        String[] pairs = new String[]{
-                TYPE_BOOLEAN,
-                TYPE_BOOLEAN_WRAPPER,
-                TYPE_BYTE,
-                TYPE_BYTE_WRAPPER,
-                TYPE_CHAR,
-                TYPE_CHARACTER_WRAPPER,
-                TYPE_DOUBLE,
-                TYPE_DOUBLE_WRAPPER,
-                TYPE_FLOAT,
-                TYPE_FLOAT_WRAPPER,
-                TYPE_INT,
-                TYPE_INTEGER_WRAPPER,
-                TYPE_LONG,
-                TYPE_LONG_WRAPPER,
-                TYPE_SHORT,
-                TYPE_SHORT_WRAPPER
-        };
+        String[] pairs =
+                new String[] {
+                    TYPE_BOOLEAN,
+                    TYPE_BOOLEAN_WRAPPER,
+                    TYPE_BYTE,
+                    TYPE_BYTE_WRAPPER,
+                    TYPE_CHAR,
+                    TYPE_CHARACTER_WRAPPER,
+                    TYPE_DOUBLE,
+                    TYPE_DOUBLE_WRAPPER,
+                    TYPE_FLOAT,
+                    TYPE_FLOAT_WRAPPER,
+                    TYPE_INT,
+                    TYPE_INTEGER_WRAPPER,
+                    TYPE_LONG,
+                    TYPE_LONG_WRAPPER,
+                    TYPE_SHORT,
+                    TYPE_SHORT_WRAPPER
+                };
 
         for (int i = 0; i < pairs.length; i += 2) {
             String primitive = pairs[i];
@@ -702,8 +745,7 @@ public class LintUtilsTest extends TestCase {
 
     @NonNull
     private static Element getElementWithNameValue(
-            @NonNull @Language("XML") String xml,
-            @NonNull String activityName) {
+            @NonNull @Language("XML") String xml, @NonNull String activityName) {
         Document document = XmlUtils.parseDocumentSilently(xml, true);
         assertNotNull(document);
         Element root = document.getDocumentElement();
@@ -722,50 +764,84 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testResolveManifestName() {
-        assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"test.pkg\">\n"
-                + "    <application>\n"
-                + "        <activity android:name=\".TestActivity\" />\n"
-                + "    </application>\n"
-                + "</manifest>\n", ".TestActivity")));
+        assertEquals(
+                "test.pkg.TestActivity",
+                resolveManifestName(
+                        getElementWithNameValue(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\">\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\".TestActivity\" />\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n",
+                                ".TestActivity")));
 
+        assertEquals(
+                "test.pkg.TestActivity",
+                resolveManifestName(
+                        getElementWithNameValue(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\">\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\"TestActivity\" />\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n",
+                                "TestActivity")));
 
-        assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"test.pkg\">\n"
-                + "    <application>\n"
-                + "        <activity android:name=\"TestActivity\" />\n"
-                + "    </application>\n"
-                + "</manifest>\n", "TestActivity")));
+        assertEquals(
+                "test.pkg.TestActivity",
+                resolveManifestName(
+                        getElementWithNameValue(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\">\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\"test.pkg.TestActivity\" />\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n",
+                                "test.pkg.TestActivity")));
 
-        assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"test.pkg\">\n"
-                + "    <application>\n"
-                + "        <activity android:name=\"test.pkg.TestActivity\" />\n"
-                + "    </application>\n"
-                + "</manifest>\n", "test.pkg.TestActivity")));
-
-        assertEquals("test.pkg.TestActivity.Bar", resolveManifestName(getElementWithNameValue(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"test.pkg\">\n"
-                + "    <application>\n"
-                + "        <activity android:name=\"test.pkg.TestActivity$Bar\" />\n"
-                + "    </application>\n"
-                + "</manifest>\n", "test.pkg.TestActivity$Bar")));
+        assertEquals(
+                "test.pkg.TestActivity.Bar",
+                resolveManifestName(
+                        getElementWithNameValue(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\">\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\"test.pkg.TestActivity$Bar\" />\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n",
+                                "test.pkg.TestActivity$Bar")));
     }
 
     public void testGetFileNameWithParent() {
-        assertThat(getFileNameWithParent(new TestLintClient(), new File("tmp" +
-            File.separator + "foo" + File.separator + "bar.baz"))).isEqualTo("foo/bar.baz");
-        assertThat(getFileNameWithParent(new LintCliClient(), new File("tmp" +
-                File.separator + "foo" + File.separator + "bar.baz"))).isEqualTo(
-                        File.separatorChar == '/' ? "foo/bar.baz" : "foo\\\\bar.baz");
+        assertThat(
+                        getFileNameWithParent(
+                                new TestLintClient(),
+                                new File(
+                                        "tmp"
+                                                + File.separator
+                                                + "foo"
+                                                + File.separator
+                                                + "bar.baz")))
+                .isEqualTo("foo/bar.baz");
+        assertThat(
+                        getFileNameWithParent(
+                                new LintCliClient(),
+                                new File(
+                                        "tmp"
+                                                + File.separator
+                                                + "foo"
+                                                + File.separator
+                                                + "bar.baz")))
+                .isEqualTo(File.separatorChar == '/' ? "foo/bar.baz" : "foo\\\\bar.baz");
     }
 
     public void testJavaKeyword() {
@@ -778,8 +854,13 @@ public class LintUtilsTest extends TestCase {
 
     private static class JavaTestContext extends JavaContext {
         private final String mJavaSource;
-        public JavaTestContext(LintDriver driver, LintCliClient client, Project project,
-                String javaSource, File file) {
+
+        public JavaTestContext(
+                LintDriver driver,
+                LintCliClient client,
+                Project project,
+                String javaSource,
+                File file) {
             //noinspection ConstantConditions
             super(driver, project, null, file);
 
@@ -795,8 +876,14 @@ public class LintUtilsTest extends TestCase {
 
     private static class XmlTestContext extends XmlContext {
         private final String xmlSource;
-        public XmlTestContext(LintDriver driver, Project project,
-                String xmlSource, File file, ResourceFolderType type, XmlParser parser,
+
+        public XmlTestContext(
+                LintDriver driver,
+                Project project,
+                String xmlSource,
+                File file,
+                ResourceFolderType type,
+                XmlParser parser,
                 Document document) {
             //noinspection ConstantConditions
             super(driver, project, null, file, type, parser, xmlSource, document);

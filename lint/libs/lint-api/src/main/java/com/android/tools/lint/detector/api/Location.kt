@@ -53,29 +53,30 @@ open class Location
  * @param end the ending position, or null
  */
 protected constructor(
-        /**
-         * Returns the file containing the warning. Note that the file *itself* may
-         * not yet contain the error. When editing a file in the IDE for example,
-         * the tool could generate warnings in the background even before the
-         * document is saved. However, the file is used as a identifying token for
-         * the document being edited, and the IDE integration can map this back to
-         * error locations in the editor source code.
-         *
-         * @return the file handle for the location
-         */
-        val file: File,
-        /**
-         * The start position of the range
-         *
-         * @return the start position of the range, or null
-         */
-        val start: Position?,
-        /**
-         * The end position of the range
-         *
-         * @return the start position of the range, may be null for an empty range
-         */
-        val end: Position?) {
+    /**
+     * Returns the file containing the warning. Note that the file *itself* may
+     * not yet contain the error. When editing a file in the IDE for example,
+     * the tool could generate warnings in the background even before the
+     * document is saved. However, the file is used as a identifying token for
+     * the document being edited, and the IDE integration can map this back to
+     * error locations in the editor source code.
+     *
+     * @return the file handle for the location
+     */
+    val file: File,
+    /**
+     * The start position of the range
+     *
+     * @return the start position of the range, or null
+     */
+    val start: Position?,
+    /**
+     * The end position of the range
+     *
+     * @return the start position of the range, may be null for an empty range
+     */
+    val end: Position?
+) {
 
     /**
      * The custom message for this location, if any. This is typically
@@ -137,9 +138,9 @@ protected constructor(
      * Sets a secondary location with the given message and returns the current location
      * updated with the given secondary location.
      *
-     * @param secondary       a secondary location associated with this location
+     * @param secondary a secondary location associated with this location
      *
-     * @param message         a message to be set on the secondary location
+     * @param message a message to be set on the secondary location
      *
      * @param selfExplanatory if true, the message is itself self-explanatory; see
      *                        [.isSelfExplanatory]}
@@ -147,8 +148,11 @@ protected constructor(
      * @return current location updated with the secondary location
      */
     @JvmOverloads
-    fun withSecondary(secondary: Location, message: String,
-                      selfExplanatory: Boolean = false): Location {
+    fun withSecondary(
+        secondary: Location,
+        message: String,
+        selfExplanatory: Boolean = false
+    ): Location {
         this.secondary = secondary
         secondary.message = message
         secondary.selfExplanatory = selfExplanatory
@@ -198,7 +202,7 @@ protected constructor(
      * id declaration, and then the secondary location could point to the
      * original declaration with the custom message "Originally defined here".
      *
-     * @param message         the message to apply to this location
+     * @param message the message to apply to this location
      *
      * @param selfExplanatory if true, the message is itself self-explanatory;
      *                        if false, it's just describing this particular
@@ -256,7 +260,7 @@ protected constructor(
     }
 
     override fun toString(): String =
-            "Location [file=$file, start=$start, end=$end, message=$message]"
+        "Location [file=$file, start=$start, end=$end, message=$message]"
 
     /**
      * A [Handle] is a reference to a location. The point of a location
@@ -289,7 +293,7 @@ protected constructor(
      *
      * @param endOffset the end offset within the file
      */
-    (context: Context, private val startOffset: Int, private val endOffset: Int) : Handle {
+        (context: Context, private val startOffset: Int, private val endOffset: Int) : Handle {
         private val file: File = context.file
         private val contents: CharSequence = context.getContents() ?: ""
         override var clientData: Any? = null
@@ -349,11 +353,12 @@ protected constructor(
      * used by [Location.create]
      */
     class SearchHints private constructor(
-            /**
-             * the direction to search for the nearest match in (provided
-             * `patternStart` is non null)
-             */
-            val direction: SearchDirection) {
+        /**
+         * the direction to search for the nearest match in (provided
+         * `patternStart` is non null)
+         */
+        val direction: SearchDirection
+    ) {
 
         /** Whether the matched pattern should be a whole word  */
         /** @return true if the pattern match should be for whole words only
@@ -421,7 +426,8 @@ protected constructor(
              *
              * @return a new @link SearchHints} object
              */
-            @JvmStatic fun create(direction: SearchDirection): SearchHints = SearchHints(direction)
+            @JvmStatic
+            fun create(direction: SearchDirection): SearchHints = SearchHints(direction)
         }
     }
 
@@ -470,20 +476,25 @@ protected constructor(
          */
         @JvmStatic
         fun create(
-                file: File,
-                position: SourcePosition): Location {
+            file: File,
+            position: SourcePosition
+        ): Location {
             if (position == SourcePosition.UNKNOWN) {
                 return Location(file, null, null)
             }
-            return Location(file,
-                    DefaultPosition(
-                            position.startLine,
-                            position.startColumn,
-                            position.startOffset),
-                    DefaultPosition(
-                            position.endLine,
-                            position.endColumn,
-                            position.endOffset))
+            return Location(
+                file,
+                DefaultPosition(
+                    position.startLine,
+                    position.startColumn,
+                    position.startOffset
+                ),
+                DefaultPosition(
+                    position.endLine,
+                    position.endColumn,
+                    position.endOffset
+                )
+            )
         }
 
         /**
@@ -500,9 +511,10 @@ protected constructor(
          */
         @JvmStatic
         fun create(
-                file: File,
-                start: Position,
-                end: Position?): Location = Location(file, start, end)
+            file: File,
+            start: Position,
+            end: Position?
+        ): Location = Location(file, start, end)
 
         /**
          * Creates a new location for the given file, with the given contents, for
@@ -521,18 +533,21 @@ protected constructor(
         @Suppress("NAME_SHADOWING")
         @JvmStatic
         fun create(
-                file: File,
-                contents: CharSequence?,
-                startOffset: Int,
-                endOffset: Int): Location {
+            file: File,
+            contents: CharSequence?,
+            startOffset: Int,
+            endOffset: Int
+        ): Location {
             if (startOffset < 0 || endOffset < startOffset) {
                 throw IllegalArgumentException("Invalid offsets")
             }
 
             if (contents == null) {
-                return Location(file,
-                        DefaultPosition(-1, -1, startOffset),
-                        DefaultPosition(-1, -1, endOffset))
+                return Location(
+                    file,
+                    DefaultPosition(-1, -1, startOffset),
+                    DefaultPosition(-1, -1, endOffset)
+                )
             }
 
             val size = contents.length
@@ -581,7 +596,7 @@ protected constructor(
          */
         @JvmStatic
         fun create(file: File, contents: String, line: Int): Location =
-                create(file, contents, line, null, null, null)
+            create(file, contents, line, null, null, null)
 
         /**
          * Creates a new location for the given file, with the given contents, for
@@ -606,9 +621,14 @@ protected constructor(
          * @return a new location
          */
         @JvmStatic
-        fun create(file: File, contents: CharSequence, line: Int,
-                   patternStart: String?, patternEnd: String?,
-                   hints: SearchHints?): Location {
+        fun create(
+            file: File,
+            contents: CharSequence,
+            line: Int,
+            patternStart: String?,
+            patternEnd: String?,
+            hints: SearchHints?
+        ): Location {
             var targetLine = line
             var targetPattern = patternStart
             var currentLine = 0
@@ -645,8 +665,10 @@ protected constructor(
                         index = findNextMatch(contents, offset, targetPattern, hints)
                         targetLine = adjustLine(contents, targetLine, offset, index)
                     } else {
-                        assert(direction == SearchDirection.NEAREST ||
-                                direction == SearchDirection.EOL_NEAREST)
+                        assert(
+                            direction == SearchDirection.NEAREST ||
+                                    direction == SearchDirection.EOL_NEAREST
+                        )
 
                         var lineEnd = indexOf(contents, '\n', offset)
                         if (lineEnd == -1) {
@@ -677,7 +699,8 @@ protected constructor(
                                 }
                             }
                             if (newLinesBefore < newLinesAfter || newLinesBefore == newLinesAfter &&
-                                    offset - before < after - offset) {
+                                offset - before < after - offset
+                            ) {
                                 index = before
                                 targetLine = adjustLine(contents, targetLine, offset, index)
                             } else {
@@ -698,19 +721,27 @@ protected constructor(
                         if (patternEnd != null) {
                             val end = indexOf(contents, patternEnd, offset + targetPattern.length)
                             if (end != -1) {
-                                return Location(file, DefaultPosition(targetLine, column, index),
-                                        DefaultPosition(targetLine, -1, end + patternEnd.length))
+                                return Location(
+                                    file, DefaultPosition(targetLine, column, index),
+                                    DefaultPosition(targetLine, -1, end + patternEnd.length)
+                                )
                             }
                         } else if (hints != null && (hints.isJavaSymbol || hints.isWholeWord)) {
                             if (hints.isConstructor && startsWith(contents, SUPER_KEYWORD, index)) {
                                 targetPattern = SUPER_KEYWORD
                             }
-                            return Location(file, DefaultPosition(targetLine, column, index),
-                                    DefaultPosition(targetLine, column + targetPattern.length,
-                                            index + targetPattern.length))
+                            return Location(
+                                file, DefaultPosition(targetLine, column, index),
+                                DefaultPosition(
+                                    targetLine, column + targetPattern.length,
+                                    index + targetPattern.length
+                                )
+                            )
                         }
-                        return Location(file, DefaultPosition(targetLine, column, index),
-                                DefaultPosition(targetLine, column, index + targetPattern.length))
+                        return Location(
+                            file, DefaultPosition(targetLine, column, index),
+                            DefaultPosition(targetLine, column, index + targetPattern.length)
+                        )
                     }
                 }
 
@@ -722,8 +753,12 @@ protected constructor(
         }
 
         @JvmStatic
-        private fun findPreviousMatch(contents: CharSequence, offset: Int, pattern: String,
-                                      hints: SearchHints?): Int {
+        private fun findPreviousMatch(
+            contents: CharSequence,
+            offset: Int,
+            pattern: String,
+            hints: SearchHints?
+        ): Int {
             var currentOffset = offset
             val loopDecrement = Math.max(1, pattern.length)
             while (true) {
@@ -741,8 +776,12 @@ protected constructor(
         }
 
         @JvmStatic
-        private fun findNextMatch(contents: CharSequence, offset: Int, pattern: String,
-                                  hints: SearchHints?): Int {
+        private fun findNextMatch(
+            contents: CharSequence,
+            offset: Int,
+            pattern: String,
+            hints: SearchHints?
+        ): Int {
             var currentOffset = offset
             var constructorIndex = -1
             if (hints != null && hints.isConstructor) {
@@ -773,8 +812,12 @@ protected constructor(
         }
 
         @JvmStatic
-        private fun isMatch(contents: CharSequence, offset: Int, pattern: String,
-                            hints: SearchHints?): Boolean {
+        private fun isMatch(
+            contents: CharSequence,
+            offset: Int,
+            pattern: String,
+            hints: SearchHints?
+        ): Boolean {
             if (!startsWith(contents, pattern, offset)) {
                 return false
             }
@@ -782,15 +825,21 @@ protected constructor(
             if (hints != null) {
                 val prevChar: Char = if (offset > 0) contents[offset - 1] else '\n'
                 val lastIndex = offset + pattern.length - 1
-                val nextChar: Char = if (lastIndex < contents.length - 1) contents[lastIndex + 1] else '\n'
+                val nextChar: Char =
+                    if (lastIndex < contents.length - 1) contents[lastIndex + 1] else '\n'
 
-                if (hints.isWholeWord && (Character.isLetter(prevChar) || Character.isLetter(nextChar))) {
+                if (hints.isWholeWord && (Character.isLetter(prevChar) || Character.isLetter(
+                        nextChar
+                    ))
+                ) {
                     return false
-
                 }
 
                 if (hints.isJavaSymbol) {
-                    if (Character.isJavaIdentifierPart(prevChar) || Character.isJavaIdentifierPart(nextChar)) {
+                    if (Character.isJavaIdentifierPart(prevChar) || Character.isJavaIdentifierPart(
+                            nextChar
+                        )
+                    ) {
                         return false
                     }
 

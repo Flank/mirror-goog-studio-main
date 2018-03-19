@@ -71,7 +71,6 @@ public class UnsafeBroadcastReceiverDetector extends Detector
 
     // TODO: Use the new merged manifest model
 
-
     /* Description of check implementations:
      *
      * UnsafeProtectedBroadcastReceiver check
@@ -110,30 +109,33 @@ public class UnsafeBroadcastReceiverDetector extends Detector
      * only ones that are declared in the application manifest.
      */
 
-    public static final Issue ACTION_STRING = Issue.create(
-            "UnsafeProtectedBroadcastReceiver",
-            "Unsafe Protected BroadcastReceiver",
-            "BroadcastReceivers that declare an intent-filter for a protected-broadcast action " +
-            "string must check that the received intent's action string matches the expected " +
-            "value, otherwise it is possible for malicious actors to spoof intents.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            new Implementation(UnsafeBroadcastReceiverDetector.class,
-                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ACTION_STRING =
+            Issue.create(
+                    "UnsafeProtectedBroadcastReceiver",
+                    "Unsafe Protected BroadcastReceiver",
+                    "BroadcastReceivers that declare an intent-filter for a protected-broadcast action "
+                            + "string must check that the received intent's action string matches the expected "
+                            + "value, otherwise it is possible for malicious actors to spoof intents.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(
+                            UnsafeBroadcastReceiverDetector.class,
+                            EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
+                            Scope.JAVA_FILE_SCOPE));
 
-    public static final Issue BROADCAST_SMS = Issue.create(
-            "UnprotectedSMSBroadcastReceiver",
-            "Unprotected SMS BroadcastReceiver",
-            "BroadcastReceivers that declare an intent-filter for SMS_DELIVER or " +
-            "SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, " +
-            "otherwise it is possible for malicious actors to spoof intents.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            new Implementation(UnsafeBroadcastReceiverDetector.class,
-                    Scope.MANIFEST_SCOPE));
+    public static final Issue BROADCAST_SMS =
+            Issue.create(
+                    "UnprotectedSMSBroadcastReceiver",
+                    "Unprotected SMS BroadcastReceiver",
+                    "BroadcastReceivers that declare an intent-filter for SMS_DELIVER or "
+                            + "SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, "
+                            + "otherwise it is possible for malicious actors to spoof intents.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(
+                            UnsafeBroadcastReceiverDetector.class, Scope.MANIFEST_SCOPE));
 
     /* List of protected broadcast strings.
      * Protected broadcast strings are defined by <protected-broadcast> entries in the
@@ -528,8 +530,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
 
     private Set<String> mReceiversWithProtectedBroadcastIntentFilter = null;
 
-    public UnsafeBroadcastReceiverDetector() {
-    }
+    public UnsafeBroadcastReceiverDetector() {}
 
     // ---- Implements XmlScanner ----
 
@@ -539,8 +540,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
     }
 
     @Override
-    public void visitElement(@NonNull XmlContext context,
-            @NonNull Element element) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         if (TAG_RECEIVER.equals(tag)) {
             String name = LintUtils.resolveManifestName(element);
@@ -554,24 +554,26 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             Element filter = getFirstSubTagByName(element, TAG_INTENT_FILTER);
             if (filter != null) {
                 for (Element action : getSubTagsByName(filter, TAG_ACTION)) {
-                    String actionName = action.getAttributeNS(
-                            ANDROID_URI, ATTR_NAME);
-                    if (("android.provider.Telephony.SMS_DELIVER".equals(actionName) ||
-                            "android.provider.Telephony.SMS_RECEIVED".
-                                equals(actionName)) &&
-                            !"android.permission.BROADCAST_SMS".equals(permission)) {
-                        LintFix fix = fix().set(ANDROID_URI, ATTR_PERMISSION,
-                                "android.permission.BROADCAST_SMS").build();
+                    String actionName = action.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                    if (("android.provider.Telephony.SMS_DELIVER".equals(actionName)
+                                    || "android.provider.Telephony.SMS_RECEIVED".equals(actionName))
+                            && !"android.permission.BROADCAST_SMS".equals(permission)) {
+                        LintFix fix =
+                                fix().set(
+                                                ANDROID_URI,
+                                                ATTR_PERMISSION,
+                                                "android.permission.BROADCAST_SMS")
+                                        .build();
                         context.report(
                                 BROADCAST_SMS,
                                 element,
                                 context.getNameLocation(element),
-                                "BroadcastReceivers that declare an intent-filter for " +
-                                "SMS_DELIVER or SMS_RECEIVED must ensure that the " +
-                                "caller has the BROADCAST_SMS permission, otherwise it " +
-                                "is possible for malicious actors to spoof intents.", fix);
-                    }
-                    else if (isProtectedBroadcast(actionName)) {
+                                "BroadcastReceivers that declare an intent-filter for "
+                                        + "SMS_DELIVER or SMS_RECEIVED must ensure that the "
+                                        + "caller has the BROADCAST_SMS permission, otherwise it "
+                                        + "is possible for malicious actors to spoof intents.",
+                                fix);
+                    } else if (isProtectedBroadcast(actionName)) {
                         if (mReceiversWithProtectedBroadcastIntentFilter == null) {
                             mReceiversWithProtectedBroadcastIntentFilter = Sets.newHashSet();
                         }
@@ -589,18 +591,18 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 // Compute from merged manifest
                 Project mainProject = context.getMainProject();
                 Document mergedManifest = mainProject.getMergedManifest();
-                if (mergedManifest != null &&
-                        mergedManifest.getDocumentElement() != null) {
-                    Element application = getFirstSubTagByName(
-                            mergedManifest.getDocumentElement(), TAG_APPLICATION);
+                if (mergedManifest != null && mergedManifest.getDocumentElement() != null) {
+                    Element application =
+                            getFirstSubTagByName(
+                                    mergedManifest.getDocumentElement(), TAG_APPLICATION);
                     if (application != null) {
                         for (Element element : XmlUtils.getSubTags(application)) {
                             if (TAG_RECEIVER.equals(element.getTagName())) {
                                 Element filter = getFirstSubTagByName(element, TAG_INTENT_FILTER);
                                 if (filter != null) {
                                     for (Element action : getSubTagsByName(filter, TAG_ACTION)) {
-                                        String actionName = action.getAttributeNS(
-                                                ANDROID_URI, ATTR_NAME);
+                                        String actionName =
+                                                action.getAttributeNS(ANDROID_URI, ATTR_NAME);
                                         if (isProtectedBroadcast(actionName)) {
                                             String name = LintUtils.resolveManifestName(element);
                                             mReceiversWithProtectedBroadcastIntentFilter.add(name);
@@ -647,8 +649,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         }
     }
 
-    private static void checkOnReceive(@NonNull JavaContext context,
-            @NonNull PsiMethod method) {
+    private static void checkOnReceive(@NonNull JavaContext context, @NonNull PsiMethod method) {
         // Search for call to getAction but also search for references to aload_2,
         // which indicates that the method is making use of the received intent in
         // some way.
@@ -664,29 +665,31 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         if (!visitor.getCallsGetAction()) {
             String report;
             if (!visitor.getUsesIntent()) {
-                report = "This broadcast receiver declares an intent-filter for a protected " +
-                        "broadcast action string, which can only be sent by the system, " +
-                        "not third-party applications. However, the receiver's onReceive " +
-                        "method does not appear to call getAction to ensure that the " +
-                        "received Intent's action string matches the expected value, " +
-                        "potentially making it possible for another actor to send a " +
-                        "spoofed intent with no action string or a different action " +
-                        "string and cause undesired behavior.";
+                report =
+                        "This broadcast receiver declares an intent-filter for a protected "
+                                + "broadcast action string, which can only be sent by the system, "
+                                + "not third-party applications. However, the receiver's onReceive "
+                                + "method does not appear to call getAction to ensure that the "
+                                + "received Intent's action string matches the expected value, "
+                                + "potentially making it possible for another actor to send a "
+                                + "spoofed intent with no action string or a different action "
+                                + "string and cause undesired behavior.";
             } else {
                 // An alternative implementation option is to not report a finding at all in
                 // this case, if we are worried about false positives causing confusion or
                 // resulting in developers ignoring other lint warnings.
-                report = "This broadcast receiver declares an intent-filter for a protected " +
-                        "broadcast action string, which can only be sent by the system, " +
-                        "not third-party applications. However, the receiver's onReceive " +
-                        "method does not appear to call getAction to ensure that the " +
-                        "received Intent's action string matches the expected value, " +
-                        "potentially making it possible for another actor to send a " +
-                        "spoofed intent with no action string or a different action " +
-                        "string and cause undesired behavior. In this case, it is " +
-                        "possible that the onReceive method passed the received Intent " +
-                        "to another method that checked the action string. If so, this " +
-                        "finding can safely be ignored.";
+                report =
+                        "This broadcast receiver declares an intent-filter for a protected "
+                                + "broadcast action string, which can only be sent by the system, "
+                                + "not third-party applications. However, the receiver's onReceive "
+                                + "method does not appear to call getAction to ensure that the "
+                                + "received Intent's action string matches the expected value, "
+                                + "potentially making it possible for another actor to send a "
+                                + "spoofed intent with no action string or a different action "
+                                + "string and cause undesired behavior. In this case, it is "
+                                + "possible that the onReceive method passed the received Intent "
+                                + "to another method that checked the action string. If so, this "
+                                + "finding can safely be ignored.";
             }
             Location location = context.getNameLocation(method);
             context.report(ACTION_STRING, method, location, report);
@@ -716,8 +719,9 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         public boolean visitCallExpression(@NonNull UCallExpression node) {
             if (!mCallsGetAction && UastExpressionUtils.isMethodCall(node)) {
                 PsiMethod method = node.resolve();
-                if (method != null && "getAction".equals(method.getName()) &&
-                        mEvaluator.isMemberInSubClassOf(method, CLASS_INTENT, false)) {
+                if (method != null
+                        && "getAction".equals(method.getName())
+                        && mEvaluator.isMemberInSubClassOf(method, CLASS_INTENT, false)) {
                     mCallsGetAction = true;
                 }
             }
@@ -726,7 +730,8 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         }
 
         @Override
-        public boolean visitSimpleNameReferenceExpression(@NonNull USimpleNameReferenceExpression node) {
+        public boolean visitSimpleNameReferenceExpression(
+                @NonNull USimpleNameReferenceExpression node) {
             if (!mUsesIntent && mParameter != null) {
                 PsiElement resolved = node.resolve();
                 if (mParameter.equals(resolved)) {

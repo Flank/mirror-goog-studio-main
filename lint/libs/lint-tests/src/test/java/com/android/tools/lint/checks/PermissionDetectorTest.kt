@@ -25,8 +25,9 @@ import com.android.tools.lint.detector.api.Detector
 class PermissionDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = PermissionDetector()
 
-    private val mLocationManagerStub = java("src/android/location/LocationManager.java",
-            """
+    private val mLocationManagerStub = java(
+        "src/android/location/LocationManager.java",
+        """
                 package android.location;
 
                 import android.support.annotation.RequiresPermission;
@@ -41,9 +42,11 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     public static class Location {
                     }
                 }
-                """).indented()
+                """
+    ).indented()
 
-    private val mPermissionTest = java("src/test/pkg/PermissionTest.java", """
+    private val mPermissionTest = java(
+        "src/test/pkg/PermissionTest.java", """
                 package test.pkg;
 
                 import android.location.LocationManager;
@@ -53,16 +56,21 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         LocationManager.Location location = locationManager.myMethod(provider);
                     }
                 }
-                """).indented()
+                """
+    ).indented()
 
-    private fun getManifestWithPermissions(targetSdk: Int,
-            vararg permissions: String): TestFile {
+    private fun getManifestWithPermissions(
+        targetSdk: Int,
+        vararg permissions: String
+    ): TestFile {
         return getManifestWithPermissions(1, targetSdk, *permissions)
     }
 
-    private fun getThingsManifestWithPermissions(targetSdk: Int,
-            isRequired: Boolean?,
-            vararg permissions: String): TestFile {
+    private fun getThingsManifestWithPermissions(
+        targetSdk: Int,
+        isRequired: Boolean?,
+        vararg permissions: String
+    ): TestFile {
         val applicationBlock = StringBuilder()
         applicationBlock.append("<uses-library android:name=\"com.google.android.things\"")
         if (isRequired != null) {
@@ -75,50 +83,57 @@ class PermissionDetectorTest : AbstractCheckTest() {
         }
         applicationBlock.append("/>\n")
         return getManifestWithPermissions(
-                applicationBlock.toString(),
-                1,
-                targetSdk,
-                *permissions)
+            applicationBlock.toString(),
+            1,
+            targetSdk,
+            *permissions
+        )
     }
 
-    private fun getManifestWithPermissions(minSdk: Int,
-            targetSdk: Int,
-            vararg permissions: String): TestFile {
+    private fun getManifestWithPermissions(
+        minSdk: Int,
+        targetSdk: Int,
+        vararg permissions: String
+    ): TestFile {
         return getManifestWithPermissions(null, minSdk, targetSdk, *permissions)
     }
 
     private fun getManifestWithPermissions(
-            applicationBlock: String?,
-            minSdk: Int,
-            targetSdk: Int,
-            vararg permissions: String): TestFile {
+        applicationBlock: String?,
+        minSdk: Int,
+        targetSdk: Int,
+        vararg permissions: String
+    ): TestFile {
         val permissionBlock = StringBuilder()
         for (permission in permissions) {
             permissionBlock.append("    <uses-permission android:name=\"").append(permission)
-                    .append("\" />\n")
+                .append("\" />\n")
         }
-        return LintDetectorTest.xml("AndroidManifest.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"foo.bar2\"\n"
-                + "    android:versionCode=\"1\"\n"
-                + "    android:versionName=\"1.0\" >\n"
-                + "\n"
-                + "    <uses-sdk android:minSdkVersion=\"" + minSdk + "\" android:targetSdkVersion=\""
-                + targetSdk + "\" />\n"
-                + "\n"
-                + permissionBlock.toString()
-                + "\n"
-                + "    <application\n"
-                + "        android:icon=\"@drawable/ic_launcher\"\n"
-                + "        android:label=\"@string/app_name\" >\n"
-                + (applicationBlock ?: "")
-                + "    </application>\n"
-                + "\n"
-                + "</manifest>")
+        return LintDetectorTest.xml(
+            "AndroidManifest.xml", "" +
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "    package=\"foo.bar2\"\n" +
+                    "    android:versionCode=\"1\"\n" +
+                    "    android:versionName=\"1.0\" >\n" +
+                    "\n" +
+                    "    <uses-sdk android:minSdkVersion=\"" + minSdk + "\" android:targetSdkVersion=\"" +
+                    targetSdk + "\" />\n" +
+                    "\n" +
+                    permissionBlock.toString()
+                    + "\n" +
+                    "    <application\n" +
+                    "        android:icon=\"@drawable/ic_launcher\"\n" +
+                    "        android:label=\"@string/app_name\" >\n" +
+                    (applicationBlock ?: "")
+                    + "    </application>\n" +
+                    "\n" +
+                    "</manifest>"
+        )
     }
 
-    private val mRevokeTest = java("src/test/pkg/RevokeTest.java", """
+    private val mRevokeTest = java(
+        "src/test/pkg/RevokeTest.java", """
                 package test.pkg;
 
                 import android.content.Context;
@@ -218,33 +233,33 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     }
 
                 }
-                """).indented()
+                """
+    ).indented()
 
     fun testMissingPermissions() {
-        val expected = "src/test/pkg/PermissionTest.java:7: Error: Missing permissions required by LocationManager.myMethod: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION [MissingPermission]\n" +
-                "        LocationManager.Location location = locationManager.myMethod(provider);\n" +
-                "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "1 errors, 0 warnings\n"
+        val expected =
+            "src/test/pkg/PermissionTest.java:7: Error: Missing permissions required by LocationManager.myMethod: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION [MissingPermission]\n" +
+                    "        LocationManager.Location location = locationManager.myMethod(provider);\n" +
+                    "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "1 errors, 0 warnings\n"
 
         lint().files(
-                getManifestWithPermissions(14),
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            getManifestWithPermissions(14),
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testHasPermission() {
         lint().files(
-                getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION"),
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION"),
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testRevokePermissions() {
@@ -273,13 +288,12 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "7 errors, 0 warnings\n"
 
         lint().files(
-                getManifestWithPermissions(23, "android.permission.ACCESS_FINE_LOCATION"),
-                mLocationManagerStub,
-                mRevokeTest,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            getManifestWithPermissions(23, "android.permission.ACCESS_FINE_LOCATION"),
+            mLocationManagerStub,
+            mRevokeTest,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testImpliedPermissions() {
@@ -291,82 +305,86 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "        ~~~~~~~~~\n" +
                 "1 errors, 0 warnings\n"
         lint().files(
-                getManifestWithPermissions(14,
-                        14,
-                        "android.permission.ACCESS_FINE_LOCATION"),
-                java("src/test/pkg/PermissionTest2.java", ""
-                        + "package test.pkg;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "public class PermissionTest2 {\n"
-                        + "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n"
-                        + "    public void method1() {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(\"my.permission.PERM1\")\n"
-                        + "    public void method2() {\n"
-                        + "        method1(); // ERROR\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n"
-                        + "    public void method3() {\n"
-                        + "        // The above @RequiresPermission implies that we are holding these\n"
-                        + "        // permissions here, so the call to method1() should not be flagged as\n"
-                        + "        // missing a permission!\n"
-                        + "        method1(); // OK\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            getManifestWithPermissions(
+                14,
+                14,
+                "android.permission.ACCESS_FINE_LOCATION"
+            ),
+            java(
+                "src/test/pkg/PermissionTest2.java", "" +
+                        "package test.pkg;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class PermissionTest2 {\n" +
+                        "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n" +
+                        "    public void method1() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.permission.PERM1\")\n" +
+                        "    public void method2() {\n" +
+                        "        method1(); // ERROR\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n" +
+                        "    public void method3() {\n" +
+                        "        // The above @RequiresPermission implies that we are holding these\n" +
+                        "        // permissions here, so the call to method1() should not be flagged as\n" +
+                        "        // missing a permission!\n" +
+                        "        method1(); // OK\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testRevokePermissionsPre23() {
         lint().files(
-                getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION"),
-                mLocationManagerStub,
-                mRevokeTest,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION"),
+            mLocationManagerStub,
+            mRevokeTest,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testUsesPermissionSdk23() {
-        val manifest = getManifestWithPermissions(14,
-                "android.permission.ACCESS_FINE_LOCATION",
-                "android.permission.BLUETOOTH")
+        val manifest = getManifestWithPermissions(
+            14,
+            "android.permission.ACCESS_FINE_LOCATION",
+            "android.permission.BLUETOOTH"
+        )
         val contents = manifest.getContents()
         assertNotNull(contents)
         val s = contents!!.replace(TAG_USES_PERMISSION, TAG_USES_PERMISSION_SDK_23)
         manifest.withSource(s)
         lint().files(
-                manifest,
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            manifest,
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testUsesPermissionSdkM() {
-        val manifest = getManifestWithPermissions(14,
-                "android.permission.ACCESS_FINE_LOCATION",
-                "android.permission.BLUETOOTH")
+        val manifest = getManifestWithPermissions(
+            14,
+            "android.permission.ACCESS_FINE_LOCATION",
+            "android.permission.BLUETOOTH"
+        )
         val contents = manifest.getContents()
         assertNotNull(contents)
         val s = contents!!.replace(TAG_USES_PERMISSION, TAG_USES_PERMISSION_SDK_M)
         manifest.withSource(s)
         lint().files(
-                manifest,
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            manifest,
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testPermissionAnnotation() {
@@ -376,37 +394,38 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "1 errors, 0 warnings\n"
         lint().files(
-                java("src/test/pkg/LocationManager.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "import java.lang.annotation.Retention;\n"
-                        + "import java.lang.annotation.RetentionPolicy;\n"
-                        + "\n"
-                        + "import static android.Manifest.permission.ACCESS_COARSE_LOCATION;\n"
-                        + "import static android.Manifest.permission.ACCESS_FINE_LOCATION;\n"
-                        + "\n"
-                        + "@SuppressWarnings(\"UnusedDeclaration\")\n"
-                        + "public abstract class LocationManager {\n"
-                        + "    @RequiresPermission(anyOf = {ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION})\n"
-                        + "    @Retention(RetentionPolicy.SOURCE)\n"
-                        + "    @interface AnyLocationPermission {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @AnyLocationPermission\n"
-                        + "    public abstract Location getLastKnownLocation(String provider);\n"
-                        + "    public static class Location {\n"
-                        + "    }\n"
-                        + "    \n"
-                        + "    public static void test(LocationManager manager) {\n"
-                        + "        Location location = manager.getLastKnownLocation(\"provider\");\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            java(
+                "src/test/pkg/LocationManager.java", "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "import java.lang.annotation.Retention;\n" +
+                        "import java.lang.annotation.RetentionPolicy;\n" +
+                        "\n" +
+                        "import static android.Manifest.permission.ACCESS_COARSE_LOCATION;\n" +
+                        "import static android.Manifest.permission.ACCESS_FINE_LOCATION;\n" +
+                        "\n" +
+                        "@SuppressWarnings(\"UnusedDeclaration\")\n" +
+                        "public abstract class LocationManager {\n" +
+                        "    @RequiresPermission(anyOf = {ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION})\n" +
+                        "    @Retention(RetentionPolicy.SOURCE)\n" +
+                        "    @interface AnyLocationPermission {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @AnyLocationPermission\n" +
+                        "    public abstract Location getLastKnownLocation(String provider);\n" +
+                        "    public static class Location {\n" +
+                        "    }\n" +
+                        "    \n" +
+                        "    public static void test(LocationManager manager) {\n" +
+                        "        Location location = manager.getLastKnownLocation(\"provider\");\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testMissingManifestLevelPermissionsWithAndroidThings() {
@@ -417,25 +436,24 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "1 errors, 0 warnings\n"
 
         lint().files(
-                getThingsManifestWithPermissions(24, null),
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            getThingsManifestWithPermissions(24, null),
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testHasManifestLevelPermissionsWithAndroidThings() {
         lint().files(
-                getThingsManifestWithPermissions(
-                        24, null, "android.permission.ACCESS_FINE_LOCATION"),
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            getThingsManifestWithPermissions(
+                24, null, "android.permission.ACCESS_FINE_LOCATION"
+            ),
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testMissingRuntimePermissionsWithOptionalAndroidThings() {
@@ -446,15 +464,16 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "1 errors, 0 warnings\n"
 
         lint().files(
-                getThingsManifestWithPermissions(24,
-                        false,
-                        "android.permission.ACCESS_FINE_LOCATION"),
-                mPermissionTest,
-                mLocationManagerStub,
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            getThingsManifestWithPermissions(
+                24,
+                false,
+                "android.permission.ACCESS_FINE_LOCATION"
+            ),
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testIntentPermission() {
@@ -525,163 +544,164 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "21 errors, 0 warnings\n"
 
         lint().files(
-                getManifestWithPermissions(14, 23),
-                java("src/test/pkg/ActionTest.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.Manifest;\n"
-                        + "import android.app.Activity;\n"
-                        + "import android.content.ContentResolver;\n"
-                        + "import android.content.Context;\n"
-                        + "import android.content.Intent;\n"
-                        + "import android.database.Cursor;\n"
-                        + "import android.net.Uri;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        //+ "import static android.Manifest.permission.READ_HISTORY_BOOKMARKS;\n"
-                        //+ "import static android.Manifest.permission.WRITE_HISTORY_BOOKMARKS;\n"
-                        + "\n"
-                        + "@SuppressWarnings({\"deprecation\", \"unused\"})\n"
-                        + "public class ActionTest {\n"
-                        + "     public static final String READ_HISTORY_BOOKMARKS=\"com.android.browser.permission.READ_HISTORY_BOOKMARKS\";\n"
-                        + "     public static final String WRITE_HISTORY_BOOKMARKS=\"com.android.browser.permission.WRITE_HISTORY_BOOKMARKS\";\n"
-                        + "    @RequiresPermission(Manifest.permission.CALL_PHONE)\n"
-                        + "    public static final String ACTION_CALL = \"android.intent.action.CALL\";\n"
-                        + "\n"
-                        + "    @RequiresPermission.Read(@RequiresPermission(READ_HISTORY_BOOKMARKS))\n"
-                        + "    @RequiresPermission.Write(@RequiresPermission(WRITE_HISTORY_BOOKMARKS))\n"
-                        + "    public static final Uri BOOKMARKS_URI = Uri.parse(\"content://browser/bookmarks\");\n"
-                        + "\n"
-                        + "    public static final Uri COMBINED_URI = Uri.withAppendedPath(BOOKMARKS_URI, \"bookmarks\");\n"
-                        + "    \n"
-                        + "    public static void activities1(Activity activity) {\n"
-                        + "        Intent intent = new Intent(Intent.ACTION_CALL);\n"
-                        + "        intent.setData(Uri.parse(\"tel:1234567890\"));\n"
-                        + "        // This one will only be flagged if we have framework metadata on Intent.ACTION_CALL\n"
-                        // Too flaky
-                        + "        //activity.startActivity(intent);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void activities2(Activity activity) {\n"
-                        + "        Intent intent = new Intent(ACTION_CALL);\n"
-                        + "        intent.setData(Uri.parse(\"tel:1234567890\"));\n"
-                        + "        activity.startActivity(intent);\n"
-                        + "    }\n"
-                        + "    public static void activities3(Activity activity) {\n"
-                        + "        Intent intent;\n"
-                        + "        intent = new Intent(ACTION_CALL);\n"
-                        + "        intent.setData(Uri.parse(\"tel:1234567890\"));\n"
-                        + "        activity.startActivity(intent);\n"
-                        + "        activity.startActivity(intent, null);\n"
-                        + "        activity.startActivityForResult(intent, 0);\n"
-                        + "        activity.startActivityFromChild(activity, intent, 0);\n"
-                        + "        activity.startActivityIfNeeded(intent, 0);\n"
-                        + "        activity.startActivityFromFragment(null, intent, 0);\n"
-                        + "        activity.startNextMatchingActivity(intent);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void broadcasts(Context context) {\n"
-                        + "        Intent intent;\n"
-                        + "        intent = new Intent(ACTION_CALL);\n"
-                        + "        context.sendBroadcast(intent);\n"
-                        + "        context.sendBroadcast(intent, \"\");\n"
-                        + "        context.sendBroadcastAsUser(intent, null);\n"
-                        + "        context.sendStickyBroadcast(intent);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void contentResolvers(Context context, ContentResolver resolver) {\n"
-                        + "        // read\n"
-                        + "        resolver.query(BOOKMARKS_URI, null, null, null, null);\n"
-                        + "\n"
-                        + "        // write\n"
-                        + "        resolver.insert(BOOKMARKS_URI, null);\n"
-                        + "        resolver.delete(BOOKMARKS_URI, null, null);\n"
-                        + "        resolver.update(BOOKMARKS_URI, null, null, null);\n"
-                        + "\n"
-                        + "        // Framework (external) annotation\n"
-                        + "//REMOVED        resolver.query(android.provider.Browser.BOOKMARKS_URI, null, null, null, null);\n"
-                        + "\n"
-                        + "        // TODO: Look for more complex URI manipulations\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void myStartActivity(String s1, String s2, \n"
-                        + "                                       @RequiresPermission Intent intent) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void myReadResolverMethod(String s1, @RequiresPermission.Read(@RequiresPermission) Uri uri) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void myWriteResolverMethod(@RequiresPermission.Read(@RequiresPermission) Uri uri) {\n"
-                        + "    }\n"
-                        + "    \n"
-                        + "    public static void testCustomMethods() {\n"
-                        + "        myStartActivity(\"\", null, new Intent(ACTION_CALL));\n"
-                        + "        myReadResolverMethod(\"\", BOOKMARKS_URI);\n"
-                        + "        myWriteResolverMethod(BOOKMARKS_URI);\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+            getManifestWithPermissions(14, 23),
+            java(
+                "src/test/pkg/ActionTest.java", "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.Manifest;\n" +
+                        "import android.app.Activity;\n" +
+                        "import android.content.ContentResolver;\n" +
+                        "import android.content.Context;\n" +
+                        "import android.content.Intent;\n" +
+                        "import android.database.Cursor;\n" +
+                        "import android.net.Uri;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "\n" +
+                        "@SuppressWarnings({\"deprecation\", \"unused\"})\n" +
+                        "public class ActionTest {\n" +
+                        "     public static final String READ_HISTORY_BOOKMARKS=\"com.android.browser.permission.READ_HISTORY_BOOKMARKS\";\n" +
+                        "     public static final String WRITE_HISTORY_BOOKMARKS=\"com.android.browser.permission.WRITE_HISTORY_BOOKMARKS\";\n" +
+                        "    @RequiresPermission(Manifest.permission.CALL_PHONE)\n" +
+                        "    public static final String ACTION_CALL = \"android.intent.action.CALL\";\n" +
+                        "\n" +
+                        "    @RequiresPermission.Read(@RequiresPermission(READ_HISTORY_BOOKMARKS))\n" +
+                        "    @RequiresPermission.Write(@RequiresPermission(WRITE_HISTORY_BOOKMARKS))\n" +
+                        "    public static final Uri BOOKMARKS_URI = Uri.parse(\"content://browser/bookmarks\");\n" +
+                        "\n" +
+                        "    public static final Uri COMBINED_URI = Uri.withAppendedPath(BOOKMARKS_URI, \"bookmarks\");\n" +
+                        "    \n" +
+                        "    public static void activities1(Activity activity) {\n" +
+                        "        Intent intent = new Intent(Intent.ACTION_CALL);\n" +
+                        "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
+                        "        // This one will only be flagged if we have framework metadata on Intent.ACTION_CALL\n" +
+                        // Too flaky +
+                        "        //activity.startActivity(intent);\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void activities2(Activity activity) {\n" +
+                        "        Intent intent = new Intent(ACTION_CALL);\n" +
+                        "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
+                        "        activity.startActivity(intent);\n" +
+                        "    }\n" +
+                        "    public static void activities3(Activity activity) {\n" +
+                        "        Intent intent;\n" +
+                        "        intent = new Intent(ACTION_CALL);\n" +
+                        "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
+                        "        activity.startActivity(intent);\n" +
+                        "        activity.startActivity(intent, null);\n" +
+                        "        activity.startActivityForResult(intent, 0);\n" +
+                        "        activity.startActivityFromChild(activity, intent, 0);\n" +
+                        "        activity.startActivityIfNeeded(intent, 0);\n" +
+                        "        activity.startActivityFromFragment(null, intent, 0);\n" +
+                        "        activity.startNextMatchingActivity(intent);\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void broadcasts(Context context) {\n" +
+                        "        Intent intent;\n" +
+                        "        intent = new Intent(ACTION_CALL);\n" +
+                        "        context.sendBroadcast(intent);\n" +
+                        "        context.sendBroadcast(intent, \"\");\n" +
+                        "        context.sendBroadcastAsUser(intent, null);\n" +
+                        "        context.sendStickyBroadcast(intent);\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void contentResolvers(Context context, ContentResolver resolver) {\n" +
+                        "        // read\n" +
+                        "        resolver.query(BOOKMARKS_URI, null, null, null, null);\n" +
+                        "\n" +
+                        "        // write\n" +
+                        "        resolver.insert(BOOKMARKS_URI, null);\n" +
+                        "        resolver.delete(BOOKMARKS_URI, null, null);\n" +
+                        "        resolver.update(BOOKMARKS_URI, null, null, null);\n" +
+                        "\n" +
+                        "        // Framework (external) annotation\n" +
+                        "//REMOVED        resolver.query(android.provider.Browser.BOOKMARKS_URI, null, null, null, null);\n" +
+                        "\n" +
+                        "        // TODO: Look for more complex URI manipulations\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void myStartActivity(String s1, String s2, \n" +
+                        "                                       @RequiresPermission Intent intent) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void myReadResolverMethod(String s1, @RequiresPermission.Read(@RequiresPermission) Uri uri) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void myWriteResolverMethod(@RequiresPermission.Read(@RequiresPermission) Uri uri) {\n" +
+                        "    }\n" +
+                        "    \n" +
+                        "    public static void testCustomMethods() {\n" +
+                        "        myStartActivity(\"\", null, new Intent(ACTION_CALL));\n" +
+                        "        myReadResolverMethod(\"\", BOOKMARKS_URI);\n" +
+                        "        myWriteResolverMethod(BOOKMARKS_URI);\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .run().expect(expected)
     }
 
     fun testRequiresPermissionWithinRequires() {
         lint().files(
-                LintDetectorTest.java(""
-                        + "package com.example.mylibrary1;\n"
-                        + "\n"
-                        + "import android.Manifest;\n"
-                        + "import android.content.Context;\n"
-                        + "import android.net.wifi.WifiInfo;\n"
-                        + "import android.net.wifi.WifiManager;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "public class WifiInfoUtil {\n"
-                        + "    @RequiresPermission(Manifest.permission.ACCESS_WIFI_STATE)\n"
-                        + "    public static WifiInfo getWifiInfo(Context context) {\n"
-                        +
-                        "        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);\n"
-                        + "        return wm.getConnectionInfo();\n"
-                        + "    }\n"
-                        + "}"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            LintDetectorTest.java(
+                "" +
+                        "package com.example.mylibrary1;\n" +
+                        "\n" +
+                        "import android.Manifest;\n" +
+                        "import android.content.Context;\n" +
+                        "import android.net.wifi.WifiInfo;\n" +
+                        "import android.net.wifi.WifiManager;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class WifiInfoUtil {\n" +
+                        "    @RequiresPermission(Manifest.permission.ACCESS_WIFI_STATE)\n" +
+                        "    public static WifiInfo getWifiInfo(Context context) {\n" +
+                        "        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);\n" +
+                        "        return wm.getConnectionInfo();\n" +
+                        "    }\n" +
+                        "}"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testMissingPermission() {
 
         lint().files(
-                LintDetectorTest.java(""
-                        + "package test.pkg;\n"
-                        + "import android.Manifest;\n"
-                        + "import android.content.Context;\n"
-                        + "import android.content.pm.PackageManager;\n"
-                        + "import android.graphics.Bitmap;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "import static android.Manifest.permission.ACCESS_COARSE_LOCATION;\n"
-                        + "import static android.Manifest.permission.ACCESS_FINE_LOCATION;\n"
-                        + "\n"
-                        + "public class X {\n"
-                        + "    private static void foo(Context context, LocationManager manager) {\n"
-                        + "        /*Missing permissions required by LocationManager.myMethod: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION*/manager.myMethod(\"myprovider\")/**/;\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @SuppressWarnings(\"UnusedDeclaration\")\n"
-                        + "    public abstract class LocationManager {\n"
-                        + "        @RequiresPermission(anyOf = {ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION})\n"
-                        + "        public abstract Location myMethod(String provider);\n"
-                        + "        public class Location {\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+            LintDetectorTest.java(
+                "" +
+                        "package test.pkg;\n" +
+                        "import android.Manifest;\n" +
+                        "import android.content.Context;\n" +
+                        "import android.content.pm.PackageManager;\n" +
+                        "import android.graphics.Bitmap;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "import static android.Manifest.permission.ACCESS_COARSE_LOCATION;\n" +
+                        "import static android.Manifest.permission.ACCESS_FINE_LOCATION;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    private static void foo(Context context, LocationManager manager) {\n" +
+                        "        /*Missing permissions required by LocationManager.myMethod: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION*/manager.myMethod(\"myprovider\")/**/;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @SuppressWarnings(\"UnusedDeclaration\")\n" +
+                        "    public abstract class LocationManager {\n" +
+                        "        @RequiresPermission(anyOf = {ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION})\n" +
+                        "        public abstract Location myMethod(String provider);\n" +
+                        "        public class Location {\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 
     fun testImpliedPermission() {
@@ -689,212 +709,220 @@ class PermissionDetectorTest : AbstractCheckTest() {
         //   https://code.google.com/p/android/issues/detail?id=177381
 
         lint().files(
-                LintDetectorTest.java(""
-                        + "package test.pkg;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "public class X {\n"
-                        + "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n"
-                        + "    public void method1() {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(\"my.permission.PERM1\")\n"
-                        + "    public void method2() {\n"
-                        + "        /*Missing permissions required by X.method1: my.permission.PERM2*/method1()/**/;\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n"
-                        + "    public void method3() {\n"
-                        + "        // The above @RequiresPermission implies that we are holding these\n"
-                        + "        // permissions here, so the call to method1() should not be flagged as\n"
-                        + "        // missing a permission!\n"
-                        + "        method1();\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+            LintDetectorTest.java(
+                "" +
+                        "package test.pkg;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n" +
+                        "    public void method1() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.permission.PERM1\")\n" +
+                        "    public void method2() {\n" +
+                        "        /*Missing permissions required by X.method1: my.permission.PERM2*/method1()/**/;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n" +
+                        "    public void method3() {\n" +
+                        "        // The above @RequiresPermission implies that we are holding these\n" +
+                        "        // permissions here, so the call to method1() should not be flagged as\n" +
+                        "        // missing a permission!\n" +
+                        "        method1();\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 
     fun testLibraryRevocablePermission() {
 
         lint().files(
-                LintDetectorTest.manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"test.pkg.permissiontest\">\n"
-                        + "\n"
-                        + "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n"
-                        + "\n"
-                        + "    <permission\n"
-                        + "        android:name=\"my.normal.P1\"\n"
-                        + "        android:protectionLevel=\"normal\" />\n"
-                        + "\n"
-                        + "    <permission\n"
-                        + "        android:name=\"my.dangerous.P2\"\n"
-                        + "        android:protectionLevel=\"dangerous\" />\n"
-                        + "\n"
-                        + "    <uses-permission android:name=\"my.normal.P1\" />\n"
-                        + "    <uses-permission android:name=\"my.dangerous.P2\" />\n"
-                        + "\n"
-                        + "</manifest>\n"),
-                LintDetectorTest.java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "public class X {\n"
-                        + "    public void something() {\n"
-                        + "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/;\n"
-                        + "        methodRequiresNormal();\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(\"my.normal.P1\")\n"
-                        + "    public void methodRequiresNormal() {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(\"my.dangerous.P2\")\n"
-                        + "    public void methodRequiresDangerous() {\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+            LintDetectorTest.manifest(
+                "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg.permissiontest\">\n" +
+                        "\n" +
+                        "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.normal.P1\"\n" +
+                        "        android:protectionLevel=\"normal\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.dangerous.P2\"\n" +
+                        "        android:protectionLevel=\"dangerous\" />\n" +
+                        "\n" +
+                        "    <uses-permission android:name=\"my.normal.P1\" />\n" +
+                        "    <uses-permission android:name=\"my.dangerous.P2\" />\n" +
+                        "\n" +
+                        "</manifest>\n"
+            ),
+            LintDetectorTest.java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    public void something() {\n" +
+                        "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/;\n" +
+                        "        methodRequiresNormal();\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.normal.P1\")\n" +
+                        "    public void methodRequiresNormal() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.dangerous.P2\")\n" +
+                        "    public void methodRequiresDangerous() {\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 
     fun testHandledPermission() {
 
         lint().files(
-                LintDetectorTest.manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"test.pkg.permissiontest\">\n"
-                        + "\n"
-                        + "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n"
-                        + "\n"
-                        + "    <permission\n"
-                        + "        android:name=\"my.normal.P1\"\n"
-                        + "        android:protectionLevel=\"normal\" />\n"
-                        + "\n"
-                        + "    <permission\n"
-                        + "        android:name=\"my.dangerous.P2\"\n"
-                        + "        android:protectionLevel=\"dangerous\" />\n"
-                        + "\n"
-                        + "    <uses-permission android:name=\"my.normal.P1\" />\n"
-                        + "    <uses-permission android:name=\"my.dangerous.P2\" />\n"
-                        + "\n"
-                        + "</manifest>\n"),
-                LintDetectorTest.java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.content.Context;\n"
-                        + "import android.content.pm.PackageManager;\n"
-                        + "import android.location.LocationManager;\n"
-                        + "import android.support.annotation.RequiresPermission;\n"
-                        + "\n"
-                        + "import java.io.IOException;\n"
-                        + "import java.security.AccessControlException;\n"
-                        + "\n"
-                        + "public class X {\n"
-                        + "    public static void test1() {\n"
-                        + "        try {\n"
-                        + "            // Ok: Security exception caught in one of the branches\n"
-                        + "            methodRequiresDangerous(); // OK\n"
-                        + "        } catch (IllegalArgumentException ignored) {\n"
-                        + "        } catch (SecurityException ignored) {\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        try {\n"
-                        + "            // You have to catch SecurityException explicitly, not parent\n"
-                        + "            /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n"
-                        + "        } catch (RuntimeException e) { // includes Security Exception\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        try {\n"
-                        + "            // Ok: Caught in outer statement\n"
-                        + "            try {\n"
-                        + "                methodRequiresDangerous(); // OK\n"
-                        + "            } catch (IllegalArgumentException e) {\n"
-                        + "                // inner\n"
-                        + "            }\n"
-                        + "        } catch (SecurityException ignored) {\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        try {\n"
-                        + "            // You have to catch SecurityException explicitly, not parent\n"
-                        + "            /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n"
-                        + "        } catch (Exception e) { // includes Security Exception\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        // NOT OK: Catching security exception subclass (except for dedicated ones?)\n"
-                        + "\n"
-                        + "        try {\n"
-                        + "            // Error: catching security exception, but not all of them\n"
-                        + "            /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n"
-                        + "        } catch (AccessControlException e) { // security exception but specific one\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void test2() {\n"
-                        + "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR: not caught\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void test3()\n"
-                        + "            throws IllegalArgumentException {\n"
-                        + "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR: not caught by right type\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void test4()\n"
-                        + "            throws AccessControlException {  // Security exception but specific one\n"
-                        + "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void test5()\n"
-                        + "            throws SecurityException {\n"
-                        + "        methodRequiresDangerous(); // OK\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void test6()\n"
-                        + "            throws Exception { // includes Security Exception\n"
-                        + "        // You have to throw SecurityException explicitly, not parent\n"
-                        + "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static void test7(Context context)\n"
-                        + "            throws IllegalArgumentException {\n"
-                        + "        if (context.getPackageManager().checkPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, context.getPackageName()) != PackageManager.PERMISSION_GRANTED) {\n"
-                        + "            return;\n"
-                        + "        }\n"
-                        + "        methodRequiresDangerous(); // OK: permission checked\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresPermission(\"my.dangerous.P2\")\n"
-                        + "    public static void methodRequiresDangerous() {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void test8() { // Regression test for http://b.android.com/187204\n"
-                        + "        try {\n"
-                        + "            methodRequiresDangerous();\n"
-                        + "            mightThrow();\n"
-                        + "        } catch (SecurityException | IOException se) { // OK: Checked in multi catch\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void mightThrow() throws IOException {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+            LintDetectorTest.manifest(
+                "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg.permissiontest\">\n" +
+                        "\n" +
+                        "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.normal.P1\"\n" +
+                        "        android:protectionLevel=\"normal\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.dangerous.P2\"\n" +
+                        "        android:protectionLevel=\"dangerous\" />\n" +
+                        "\n" +
+                        "    <uses-permission android:name=\"my.normal.P1\" />\n" +
+                        "    <uses-permission android:name=\"my.dangerous.P2\" />\n" +
+                        "\n" +
+                        "</manifest>\n"
+            ),
+            LintDetectorTest.java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.content.Context;\n" +
+                        "import android.content.pm.PackageManager;\n" +
+                        "import android.location.LocationManager;\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "import java.io.IOException;\n" +
+                        "import java.security.AccessControlException;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    public static void test1() {\n" +
+                        "        try {\n" +
+                        "            // Ok: Security exception caught in one of the branches\n" +
+                        "            methodRequiresDangerous(); // OK\n" +
+                        "        } catch (IllegalArgumentException ignored) {\n" +
+                        "        } catch (SecurityException ignored) {\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        try {\n" +
+                        "            // You have to catch SecurityException explicitly, not parent\n" +
+                        "            /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n" +
+                        "        } catch (RuntimeException e) { // includes Security Exception\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        try {\n" +
+                        "            // Ok: Caught in outer statement\n" +
+                        "            try {\n" +
+                        "                methodRequiresDangerous(); // OK\n" +
+                        "            } catch (IllegalArgumentException e) {\n" +
+                        "                // inner\n" +
+                        "            }\n" +
+                        "        } catch (SecurityException ignored) {\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        try {\n" +
+                        "            // You have to catch SecurityException explicitly, not parent\n" +
+                        "            /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n" +
+                        "        } catch (Exception e) { // includes Security Exception\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        // NOT OK: Catching security exception subclass (except for dedicated ones?)\n" +
+                        "\n" +
+                        "        try {\n" +
+                        "            // Error: catching security exception, but not all of them\n" +
+                        "            /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n" +
+                        "        } catch (AccessControlException e) { // security exception but specific one\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void test2() {\n" +
+                        "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR: not caught\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void test3()\n" +
+                        "            throws IllegalArgumentException {\n" +
+                        "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR: not caught by right type\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void test4()\n" +
+                        "            throws AccessControlException {  // Security exception but specific one\n" +
+                        "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void test5()\n" +
+                        "            throws SecurityException {\n" +
+                        "        methodRequiresDangerous(); // OK\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void test6()\n" +
+                        "            throws Exception { // includes Security Exception\n" +
+                        "        // You have to throw SecurityException explicitly, not parent\n" +
+                        "        /*Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException*/methodRequiresDangerous()/**/; // ERROR\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void test7(Context context)\n" +
+                        "            throws IllegalArgumentException {\n" +
+                        "        if (context.getPackageManager().checkPermission(android.Manifest.permission.ACCESS_FINE_LOCATION, context.getPackageName()) != PackageManager.PERMISSION_GRANTED) {\n" +
+                        "            return;\n" +
+                        "        }\n" +
+                        "        methodRequiresDangerous(); // OK: permission checked\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.dangerous.P2\")\n" +
+                        "    public static void methodRequiresDangerous() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void test8() { // Regression test for http://b.android.com/187204\n" +
+                        "        try {\n" +
+                        "            methodRequiresDangerous();\n" +
+                        "            mightThrow();\n" +
+                        "        } catch (SecurityException | IOException se) { // OK: Checked in multi catch\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void mightThrow() throws IOException {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 
     fun testIntentsAndContentResolvers() {
         lint().files(
-                LintDetectorTest.java("" +
+            LintDetectorTest.java(
+                "" +
                         "package test.pkg;\n" +
                         "\n" +
                         "import android.Manifest;\n" +
@@ -964,10 +992,10 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         "    public static void startActivity(Object other) {\n" +
                         "        // Unrelated\n" +
                         "    }\n" +
-                        "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 }

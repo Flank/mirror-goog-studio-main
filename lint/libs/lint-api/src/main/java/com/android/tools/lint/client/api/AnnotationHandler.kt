@@ -57,9 +57,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
     val relevantAnnotations: Set<String> = HashSet<String>(scanners.keys())
 
-    private fun checkContextAnnotations(context: JavaContext, method: PsiMethod?,
-            origCall: UElement,
-            allMethodAnnotations: List<UAnnotation>) {
+    private fun checkContextAnnotations(
+        context: JavaContext,
+        method: PsiMethod?,
+        origCall: UElement,
+        allMethodAnnotations: List<UAnnotation>
+    ) {
         var call = origCall
         // Handle typedefs and resource types: if you're comparing it, check that
         // it's being compared with something compatible
@@ -80,18 +83,19 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             }
             if (check != null) {
                 checkAnnotations(
-                        context = context,
-                        argument = check,
-                        type = when (p.operator) {
-                            UastBinaryOperator.ASSIGN  -> AnnotationUsageType.ASSIGNMENT
-                            UastBinaryOperator.EQUALS,
-                            UastBinaryOperator.NOT_EQUALS,
-                            UastBinaryOperator.IDENTITY_EQUALS,
-                            UastBinaryOperator.IDENTITY_NOT_EQUALS -> AnnotationUsageType.EQUALITY
-                            else -> AnnotationUsageType.BINARY
-                        },
-                        method = method,
-                        annotations = allMethodAnnotations)
+                    context = context,
+                    argument = check,
+                    type = when (p.operator) {
+                        UastBinaryOperator.ASSIGN -> AnnotationUsageType.ASSIGNMENT
+                        UastBinaryOperator.EQUALS,
+                        UastBinaryOperator.NOT_EQUALS,
+                        UastBinaryOperator.IDENTITY_EQUALS,
+                        UastBinaryOperator.IDENTITY_NOT_EQUALS -> AnnotationUsageType.EQUALITY
+                        else -> AnnotationUsageType.BINARY
+                    },
+                    method = method,
+                    annotations = allMethodAnnotations
+                )
             }
         } else if (p is UQualifiedReferenceExpression) {
             // Handle equals() as a special case: if you're invoking
@@ -105,11 +109,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     val arguments = selector.valueArguments
                     if (arguments.size == 1) {
                         checkAnnotations(
-                                context = context,
-                                argument = arguments[0],
-                                type = AnnotationUsageType.EQUALITY,
-                                method = method,
-                                annotations = allMethodAnnotations)
+                            context = context,
+                            argument = arguments[0],
+                            type = AnnotationUsageType.EQUALITY,
+                            method = method,
+                            annotations = allMethodAnnotations
+                        )
                     }
                 }
             }
@@ -117,31 +122,38 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             val assignment = p as UBinaryExpression
             val rExpression = assignment.rightOperand
             checkAnnotations(
-                    context = context,
-                    argument = rExpression,
-                    type = AnnotationUsageType.ASSIGNMENT,
-                    method = method,
-                    annotations = allMethodAnnotations)
+                context = context,
+                argument = rExpression,
+                type = AnnotationUsageType.ASSIGNMENT,
+                method = method,
+                annotations = allMethodAnnotations
+            )
         } else if (call is UVariable) {
             val variable = call
             val variablePsi = call.psi
             // TODO: What about fields?
             call.getContainingUMethod()?.accept(object : AbstractUastVisitor() {
                 override fun visitSimpleNameReferenceExpression(
-                        node: USimpleNameReferenceExpression): Boolean {
+                    node: USimpleNameReferenceExpression
+                ): Boolean {
                     val resolved = node.resolve()
                     if (variable == resolved || variablePsi == resolved) {
-                        val expression = node.getParentOfType<UExpression>(UExpression::class.java,
-                                true)
+                        val expression = node.getParentOfType<UExpression>(
+                            UExpression::class.java,
+                            true
+                        )
                         if (expression != null) {
-                            val inner = node.getParentOfType<UExpression>(UExpression::class.java,
-                                    false) ?: return false
+                            val inner = node.getParentOfType<UExpression>(
+                                UExpression::class.java,
+                                false
+                            ) ?: return false
                             checkAnnotations(
-                                    context = context,
-                                    argument = inner,
-                                    type = AnnotationUsageType.VARIABLE_REFERENCE,
-                                    method = method,
-                                    annotations = allMethodAnnotations)
+                                context = context,
+                                argument = inner,
+                                type = AnnotationUsageType.VARIABLE_REFERENCE,
+                                method = method,
+                                annotations = allMethodAnnotations
+                            )
                             return false
                         }
 
@@ -155,24 +167,27 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
             val initializer = variable.uastInitializer
             if (initializer != null) {
-                checkAnnotations(context,
-                        initializer,
-                        type = AnnotationUsageType.ASSIGNMENT,
-                        method = null,
-                        annotations = allMethodAnnotations)
+                checkAnnotations(
+                    context,
+                    initializer,
+                    type = AnnotationUsageType.ASSIGNMENT,
+                    method = null,
+                    annotations = allMethodAnnotations
+                )
             }
         }
     }
 
     private fun checkAnnotations(
-            context: JavaContext,
-            argument: UElement,
-            type: AnnotationUsageType,
-            method: PsiMethod?,
-            annotations: List<UAnnotation>,
-            allMethodAnnotations: List<UAnnotation> = emptyList(),
-            allClassAnnotations: List<UAnnotation> = emptyList(),
-            packageAnnotations: List<UAnnotation> = emptyList()) {
+        context: JavaContext,
+        argument: UElement,
+        type: AnnotationUsageType,
+        method: PsiMethod?,
+        annotations: List<UAnnotation>,
+        allMethodAnnotations: List<UAnnotation> = emptyList(),
+        allClassAnnotations: List<UAnnotation> = emptyList(),
+        packageAnnotations: List<UAnnotation> = emptyList()
+    ) {
 
         for (annotation in annotations) {
             val signature = annotation.qualifiedName ?: continue
@@ -180,9 +195,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             if (uastScanners != null) {
                 for (scanner in uastScanners) {
                     if (scanner.isApplicableAnnotationUsage(type)) {
-                        scanner.visitAnnotationUsage(context, argument, type, annotation,
-                                signature, method, annotations, allMethodAnnotations,
-                                allClassAnnotations, packageAnnotations)
+                        scanner.visitAnnotationUsage(
+                            context, argument, type, annotation,
+                            signature, method, annotations, allMethodAnnotations,
+                            allClassAnnotations, packageAnnotations
+                        )
                     }
                 }
             }
@@ -194,8 +211,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
     fun visitMethod(context: JavaContext, method: UMethod) {
         val evaluator = context.evaluator
-        val methodAnnotations = filterRelevantAnnotations(evaluator,
-                evaluator.getAllAnnotations(method, true))
+        val methodAnnotations = filterRelevantAnnotations(
+            evaluator,
+            evaluator.getAllAnnotations(method, true)
+        )
         if (methodAnnotations.isNotEmpty()) {
             val annotations = JavaUAnnotation.wrap(methodAnnotations)
 
@@ -205,25 +224,26 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             val body = method.uastBody
             if (body != null && body !is UBlockExpression && body !is UReturnExpression) {
                 checkAnnotations(
-                        context = context,
-                        argument = body,
-                        type = AnnotationUsageType.METHOD_RETURN,
-                        method = method,
-                        annotations = annotations,
-                        allMethodAnnotations = annotations)
-
+                    context = context,
+                    argument = body,
+                    type = AnnotationUsageType.METHOD_RETURN,
+                    method = method,
+                    annotations = annotations,
+                    allMethodAnnotations = annotations
+                )
             } else {
                 method.accept(object : AbstractUastVisitor() {
                     override fun visitReturnExpression(node: UReturnExpression): Boolean {
                         val returnValue = node.returnExpression
                         if (returnValue != null) {
                             checkAnnotations(
-                                    context = context,
-                                    argument = returnValue,
-                                    type = AnnotationUsageType.METHOD_RETURN,
-                                    method = method,
-                                    annotations = annotations,
-                                    allMethodAnnotations = annotations)
+                                context = context,
+                                argument = returnValue,
+                                type = AnnotationUsageType.METHOD_RETURN,
+                                method = method,
+                                annotations = annotations,
+                                allMethodAnnotations = annotations
+                            )
                         }
                         return super.visitReturnExpression(node)
                     }
@@ -243,7 +263,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         // Check annotation references; these are a form of method call
         val qualifiedName = annotation.qualifiedName
         if (qualifiedName == null || qualifiedName.startsWith("java.") ||
-                SUPPORT_ANNOTATIONS_PREFIX.isPrefix(qualifiedName)) {
+            SUPPORT_ANNOTATIONS_PREFIX.isPrefix(qualifiedName)
+        ) {
             return
         }
 
@@ -260,18 +281,21 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             if (methods.size == 1) {
                 val method = methods[0]
                 val evaluator = context.evaluator
-                val methodAnnotations = filterRelevantAnnotations(evaluator,
-                        evaluator.getAllAnnotations(method, true))
+                val methodAnnotations = filterRelevantAnnotations(
+                    evaluator,
+                    evaluator.getAllAnnotations(method, true)
+                )
                 if (methodAnnotations.isNotEmpty()) {
                     val value = expression.expression
                     val annotations = JavaUAnnotation.wrap(methodAnnotations)
                     checkAnnotations(
-                            context = context,
-                            argument = value,
-                            type = AnnotationUsageType.ANNOTATION_REFERENCE,
-                            method = method,
-                            annotations = annotations,
-                            allMethodAnnotations = annotations)
+                        context = context,
+                        argument = value,
+                        type = AnnotationUsageType.ANNOTATION_REFERENCE,
+                        method = method,
+                        annotations = annotations,
+                        allMethodAnnotations = annotations
+                    )
                 }
             }
         }
@@ -284,8 +308,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         }
     }
 
-    fun visitArrayAccessExpression(context: JavaContext,
-            expression: UArrayAccessExpression) {
+    fun visitArrayAccessExpression(
+        context: JavaContext,
+        expression: UArrayAccessExpression
+    ) {
         val arrayExpression = expression.receiver
         if (arrayExpression is UReferenceExpression) {
             val resolved = arrayExpression.resolve()
@@ -294,8 +320,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 var methodAnnotations = evaluator.getAllAnnotations(resolved, true)
                 methodAnnotations = filterRelevantAnnotations(evaluator, methodAnnotations)
                 if (methodAnnotations.isNotEmpty()) {
-                    checkContextAnnotations(context, null, expression,
-                            JavaUAnnotation.wrap(methodAnnotations))
+                    checkContextAnnotations(
+                        context, null, expression,
+                        JavaUAnnotation.wrap(methodAnnotations)
+                    )
                 }
             }
         }
@@ -304,8 +332,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     fun visitVariable(context: JavaContext, variable: UVariable) {
         val evaluator = context.evaluator
         val psi = variable.psi
-        val methodAnnotations = filterRelevantAnnotations(evaluator,
-                evaluator.getAllAnnotations(psi, true))
+        val methodAnnotations = filterRelevantAnnotations(
+            evaluator,
+            evaluator.getAllAnnotations(psi, true)
+        )
         if (methodAnnotations.isNotEmpty()) {
             val annotations = JavaUAnnotation.wrap(methodAnnotations)
             checkContextAnnotations(context, null, variable, annotations)
@@ -313,13 +343,15 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     }
 
     private fun checkCall(
-            context: JavaContext,
-            method: PsiMethod,
-            call: UCallExpression) {
+        context: JavaContext,
+        method: PsiMethod,
+        call: UCallExpression
+    ) {
         val evaluator = context.evaluator
         val allAnnotations = evaluator.getAllAnnotations(method, true)
         val methodAnnotations: List<UAnnotation> = JavaUAnnotation.wrap(
-                filterRelevantAnnotations(evaluator, allAnnotations))
+            filterRelevantAnnotations(evaluator, allAnnotations)
+        )
 
         // Look for annotations on the class as well: these trickle
         // down to all the methods in the class
@@ -329,7 +361,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (containingClass != null) {
             val annotations = evaluator.getAllAnnotations(containingClass, true)
             classAnnotations = JavaUAnnotation
-                    .wrap(filterRelevantAnnotations(evaluator, annotations))
+                .wrap(filterRelevantAnnotations(evaluator, annotations))
 
             val pkg = evaluator.getPackage(containingClass)
             pkgAnnotations = if (pkg != null) {
@@ -344,20 +376,26 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         }
 
         if (!methodAnnotations.isEmpty()) {
-            checkAnnotations(context, call, AnnotationUsageType.METHOD_CALL, method,
-                    methodAnnotations, methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(
+                context, call, AnnotationUsageType.METHOD_CALL, method,
+                methodAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
+            )
 
             checkContextAnnotations(context, method, call, methodAnnotations)
         }
 
         if (!classAnnotations.isEmpty()) {
-            checkAnnotations(context, call, AnnotationUsageType.METHOD_CALL_CLASS, method,
-                    classAnnotations, methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(
+                context, call, AnnotationUsageType.METHOD_CALL_CLASS, method,
+                classAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
+            )
         }
 
         if (!pkgAnnotations.isEmpty()) {
-            checkAnnotations(context, call, AnnotationUsageType.METHOD_CALL_PACKAGE, method,
-                    pkgAnnotations, methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(
+                context, call, AnnotationUsageType.METHOD_CALL_PACKAGE, method,
+                pkgAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
+            )
         }
 
         val mapping = evaluator.computeArgumentMapping(call, method)
@@ -368,14 +406,17 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 continue
             }
             val annotations = JavaUAnnotation.wrap(filtered)
-            checkAnnotations(context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
-                    annotations, methodAnnotations, classAnnotations, pkgAnnotations)
-
+            checkAnnotations(
+                context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
+                annotations, methodAnnotations, classAnnotations, pkgAnnotations
+            )
         }
     }
 
     private fun filterRelevantAnnotations(
-            evaluator: JavaEvaluator, annotations: Array<PsiAnnotation>): Array<PsiAnnotation> {
+        evaluator: JavaEvaluator,
+        annotations: Array<PsiAnnotation>
+    ): Array<PsiAnnotation> {
         var result: MutableList<PsiAnnotation>? = null
         val length = annotations.size
         if (length == 0) {
@@ -384,7 +425,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
             if (signature == null ||
-                    signature.startsWith("java.") && !relevantAnnotations.contains(signature)) {
+                signature.startsWith("java.") && !relevantAnnotations.contains(signature)
+            ) {
                 // @Override, @SuppressWarnings etc. Ignore
                 continue
             }
@@ -429,7 +471,6 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         return if (result != null)
             result.toTypedArray()
-        else
-            PsiAnnotation.EMPTY_ARRAY
+        else PsiAnnotation.EMPTY_ARRAY
     }
 }

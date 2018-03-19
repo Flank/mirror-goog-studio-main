@@ -123,6 +123,8 @@ public class TaskStateList {
     @NonNull private final ImmutableSet<String> upToDateTasks;
     @NonNull private final ImmutableSet<String> notUpToDateTasks;
     @NonNull private final ImmutableSet<String> inputChangedTasks;
+    @NonNull private final ImmutableSet<String> fromCacheTasks;
+    @NonNull private final ImmutableSet<String> skippedTasks;
 
     public TaskStateList(
             @NonNull List<ProgressEvent> progressEvents, @NonNull String gradleOutput) {
@@ -132,6 +134,7 @@ public class TaskStateList {
         ImmutableSet.Builder<String> notUpToDateTasksBuilder = ImmutableSet.builder();
         ImmutableSet.Builder<String> skippedTasksBuilder = ImmutableSet.builder();
         ImmutableSet.Builder<String> failedTasksBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> fromCacheTasksBuilder = ImmutableSet.builder();
 
         for (ProgressEvent progressEvent : progressEvents) {
             if (progressEvent instanceof TaskFinishEvent) {
@@ -145,6 +148,8 @@ public class TaskStateList {
                     TaskSuccessResult successResult = (TaskSuccessResult) result;
                     if (successResult.isUpToDate()) {
                         upToDateTasksBuilder.add(name);
+                    } else if (successResult.isFromCache()) {
+                        fromCacheTasksBuilder.add(name);
                     } else {
                         notUpToDateTasksBuilder.add(name);
                     }
@@ -165,8 +170,9 @@ public class TaskStateList {
         upToDateTasks = upToDateTasksBuilder.build();
         notUpToDateTasks = notUpToDateTasksBuilder.build();
         inputChangedTasks = getInputChangedTasks(gradleOutput, notUpToDateTasks);
+        fromCacheTasks = fromCacheTasksBuilder.build();
+        skippedTasks = skippedTasksBuilder.build();
         ImmutableSet<String> failedTasks = failedTasksBuilder.build();
-        ImmutableSet<String> skippedTasks = skippedTasksBuilder.build();
 
         taskInfoList = Maps.newHashMapWithExpectedSize(orderedTasks.size());
 
@@ -232,6 +238,16 @@ public class TaskStateList {
     @NonNull
     public Set<String> getNotUpToDateTasks() {
         return notUpToDateTasks;
+    }
+
+    @NonNull
+    public Set<String> getCachedTasks() {
+        return fromCacheTasks;
+    }
+
+    @NonNull
+    public Set<String> getSkippedTasks() {
+        return skippedTasks;
     }
 
     @NonNull

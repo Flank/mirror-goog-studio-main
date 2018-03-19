@@ -168,6 +168,7 @@ message StartupProfilingRequest {
   string app_package = 1;
   int64 device_id = 2;
   CpuProfilerConfiguration configuration = 3;
+  string abi_cpu_arch = 4;
 }
 
 message StartupProfilingResponse {
@@ -215,12 +216,14 @@ message CpuProfilerConfiguration {
     SAMPLED = 1;
     INSTRUMENTED = 2;
   }
-  Mode mode = 1;
-  CpuProfilerType profiler_type = 2;
+  // Name of the configuration. For Studio-side display only.
+  string name = 1;
+  Mode mode = 2;
+  CpuProfilerType profiler_type = 3;
   // When using ART, the size of the in-memory buffer that holds tracing data.
-  int32 buffer_size_in_mb = 3;
+  int32 buffer_size_in_mb = 4;
   // When using sampling, the sampling interval in microseconds.
-  int32 sampling_interval_us = 4;
+  int32 sampling_interval_us = 5;
 }
 
 // Request profiling of app (identified by its |session|) to stop.

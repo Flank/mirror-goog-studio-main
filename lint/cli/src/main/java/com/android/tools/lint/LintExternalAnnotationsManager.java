@@ -45,7 +45,9 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
 
     private final List<VirtualFile> roots = Lists.newArrayList();
 
-    public LintExternalAnnotationsManager(@NonNull final com.intellij.openapi.project.Project project, @NonNull PsiManager psiManager) {
+    public LintExternalAnnotationsManager(
+            @NonNull final com.intellij.openapi.project.Project project,
+            @NonNull PsiManager psiManager) {
         super(psiManager);
     }
 
@@ -143,9 +145,7 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
     }
 
     private static void addLibraries(
-            @NonNull List<File> result,
-            @NonNull AndroidLibrary library,
-            Set<AndroidLibrary> seen) {
+            @NonNull List<File> result, @NonNull AndroidLibrary library, Set<AndroidLibrary> seen) {
         if (seen.contains(library)) {
             return;
         }

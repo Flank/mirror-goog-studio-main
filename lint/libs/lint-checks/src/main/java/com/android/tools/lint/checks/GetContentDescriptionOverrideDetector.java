@@ -35,8 +35,7 @@ import org.jetbrains.uast.UClass;
 /**
  * Check that looks for override of getContentDescription() in any class that descends from View.
  */
-public class GetContentDescriptionOverrideDetector extends Detector
-        implements SourceCodeScanner {
+public class GetContentDescriptionOverrideDetector extends Detector implements SourceCodeScanner {
 
     public static final Issue ISSUE =
             Issue.create(

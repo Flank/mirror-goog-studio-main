@@ -21,19 +21,21 @@ import junit.framework.TestCase;
 @SuppressWarnings("javadoc")
 public class ClassContextTest extends TestCase {
     public void testCreateSignature() {
-        assertEquals("foo.bar.Foo.Bar",
-                ClassContext.createSignature("foo/bar/Foo$Bar", null, null));
-        assertEquals("void foo.bar.Foo.Bar#name(int)",
+        assertEquals(
+                "foo.bar.Foo.Bar", ClassContext.createSignature("foo/bar/Foo$Bar", null, null));
+        assertEquals(
+                "void foo.bar.Foo.Bar#name(int)",
                 ClassContext.createSignature("foo/bar/Foo$Bar", "name", "(I)V"));
-        assertEquals("void foo.bar.Foo.Bar#name(Integer)",
+        assertEquals(
+                "void foo.bar.Foo.Bar#name(Integer)",
                 ClassContext.createSignature("foo/bar/Foo$Bar", "name", "(Ljava/lang/Integer;)V"));
     }
 
     public void testGetInternalName() {
-        assertEquals("foo/bar/Foo$Bar",
-                ClassContext.getInternalName("foo.bar.Foo.Bar"));
-        assertEquals("java/util/Map",  ClassContext.getInternalName(
-                "java.util.Map<java.lang.String,java.lang.String>"));
+        assertEquals("foo/bar/Foo$Bar", ClassContext.getInternalName("foo.bar.Foo.Bar"));
+        assertEquals(
+                "java/util/Map",
+                ClassContext.getInternalName("java.util.Map<java.lang.String,java.lang.String>"));
     }
 
     public void testGetFqcn() {

@@ -49,37 +49,31 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Checks for usability problems in text fields: for example, omitting inputType.
- */
+/** Checks for usability problems in text fields: for example, omitting inputType. */
 public class TextFieldDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "TextFields",
-            "Missing `inputType`",
-
-            "Providing an `inputType` attribute on a text field improves usability " +
-            "because depending on the data to be input, optimized keyboards can be shown " +
-            "to the user (such as just digits and parentheses for a phone number). \n" +
-            "\n" +
-            "The lint detector also looks at the `id` of the view, and if the id offers a " +
-            "hint of the purpose of the field (for example, the `id` contains the phrase " +
-            "`phone` or `email`), then lint will also ensure that the `inputType` contains " +
-            "the corresponding type attributes.\n" +
-            "\n" +
-            "If you really want to keep the text field generic, you can suppress this warning " +
-            "by setting `inputType=\"text\"`.",
-
-            Category.USABILITY,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    TextFieldDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "TextFields",
+                    "Missing `inputType`",
+                    "Providing an `inputType` attribute on a text field improves usability "
+                            + "because depending on the data to be input, optimized keyboards can be shown "
+                            + "to the user (such as just digits and parentheses for a phone number). \n"
+                            + "\n"
+                            + "The lint detector also looks at the `id` of the view, and if the id offers a "
+                            + "hint of the purpose of the field (for example, the `id` contains the phrase "
+                            + "`phone` or `email`), then lint will also ensure that the `inputType` contains "
+                            + "the corresponding type attributes.\n"
+                            + "\n"
+                            + "If you really want to keep the text field generic, you can suppress this warning "
+                            + "by setting `inputType=\"text\"`.",
+                    Category.USABILITY,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(TextFieldDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link TextFieldDetector} */
-    public TextFieldDetector() {
-    }
+    public TextFieldDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -100,8 +94,9 @@ public class TextFieldDetector extends LayoutDetector {
                 LintClient client = context.getClient();
                 if (client.supportsProjectResources()) {
                     Project project = context.getMainProject();
-                    List<ResourceValue> styles = LintUtils.getStyleAttributes(project, client,
-                            style, ANDROID_URI, ATTR_INPUT_TYPE);
+                    List<ResourceValue> styles =
+                            LintUtils.getStyleAttributes(
+                                    project, client, style, ANDROID_URI, ATTR_INPUT_TYPE);
                     if (styles != null && !styles.isEmpty()) {
                         ResourceValue value = styles.get(0);
                         inputType = value.getValue();
@@ -126,8 +121,12 @@ public class TextFieldDetector extends LayoutDetector {
             }
 
             LintFix fix = fix().set(ANDROID_URI, ATTR_INPUT_TYPE, "").caretBegin().build();
-            context.report(ISSUE, element, context.getNameLocation(element),
-                    "This text field does not specify an `inputType`", fix);
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
+                    "This text field does not specify an `inputType`",
+                    fix);
             return;
         }
 
@@ -153,8 +152,11 @@ public class TextFieldDetector extends LayoutDetector {
         if (containsWord(id, "phone", true, true)) {
             if (!inputType.contains("phone")
                     && element.getAttributeNodeNS(ANDROID_URI, ATTR_PHONE_NUMBER) == null) {
-                String message = String.format("The view name (`%1$s`) suggests this is a phone "
-                        + "number, but it does not include '`phone`' in the `inputType`", id);
+                String message =
+                        String.format(
+                                "The view name (`%1$s`) suggests this is a phone "
+                                        + "number, but it does not include '`phone`' in the `inputType`",
+                                id);
                 reportMismatch(context, idNode, inputTypeNode, message);
             }
             return;
@@ -167,9 +169,11 @@ public class TextFieldDetector extends LayoutDetector {
                 || containsWord(id, "weight", false, true)
                 || containsWord(id, "number", false, true)) {
             if (!inputType.contains("number") && !inputType.contains("phone")) {
-                String message = String.format("The view name (`%1$s`) suggests this is a number, "
-                        + "but it does not include a numeric `inputType` (such as '`numberSigned`')",
-                        id);
+                String message =
+                        String.format(
+                                "The view name (`%1$s`) suggests this is a number, "
+                                        + "but it does not include a numeric `inputType` (such as '`numberSigned`')",
+                                id);
                 reportMismatch(context, idNode, inputTypeNode, message);
             }
             return;
@@ -177,9 +181,12 @@ public class TextFieldDetector extends LayoutDetector {
 
         if (containsWord(id, "password", true, true)) {
             if (!(inputType.contains("Password"))
-                && element.getAttributeNodeNS(ANDROID_URI, ATTR_PASSWORD) == null) {
-                String message = String.format("The view name (`%1$s`) suggests this is a password, "
-                        + "but it does not include '`textPassword`' in the `inputType`", id);
+                    && element.getAttributeNodeNS(ANDROID_URI, ATTR_PASSWORD) == null) {
+                String message =
+                        String.format(
+                                "The view name (`%1$s`) suggests this is a password, "
+                                        + "but it does not include '`textPassword`' in the `inputType`",
+                                id);
                 reportMismatch(context, idNode, inputTypeNode, message);
             }
             return;
@@ -187,8 +194,11 @@ public class TextFieldDetector extends LayoutDetector {
 
         if (containsWord(id, "email", true, true)) {
             if (!inputType.contains("Email")) {
-                String message = String.format("The view name (`%1$s`) suggests this is an e-mail "
-                        + "address, but it does not include '`textEmail`' in the `inputType`", id);
+                String message =
+                        String.format(
+                                "The view name (`%1$s`) suggests this is an e-mail "
+                                        + "address, but it does not include '`textEmail`' in the `inputType`",
+                                id);
                 reportMismatch(context, idNode, inputTypeNode, message);
             }
             return;
@@ -196,9 +206,12 @@ public class TextFieldDetector extends LayoutDetector {
 
         if (endsWith(id, "pin", false, true)) {
             if (!(inputType.contains("numberPassword"))
-                && element.getAttributeNodeNS(ANDROID_URI, ATTR_PASSWORD) == null) {
-                String message = String.format("The view name (`%1$s`) suggests this is a password, "
-                        + "but it does not include '`numberPassword`' in the `inputType`", id);
+                    && element.getAttributeNodeNS(ANDROID_URI, ATTR_PASSWORD) == null) {
+                String message =
+                        String.format(
+                                "The view name (`%1$s`) suggests this is a password, "
+                                        + "but it does not include '`numberPassword`' in the `inputType`",
+                                id);
                 reportMismatch(context, idNode, inputTypeNode, message);
             }
             return;
@@ -206,21 +219,26 @@ public class TextFieldDetector extends LayoutDetector {
 
         if ((containsWord(id, "uri") || containsWord(id, "url"))
                 && !inputType.contains("textUri")) {
-            String message = String.format("The view name (`%1$s`) suggests this is a URI, "
-                    + "but it does not include '`textUri`' in the `inputType`", id);
+            String message =
+                    String.format(
+                            "The view name (`%1$s`) suggests this is a URI, "
+                                    + "but it does not include '`textUri`' in the `inputType`",
+                            id);
             reportMismatch(context, idNode, inputTypeNode, message);
         }
 
-        if ((containsWord(id, "date"))
-                && !inputType.contains("date")) {
-            String message = String.format("The view name (`%1$s`) suggests this is a date, "
-                    + "but it does not include '`date`' or '`datetime`' in the `inputType`", id);
+        if ((containsWord(id, "date")) && !inputType.contains("date")) {
+            String message =
+                    String.format(
+                            "The view name (`%1$s`) suggests this is a date, "
+                                    + "but it does not include '`date`' or '`datetime`' in the `inputType`",
+                            id);
             reportMismatch(context, idNode, inputTypeNode, message);
         }
     }
 
-    private static void reportMismatch(XmlContext context, Attr idNode, Node inputTypeNode,
-            String message) {
+    private static void reportMismatch(
+            XmlContext context, Attr idNode, Node inputTypeNode, String message) {
         Location location;
         if (inputTypeNode != null) {
             location = context.getLocation(inputTypeNode);
@@ -241,43 +259,43 @@ public class TextFieldDetector extends LayoutDetector {
 
     /**
      * Returns true if the given sentence contains a given word
+     *
      * @param sentence the full sentence to search within
      * @param word the word to look for
-     * @param allowPrefix if true, allow a prefix match even if the next character
-     *    is in the same word (same case or not an underscore)
-     * @param allowSuffix if true, allow a suffix match even if the preceding character
-     *    is in the same word (same case or not an underscore)
+     * @param allowPrefix if true, allow a prefix match even if the next character is in the same
+     *     word (same case or not an underscore)
+     * @param allowSuffix if true, allow a suffix match even if the preceding character is in the
+     *     same word (same case or not an underscore)
      * @return true if the word is contained in the sentence
      */
     @VisibleForTesting
-    static boolean containsWord(String sentence, String word, boolean allowPrefix,
-            boolean allowSuffix) {
+    static boolean containsWord(
+            String sentence, String word, boolean allowPrefix, boolean allowSuffix) {
         return indexOfWord(sentence, word, allowPrefix, allowSuffix) != -1;
     }
 
     /** Returns true if the given sentence <b>ends</b> with a given word */
-    private static boolean endsWith(String sentence, String word, boolean allowPrefix,
-            boolean allowSuffix) {
+    private static boolean endsWith(
+            String sentence, String word, boolean allowPrefix, boolean allowSuffix) {
         int index = indexOfWord(sentence, word, allowPrefix, allowSuffix);
 
         return index != -1 && index == sentence.length() - word.length();
     }
 
     /**
-     * Returns the index of the given word in the given sentence, if any. It will match
-     * across cases, and ignore words that seem to be just a substring in the middle
-     * of another word.
+     * Returns the index of the given word in the given sentence, if any. It will match across
+     * cases, and ignore words that seem to be just a substring in the middle of another word.
      *
      * @param sentence the full sentence to search within
      * @param word the word to look for
-     * @param allowPrefix if true, allow a prefix match even if the next character
-     *    is in the same word (same case or not an underscore)
-     * @param allowSuffix if true, allow a suffix match even if the preceding character
-     *    is in the same word (same case or not an underscore)
+     * @param allowPrefix if true, allow a prefix match even if the next character is in the same
+     *     word (same case or not an underscore)
+     * @param allowSuffix if true, allow a suffix match even if the preceding character is in the
+     *     same word (same case or not an underscore)
      * @return true if the word is contained in the sentence
      */
-    private static int indexOfWord(String sentence, String word, boolean allowPrefix,
-            boolean allowSuffix) {
+    private static int indexOfWord(
+            String sentence, String word, boolean allowPrefix, boolean allowSuffix) {
         if (sentence.isEmpty()) {
             return -1;
         }
@@ -306,8 +324,7 @@ public class TextFieldDetector extends LayoutDetector {
                     if (i == m - 1 && allowSuffix) {
                         return i;
                     }
-                    if (i <= start || (sentence.charAt(i - 1) == '_')
-                            || Character.isUpperCase(c)) {
+                    if (i <= start || (sentence.charAt(i - 1) == '_') || Character.isUpperCase(c)) {
                         if (i == m - 1) {
                             return i;
                         }

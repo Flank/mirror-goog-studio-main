@@ -57,37 +57,38 @@ public class LintClientTest extends TestCase {
         MockFileOp fop = new MockFileOp();
         LocalPackage platformPackage = getLocalPlatformPackage(fop, "23", 23);
         LocalPackage previewPlatform = getLocalPlatformPackage(fop, "O", 26);
-        LocalPackage addOnPlatform = getLocalAddOnPackage(fop, "google_apis", "Google APIs",
-                "google", "Google Inc.", 23);
+        LocalPackage addOnPlatform =
+                getLocalAddOnPackage(
+                        fop, "google_apis", "Google APIs", "google", "Google Inc.", 23);
 
         RepositoryPackages packages = new RepositoryPackages();
         packages.setLocalPkgInfos(
                 ImmutableList.of(platformPackage, previewPlatform, addOnPlatform));
         RepoManager mgr = new FakeRepoManager(null, packages);
-        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(null, null, fop,
-                mgr);
-        LintCliClient client = new LintCliClient() {
-            @Override
-            public AndroidSdkHandler getSdk() {
-                return sdkHandler;
-            }
-
-            @NonNull
-            @Override
-            public ProgressIndicator getRepositoryLogger() {
-                return new ConsoleProgressIndicator() {
+        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(null, null, fop, mgr);
+        LintCliClient client =
+                new LintCliClient() {
                     @Override
-                    public void logError(@NonNull String s, @Nullable Throwable e) {
-                        fail(s);
+                    public AndroidSdkHandler getSdk() {
+                        return sdkHandler;
                     }
 
+                    @NonNull
                     @Override
-                    public void logWarning(@NonNull String s, @Nullable Throwable e) {
-                        fail(s);
+                    public ProgressIndicator getRepositoryLogger() {
+                        return new ConsoleProgressIndicator() {
+                            @Override
+                            public void logError(@NonNull String s, @Nullable Throwable e) {
+                                fail(s);
+                            }
+
+                            @Override
+                            public void logWarning(@NonNull String s, @Nullable Throwable e) {
+                                fail(s);
+                            }
+                        };
                     }
                 };
-            }
-        };
 
         Project platformProject = mock(Project.class);
         when(platformProject.getBuildTargetHash()).thenReturn("android-23");
@@ -106,19 +107,20 @@ public class LintClientTest extends TestCase {
 
         IAndroidTarget addOnTarget = client.getCompileTarget(addOnProject);
         assertThat(addOnTarget).isNotNull();
-        assertEquals("Google Inc.:Google APIs:23",
-                AndroidTargetHash.getTargetHashString(addOnTarget));
+        assertEquals(
+                "Google Inc.:Google APIs:23", AndroidTargetHash.getTargetHashString(addOnTarget));
     }
 
     @NonNull
     private static LocalPackage getLocalPlatformPackage(MockFileOp fop, String version, int api) {
         fop.recordExistingFile("/sdk/platforms/android-" + version + "/build.prop", "");
-        FakePackage.FakeLocalPackage local = new FakePackage.FakeLocalPackage(
-                "platforms;android-" + version);
+        FakePackage.FakeLocalPackage local =
+                new FakePackage.FakeLocalPackage("platforms;android-" + version);
         local.setInstalledPath(new File("/sdk/platforms/android-" + version));
 
         DetailsTypes.PlatformDetailsType platformDetails =
-                AndroidSdkHandler.getRepositoryModule().createLatestFactory()
+                AndroidSdkHandler.getRepositoryModule()
+                        .createLatestFactory()
                         .createPlatformDetailsType();
         platformDetails.setApiLevel(api);
         if (!Character.isDigit(version.charAt(0))) {
@@ -130,18 +132,25 @@ public class LintClientTest extends TestCase {
 
     @SuppressWarnings("SameParameterValue")
     @NonNull
-    private static LocalPackage getLocalAddOnPackage(MockFileOp fop,
-            String tag, String tagDisplay, String vendor, String vendorDisplay, int version) {
+    private static LocalPackage getLocalAddOnPackage(
+            MockFileOp fop,
+            String tag,
+            String tagDisplay,
+            String vendor,
+            String vendorDisplay,
+            int version) {
         // MUST also have platform target of the same version
-        fop.recordExistingFile("/sdk/add-ons/addon-" + tag + "-" + vendor + "-"
-                + version + "/source.properties", "");
-        FakePackage.FakeLocalPackage local = new FakePackage.FakeLocalPackage(
-                "add-ons;addon-" + tag + "-" + vendor + "-" + version);
-        local.setInstalledPath(new File("/sdk/add-ons/addon-" + tag + "-" + vendor
-                + "-" + version));
+        fop.recordExistingFile(
+                "/sdk/add-ons/addon-" + tag + "-" + vendor + "-" + version + "/source.properties",
+                "");
+        FakePackage.FakeLocalPackage local =
+                new FakePackage.FakeLocalPackage(
+                        "add-ons;addon-" + tag + "-" + vendor + "-" + version);
+        local.setInstalledPath(
+                new File("/sdk/add-ons/addon-" + tag + "-" + vendor + "-" + version));
 
-        DetailsTypes.AddonDetailsType addOnDetails = AndroidSdkHandler.
-                getAddonModule().createLatestFactory().createAddonDetailsType();
+        DetailsTypes.AddonDetailsType addOnDetails =
+                AndroidSdkHandler.getAddonModule().createLatestFactory().createAddonDetailsType();
         addOnDetails.setVendor(IdDisplay.create(vendor, vendorDisplay));
         addOnDetails.setTag(IdDisplay.create(tag, tagDisplay));
         addOnDetails.setApiLevel(version);
@@ -154,12 +163,13 @@ public class LintClientTest extends TestCase {
     }
 
     public void testVersion() {
-        LintCliClient client = new LintCliClient() {
-            @Override
-            public File getSdkHome() {
-                return TestUtils.getSdk();
-            }
-        };
+        LintCliClient client =
+                new LintCliClient() {
+                    @Override
+                    public File getSdkHome() {
+                        return TestUtils.getSdk();
+                    }
+                };
         String revision = client.getClientRevision();
         Truth.assertThat(revision).isNotNull();
         Truth.assertThat(revision).isNotEmpty();

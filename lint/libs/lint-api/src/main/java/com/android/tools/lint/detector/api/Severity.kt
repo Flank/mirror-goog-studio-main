@@ -27,10 +27,11 @@ import com.google.common.annotations.Beta
  */
 @Beta
 enum class Severity constructor(
-        /**
-         * A description of this severity suitable for display to the user
-         */
-        val description: String) {
+    /**
+     * A description of this severity suitable for display to the user
+     */
+    val description: String
+) {
 
     /**
      * Fatal: Use sparingly because a warning marked as fatal will be
@@ -94,15 +95,15 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun fromLintOptionSeverity(severity: Int): Severity =
-                when (severity) {
-                    LintOptions.SEVERITY_FATAL -> Severity.FATAL
-                    LintOptions.SEVERITY_ERROR -> Severity.ERROR
-                    LintOptions.SEVERITY_WARNING -> Severity.WARNING
-                    LintOptions.SEVERITY_INFORMATIONAL -> Severity.INFORMATIONAL
-                    LintOptions.SEVERITY_IGNORE -> Severity.IGNORE
-                    LintOptions.SEVERITY_DEFAULT_ENABLED -> Severity.WARNING
-                    else -> Severity.IGNORE
-                }
+            when (severity) {
+                LintOptions.SEVERITY_FATAL -> Severity.FATAL
+                LintOptions.SEVERITY_ERROR -> Severity.ERROR
+                LintOptions.SEVERITY_WARNING -> Severity.WARNING
+                LintOptions.SEVERITY_INFORMATIONAL -> Severity.INFORMATIONAL
+                LintOptions.SEVERITY_IGNORE -> Severity.IGNORE
+                LintOptions.SEVERITY_DEFAULT_ENABLED -> Severity.WARNING
+                else -> Severity.IGNORE
+            }
 
         /**
          * Returns the smallest / least severe of the two given severities
@@ -113,9 +114,9 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun min(severity1: Severity, severity2: Severity): Severity =
-                // Using ">" instead of "<" here because compareTo is inherited from
-                // enum and the severity constants are in descending order of severity
-                if (severity1 > severity2) severity1 else severity2
+        // Using ">" instead of "<" here because compareTo is inherited from
+        // enum and the severity constants are in descending order of severity
+            if (severity1 > severity2) severity1 else severity2
 
         /**
          * Returns the largest / most severe of the two given severities
@@ -126,8 +127,8 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun max(severity1: Severity, severity2: Severity): Severity =
-                // Using "<" instead of ">" here because compareTo is inherited from
-                // enum and the severity constants are in descending order of severity
-                if (severity1 < severity2) severity1 else severity2
+        // Using "<" instead of ">" here because compareTo is inherited from
+        // enum and the severity constants are in descending order of severity
+            if (severity1 < severity2) severity1 else severity2
     }
 }

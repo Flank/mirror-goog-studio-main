@@ -64,44 +64,38 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-/**
- * Looks for leaks via static fields
- */
+/** Looks for leaks via static fields */
 public class LeakDetector extends Detector implements SourceCodeScanner {
     /** Leaking data via static fields */
-    public static final Issue ISSUE = Issue.create(
-            "StaticFieldLeak",
-            "Static Field Leaks",
+    public static final Issue ISSUE =
+            Issue.create(
+                    "StaticFieldLeak",
+                    "Static Field Leaks",
+                    "A static field will leak contexts.\n"
+                            + "\n"
+                            + "Non-static inner classes have an implicit reference to their outer class. "
+                            + "If that outer class is for example a `Fragment` or `Activity`, then this "
+                            + "reference means that the long-running handler/loader/task will hold a reference "
+                            + "to the activity which prevents it from getting garbage collected.\n"
+                            + "\n"
+                            + "Similarly, direct field references to activities and fragments from these "
+                            + "longer running instances can cause leaks.\n"
+                            + "\n"
+                            + "ViewModel classes should never point to Views or non-application Contexts.",
+                    Category.PERFORMANCE,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(LeakDetector.class, Scope.JAVA_FILE_SCOPE));
 
-            "A static field will leak contexts.\n" +
-            "\n" +
-            "Non-static inner classes have an implicit reference to their outer class. " +
-            "If that outer class is for example a `Fragment` or `Activity`, then this " +
-            "reference means that the long-running handler/loader/task will hold a reference " +
-            "to the activity which prevents it from getting garbage collected.\n" +
-            "\n" +
-            "Similarly, direct field references to activities and fragments from these " +
-            "longer running instances can cause leaks.\n" +
-            "\n" +
-            "ViewModel classes should never point to Views or non-application Contexts.",
-
-            Category.PERFORMANCE,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    LeakDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
-
-    private static final List<String> SUPER_CLASSES = Arrays.asList(
-            "android.content.Loader",
-            "android.support.v4.content.Loader",
-            "android.os.AsyncTask",
-            "android.arch.lifecycle.ViewModel"
-    );
+    private static final List<String> SUPER_CLASSES =
+            Arrays.asList(
+                    "android.content.Loader",
+                    "android.support.v4.content.Loader",
+                    "android.os.AsyncTask",
+                    "android.arch.lifecycle.ViewModel");
 
     /** Constructs a new {@link LeakDetector} check */
-    public LeakDetector() {
-    }
+    public LeakDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -143,17 +137,22 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
         UElement uastParent = declaration.getUastParent();
         if (uastParent != null) {
             //noinspection unchecked
-            UMethod method = UastUtils.getParentOfType(
-                    uastParent, UMethod.class, true,
-                    UClass.class, UObjectLiteralExpression.class);
+            UMethod method =
+                    UastUtils.getParentOfType(
+                            uastParent,
+                            UMethod.class,
+                            true,
+                            UClass.class,
+                            UObjectLiteralExpression.class);
             if (method != null && evaluator.isStatic(method)) {
                 return;
             }
         }
 
         //noinspection unchecked
-        UCallExpression invocation = UastUtils.getParentOfType(
-                declaration, UObjectLiteralExpression.class, true, UMethod.class);
+        UCallExpression invocation =
+                UastUtils.getParentOfType(
+                        declaration, UObjectLiteralExpression.class, true, UMethod.class);
 
         Location location;
         if (isAnonymous && invocation != null) {
@@ -163,7 +162,11 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
         }
         String name;
         if (isAnonymous) {
-            name = "anonymous " + ((UAnonymousClass)declaration).getBaseClassReference().getQualifiedName();
+            name =
+                    "anonymous "
+                            + ((UAnonymousClass) declaration)
+                                    .getBaseClassReference()
+                                    .getQualifiedName();
         } else {
             name = declaration.getQualifiedName();
             if (name == null) {
@@ -172,9 +175,13 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
         }
 
         String superClassName = superClass.substring(superClass.lastIndexOf('.') + 1);
-        context.report(ISSUE, declaration, location, String.format(
-                "This %1$s class should be static or leaks might occur (%2$s)",
-                superClassName,  name));
+        context.report(
+                ISSUE,
+                declaration,
+                location,
+                String.format(
+                        "This %1$s class should be static or leaks might occur (%2$s)",
+                        superClassName, name));
     }
 
     private static void checkInstanceField(@NonNull JavaContext context, @NonNull UField field) {
@@ -193,7 +200,10 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
         }
 
         if (isLeakCandidate(cls, context.getEvaluator())) {
-            context.report(LeakDetector.ISSUE, field, context.getLocation(field),
+            context.report(
+                    LeakDetector.ISSUE,
+                    field,
+                    context.getLocation(field),
                     "This field leaks a context object");
         }
     }
@@ -239,8 +249,9 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
                 if (isLeakCandidate(cls, mContext.getEvaluator())
                         && !isAppContextName(cls, field)
                         && !isInitializedToAppContext(field)) {
-                    String message = "Do not place Android context classes in static fields; "
-                            + "this is a memory leak (and also breaks Instant Run)";
+                    String message =
+                            "Do not place Android context classes in static fields; "
+                                    + "this is a memory leak (and also breaks Instant Run)";
                     report(field, modifierList, message);
                 }
             } else {
@@ -273,10 +284,14 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
                             String message =
                                     "Do not place Android context classes in static fields "
                                             + "(static reference to `"
-                                            + cls.getName() + "` which has field "
-                                            + "`" + referenced.getName() + "` pointing to `"
-                                            + innerCls.getName() + "`); "
-                                        + "this is a memory leak (and also breaks Instant Run)";
+                                            + cls.getName()
+                                            + "` which has field "
+                                            + "`"
+                                            + referenced.getName()
+                                            + "` pointing to `"
+                                            + innerCls.getName()
+                                            + "`); "
+                                            + "this is a memory leak (and also breaks Instant Run)";
                             report(field, modifierList, message);
                             break;
                         }
@@ -286,11 +301,10 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
         }
 
         /**
-         * If it's a static field see if it's initialized to an app context in
-         * one of the constructors
+         * If it's a static field see if it's initialized to an app context in one of the
+         * constructors
          */
-        private boolean isInitializedToAppContext(
-                @NonNull UField field) {
+        private boolean isInitializedToAppContext(@NonNull UField field) {
             PsiClass containingClass = field.getContainingClass();
             if (containingClass == null) {
                 return false;
@@ -303,29 +317,32 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
                 }
                 Ref<Boolean> assignedToAppContext = new Ref<>(false);
 
-                methodBody.accept(new AbstractUastVisitor() {
-                    @Override
-                    public boolean visitBinaryExpression(UBinaryExpression node) {
-                        if (UastExpressionUtils.isAssignment(node) &&
-                                node.getLeftOperand() instanceof UResolvable &&
-                                field.getPsi().equals(
-                                        ((UResolvable)node.getLeftOperand()).resolve())) {
-                            // Yes, assigning to this field
-                            // See if the right hand side looks like an app context
-                            UElement rhs = node.getRightOperand();
-                            while (rhs instanceof UQualifiedReferenceExpression) {
-                                rhs = ((UQualifiedReferenceExpression)rhs).getSelector();
-                            }
-                            if (rhs instanceof UCallExpression) {
-                                UCallExpression call = (UCallExpression) rhs;
-                                if ("getApplicationContext".equals(getMethodName(call))) {
-                                    assignedToAppContext.set(true);
+                methodBody.accept(
+                        new AbstractUastVisitor() {
+                            @Override
+                            public boolean visitBinaryExpression(UBinaryExpression node) {
+                                if (UastExpressionUtils.isAssignment(node)
+                                        && node.getLeftOperand() instanceof UResolvable
+                                        && field.getPsi()
+                                                .equals(
+                                                        ((UResolvable) node.getLeftOperand())
+                                                                .resolve())) {
+                                    // Yes, assigning to this field
+                                    // See if the right hand side looks like an app context
+                                    UElement rhs = node.getRightOperand();
+                                    while (rhs instanceof UQualifiedReferenceExpression) {
+                                        rhs = ((UQualifiedReferenceExpression) rhs).getSelector();
+                                    }
+                                    if (rhs instanceof UCallExpression) {
+                                        UCallExpression call = (UCallExpression) rhs;
+                                        if ("getApplicationContext".equals(getMethodName(call))) {
+                                            assignedToAppContext.set(true);
+                                        }
+                                    }
                                 }
+                                return super.visitBinaryExpression(node);
                             }
-                        }
-                        return super.visitBinaryExpression(node);
-                    }
-                });
+                        });
 
                 if (assignedToAppContext.get()) {
                     return true;
@@ -335,15 +352,16 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
             return false;
         }
 
-        private void report(@NonNull PsiField field, @NonNull PsiModifierList modifierList,
+        private void report(
+                @NonNull PsiField field,
+                @NonNull PsiModifierList modifierList,
                 @NonNull String message) {
             PsiElement locationNode = field;
             // Try to find the static modifier itself
             if (modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
                 PsiElement child = modifierList.getFirstChild();
                 while (child != null) {
-                    if (child instanceof PsiKeyword
-                            && PsiKeyword.STATIC.equals(child.getText())) {
+                    if (child instanceof PsiKeyword && PsiKeyword.STATIC.equals(child.getText())) {
                         locationNode = child;
                         break;
                     }
@@ -370,11 +388,9 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
         return false;
     }
 
-    static boolean isLeakCandidate(
-            @NonNull PsiClass cls,
-            @NonNull JavaEvaluator evaluator) {
-        return evaluator.extendsClass(cls, CLASS_CONTEXT, false) &&
-                   !evaluator.extendsClass(cls, CLASS_APPLICATION, false)
+    static boolean isLeakCandidate(@NonNull PsiClass cls, @NonNull JavaEvaluator evaluator) {
+        return evaluator.extendsClass(cls, CLASS_CONTEXT, false)
+                        && !evaluator.extendsClass(cls, CLASS_APPLICATION, false)
                 || evaluator.extendsClass(cls, CLASS_VIEW, false)
                 || evaluator.extendsClass(cls, CLASS_FRAGMENT, false);
     }

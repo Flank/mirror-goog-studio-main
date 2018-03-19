@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
@@ -47,11 +48,9 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
             implements TaskConfigAction<FeatureSplitDeclarationWriterTask> {
 
         @NonNull private final VariantScope variantScope;
-        @NonNull private final File outputDirectory;
 
-        public ConfigAction(@NonNull VariantScope variantScope, @NonNull File outputDirectory) {
+        public ConfigAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
-            this.outputDirectory = outputDirectory;
         }
 
         @NonNull
@@ -76,7 +75,11 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
                             .getVariantData()
                             .getVariantConfiguration()
                             .getOriginalApplicationId();
-            task.outputDirectory = outputDirectory;
+            task.outputDirectory =
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.METADATA_FEATURE_DECLARATION, task, "out");
         }
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-
 import com.android.tools.lint.detector.api.Detector;
 
 public class AddJavascriptInterfaceDetectorTest extends AbstractCheckTest {
@@ -27,68 +26,64 @@ public class AddJavascriptInterfaceDetectorTest extends AbstractCheckTest {
     }
 
     public void test() {
-        String expected = ""
-                + "src/test/pkg/AddJavascriptInterfaceTest.java:16: Warning: WebView.addJavascriptInterface should not be called with minSdkVersion < 17 for security reasons: JavaScript can use reflection to manipulate application [AddJavascriptInterface]\n"
-                + "            webView.addJavascriptInterface(object, string);\n"
-                + "                    ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/AddJavascriptInterfaceTest.java:23: Warning: WebView.addJavascriptInterface should not be called with minSdkVersion < 17 for security reasons: JavaScript can use reflection to manipulate application [AddJavascriptInterface]\n"
-                + "            webView.addJavascriptInterface(object, string);\n"
-                + "                    ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n";
+        String expected =
+                ""
+                        + "src/test/pkg/AddJavascriptInterfaceTest.java:16: Warning: WebView.addJavascriptInterface should not be called with minSdkVersion < 17 for security reasons: JavaScript can use reflection to manipulate application [AddJavascriptInterface]\n"
+                        + "            webView.addJavascriptInterface(object, string);\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AddJavascriptInterfaceTest.java:23: Warning: WebView.addJavascriptInterface should not be called with minSdkVersion < 17 for security reasons: JavaScript can use reflection to manipulate application [AddJavascriptInterface]\n"
+                        + "            webView.addJavascriptInterface(object, string);\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings\n";
         //noinspection all // Sample code
-        lint().files(
-                manifest().minSdk(10),
-                mTestFile)
-                .run()
-                .expect(expected);
+        lint().files(manifest().minSdk(10), mTestFile).run().expect(expected);
     }
 
     public void testNoWarningWhenMinSdkAt17() {
         //noinspection all // Sample code
-        lint().files(
-                manifest().minSdk(17),
-                mTestFile)
-                .run()
-                .expectClean();
+        lint().files(manifest().minSdk(17), mTestFile).run().expectClean();
     }
 
     @SuppressWarnings("all")
-    private TestFile mTestFile = java("src/test/pkg/AddJavascriptInterfaceTest.java", ""
-            + "package test.pkg;\n"
-            + "\n"
-            + "import android.webkit.WebView;\n"
-            + "import android.content.Context;\n"
-            + "\n"
-            + "\n"
-            + "public class AddJavascriptInterfaceTest {\n"
-            + "    private static class WebViewChild extends WebView {\n"
-            + "        WebViewChild(Context context) {\n"
-            + "            super(context);\n"
-            + "        }\n"
-            + "    }\n"
-            + "\n"
-            + "    private static class CallAddJavascriptInterfaceOnWebView {\n"
-            + "        public void addJavascriptInterfaceToWebView(WebView webView, Object object, String string) {\n"
-            + "            webView.addJavascriptInterface(object, string);\n"
-            + "        }\n"
-            + "    }\n"
-            + "\n"
-            + "    private static class CallAddJavascriptInterfaceOnWebViewChild {\n"
-            + "        public void addJavascriptInterfaceToWebViewChild(\n"
-            + "            WebViewChild webView, Object object, String string) {\n"
-            + "            webView.addJavascriptInterface(object, string);\n"
-            + "        }\n"
-            + "    }\n"
-            + "\n"
-            + "    private static class NonWebView {\n"
-            + "        public void addJavascriptInterface(Object object, String string) { }\n"
-            + "    }\n"
-            + "\n"
-            + "    private static class CallAddJavascriptInterfaceOnNonWebView {\n"
-            + "        public void addJavascriptInterfaceToNonWebView(\n"
-            + "            NonWebView webView, Object object, String string) {\n"
-            + "            webView.addJavascriptInterface(object, string);\n"
-            + "        }\n"
-            + "    }\n"
-            + "}");
+    private TestFile mTestFile =
+            java(
+                    "src/test/pkg/AddJavascriptInterfaceTest.java",
+                    ""
+                            + "package test.pkg;\n"
+                            + "\n"
+                            + "import android.webkit.WebView;\n"
+                            + "import android.content.Context;\n"
+                            + "\n"
+                            + "\n"
+                            + "public class AddJavascriptInterfaceTest {\n"
+                            + "    private static class WebViewChild extends WebView {\n"
+                            + "        WebViewChild(Context context) {\n"
+                            + "            super(context);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class CallAddJavascriptInterfaceOnWebView {\n"
+                            + "        public void addJavascriptInterfaceToWebView(WebView webView, Object object, String string) {\n"
+                            + "            webView.addJavascriptInterface(object, string);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class CallAddJavascriptInterfaceOnWebViewChild {\n"
+                            + "        public void addJavascriptInterfaceToWebViewChild(\n"
+                            + "            WebViewChild webView, Object object, String string) {\n"
+                            + "            webView.addJavascriptInterface(object, string);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class NonWebView {\n"
+                            + "        public void addJavascriptInterface(Object object, String string) { }\n"
+                            + "    }\n"
+                            + "\n"
+                            + "    private static class CallAddJavascriptInterfaceOnNonWebView {\n"
+                            + "        public void addJavascriptInterfaceToNonWebView(\n"
+                            + "            NonWebView webView, Object object, String string) {\n"
+                            + "            webView.addJavascriptInterface(object, string);\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}");
 }

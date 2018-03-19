@@ -68,16 +68,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Check which looks at the order of buttons in dialogs and makes sure that
- * "the dismissive action of a dialog is always on the left whereas the affirmative actions
- * are on the right."
- * <p>
- * This only looks for the affirmative and dismissive actions named "OK" and "Cancel";
- * "Cancel" usually works, but the affirmative action often has many other names -- "Done",
- * "Send", "Go", etc.
- * <p>
- * TODO: Perhaps we should look for Yes/No dialogs and suggested they be rephrased as
- * Cancel/OK dialogs? Similarly, consider "Abort" a synonym for "Cancel" ?
+ * Check which looks at the order of buttons in dialogs and makes sure that "the dismissive action
+ * of a dialog is always on the left whereas the affirmative actions are on the right."
+ *
+ * <p>This only looks for the affirmative and dismissive actions named "OK" and "Cancel"; "Cancel"
+ * usually works, but the affirmative action often has many other names -- "Done", "Send", "Go",
+ * etc.
+ *
+ * <p>TODO: Perhaps we should look for Yes/No dialogs and suggested they be rephrased as Cancel/OK
+ * dialogs? Similarly, consider "Abort" a synonym for "Cancel" ?
  */
 public class ButtonDetector extends ResourceXmlDetector {
     /** Name of cancel value ("Cancel") */
@@ -92,121 +91,110 @@ public class ButtonDetector extends ResourceXmlDetector {
     private static final String NO_LABEL = "No";
 
     /** Layout text attribute reference to {@code @android:string/ok} */
-    private static final String ANDROID_OK_RESOURCE =
-            ANDROID_STRING_PREFIX + "ok";
+    private static final String ANDROID_OK_RESOURCE = ANDROID_STRING_PREFIX + "ok";
     /** Layout text attribute reference to {@code @android:string/cancel} */
-    private static final String ANDROID_CANCEL_RESOURCE =
-            ANDROID_STRING_PREFIX + "cancel";
+    private static final String ANDROID_CANCEL_RESOURCE = ANDROID_STRING_PREFIX + "cancel";
     /** Layout text attribute reference to {@code @android:string/yes} */
-    private static final String ANDROID_YES_RESOURCE =
-            ANDROID_STRING_PREFIX + "yes";
+    private static final String ANDROID_YES_RESOURCE = ANDROID_STRING_PREFIX + "yes";
     /** Layout text attribute reference to {@code @android:string/no} */
-    private static final String ANDROID_NO_RESOURCE =
-            ANDROID_STRING_PREFIX + "no";
+    private static final String ANDROID_NO_RESOURCE = ANDROID_STRING_PREFIX + "no";
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            ButtonDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(ButtonDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
-    public static final Issue ORDER = Issue.create(
-            "ButtonOrder",
-            "Button order",
-
-            "According to the Android Design Guide,\n" +
-            "\n" +
-            "\"Action buttons are typically Cancel and/or OK, with OK indicating the preferred " +
-            "or most likely action. However, if the options consist of specific actions such " +
-            "as Close or Wait rather than a confirmation or cancellation of the action " +
-            "described in the content, then all the buttons should be active verbs. As a rule, " +
-            "the dismissive action of a dialog is always on the left whereas the affirmative " +
-            "actions are on the right.\"\n" +
-            "\n" +
-            "This check looks for button bars and buttons which look like cancel buttons, " +
-            "and makes sure that these are on the left.",
-
-            Category.USABILITY,
-            8,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-                    "http://developer.android.com/design/building-blocks/dialogs.html");
-
-    /** The main issue discovered by this detector */
-    public static final Issue STYLE = Issue.create(
-            "ButtonStyle",
-            "Button should be borderless",
-
-            "Button bars typically use a borderless style for the buttons. Set the " +
-            "`style=\"?android:attr/buttonBarButtonStyle\"` attribute " +
-            "on each of the buttons, and set `style=\"?android:attr/buttonBarStyle\"` on " +
-            "the parent layout",
-
-            Category.USABILITY,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-                    "http://developer.android.com/design/building-blocks/buttons.html");
+    public static final Issue ORDER =
+            Issue.create(
+                            "ButtonOrder",
+                            "Button order",
+                            "According to the Android Design Guide,\n"
+                                    + "\n"
+                                    + "\"Action buttons are typically Cancel and/or OK, with OK indicating the preferred "
+                                    + "or most likely action. However, if the options consist of specific actions such "
+                                    + "as Close or Wait rather than a confirmation or cancellation of the action "
+                                    + "described in the content, then all the buttons should be active verbs. As a rule, "
+                                    + "the dismissive action of a dialog is always on the left whereas the affirmative "
+                                    + "actions are on the right.\"\n"
+                                    + "\n"
+                                    + "This check looks for button bars and buttons which look like cancel buttons, "
+                                    + "and makes sure that these are on the left.",
+                            Category.USABILITY,
+                            8,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/design/building-blocks/dialogs.html");
 
     /** The main issue discovered by this detector */
-    public static final Issue BACK_BUTTON = Issue.create(
-            "BackButton",
-            "Back button",
-            // TODO: Look for ">" as label suffixes as well
-
-            "According to the Android Design Guide,\n" +
-            "\n" +
-            "\"Other platforms use an explicit back button with label to allow the user " +
-            "to navigate up the application's hierarchy. Instead, Android uses the main " +
-            "action bar's app icon for hierarchical navigation and the navigation bar's " +
-            "back button for temporal navigation.\"" +
-            "\n" +
-            "This check is not very sophisticated (it just looks for buttons with the " +
-            "label \"Back\"), so it is disabled by default to not trigger on common " +
-            "scenarios like pairs of Back/Next buttons to paginate through screens.",
-
-            Category.USABILITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .setEnabledByDefault(false)
-            .addMoreInfo(
-                 "http://developer.android.com/design/patterns/pure-android.html");
+    public static final Issue STYLE =
+            Issue.create(
+                            "ButtonStyle",
+                            "Button should be borderless",
+                            "Button bars typically use a borderless style for the buttons. Set the "
+                                    + "`style=\"?android:attr/buttonBarButtonStyle\"` attribute "
+                                    + "on each of the buttons, and set `style=\"?android:attr/buttonBarStyle\"` on "
+                                    + "the parent layout",
+                            Category.USABILITY,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/design/building-blocks/buttons.html");
 
     /** The main issue discovered by this detector */
-    public static final Issue CASE = Issue.create(
-            "ButtonCase",
-            "Cancel/OK dialog button capitalization",
+    public static final Issue BACK_BUTTON =
+            Issue.create(
+                            "BackButton",
+                            "Back button",
+                            // TODO: Look for ">" as label suffixes as well
 
-            "The standard capitalization for OK/Cancel dialogs is \"OK\" and \"Cancel\". " +
-            "To ensure that your dialogs use the standard strings, you can use " +
-            "the resource strings @android:string/ok and @android:string/cancel.",
+                            "According to the Android Design Guide,\n"
+                                    + "\n"
+                                    + "\"Other platforms use an explicit back button with label to allow the user "
+                                    + "to navigate up the application's hierarchy. Instead, Android uses the main "
+                                    + "action bar's app icon for hierarchical navigation and the navigation bar's "
+                                    + "back button for temporal navigation.\""
+                                    + "\n"
+                                    + "This check is not very sophisticated (it just looks for buttons with the "
+                                    + "label \"Back\"), so it is disabled by default to not trigger on common "
+                                    + "scenarios like pairs of Back/Next buttons to paginate through screens.",
+                            Category.USABILITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setEnabledByDefault(false)
+                    .addMoreInfo("http://developer.android.com/design/patterns/pure-android.html");
 
-            Category.USABILITY,
-            2,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    /** The main issue discovered by this detector */
+    public static final Issue CASE =
+            Issue.create(
+                    "ButtonCase",
+                    "Cancel/OK dialog button capitalization",
+                    "The standard capitalization for OK/Cancel dialogs is \"OK\" and \"Cancel\". "
+                            + "To ensure that your dialogs use the standard strings, you can use "
+                            + "the resource strings @android:string/ok and @android:string/cancel.",
+                    Category.USABILITY,
+                    2,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Set of resource names whose value was either OK or Cancel */
     private Set<String> mApplicableResources;
 
     /**
-     * Map of resource names we'd like resolved into strings in phase 2. The
-     * values should be filled in with the actual string contents.
+     * Map of resource names we'd like resolved into strings in phase 2. The values should be filled
+     * in with the actual string contents.
      */
     private Map<String, String> mKeyToLabel;
 
     /**
-     * Set of elements we've already warned about. If we've already complained
-     * about a cancel button, don't also report the OK button (since it's listed
-     * for the warnings on OK buttons).
+     * Set of elements we've already warned about. If we've already complained about a cancel
+     * button, don't also report the OK button (since it's listed for the warnings on OK buttons).
      */
     private Set<Element> mIgnore;
 
     /** Constructs a new {@link ButtonDetector} */
-    public ButtonDetector() {
-    }
+    public ButtonDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -275,11 +263,14 @@ public class ButtonDetector extends ResourceXmlDetector {
                                             && LintUtils.isEnglishResource(context, true)
                                             && context.isEnabled(CASE)) {
                                         assert label.trim().equalsIgnoreCase(CANCEL_LABEL) : label;
-                                        context.report(CASE, child, context.getLocation(child),
-                                            String.format(
-                                            "The standard Android way to capitalize %1$s " +
-                                            "is \"Cancel\" (tip: use `@android:string/cancel` instead)",
-                                            label));
+                                        context.report(
+                                                CASE,
+                                                child,
+                                                context.getLocation(child),
+                                                String.format(
+                                                        "The standard Android way to capitalize %1$s "
+                                                                + "is \"Cancel\" (tip: use `@android:string/cancel` instead)",
+                                                        label));
                                     }
                                 }
                             } else if (LintUtils.startsWith(text, OK_LABEL, j)) {
@@ -292,15 +283,18 @@ public class ButtonDetector extends ResourceXmlDetector {
                                             && LintUtils.isEnglishResource(context, true)
                                             && context.isEnabled(CASE)) {
                                         assert label.trim().equalsIgnoreCase(OK_LABEL) : label;
-                                        context.report(CASE, child, context.getLocation(child),
-                                            String.format(
-                                            "The standard Android way to capitalize %1$s " +
-                                            "is \"OK\" (tip: use `@android:string/ok` instead)",
-                                            label));
+                                        context.report(
+                                                CASE,
+                                                child,
+                                                context.getLocation(child),
+                                                String.format(
+                                                        "The standard Android way to capitalize %1$s "
+                                                                + "is \"OK\" (tip: use `@android:string/ok` instead)",
+                                                        label));
                                     }
                                 }
-                            } else if (LintUtils.startsWith(text, BACK_LABEL, j) &&
-                                    stripLabel(text).equalsIgnoreCase(BACK_LABEL)) {
+                            } else if (LintUtils.startsWith(text, BACK_LABEL, j)
+                                    && stripLabel(text).equalsIgnoreCase(BACK_LABEL)) {
                                 String name = element.getAttribute(ATTR_NAME);
                                 foundResource(context, name, element);
                             }
@@ -316,13 +310,16 @@ public class ButtonDetector extends ResourceXmlDetector {
                         && !VALUE_SELECTABLE_ITEM_BACKGROUND.equals(
                                 element.getAttributeNS(ANDROID_URI, ATTR_BACKGROUND))
                         && (context.getProject().getMinSdk() >= 11
-                            || context.getFolderVersion() >= 11)
+                                || context.getFolderVersion() >= 11)
                         && context.isEnabled(STYLE)
                         && !parentDefinesSelectableItem(element)) {
-                    context.report(STYLE, element, context.getElementLocation(element),
-                            "Buttons in button bars should be borderless; use " +
-                            "`style=\"?android:attr/buttonBarButtonStyle\"` (and " +
-                            "`?android:attr/buttonBarStyle` on the parent)");
+                    context.report(
+                            STYLE,
+                            element,
+                            context.getElementLocation(element),
+                            "Buttons in button bars should be borderless; use "
+                                    + "`style=\"?android:attr/buttonBarButtonStyle\"` (and "
+                                    + "`?android:attr/buttonBarStyle` on the parent)");
                 }
             }
 
@@ -346,9 +343,12 @@ public class ButtonDetector extends ResourceXmlDetector {
                     } else if (BACK_LABEL.equalsIgnoreCase(label)) {
                         if (context.isEnabled(BACK_BUTTON)) {
                             Location location = context.getElementLocation(element);
-                            context.report(BACK_BUTTON, element, location,
-                                "Back buttons are not standard on Android; see design guide's " +
-                                "navigation section");
+                            context.report(
+                                    BACK_BUTTON,
+                                    element,
+                                    location,
+                                    "Back buttons are not standard on Android; see design guide's "
+                                            + "navigation section");
                         }
                     }
                 }
@@ -365,13 +365,15 @@ public class ButtonDetector extends ResourceXmlDetector {
                 if (isYes || text.equals(ANDROID_NO_RESOURCE)) {
                     Attr attribute = element.getAttributeNodeNS(ANDROID_URI, ATTR_TEXT);
                     Location location = context.getLocation(attribute);
-                    String message = String.format("%1$s actually returns \"%2$s\", not \"%3$s\"; "
-                                    + "use %4$s instead or create a local string resource for %5$s",
-                            text,
-                            isYes ? OK_LABEL : CANCEL_LABEL,
-                            isYes ? YES_LABEL : NO_LABEL,
-                            isYes ? ANDROID_OK_RESOURCE : ANDROID_CANCEL_RESOURCE,
-                            isYes ? YES_LABEL : NO_LABEL);
+                    String message =
+                            String.format(
+                                    "%1$s actually returns \"%2$s\", not \"%3$s\"; "
+                                            + "use %4$s instead or create a local string resource for %5$s",
+                                    text,
+                                    isYes ? OK_LABEL : CANCEL_LABEL,
+                                    isYes ? YES_LABEL : NO_LABEL,
+                                    isYes ? ANDROID_OK_RESOURCE : ANDROID_CANCEL_RESOURCE,
+                                    isYes ? YES_LABEL : NO_LABEL);
                     context.report(CASE, element, location, message);
                 }
             }
@@ -403,10 +405,9 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     /**
-     * We've found a resource reference to some label we're interested in ("OK",
-     * "Cancel", "Back", ...). Record the corresponding name such that in the
-     * next pass through the layouts we can check the context (for OK/Cancel the
-     * button order etc).
+     * We've found a resource reference to some label we're interested in ("OK", "Cancel", "Back",
+     * ...). Record the corresponding name such that in the next pass through the layouts we can
+     * check the context (for OK/Cancel the button order etc).
      */
     private void foundResource(XmlContext context, String name, Element element) {
         if (!LintUtils.isEnglishResource(context, true)) {
@@ -514,10 +515,11 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
 
         if (mustCreateIcsLayout) {
-            message = String.format(
-                    "Layout uses the wrong button order for API >= 14: Create a " +
-                    "`layout-v14/%1$s` file with opposite order: %2$s",
-                    context.file.getName(), message);
+            message =
+                    String.format(
+                            "Layout uses the wrong button order for API >= 14: Create a "
+                                    + "`layout-v14/%1$s` file with opposite order: %2$s",
+                            context.file.getName(), message);
         }
 
         // Show existing button order? We can only do that for LinearLayouts
@@ -536,10 +538,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         context.report(ORDER, element, location, message);
     }
 
-    /**
-     * Sort a list of label buttons into the expected order (Cancel on the left,
-     * OK on the right
-     */
+    /** Sort a list of label buttons into the expected order (Cancel on the left, OK on the right */
     private static void sortButtons(List<String> labelList) {
         for (int i = 0, n = labelList.size(); i < n; i++) {
             String label = labelList.get(i);
@@ -724,22 +723,24 @@ public class ButtonDetector extends ResourceXmlDetector {
             // etc.
             if (isCancel) {
                 if (element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_TO_RIGHT_OF)
-                        && isButtonId(parent, element.getAttributeNS(ANDROID_URI,
-                                ATTR_LAYOUT_TO_RIGHT_OF))) {
+                        && isButtonId(
+                                parent,
+                                element.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_TO_RIGHT_OF))) {
                     return true;
                 }
-                if (isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_RIGHT) &&
-                        !isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_LEFT)) {
+                if (isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_RIGHT)
+                        && !isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_LEFT)) {
                     return true;
                 }
             } else {
                 if (element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_TO_LEFT_OF)
-                        && isButtonId(parent, element.getAttributeNS(ANDROID_URI,
-                                ATTR_LAYOUT_TO_RIGHT_OF))) {
+                        && isButtonId(
+                                parent,
+                                element.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_TO_RIGHT_OF))) {
                     return true;
                 }
-                if (isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_LEFT) &&
-                        !isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_RIGHT)) {
+                if (isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_LEFT)
+                        && !isTrue(element, ATTR_LAYOUT_ALIGN_PARENT_RIGHT)) {
                     return true;
                 }
             }
@@ -753,8 +754,8 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Returns true if the given attribute (in the Android namespace) is set to
-     * true on the given element
+     * Returns true if the given attribute (in the Android namespace) is set to true on the given
+     * element
      */
     private static boolean isTrue(Element element, String attribute) {
         return VALUE_TRUE.equals(element.getAttributeNS(ANDROID_URI, attribute));

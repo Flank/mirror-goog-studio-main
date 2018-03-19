@@ -55,7 +55,7 @@ class CpuProfilerComponent final : public ProfilerComponent {
   grpc::Service* GetInternalService() override { return &internal_service_; }
 
  private:
-  const Clock& clock_;
+  Clock* clock_;
   CpuCache cache_{kBufferCapacity};
   CpuUsageSampler usage_sampler_;
   ThreadMonitor thread_monitor_;

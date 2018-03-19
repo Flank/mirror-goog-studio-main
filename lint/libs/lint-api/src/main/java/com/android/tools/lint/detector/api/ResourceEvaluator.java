@@ -65,18 +65,17 @@ import org.jetbrains.uast.UastUtils;
 public class ResourceEvaluator {
 
     /**
-     * Marker ResourceType used to signify that an expression is of type {@code @ColorInt},
-     * which isn't actually a ResourceType but one we want to specifically compare with.
-     * We're using {@link ResourceType#PUBLIC} because that one won't appear in the R
-     * class (and ResourceType is an enum we can't just create new constants for.)
+     * Marker ResourceType used to signify that an expression is of type {@code @ColorInt}, which
+     * isn't actually a ResourceType but one we want to specifically compare with. We're using
+     * {@link ResourceType#PUBLIC} because that one won't appear in the R class (and ResourceType is
+     * an enum we can't just create new constants for.)
      */
     public static final ResourceType COLOR_INT_MARKER_TYPE = ResourceType.PUBLIC;
     /**
-     * Marker ResourceType used to signify that an expression is of type {@code @Px},
-     * which isn't actually a ResourceType but one we want to specifically compare with.
-     * We're using {@link ResourceType#DECLARE_STYLEABLE} because that one doesn't
-     * have a corresponding {@code *Res} constant (and ResourceType is an enum we can't
-     * just create new constants for.)
+     * Marker ResourceType used to signify that an expression is of type {@code @Px}, which isn't
+     * actually a ResourceType but one we want to specifically compare with. We're using {@link
+     * ResourceType#DECLARE_STYLEABLE} because that one doesn't have a corresponding {@code *Res}
+     * constant (and ResourceType is an enum we can't just create new constants for.)
      */
     public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.DECLARE_STYLEABLE;
 
@@ -201,10 +200,9 @@ public class ResourceEvaluator {
     }
 
     /**
-     * Whether we allow dereferencing resources when computing constants;
-     * e.g. if we ask for the resource for {@code x} when the code is
-     * {@code x = getString(R.string.name)}, if {@code allowDereference} is
-     * true we'll return R.string.name, otherwise we'll return null.
+     * Whether we allow dereferencing resources when computing constants; e.g. if we ask for the
+     * resource for {@code x} when the code is {@code x = getString(R.string.name)}, if {@code
+     * allowDereference} is true we'll return R.string.name, otherwise we'll return null.
      *
      * @return this for constructor chaining
      */
@@ -214,8 +212,8 @@ public class ResourceEvaluator {
     }
 
     /**
-     * Evaluates the given node and returns the resource reference (type and name) it
-     * points to, if any
+     * Evaluates the given node and returns the resource reference (type and name) it points to, if
+     * any
      *
      * @param evaluator the evaluator to use to look up annotations
      * @param element the node to compute the constant value for
@@ -223,14 +221,13 @@ public class ResourceEvaluator {
      */
     @Nullable
     public static ResourceUrl getResource(
-            @Nullable JavaEvaluator evaluator,
-            @NonNull PsiElement element) {
+            @Nullable JavaEvaluator evaluator, @NonNull PsiElement element) {
         return new ResourceEvaluator(evaluator).getResource(element);
     }
 
     /**
-     * Evaluates the given node and returns the resource reference (type and name) it
-     * points to, if any
+     * Evaluates the given node and returns the resource reference (type and name) it points to, if
+     * any
      *
      * @param evaluator the evaluator to use to look up annotations
      * @param element the node to compute the constant value for
@@ -238,14 +235,12 @@ public class ResourceEvaluator {
      */
     @Nullable
     public static ResourceUrl getResource(
-            @NonNull JavaEvaluator evaluator,
-            @NonNull UElement element) {
+            @NonNull JavaEvaluator evaluator, @NonNull UElement element) {
         return new ResourceEvaluator(evaluator).getResource(element);
     }
 
     /**
-     * Evaluates the given node and returns the resource types implied by the given element,
-     * if any.
+     * Evaluates the given node and returns the resource types implied by the given element, if any.
      *
      * @param evaluator the evaluator to use to look up annotations
      * @param element the node to compute the constant value for
@@ -253,14 +248,12 @@ public class ResourceEvaluator {
      */
     @Nullable
     public static EnumSet<ResourceType> getResourceTypes(
-            @Nullable JavaEvaluator evaluator,
-            @NonNull PsiElement element) {
+            @Nullable JavaEvaluator evaluator, @NonNull PsiElement element) {
         return new ResourceEvaluator(evaluator).getResourceTypes(element);
     }
 
     /**
-     * Evaluates the given node and returns the resource types implied by the given element,
-     * if any.
+     * Evaluates the given node and returns the resource types implied by the given element, if any.
      *
      * @param evaluator the evaluator to use to look up annotations
      * @param element the node to compute the constant value for
@@ -268,14 +261,13 @@ public class ResourceEvaluator {
      */
     @Nullable
     public static EnumSet<ResourceType> getResourceTypes(
-            @Nullable JavaEvaluator evaluator,
-            @NonNull UElement element) {
+            @Nullable JavaEvaluator evaluator, @NonNull UElement element) {
         return new ResourceEvaluator(evaluator).getResourceTypes(element);
     }
 
     /**
-     * Evaluates the given node and returns the resource reference (type and name) it
-     * points to, if any
+     * Evaluates the given node and returns the resource reference (type and name) it points to, if
+     * any
      *
      * @param element the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
@@ -349,8 +341,8 @@ public class ResourceEvaluator {
     }
 
     /**
-     * Evaluates the given node and returns the resource reference (type and name) it
-     * points to, if any
+     * Evaluates the given node and returns the resource reference (type and name) it points to, if
+     * any
      *
      * @param element the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
@@ -369,7 +361,8 @@ public class ResourceEvaluator {
                 return getResource(expression.getElseExpression());
             }
         } else if (element instanceof PsiParenthesizedExpression) {
-            PsiParenthesizedExpression parenthesizedExpression = (PsiParenthesizedExpression) element;
+            PsiParenthesizedExpression parenthesizedExpression =
+                    (PsiParenthesizedExpression) element;
             return getResource(parenthesizedExpression.getExpression());
         } else if (element instanceof PsiMethodCallExpression && allowDereference) {
             PsiMethodCallExpression call = (PsiMethodCallExpression) element;
@@ -420,8 +413,7 @@ public class ResourceEvaluator {
     }
 
     /**
-     * Evaluates the given node and returns the resource types applicable to the
-     * node, if any.
+     * Evaluates the given node and returns the resource types applicable to the node, if any.
      *
      * @param element the element to compute the types for
      * @return the corresponding resource types
@@ -439,10 +431,8 @@ public class ResourceEvaluator {
             } else if (known == Boolean.FALSE && expression.getElseExpression() != null) {
                 return getResourceTypes(expression.getElseExpression());
             } else {
-                EnumSet<ResourceType> left = getResourceTypes(
-                        expression.getThenExpression());
-                EnumSet<ResourceType> right = getResourceTypes(
-                        expression.getElseExpression());
+                EnumSet<ResourceType> left = getResourceTypes(expression.getThenExpression());
+                EnumSet<ResourceType> right = getResourceTypes(expression.getElseExpression());
                 if (left == null) {
                     return right;
                 } else if (right == null) {
@@ -486,8 +476,8 @@ public class ResourceEvaluator {
             PsiElement resolved = ((UReferenceExpression) element).resolve();
 
             if (resolved instanceof PsiModifierListOwner) {
-                EnumSet<ResourceType> types = getTypesFromAnnotations(
-                        (PsiModifierListOwner) resolved);
+                EnumSet<ResourceType> types =
+                        getTypesFromAnnotations((PsiModifierListOwner) resolved);
                 if (types != null && !types.isEmpty()) {
                     return types;
                 }
@@ -495,8 +485,7 @@ public class ResourceEvaluator {
 
             if (resolved instanceof PsiVariable) {
                 PsiVariable variable = (PsiVariable) resolved;
-                UElement lastAssignment =
-                        UastLintUtils.findLastAssignment(variable, element);
+                UElement lastAssignment = UastLintUtils.findLastAssignment(variable, element);
 
                 if (lastAssignment != null) {
                     return getResourceTypes(lastAssignment);
@@ -510,8 +499,7 @@ public class ResourceEvaluator {
     }
 
     /**
-     * Evaluates the given node and returns the resource types applicable to the
-     * node, if any.
+     * Evaluates the given node and returns the resource types applicable to the node, if any.
      *
      * @param element the element to compute the types for
      * @return the corresponding resource types
@@ -529,10 +517,8 @@ public class ResourceEvaluator {
             } else if (known == Boolean.FALSE && expression.getElseExpression() != null) {
                 return getResourceTypes(expression.getElseExpression());
             } else {
-                EnumSet<ResourceType> left = getResourceTypes(
-                        expression.getThenExpression());
-                EnumSet<ResourceType> right = getResourceTypes(
-                        expression.getElseExpression());
+                EnumSet<ResourceType> left = getResourceTypes(expression.getThenExpression());
+                EnumSet<ResourceType> right = getResourceTypes(expression.getElseExpression());
                 if (left == null) {
                     return right;
                 } else if (right == null) {
@@ -544,7 +530,8 @@ public class ResourceEvaluator {
                 }
             }
         } else if (element instanceof PsiParenthesizedExpression) {
-            PsiParenthesizedExpression parenthesizedExpression = (PsiParenthesizedExpression) element;
+            PsiParenthesizedExpression parenthesizedExpression =
+                    (PsiParenthesizedExpression) element;
             return getResourceTypes(parenthesizedExpression.getExpression());
         } else if (element instanceof PsiMethodCallExpression) {
             PsiMethodCallExpression call = (PsiMethodCallExpression) element;
@@ -562,8 +549,8 @@ public class ResourceEvaluator {
             }
             PsiElement resolved = ((PsiReference) element).resolve();
             if (resolved instanceof PsiModifierListOwner) {
-                EnumSet<ResourceType> types = getTypesFromAnnotations(
-                        (PsiModifierListOwner) resolved);
+                EnumSet<ResourceType> types =
+                        getTypesFromAnnotations((PsiModifierListOwner) resolved);
                 if (types != null && !types.isEmpty()) {
                     return types;
                 }
@@ -580,7 +567,7 @@ public class ResourceEvaluator {
                 }
                 return null;
             } else if (resolved instanceof PsiParameter) {
-                return getTypesFromAnnotations((PsiParameter)resolved);
+                return getTypesFromAnnotations((PsiParameter) resolved);
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
                 PsiExpression last = ConstantEvaluator.findLastAssignment(element, variable);
@@ -678,8 +665,8 @@ public class ResourceEvaluator {
             if (expression.getQualifier() instanceof PsiReferenceExpression) {
                 PsiReferenceExpression select = (PsiReferenceExpression) expression.getQualifier();
                 if (select.getQualifier() instanceof PsiReferenceExpression) {
-                    PsiReferenceExpression reference = (PsiReferenceExpression) select
-                            .getQualifier();
+                    PsiReferenceExpression reference =
+                            (PsiReferenceExpression) select.getQualifier();
                     if (R_CLASS.equals(reference.getReferenceName())) {
                         String typeName = select.getReferenceName();
                         String name = expression.getReferenceName();
@@ -688,9 +675,10 @@ public class ResourceEvaluator {
                         if (type != null && name != null) {
                             boolean isFramework =
                                     reference.getQualifier() instanceof PsiReferenceExpression
-                                            && ANDROID_PKG
-                                            .equals(((PsiReferenceExpression) reference.
-                                                    getQualifier()).getReferenceName());
+                                            && ANDROID_PKG.equals(
+                                                    ((PsiReferenceExpression)
+                                                                    reference.getQualifier())
+                                                            .getReferenceName());
 
                             return ResourceUrl.create(type, name, isFramework);
                         }
@@ -707,8 +695,9 @@ public class ResourceEvaluator {
                     ResourceType type = ResourceType.getEnum(typeClass.getName());
                     if (type != null && name != null) {
                         String qualifiedName = rClass.getQualifiedName();
-                        boolean isFramework = qualifiedName != null
-                                && qualifiedName.startsWith(ANDROID_PKG_PREFIX);
+                        boolean isFramework =
+                                qualifiedName != null
+                                        && qualifiedName.startsWith(ANDROID_PKG_PREFIX);
                         return ResourceUrl.create(type, name, isFramework);
                     }
                 }

@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELA
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
@@ -33,7 +34,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_CLASSES
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_IDS_DECLARATION
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_TRANSITIVE_DEPS
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
@@ -43,18 +44,14 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_CLAS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
-import com.android.build.gradle.internal.scope.InternalArtifactType.METADADA_FEATURE_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_APP_ID_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
+import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
+import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_DEX
-import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST
@@ -139,16 +136,11 @@ class PublishingSpecs {
 
                 metadata(METADATA_APP_ID_DECLARATION, ArtifactType.METADATA_APP_ID_DECLARATION)
 
-                // this should only be needed by the non base module
-                // FIXME when the bundle task is inside the base module
-                bundle(MERGED_ASSETS, ArtifactType.ASSETS)
-                bundle(PUBLISHED_DEX, ArtifactType.DEX)
-                bundle(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES)
-                bundle(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI)
-                bundle(LINKED_RES_FOR_BUNDLE, ArtifactType.RES_BUNDLE)
+                // output of bundle-tool
+                metadata(BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
-                api(FEATURE_IDS_DECLARATION, ArtifactType.FEATURE_IDS_DECLARATION)
+                api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(FEATURE_APPLICATION_ID_DECLARATION,
                     ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
 
@@ -187,15 +179,13 @@ class PublishingSpecs {
                 runtime(APK, ArtifactType.APK)
                 runtime(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
 
-                bundle(MERGED_ASSETS, ArtifactType.ASSETS)
-                bundle(PUBLISHED_DEX, ArtifactType.DEX)
-                bundle(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES)
-                bundle(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI)
-                bundle(LINKED_RES_FOR_BUNDLE, ArtifactType.RES_BUNDLE)
+                // The intermediate bundle containing only this module. Input for bundle-tool
+                metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
 
                 // this is only for non-base modules.
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
-                metadata(METADADA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(APP_CLASSES, ArtifactType.METADATA_CLASSES)
 
                 // ----
 
@@ -252,7 +242,7 @@ class PublishingSpecs {
 
             variantSpec(VariantTypeImpl.BASE_FEATURE) {
 
-                api(FEATURE_IDS_DECLARATION, ArtifactType.FEATURE_IDS_DECLARATION)
+                api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(FEATURE_APPLICATION_ID_DECLARATION,
                         ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
 
@@ -272,7 +262,8 @@ class PublishingSpecs {
 
             variantSpec(VariantTypeImpl.FEATURE) {
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
-                metadata(METADADA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(FEATURE_CLASSES, ArtifactType.METADATA_CLASSES)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(FEATURE_CLASSES, ArtifactType.CLASSES)
@@ -287,7 +278,6 @@ class PublishingSpecs {
                 api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                     ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
             }
-
 
             // empty specs
             variantSpec(VariantTypeImpl.TEST_APK)

@@ -44,39 +44,36 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.UVariable;
 
-/**
- * Checks for errors related to the Exif Interface
- */
+/** Checks for errors related to the Exif Interface */
 public class ExifInterfaceDetector extends Detector implements SourceCodeScanner {
 
     public static final String EXIF_INTERFACE = "ExifInterface";
     public static final String OLD_EXIF_INTERFACE = "android.media.ExifInterface";
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            ExifInterfaceDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(ExifInterfaceDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Using android.media.ExifInterface */
-    public static final Issue ISSUE = Issue.create(
-            "ExifInterface",
-            "Using `android.media.ExifInterface`",
-
-            "The `android.media.ExifInterface` implementation has some known security " +
-            "bugs in older versions of Android. There is a new implementation available " +
-            "of this library in the support library, which is preferable.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ExifInterface",
+                    "Using `android.media.ExifInterface`",
+                    "The `android.media.ExifInterface` implementation has some known security "
+                            + "bugs in older versions of Android. There is a new implementation available "
+                            + "of this library in the support library, which is preferable.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Constructs a new {@link ExifInterfaceDetector} */
-    public ExifInterfaceDetector() {
-    }
+    public ExifInterfaceDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
-    private static void fix(@NonNull JavaContext context, @NonNull UElement reference,
+    private static void fix(
+            @NonNull JavaContext context,
+            @NonNull UElement reference,
             @NonNull PsiElement referenced) {
         // Can't just check for PsiMember, because we explicitly don't want to include PsiClass
         // (which is also a PsiMember)
@@ -112,7 +109,7 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
     @NonNull
     private static String getErrorMessage() {
         return "Avoid using `android.media.ExifInterface`; use "
-                    + "`android.support.media.ExifInterface` from the support library instead";
+                + "`android.support.media.ExifInterface` from the support library instead";
     }
 
     @Override
@@ -178,8 +175,8 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
                 }
                 if (resolved instanceof PsiClass) {
                     PsiClass cls = (PsiClass) resolved;
-                    if (EXIF_INTERFACE.equals(cls.getName()) &&
-                            OLD_EXIF_INTERFACE.equals(cls.getQualifiedName())) {
+                    if (EXIF_INTERFACE.equals(cls.getName())
+                            && OLD_EXIF_INTERFACE.equals(cls.getQualifiedName())) {
                         fix(context, importReference, resolved);
                     }
                 }
@@ -196,8 +193,8 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
             // accessor.
             PsiTypeElement typeElement = node.getTypeElement();
             if (typeElement != null) {
-                PsiJavaCodeReferenceElement referenceElement = typeElement
-                        .getInnermostComponentReferenceElement();
+                PsiJavaCodeReferenceElement referenceElement =
+                        typeElement.getInnermostComponentReferenceElement();
                 if (referenceElement != null
                         && EXIF_INTERFACE.equals(referenceElement.getReferenceName())
                         && OLD_EXIF_INTERFACE.equals(referenceElement.getText())) {

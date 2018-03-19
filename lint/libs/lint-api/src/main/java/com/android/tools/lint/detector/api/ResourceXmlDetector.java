@@ -21,25 +21,22 @@ import com.android.resources.ResourceFolderType;
 import com.google.common.annotations.Beta;
 
 /**
- * Specialized detector intended for XML resources. Detectors that apply to XML
- * resources should extend this detector instead since it provides special
- * iteration hooks that are more efficient.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * Specialized detector intended for XML resources. Detectors that apply to XML resources should
+ * extend this detector instead since it provides special iteration hooks that are more efficient.
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public abstract class ResourceXmlDetector extends Detector implements XmlScanner {
 
     /**
-     * Returns whether this detector applies to the given folder type. This
-     * allows the detectors to be pruned from iteration, so for example when we
-     * are analyzing a string value file we don't need to look up detectors
-     * related to layout.
+     * Returns whether this detector applies to the given folder type. This allows the detectors to
+     * be pruned from iteration, so for example when we are analyzing a string value file we don't
+     * need to look up detectors related to layout.
      *
      * @param folderType the folder type to be visited
-     * @return true if this detector can apply to resources in folders of the
-     *         given type
+     * @return true if this detector can apply to resources in folders of the given type
      */
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {

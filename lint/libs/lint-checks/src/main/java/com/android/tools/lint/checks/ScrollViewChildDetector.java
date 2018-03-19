@@ -39,35 +39,30 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
 /**
- * Check which looks at the children of ScrollViews and ensures that they fill/match
- * the parent width instead of setting wrap_content.
+ * Check which looks at the children of ScrollViews and ensures that they fill/match the parent
+ * width instead of setting wrap_content.
  */
 public class ScrollViewChildDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "ScrollViewSize",
-            "ScrollView size validation",
-            // TODO add a better explanation here!
-            "ScrollView children must set their `layout_width` or `layout_height` attributes " +
-            "to `wrap_content` rather than `fill_parent` or `match_parent` in the scrolling " +
-            "dimension",
-            Category.CORRECTNESS,
-            7,
-            Severity.WARNING,
-            new Implementation(
-                    ScrollViewChildDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ScrollViewSize",
+                    "ScrollView size validation",
+                    // TODO add a better explanation here!
+                    "ScrollView children must set their `layout_width` or `layout_height` attributes "
+                            + "to `wrap_content` rather than `fill_parent` or `match_parent` in the scrolling "
+                            + "dimension",
+                    Category.CORRECTNESS,
+                    7,
+                    Severity.WARNING,
+                    new Implementation(ScrollViewChildDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link ScrollViewChildDetector} */
-    public ScrollViewChildDetector() {
-    }
+    public ScrollViewChildDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
-                SCROLL_VIEW,
-                HORIZONTAL_SCROLL_VIEW
-        );
+        return Arrays.asList(SCROLL_VIEW, HORIZONTAL_SCROLL_VIEW);
     }
 
     @Override
@@ -81,8 +76,10 @@ public class ScrollViewChildDetector extends LayoutDetector {
             }
             String value = sizeNode.getValue();
             if (VALUE_FILL_PARENT.equals(value) || VALUE_MATCH_PARENT.equals(value)) {
-                String msg = String.format("This %1$s should use `android:%2$s=\"wrap_content\"`",
-                        child.getTagName(), attributeName);
+                String msg =
+                        String.format(
+                                "This %1$s should use `android:%2$s=\"wrap_content\"`",
+                                child.getTagName(), attributeName);
                 context.report(ISSUE, sizeNode, context.getLocation(sizeNode), msg);
             }
         }

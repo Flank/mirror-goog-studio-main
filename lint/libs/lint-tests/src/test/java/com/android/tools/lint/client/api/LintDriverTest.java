@@ -70,31 +70,33 @@ public class LintDriverTest extends AbstractCheckTest {
     public void testMissingResourceDirectory() {
         //noinspection all // Sample code
         lint().files(
-                xml("res/layout/layout1.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "    <include\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"wrap_content\"\n"
-                        + "        layout=\"@layout/layout2\" />\n"
-                        + "\n"
-                        + "    <Button\n"
-                        + "        android:id=\"@+id/button1\"\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"wrap_content\"\n"
-                        + "        android:text=\"Button\" />\n"
-                        + "\n"
-                        + "    <Button\n"
-                        + "        android:id=\"@+id/button2\"\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"wrap_content\"\n"
-                        + "        android:text=\"Button\" />\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                        xml(
+                                "res/layout/layout1.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    android:orientation=\"vertical\" >\n"
+                                        + "\n"
+                                        + "    <include\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        layout=\"@layout/layout2\" />\n"
+                                        + "\n"
+                                        + "    <Button\n"
+                                        + "        android:id=\"@+id/button1\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "\n"
+                                        + "    <Button\n"
+                                        + "        android:id=\"@+id/button2\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "\n"
+                                        + "</LinearLayout>\n"))
                 .run()
                 .expectClean();
     }

@@ -45,8 +45,10 @@ class LintExtractAnnotations {
         try {
             val projectEnvironment = LintCoreProjectEnvironment.create(parentDisposable, appEnv)
             projectEnvironment.registerPaths(roots)
-            val parsedUnits = Extractor.createUnitsForFiles(projectEnvironment.project,
-                    sourceFiles)
+            val parsedUnits = Extractor.createUnitsForFiles(
+                projectEnvironment.project,
+                sourceFiles
+            )
 
             val ktFiles = ArrayList<File>()
             for (file in sourceFiles) {

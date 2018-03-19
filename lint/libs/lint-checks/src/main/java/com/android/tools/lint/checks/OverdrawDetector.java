@@ -80,43 +80,42 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Check which looks for overdraw problems where view areas are painted and then
- * painted over, meaning that the bottom paint operation is a waste of time.
+ * Check which looks for overdraw problems where view areas are painted and then painted over,
+ * meaning that the bottom paint operation is a waste of time.
  */
 public class OverdrawDetector extends LayoutDetector implements SourceCodeScanner {
     private static final String SET_THEME = "setTheme";
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "Overdraw",
-            "Overdraw: Painting regions more than once",
-
-            "If you set a background drawable on a root view, then you should use a " +
-            "custom theme where the theme background is null. Otherwise, the theme background " +
-            "will be painted first, only to have your custom background completely cover it; " +
-            "this is called \"overdraw\".\n" +
-            "\n" +
-            "NOTE: This detector relies on figuring out which layouts are associated with " +
-            "which activities based on scanning the Java code, and it's currently doing that " +
-            "using an inexact pattern matching algorithm. Therefore, it can incorrectly " +
-            "conclude which activity the layout is associated with and then wrongly complain " +
-            "that a background-theme is hidden.\n" +
-            "\n" +
-            "If you want your custom background on multiple pages, then you should consider " +
-            "making a custom theme with your custom background and just using that theme " +
-            "instead of a root element background.\n" +
-            "\n" +
-            "Of course it's possible that your custom drawable is translucent and you want " +
-            "it to be mixed with the background. However, you will get better performance " +
-            "if you pre-mix the background with your drawable and use that resulting image or " +
-            "color as a custom theme background instead.\n",
-
-            Category.PERFORMANCE,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    OverdrawDetector.class,
-                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "Overdraw",
+                    "Overdraw: Painting regions more than once",
+                    "If you set a background drawable on a root view, then you should use a "
+                            + "custom theme where the theme background is null. Otherwise, the theme background "
+                            + "will be painted first, only to have your custom background completely cover it; "
+                            + "this is called \"overdraw\".\n"
+                            + "\n"
+                            + "NOTE: This detector relies on figuring out which layouts are associated with "
+                            + "which activities based on scanning the Java code, and it's currently doing that "
+                            + "using an inexact pattern matching algorithm. Therefore, it can incorrectly "
+                            + "conclude which activity the layout is associated with and then wrongly complain "
+                            + "that a background-theme is hidden.\n"
+                            + "\n"
+                            + "If you want your custom background on multiple pages, then you should consider "
+                            + "making a custom theme with your custom background and just using that theme "
+                            + "instead of a root element background.\n"
+                            + "\n"
+                            + "Of course it's possible that your custom drawable is translucent and you want "
+                            + "it to be mixed with the background. However, you will get better performance "
+                            + "if you pre-mix the background with your drawable and use that resulting image or "
+                            + "color as a custom theme background instead.\n",
+                    Category.PERFORMANCE,
+                    3,
+                    Severity.WARNING,
+                    new Implementation(
+                            OverdrawDetector.class,
+                            EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)));
 
     /** Mapping from FQN activity names to theme names registered in the manifest */
     private Map<String, String> activityToTheme;
@@ -130,20 +129,21 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
     /** List of theme names registered in the project which have blank backgrounds */
     private List<String> blankThemes;
 
-    /** List of drawable resources that are not flagged for overdraw (XML drawables
-     * except for {@code <bitmap>} drawables without tiling) */
+    /**
+     * List of drawable resources that are not flagged for overdraw (XML drawables except for {@code
+     * <bitmap>} drawables without tiling)
+     */
     private List<String> validDrawables;
 
     /**
-     * List of pairs of (location, background drawable) corresponding to root elements
-     * in layouts that define a given background drawable. These should be checked to
-     * see if they are painting on top of a non-transparent theme.
+     * List of pairs of (location, background drawable) corresponding to root elements in layouts
+     * that define a given background drawable. These should be checked to see if they are painting
+     * on top of a non-transparent theme.
      */
     private List<Pair<Location, String>> rootAttributes;
 
     /** Constructs a new {@link OverdrawDetector} */
-    public OverdrawDetector() {
-    }
+    public OverdrawDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -175,7 +175,6 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
         }
 
         return blankThemes != null && blankThemes.contains(name);
-
     }
 
     @Override
@@ -199,10 +198,11 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
                 String theme = getTheme(context, layoutName);
                 if (theme == null || !isBlankTheme(theme)) {
                     String drawable = pair.getSecond();
-                    String message = String.format(
-                            "Possible overdraw: Root element paints background `%1$s` with " +
-                            "a theme that also paints a background (inferred theme is `%2$s`)",
-                            drawable, theme);
+                    String message =
+                            String.format(
+                                    "Possible overdraw: Root element paints background `%1$s` with "
+                                            + "a theme that also paints a background (inferred theme is `%2$s`)",
+                                    drawable, theme);
                     // TODO: Compute applicable scope node
                     context.report(ISSUE, location, message);
                 }
@@ -216,7 +216,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
             List<String> activities = layoutToActivity.get(layoutName);
             if (activities != null) {
                 for (String activity : activities) {
-                   String theme = activityToTheme.get(activity);
+                    String theme = activityToTheme.get(activity);
                     if (theme != null) {
                         return theme;
                     }
@@ -305,8 +305,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
     public Collection<String> getApplicableAttributes() {
         return Collections.singletonList(
                 // Layouts: Look for background attributes on root elements for possible overdraw
-                ATTR_BACKGROUND
-        );
+                ATTR_BACKGROUND);
     }
 
     @Override
@@ -320,8 +319,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
                 TAG_STYLE,
 
                 // Bitmaps
-                TAG_BITMAP
-        );
+                TAG_BITMAP);
     }
 
     @Override
@@ -432,7 +430,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
                                 if (trim.equals(NULL_RESOURCE)
                                         || trim.equals(TRANSPARENT_COLOR)
                                         || validDrawables != null
-                                            && validDrawables.contains(trim)) {
+                                                && validDrawables.contains(trim)) {
                                     if (blankThemes == null) {
                                         blankThemes = new ArrayList<>();
                                     }
@@ -531,8 +529,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
                     if (activityToTheme == null) {
                         activityToTheme = new HashMap<>();
                     }
-                    activityToTheme.put(name, STYLE_RESOURCE_PREFIX +
-                            style);
+                    activityToTheme.put(name, STYLE_RESOURCE_PREFIX + style);
                 }
             }
             return super.visitCallExpression(node);

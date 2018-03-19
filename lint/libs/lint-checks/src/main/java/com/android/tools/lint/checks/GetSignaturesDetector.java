@@ -37,23 +37,22 @@ import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 
-public class GetSignaturesDetector extends Detector implements SourceCodeScanner  {
-    public static final Issue ISSUE = Issue.create(
-            "PackageManagerGetSignatures",
-            "Potential Multiple Certificate Exploit",
-            "Improper validation of app signatures could lead to issues where a malicious app " +
-            "submits itself to the Play Store with both its real certificate and a fake " +
-            "certificate and gains access to functionality or information it shouldn't " +
-            "have due to another application only checking for the fake certificate and " +
-            "ignoring the rest. Please make sure to validate all signatures returned " +
-            "by this method.",
-            Category.SECURITY,
-            8,
-            Severity.WARNING,
-            new Implementation(
-                    GetSignaturesDetector.class,
-                    Scope.JAVA_FILE_SCOPE))
-            .addMoreInfo("https://bluebox.com/technical/android-fake-id-vulnerability/");
+public class GetSignaturesDetector extends Detector implements SourceCodeScanner {
+    public static final Issue ISSUE =
+            Issue.create(
+                            "PackageManagerGetSignatures",
+                            "Potential Multiple Certificate Exploit",
+                            "Improper validation of app signatures could lead to issues where a malicious app "
+                                    + "submits itself to the Play Store with both its real certificate and a fake "
+                                    + "certificate and gains access to functionality or information it shouldn't "
+                                    + "have due to another application only checking for the fake certificate and "
+                                    + "ignoring the rest. Please make sure to validate all signatures returned "
+                                    + "by this method.",
+                            Category.SECURITY,
+                            8,
+                            Severity.WARNING,
+                            new Implementation(GetSignaturesDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo("https://bluebox.com/technical/android-fake-id-vulnerability/");
 
     private static final String PACKAGE_MANAGER_CLASS = "android.content.pm.PackageManager";
     private static final String GET_PACKAGE_INFO = "getPackageInfo";
@@ -68,11 +67,12 @@ public class GetSignaturesDetector extends Detector implements SourceCodeScanner
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
-        if (!evaluator.methodMatches(method, PACKAGE_MANAGER_CLASS, true,
-                TYPE_STRING, TYPE_INT)) {
+        if (!evaluator.methodMatches(method, PACKAGE_MANAGER_CLASS, true, TYPE_STRING, TYPE_INT)) {
             return;
         }
 
@@ -81,20 +81,22 @@ public class GetSignaturesDetector extends Detector implements SourceCodeScanner
             UExpression second = arguments.get(1);
             Object number = ConstantEvaluator.evaluate(context, second);
             if (number instanceof Number) {
-                int flagValue = ((Number)number).intValue();
+                int flagValue = ((Number) number).intValue();
                 maybeReportIssue(flagValue, context, node, second);
             }
         }
     }
 
     private static void maybeReportIssue(
-            int flagValue, JavaContext context, UCallExpression node,
-            UExpression last) {
+            int flagValue, JavaContext context, UCallExpression node, UExpression last) {
         if ((flagValue & GET_SIGNATURES_FLAG) != 0) {
-            context.report(ISSUE, node, context.getLocation(last),
-                "Reading app signatures from getPackageInfo: The app signatures "
-                    + "could be exploited if not validated properly; "
-                    + "see issue explanation for details.");
+            context.report(
+                    ISSUE,
+                    node,
+                    context.getLocation(last),
+                    "Reading app signatures from getPackageInfo: The app signatures "
+                            + "could be exploited if not validated properly; "
+                            + "see issue explanation for details.");
         }
     }
 }

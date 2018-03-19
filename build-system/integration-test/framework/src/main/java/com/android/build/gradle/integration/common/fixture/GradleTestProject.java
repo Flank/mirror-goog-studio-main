@@ -226,6 +226,9 @@ public final class GradleTestProject implements TestRule {
     private final GradleTestProject rootProject;
     private final List<ProjectConnection> openConnections;
 
+    /** Whether or not to output the log of the last build result when a test fails. */
+    private boolean outputLogOnFailure;
+
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
@@ -247,7 +250,8 @@ public final class GradleTestProject implements TestRule {
             @NonNull File androidHome,
             @NonNull File androidNdkHome,
             @NonNull File gradleDistributionDirectory,
-            @NonNull String kotlinVersion) {
+            @NonNull String kotlinVersion,
+            boolean outputLogOnFailure) {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
@@ -272,6 +276,7 @@ public final class GradleTestProject implements TestRule {
         this.androidNdkHome = androidNdkHome;
         this.gradleDistributionDirectory = gradleDistributionDirectory;
         this.kotlinVersion = kotlinVersion;
+        this.outputLogOnFailure = outputLogOnFailure;
     }
 
     /**
@@ -308,6 +313,7 @@ public final class GradleTestProject implements TestRule {
         this.androidNdkHome = rootProject.androidNdkHome;
         this.gradleDistributionDirectory = rootProject.gradleDistributionDirectory;
         this.kotlinVersion = rootProject.kotlinVersion;
+        this.outputLogOnFailure = rootProject.outputLogOnFailure;
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -406,7 +412,7 @@ public final class GradleTestProject implements TestRule {
                         }
                     }
                     openConnections.forEach(ProjectConnection::close);
-                    if (testFailed && lastBuildResult != null) {
+                    if (outputLogOnFailure && testFailed && lastBuildResult != null) {
                         System.err.println("==============================================");
                         System.err.println("= Test " + description + " failed. Last build:");
                         System.err.println("==============================================");

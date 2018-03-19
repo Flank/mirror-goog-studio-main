@@ -64,46 +64,44 @@ import org.w3c.dom.NamedNodeMap;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-/**
- * Looks for layout inflation calls passing null as the view root
- */
+/** Looks for layout inflation calls passing null as the view root */
 public class LayoutInflationDetector extends LayoutDetector implements SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            LayoutInflationDetector.class,
-            Scope.JAVA_AND_RESOURCE_FILES,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(
+                    LayoutInflationDetector.class,
+                    Scope.JAVA_AND_RESOURCE_FILES,
+                    Scope.JAVA_FILE_SCOPE);
 
     /** Passing in a null parent to a layout inflater */
-    public static final Issue ISSUE = Issue.create(
-            "InflateParams",
-            "Layout Inflation without a Parent",
-
-            "When inflating a layout, avoid passing in null as the parent view, since " +
-            "otherwise any layout parameters on the root of the inflated layout will be ignored.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo("http://www.doubleencore.com/2013/05/layout-inflation-as-intended");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "InflateParams",
+                            "Layout Inflation without a Parent",
+                            "When inflating a layout, avoid passing in null as the parent view, since "
+                                    + "otherwise any layout parameters on the root of the inflated layout will be ignored.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://www.doubleencore.com/2013/05/layout-inflation-as-intended");
 
     private static final String ERROR_MESSAGE =
             "Avoid passing `null` as the view root (needed to resolve "
-            + "layout parameters on the inflated layout's root element)";
+                    + "layout parameters on the inflated layout's root element)";
 
     /** Constructs a new {@link LayoutInflationDetector} check */
-    public LayoutInflationDetector() {
-    }
+    public LayoutInflationDetector() {}
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
         if (mPendingErrors != null) {
-            for (Pair<String,Location> pair : mPendingErrors) {
+            for (Pair<String, Location> pair : mPendingErrors) {
                 String inflatedLayout = pair.getFirst();
-                if (mLayoutsWithRootLayoutParams == null ||
-                        !mLayoutsWithRootLayoutParams.contains(inflatedLayout)) {
+                if (mLayoutsWithRootLayoutParams == null
+                        || !mLayoutsWithRootLayoutParams.contains(inflatedLayout)) {
                     // No root layout parameters on the inflated layout: no need to complain
                     continue;
                 }
@@ -116,7 +114,7 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
     // ---- Implements XmlScanner ----
 
     private Set<String> mLayoutsWithRootLayoutParams;
-    private List<Pair<String,Location>> mPendingErrors;
+    private List<Pair<String, Location>> mPendingErrors;
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
@@ -146,7 +144,9 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         assert method.getName().equals(INFLATE);
         if (call.getReceiver() == null) {
@@ -238,8 +238,9 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
                 for (int i = 0; i < parser.getAttributeCount(); i++) {
                     if (parser.getAttributeName(i).startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)) {
                         String prefix = parser.getAttributePrefix(i);
-                        if (prefix != null && !prefix.isEmpty() &&
-                                ANDROID_URI.equals(parser.getNamespace(prefix))) {
+                        if (prefix != null
+                                && !prefix.isEmpty()
+                                && ANDROID_URI.equals(parser.getNamespace(prefix))) {
                             return true;
                         }
                     }

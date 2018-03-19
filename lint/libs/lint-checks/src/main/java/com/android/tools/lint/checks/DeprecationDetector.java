@@ -45,36 +45,31 @@ import java.util.Collection;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-/**
- * Check which looks for usage of deprecated tags, attributes, etc.
- */
+/** Check which looks for usage of deprecated tags, attributes, etc. */
 public class DeprecationDetector extends LayoutDetector {
     /** Usage of deprecated views or attributes */
     @SuppressWarnings("unchecked")
-    public static final Issue ISSUE = Issue.create(
-            "Deprecated",
-            "Using deprecated resources",
-            "Deprecated views, attributes and so on are deprecated because there " +
-            "is a better way to do something. Do it that new way. You've been warned.",
-            Category.CORRECTNESS,
-            2,
-            Severity.WARNING,
-            new Implementation(
-                    DeprecationDetector.class,
-                    Scope.MANIFEST_AND_RESOURCE_SCOPE,
-                    Scope.MANIFEST_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "Deprecated",
+                    "Using deprecated resources",
+                    "Deprecated views, attributes and so on are deprecated because there "
+                            + "is a better way to do something. Do it that new way. You've been warned.",
+                    Category.CORRECTNESS,
+                    2,
+                    Severity.WARNING,
+                    new Implementation(
+                            DeprecationDetector.class,
+                            Scope.MANIFEST_AND_RESOURCE_SCOPE,
+                            Scope.MANIFEST_SCOPE,
+                            Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link DeprecationDetector} */
-    public DeprecationDetector() {
-    }
+    public DeprecationDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
-                ABSOLUTE_LAYOUT,
-                TAG_USES_PERMISSION_SDK_M
-        );
+        return Arrays.asList(ABSOLUTE_LAYOUT, TAG_USES_PERMISSION_SDK_M);
     }
 
     @Override
@@ -90,7 +85,6 @@ public class DeprecationDetector extends LayoutDetector {
                 ATTR_INPUT_METHOD,
                 ATTR_AUTO_TEXT,
                 ATTR_CAPITALIZE,
-
                 ATTR_NUMERIC,
                 ATTR_PHONE_NUMBER,
                 ATTR_PASSWORD
@@ -114,7 +108,7 @@ public class DeprecationDetector extends LayoutDetector {
                 // "This will create a non-standard UI appearance, because the search bar UI is
                 // changing to use only icons for its buttons."
                 //"searchButtonText",
-        );
+                );
     }
 
     @Override
@@ -124,8 +118,7 @@ public class DeprecationDetector extends LayoutDetector {
         if (TAG_USES_PERMISSION_SDK_M.equals(tagName)) {
             message += ": Use `" + TAG_USES_PERMISSION_SDK_23 + " instead";
         }
-        context.report(ISSUE, element, context.getNameLocation(element),
-                message);
+        context.report(ISSUE, element, context.getNameLocation(element), message);
     }
 
     @Override
@@ -155,11 +148,11 @@ public class DeprecationDetector extends LayoutDetector {
             }
         } else {
             assert name.equals(ATTR_INPUT_METHOD)
-                || name.equals(ATTR_CAPITALIZE)
-                || name.equals(ATTR_NUMERIC)
-                || name.equals(ATTR_PHONE_NUMBER)
-                || name.equals(ATTR_PASSWORD)
-                || name.equals(ATTR_AUTO_TEXT);
+                    || name.equals(ATTR_CAPITALIZE)
+                    || name.equals(ATTR_NUMERIC)
+                    || name.equals(ATTR_PHONE_NUMBER)
+                    || name.equals(ATTR_PASSWORD)
+                    || name.equals(ATTR_AUTO_TEXT);
             fix = "Use `inputType` instead";
             // The inputType attribute was introduced in API 3 so don't warn about
             // deprecation if targeting older platforms
@@ -170,8 +163,10 @@ public class DeprecationDetector extends LayoutDetector {
             return;
         }
 
-        context.report(ISSUE, attribute, context.getLocation(attribute),
-                String.format("`%1$s` is deprecated: %2$s",
-                        attribute.getName(), fix));
+        context.report(
+                ISSUE,
+                attribute,
+                context.getLocation(attribute),
+                String.format("`%1$s` is deprecated: %2$s", attribute.getName(), fix));
     }
 }

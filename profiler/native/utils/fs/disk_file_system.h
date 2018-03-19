@@ -53,6 +53,7 @@ class DiskFileSystem final : public FileSystem {
   bool DeleteDir(const std::string &path) override;
   bool DeleteFile(const std::string &path) override;
   int64_t GetFreeSpace(const std::string &path) const override;
+  std::string GetWorkingDir() const override;
 
  private:
   std::unordered_map<std::string, FILE *> open_files_;

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.Log.LogLevel;
 import java.time.Instant;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
@@ -117,12 +116,8 @@ public final class LogCatHeader {
         return mTimestampInstant.isBefore(header.mTimestampInstant);
     }
 
-    @NonNull
+    @Nullable
     public Instant getTimestampInstant() {
-        if (mTimestampInstant == null) {
-            throw new NoSuchElementException();
-        }
-
         return mTimestampInstant;
     }
 
@@ -131,12 +126,8 @@ public final class LogCatHeader {
      *     String, String, Instant)} and use {@link #getTimestampInstant()}
      */
     @Deprecated
-    @NonNull
+    @Nullable
     public LogCatTimestamp getTimestamp() {
-        if (mTimestamp == null) {
-            throw new NoSuchElementException();
-        }
-
         return mTimestamp;
     }
 

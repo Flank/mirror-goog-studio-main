@@ -38,7 +38,6 @@ class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
                     }
                 }
 
-
                 ourFilteredIssues = result
             }
             return ourFilteredIssues!!
@@ -50,12 +49,12 @@ class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
         private var ourFilteredIssues: List<Issue>? = null
 
         private val ANDROID_SPECIFIC_CHECKS = Sets.newHashSet(
-                // Issues that don't include manifest or resource checking in their
-                // scope but nevertheless are Android specific
-                ApiDetector.INLINED,
-                ApiDetector.OVERRIDE,
-                ApiDetector.OBSOLETE_SDK,
-                InvalidPackageDetector.ISSUE
+            // Issues that don't include manifest or resource checking in their
+            // scope but nevertheless are Android specific
+            ApiDetector.INLINED,
+            ApiDetector.OVERRIDE,
+            ApiDetector.OBSOLETE_SDK,
+            InvalidPackageDetector.ISSUE
         )
 
         private fun isAndroidSpecific(issue: Issue): Boolean {

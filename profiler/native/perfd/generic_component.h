@@ -33,7 +33,7 @@ class GenericComponent final : public ProfilerComponent {
  public:
   static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
 
-  explicit GenericComponent(Daemon::Utilities* utilities,
+  explicit GenericComponent(Daemon* daemon, Daemon::Utilities* utilities,
                             SessionsManager* sessions);
 
   // Returns the service that talks to desktop clients (e.g., Studio).
@@ -54,7 +54,7 @@ class GenericComponent final : public ProfilerComponent {
   ProfilerServiceImpl generic_public_service_;
   AgentServiceImpl agent_service_;
 
-  const Clock& clock_;
+  Clock* clock_;
   // Mapping pid -> timestamp of last ping from the agent.
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
   std::list<AgentStatusChanged> agent_status_changed_callbacks_;

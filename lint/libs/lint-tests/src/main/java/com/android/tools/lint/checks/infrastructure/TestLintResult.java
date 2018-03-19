@@ -53,10 +53,11 @@ import org.intellij.lang.annotations.Language;
 /**
  * The result of running a {@link TestLintTask}.
  *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
-@SuppressWarnings({"UnusedReturnValue", "SameParameterValue"}) // Allow chaining of these report checks
+@SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
+// Allow chaining of these report checks
 public class TestLintResult {
     private final String output;
     private final Exception exception;
@@ -64,8 +65,11 @@ public class TestLintResult {
     private final List<Warning> warnings;
     private int maxLineLength;
 
-    TestLintResult(@NonNull TestLintTask task, @Nullable String output,
-            @Nullable Exception e, @NonNull List<Warning> warnings) {
+    TestLintResult(
+            @NonNull TestLintTask task,
+            @Nullable String output,
+            @Nullable Exception e,
+            @NonNull List<Warning> warnings) {
         this.task = task;
         this.output = output;
         this.exception = e;
@@ -73,8 +77,8 @@ public class TestLintResult {
     }
 
     /**
-     * Sets the maximum line length in the report. This is useful if some lines are
-     * particularly long and you don't care about the details at the end of the line
+     * Sets the maximum line length in the report. This is useful if some lines are particularly
+     * long and you don't care about the details at the end of the line
      *
      * @param maxLineLength the maximum number of characters to show in the report
      * @return this
@@ -98,12 +102,14 @@ public class TestLintResult {
         if (!actual.trim().equals((trimIndent(expectedText).trim()))) {
             // See if it's a Windows path issue
             if (actual.equals(expectedText.replace(File.separatorChar, '/'))) {
-                assertEquals("The expected lint output does not match, but it *does* "
-                        + "match when Windows file separators (\\) are replaced by Unix ones.\n"
-                        + "Make sure your lint detector calls LintClient.getDisplayPath(File) "
-                        + "instead of displaying paths directly (in unit tests they will then "
-                        + "be converted to forward slashes for test output stability.)\n",
-                        expectedText, actual);
+                assertEquals(
+                        "The expected lint output does not match, but it *does* "
+                                + "match when Windows file separators (\\) are replaced by Unix ones.\n"
+                                + "Make sure your lint detector calls LintClient.getDisplayPath(File) "
+                                + "instead of displaying paths directly (in unit tests they will then "
+                                + "be converted to forward slashes for test output stability.)\n",
+                        expectedText,
+                        actual);
             }
 
             assertEquals(trimIndent(expectedText), trimIndent(actual));
@@ -122,8 +128,9 @@ public class TestLintResult {
             StringBuilder sb = new StringBuilder();
             for (String line : Splitter.on('\n').split(output)) {
                 if (line.length() > maxLineLength) {
-                    line = line.substring(0, maxLineLength - TRUNCATION_MARKER.length()) +
-                            TRUNCATION_MARKER;
+                    line =
+                            line.substring(0, maxLineLength - TRUNCATION_MARKER.length())
+                                    + TRUNCATION_MARKER;
                 }
                 sb.append(line).append('\n');
             }
@@ -248,8 +255,7 @@ public class TestLintResult {
 
                         if (isXml) {
                             String tag = warning.severity.getDescription().toLowerCase(Locale.ROOT);
-                            startMarker = "<?" + tag + " message=\""
-                                    + message + "\"?>";
+                            startMarker = "<?" + tag + " message=\"" + message + "\"?>";
                             endMarker = "<?" + tag + "?>";
                         } else {
                             // Java, Gradle, Kotlin, ...
@@ -351,9 +357,8 @@ public class TestLintResult {
      * Checks that the lint report matches the given regular expression
      *
      * @param regexp the regular expression to match the input with (note that it's using {@link
-     *               Matcher#find()}, not {@link Matcher#match(int, int)}, so you don't have to
-     *               include wildcards at the beginning or end if looking for a match inside the
-     *               report
+     *     Matcher#find()}, not {@link Matcher#match(int, int)}, so you don't have to include
+     *     wildcards at the beginning or end if looking for a match inside the report
      * @return this
      */
     public TestLintResult expectMatches(@Language("RegExp") @NonNull String regexp) {
@@ -362,8 +367,14 @@ public class TestLintResult {
         boolean found = pattern.matcher(output).find();
         if (!found) {
             int reached = computeSubstringMatch(pattern, output);
-            fail("Did not find pattern\n  " + regexp + "\n in \n" + output + "; "
-                    + "the incomplete match was " + output.substring(0, reached));
+            fail(
+                    "Did not find pattern\n  "
+                            + regexp
+                            + "\n in \n"
+                            + output
+                            + "; "
+                            + "the incomplete match was "
+                            + output.substring(0, reached));
         }
 
         cleanup();
@@ -371,8 +382,8 @@ public class TestLintResult {
     }
 
     /**
-     * Checks the output using the given custom checker, which should throw an
-     * {@link AssertionError} if the result is not as expected.
+     * Checks the output using the given custom checker, which should throw an {@link
+     * AssertionError} if the result is not as expected.
      *
      * @param checker the checker to apply, typically a lambda
      * @return this
@@ -405,9 +416,9 @@ public class TestLintResult {
 
         return 0;
     }
+
     /**
-     * Checks that the actual number of errors in this lint check matches exactly the given
-     * count
+     * Checks that the actual number of errors in this lint check matches exactly the given count
      *
      * @param expectedCount the expected error count
      * @return this
@@ -417,8 +428,7 @@ public class TestLintResult {
     }
 
     /**
-     * Checks that the actual number of errors in this lint check matches exactly the given
-     * count
+     * Checks that the actual number of errors in this lint check matches exactly the given count
      *
      * @param expectedCount the expected error count
      * @return this
@@ -428,11 +438,11 @@ public class TestLintResult {
     }
 
     /**
-     * Checks that the actual number of problems with a given severity in this lint check
-     * matches exactly the given count.
+     * Checks that the actual number of problems with a given severity in this lint check matches
+     * exactly the given count.
      *
      * @param expectedCount the expected count
-     * @param severities    the severities to count
+     * @param severities the severities to count
      * @return this
      */
     @NonNull
@@ -445,9 +455,15 @@ public class TestLintResult {
         }
 
         if (count != expectedCount) {
-            assertEquals("Expected " + expectedCount + " problems with severity "
-                            + Joiner.on(" or ").join(severities) + " but was " + count,
-                    expectedCount, count);
+            assertEquals(
+                    "Expected "
+                            + expectedCount
+                            + " problems with severity "
+                            + Joiner.on(" or ").join(severities)
+                            + " but was "
+                            + count,
+                    expectedCount,
+                    count);
         }
 
         return this;
@@ -459,10 +475,10 @@ public class TestLintResult {
     }
 
     /**
-     * Checks what happens with the given fix in this result as applied to the given
-     * test file, and making sure that the result is the new contents
+     * Checks what happens with the given fix in this result as applied to the given test file, and
+     * making sure that the result is the new contents
      *
-     * @param fix   the fix description, or null to pick the first one
+     * @param fix the fix description, or null to pick the first one
      * @param after the file after applying the fix
      * @return this
      */
@@ -472,10 +488,9 @@ public class TestLintResult {
     }
 
     /**
-     * Applies the fixes and provides diffs to all the files.
-     * Convenience wrapper around {@link #verifyFixes()} and
-     * {@link LintFixVerifier#expectFixDiffs(String)} if you don't want to configure
-     * any diff options.
+     * Applies the fixes and provides diffs to all the files. Convenience wrapper around {@link
+     * #verifyFixes()} and {@link LintFixVerifier#expectFixDiffs(String)} if you don't want to
+     * configure any diff options.
      *
      * @param expected the diff description resulting from applying the diffs
      * @return this

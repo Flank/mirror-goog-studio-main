@@ -37,10 +37,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A {@link Warning} represents a specific warning that a {@link LintClient}
- * has been told about. The context stores these as they are reported into a
- * list of warnings such that it can sort them all before presenting them all at
- * the end.
+ * A {@link Warning} represents a specific warning that a {@link LintClient} has been told about.
+ * The context stores these as they are reported into a list of warnings such that it can sort them
+ * all before presenting them all at the end.
  */
 public class Warning implements Comparable<Warning> {
     public final Issue issue;
@@ -91,8 +90,7 @@ public class Warning implements Comparable<Warning> {
         }
         if (file != null) {
             if (other.file != null) {
-                int fileDelta = file.getName().compareTo(
-                        other.file.getName());
+                int fileDelta = file.getName().compareTo(other.file.getName());
                 if (fileDelta != 0) {
                     return fileDelta;
                 }
@@ -140,9 +138,11 @@ public class Warning implements Comparable<Warning> {
 
         // This handles the case where you have a huge XML document without hewlines,
         // such that all the errors end up on the same line.
-        if (location != null && other.location != null &&
-                location.getStart() != null && other.location.getStart() != null) {
-                delta = location.getStart().getColumn() - other.location.getStart().getColumn();
+        if (location != null
+                && other.location != null
+                && location.getStart() != null
+                && other.location.getStart() != null) {
+            delta = location.getStart().getColumn() - other.location.getStart().getColumn();
             if (delta != 0) {
                 return delta;
             }
@@ -193,16 +193,18 @@ public class Warning implements Comparable<Warning> {
                 return false;
             }
         } else //noinspection VariableNotUsedInsideIf
-            if (secondary2 != null) {
+        if (secondary2 != null) {
             return false;
         }
 
         // This handles the case where you have a huge XML document without newlines,
         // such that all the errors end up on the same line.
         //noinspection RedundantIfStatement
-        if (location != null && warning.location != null &&
-                location.getStart() != null && warning.location.getStart() != null &&
-                location.getStart().getColumn() != warning.location.getStart().getColumn()) {
+        if (location != null
+                && warning.location != null
+                && location.getStart() != null
+                && warning.location.getStart() != null
+                && location.getStart().getColumn() != warning.location.getStart().getColumn()) {
             return false;
         }
 
@@ -255,11 +257,16 @@ public class Warning implements Comparable<Warning> {
 
     @Override
     public String toString() {
-        return "Warning{" +
-                "issue=" + issue +
-                ", message='" + message + '\'' +
-                ", file=" + file +
-                ", line=" + line +
-                '}';
+        return "Warning{"
+                + "issue="
+                + issue
+                + ", message='"
+                + message
+                + '\''
+                + ", file="
+                + file
+                + ", line="
+                + line
+                + '}';
     }
 }

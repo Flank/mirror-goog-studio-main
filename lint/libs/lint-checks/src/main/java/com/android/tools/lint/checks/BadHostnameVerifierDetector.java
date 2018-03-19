@@ -45,19 +45,20 @@ public class BadHostnameVerifierDetector extends Detector implements SourceCodeS
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
-            new Implementation(BadHostnameVerifierDetector.class,
-                    Scope.JAVA_FILE_SCOPE);
+            new Implementation(BadHostnameVerifierDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue ISSUE = Issue.create("BadHostnameVerifier",
-            "Insecure HostnameVerifier",
-            "This check looks for implementations of `HostnameVerifier` " +
-            "whose `verify` method always returns true (thus trusting any hostname) " +
-            "which could result in insecure network traffic caused by trusting arbitrary " +
-            "hostnames in TLS/SSL certificates presented by peers.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "BadHostnameVerifier",
+                    "Insecure HostnameVerifier",
+                    "This check looks for implementations of `HostnameVerifier` "
+                            + "whose `verify` method always returns true (thus trusting any hostname) "
+                            + "which could result in insecure network traffic caused by trusting arbitrary "
+                            + "hostnames in TLS/SSL certificates presented by peers.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     // ---- implements SourceCodeScanner ----
 
@@ -71,8 +72,8 @@ public class BadHostnameVerifierDetector extends Detector implements SourceCodeS
     public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
         JavaEvaluator evaluator = context.getEvaluator();
         for (PsiMethod method : declaration.findMethodsByName("verify", false)) {
-            if (evaluator.methodMatches(method, null, false,
-                    TYPE_STRING, "javax.net.ssl.SSLSession")) {
+            if (evaluator.methodMatches(
+                    method, null, false, TYPE_STRING, "javax.net.ssl.SSLSession")) {
                 ComplexVisitor visitor = new ComplexVisitor(context);
                 declaration.accept(visitor);
                 if (visitor.isComplex()) {
@@ -80,10 +81,12 @@ public class BadHostnameVerifierDetector extends Detector implements SourceCodeS
                 }
 
                 Location location = context.getNameLocation(method);
-                String message = String.format("`%1$s` always returns `true`, which " +
-                                "could cause insecure network traffic due to trusting "
-                                + "TLS/SSL server certificates for wrong hostnames",
-                        method.getName());
+                String message =
+                        String.format(
+                                "`%1$s` always returns `true`, which "
+                                        + "could cause insecure network traffic due to trusting "
+                                        + "TLS/SSL server certificates for wrong hostnames",
+                                method.getName());
                 context.report(ISSUE, method, location, message);
                 break;
             }
@@ -93,6 +96,7 @@ public class BadHostnameVerifierDetector extends Detector implements SourceCodeS
     private static class ComplexVisitor extends AbstractUastVisitor {
         @SuppressWarnings("unused")
         private final JavaContext context;
+
         private boolean complex;
 
         public ComplexVisitor(JavaContext context) {

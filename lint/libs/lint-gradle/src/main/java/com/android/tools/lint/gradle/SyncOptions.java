@@ -85,8 +85,8 @@ public class SyncOptions {
                 String id = entry.getKey();
                 Integer severityInt = entry.getValue();
                 Issue issue = registry.getIssue(id);
-                Severity severity = issue != null ?
-                        getSeverity(issue, severityInt) : Severity.WARNING;
+                Severity severity =
+                        issue != null ? getSeverity(issue, severityInt) : Severity.WARNING;
                 map.put(id, severity);
             }
             flags.setSeverityOverrides(map);
@@ -99,8 +99,10 @@ public class SyncOptions {
                 File output = options.getTextOutput();
                 if (output == null) {
                     output = new File(flags.isFatalOnly() ? STDERR : STDOUT);
-                } else if (!output.isAbsolute() && !isStdOut(output) && !isStdErr(output) &&
-                        project != null) {
+                } else if (!output.isAbsolute()
+                        && !isStdOut(output)
+                        && !isStdErr(output)
+                        && project != null) {
                     output = project.file(output.getPath());
                 }
                 output = validateOutputFile(output);
@@ -126,14 +128,15 @@ public class SyncOptions {
                     }
                     closeWriter = true;
                 }
-                flags.getReporters().add(Reporter.createTextReporter(client, flags, file, writer,
-                        closeWriter));
+                flags.getReporters()
+                        .add(Reporter.createTextReporter(client, flags, file, writer, closeWriter));
             }
             if (options.getHtmlReport()) {
                 File output = options.getHtmlOutput();
                 if (output == null || flags.isFatalOnly()) {
-                    output = createOutputPath(project, variantName, ".html", reportsDir,
-                            flags.isFatalOnly());
+                    output =
+                            createOutputPath(
+                                    project, variantName, ".html", reportsDir, flags.isFatalOnly());
                 } else if (!output.isAbsolute() && project != null) {
                     output = project.file(output.getPath());
                 }
@@ -147,8 +150,9 @@ public class SyncOptions {
             if (options.getXmlReport()) {
                 File output = options.getXmlOutput();
                 if (output == null || flags.isFatalOnly()) {
-                    output = createOutputPath(project, variantName, DOT_XML, reportsDir,
-                            flags.isFatalOnly());
+                    output =
+                            createOutputPath(
+                                    project, variantName, DOT_XML, reportsDir, flags.isFatalOnly());
                 } else if (!output.isAbsolute() && project != null) {
                     output = project.file(output.getPath());
                 }

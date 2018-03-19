@@ -45,9 +45,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
- * Check which makes sure that an application restrictions file is correct.
- * The rules are specified in
- * https://developer.android.com/reference/android/content/RestrictionsManager.html
+ * Check which makes sure that an application restrictions file is correct. The rules are specified
+ * in https://developer.android.com/reference/android/content/RestrictionsManager.html
  */
 public class RestrictionsDetector extends ResourceXmlDetector {
 
@@ -55,22 +54,19 @@ public class RestrictionsDetector extends ResourceXmlDetector {
     @VisibleForTesting static final int MAX_NESTING_DEPTH = 20;
     // Copied from Google Play store's AppRestrictionBuilder
     @VisibleForTesting static final int MAX_NUMBER_OF_NESTED_RESTRICTIONS = 1000;
-    /**
-     * Validation of {@code <restrictions>} XML elements
-     */
-    public static final Issue ISSUE = Issue.create(
-            "ValidRestrictions",
-            "Invalid Restrictions Descriptor",
-
-            "Ensures that an applications restrictions XML file is properly formed",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.FATAL,
-            new Implementation(
-                    RestrictionsDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("https://developer.android.com/reference/android/content/RestrictionsManager.html");
+    /** Validation of {@code <restrictions>} XML elements */
+    public static final Issue ISSUE =
+            Issue.create(
+                            "ValidRestrictions",
+                            "Invalid Restrictions Descriptor",
+                            "Ensures that an applications restrictions XML file is properly formed",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.FATAL,
+                            new Implementation(
+                                    RestrictionsDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo(
+                            "https://developer.android.com/reference/android/content/RestrictionsManager.html");
 
     static final String TAG_RESTRICTIONS = "restrictions";
     static final String TAG_RESTRICTION = "restriction";
@@ -87,11 +83,8 @@ public class RestrictionsDetector extends ResourceXmlDetector {
     static final String VALUE_DEFAULT_VALUE = "defaultValue";
     static final String VALUE_INTEGER = "integer";
 
-    /**
-     * Constructs a new {@link RestrictionsDetector}
-     */
-    public RestrictionsDetector() {
-    }
+    /** Constructs a new {@link RestrictionsDetector} */
+    public RestrictionsDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -115,9 +108,9 @@ public class RestrictionsDetector extends ResourceXmlDetector {
     /** Validates the {@code <restriction>} <b>children</b> of the given element */
     private static void validateNestedRestrictions(
             @NonNull XmlContext context,
-            @NonNull  Element element,
+            @NonNull Element element,
             @Nullable String restrictionType,
-            @NonNull  Map<String, Element> keys,
+            @NonNull Map<String, Element> keys,
             int depth) {
         assert depth == 0 || restrictionType != null;
 
@@ -131,8 +124,12 @@ public class RestrictionsDetector extends ResourceXmlDetector {
             // Bundle and bundle array should not have a default value
             Attr defaultValue = element.getAttributeNodeNS(ANDROID_URI, VALUE_DEFAULT_VALUE);
             if (defaultValue != null) {
-                context.report(ISSUE, element, context.getLocation(defaultValue),
-                        String.format("Restriction type `%1$s` should not have a default value",
+                context.report(
+                        ISSUE,
+                        element,
+                        context.getLocation(defaultValue),
+                        String.format(
+                                "Restriction type `%1$s` should not have a default value",
                                 restrictionType));
             }
             for (Element child : children) {
@@ -146,47 +143,63 @@ public class RestrictionsDetector extends ResourceXmlDetector {
                 // It's okay to have <restrictions />
             } else if (restrictionType.equals(VALUE_BUNDLE_ARRAY)) {
                 if (children.size() != 1) {
-                    context.report(ISSUE, element, context.getElementLocation(element),
+                    context.report(
+                            ISSUE,
+                            element,
+                            context.getElementLocation(element),
                             "Expected exactly one child for restriction of type `bundle_array`");
                 }
             } else {
                 assert restrictionType.equals(VALUE_BUNDLE);
                 if (children.isEmpty()) {
-                    context.report(ISSUE, element, context.getElementLocation(element),
+                    context.report(
+                            ISSUE,
+                            element,
+                            context.getElementLocation(element),
                             "Restriction type `bundle` should have at least one nested "
                                     + "restriction");
-
                 }
             }
 
             if (children.size() > MAX_NUMBER_OF_NESTED_RESTRICTIONS) {
-                context.report(ISSUE, element, context.getElementLocation(element), String.format(
-                        // TODO: Reference Google Play store restriction here in error message,
-                        // e.g. that violating this will cause APK to be rejected?
-                        "Invalid nested restriction: too many nested restrictions "
-                                + "(was %1$d, max %2$d)",
-                        children.size(), MAX_NUMBER_OF_NESTED_RESTRICTIONS));
+                context.report(
+                        ISSUE,
+                        element,
+                        context.getElementLocation(element),
+                        String.format(
+                                // TODO: Reference Google Play store restriction here in error message,
+                                // e.g. that violating this will cause APK to be rejected?
+                                "Invalid nested restriction: too many nested restrictions "
+                                        + "(was %1$d, max %2$d)",
+                                children.size(), MAX_NUMBER_OF_NESTED_RESTRICTIONS));
             } else if (depth > MAX_NESTING_DEPTH) {
                 // Same comment as for MAX_NUMBER_OF_NESTED_RESTRICTIONS: include source?
-                context.report(ISSUE, element, context.getElementLocation(element), String.format(
-                        "Invalid nested restriction: nesting depth %1$d too large (max %2$d",
-                        depth, MAX_NESTING_DEPTH));
+                context.report(
+                        ISSUE,
+                        element,
+                        context.getElementLocation(element),
+                        String.format(
+                                "Invalid nested restriction: nesting depth %1$d too large (max %2$d",
+                                depth, MAX_NESTING_DEPTH));
             }
         } else if (!children.isEmpty()) {
-            context.report(ISSUE, element, context.getNameLocation(element),
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
                     "Only restrictions of type `bundle` and `bundle_array` can have "
                             + "one or multiple nested restriction elements");
         }
     }
 
     /** Validates a {@code <restriction>} element (and recurses to validate the children) */
-    private static void validateRestriction(@NonNull XmlContext context, Node node, int depth,
-            Map<String, Element> keys) {
+    private static void validateRestriction(
+            @NonNull XmlContext context, Node node, int depth, Map<String, Element> keys) {
 
         if (node.getNodeType() != Node.ELEMENT_NODE) {
             return;
         }
-        Element element = (Element)node;
+        Element element = (Element) node;
 
         // key, title and restrictionType are mandatory.
         String restrictionType = checkRequiredAttribute(context, element, ATTR_RESTRICTION_TYPE);
@@ -202,12 +215,14 @@ public class RestrictionsDetector extends ResourceXmlDetector {
         if (key.startsWith(STRING_PREFIX)) {
             Attr attribute = element.getAttributeNodeNS(ANDROID_URI, ATTR_KEY);
             Location valueLocation = context.getValueLocation(attribute);
-            context.report(ISSUE, element, valueLocation,
+            context.report(
+                    ISSUE,
+                    element,
+                    valueLocation,
                     "Keys cannot be localized, they should be specified with a string literal");
         } else if (keys.containsKey(key)) {
             Attr thisAttribute = element.getAttributeNodeNS(ANDROID_URI, ATTR_KEY);
-            Location location = context.getValueLocation(
-                    thisAttribute);
+            Location location = context.getValueLocation(thisAttribute);
             Element prev = keys.get(key);
             Attr prevAttribute = prev.getAttributeNodeNS(ANDROID_URI, ATTR_KEY);
             Location previousLocation = context.getValueLocation(prevAttribute);
@@ -223,7 +238,7 @@ public class RestrictionsDetector extends ResourceXmlDetector {
             //noinspection unused
             boolean ok = // deliberate short circuit evaluation
                     checkRequiredAttribute(context, element, VALUE_ENTRIES) != null
-                        || checkRequiredAttribute(context, element, VALUE_ENTRY_VALUES) != null;
+                            || checkRequiredAttribute(context, element, VALUE_ENTRY_VALUES) != null;
         } else if (restrictionType.equals(VALUE_HIDDEN)) {
             // hidden type must have a defaultValue
             checkRequiredAttribute(context, element, VALUE_DEFAULT_VALUE);
@@ -234,7 +249,10 @@ public class RestrictionsDetector extends ResourceXmlDetector {
                     //noinspection ResultOfMethodCallIgnored
                     Integer.decode(defaultValue.getValue());
                 } catch (NumberFormatException e) {
-                    context.report(ISSUE, element, context.getValueLocation(defaultValue),
+                    context.report(
+                            ISSUE,
+                            element,
+                            context.getValueLocation(defaultValue),
                             "Invalid number");
                 }
             }
@@ -244,30 +262,34 @@ public class RestrictionsDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Makes sure that the given element corresponds to a restriction tag, and if not, reports
-     * it and return false */
+     * Makes sure that the given element corresponds to a restriction tag, and if not, reports it
+     * and return false
+     */
     private static boolean verifyRestrictionTagName(@NonNull XmlContext context, Element element) {
         String tagName = element.getTagName();
         if (!tagName.equals(TAG_RESTRICTION)) {
-            context.report(ISSUE, element, context.getNameLocation(element),
-                    String.format("Unexpected tag `<%1$s>`, expected `<%2$s>`",
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
+                    String.format(
+                            "Unexpected tag `<%1$s>`, expected `<%2$s>`",
                             tagName, TAG_RESTRICTION));
             return false;
         }
         return true;
     }
 
-    private static String checkRequiredAttribute(@NonNull XmlContext context, Element element,
-            String attribute) {
+    private static String checkRequiredAttribute(
+            @NonNull XmlContext context, Element element, String attribute) {
         if (!element.hasAttributeNS(ANDROID_URI, attribute)) {
             String prefix = element.getOwnerDocument().lookupNamespaceURI(ANDROID_URI);
             if (prefix == null) {
                 Element root = element.getOwnerDocument().getDocumentElement();
                 NamedNodeMap attributes = root.getAttributes();
                 for (int i = 0, n = attributes.getLength(); i < n; i++) {
-                    Attr a = (Attr)attributes.item(i);
-                    if (a.getName().startsWith(XMLNS_PREFIX) &&
-                            ANDROID_URI.equals(a.getValue())) {
+                    Attr a = (Attr) attributes.item(i);
+                    if (a.getName().startsWith(XMLNS_PREFIX) && ANDROID_URI.equals(a.getValue())) {
                         prefix = a.getName().substring(XMLNS_PREFIX.length());
                         break;
                     }
@@ -276,7 +298,10 @@ public class RestrictionsDetector extends ResourceXmlDetector {
             if (prefix != null) {
                 attribute = prefix + ':' + attribute;
             }
-            context.report(ISSUE, element, context.getElementLocation(element),
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getElementLocation(element),
                     // TODO: Include namespace prefix?
                     String.format("Missing required attribute `%1$s`", attribute));
             return null;

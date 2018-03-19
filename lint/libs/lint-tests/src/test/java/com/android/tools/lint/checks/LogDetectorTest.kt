@@ -72,7 +72,6 @@ class LogDetectorTest : AbstractCheckTest() {
             11 errors, 2 warnings
             """
 
-
         lint().files(
             java(
                 "src/test/pkg/LogTest.java", """
@@ -94,7 +93,7 @@ class LogDetectorTest : AbstractCheckTest() {
                     public void checkConditional(String m) {
                         Log.d(TAG1, "message"); // ok: unconditional, but not performing computation
                         Log.d(TAG1, m); // ok: unconditional, but not performing computation
-                        Log.d(TAG1, "a" + "b"); // ok: unconditional, but not performing non-constant computation
+                        Log.d(TAG1, "ab"); // ok: unconditional, but not performing non-constant computation
                         Log.d(TAG1, Constants.MY_MESSAGE); // ok: unconditional, but constant string
                         Log.i(TAG1, "message" + m); // error: unconditional w/ computation
                         Log.i(TAG1, toString()); // error: unconditional w/ computation

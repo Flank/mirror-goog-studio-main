@@ -124,8 +124,10 @@ fun stripComments(source: String, stripLineComments: Boolean = true): String {
 
 private val PACKAGE_PATTERN = Pattern.compile("""package\s+([\S&&[^;]]*)""")
 
-private val CLASS_PATTERN = Pattern.compile("""(class|interface|enum|object)+?\s*([^\s:(]+)""",
-        Pattern.MULTILINE)
+private val CLASS_PATTERN = Pattern.compile(
+    """(class|interface|enum|object)+?\s*([^\s:(]+)""",
+    Pattern.MULTILINE
+)
 
 fun getPackage(source: String): String? {
     val matcher = PACKAGE_PATTERN.matcher(source)
@@ -145,7 +147,7 @@ fun getClassName(source: String): String? {
 
         // Make sure this "class" reference isn't part of an annotation on the class
         // referencing a class literal -- Foo.class, or in Kotlin, Foo::class.java)
-        if (groupStart == 0 || source[groupStart-1] != '.' && source[groupStart-1] != ':') {
+        if (groupStart == 0 || source[groupStart - 1] != '.' && source[groupStart - 1] != ':') {
             val trimmed = cls.trim { it <= ' ' }
             val typeParameter = trimmed.indexOf('<')
             return if (typeParameter != -1) {

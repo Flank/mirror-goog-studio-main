@@ -38,36 +38,32 @@ import org.w3c.dom.Attr;
 /**
  * Check that the right namespace is used for app compat menu items
  *
- * Using app:showAsAction instead of android:showAsAction leads to problems, but
- * isn't caught by the API Detector since it's not in the Android namespace.
+ * <p>Using app:showAsAction instead of android:showAsAction leads to problems, but isn't caught by
+ * the API Detector since it's not in the Android namespace.
  */
 public class AppCompatResourceDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "AppCompatResource",
-            "Menu namespace",
-
-            "When using the appcompat library, menu resources should refer to the " +
-            "`showAsAction` (or `actionViewClass`, or `actionProviderClass`) in the " +
-            "`app:` namespace, not the `android:` namespace.\n" +
-            "\n" +
-            "Similarly, when **not** using the appcompat library, you should be using " +
-            "the `android:showAsAction` (or `actionViewClass`, or `actionProviderClass`) " +
-            "attribute.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.ERROR,
-            new Implementation(
-                    AppCompatResourceDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "AppCompatResource",
+                    "Menu namespace",
+                    "When using the appcompat library, menu resources should refer to the "
+                            + "`showAsAction` (or `actionViewClass`, or `actionProviderClass`) in the "
+                            + "`app:` namespace, not the `android:` namespace.\n"
+                            + "\n"
+                            + "Similarly, when **not** using the appcompat library, you should be using "
+                            + "the `android:showAsAction` (or `actionViewClass`, or `actionProviderClass`) "
+                            + "attribute.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.ERROR,
+                    new Implementation(AppCompatResourceDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     private static final String ATTR_ACTION_VIEW_CLASS = "actionViewClass";
     private static final String ATTR_ACTION_PROVIDER_CLASS = "actionProviderClass";
 
     /** Constructs a new {@link AppCompatResourceDetector} */
-    public AppCompatResourceDetector() {
-    }
+    public AppCompatResourceDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -91,28 +87,34 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
             }
             if (appCompat == Boolean.TRUE) {
 
-                LintFix fix = fix().name("Update to app:" + localName).composite(
-                        fix().set(AUTO_URI, localName, attribute.getValue()).build(),
-                        fix().unset(ANDROID_URI, localName).build()
-                );
+                LintFix fix =
+                        fix().name("Update to app:" + localName)
+                                .composite(
+                                        fix().set(AUTO_URI, localName, attribute.getValue())
+                                                .build(),
+                                        fix().unset(ANDROID_URI, localName).build());
 
-                String message = String.format(
-                        "Should use `app:%1$s` with the appcompat library with "
-                                + "`xmlns:app=\"http://schemas.android.com/apk/res-auto\"`",
-                        localName);
+                String message =
+                        String.format(
+                                "Should use `app:%1$s` with the appcompat library with "
+                                        + "`xmlns:app=\"http://schemas.android.com/apk/res-auto\"`",
+                                localName);
                 context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
             }
         } else {
             if (appCompat == Boolean.FALSE) {
 
-                LintFix fix = fix().name("Update to android:" + localName).composite(
-                        fix().set(ANDROID_URI, localName, attribute.getValue()).build(),
-                        fix().unset(AUTO_URI, localName).build()
-                );
+                LintFix fix =
+                        fix().name("Update to android:" + localName)
+                                .composite(
+                                        fix().set(ANDROID_URI, localName, attribute.getValue())
+                                                .build(),
+                                        fix().unset(AUTO_URI, localName).build());
 
-                String message = String.format(
-                        "Should use `android:%1$s` when not using the appcompat library",
-                        localName);
+                String message =
+                        String.format(
+                                "Should use `android:%1$s` when not using the appcompat library",
+                                localName);
 
                 context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
             }

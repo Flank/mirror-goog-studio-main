@@ -113,7 +113,8 @@ class IntentDetector : Detector(), SourceCodeScanner {
         for (argument in node.valueArguments) {
             val type = argument.getExpressionType() ?: continue
             if (type.canonicalText == ANDROID_NET_URI &&
-                !(argument is ULiteralExpression && argument.isNull)) {
+                !(argument is ULiteralExpression && argument.isNull)
+            ) {
                 seenInConstructor = true
                 seenData = argument
                 break

@@ -39,8 +39,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -56,7 +57,7 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(r);
 
-        SymbolTable table = SymbolIo.read(file, null);
+        SymbolTable table = SymbolIo.readFromAapt(file, null);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -77,7 +78,7 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(r);
 
-        SymbolTable table = SymbolIo.read(file, null);
+        SymbolTable table = SymbolIo.readFromAapt(file, null);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -87,7 +88,7 @@ public class SymbolIoTest {
                                         "LimitedSizeLinearLayout",
                                         "int[]",
                                         "{ 0x7f010000, 0x7f010001 }",
-                                        ImmutableList.of("max_height", "max_width")))
+                                        ImmutableList.of("max_width", "max_height")))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "xml", "authenticator", "int", "0x7f040000"))
@@ -105,7 +106,7 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(r);
 
-        SymbolTable table = SymbolIo.read(file, null);
+        SymbolTable table = SymbolIo.readFromAapt(file, null);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -186,16 +187,10 @@ public class SymbolIoTest {
 
         File f = mTemporaryFolder.newFile();
 
-        SymbolIo.write(original, f);
-        SymbolTable copy = SymbolIo.read(f, null);
+        SymbolIo.writeForAar(original, f);
+        SymbolTable copy = SymbolIo.readFromAapt(f, null);
 
         assertEquals(original, copy);
-    }
-
-    @Test
-    public void writeReadBrokenSymbolFile() throws Exception {
-        File R = TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt");
-        SymbolIo.read(R, null);
     }
 
     @Test
@@ -207,7 +202,7 @@ public class SymbolIoTest {
                                 + "int styleable a_b 0\n"
                                 + "int[] styleable a_c { 0x2 }\n"
                                 + "int styleable a_c_d 0");
-        SymbolTable table = SymbolIo.read(file, null);
+        SymbolTable table = SymbolIo.readFromAapt(file, null);
         assertThat(table)
                 .isEqualTo(
                         SymbolTable.builder()
@@ -223,11 +218,15 @@ public class SymbolIoTest {
     }
 
     private static void checkFileGeneration(
-            @NonNull String expected, @NonNull Supplier<File> generator) throws Exception {
+            @NonNull String expected, @NonNull FileSupplier generator) throws Exception {
         File result = generator.get();
         assertTrue(result.isFile());
         String contents = Joiner.on("\n").join(Files.readLines(result, Charsets.UTF_8));
         assertEquals(expected, contents);
+    }
+
+    private interface FileSupplier {
+        File get() throws IOException;
     }
 
     private void checkRGeneration(
@@ -561,7 +560,7 @@ public class SymbolIoTest {
                         e.printStackTrace();
                         return null;
                     }
-                    SymbolIo.write(table, f);
+                    SymbolIo.writeForAar(table, f);
                     return f;
                 });
     }
@@ -575,7 +574,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_max_width 0 \r\n"
                         + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
         Files.asCharSink(txt, Charsets.UTF_8).write(content);
-        SymbolTable table = SymbolIo.read(txt, "com.example.app");
+        SymbolTable table = SymbolIo.readFromAapt(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
                         new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
@@ -614,7 +613,7 @@ public class SymbolIoTest {
                         e.printStackTrace();
                         return null;
                     }
-                    SymbolIo.write(table, f);
+                    SymbolIo.writeForAar(table, f);
                     return f;
                 });
     }
@@ -628,7 +627,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_android_max_width 0 \r\n"
                         + "int styleable LimitedSizeLinearLayout_android_max_height 1 \r\n";
         Files.asCharSink(txt, Charsets.UTF_8).write(content);
-        SymbolTable table = SymbolIo.read(txt, "com.example.app");
+        SymbolTable table = SymbolIo.readFromAapt(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
                         new Symbol.StyleableSymbol(
@@ -641,23 +640,21 @@ public class SymbolIoTest {
     public void testPackageNameRead() throws Exception {
         String content =
                 "com.example.lib\n"
-                        + "int drawable foobar 0x7f02000 \r\n"
-                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \r\n"
-                        + "int styleable LimitedSizeLinearLayout_max_width 0 \r\n"
-                        + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
+                        + "drawable foobar\n"
+                        + "styleable LimitedSizeLinearLayout\n"
+                        + "styleable S2";
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(content);
 
-        SymbolTable table = SymbolIo.readTableWithPackage(file);
+        SymbolTable table = SymbolIo.readSymbolListWithPackageName(file.toPath());
 
         assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
+                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0),
                         new Symbol.StyleableSymbol(
-                                "LimitedSizeLinearLayout",
-                                ImmutableList.of(0x7f010000, 0x7f010001),
-                                ImmutableList.of("max_width", "max_height")));
+                                "LimitedSizeLinearLayout", ImmutableList.of(), ImmutableList.of()),
+                        new Symbol.StyleableSymbol("S2", ImmutableList.of(), ImmutableList.of()));
     }
 
     @Test
@@ -675,7 +672,7 @@ public class SymbolIoTest {
                                         ImmutableList.of("max_width", "max_height")))
                         .build();
         Path rTxt = fs.getPath("r.txt");
-        SymbolIo.write(table, rTxt);
+        SymbolIo.writeForAar(table, rTxt);
 
         Path manifest = fs.getPath("AndroidManifest.xml");
         java.nio.file.Files.write(
@@ -684,33 +681,40 @@ public class SymbolIoTest {
                 StandardCharsets.UTF_8);
 
         Path output = fs.getPath("package-aware-r.txt");
-        SymbolIo.writeSymbolTableWithPackage(rTxt, manifest, output);
+        SymbolIo.writeSymbolListWithPackageName(rTxt, manifest, output);
 
         List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
         assertThat(outputLines)
                 .containsExactly(
-                        "com.example.lib",
-                        "int drawable foobar 0x7f02000",
-                        "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }",
-                        "int styleable LimitedSizeLinearLayout_max_width 0",
-                        "int styleable LimitedSizeLinearLayout_max_height 1")
+                        "com.example.lib", "drawable foobar", "styleable LimitedSizeLinearLayout")
                 .inOrder();
 
-        assertThat(SymbolIo.readTableWithPackage(output)).isEqualTo(table);
+        SymbolTable result = SymbolIo.readSymbolListWithPackageName(output);
+        for (ResourceType type : ResourceType.values()) {
+            assertThat(result.getSymbols().row(type).keySet())
+                    .named(type.getName() + " resources in table " + result)
+                    .containsExactlyElementsIn(table.getSymbols().row(type).keySet());
+        }
 
-        // Simulate what might happen with AAPT1 on windows, that the first line ending will be \n
-        // but the rest will be \r\n
+        // Simulate what might happen with AAPT1 on windows.
+        Path symbolTable = fs.getPath("preSymbolTable");
+        SymbolIo.writeForAar(table, symbolTable);
         Path mixedLineEndings = fs.getPath("withAAPT1onWindows.txt");
-        try (BufferedWriter w =
-                java.nio.file.Files.newBufferedWriter(mixedLineEndings, StandardCharsets.UTF_8)) {
-            w.write(outputLines.get(0));
-            w.write('\n');
-            for (int i = 1; i < outputLines.size(); i++) {
-                w.write(outputLines.get(i));
+        try (Stream<String> lines = java.nio.file.Files.lines(symbolTable);
+                BufferedWriter w =
+                        java.nio.file.Files.newBufferedWriter(
+                                mixedLineEndings, StandardCharsets.UTF_8)) {
+            Iterator<String> iterator = lines.iterator();
+            while (iterator.hasNext()) {
+                w.write(iterator.next());
                 w.write("\r\n");
             }
         }
-        assertThat(SymbolIo.readTableWithPackage(mixedLineEndings)).isEqualTo(table);
+        Path outputWindows = fs.getPath("package-aware-r.txt");
+        SymbolIo.writeSymbolListWithPackageName(mixedLineEndings, manifest, output);
+        assertThat(java.nio.file.Files.readAllLines(outputWindows))
+                .containsExactlyElementsIn(java.nio.file.Files.readAllLines(output))
+                .inOrder();
     }
 
     @Test
@@ -726,7 +730,7 @@ public class SymbolIoTest {
                 StandardCharsets.UTF_8);
 
         Path output = fs.getPath("package-aware-r.txt");
-        SymbolIo.writeSymbolTableWithPackage(doesNotExist, manifest, output);
+        SymbolIo.writeSymbolListWithPackageName(doesNotExist, manifest, output);
 
         List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
         assertThat(outputLines).containsExactly("com.example.lib");
@@ -738,7 +742,7 @@ public class SymbolIoTest {
         FileSubject.assertThat(file).exists();
 
         try {
-            SymbolIo.readTableWithPackage(file);
+            SymbolIo.readSymbolListWithPackageName(file.toPath());
             fail();
         } catch (IOException e) {
             assertThat(e.getMessage())
@@ -763,9 +767,9 @@ public class SymbolIoTest {
                 StandardCharsets.UTF_8);
 
         Path output = fs.getPath("package-aware-r.txt");
-        SymbolIo.writeSymbolTableWithPackage(misordered, manifest, output);
+        SymbolIo.writeSymbolListWithPackageName(misordered, manifest, output);
 
-        SymbolTable symbolTable = SymbolIo.readTableWithPackage(output);
+        SymbolTable symbolTable = SymbolIo.readSymbolListWithPackageName(output);
         Symbol symbol = symbolTable.getSymbols().get(ResourceType.STYLEABLE, "AlertDialog");
         assertNotNull(symbol);
     }

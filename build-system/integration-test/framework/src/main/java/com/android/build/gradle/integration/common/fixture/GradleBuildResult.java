@@ -162,6 +162,16 @@ public class GradleBuildResult {
         return initTaskStates().getInputChangedTasks();
     }
 
+    @NonNull
+    public Set<String> getCachedTasks() {
+        return initTaskStates().getCachedTasks();
+    }
+
+    @NonNull
+    public Set<String> getSkippedTasks() {
+        return initTaskStates().getSkippedTasks();
+    }
+
     public Set<String> getNotUpToDateTasks() {
         return initTaskStates().getNotUpToDateTasks();
     }

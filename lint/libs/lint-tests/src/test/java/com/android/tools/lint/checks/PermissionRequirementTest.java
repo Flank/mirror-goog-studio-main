@@ -47,8 +47,7 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     private static UAnnotation createUAnnotation(
-            @NonNull String name,
-            @NonNull MockValue... values) {
+            @NonNull String name, @NonNull MockValue... values) {
         UAnnotation annotation = mock(UAnnotation.class);
         when(annotation.getQualifiedName()).thenReturn(name);
 
@@ -64,8 +63,7 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     public void testSingle() {
-        MockValue values = new MockValue("value",
-                "android.permission.ACCESS_FINE_LOCATION");
+        MockValue values = new MockValue("value", "android.permission.ACCESS_FINE_LOCATION");
         Set<String> emptySet = Collections.emptySet();
         Set<String> fineSet = Collections.singleton("android.permission.ACCESS_FINE_LOCATION");
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
@@ -75,7 +73,8 @@ public class PermissionRequirementTest extends TestCase {
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
         assertTrue(req.isSatisfied(new SetPermissionLookup(fineSet)));
-        assertEquals("android.permission.ACCESS_FINE_LOCATION",
+        assertEquals(
+                "android.permission.ACCESS_FINE_LOCATION",
                 req.describeMissingPermissions(new SetPermissionLookup(emptySet)));
         assertEquals(fineSet, req.getMissingPermissions(new SetPermissionLookup(emptySet)));
         assertEquals(emptySet, req.getMissingPermissions(new SetPermissionLookup(fineSet)));
@@ -85,15 +84,20 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     public void testAny() {
-        MockValue values = new MockValue("anyOf",
-                new String[]{"android.permission.ACCESS_FINE_LOCATION",
-                        "android.permission.ACCESS_COARSE_LOCATION"});
+        MockValue values =
+                new MockValue(
+                        "anyOf",
+                        new String[] {
+                            "android.permission.ACCESS_FINE_LOCATION",
+                            "android.permission.ACCESS_COARSE_LOCATION"
+                        });
         Set<String> emptySet = Collections.emptySet();
         Set<String> fineSet = Collections.singleton("android.permission.ACCESS_FINE_LOCATION");
         Set<String> coarseSet = Collections.singleton("android.permission.ACCESS_COARSE_LOCATION");
-        Set<String> bothSet = Sets.newHashSet(
-                "android.permission.ACCESS_FINE_LOCATION",
-                "android.permission.ACCESS_COARSE_LOCATION");
+        Set<String> bothSet =
+                Sets.newHashSet(
+                        "android.permission.ACCESS_FINE_LOCATION",
+                        "android.permission.ACCESS_COARSE_LOCATION");
 
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
@@ -111,15 +115,20 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     public void testAll() {
-        MockValue values = new MockValue("allOf",
-                new String[]{"android.permission.ACCESS_FINE_LOCATION",
-                        "android.permission.ACCESS_COARSE_LOCATION"});
+        MockValue values =
+                new MockValue(
+                        "allOf",
+                        new String[] {
+                            "android.permission.ACCESS_FINE_LOCATION",
+                            "android.permission.ACCESS_COARSE_LOCATION"
+                        });
         Set<String> emptySet = Collections.emptySet();
         Set<String> fineSet = Collections.singleton("android.permission.ACCESS_FINE_LOCATION");
         Set<String> coarseSet = Collections.singleton("android.permission.ACCESS_COARSE_LOCATION");
-        Set<String> bothSet = Sets.newHashSet(
-                "android.permission.ACCESS_FINE_LOCATION",
-                "android.permission.ACCESS_COARSE_LOCATION");
+        Set<String> bothSet =
+                Sets.newHashSet(
+                        "android.permission.ACCESS_FINE_LOCATION",
+                        "android.permission.ACCESS_COARSE_LOCATION");
 
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
@@ -147,8 +156,7 @@ public class PermissionRequirementTest extends TestCase {
 
     public void testSingleAsArray() {
         // Annotations let you supply a single string to an array method
-        MockValue values = new MockValue("allOf",
-                "android.permission.ACCESS_FINE_LOCATION");
+        MockValue values = new MockValue("allOf", "android.permission.ACCESS_FINE_LOCATION");
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         assertTrue(PermissionRequirement.create(annotation).isSingle());
     }
@@ -161,8 +169,11 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     public void testRevocable2() {
-        assertTrue(new SetPermissionLookup(Collections.emptySet(),
-            Sets.newHashSet("my.permission1", "my.permission2")).isRevocable("my.permission2"));
+        assertTrue(
+                new SetPermissionLookup(
+                                Collections.emptySet(),
+                                Sets.newHashSet("my.permission1", "my.permission2"))
+                        .isRevocable("my.permission2"));
     }
 
     public void testAppliesTo() {
@@ -219,8 +230,10 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     private static PermissionHolder getHolder(int min, int target) {
-        return new PermissionHolder.SetPermissionLookup(Collections.emptySet(),
-                Collections.emptySet(), new AndroidVersion(min, null),
+        return new PermissionHolder.SetPermissionLookup(
+                Collections.emptySet(),
+                Collections.emptySet(),
+                new AndroidVersion(min, null),
                 new AndroidVersion(target, null));
     }
 

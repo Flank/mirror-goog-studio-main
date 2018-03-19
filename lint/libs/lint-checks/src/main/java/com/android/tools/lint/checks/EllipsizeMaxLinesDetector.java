@@ -37,39 +37,31 @@ import java.util.Collections;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-/**
- * Checks for the scenario which triggers
- * https://issuetracker.google.com/issues/36950033
- */
+/** Checks for the scenario which triggers https://issuetracker.google.com/issues/36950033 */
 public class EllipsizeMaxLinesDetector extends LayoutDetector {
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            EllipsizeMaxLinesDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(EllipsizeMaxLinesDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
-    /**
-     * Combining maxLines and ellipsize
-     */
-    public static final Issue ISSUE = Issue.create(
-            "EllipsizeMaxLines",
-            "Combining Ellipsize and Maxlines",
-
-            "Combining `ellipsize` and `maxLines=1` can lead to crashes on some devices. "
-                    + "Earlier versions of lint recommended replacing `singleLine=true` with "
-                    + "`maxLines=1` but that should not be done when using `ellipsize`.",
-            Category.CORRECTNESS,
-            4,
-            Severity.ERROR,
-            IMPLEMENTATION).addMoreInfo("https://issuetracker.google.com/issues/36950033");
+    /** Combining maxLines and ellipsize */
+    public static final Issue ISSUE =
+            Issue.create(
+                            "EllipsizeMaxLines",
+                            "Combining Ellipsize and Maxlines",
+                            "Combining `ellipsize` and `maxLines=1` can lead to crashes on some devices. "
+                                    + "Earlier versions of lint recommended replacing `singleLine=true` with "
+                                    + "`maxLines=1` but that should not be done when using `ellipsize`.",
+                            Category.CORRECTNESS,
+                            4,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .addMoreInfo("https://issuetracker.google.com/issues/36950033");
 
     public static final String ATTR_ELLIPSIZE = "ellipsize";
     public static final String ATTR_LINES = "lines";
     public static final String ATTR_MAX_LINES = "maxLines";
 
-    /**
-     * Constructs a new {@link EllipsizeMaxLinesDetector}
-     */
-    public EllipsizeMaxLinesDetector() {
-    }
+    /** Constructs a new {@link EllipsizeMaxLinesDetector} */
+    public EllipsizeMaxLinesDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -94,21 +86,29 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
         Element element = attribute.getOwnerElement();
         Attr lines = element.getAttributeNodeNS(ANDROID_URI, ATTR_LINES);
         Attr maxLines = element.getAttributeNodeNS(ANDROID_URI, ATTR_MAX_LINES);
-        if (lines != null && VALUE_1.equals(lines.getValue()) ||
-                maxLines != null && VALUE_1.equals(maxLines.getValue())) {
+        if (lines != null && VALUE_1.equals(lines.getValue())
+                || maxLines != null && VALUE_1.equals(maxLines.getValue())) {
             Attr other = lines != null ? lines : maxLines;
             Location location = context.getLocation(other);
             location.setSecondary(context.getLocation(attribute));
 
-            LintFix fix = fix().name("Replace with singleLine=\"true\"").composite(
-                    fix().set(ANDROID_URI, ATTR_SINGLE_LINE, VALUE_TRUE).build(),
-                    fix().unset(ANDROID_URI, other.getLocalName()).build());
+            LintFix fix =
+                    fix().name("Replace with singleLine=\"true\"")
+                            .composite(
+                                    fix().set(ANDROID_URI, ATTR_SINGLE_LINE, VALUE_TRUE).build(),
+                                    fix().unset(ANDROID_URI, other.getLocalName()).build());
 
-            context.report(ISSUE, attribute, location,
-                    String.format("Combining `ellipsize=%1$s` and `%2$s=%3$s` can lead to "
+            context.report(
+                    ISSUE,
+                    attribute,
+                    location,
+                    String.format(
+                            "Combining `ellipsize=%1$s` and `%2$s=%3$s` can lead to "
                                     + "crashes. Use `singleLine=true` instead.",
                             element.getAttributeNS(ANDROID_URI, ATTR_ELLIPSIZE),
-                            other.getLocalName(), other.getValue()), fix);
+                            other.getLocalName(),
+                            other.getValue()),
+                    fix);
         }
     }
 }

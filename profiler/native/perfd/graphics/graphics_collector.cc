@@ -18,10 +18,6 @@
 #include <unistd.h>
 #include <sstream>
 
-#include "utils/activity_manager.h"
-#include "utils/bash_command.h"
-#include "utils/device_info.h"
-#include "utils/log.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
 #include "utils/trace.h"
@@ -53,25 +49,24 @@ bool GraphicsCollector::IsRunning() { return is_running_.load(); }
 void GraphicsCollector::Collect() {
   SetThreadName("Studio:PollGrap");
 
-  int sdk = profiler::DeviceInfo::api_level();
-  Log::D("SDK is %d ", sdk);
-
   Stopwatch stopwatch;
   int64_t start_timestamp_exclusive = INT64_MIN;
-  BashCommandRunner command(GraphicsFrameStatsSampler::GetDumpsysCommand(
-      app_and_activity_name_, sdk));
   while (is_running_) {
     Trace::Begin("GRAPHICS:Collect");
     int64_t start_time_ns = stopwatch.GetElapsed();
 
-    std::vector<GraphicsData> data_vector;
-    // For each sampler call we will get multiple GraphicsData
-    start_timestamp_exclusive =
-        graphics_frame_stats_sampler_.GetFrameStatsVector(
-            start_timestamp_exclusive, command, &data_vector);
+    std::string str_get_dumpsys{GraphicsFrameStatsSampler::GetDumpsysCommand()};
+    if (!str_get_dumpsys.empty()) {
+      BashCommandRunner cmd_get_dumpsys{str_get_dumpsys};
 
-    graphics_cache_.SaveGraphicsDataVector(data_vector);
+      std::vector<GraphicsData> data_vector;
+      // For each sampler call we will get multiple GraphicsData
+      start_timestamp_exclusive =
+          graphics_frame_stats_sampler_.GetFrameStatsVector(
+              start_timestamp_exclusive, cmd_get_dumpsys, &data_vector);
 
+      graphics_cache_.SaveGraphicsDataVector(data_vector);
+    }
     Trace::End();
     int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
     if (kSleepNs > elapsed_time_ns) {
@@ -80,10 +75,6 @@ void GraphicsCollector::Collect() {
     }
   }
   is_running_.exchange(false);
-}
-
-std::string GraphicsCollector::app_and_activity_name() {
-  return app_and_activity_name_;
 }
 
 }  // namespace profiler

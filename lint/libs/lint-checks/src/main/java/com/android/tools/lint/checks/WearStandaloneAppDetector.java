@@ -50,31 +50,35 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
             new Implementation(WearStandaloneAppDetector.class, Scope.MANIFEST_SCOPE);
 
     /** Invalid meta-data or missing wear standalone app flag */
-    public static final Issue INVALID_WEAR_FEATURE_ATTRIBUTE = Issue.create(
-            "InvalidWearFeatureAttribute",
-            "Invalid attribute for Wear uses-feature",
-            "For the `android.hardware.type.watch` uses-feature, android:required=\"false\" " +
-            "is disallowed. A single APK for Wear and non-Wear devices is not supported.\n",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION).addMoreInfo(
-            "https://developer.android.com/training/wearables/apps/packaging.html");
+    public static final Issue INVALID_WEAR_FEATURE_ATTRIBUTE =
+            Issue.create(
+                            "InvalidWearFeatureAttribute",
+                            "Invalid attribute for Wear uses-feature",
+                            "For the `android.hardware.type.watch` uses-feature, android:required=\"false\" "
+                                    + "is disallowed. A single APK for Wear and non-Wear devices is not supported.\n",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/wearables/apps/packaging.html");
 
     /** Invalid meta-data or missing wear standalone app flag */
-    public static final Issue WEAR_STANDALONE_APP_ISSUE = Issue.create(
-            "WearStandaloneAppFlag",
-            "Invalid or missing Wear standalone app flag",
-            "Wearable apps should specify whether they can work standalone, without a phone app." +
-            "Add a valid meta-data entry for `com.google.android.wearable.standalone` to " +
-            "your application element and set the value to `true` or `false`.\n" +
-            "`<meta-data android:name=\"com.google.android.wearable.standalone\"\n" +
-            "            android:value=\"true\"/>`\n",
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION).addMoreInfo(
-            "https://developer.android.com/training/wearables/apps/packaging.html");
+    public static final Issue WEAR_STANDALONE_APP_ISSUE =
+            Issue.create(
+                            "WearStandaloneAppFlag",
+                            "Invalid or missing Wear standalone app flag",
+                            "Wearable apps should specify whether they can work standalone, without a phone app."
+                                    + "Add a valid meta-data entry for `com.google.android.wearable.standalone` to "
+                                    + "your application element and set the value to `true` or `false`.\n"
+                                    + "`<meta-data android:name=\"com.google.android.wearable.standalone\"\n"
+                                    + "            android:value=\"true\"/>`\n",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/wearables/apps/packaging.html");
 
     public static final String WEARABLE_STANDALONE_ATTR = "com.google.android.wearable.standalone";
 
@@ -83,10 +87,9 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
     public static final int QFX_EXTRA_MISSING_META_DATA = 2;
 
     /** Constructs a new {@link WearStandaloneAppDetector} check */
-    public WearStandaloneAppDetector() {
-    }
+    public WearStandaloneAppDetector() {}
 
-    /** Whether we saw &lt;uses-feature android:name="android.hardware.type.watch" /&gt;*/
+    /** Whether we saw &lt;uses-feature android:name="android.hardware.type.watch" /&gt; */
     private boolean sawWearUsesFeature;
 
     /** Whether we saw the standalone meta-data element for wear */
@@ -115,31 +118,42 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
                 Attr requiredAttr = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
                 if (requiredAttr != null && !Boolean.valueOf(requiredAttr.getValue())) {
                     // required=false is not supported for the android.hardware.type.watch feature
-                    context.report(INVALID_WEAR_FEATURE_ATTRIBUTE, requiredAttr, context.getLocation(requiredAttr),
+                    context.report(
+                            INVALID_WEAR_FEATURE_ATTRIBUTE,
+                            requiredAttr,
+                            context.getLocation(requiredAttr),
                             "`android:required=\"false\"` is not supported for this feature");
                 }
             }
-        } else if (sawWearUsesFeature && NODE_METADATA.equals(tagName)
-                   && WEARABLE_STANDALONE_ATTR.equals(attrName)
-                   && element.getParentNode() != null
-                   && element.getParentNode().getNodeName().equals(NODE_APPLICATION)) {
+        } else if (sawWearUsesFeature
+                && NODE_METADATA.equals(tagName)
+                && WEARABLE_STANDALONE_ATTR.equals(attrName)
+                && element.getParentNode() != null
+                && element.getParentNode().getNodeName().equals(NODE_APPLICATION)) {
             sawStandaloneMetadata = true;
             // validate android:value
             Attr valueAttr = element.getAttributeNodeNS(ANDROID_URI, ATTR_VALUE);
 
             if (valueAttr == null) {
                 LintFix fix = fix().set(ANDROID_URI, ATTR_VALUE, VALUE_TRUE).build();
-                context.report(WEAR_STANDALONE_APP_ISSUE, element, context.getNameLocation(element),
-                        "Missing `android:value` attribute", fix);
+                context.report(
+                        WEAR_STANDALONE_APP_ISSUE,
+                        element,
+                        context.getNameLocation(element),
+                        "Missing `android:value` attribute",
+                        fix);
             } else {
                 String value = valueAttr.getValue();
                 if (value == null
                         || (!value.equalsIgnoreCase(VALUE_TRUE)
-                        && !value.equalsIgnoreCase(VALUE_FALSE))) {
-                    LintFix fixes = fix().group(
-                            fix().replace().with(VALUE_TRUE).build(),
-                            fix().replace().with(VALUE_FALSE).build());
-                    context.report(WEAR_STANDALONE_APP_ISSUE, valueAttr,
+                                && !value.equalsIgnoreCase(VALUE_FALSE))) {
+                    LintFix fixes =
+                            fix().group(
+                                            fix().replace().with(VALUE_TRUE).build(),
+                                            fix().replace().with(VALUE_FALSE).build());
+                    context.report(
+                            WEAR_STANDALONE_APP_ISSUE,
+                            valueAttr,
                             context.getValueLocation(valueAttr),
                             "Expecting a boolean value for attribute `android:value`",
                             fixes);
@@ -161,7 +175,9 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
             Element root = xmlContext.document.getDocumentElement();
             Element application = XmlUtils.getFirstSubTagByName(root, NODE_APPLICATION);
             if (application != null) {
-                xmlContext.report(WEAR_STANDALONE_APP_ISSUE, application,
+                xmlContext.report(
+                        WEAR_STANDALONE_APP_ISSUE,
+                        application,
                         xmlContext.getNameLocation(application),
                         "Missing `<meta-data android:name="
                                 + "\"com.google.android.wearable.standalone\" ../>` element",

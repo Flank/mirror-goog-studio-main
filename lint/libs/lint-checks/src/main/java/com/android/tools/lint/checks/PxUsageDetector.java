@@ -59,93 +59,86 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Check for px dimensions instead of dp dimensions.
- * Also look for non-"sp" text sizes.
- */
+/** Check for px dimensions instead of dp dimensions. Also look for non-"sp" text sizes. */
 public class PxUsageDetector extends LayoutDetector {
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            PxUsageDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(PxUsageDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** Using px instead of dp */
-    public static final Issue PX_ISSUE = Issue.create(
-            "PxUsage",
-            "Using 'px' dimension",
-            // This description is from the below screen support document
-            "For performance reasons and to keep the code simpler, the Android system uses pixels " +
-            "as the standard unit for expressing dimension or coordinate values. That means that " +
-            "the dimensions of a view are always expressed in the code using pixels, but " +
-            "always based on the current screen density. For instance, if `myView.getWidth()` " +
-            "returns 10, the view is 10 pixels wide on the current screen, but on a device with " +
-            "a higher density screen, the value returned might be 15. If you use pixel values " +
-            "in your application code to work with bitmaps that are not pre-scaled for the " +
-            "current screen density, you might need to scale the pixel values that you use in " +
-            "your code to match the un-scaled bitmap source.",
-            Category.CORRECTNESS,
-            2,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-            "http://developer.android.com/guide/practices/screens_support.html#screen-independence");
+    public static final Issue PX_ISSUE =
+            Issue.create(
+                            "PxUsage",
+                            "Using 'px' dimension",
+                            // This description is from the below screen support document
+                            "For performance reasons and to keep the code simpler, the Android system uses pixels "
+                                    + "as the standard unit for expressing dimension or coordinate values. That means that "
+                                    + "the dimensions of a view are always expressed in the code using pixels, but "
+                                    + "always based on the current screen density. For instance, if `myView.getWidth()` "
+                                    + "returns 10, the view is 10 pixels wide on the current screen, but on a device with "
+                                    + "a higher density screen, the value returned might be 15. If you use pixel values "
+                                    + "in your application code to work with bitmaps that are not pre-scaled for the "
+                                    + "current screen density, you might need to scale the pixel values that you use in "
+                                    + "your code to match the un-scaled bitmap source.",
+                            Category.CORRECTNESS,
+                            2,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/guide/practices/screens_support.html#screen-independence");
 
     /** Using mm/in instead of dp */
-    public static final Issue IN_MM_ISSUE = Issue.create(
-            "InOrMmUsage",
-            "Using `mm` or `in` dimensions",
-
-            "Avoid using `mm` (millimeters) or `in` (inches) as the unit for dimensions.\n" +
-            "\n" +
-            "While it should work in principle, unfortunately many devices do not report " +
-            "the correct true physical density, which means that the dimension calculations " +
-            "won't work correctly. You are better off using `dp` (and for font sizes, `sp`).",
-
-            Category.CORRECTNESS,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue IN_MM_ISSUE =
+            Issue.create(
+                    "InOrMmUsage",
+                    "Using `mm` or `in` dimensions",
+                    "Avoid using `mm` (millimeters) or `in` (inches) as the unit for dimensions.\n"
+                            + "\n"
+                            + "While it should work in principle, unfortunately many devices do not report "
+                            + "the correct true physical density, which means that the dimension calculations "
+                            + "won't work correctly. You are better off using `dp` (and for font sizes, `sp`).",
+                    Category.CORRECTNESS,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Using sp instead of dp */
-    public static final Issue DP_ISSUE = Issue.create(
-            "SpUsage",
-            "Using `dp` instead of `sp` for text sizes",
-
-            "When setting text sizes, you should normally use `sp`, or \"scale-independent " +
-            "pixels\". This is like the `dp` unit, but it is also scaled " +
-            "by the user's font size preference. It is recommend you use this unit when " +
-            "specifying font sizes, so they will be adjusted for both the screen density " +
-            "and the user's preference.\n" +
-            "\n" +
-            "There **are** cases where you might need to use `dp`; typically this happens when " +
-            "the text is in a container with a specific dp-size. This will prevent the text " +
-            "from spilling outside the container. Note however that this means that the user's " +
-            "font size settings are not respected, so consider adjusting the layout itself " +
-            "to be more flexible.",
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-            "http://developer.android.com/training/multiscreen/screendensities.html");
+    public static final Issue DP_ISSUE =
+            Issue.create(
+                            "SpUsage",
+                            "Using `dp` instead of `sp` for text sizes",
+                            "When setting text sizes, you should normally use `sp`, or \"scale-independent "
+                                    + "pixels\". This is like the `dp` unit, but it is also scaled "
+                                    + "by the user's font size preference. It is recommend you use this unit when "
+                                    + "specifying font sizes, so they will be adjusted for both the screen density "
+                                    + "and the user's preference.\n"
+                                    + "\n"
+                                    + "There **are** cases where you might need to use `dp`; typically this happens when "
+                                    + "the text is in a container with a specific dp-size. This will prevent the text "
+                                    + "from spilling outside the container. Note however that this means that the user's "
+                                    + "font size settings are not respected, so consider adjusting the layout itself "
+                                    + "to be more flexible.",
+                            Category.CORRECTNESS,
+                            3,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/training/multiscreen/screendensities.html");
 
     /** Using text sizes that are too small */
-    public static final Issue SMALL_SP_ISSUE = Issue.create(
-            "SmallSp",
-            "Text size is too small",
-
-            "Avoid using sizes smaller than 12sp.",
-
-            Category.USABILITY,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue SMALL_SP_ISSUE =
+            Issue.create(
+                    "SmallSp",
+                    "Text size is too small",
+                    "Avoid using sizes smaller than 12sp.",
+                    Category.USABILITY,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     private HashMap<String, Location.Handle> mTextSizeUsage;
 
-
     /** Constructs a new {@link PxUsageDetector} */
-    public PxUsageDetector() {
-    }
+    public PxUsageDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -172,21 +165,23 @@ public class PxUsageDetector extends LayoutDetector {
                     && attribute.getOwnerElement().getTagName().equals(TAG_DIMEN)) {
                 Element element = attribute.getOwnerElement();
                 String name = element.getAttribute(ATTR_NAME);
-                if (name != null && mTextSizeUsage.containsKey(name)
+                if (name != null
+                        && mTextSizeUsage.containsKey(name)
                         && context.isEnabled(DP_ISSUE)) {
                     NodeList children = element.getChildNodes();
                     for (int i = 0, n = children.getLength(); i < n; i++) {
                         Node child = children.item(i);
-                        if (child.getNodeType() == Node.TEXT_NODE &&
-                                isDpUnit(child.getNodeValue())) {
-                            String message = "This dimension is used as a text size: "
-                                    + "Should use \"`sp`\" instead of \"`dp`\"";
+                        if (child.getNodeType() == Node.TEXT_NODE
+                                && isDpUnit(child.getNodeValue())) {
+                            String message =
+                                    "This dimension is used as a text size: "
+                                            + "Should use \"`sp`\" instead of \"`dp`\"";
                             Location location = context.getLocation(child);
                             Location secondary = mTextSizeUsage.get(name).resolve();
                             secondary.setMessage("Dimension used as a text size here");
                             location.setSecondary(secondary);
-                            context.report(DP_ISSUE, attribute, location, message,
-                                    createDpToSpFix());
+                            context.report(
+                                    DP_ISSUE, attribute, location, message, createDpToSpFix());
                             break;
                         }
                     }
@@ -203,21 +198,28 @@ public class PxUsageDetector extends LayoutDetector {
                 return;
             }
             if (context.isEnabled(PX_ISSUE)) {
-                context.report(PX_ISSUE, attribute, context.getLocation(attribute),
-                    "Avoid using \"`px`\" as units; use \"`dp`\" instead");
+                context.report(
+                        PX_ISSUE,
+                        attribute,
+                        context.getLocation(attribute),
+                        "Avoid using \"`px`\" as units; use \"`dp`\" instead");
             }
         } else if (value.endsWith(UNIT_MM) && value.matches("\\d+mm")
-                       || value.endsWith(UNIT_IN) && value.matches("\\d+in")) {
+                || value.endsWith(UNIT_IN) && value.matches("\\d+in")) {
             if (value.charAt(0) == '0') {
                 // 0mm == 0in == 0dp
                 return;
             }
             if (context.isEnabled(IN_MM_ISSUE)) {
                 String unit = value.substring(value.length() - 2);
-                context.report(IN_MM_ISSUE, attribute, context.getLocation(attribute),
-                        String.format("Avoid using \"`%1$s`\" as units " +
-                            "(it does not work accurately on all devices); use \"`dp`\" instead",
-                            unit));
+                context.report(
+                        IN_MM_ISSUE,
+                        attribute,
+                        context.getLocation(attribute),
+                        String.format(
+                                "Avoid using \"`%1$s`\" as units "
+                                        + "(it does not work accurately on all devices); use \"`dp`\" instead",
+                                unit));
             }
         } else if (value.endsWith(UNIT_SP)
                 && (ATTR_TEXT_SIZE.equals(attribute.getLocalName())
@@ -225,13 +227,19 @@ public class PxUsageDetector extends LayoutDetector {
                 && value.matches("\\d+sp")) {
             int size = getSize(value);
             if (size > 0 && size < 12) {
-                context.report(SMALL_SP_ISSUE, attribute, context.getLocation(attribute),
+                context.report(
+                        SMALL_SP_ISSUE,
+                        attribute,
+                        context.getLocation(attribute),
                         String.format("Avoid using sizes smaller than `12sp`: `%1$s`", value));
             }
         } else if (ATTR_TEXT_SIZE.equals(attribute.getLocalName())) {
             if (isDpUnit(value)) {
                 if (context.isEnabled(DP_ISSUE)) {
-                    context.report(DP_ISSUE, attribute, context.getLocation(attribute),
+                    context.report(
+                            DP_ISSUE,
+                            attribute,
+                            context.getLocation(attribute),
                             "Should use \"`sp`\" instead of \"`dp`\" for text sizes",
                             createDpToSpFix());
                 }
@@ -239,8 +247,8 @@ public class PxUsageDetector extends LayoutDetector {
                 if (context.getClient().supportsProjectResources()) {
                     LintClient client = context.getClient();
                     Project project = context.getProject();
-                    AbstractResourceRepository resources = client.getResourceRepository(project,
-                            true, false);
+                    AbstractResourceRepository resources =
+                            client.getResourceRepository(project, true, false);
                     ResourceUrl url = ResourceUrl.parse(value);
                     if (resources != null && url != null) {
                         List<ResourceItem> items = resources.getResourceItem(url.type, url.name);
@@ -249,16 +257,21 @@ public class PxUsageDetector extends LayoutDetector {
                                 ResourceValue resourceValue = item.getResourceValue();
                                 if (resourceValue != null) {
                                     String dimenValue = resourceValue.getValue();
-                                    if (dimenValue != null && isDpUnit(dimenValue)
+                                    if (dimenValue != null
+                                            && isDpUnit(dimenValue)
                                             && context.isEnabled(DP_ISSUE)) {
                                         ResourceFile sourceFile = item.getSource();
                                         assert sourceFile != null;
-                                        String message = String.format(
-                                                "Should use \"`sp`\" instead of \"`dp`\" for text sizes (`%1$s` is defined as `%2$s` in `%3$s`",
-                                                value, dimenValue,
-                                                LintUtils.getFileNameWithParent(client,
-                                                        sourceFile.getFile()));
-                                        context.report(DP_ISSUE, attribute,
+                                        String message =
+                                                String.format(
+                                                        "Should use \"`sp`\" instead of \"`dp`\" for text sizes (`%1$s` is defined as `%2$s` in `%3$s`",
+                                                        value,
+                                                        dimenValue,
+                                                        LintUtils.getFileNameWithParent(
+                                                                client, sourceFile.getFile()));
+                                        context.report(
+                                                DP_ISSUE,
+                                                attribute,
                                                 context.getLocation(attribute),
                                                 message);
                                         break;
@@ -283,14 +296,11 @@ public class PxUsageDetector extends LayoutDetector {
 
     @NonNull
     private static LintFix createDpToSpFix() {
-        return LintFix.create().replace().pattern("\\d+(di?p)")
-                .with("sp")
-                .build();
+        return LintFix.create().replace().pattern("\\d+(di?p)").with("sp").build();
     }
 
     private static boolean isDpUnit(String value) {
-        return (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP))
-                && (value.matches("\\d+di?p"));
+        return (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP)) && (value.matches("\\d+di?p"));
     }
 
     private static int getSize(String text) {
@@ -308,8 +318,7 @@ public class PxUsageDetector extends LayoutDetector {
         NodeList itemNodes = element.getChildNodes();
         for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
             Node item = itemNodes.item(j);
-            if (item.getNodeType() == Node.ELEMENT_NODE &&
-                    TAG_ITEM.equals(item.getNodeName())) {
+            if (item.getNodeType() == Node.ELEMENT_NODE && TAG_ITEM.equals(item.getNodeName())) {
                 Element itemElement = (Element) item;
                 NodeList childNodes = item.getChildNodes();
                 for (int i = 0, n = childNodes.getLength(); i < n; i++) {
@@ -331,36 +340,46 @@ public class PxUsageDetector extends LayoutDetector {
             if (!Character.isWhitespace(c)) {
                 if (c == 'x' && text.charAt(j - 1) == 'p') { // ends with px
                     text = text.trim();
-                    if (text.matches("\\d+px") && text.charAt(0) != '0' &&
-                            !text.equals("1px")) {
+                    if (text.matches("\\d+px") && text.charAt(0) != '0' && !text.equals("1px")) {
                         if (context.isEnabled(PX_ISSUE)) {
-                            context.report(PX_ISSUE, item, context.getLocation(textNode),
-                                "Avoid using `\"px\"` as units; use `\"dp\"` instead");
+                            context.report(
+                                    PX_ISSUE,
+                                    item,
+                                    context.getLocation(textNode),
+                                    "Avoid using `\"px\"` as units; use `\"dp\"` instead");
                         }
                     }
-                } else if (c == 'm' && text.charAt(j - 1) == 'm' ||
-                            c == 'n' && text.charAt(j - 1) == 'i') {
+                } else if (c == 'm' && text.charAt(j - 1) == 'm'
+                        || c == 'n' && text.charAt(j - 1) == 'i') {
                     text = text.trim();
                     String unit = text.substring(text.length() - 2);
                     if (text.matches("\\d+" + unit) && text.charAt(0) != '0') {
                         if (context.isEnabled(IN_MM_ISSUE)) {
-                            context.report(IN_MM_ISSUE, item, context.getLocation(textNode),
-                                String.format("Avoid using \"`%1$s`\" as units "
-                                        + "(it does not work accurately on all devices); "
-                                        + "use \"`dp`\" instead", unit));
+                            context.report(
+                                    IN_MM_ISSUE,
+                                    item,
+                                    context.getLocation(textNode),
+                                    String.format(
+                                            "Avoid using \"`%1$s`\" as units "
+                                                    + "(it does not work accurately on all devices); "
+                                                    + "use \"`dp`\" instead",
+                                            unit));
                         }
                     }
-                } else if (c == 'p' && (text.charAt(j - 1) == 'd'
-                        || text.charAt(j - 1) == 'i')) { // ends with dp or di
+                } else if (c == 'p'
+                        && (text.charAt(j - 1) == 'd'
+                                || text.charAt(j - 1) == 'i')) { // ends with dp or di
                     text = text.trim();
                     String name = item.getAttribute(ATTR_NAME);
-                    if ((name.equals(ATTR_TEXT_SIZE)
-                            || name.equals("android:textSize"))
+                    if ((name.equals(ATTR_TEXT_SIZE) || name.equals("android:textSize"))
                             && text.matches("\\d+di?p")) {
                         if (context.isEnabled(DP_ISSUE)) {
-                            context.report(DP_ISSUE, item, context.getLocation(textNode),
-                                "Should use \"`sp`\" instead of \"`dp`\" for text sizes",
-                                           createDpToSpFix());
+                            context.report(
+                                    DP_ISSUE,
+                                    item,
+                                    context.getLocation(textNode),
+                                    "Should use \"`sp`\" instead of \"`dp`\" for text sizes",
+                                    createDpToSpFix());
                         }
                     }
                 } else if (c == 'p' && text.charAt(j - 1) == 's') {
@@ -372,10 +391,13 @@ public class PxUsageDetector extends LayoutDetector {
                             if (context.isEnabled(SMALL_SP_ISSUE)) {
                                 int size = getSize(text);
                                 if (size > 0 && size < 12) {
-                                    context.report(SMALL_SP_ISSUE, item,
-                                        context.getLocation(textNode), String.format(
-                                                "Avoid using sizes smaller than `12sp`: `%1$s`",
-                                                        text));
+                                    context.report(
+                                            SMALL_SP_ISSUE,
+                                            item,
+                                            context.getLocation(textNode),
+                                            String.format(
+                                                    "Avoid using sizes smaller than `12sp`: `%1$s`",
+                                                    text));
                                 }
                             }
                         }

@@ -43,7 +43,7 @@ const char *kCategories[] = {"gfx", "input",  "view", "wm",   "am",
                              "pm",  "sched",  "freq", "idle", "load"};
 const int kCategoriesCount = sizeof(kCategories) / sizeof(kCategories[0]);
 
-AtraceManager::AtraceManager(const Clock &clock, int dump_data_interval_ms)
+AtraceManager::AtraceManager(Clock* clock, int dump_data_interval_ms)
     : clock_(clock),
       dump_data_interval_ms_(dump_data_interval_ms),
       dumps_created_(0),
@@ -136,7 +136,7 @@ string AtraceManager::GetFileBaseName(const string &app_name) const {
   trace_filebase << "atrace-";
   trace_filebase << app_name;
   trace_filebase << "-";
-  trace_filebase << clock_.GetCurrentTime();
+  trace_filebase << clock_->GetCurrentTime();
   return trace_filebase.str();
 }
 

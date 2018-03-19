@@ -1,21 +1,22 @@
 apply plugin: 'com.android.application'
 
-repositories {
-    maven {
-        url 'libs'
-    }
-}
-
 android {
     compileSdkVersion rootProject.latestCompileSdk
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 23
         targetSdkVersion rootProject.latestCompileSdk
     }
 }
 
+repositories {
+    maven { url '../localRepo' }
+}
+
 dependencies {
     implementation "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
-    implementation files('libs/libraryToRefactor/libraryToRefactor-1.0.jar')
-    implementation 'supportLib:supportLibStub:1.0'
+    implementation 'com.example.androidlib:androidLibToRefactor:1.0'
+
+    // This raises the version used by androidLibToRefactor to be consistent with the app to avoid 
+    // lint errors.
+    implementation "com.android.support:preference-v7:${rootProject.supportLibVersion}"
 }

@@ -34,29 +34,31 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidNoLeanbackActivity() {
-        String expected = "" +
-                "AndroidManifest.xml:2: Error: Expecting an activity to have android.intent.category.LEANBACK_LAUNCHER intent filter. [MissingLeanbackLauncher]\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                " ~~~~~~~~\n" +
-                "1 errors, 0 warnings";
+        String expected =
+                ""
+                        + "AndroidManifest.xml:2: Error: Expecting an activity to have android.intent.category.LEANBACK_LAUNCHER intent filter. [MissingLeanbackLauncher]\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + " ~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
-                manifest("" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "          xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                        "    <uses-feature android:name=\"android.software.leanback\"/>\n" +
-                        "    <application>\n" +
-                        "        <!-- Application contains an activity, but it isn't a leanback launcher activity -->\n" +
-                        "        <activity android:name=\"com.example.android.test.Activity\">\n" +
-                        "            <intent-filter>\n" +
-                        "                <action android:name=\"android.intent.action.SEND\"/>\n" +
-                        "                <category android:name=\"android.intent.category.DEFAULT\"/>\n" +
-                        "                <data android:mimeType=\"text/plain\"/>\n" +
-                        "            </intent-filter>\n" +
-                        "        </activity>\n" +
-                        "    </application>\n" +
-                        "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <application>\n"
+                                        + "        <!-- Application contains an activity, but it isn't a leanback launcher activity -->\n"
+                                        + "        <activity android:name=\"com.example.android.test.Activity\">\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.SEND\"/>\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\"/>\n"
+                                        + "                <data android:mimeType=\"text/plain\"/>\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_LAUNCHER)
                 .run()
                 .expect(expected);
@@ -65,20 +67,21 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testValidLeanbackActivity() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <application>\n"
-                        + "        <activity android:name=\"com.example.android.TvActivity\">\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\"com.example.android.TvActivity\">\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_LAUNCHER)
                 .run()
                 .expectClean();
@@ -87,49 +90,52 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testValidLeanbackActivityAlias() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <application>\n"
-                        + "        <activity android:name=\".ui.TvActivity\" />\n"
-                        + "        <activity-alias "
-                        + "            android:name=\".TvActivity\"\n"
-                        + "            android:targetActivity=\".ui.TvActivity\">\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity-alias>\n"
-                        + "    </application>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\".ui.TvActivity\" />\n"
+                                        + "        <activity-alias "
+                                        + "            android:name=\".TvActivity\"\n"
+                                        + "            android:targetActivity=\".ui.TvActivity\">\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity-alias>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_LAUNCHER)
                 .run()
                 .expectClean();
     }
 
     public void testInvalidNoUsesFeatureLeanback() {
-        String expected = "" +
-                "AndroidManifest.xml:2: Error: Expecting <uses-feature android:name=\"android.software.leanback\" android:required=\"false\" /> tag. [MissingLeanbackSupport]\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                " ~~~~~~~~\n" +
-                "1 errors, 0 warnings";
+        String expected =
+                ""
+                        + "AndroidManifest.xml:2: Error: Expecting <uses-feature android:name=\"android.software.leanback\" android:required=\"false\" /> tag. [MissingLeanbackSupport]\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + " ~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
-                manifest("" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "          xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                        "    <application>\n" +
-                        "        <activity android:name=\"com.example.android.TvActivity\">\n" +
-                        "            <intent-filter>\n" +
-                        "                <action android:name=\"android.intent.action.MAIN\" />\n" +
-                        "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n" +
-                        "            </intent-filter>\n" +
-                        "        </activity>\n" +
-                        "    </application>\n" +
-                        "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\"com.example.android.TvActivity\">\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_SUPPORT)
                 .run()
                 .expect(expected);
@@ -138,12 +144,13 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testValidUsesFeatureLeanback() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\" android:required=\"false\" />\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\" android:required=\"false\" />\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_SUPPORT)
                 .run()
                 .expectClean();
@@ -157,57 +164,62 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <uses-feature\n"
-                        + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
-                        + "\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-feature\n"
+                                        + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
                 .issues(UNSUPPORTED_TV_HARDWARE)
                 .run()
                 .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for AndroidManifest.xml line 5: Set required=\"false\":\n"
-                        + "@@ -8 +8\n"
-                        + "-         android:required=\"true\" />\n"
-                        + "+         android:required=\"false\" />\n");
+                .expectFixDiffs(
+                        ""
+                                + "Fix for AndroidManifest.xml line 5: Set required=\"false\":\n"
+                                + "@@ -8 +8\n"
+                                + "-         android:required=\"true\" />\n"
+                                + "+         android:required=\"false\" />\n");
     }
 
     public void testValidUnsupportedHardware() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <uses-feature\n"
-                        + "        android:name=\"android.hardware.touchscreen\"\n"
-                        + "        android:required=\"false\" />\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-feature\n"
+                                        + "        android:name=\"android.hardware.touchscreen\"\n"
+                                        + "        android:required=\"false\" />\n"
+                                        + "</manifest>\n"))
                 .issues(UNSUPPORTED_TV_HARDWARE)
                 .run()
                 .expectClean();
     }
 
     public void testMissingUsesFeatureTouchScreen() {
-        String expected = "" +
-                "AndroidManifest.xml:2: Error: Hardware feature android.hardware.touchscreen not explicitly marked as optional  [ImpliedTouchscreenHardware]\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                " ~~~~~~~~\n" +
-                "1 errors, 0 warnings";
+        String expected =
+                ""
+                        + "AndroidManifest.xml:2: Error: Hardware feature android.hardware.touchscreen not explicitly marked as optional  [ImpliedTouchscreenHardware]\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + " ~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
-                manifest("" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "          xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                        "    <uses-feature android:name=\"android.software.leanback\"/>\n" +
-                        "    <uses-feature android:name=\"android.hardware.telephony\"/>\n" +
-                        "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-feature android:name=\"android.hardware.telephony\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(IMPLIED_TOUCHSCREEN_HARDWARE)
                 .run()
                 .expect(expected);
@@ -216,15 +228,16 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testValidUsesFeatureTouchScreen() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <uses-feature\n"
-                        + "            android:name=\"android.hardware.touchscreen\"\n"
-                        + "            android:required=\"false\"/>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-feature\n"
+                                        + "            android:name=\"android.hardware.touchscreen\"\n"
+                                        + "            android:required=\"false\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(UNSUPPORTED_TV_HARDWARE)
                 .run()
                 .expectClean();
@@ -233,54 +246,59 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testValidPermissionImpliesNotMissingUnsupportedHardware() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
-                        + "    <uses-feature android:required=\"false\" android:name=\"android.hardware.telephony\"/>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                                        + "    <uses-feature android:required=\"false\" android:name=\"android.hardware.telephony\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)
                 .run()
                 .expectClean();
     }
 
     public void testInvalidPermissionImpliesNotMissingUnsupportedHardware() {
-        String expected = "" +
-                "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedHardware]\n" +
-                "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n" +
-                "     ~~~~~~~~~~~~~~~\n" +
-                "0 errors, 1 warnings";
+        String expected =
+                ""
+                        + "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedHardware]\n"
+                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                        + "     ~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
-                manifest("" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "          xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                        "    <uses-feature android:name=\"android.software.leanback\"/>\n" +
-                        "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n" +
-                        "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)
                 .run()
                 .expect(expected);
     }
 
     public void testInvalidPermissionImpliesMissingUnsupportedHardware() {
-        String expected = "" +
-                "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedHardware]\n" +
-                "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n" +
-                "     ~~~~~~~~~~~~~~~\n" +
-                "0 errors, 1 warnings";
+        String expected =
+                ""
+                        + "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedHardware]\n"
+                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                        + "     ~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
-                manifest("" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "          xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                        "    <uses-feature android:name=\"android.software.leanback\"/>\n" +
-                        "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n" +
-                        "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)
                 .run()
                 .expect(expected);
@@ -289,67 +307,72 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testValidPermissionImpliesUnsupportedHardware() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)
                 .run()
                 .expectClean();
     }
 
     public void testBannerMissingInApplicationTag() {
-        String expected = "" +
-                "AndroidManifest.xml:5: Error: Expecting android:banner with the <application> tag or each Leanback launcher activity. [MissingTvBanner]\n" +
-                "    <application>\n" +
-                "     ~~~~~~~~~~~\n" +
-                "1 errors, 0 warnings";
+        String expected =
+                ""
+                        + "AndroidManifest.xml:5: Error: Expecting android:banner with the <application> tag or each Leanback launcher activity. [MissingTvBanner]\n"
+                        + "    <application>\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
-                manifest("" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "          xmlns:tools=\"http://schemas.android.com/tools\">\n" +
-                        "    <uses-feature android:name=\"android.software.leanback\"/>\n" +
-                        "    <application>\n" +
-                        "        <activity>\n" +
-                        "            <intent-filter>\n" +
-                        "                <action android:name=\"android.intent.action.MAIN\"/>\n" +
-                        "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\"/>\n" +
-                        "            </intent-filter>\n" +
-                        "        </activity>\n" +
-                        "    </application>\n" +
-                        "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <application>\n"
+                                        + "        <activity>\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\"/>\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_BANNER)
                 .run()
                 .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for AndroidManifest.xml line 4: Set banner:\n"
-                        + "@@ -7 +7\n"
-                        + "-     <application>\n"
-                        + "+     <application android:banner=\"[TODO]|\" >\n");
+                .expectFixDiffs(
+                        ""
+                                + "Fix for AndroidManifest.xml line 4: Set banner:\n"
+                                + "@@ -7 +7\n"
+                                + "-     <application>\n"
+                                + "+     <application android:banner=\"[TODO]|\" >\n");
     }
 
     public void testBannerInLeanbackLauncherActivity() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <application>\n"
-                        + "        <activity android:banner=\"@drawable/banner\">\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
-                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\"/>\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:banner=\"@drawable/banner\">\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\"/>\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_BANNER)
                 .run()
                 .expectClean();
@@ -358,20 +381,21 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testBannerInApplicationTag() {
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <application android:banner=\"@drawable/banner\">\n"
-                        + "        <activity>\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
-                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\"/>\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <application android:banner=\"@drawable/banner\">\n"
+                                        + "        <activity>\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\"/>\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_BANNER)
                 .run()
                 .expectClean();
@@ -383,25 +407,27 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
         // Expect some issue to be raised when there is the leanback support trigger.
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
-                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature android:name=\"android.software.leanback\"/>\n"
+                                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)
                 .run()
                 .expectWarningCount(1);
 
         // Expect no warnings when there is no trigger.
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)
                 .run()
                 .expectClean();
@@ -409,31 +435,33 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
 
     public void testLeanbackLauncherTrigger() {
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <application>\n"
-                        + "        <activity android:name=\"com.example.android.TvActivity\">\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <application>\n"
+                                        + "        <activity android:name=\"com.example.android.TvActivity\">\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "                <category android:name=\"android.intent.category.LEANBACK_LAUNCHER\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_SUPPORT)
                 .run()
                 .expectErrorCount(1);
 
         // Expect no warnings when there is no trigger.
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
-                        + "</manifest>\n"))
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "          xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
+                                        + "</manifest>\n"))
                 .issues(MISSING_LEANBACK_SUPPORT)
                 .run()
                 .expectClean();

@@ -27,10 +27,10 @@
 #include "utils/clock.h"
 #include "utils/log.h"
 
+using std::ostringstream;
 using std::strcmp;
 using std::strcpy;
 using std::string;
-using std::ostringstream;
 
 namespace {
 
@@ -108,7 +108,13 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   ostringstream command;
   command << GetSimpleperfPath(abi_arch);
   command << " record";
-  command << " -p " << pid;
+
+  // When profiling an application startup, simpleperf profiling starts before
+  // application launch, i.e when pid is not available. In this case, it will
+  // rely on "--app" flag instead of "-p".
+  if (pid != kStartupProfilingPid) {
+    command << " -p " << pid;
+  }
   command << " --app " << pkg_name;
 
   string supported_features = GetFeatures(abi_arch);

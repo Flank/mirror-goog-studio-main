@@ -35,13 +35,20 @@ class PathStat {
     DIR,
   };
 
-  PathStat(Type type, const std::string &root, const std::string &full_path,
-           int32_t size_b, int32_t modification_age_s)
+  // Construct an instance of a |PathStat| given a full path to a particular
+  // file as well as some root path it should live under (which allows the user
+  // to ask for the full path as relative or absolute).
+  //
+  // In other words, the caller is responsible for ensuring that |full_path| is
+  // a subset of |root_path|.
+  PathStat(Type type, const std::string &root_path,
+           const std::string &full_path, int32_t size_b,
+           int32_t modification_age_s)
       : type_(type),
         full_path_(full_path),
         size_b_(size_b),
         modification_age_s_(modification_age_s) {
-    rel_path_ = full_path.substr(root.length() + 1);
+    rel_path_ = full_path.substr(root_path.length() + 1);
   }
 
   Type type() const { return type_; }
@@ -203,6 +210,9 @@ class FileSystem {
   // Return the free space available on the disk which contains the target path.
   // The path must exist, or this will return 0.
   virtual int64_t GetFreeSpace(const std::string &path) const = 0;
+
+  // Return an absolute path to the current working directory.
+  virtual std::string GetWorkingDir() const = 0;
 };
 
 }  // namespace profiler

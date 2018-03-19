@@ -42,37 +42,44 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
-            new Implementation(AllowAllHostnameVerifierDetector.class,
-                    Scope.JAVA_FILE_SCOPE);
+            new Implementation(AllowAllHostnameVerifierDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue ISSUE = Issue.create("AllowAllHostnameVerifier",
-            "Insecure HostnameVerifier",
-            "This check looks for use of HostnameVerifier implementations " +
-            "whose `verify` method always returns true (thus trusting any hostname) " +
-            "which could result in insecure network traffic caused by trusting arbitrary " +
-            "hostnames in TLS/SSL certificates presented by peers.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "AllowAllHostnameVerifier",
+                    "Insecure HostnameVerifier",
+                    "This check looks for use of HostnameVerifier implementations "
+                            + "whose `verify` method always returns true (thus trusting any hostname) "
+                            + "which could result in insecure network traffic caused by trusting arbitrary "
+                            + "hostnames in TLS/SSL certificates presented by peers.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     // ---- implements SourceCodeScanner ----
 
     @Override
-    @Nullable @SuppressWarnings("javadoc")
+    @Nullable
+    @SuppressWarnings("javadoc")
     public List<String> getApplicableConstructorTypes() {
         return Collections.singletonList("org.apache.http.conn.ssl.AllowAllHostnameVerifier");
     }
 
     @Override
-    public void visitConstructor(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitConstructor(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod constructor) {
         Location location = context.getLocation(node);
-        context.report(ISSUE, node, location,
-                "Using the AllowAllHostnameVerifier HostnameVerifier is unsafe " +
-                        "because it always returns true, which could cause insecure network " +
-                        "traffic due to trusting TLS/SSL server certificates for wrong " +
-                        "hostnames");
+        context.report(
+                ISSUE,
+                node,
+                location,
+                "Using the AllowAllHostnameVerifier HostnameVerifier is unsafe "
+                        + "because it always returns true, which could cause insecure network "
+                        + "traffic due to trusting TLS/SSL server certificates for wrong "
+                        + "hostnames");
     }
 
     @Override
@@ -81,7 +88,9 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (evaluator.methodMatches(method, null, false, "javax.net.ssl.HostnameVerifier")) {
@@ -91,10 +100,11 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
                 PsiField field = (PsiField) resolvedArgument;
                 if ("ALLOW_ALL_HOSTNAME_VERIFIER".equals(field.getName())) {
                     Location location = context.getLocation(argument);
-                    String message = "Using the ALLOW_ALL_HOSTNAME_VERIFIER HostnameVerifier "
-                            + "is unsafe because it always returns true, which could cause "
-                            + "insecure network traffic due to trusting TLS/SSL server "
-                            + "certificates for wrong hostnames";
+                    String message =
+                            "Using the ALLOW_ALL_HOSTNAME_VERIFIER HostnameVerifier "
+                                    + "is unsafe because it always returns true, which could cause "
+                                    + "insecure network traffic due to trusting TLS/SSL server "
+                                    + "certificates for wrong hostnames";
                     context.report(ISSUE, argument, location, message);
                 }
             }

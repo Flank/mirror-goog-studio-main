@@ -24,7 +24,7 @@ interface ResourceFolderScanner {
     /**
      * Called for each resource folder
      *
-     * @param context    the context for the resource folder
+     * @param context the context for the resource folder
      * @param folderName the resource folder name
      */
     fun checkFolder(context: ResourceContext, folderName: String)

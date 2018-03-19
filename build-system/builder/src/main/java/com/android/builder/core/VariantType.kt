@@ -42,6 +42,11 @@ interface VariantType {
     val isBaseModule: Boolean
 
     /**
+     * Returns true if the variant is a feature split/optional module.
+     */
+    val isFeatureSplit: Boolean
+
+    /**
      * Returns true if the variant is a dual-type. This is only valid for BASE_FEATURE/FEATURE.
      * The library component of a feature returns false.
      */
@@ -96,7 +101,7 @@ interface VariantType {
     val canHaveSplits: Boolean
 
     val consumeType: String
-    val publishType: String
+    val publishType: String?
 
     val name: String
 
@@ -127,187 +132,132 @@ const val ATTR_FEATURE = "Feature"
 const val ATTR_METADATA = "Metadata"
 
 enum class VariantTypeImpl(
-    override val isAar: Boolean,
-    override val isApk: Boolean,
+    override val isAar: Boolean = false,
+    override val isApk: Boolean = false,
     override val isBaseModule: Boolean = false,
+    override val isFeatureSplit:Boolean = false,
     override val isHybrid: Boolean = false,
     override val publishToMetadata: Boolean = false,
-    override val isForTesting: Boolean,
+    override val isForTesting: Boolean = false,
     override val prefix: String,
     override val suffix: String,
-    override val isSingleBuildType: Boolean,
+    override val isSingleBuildType: Boolean = false,
     override val artifactName: String,
     override val artifactType: Int,
-    override val isExportDataBindingClassList: Boolean,
+    override val isExportDataBindingClassList: Boolean = false,
     override val analyticsVariantType: GradleBuildVariant.VariantType,
-    override val canHaveSplits: Boolean,
+    override val canHaveSplits: Boolean = false,
     private val consumeTypeOptional: String?,
-    private val publishTypeOptional: String?
+    override val publishType: String?
 
 ): VariantType {
     BASE_APK(
-        isAar = false,
         isApk = true,
         isBaseModule = true,
-        isHybrid = false,
         publishToMetadata = true,
-        isForTesting = false,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishTypeOptional = ATTR_APK
+        publishType = ATTR_APK
     ),
     OPTIONAL_APK(
-        isAar = false,
         isApk = true,
-        isBaseModule = false,
-        isHybrid = false,
+        isFeatureSplit = true,
         publishToMetadata = true,
-        isForTesting = false,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_APK,
-        publishTypeOptional = ATTR_APK),
+        publishType = ATTR_APK),
     BASE_FEATURE(
-        isAar = false,
         isApk = true,
         isBaseModule = true,
         isHybrid = true,
-        publishToMetadata = false,
-        isForTesting = false,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishTypeOptional = ATTR_FEATURE
+        publishType = ATTR_FEATURE
     ),
     FEATURE(
-        isAar = false,
         isApk = true,
-        isBaseModule = false,
+        isFeatureSplit = true,
         isHybrid = true,
         publishToMetadata = true,
-        isForTesting = false,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_FEATURE,
-        publishTypeOptional = ATTR_FEATURE
+        publishType = ATTR_FEATURE
     ),
     LIBRARY(
         isAar = true,
-        isApk = false,
-        isBaseModule = false,
-        isHybrid = false,
-        publishToMetadata = false,
-        isForTesting = false,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         isExportDataBindingClassList = true,
         analyticsVariantType = GradleBuildVariant.VariantType.LIBRARY,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishTypeOptional = ATTR_AAR),
+        publishType = ATTR_AAR),
     INSTANTAPP(
-        isAar = false,
-        isApk = false,
-        isBaseModule = false,
-        isHybrid = false,
-        publishToMetadata = false,
-        isForTesting = false,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.INSTANTAPP,
-        canHaveSplits = false,
         consumeTypeOptional = ATTR_FEATURE,
-        publishTypeOptional = ATTR_FEATURE
+        publishType = null
     ),
     TEST_APK(
-        isAar = false,
         isApk = true,
-        isBaseModule = false,
-        isHybrid = false,
-        publishToMetadata = false,
         isForTesting = true,
         prefix = "",
         suffix = "",
-        isSingleBuildType = false,
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
-        canHaveSplits = false,
         consumeTypeOptional = ATTR_APK,
-        publishTypeOptional = ATTR_APK),
+        publishType = null),
     ANDROID_TEST(
-        isAar = false,
         isApk = true,
-        isBaseModule = false,
-        isHybrid = false,
-        publishToMetadata = false,
         isForTesting = true,
         prefix = VariantType.ANDROID_TEST_PREFIX,
         suffix = VariantType.ANDROID_TEST_SUFFIX,
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_ANDROID_TEST,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.ANDROID_TEST,
-        canHaveSplits = false,
         consumeTypeOptional = null,
-        publishTypeOptional = null),
+        publishType = null),
     UNIT_TEST(
-        isAar = false,
-        isApk = false,
-        isBaseModule = false,
-        isHybrid = false,
-        publishToMetadata = false,
         isForTesting = true,
         prefix = VariantType.UNIT_TEST_PREFIX,
         suffix = VariantType.UNIT_TEST_SUFFIX,
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_UNIT_TEST,
         artifactType = ArtifactMetaData.TYPE_JAVA,
-        isExportDataBindingClassList = false,
         analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST,
-        canHaveSplits = false,
         consumeTypeOptional = null,
-        publishTypeOptional = null);
+        publishType = null);
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK
 
     override val consumeType: String
         get() = consumeTypeOptional ?: throw RuntimeException("Unsupported consumeType for VariantType: ${this.name}")
-    override val publishType: String
-        get() = publishTypeOptional ?: throw RuntimeException("Unsupported publishType for VariantType: ${this.name}")
 }

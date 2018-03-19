@@ -47,53 +47,54 @@ class ClassContext
 /**
  * Construct a new [ClassContext]
  */
-(
-        /** the driver running through the checks */
-        driver: LintDriver,
+    (
+    /** the driver running through the checks */
+    driver: LintDriver,
 
-        /** the project containing the file being checked */
-        project: Project,
+    /** the project containing the file being checked */
+    project: Project,
 
-        /**
-         * The "main" project. For normal projects, this is the same as [.project],
-         * but for library projects, it's the root project that includes (possibly indirectly)
-         * the various library projects and their library projects.
-         *
-         * Note that this is a property on the [Context], not the
-         * [Project], since a library project can be included from multiple
-         * different top level projects, so there isn't **one** main project,
-         * just one per main project being analyzed with its library projects.
-         */
-        main: Project?,
+    /**
+     * The "main" project. For normal projects, this is the same as [.project],
+     * but for library projects, it's the root project that includes (possibly indirectly)
+     * the various library projects and their library projects.
+     *
+     * Note that this is a property on the [Context], not the
+     * [Project], since a library project can be included from multiple
+     * different top level projects, so there isn't **one** main project,
+     * just one per main project being analyzed with its library projects.
+     */
+    main: Project?,
 
-        /** the file being checked */
-        file: File,
+    /** the file being checked */
+    file: File,
 
-        /**
-         * The jar file, if any. If this is null, the .class file is a real file
-         * on disk, otherwise it represents a relative path within the jar file.
-         *
-         * @return the jar file, or null
-         */
-        val jarFile: File?,
+    /**
+     * The jar file, if any. If this is null, the .class file is a real file
+     * on disk, otherwise it represents a relative path within the jar file.
+     *
+     * @return the jar file, or null
+     */
+    val jarFile: File?,
 
-        /** the root binary directory containing this .class file */
-        private val binDir: File,
+    /** the root binary directory containing this .class file */
+    private val binDir: File,
 
-        /** The class file byte data  */
-        val bytecode: ByteArray,
+    /** The class file byte data  */
+    val bytecode: ByteArray,
 
-        /** The class file DOM root node  */
-        val classNode: ClassNode,
+    /** The class file DOM root node  */
+    val classNode: ClassNode,
 
-        /**
-         * Whether this class is part of a library (rather than corresponding to one of the
-         * source files in this project
-         */
-        val isFromClassLibrary: Boolean,
+    /**
+     * Whether this class is part of a library (rather than corresponding to one of the
+     * source files in this project
+     */
+    val isFromClassLibrary: Boolean,
 
-        /** The contents of the source file, if source file is known/found  */
-        private var sourceContents: CharSequence?) : Context(driver, project, main, file) {
+    /** The contents of the source file, if source file is known/found  */
+    private var sourceContents: CharSequence?
+) : Context(driver, project, main, file) {
 
     /** The source file, if known/found  */
     private var sourceFile: File? = null
@@ -140,8 +141,7 @@ class ClassContext
                     val relative = if (start > parentPath.length)
                     // default package?
                         ""
-                    else
-                        parentPath.substring(start)
+                    else parentPath.substring(start)
                     val sources = project.getJavaSourceFolders()
                     for (dir in sources) {
                         val sourceFile = File(dir, relative + File.separator + source)
@@ -216,14 +216,20 @@ class ClassContext
      *
      * @return a location, never null
      */
-    fun getLocationForLine(line: Int, patternStart: String?,
-                           patternEnd: String?, hints: SearchHints?): Location {
+    fun getLocationForLine(
+        line: Int,
+        patternStart: String?,
+        patternEnd: String?,
+        hints: SearchHints?
+    ): Location {
         val sourceFile = getSourceFile()
         if (sourceFile != null) {
             // ASM line numbers are 1-based, and lint line numbers are 0-based
             return if (line != -1) {
-                Location.create(sourceFile, getSourceContents(), line - 1,
-                        patternStart, patternEnd, hints)
+                Location.create(
+                    sourceFile, getSourceContents(), line - 1,
+                    patternStart, patternEnd, hints
+                )
             } else {
                 Location.create(sourceFile)
             }
@@ -249,10 +255,11 @@ class ClassContext
      * @param message the message for this warning
      */
     override fun report(
-            issue: Issue,
-            location: Location,
-            message: String,
-            quickfixData: LintFix?) {
+        issue: Issue,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) {
         if (driver.isSuppressed(issue, classNode)) {
             return
         }
@@ -313,11 +320,12 @@ class ClassContext
      * @param message the message for this warning
      */
     fun report(
-            issue: Issue,
-            method: MethodNode?,
-            instruction: AbstractInsnNode?,
-            location: Location,
-            message: String) {
+        issue: Issue,
+        method: MethodNode?,
+        instruction: AbstractInsnNode?,
+        location: Location,
+        message: String
+    ) {
         if (method != null && driver.isSuppressed(issue, classNode, method, instruction)) {
             return
         }
@@ -338,10 +346,11 @@ class ClassContext
      * @param message the message for this warning
      */
     fun report(
-            issue: Issue,
-            field: FieldNode?,
-            location: Location,
-            message: String) {
+        issue: Issue,
+        field: FieldNode?,
+        location: Location,
+        message: String
+    ) {
         if (field != null && driver.isSuppressed(issue, field)) {
             return
         }
@@ -353,16 +362,19 @@ class ClassContext
      * Like [.report] but with
      * a now-unused data parameter at the end.
      */
-    @Deprecated("Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
-            "is here for custom rule compatibility",
-            ReplaceWith("report(issue, method, instruction, location, message)"))
+    @Deprecated(
+        "Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
+                "is here for custom rule compatibility",
+        ReplaceWith("report(issue, method, instruction, location, message)")
+    )
     fun report(
-            issue: Issue,
-            method: MethodNode?,
-            instruction: AbstractInsnNode?,
-            location: Location,
-            message: String,
-            data: Any?) = report(issue, method, instruction, location, message)
+        issue: Issue,
+        method: MethodNode?,
+        instruction: AbstractInsnNode?,
+        location: Location,
+        message: String,
+        data: Any?
+    ) = report(issue, method, instruction, location, message)
 
     /**
      * Report an error.
@@ -370,15 +382,18 @@ class ClassContext
      * a now-unused data parameter at the end.
      *
      */
-    @Deprecated("Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
-            "is here for custom rule compatibility",
-            ReplaceWith("report(issue, field, location, message)"))
+    @Deprecated(
+        "Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
+                "is here for custom rule compatibility",
+        ReplaceWith("report(issue, field, location, message)")
+    )
     fun report(
-            issue: Issue,
-            field: FieldNode?,
-            location: Location,
-            message: String,
-            data: Any?) = report(issue, field, location, message)
+        issue: Issue,
+        field: FieldNode?,
+        location: Location,
+        message: String,
+        data: Any?
+    ) = report(issue, field, location, message)
 
     /**
      * Returns a location for the given [ClassNode], where class node is
@@ -409,8 +424,10 @@ class ClassContext
             pattern = pattern.substring(index + 1)
         }
 
-        return getLocationForLine(findLineNumber(classNode), pattern, null,
-                SearchHints.create(BACKWARD).matchJavaSymbol())
+        return getLocationForLine(
+            findLineNumber(classNode), pattern, null,
+            SearchHints.create(BACKWARD).matchJavaSymbol()
+        )
     }
 
     /**
@@ -423,8 +440,10 @@ class ClassContext
      * @return a location pointing to the class declaration, or as close to it
      *         as possible
      */
-    fun getLocation(methodNode: MethodNode,
-                    classNode: ClassNode): Location {
+    fun getLocation(
+        methodNode: MethodNode,
+        classNode: ClassNode
+    ): Location {
         // Attempt to find a proper location for this class. This is tricky
         // since classes do not have line number entries in the class file; we need
         // to find a method, look up the corresponding line number then search
@@ -443,8 +462,10 @@ class ClassContext
             pattern = methodNode.name
         }
 
-        return getLocationForLine(findLineNumber(methodNode), pattern, null,
-                SearchHints.create(searchMode).matchJavaSymbol())
+        return getLocationForLine(
+            findLineNumber(methodNode), pattern, null,
+            SearchHints.create(searchMode).matchJavaSymbol()
+        )
     }
 
     /**

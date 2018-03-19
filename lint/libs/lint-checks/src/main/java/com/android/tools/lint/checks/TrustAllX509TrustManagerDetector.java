@@ -47,28 +47,30 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
-public class TrustAllX509TrustManagerDetector extends Detector implements SourceCodeScanner,
-        ClassScanner {
+public class TrustAllX509TrustManagerDetector extends Detector
+        implements SourceCodeScanner, ClassScanner {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
-            new Implementation(TrustAllX509TrustManagerDetector.class,
+            new Implementation(
+                    TrustAllX509TrustManagerDetector.class,
                     EnumSet.of(Scope.JAVA_LIBRARIES, Scope.JAVA_FILE),
                     Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue ISSUE = Issue.create("TrustAllX509TrustManager",
-            "Insecure TLS/SSL trust manager",
-            "This check looks for X509TrustManager implementations whose `checkServerTrusted` or " +
-            "`checkClientTrusted` methods do nothing (thus trusting any certificate chain) " +
-            "which could result in insecure network traffic caused by trusting arbitrary " +
-            "TLS/SSL certificates presented by peers.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "TrustAllX509TrustManager",
+                    "Insecure TLS/SSL trust manager",
+                    "This check looks for X509TrustManager implementations whose `checkServerTrusted` or "
+                            + "`checkClientTrusted` methods do nothing (thus trusting any certificate chain) "
+                            + "which could result in insecure network traffic caused by trusting arbitrary "
+                            + "TLS/SSL certificates presented by peers.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
-    public TrustAllX509TrustManagerDetector() {
-    }
+    public TrustAllX509TrustManagerDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -84,9 +86,8 @@ public class TrustAllX509TrustManagerDetector extends Detector implements Source
         checkMethod(context, cls, "checkClientTrusted");
     }
 
-    private static void checkMethod(@NonNull JavaContext context,
-            @NonNull UClass cls,
-            @NonNull String methodName) {
+    private static void checkMethod(
+            @NonNull JavaContext context, @NonNull UClass cls, @NonNull String methodName) {
         JavaEvaluator evaluator = context.getEvaluator();
         for (PsiMethod method : cls.findMethodsByName(methodName, true)) {
             if (evaluator.isAbstract(method)) {
@@ -119,9 +120,11 @@ public class TrustAllX509TrustManagerDetector extends Detector implements Source
 
     @NonNull
     private static String getErrorMessage(String methodName) {
-        return "`" + methodName + "` is empty, which could cause " +
-                "insecure network traffic due to trusting arbitrary TLS/SSL " +
-                "certificates presented by peers";
+        return "`"
+                + methodName
+                + "` is empty, which could cause "
+                + "insecure network traffic due to trusting arbitrary TLS/SSL "
+                + "certificates presented by peers";
     }
 
     private static class ComplexBodyVisitor extends AbstractUastVisitor {
@@ -129,8 +132,8 @@ public class TrustAllX509TrustManagerDetector extends Detector implements Source
 
         @Override
         public boolean visitElement(@NonNull UElement node) {
-            if (node instanceof UExpression &&
-                    !(node instanceof UReturnExpression
+            if (node instanceof UExpression
+                    && !(node instanceof UReturnExpression
                             || node instanceof UBlockExpression
                             || node instanceof UastEmptyExpression)) {
                 isComplex = true;
@@ -149,8 +152,7 @@ public class TrustAllX509TrustManagerDetector extends Detector implements Source
 
     @Override
     @SuppressWarnings("rawtypes")
-    public void checkClass(@NonNull final ClassContext context,
-            @NonNull ClassNode classNode) {
+    public void checkClass(@NonNull final ClassContext context, @NonNull ClassNode classNode) {
         if (!context.isFromClassLibrary()) {
             // Non-library code checked at the AST level
             return;
@@ -161,11 +163,11 @@ public class TrustAllX509TrustManagerDetector extends Detector implements Source
         List methodList = classNode.methods;
         for (Object m : methodList) {
             MethodNode method = (MethodNode) m;
-            if ("checkServerTrusted".equals(method.name) ||
-                    "checkClientTrusted".equals(method.name)) {
+            if ("checkServerTrusted".equals(method.name)
+                    || "checkClientTrusted".equals(method.name)) {
                 InsnList nodes = method.instructions;
                 boolean emptyMethod = true; // Stays true if method doesn't perform any "real"
-                                            // operations
+                // operations
                 for (int i = 0, n = nodes.size(); i < n; i++) {
                     // Future work: Improve this check to be less sensitive to irrelevant
                     // instructions/statements/invocations (e.g. System.out.println) by
@@ -176,9 +178,10 @@ public class TrustAllX509TrustManagerDetector extends Detector implements Source
                     // may be useful here.
                     AbstractInsnNode instruction = nodes.get(i);
                     int type = instruction.getType();
-                    if (type != AbstractInsnNode.LABEL && type != AbstractInsnNode.LINE &&
-                            !(type == AbstractInsnNode.INSN &&
-                                    instruction.getOpcode() == Opcodes.RETURN)) {
+                    if (type != AbstractInsnNode.LABEL
+                            && type != AbstractInsnNode.LINE
+                            && !(type == AbstractInsnNode.INSN
+                                    && instruction.getOpcode() == Opcodes.RETURN)) {
                         emptyMethod = false;
                         break;
                     }

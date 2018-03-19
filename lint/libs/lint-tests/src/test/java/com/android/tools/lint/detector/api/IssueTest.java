@@ -29,10 +29,17 @@ public class IssueTest extends TestCase {
         // Test that the addMoreInfo/getMoreInfo handling (which switches between
         // a direct string and a list internally when there is more than one item)
         // works correctly
-        Implementation implementation = new Implementation(AccessibilityDetector.class,
-                Scope.RESOURCE_FILE_SCOPE);
-        Issue issue = Issue.create("MyId", "ShortDesc", "Explanation",
-                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+        Implementation implementation =
+                new Implementation(AccessibilityDetector.class, Scope.RESOURCE_FILE_SCOPE);
+        Issue issue =
+                Issue.create(
+                        "MyId",
+                        "ShortDesc",
+                        "Explanation",
+                        Category.CORRECTNESS,
+                        10,
+                        Severity.ERROR,
+                        implementation);
         assertTrue(issue.getMoreInfo().isEmpty());
         String url1 = "http://tools.android.com";
         String url2 = "http://tools.android.com/recent";
@@ -43,16 +50,37 @@ public class IssueTest extends TestCase {
     }
 
     public void testEquals() {
-        Implementation implementation = new Implementation(AccessibilityDetector.class,
-                Scope.RESOURCE_FILE_SCOPE);
-        Issue issue1 = Issue.create("MyId", "ShortDesc", "Explanation",
-                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+        Implementation implementation =
+                new Implementation(AccessibilityDetector.class, Scope.RESOURCE_FILE_SCOPE);
+        Issue issue1 =
+                Issue.create(
+                        "MyId",
+                        "ShortDesc",
+                        "Explanation",
+                        Category.CORRECTNESS,
+                        10,
+                        Severity.ERROR,
+                        implementation);
 
-        Issue issue2 = Issue.create("MyId", "ShortDesc2", "Explanation",
-                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+        Issue issue2 =
+                Issue.create(
+                        "MyId",
+                        "ShortDesc2",
+                        "Explanation",
+                        Category.CORRECTNESS,
+                        10,
+                        Severity.ERROR,
+                        implementation);
 
-        Issue issue3 = Issue.create("SomethingElse", "ShortDesc", "Explanation",
-                Category.CORRECTNESS, 10, Severity.ERROR, implementation);
+        Issue issue3 =
+                Issue.create(
+                        "SomethingElse",
+                        "ShortDesc",
+                        "Explanation",
+                        Category.CORRECTNESS,
+                        10,
+                        Severity.ERROR,
+                        implementation);
 
         assertEquals(issue1, issue1);
         assertEquals(issue1, issue2); // only id counts, not the other attributes

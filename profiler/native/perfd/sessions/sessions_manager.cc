@@ -39,7 +39,7 @@ bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
   bool new_session = false;
   if (it == sessions_.end()) {
     sessions_.push_front(
-        SessionUtils::CreateSession(device_id, pid, clock_.GetCurrentTime()));
+        SessionUtils::CreateSession(device_id, pid, clock_->GetCurrentTime()));
     new_session = true;
   } else {
     // If a matching session was already running, move it to the front of the
@@ -139,7 +139,7 @@ void SessionsManager::DoEndSession(Session* session) {
     return;
   }
 
-  session->set_end_timestamp(clock_.GetCurrentTime());
+  session->set_end_timestamp(clock_->GetCurrentTime());
   // TODO(b/67508650): Stop all profilers!
 }
 

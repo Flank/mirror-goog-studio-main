@@ -59,11 +59,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXParseException;
 
 /**
- * Default implementation of a {@link Configuration} which reads and writes
- * configuration data into {@code lint.xml} in the project directory.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * Default implementation of a {@link Configuration} which reads and writes configuration data into
+ * {@code lint.xml} in the project directory.
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public class DefaultConfiguration extends Configuration {
@@ -96,22 +96,23 @@ public class DefaultConfiguration extends Configuration {
     private File baselineFile;
 
     /**
-     * Returns whether lint should check all warnings, including those off by default,
-     * or null if not configured in this configuration
+     * Returns whether lint should check all warnings, including those off by default, or null if
+     * not configured in this configuration
      */
     private Boolean checkAllWarnings;
 
     /**
-     * Returns whether lint will only check for errors (ignoring warnings),
-     * or null if not configured in this configuration
+     * Returns whether lint will only check for errors (ignoring warnings), or null if not
+     * configured in this configuration
      */
     private Boolean ignoreWarnings;
 
     /**
-     * Returns whether lint should treat all warnings as errors,
-     * or null if not configured in this configuration
+     * Returns whether lint should treat all warnings as errors, or null if not configured in this
+     * configuration
      */
     private Boolean warningsAsErrors;
+
     private Boolean fatalOnly;
     private Boolean checkTestSources;
     private Boolean checkGeneratedSources;
@@ -124,12 +125,9 @@ public class DefaultConfiguration extends Configuration {
     private Map<String, List<String>> suppressed;
 
     /** Map from id to regular expressions. */
-    @Nullable
-    private Map<String, List<Pattern>> regexps;
+    @Nullable private Map<String, List<Pattern>> regexps;
 
-    /**
-     * Map from id to custom {@link Severity} override
-     */
+    /** Map from id to custom {@link Severity} override */
     protected Map<String, Severity> severity;
 
     protected DefaultConfiguration(
@@ -144,9 +142,7 @@ public class DefaultConfiguration extends Configuration {
     }
 
     protected DefaultConfiguration(
-            @NonNull LintClient client,
-            @NonNull Project project,
-            @Nullable Configuration parent) {
+            @NonNull LintClient client, @NonNull Project project, @Nullable Configuration parent) {
         this(client, project, parent, new File(project.getDir(), CONFIG_FILE_NAME));
     }
 
@@ -160,18 +156,15 @@ public class DefaultConfiguration extends Configuration {
      */
     @NonNull
     public static DefaultConfiguration create(
-            @NonNull LintClient client,
-            @NonNull Project project,
-            @Nullable Configuration parent) {
+            @NonNull LintClient client, @NonNull Project project, @Nullable Configuration parent) {
         return new DefaultConfiguration(client, project, parent);
     }
 
     /**
-     * Creates a new {@link DefaultConfiguration} for the given lint config
-     * file, not affiliated with a project. This is used for global
-     * configurations.
+     * Creates a new {@link DefaultConfiguration} for the given lint config file, not affiliated
+     * with a project. This is used for global configurations.
      *
-     * @param client   the client to report errors to etc
+     * @param client the client to report errors to etc
      * @param lintFile the lint file containing the configuration
      * @return a new configuration
      */
@@ -325,8 +318,7 @@ public class DefaultConfiguration extends Configuration {
             message = String.format(message, args);
         }
         message = "Failed to parse `lint.xml` configuration file: " + message;
-        LintClient.Companion.report(client, IssueRegistry.LINT_ERROR, message, configFile,
-                project);
+        LintClient.Companion.report(client, IssueRegistry.LINT_ERROR, message, configFile, project);
     }
 
     private void readConfig() {
@@ -395,8 +387,9 @@ public class DefaultConfiguration extends Configuration {
                             if (path.isEmpty()) {
                                 String regexp = ignore.getAttribute(ATTR_REGEXP);
                                 if (regexp.isEmpty()) {
-                                    formatError("Missing required attribute %1$s or %2$s under %3$s",
-                                        ATTR_PATH, ATTR_REGEXP, idList);
+                                    formatError(
+                                            "Missing required attribute %1$s or %2$s under %3$s",
+                                            ATTR_PATH, ATTR_REGEXP, idList);
                                 } else {
                                     addRegexp(idList, ids, n, regexp, false);
                                 }
@@ -532,8 +525,12 @@ public class DefaultConfiguration extends Configuration {
         return abortOnError;
     }
 
-    private void addRegexp(@NonNull String idList, @NonNull Iterable<String> ids, int n,
-            @NonNull String regexp, boolean silent) {
+    private void addRegexp(
+            @NonNull String idList,
+            @NonNull Iterable<String> ids,
+            int n,
+            @NonNull String regexp,
+            boolean silent) {
         try {
             if (regexps == null) {
                 regexps = new HashMap<>();
@@ -549,7 +546,8 @@ public class DefaultConfiguration extends Configuration {
             }
         } catch (PatternSyntaxException e) {
             if (!silent) {
-                formatError("Invalid pattern %1$s under %2$s: %3$s",
+                formatError(
+                        "Invalid pattern %1$s under %2$s: %3$s",
                         regexp, idList, e.getDescription());
             }
         }
@@ -559,19 +557,18 @@ public class DefaultConfiguration extends Configuration {
         try {
             // Write the contents to a new file first such that we don't clobber the
             // existing file if some I/O error occurs.
-            File file = new File(configFile.getParentFile(),
-                    configFile.getName() + ".new");
+            File file = new File(configFile.getParentFile(), configFile.getName() + ".new");
 
             Writer writer = new BufferedWriter(new FileWriter(file));
-            writer.write(
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<");
+            writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<");
             writer.write(TAG_LINT);
 
             if (baselineFile != null) {
                 writer.write(" baseline=\"");
-                String path = project != null ?
-                        project.getRelativePath(baselineFile) : baselineFile.getPath();
+                String path =
+                        project != null
+                                ? project.getRelativePath(baselineFile)
+                                : baselineFile.getPath();
                 writeAttribute(writer, ATTR_BASELINE, path.replace('\\', '/'));
             }
             writer.write(">\n");
@@ -597,8 +594,8 @@ public class DefaultConfiguration extends Configuration {
                     writeAttribute(writer, ATTR_ID, id);
                     Severity severity = this.severity.get(id);
                     if (severity != null) {
-                        writeAttribute(writer, ATTR_SEVERITY,
-                                severity.name().toLowerCase(Locale.US));
+                        writeAttribute(
+                                writer, ATTR_SEVERITY, severity.name().toLowerCase(Locale.US));
                     }
 
                     List<Pattern> regexps = this.regexps != null ? this.regexps.get(id) : null;
@@ -640,8 +637,7 @@ public class DefaultConfiguration extends Configuration {
 
             // Move file into place: move current version to lint.xml~ (removing the old ~ file
             // if it exists), then move the new version to lint.xml.
-            File oldFile = new File(configFile.getParentFile(),
-                    configFile.getName() + '~');
+            File oldFile = new File(configFile.getParentFile(), configFile.getName() + '~');
             if (oldFile.exists()) {
                 oldFile.delete();
             }

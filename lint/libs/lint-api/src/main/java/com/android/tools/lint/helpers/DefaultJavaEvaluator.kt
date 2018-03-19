@@ -49,8 +49,10 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.getContainingUFile
 
-open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.project.Project?,
-        private val myLintProject: Project?) : JavaEvaluator() {
+open class DefaultJavaEvaluator(
+    private val myProject: com.intellij.openapi.project.Project?,
+    private val myLintProject: Project?
+) : JavaEvaluator() {
 
     override val dependencies: Dependencies?
         get() {
@@ -68,9 +70,11 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
         return InheritanceUtil.isInheritor(cls, strict, className)
     }
 
-    override fun implementsInterface(cls: PsiClass,
-            interfaceName: String,
-            strict: Boolean): Boolean {
+    override fun implementsInterface(
+        cls: PsiClass,
+        interfaceName: String,
+        strict: Boolean
+    ): Boolean {
         // TODO: This checks superclasses too. Let's find a cheaper method which only checks interfaces.
         return InheritanceUtil.isInheritor(cls, strict, interfaceName)
     }
@@ -80,19 +84,22 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
     }
 
     override fun findClass(qualifiedName: String): PsiClass? {
-        return JavaPsiFacade.getInstance(myProject ?: return null).findClass(qualifiedName,
-                GlobalSearchScope.allScope(myProject))
+        return JavaPsiFacade.getInstance(myProject ?: return null).findClass(
+            qualifiedName,
+            GlobalSearchScope.allScope(myProject)
+        )
     }
 
     override fun getClassType(psiClass: PsiClass?): PsiClassType? {
         return if (myProject != null && psiClass != null)
             JavaPsiFacade.getElementFactory(myProject).createType(psiClass)
-        else
-            null
+        else null
     }
 
-    override fun getAllAnnotations(owner: PsiModifierListOwner,
-            inHierarchy: Boolean): Array<PsiAnnotation> {
+    override fun getAllAnnotations(
+        owner: PsiModifierListOwner,
+        inHierarchy: Boolean
+    ): Array<PsiAnnotation> {
         if (owner is UDeclaration) {
             // Work around bug: Passing in a UAST node to this method generates a
             // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
@@ -104,18 +111,24 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
         return AnnotationUtil.getAllAnnotations(owner, inHierarchy, null, false)
     }
 
-    override fun findAnnotationInHierarchy(listOwner: PsiModifierListOwner,
-            vararg annotationNames: String): PsiAnnotation? {
+    override fun findAnnotationInHierarchy(
+        listOwner: PsiModifierListOwner,
+        vararg annotationNames: String
+    ): PsiAnnotation? {
         if (listOwner is UDeclaration) {
             // Work around UAST bug
             return findAnnotationInHierarchy(listOwner.psi, *annotationNames)
         }
-        return AnnotationUtil.findAnnotationInHierarchy(listOwner,
-                Sets.newHashSet(*annotationNames))
+        return AnnotationUtil.findAnnotationInHierarchy(
+            listOwner,
+            Sets.newHashSet(*annotationNames)
+        )
     }
 
-    override fun findAnnotation(listOwner: PsiModifierListOwner?,
-            vararg annotationNames: String): PsiAnnotation? {
+    override fun findAnnotation(
+        listOwner: PsiModifierListOwner?,
+        vararg annotationNames: String
+    ): PsiAnnotation? {
         if (listOwner is UDeclaration) {
             // Work around UAST bug
             return findAnnotation(listOwner.psi, *annotationNames)
@@ -176,8 +189,10 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
                                 // Use composite even if we just have one such that we don't
                                 // pass a modifier list tied to source elements in the class
                                 // (modifier lists can be part of the AST)
-                                PsiCompositeModifierList(manager,
-                                        listOf(modifierList))
+                                PsiCompositeModifierList(
+                                    manager,
+                                    listOf(modifierList)
+                                )
                             } else modifierList
                         }
                         return null
@@ -205,7 +220,6 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
         return if (erased is PsiClassType) {
             super.getQualifiedName((erased as PsiClassType?)!!)
         } else super.getQualifiedName(psiClassType)
-
     }
 
     override fun getQualifiedName(psiClass: PsiClass): String? {
@@ -218,7 +232,6 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
         return if (erased is PsiClassType) {
             super.getInternalName((erased as PsiClassType?)!!)
         } else super.getInternalName(psiClassType)
-
     }
 
     @Suppress("OverridingDeprecatedMember")

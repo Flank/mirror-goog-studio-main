@@ -16,6 +16,7 @@
 package com.android.layoutinspector.model
 
 import com.android.layoutinspector.LayoutInspectorCaptureOptions
+import com.android.layoutinspector.parser.ViewNodeParser
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -44,7 +45,7 @@ constructor(file: File) {
             // Parse view node
             val nodeBytes = ByteArray(input.readInt())
             input.readFully(nodeBytes)
-            node = ViewNode.parseFlatString(nodeBytes)
+            node = ViewNodeParser.parse(nodeBytes)
             if (node == null) {
                 throw IOException("Error parsing view node")
             }

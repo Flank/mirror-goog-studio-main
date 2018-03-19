@@ -72,75 +72,69 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Checks to ensure that classes referenced in the manifest actually exist and are included
- */
+/** Checks to ensure that classes referenced in the manifest actually exist and are included */
 public class MissingClassDetector extends LayoutDetector implements ClassScanner {
     /** Manifest-referenced classes missing from the project or libraries */
-    public static final Issue MISSING = Issue.create(
-            "MissingRegistered",
-            "Missing registered class",
-
-            "If a class is referenced in the manifest or in a layout file, it must also exist " +
-            "in the project (or in one of the libraries included by the project. This check " +
-            "helps uncover typos in registration names, or attempts to rename or move classes " +
-            "without updating the manifest file properly.",
-
-            Category.CORRECTNESS,
-            8,
-            Severity.ERROR,
-            new Implementation(
-                    MissingClassDetector.class,
-                    EnumSet.of(Scope.MANIFEST, Scope.CLASS_FILE,
-                            Scope.JAVA_LIBRARIES, Scope.RESOURCE_FILE)))
-            .addMoreInfo("http://developer.android.com/guide/topics/manifest/manifest-intro.html")
-            // Until http://b.android.com/229868 is fixed
-            .setEnabledByDefault(false);
+    public static final Issue MISSING =
+            Issue.create(
+                            "MissingRegistered",
+                            "Missing registered class",
+                            "If a class is referenced in the manifest or in a layout file, it must also exist "
+                                    + "in the project (or in one of the libraries included by the project. This check "
+                                    + "helps uncover typos in registration names, or attempts to rename or move classes "
+                                    + "without updating the manifest file properly.",
+                            Category.CORRECTNESS,
+                            8,
+                            Severity.ERROR,
+                            new Implementation(
+                                    MissingClassDetector.class,
+                                    EnumSet.of(
+                                            Scope.MANIFEST,
+                                            Scope.CLASS_FILE,
+                                            Scope.JAVA_LIBRARIES,
+                                            Scope.RESOURCE_FILE)))
+                    .addMoreInfo(
+                            "http://developer.android.com/guide/topics/manifest/manifest-intro.html")
+                    // Until http://b.android.com/229868 is fixed
+                    .setEnabledByDefault(false);
 
     /** Are activity, service, receiver etc subclasses instantiatable? */
-    public static final Issue INSTANTIATABLE = Issue.create(
-            "Instantiatable",
-            "Registered class is not instantiatable",
-
-            "Activities, services, broadcast receivers etc. registered in the manifest file " +
-            "(or for custom views, in a layout file) " +
-            "must be \"instantiatable\" by the system, which means that the class must be " +
-            "public, it must have an empty public constructor, and if it's an inner class, " +
-            "it must be a static inner class.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.FATAL,
-            new Implementation(
-                    MissingClassDetector.class,
-                    Scope.CLASS_FILE_SCOPE));
+    public static final Issue INSTANTIATABLE =
+            Issue.create(
+                    "Instantiatable",
+                    "Registered class is not instantiatable",
+                    "Activities, services, broadcast receivers etc. registered in the manifest file "
+                            + "(or for custom views, in a layout file) "
+                            + "must be \"instantiatable\" by the system, which means that the class must be "
+                            + "public, it must have an empty public constructor, and if it's an inner class, "
+                            + "it must be a static inner class.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    new Implementation(MissingClassDetector.class, Scope.CLASS_FILE_SCOPE));
 
     /** Is the right character used for inner class separators? */
-    public static final Issue INNERCLASS = Issue.create(
-            "InnerclassSeparator",
-            "Inner classes should use `$` rather than `.`",
-
-            "When you reference an inner class in a manifest file, you must use '$' instead of " +
-            "'.' as the separator character, i.e. Outer$Inner instead of Outer.Inner.\n" +
-            "\n" +
-            "(If you get this warning for a class which is not actually an inner class, it's " +
-            "because you are using uppercase characters in your package name, which is not " +
-            "conventional.)",
-
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    MissingClassDetector.class,
-                    Scope.MANIFEST_SCOPE));
+    public static final Issue INNERCLASS =
+            Issue.create(
+                    "InnerclassSeparator",
+                    "Inner classes should use `$` rather than `.`",
+                    "When you reference an inner class in a manifest file, you must use '$' instead of "
+                            + "'.' as the separator character, i.e. Outer$Inner instead of Outer.Inner.\n"
+                            + "\n"
+                            + "(If you get this warning for a class which is not actually an inner class, it's "
+                            + "because you are using uppercase characters in your package name, which is not "
+                            + "conventional.)",
+                    Category.CORRECTNESS,
+                    3,
+                    Severity.WARNING,
+                    new Implementation(MissingClassDetector.class, Scope.MANIFEST_SCOPE));
 
     private Map<String, Location.Handle> mReferencedClasses;
     private Set<String> mCustomViews;
     private boolean mHaveClasses;
 
     /** Constructs a new {@link MissingClassDetector} */
-    public MissingClassDetector() {
-    }
+    public MissingClassDetector() {}
 
     // ---- Implements XmlScanner ----
 
@@ -291,8 +285,8 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                     if (index == -1) {
                         break;
                     }
-                    signature = signature.substring(0, index) + '/'
-                            + signature.substring(index + 1);
+                    signature =
+                            signature.substring(0, index) + '/' + signature.substring(index + 1);
                     mReferencedClasses.put(signature, handle);
                     if (folderType == LAYOUT && !tag.equals(VIEW_FRAGMENT)) {
                         mCustomViews.add(signature);
@@ -302,8 +296,8 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
         }
     }
 
-    private static void checkInnerClass(XmlContext context, Element element, String pkg,
-            Node classNameNode, String className) {
+    private static void checkInnerClass(
+            XmlContext context, Element element, String pkg, Node classNameNode, String className) {
         if (pkg != null && className.indexOf('$') == -1 && className.indexOf('.', 1) > 0) {
             boolean haveUpperCase = false;
             for (int i = 0, n = pkg.length(); i < n; i++) {
@@ -313,9 +307,13 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 }
             }
             if (!haveUpperCase) {
-                String fixed = className.charAt(0) + className.substring(1).replace('.','$');
-                String message = "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \"" +
-                        className + "\" with \"" + fixed + "\"";
+                String fixed = className.charAt(0) + className.substring(1).replace('.', '$');
+                String message =
+                        "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \""
+                                + className
+                                + "\" with \""
+                                + fixed
+                                + "\"";
                 Location location = context.getLocation(classNameNode);
                 LintFix fix = LintFix.create().replace().text(className).with(fixed).build();
                 context.report(INNERCLASS, element, location, message, fix);
@@ -326,9 +324,11 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
     @Override
     public void afterCheckProject(@NonNull Context context) {
         Project mainProject = context.getMainProject();
-        if (context.getProject() == mainProject && mHaveClasses
+        if (context.getProject() == mainProject
+                && mHaveClasses
                 && !mainProject.isLibrary()
-                && mReferencedClasses != null && !mReferencedClasses.isEmpty()
+                && mReferencedClasses != null
+                && !mReferencedClasses.isEmpty()
                 && context.getDriver().getScope().contains(Scope.CLASS_FILE)) {
             List<String> classes = new ArrayList<>(mReferencedClasses.keySet());
             Collections.sort(classes);
@@ -363,16 +363,17 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 all.add(mainProject);
                 for (Project project : all) {
                     for (File root : project.getJavaSourceFolders()) {
-                        File source = new File(root, owner.replace('/', File.separatorChar)
-                                + DOT_JAVA);
+                        File source =
+                                new File(root, owner.replace('/', File.separatorChar) + DOT_JAVA);
                         if (source.exists()) {
                             continue classLoop;
                         }
                     }
                 }
 
-                String message = String.format(
-                        "Class referenced in the manifest, `%1$s`, was not found in the project or the libraries",
+                String message =
+                        String.format(
+                                "Class referenced in the manifest, `%1$s`, was not found in the project or the libraries",
                                 fqcn);
                 Location location = handle.resolve();
                 File parentFile = location.getFile().getParentFile();
@@ -380,17 +381,20 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                     String parent = parentFile.getName();
                     ResourceFolderType type = ResourceFolderType.getFolderType(parent);
                     if (type == LAYOUT) {
-                        message = String.format(
-                            "Class referenced in the layout file, `%1$s`, was not found in the project or the libraries",
-                                    fqcn);
+                        message =
+                                String.format(
+                                        "Class referenced in the layout file, `%1$s`, was not found in the project or the libraries",
+                                        fqcn);
                     } else if (type == XML) {
-                        message = String.format(
-                                "Class referenced in the preference header file, `%1$s`, was not found in the project or the libraries",
+                        message =
+                                String.format(
+                                        "Class referenced in the preference header file, `%1$s`, was not found in the project or the libraries",
                                         fqcn);
 
                     } else if (type == VALUES) {
-                        message = String.format(
-                                "Class referenced in the analytics file, `%1$s`, was not found in the project or the libraries",
+                        message =
+                                String.format(
+                                        "Class referenced in the analytics file, `%1$s`, was not found in the project or the libraries",
                                         fqcn);
                     }
                 }
@@ -404,7 +408,8 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
 
     @Override
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
-        if (!mHaveClasses && !context.isFromClassLibrary()
+        if (!mHaveClasses
+                && !context.isFromClassLibrary()
                 && context.getProject() == context.getMainProject()) {
             mHaveClasses = true;
         }
@@ -416,16 +421,22 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
             // Ensure that the class is non static and has a null constructor!
 
             if ((classNode.access & Opcodes.ACC_PRIVATE) != 0) {
-                context.report(INSTANTIATABLE, context.getLocation(classNode), String.format(
-                        "This class should be public (%1$s)",
-                            ClassContext.createSignature(classNode.name, null, null)));
+                context.report(
+                        INSTANTIATABLE,
+                        context.getLocation(classNode),
+                        String.format(
+                                "This class should be public (%1$s)",
+                                ClassContext.createSignature(classNode.name, null, null)));
                 return;
             }
 
             if (classNode.name.indexOf('$') != -1 && !LintUtils.isStaticInnerClass(classNode)) {
-                context.report(INSTANTIATABLE, context.getLocation(classNode), String.format(
-                        "This inner class should be static (%1$s)",
-                            ClassContext.createSignature(classNode.name, null, null)));
+                context.report(
+                        INSTANTIATABLE,
+                        context.getLocation(classNode),
+                        String.format(
+                                "This inner class should be static (%1$s)",
+                                ClassContext.createSignature(classNode.name, null, null)));
                 return;
             }
 
@@ -438,7 +449,9 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                     if (method.desc.equals("()V")) {
                         // The constructor must be public
                         if ((method.access & Opcodes.ACC_PUBLIC) == 0) {
-                            context.report(INSTANTIATABLE, context.getLocation(method, classNode),
+                            context.report(
+                                    INSTANTIATABLE,
+                                    context.getLocation(method, classNode),
                                     "The default constructor must be public");
                             // Also mark that we have a constructor so we don't complain again
                             // below since we've already emitted a more specific error related
@@ -449,11 +462,16 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 }
             }
 
-            if (!hasDefaultConstructor && !isCustomView && !context.isFromClassLibrary()
+            if (!hasDefaultConstructor
+                    && !isCustomView
+                    && !context.isFromClassLibrary()
                     && context.getProject().getReportIssues()) {
-                context.report(INSTANTIATABLE, context.getLocation(classNode), String.format(
-                        "This class should provide a default constructor (a public constructor with no arguments) (%1$s)",
-                            ClassContext.createSignature(classNode.name, null, null)));
+                context.report(
+                        INSTANTIATABLE,
+                        context.getLocation(classNode),
+                        String.format(
+                                "This class should provide a default constructor (a public constructor with no arguments) (%1$s)",
+                                ClassContext.createSignature(classNode.name, null, null)));
             }
         }
     }

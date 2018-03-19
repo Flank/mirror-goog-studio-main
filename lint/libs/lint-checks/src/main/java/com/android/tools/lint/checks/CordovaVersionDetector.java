@@ -51,51 +51,51 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-/**
- * Checks to detect vulnerable versions of Apache Cordova.
- */
+/** Checks to detect vulnerable versions of Apache Cordova. */
 public class CordovaVersionDetector extends Detector implements ClassScanner {
 
-    private static final Implementation IMPL = new Implementation(
-            CordovaVersionDetector.class,
-            EnumSet.of(Scope.CLASS_FILE, Scope.JAVA_LIBRARIES));
+    private static final Implementation IMPL =
+            new Implementation(
+                    CordovaVersionDetector.class,
+                    EnumSet.of(Scope.CLASS_FILE, Scope.JAVA_LIBRARIES));
 
     /** Vulnerable Cordova Version */
-    public static final Issue ISSUE = Issue.create(
-            "VulnerableCordovaVersion",
-            "Vulnerable Cordova Version",
-            "The version of Cordova used in the app is vulnerable to security " +
-            "issues. Please update to the latest Apache Cordova version.",
-            Category.SECURITY,
-            9,
-            Severity.WARNING,
-            IMPL)
-            .addMoreInfo("https://cordova.apache.org/announcements/2015/11/20/security.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "VulnerableCordovaVersion",
+                            "Vulnerable Cordova Version",
+                            "The version of Cordova used in the app is vulnerable to security "
+                                    + "issues. Please update to the latest Apache Cordova version.",
+                            Category.SECURITY,
+                            9,
+                            Severity.WARNING,
+                            IMPL)
+                    .addMoreInfo(
+                            "https://cordova.apache.org/announcements/2015/11/20/security.html");
 
-    /** Version string format in a class file. Note that any qualifiers such as -dev are ignored.*/
+    /** Version string format in a class file. Note that any qualifiers such as -dev are ignored. */
     private static final Pattern VERSION_STR = Pattern.compile("(\\d+\\.\\d+\\.\\d+).*");
     /** The class name that declares the cordovaVersion for versions < 3.x.x */
     private static final String FQN_CORDOVA_DEVICE = "org/apache/cordova/Device";
     /** The name of the static field if present in the {@code FQN_CORDOVA_DEVICE} */
     private static final String FIELD_NAME_CORDOVA_VERSION = "cordovaVersion";
 
-    private static final String FQN_CORDOVA_WEBVIEW =
-            "org/apache/cordova/CordovaWebView";
+    private static final String FQN_CORDOVA_WEBVIEW = "org/apache/cordova/CordovaWebView";
     /** The name of the static final field present in {@code FQN_CORDOVA_WEBVIEW} */
-    private static final String FIELD_NAME_CORDOVA_VERSION_WEBVIEW =
-            "CORDOVA_VERSION";
+    private static final String FIELD_NAME_CORDOVA_VERSION_WEBVIEW = "CORDOVA_VERSION";
 
     private static final String CORDOVA_DOT_JS = "cordova.js";
 
-    private static final FilenameFilter CORDOVA_JS_FILTER = (dir, filename) -> filename.startsWith(CORDOVA_DOT_JS) || new File(dir, filename).isDirectory();
+    private static final FilenameFilter CORDOVA_JS_FILTER =
+            (dir, filename) ->
+                    filename.startsWith(CORDOVA_DOT_JS) || new File(dir, filename).isDirectory();
 
     /** Constructs a new {@link CordovaVersionDetector} check */
-    public CordovaVersionDetector() {
-    }
+    public CordovaVersionDetector() {}
 
     /**
-     * The cordova version is similar to a dewey decimal like system
-     * used by {@link GradleVersion} except for the named qualifiers.
+     * The cordova version is similar to a dewey decimal like system used by {@link GradleVersion}
+     * except for the named qualifiers.
      */
     private GradleVersion mCordovaVersion;
 
@@ -140,8 +140,8 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
                 && file.getPath().contains(CORDOVA_DOT_JS)
                 && file.getName().startsWith(CORDOVA_DOT_JS)) {
             try {
-                mCordovaVersion = Files.readLines(
-                        file, Charsets.UTF_8, new JsVersionLineProcessor());
+                mCordovaVersion =
+                        Files.readLines(file, Charsets.UTF_8, new JsVersionLineProcessor());
                 if (mCordovaVersion != null) {
                     validateCordovaVersion(context, mCordovaVersion, Location.create(file));
                 }
@@ -151,13 +151,14 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
         }
     }
 
-    private static void validateCordovaVersion(@NonNull Context context,
-            @NonNull GradleVersion cordovaVersion, Location location) {
+    private static void validateCordovaVersion(
+            @NonNull Context context, @NonNull GradleVersion cordovaVersion, Location location) {
         // All cordova versions below 4.1.1 are considered vulnerable.
         if (!cordovaVersion.isAtLeast(4, 1, 1)) {
-            String message = String.format(
-                    "You are using a vulnerable version of Cordova: %1$s",
-                    cordovaVersion.toString());
+            String message =
+                    String.format(
+                            "You are using a vulnerable version of Cordova: %1$s",
+                            cordovaVersion.toString());
             context.report(ISSUE, location, message);
         }
     }
@@ -216,16 +217,16 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
                         && node.value instanceof String) {
                     mCordovaVersion = createVersion((String) node.value);
                     if (mCordovaVersion != null) {
-                        validateCordovaVersion(context, mCordovaVersion,
-                                context.getLocation(classNode));
+                        validateCordovaVersion(
+                                context, mCordovaVersion, context.getLocation(classNode));
                     }
                 }
             }
         }
     }
 
-    private void checkInstructionInternal(ClassContext context, ClassNode classNode,
-            AbstractInsnNode instruction) {
+    private void checkInstructionInternal(
+            ClassContext context, ClassNode classNode, AbstractInsnNode instruction) {
 
         FieldInsnNode node = (FieldInsnNode) instruction;
         if (node.getOpcode() == Opcodes.PUTSTATIC
@@ -239,8 +240,8 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
             if (ldcInsnNode.cst instanceof String) {
                 mCordovaVersion = createVersion((String) ldcInsnNode.cst);
                 if (mCordovaVersion != null) {
-                    validateCordovaVersion(context, mCordovaVersion,
-                            context.getLocation(classNode));
+                    validateCordovaVersion(
+                            context, mCordovaVersion, context.getLocation(classNode));
                 }
             }
         }
@@ -262,9 +263,10 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
     public static class JsVersionLineProcessor implements LineProcessor<GradleVersion> {
 
         // var CORDOVA_JS_BUILD_LABEL = '3.5.1-dev';
-        private static final Pattern PATTERN = Pattern.compile(
-                "var\\s*(PLATFORM_VERSION_BUILD_LABEL|CORDOVA_JS_BUILD_LABEL)\\s*"
-                        + "=\\s*'(\\d+\\.\\d+\\.\\d+)[^']*';.*");
+        private static final Pattern PATTERN =
+                Pattern.compile(
+                        "var\\s*(PLATFORM_VERSION_BUILD_LABEL|CORDOVA_JS_BUILD_LABEL)\\s*"
+                                + "=\\s*'(\\d+\\.\\d+\\.\\d+)[^']*';.*");
 
         private GradleVersion mVersion;
 

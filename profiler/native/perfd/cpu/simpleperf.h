@@ -23,6 +23,13 @@
 
 namespace profiler {
 
+// The constant is used when profiling startup of an application with
+// simpleperf, in which case simpleperf profiling starts before application
+// launch, so pid is not available. The value is not -1 because system libraries
+// may use it as pid is not available value. (e.g
+// |ProcessManager::GetPidForBinary|).
+const int kStartupProfilingPid = -12345;
+
 // Service to manage interactions related with simpleperf profiling tool
 // (e.g. invoking simpleperf commands, enabling simpleperf on the device, etc.).
 // Designed to be easily inherited and used in tests.

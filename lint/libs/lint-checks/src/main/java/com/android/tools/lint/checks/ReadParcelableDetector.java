@@ -37,37 +37,31 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UastLiteralUtils;
 
-/**
- * Looks for Parcelable classes that are missing a CREATOR field
- */
+/** Looks for Parcelable classes that are missing a CREATOR field */
 public class ReadParcelableDetector extends Detector implements SourceCodeScanner {
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "ParcelClassLoader",
-            "Default Parcel Class Loader",
-
-            "The documentation for `Parcel#readParcelable(ClassLoader)` (and its variations) " +
-            "says that you can pass in `null` to pick up the default class loader. However, " +
-            "that ClassLoader is a system class loader and is not able to find classes in " +
-            "your own application.\n" +
-            "\n" +
-            "If you are writing your own classes into the `Parcel` (not just SDK classes like " +
-            "`String` and so on), then you should supply a `ClassLoader` for your application " +
-            "instead; a simple way to obtain one is to just call `getClass().getClassLoader()` " +
-            "from your own class.",
-
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    ReadParcelableDetector.class,
-                    Scope.JAVA_FILE_SCOPE))
-            .addMoreInfo("http://developer.android.com/reference/android/os/Parcel.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "ParcelClassLoader",
+                            "Default Parcel Class Loader",
+                            "The documentation for `Parcel#readParcelable(ClassLoader)` (and its variations) "
+                                    + "says that you can pass in `null` to pick up the default class loader. However, "
+                                    + "that ClassLoader is a system class loader and is not able to find classes in "
+                                    + "your own application.\n"
+                                    + "\n"
+                                    + "If you are writing your own classes into the `Parcel` (not just SDK classes like "
+                                    + "`String` and so on), then you should supply a `ClassLoader` for your application "
+                                    + "instead; a simple way to obtain one is to just call `getClass().getClassLoader()` "
+                                    + "from your own class.",
+                            Category.CORRECTNESS,
+                            3,
+                            Severity.WARNING,
+                            new Implementation(ReadParcelableDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo("http://developer.android.com/reference/android/os/Parcel.html");
 
     /** Constructs a new {@link ReadParcelableDetector} check */
-    public ReadParcelableDetector() {
-    }
+    public ReadParcelableDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -80,12 +74,13 @@ public class ReadParcelableDetector extends Detector implements SourceCodeScanne
                 "readArray",
                 "readSparseArray",
                 "readValue",
-                "readPersistableBundle"
-        );
+                "readPersistableBundle");
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         PsiClass containingClass = method.getContainingClass();
         if (containingClass == null) {
@@ -98,19 +93,22 @@ public class ReadParcelableDetector extends Detector implements SourceCodeScanne
         List<UExpression> expressions = node.getValueArguments();
         int argumentCount = expressions.size();
         if (argumentCount == 0) {
-            String message = String.format("Using the default class loader "
-                            + "will not work if you are restoring your own classes. Consider "
-                            + "using for example `%1$s(getClass().getClassLoader())` instead.",
-                    getMethodName(node));
+            String message =
+                    String.format(
+                            "Using the default class loader "
+                                    + "will not work if you are restoring your own classes. Consider "
+                                    + "using for example `%1$s(getClass().getClassLoader())` instead.",
+                            getMethodName(node));
             LintFix fix = createQuickfixData(")");
             Location location = context.getCallLocation(node, false, true);
             context.report(ISSUE, node, location, message, fix);
         } else if (argumentCount == 1) {
             UExpression parameter = expressions.get(0);
             if (UastLiteralUtils.isNullLiteral(parameter)) {
-                String message = "Passing null here (to use the default class loader) "
-                        + "will not work if you are restoring your own classes. Consider "
-                        + "using for example `getClass().getClassLoader()` instead.";
+                String message =
+                        "Passing null here (to use the default class loader) "
+                                + "will not work if you are restoring your own classes. Consider "
+                                + "using for example `getClass().getClassLoader()` instead.";
                 Location location = context.getCallLocation(node, false, true);
                 LintFix fix = createQuickfixData("null)");
                 context.report(ISSUE, node, location, message, fix);
@@ -121,7 +119,9 @@ public class ReadParcelableDetector extends Detector implements SourceCodeScanne
     @NonNull
     private static LintFix createQuickfixData(String parameter) {
         return LintFix.create()
-                .name("Use getClass().getClassLoader()").replace().text(parameter)
+                .name("Use getClass().getClassLoader()")
+                .replace()
+                .text(parameter)
                 .with("getClass().getClassLoader())")
                 .build();
     }

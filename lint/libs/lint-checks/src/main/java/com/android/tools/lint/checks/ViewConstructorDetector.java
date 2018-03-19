@@ -41,42 +41,35 @@ import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UClass;
 
-/**
- * Looks for custom views that do not define the view constructors needed by UI builders
- */
+/** Looks for custom views that do not define the view constructors needed by UI builders */
 public class ViewConstructorDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "ViewConstructor",
-            "Missing View constructors for XML inflation",
-
-            "Some layout tools (such as the Android layout editor) need to " +
-            "find a constructor with one of the following signatures:\n" +
-            "* `View(Context context)`\n" +
-            "* `View(Context context, AttributeSet attrs)`\n" +
-            "* `View(Context context, AttributeSet attrs, int defStyle)`\n" +
-            "\n" +
-            "If your custom view needs to perform initialization which does not apply when " +
-            "used in a layout editor, you can surround the given code with a check to " +
-            "see if `View#isInEditMode()` is false, since that method will return `false` " +
-            "at runtime but true within a user interface editor.",
-
-            Category.USABILITY,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    ViewConstructorDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ViewConstructor",
+                    "Missing View constructors for XML inflation",
+                    "Some layout tools (such as the Android layout editor) need to "
+                            + "find a constructor with one of the following signatures:\n"
+                            + "* `View(Context context)`\n"
+                            + "* `View(Context context, AttributeSet attrs)`\n"
+                            + "* `View(Context context, AttributeSet attrs, int defStyle)`\n"
+                            + "\n"
+                            + "If your custom view needs to perform initialization which does not apply when "
+                            + "used in a layout editor, you can surround the given code with a check to "
+                            + "see if `View#isInEditMode()` is false, since that method will return `false` "
+                            + "at runtime but true within a user interface editor.",
+                    Category.USABILITY,
+                    3,
+                    Severity.WARNING,
+                    new Implementation(ViewConstructorDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link ViewConstructorDetector} check */
-    public ViewConstructorDetector() {
-    }
+    public ViewConstructorDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
     private static boolean isXmlConstructor(
-            @NonNull JavaEvaluator evaluator,
-            @NonNull PsiMethod method) {
+            @NonNull JavaEvaluator evaluator, @NonNull PsiMethod method) {
         // Accept
         //   android.content.Context
         //   android.content.Context,android.util.AttributeSet
@@ -120,8 +113,7 @@ public class ViewConstructorDetector extends Detector implements SourceCodeScann
             return;
         }
 
-        if (declaration.getContainingClass() != null &&
-                !evaluator.isStatic(declaration)) {
+        if (declaration.getContainingClass() != null && !evaluator.isStatic(declaration)) {
             // Ignore inner classes that aren't static: we can't create these
             // anyway since we'd need the outer instance
             return;
@@ -136,11 +128,12 @@ public class ViewConstructorDetector extends Detector implements SourceCodeScann
         }
 
         if (!found) {
-            String message = String.format(
-                    "Custom view `%1$s` is missing constructor used by tools: "
-                            + "`(Context)` or `(Context,AttributeSet)` "
-                            + "or `(Context,AttributeSet,int)`",
-                    declaration.getName());
+            String message =
+                    String.format(
+                            "Custom view `%1$s` is missing constructor used by tools: "
+                                    + "`(Context)` or `(Context,AttributeSet)` "
+                                    + "or `(Context,AttributeSet,int)`",
+                            declaration.getName());
             Location location = context.getNameLocation(declaration);
             context.report(ISSUE, declaration, location, message);
         }

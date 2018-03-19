@@ -32,35 +32,29 @@ import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Attr;
 
-/**
- * Checks for hardcoded debug mode in manifest files
- */
+/** Checks for hardcoded debug mode in manifest files */
 public class HardcodedDebugModeDetector extends Detector implements XmlScanner {
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "HardcodedDebugMode",
-            "Hardcoded value of `android:debuggable` in the manifest",
-
-            "It's best to leave out the `android:debuggable` attribute from the manifest. " +
-            "If you do, then the tools will automatically insert `android:debuggable=true` when " +
-            "building an APK to debug on an emulator or device. And when you perform a " +
-            "release build, such as Exporting APK, it will automatically set it to `false`.\n" +
-            "\n" +
-            "If on the other hand you specify a specific value in the manifest file, then " +
-            "the tools will always use it. This can lead to accidentally publishing " +
-            "your app with debug information.",
-
-            Category.SECURITY,
-            5,
-            Severity.FATAL,
-            new Implementation(
-                    HardcodedDebugModeDetector.class,
-                    Scope.MANIFEST_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "HardcodedDebugMode",
+                    "Hardcoded value of `android:debuggable` in the manifest",
+                    "It's best to leave out the `android:debuggable` attribute from the manifest. "
+                            + "If you do, then the tools will automatically insert `android:debuggable=true` when "
+                            + "building an APK to debug on an emulator or device. And when you perform a "
+                            + "release build, such as Exporting APK, it will automatically set it to `false`.\n"
+                            + "\n"
+                            + "If on the other hand you specify a specific value in the manifest file, then "
+                            + "the tools will always use it. This can lead to accidentally publishing "
+                            + "your app with debug information.",
+                    Category.SECURITY,
+                    5,
+                    Severity.FATAL,
+                    new Implementation(HardcodedDebugModeDetector.class, Scope.MANIFEST_SCOPE));
 
     /** Constructs a new {@link HardcodedDebugModeDetector} check */
-    public HardcodedDebugModeDetector() {
-    }
+    public HardcodedDebugModeDetector() {}
 
     // ---- Implements XmlScanner ----
 
@@ -72,10 +66,13 @@ public class HardcodedDebugModeDetector extends Detector implements XmlScanner {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         if (attribute.getNamespaceURI().equals(ANDROID_URI)) {
-        //if (attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
-            context.report(ISSUE, attribute, context.getLocation(attribute),
-                    "Avoid hardcoding the debug mode; leaving it out allows debug and " +
-                    "release builds to automatically assign one");
+            //if (attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
+            context.report(
+                    ISSUE,
+                    attribute,
+                    context.getLocation(attribute),
+                    "Avoid hardcoding the debug mode; leaving it out allows debug and "
+                            + "release builds to automatically assign one");
         }
     }
 }

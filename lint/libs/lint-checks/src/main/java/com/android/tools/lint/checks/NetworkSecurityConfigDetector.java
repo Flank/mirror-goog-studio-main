@@ -51,69 +51,58 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/**
- * Check which makes sure that a network-security-config descriptor file is valid and logical
- */
+/** Check which makes sure that a network-security-config descriptor file is valid and logical */
 public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
 
-    public static final Implementation IMPLEMENTATION = new Implementation(
-            NetworkSecurityConfigDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    public static final Implementation IMPLEMENTATION =
+            new Implementation(NetworkSecurityConfigDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
-    /**
-     * Validate the entire network-security-config descriptor.
-     */
-    public static final Issue ISSUE = Issue.create(
-            "NetworkSecurityConfig",
-            "Valid Network Security Config File",
+    /** Validate the entire network-security-config descriptor. */
+    public static final Issue ISSUE =
+            Issue.create(
+                            "NetworkSecurityConfig",
+                            "Valid Network Security Config File",
+                            "Ensures that a `<network-security-config>` file, which is pointed to by an "
+                                    + "`android:networkSecurityConfig` attribute in the manifest file, is valid",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.FATAL,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/preview/features/security-config.html");
 
-            "Ensures that a `<network-security-config>` file, which is pointed to by an " +
-            "`android:networkSecurityConfig` attribute in the manifest file, is valid",
+    /** Validate the pin-set expiration attribute and warn if the expiry is in the near future. */
+    public static final Issue PIN_SET_EXPIRY =
+            Issue.create(
+                            "PinSetExpiry",
+                            "Validate `<pin-set>` expiration attribute",
+                            "Ensures that the `expiration` attribute of the `<pin-set>` element is valid and has "
+                                    + "not already expired or is expiring soon",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/preview/features/security-config.html");
 
-            Category.CORRECTNESS,
-            5,
-            Severity.FATAL,
-            IMPLEMENTATION)
-            .addMoreInfo("https://developer.android.com/preview/features/security-config.html");
-
-    /**
-     * Validate the pin-set expiration attribute and warn if the expiry is in the
-     * near future.
-     */
-    public static final Issue PIN_SET_EXPIRY = Issue.create(
-            "PinSetExpiry",
-            "Validate `<pin-set>` expiration attribute",
-
-            "Ensures that the `expiration` attribute of the `<pin-set>` element is valid and has " +
-            "not already expired or is expiring soon",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo("https://developer.android.com/preview/features/security-config.html");
-
-    /**
-     * No backup pin specified
-     */
-    public static final Issue MISSING_BACKUP_PIN = Issue.create(
-            "MissingBackupPin",
-            "Missing Backup Pin",
-
-            "It is highly recommended to declare a backup `<pin>` element. " +
-            "Not having a second pin defined can cause connection failures when the " +
-            "particular site certificate is rotated and the app has not yet been updated.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo("https://developer.android.com/preview/features/security-config.html");
+    /** No backup pin specified */
+    public static final Issue MISSING_BACKUP_PIN =
+            Issue.create(
+                            "MissingBackupPin",
+                            "Missing Backup Pin",
+                            "It is highly recommended to declare a backup `<pin>` element. "
+                                    + "Not having a second pin defined can cause connection failures when the "
+                                    + "particular site certificate is rotated and the app has not yet been updated.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/preview/features/security-config.html");
 
     public static final String ATTR_DIGEST = "digest";
 
-    private static final String TAG_NETWORK_SECURITY_CONFIG =
-            "network-security-config";
+    private static final String TAG_NETWORK_SECURITY_CONFIG = "network-security-config";
     private static final String TAG_BASE_CONFIG = "base-config";
     private static final String TAG_DOMAIN_CONFIG = "domain-config";
     private static final String TAG_DEBUG_OVERRIDES = "debug-overrides";
@@ -126,8 +115,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     private static final String ATTR_SRC = "src";
     private static final String ATTR_INCLUDE_SUBDOMAINS = "includeSubdomains";
     private static final String ATTR_EXPIRATION = "expiration";
-    private static final String ATTR_CLEARTEXT_TRAFFIC_PERMITTED =
-            "cleartextTrafficPermitted";
+    private static final String ATTR_CLEARTEXT_TRAFFIC_PERMITTED = "cleartextTrafficPermitted";
 
     private static final String PIN_DIGEST_ALGORITHM = "SHA-256";
     // SHA 256 bit = 32 bytes
@@ -139,18 +127,15 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     private static final String UNEXPECTED_ELEMENT_MESSAGE = "Unexpected element `<%1$s>`";
     private static final String ALREADY_DECLARED_MESSAGE = "Already declared here";
 
-    /**
-     * Constructs a new {@link NetworkSecurityConfigDetector}
-     */
-    public NetworkSecurityConfigDetector() {
-    }
+    /** Constructs a new {@link NetworkSecurityConfigDetector} */
+    public NetworkSecurityConfigDetector() {}
 
     /**
      * Keep track of whether the debug-overrides element was seen in one of the
      * network-security-config files.
      *
-     * Context: When an app is debuggable, a file named $config_resource$_debug.xml is
-     * also looked up by framework to check for debug overrides.
+     * <p>Context: When an app is debuggable, a file named $config_resource$_debug.xml is also
+     * looked up by framework to check for debug overrides.
      */
     private Location.Handle mDebugOverridesHandle;
 
@@ -204,15 +189,18 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 // be unnecessary. We can let the developer first fix the spelling
                 // and then revalidate the values to check for duplicates (according to rules).
                 if (!checkForTyposInTags(context, child, VALID_BASE_TAGS)) {
-                    context.report(ISSUE, child, context.getNameLocation(child),
+                    context.report(
+                            ISSUE,
+                            child,
+                            context.getNameLocation(child),
                             String.format(UNEXPECTED_ELEMENT_MESSAGE, tagName));
                 }
             }
         }
     }
 
-    private void handleConfigElement(XmlContext context, Element config,
-            @NonNull Map<String, Node> seenDomainsToLocations) {
+    private void handleConfigElement(
+            XmlContext context, Element config, @NonNull Map<String, Node> seenDomainsToLocations) {
         String configName = config.getTagName();
         boolean isDomainConfig = TAG_DOMAIN_CONFIG.equals(configName);
         String message = "`%1$s` element not allowed in `%2$s`";
@@ -227,7 +215,10 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             String tagName = node.getTagName();
             if (TAG_DOMAIN.equals(tagName)) {
                 if (!isDomainConfig) {
-                    context.report(ISSUE, node, context.getNameLocation(node),
+                    context.report(
+                            ISSUE,
+                            node,
+                            context.getNameLocation(node),
                             String.format(message, TAG_DOMAIN, configName));
                 } else {
                     checkForTyposInAttributes(context, node, ATTR_INCLUDE_SUBDOMAINS, true);
@@ -235,10 +226,13 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     if (seenDomainsToLocations.containsKey(domainName)) {
                         String duplicateMessage = "Duplicate domain names are not allowed";
                         Node previousNode = seenDomainsToLocations.get(domainName);
-                        context.report(ISSUE, node.getFirstChild(),
-                                context.getLocation(node.getFirstChild()).withSecondary(
-                                        context.getLocation(previousNode),
-                                        ALREADY_DECLARED_MESSAGE),
+                        context.report(
+                                ISSUE,
+                                node.getFirstChild(),
+                                context.getLocation(node.getFirstChild())
+                                        .withSecondary(
+                                                context.getLocation(previousNode),
+                                                ALREADY_DECLARED_MESSAGE),
                                 duplicateMessage);
                     } else {
                         seenDomainsToLocations.put(domainName, node.getFirstChild());
@@ -247,10 +241,13 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             } else if (TAG_TRUST_ANCHORS.equals(tagName)) {
                 if (trustAnchorsNode != null) {
                     String anchorMessage = "Multiple `<trust-anchors>` elements are not allowed";
-                    context.report(ISSUE, node,
-                            context.getNameLocation(node).withSecondary(
-                                    context.getNameLocation(trustAnchorsNode),
-                                    ALREADY_DECLARED_MESSAGE),
+                    context.report(
+                            ISSUE,
+                            node,
+                            context.getNameLocation(node)
+                                    .withSecondary(
+                                            context.getNameLocation(trustAnchorsNode),
+                                            ALREADY_DECLARED_MESSAGE),
                             anchorMessage);
                 } else {
                     trustAnchorsNode = node;
@@ -259,7 +256,10 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             } else if (TAG_DOMAIN_CONFIG.equals(tagName)) {
                 if (!isDomainConfig) {
                     // If the parent is any config other than a domain-config report an error
-                    context.report(ISSUE, node, context.getNameLocation(node),
+                    context.report(
+                            ISSUE,
+                            node,
+                            context.getNameLocation(node),
                             String.format(
                                     "Nested `<domain-config>` elements are not allowed in `%1$s`",
                                     configName));
@@ -268,15 +268,21 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 }
             } else if (TAG_PIN_SET.equals(tagName)) {
                 if (!isDomainConfig) {
-                    context.report(ISSUE, node, context.getNameLocation(node),
+                    context.report(
+                            ISSUE,
+                            node,
+                            context.getNameLocation(node),
                             String.format(message, TAG_PIN_SET, configName));
                 }
                 if (pinSetNode != null) {
                     String pinSetMessage = "Multiple `<pin-set>` elements are not allowed";
-                    context.report(ISSUE, node,
-                            context.getNameLocation(node).withSecondary(
-                                    context.getNameLocation(pinSetNode),
-                                    ALREADY_DECLARED_MESSAGE),
+                    context.report(
+                            ISSUE,
+                            node,
+                            context.getNameLocation(node)
+                                    .withSecondary(
+                                            context.getNameLocation(pinSetNode),
+                                            ALREADY_DECLARED_MESSAGE),
                             pinSetMessage);
                 } else {
                     pinSetNode = node;
@@ -290,7 +296,10 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         }
 
         if (isDomainConfig && seenDomainsToLocations.isEmpty()) {
-            context.report(ISSUE, config, context.getNameLocation(config),
+            context.report(
+                    ISSUE,
+                    config,
+                    context.getNameLocation(config),
                     "No `<domain>` elements in `<domain-config>`");
         }
     }
@@ -301,8 +310,9 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             Attr expirationAttr = node.getAttributeNode(ATTR_EXPIRATION);
             String message = null;
             try {
-                LocalDate date = LocalDate.parse(expirationAttr.getValue(),
-                        DateTimeFormatter.ISO_LOCAL_DATE);
+                LocalDate date =
+                        LocalDate.parse(
+                                expirationAttr.getValue(), DateTimeFormatter.ISO_LOCAL_DATE);
                 // If the pin-set has already expired report a warning.
                 LocalDate now = LocalDate.now();
                 if (date.isBefore(now)) {
@@ -312,13 +322,19 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     message = "`pin-set` is expiring soon";
                 }
             } catch (DateTimeParseException e) {
-                context.report(ISSUE, expirationAttr, context.getValueLocation(expirationAttr),
+                context.report(
+                        ISSUE,
+                        expirationAttr,
+                        context.getValueLocation(expirationAttr),
                         "Invalid expiration in `pin-set`");
             }
 
             if (message != null) {
-                context.report(PIN_SET_EXPIRY, expirationAttr,
-                        context.getValueLocation(expirationAttr), message);
+                context.report(
+                        PIN_SET_EXPIRY,
+                        expirationAttr,
+                        context.getValueLocation(expirationAttr),
+                        message);
             }
         } else {
             checkForTyposInAttributes(context, node, ATTR_EXPIRATION, false);
@@ -336,14 +352,26 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                         String values = LintUtils.formatList(getSupportedPinDigestAlgorithms(), 2);
                         LintFix.GroupBuilder fixBuilder = LintFix.create().group();
                         for (String algorithm : getSupportedPinDigestAlgorithms()) {
-                            fixBuilder.add(LintFix.create()
-                                    .name(String.format("Set digest to \"%1$s\"", algorithm))
-                                    .replace().all().with(algorithm).build());
+                            fixBuilder.add(
+                                    LintFix.create()
+                                            .name(
+                                                    String.format(
+                                                            "Set digest to \"%1$s\"", algorithm))
+                                            .replace()
+                                            .all()
+                                            .with(algorithm)
+                                            .build());
                         }
                         LintFix fix = fixBuilder.build();
 
-                        context.report(ISSUE, digestAttr, context.getValueLocation(digestAttr),
-                                String.format("Invalid digest algorithm. Supported digests: `%1$s`", values), fix);
+                        context.report(
+                                ISSUE,
+                                digestAttr,
+                                context.getValueLocation(digestAttr),
+                                String.format(
+                                        "Invalid digest algorithm. Supported digests: `%1$s`",
+                                        values),
+                                fix);
                     }
                 } else {
                     checkForTyposInAttributes(context, child, ATTR_DIGEST, true);
@@ -361,16 +389,21 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                                 Base64.getDecoder().decode(digestNode.getNodeValue());
                         if (decodedDigest.length != PIN_DECODED_DIGEST_LEN_SHA_256) {
                             // incorrect digest length
-                            String message = String.format(
-                                    "Decoded digest length `%1$d` does not match expected "
-                                            + "length for `%2$s` of `%3$d`",
-                              decodedDigest.length,
-                              PIN_DIGEST_ALGORITHM, PIN_DECODED_DIGEST_LEN_SHA_256);
-                            context.report(ISSUE, digestNode, context.getLocation(digestNode),
-                              message);
+                            String message =
+                                    String.format(
+                                            "Decoded digest length `%1$d` does not match expected "
+                                                    + "length for `%2$s` of `%3$d`",
+                                            decodedDigest.length,
+                                            PIN_DIGEST_ALGORITHM,
+                                            PIN_DECODED_DIGEST_LEN_SHA_256);
+                            context.report(
+                                    ISSUE, digestNode, context.getLocation(digestNode), message);
                         }
                     } catch (Exception ex) {
-                        context.report(ISSUE, digestNode, context.getLocation(digestNode),
+                        context.report(
+                                ISSUE,
+                                digestNode,
+                                context.getLocation(digestNode),
                                 "Invalid pin digest");
                     }
                 }
@@ -382,11 +415,14 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         // Let the developer fix the typos before we can ascertain that the pin is missing
         if (!foundTyposInPin) {
             if (pinElementCount == 0) {
-                context.report(ISSUE, node, context.getNameLocation(node),
-                        "Missing `<pin>` element(s)");
+                context.report(
+                        ISSUE, node, context.getNameLocation(node), "Missing `<pin>` element(s)");
             } else if (pinElementCount == 1) {
                 // We should probably check to see if both hashes are the same here.
-                context.report(MISSING_BACKUP_PIN, node, context.getNameLocation(node),
+                context.report(
+                        MISSING_BACKUP_PIN,
+                        node,
+                        context.getNameLocation(node),
                         "A backup `<pin>` declaration is highly recommended");
             }
         }
@@ -405,11 +441,14 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                             && resourceUrl != null
                             && !resourceUrl.isFramework()) {
                         // ensure that this is a valid resource
-                        AbstractResourceRepository resources = context.getClient()
-                          .getResourceRepository(context.getProject(), true, false);
+                        AbstractResourceRepository resources =
+                                context.getClient()
+                                        .getResourceRepository(context.getProject(), true, false);
                         if (resources != null
                                 && !resources.hasResourceItem(resourceUrl.type, resourceUrl.name)) {
-                            context.report(ISSUE, sourceIdAttr,
+                            context.report(
+                                    ISSUE,
+                                    sourceIdAttr,
                                     context.getValueLocation(sourceIdAttr),
                                     "Missing `src` resource.");
                         }
@@ -418,7 +457,10 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     if (resourceUrl == null
                             && !"user".equals(sourceId)
                             && !"system".equals(sourceId)) {
-                        context.report(ISSUE, sourceIdAttr, context.getValueLocation(sourceIdAttr),
+                        context.report(
+                                ISSUE,
+                                sourceIdAttr,
+                                context.getValueLocation(sourceIdAttr),
                                 "Unknown certificates `src` attribute. "
                                         + "Expecting `system`, `user` or an @resource value");
                     }
@@ -429,8 +471,8 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         }
     }
 
-    private static boolean checkForTyposInTags(XmlContext context, Element node,
-            Collection<String> validPossibleTags) {
+    private static boolean checkForTyposInTags(
+            XmlContext context, Element node, Collection<String> validPossibleTags) {
         String tagName = node.getTagName();
         List<String> suggestions = generateTypoSuggestions(tagName, validPossibleTags);
         if (suggestions != null) {
@@ -439,13 +481,15 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             if (suggestions.size() == 1) {
                 suggestionString = suggestions.get(0);
             } else if (suggestions.size() == 2) {
-                suggestionString = String.format("%1$s or %2$s",
-                        suggestions.get(0), suggestions.get(1));
+                suggestionString =
+                        String.format("%1$s or %2$s", suggestions.get(0), suggestions.get(1));
             } else {
                 suggestionString = LintUtils.formatList(suggestions, -1);
             }
-            String message = String.format("Misspelled tag `<%1$s>`: Did you mean `%2$s` ?",
-                    tagName, suggestionString);
+            String message =
+                    String.format(
+                            "Misspelled tag `<%1$s>`: Did you mean `%2$s` ?",
+                            tagName, suggestionString);
 
             context.report(ISSUE, node, context.getNameLocation(node), message);
             return true;
@@ -453,8 +497,8 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         return false;
     }
 
-    private static void checkForTyposInAttributes(XmlContext context, Element node,
-            String attrName, boolean requiredAttribute) {
+    private static void checkForTyposInAttributes(
+            XmlContext context, Element node, String attrName, boolean requiredAttribute) {
         if (node.hasAttribute(attrName)) {
             return;
         }
@@ -469,20 +513,27 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 suggestions = generateTypoSuggestions(nodeName, validAttributeNames);
             }
             if (suggestions != null && suggestions.size() == 1) {
-                context.report(ISSUE, attr, context.getNameLocation(attr),
-                        String.format("Misspelled attribute `%1$s`: Did you mean `%2$s` ?",
+                context.report(
+                        ISSUE,
+                        attr,
+                        context.getNameLocation(attr),
+                        String.format(
+                                "Misspelled attribute `%1$s`: Did you mean `%2$s` ?",
                                 nodeName, attrName));
                 foundSpellingError |= true;
             }
         }
         if (!foundSpellingError && requiredAttribute) {
-            context.report(ISSUE, node, context.getNameLocation(node),
+            context.report(
+                    ISSUE,
+                    node,
+                    context.getNameLocation(node),
                     String.format("Missing `%1$s` attribute", attrName));
         }
     }
 
-    private static List<String> generateTypoSuggestions(@NonNull String name,
-            @NonNull Collection<String> validAttributeNames) {
+    private static List<String> generateTypoSuggestions(
+            @NonNull String name, @NonNull Collection<String> validAttributeNames) {
         List<String> suggestions = null;
         for (String suggestion : validAttributeNames) {
             if (LintUtils.isEditableTo(suggestion, name, 3)) {
@@ -495,17 +546,22 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
         return suggestions;
     }
 
-    private static void reportExceeded(XmlContext context, String elementName, Element element,
+    private static void reportExceeded(
+            XmlContext context,
+            String elementName,
+            Element element,
             @NonNull Location.Handle handle) {
-        context.report(ISSUE, element, context.getNameLocation(element)
+        context.report(
+                ISSUE,
+                element,
+                context.getNameLocation(element)
                         .withSecondary(handle.resolve(), ALREADY_DECLARED_MESSAGE),
                 String.format("Expecting at most 1 `<%1$s>`", elementName));
     }
 
     /**
-     * For a given error message created by this lint detector, returns whether the error
-     * was due to a typo in an attribute name.
-     * This is primarily for use by IDE quick fixes.
+     * For a given error message created by this lint detector, returns whether the error was due to
+     * a typo in an attribute name. This is primarily for use by IDE quick fixes.
      *
      * @param errorMessage The error message associated with this detector.
      * @return true if this is a spelling error in an attribute.
@@ -524,8 +580,8 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
      */
     @SuppressWarnings("unused")
     @NonNull
-    public static List<String> getAttributeSpellingSuggestions(@NonNull String errorAttribute,
-      @NonNull String parentTag) {
+    public static List<String> getAttributeSpellingSuggestions(
+            @NonNull String errorAttribute, @NonNull String parentTag) {
         Collection<String> validAttributes;
         switch (parentTag) {
             case TAG_BASE_CONFIG: // fallthrough
@@ -570,8 +626,8 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
      */
     @SuppressWarnings("unused")
     @NonNull
-    public static List<String> getTagSpellingSuggestions(@NonNull String errorTag,
-      @NonNull String parentTag) {
+    public static List<String> getTagSpellingSuggestions(
+            @NonNull String errorTag, @NonNull String parentTag) {
         Collection<String> validTags;
         switch (parentTag) {
             case TAG_NETWORK_SECURITY_CONFIG:

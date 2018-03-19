@@ -34,12 +34,12 @@ namespace profiler {
 class FakeAtraceManager final : public AtraceManager {
  public:
   FakeAtraceManager(
-      const Clock& clock,
+      Clock* clock,
       std::function<void(const std::string&, int)> write_data_callback)
       : AtraceManager(clock, 50), write_data_callback_(write_data_callback) {
     ResetState();
   }
-  FakeAtraceManager(const Clock& clock)
+  FakeAtraceManager(Clock* clock)
       : FakeAtraceManager(clock, [](const std::string& path, int count) {}) {}
 
   // Override the RunAtrace function to not run Atrace but instead validate
@@ -141,7 +141,7 @@ struct TestInitializer {
 TEST(AtraceManagerTest, ProfilingStartStop) {
   TestInitializer test_data;
   int dump_count = 3;
-  FakeAtraceManager atrace(test_data.fake_clock);
+  FakeAtraceManager atrace(&test_data.fake_clock);
   EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
                                     &test_data.trace_path, &test_data.error));
   EXPECT_TRUE(atrace.IsProfiling());
@@ -154,7 +154,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
 TEST(AtraceManagerTest, ProfilerReentrant) {
   TestInitializer test_data;
   int dump_count = 3;
-  FakeAtraceManager atrace(test_data.fake_clock);
+  FakeAtraceManager atrace(&test_data.fake_clock);
   for (int i = 0; i < 3; i++) {
     EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
                                       &test_data.trace_path, &test_data.error));
@@ -171,7 +171,7 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
 
 TEST(AtraceManagerTest, ProfilingStartTwice) {
   TestInitializer test_data;
-  FakeAtraceManager atrace(test_data.fake_clock);
+  FakeAtraceManager atrace(&test_data.fake_clock);
   EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
                                     &test_data.trace_path, &test_data.error));
   atrace.BlockForXTraces(1);
@@ -189,7 +189,7 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   int dump_count = 3;
   // Tell our mock Atrace manager that for each "atrace" run we want to create a
   // file and write how many dumps have been created to this point to the file.
-  FakeAtraceManager atrace(test_data.fake_clock,
+  FakeAtraceManager atrace(&test_data.fake_clock,
                            [](const std::string& path, int count) {
     FILE* file = fopen(path.c_str(), "wb");
     fwrite(&count, sizeof(int), 1, file);

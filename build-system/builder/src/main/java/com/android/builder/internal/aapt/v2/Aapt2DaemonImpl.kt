@@ -138,11 +138,13 @@ class Aapt2DaemonImpl(
             when (result) {
                 is WaitForTaskCompletion.Result.Succeeded -> {}
                 is WaitForTaskCompletion.Result.Failed -> {
-                    val args = AaptV2CommandBuilder.makeCompile(request).joinToString(" \\\n        ")
+                    val args = makeCompileCommand(request).joinToString(" \\\n        ")
                     throw Aapt2Exception(
-                        "Android resource compilation failed ($displayName)\n" +
-                                "Command: $aaptPath compile $args\n",
-                        result.stdErr)
+                        description = "Android resource compilation failed",
+                        output = result.stdErr,
+                        processName = displayName,
+                        command = "$aaptPath compile $args"
+                    )
                 }
                 is WaitForTaskCompletion.Result.InternalAapt2Error -> {
                     throw result.failure
@@ -170,13 +172,14 @@ class Aapt2DaemonImpl(
                             request
                         }
                     val args =
-                        AaptV2CommandBuilder.makeLink(configWithResourcesListed)
-                            .joinToString("\\\n        ")
+                        makeLinkCommand(configWithResourcesListed).joinToString("\\\n        ")
 
                     throw Aapt2Exception(
-                        "Android resource linking failed ($displayName)\n" +
-                                "Command: $aaptPath link $args\n",
-                        result.stdErr)
+                        description = "Android resource linking failed",
+                        output = result.stdErr,
+                        processName = displayName,
+                        command = "$aaptPath link $args"
+                    )
                 }
                 is WaitForTaskCompletion.Result.InternalAapt2Error -> {
                     throw result.failure

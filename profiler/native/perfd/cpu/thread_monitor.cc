@@ -201,7 +201,7 @@ bool ThreadMonitor::MonitorAProcess(int32_t pid) {
   // activities. This timestamp is acquired after calling CollectStates(...)
   // because we want this timestamp to be larger than or equal to any
   // activity's timestamp in this message.
-  int64_t timestamp = clock_.GetCurrentTime();
+  int64_t timestamp = clock_->GetCurrentTime();
 
   if (!new_states_collected) {
     // The process is not running.
@@ -319,7 +319,7 @@ bool ThreadMonitor::CollectStates(int32_t pid, ThreadStates* states) const {
     ThreadState state;
     // It is possible a thread is deleted right at this moment.
     if (GetThreadState(pid, tid, &state.state, &state.name)) {
-      state.timestamp = clock_.GetCurrentTime();
+      state.timestamp = clock_->GetCurrentTime();
       states->emplace(tid, state);
     }
   }

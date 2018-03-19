@@ -70,11 +70,13 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
             Disposable parentDisposable = Disposer.newDisposable();
             ourApplicationEnvironment = createApplicationEnvironment(parentDisposable);
             ourProjectCount = 0;
-            Disposer.register(parentDisposable, () -> {
-                synchronized (APPLICATION_LOCK) {
-                    ourApplicationEnvironment = null;
-                }
-            });
+            Disposer.register(
+                    parentDisposable,
+                    () -> {
+                        synchronized (APPLICATION_LOCK) {
+                            ourApplicationEnvironment = null;
+                        }
+                    });
 
             return ourApplicationEnvironment;
         }
@@ -127,53 +129,85 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
 
     private static void registerAppExtensionPoints() {
         ExtensionsArea rootArea = Extensions.getRootArea();
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, BinaryFileStubBuilders.EP_NAME, FileTypeExtensionPoint.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, FileContextProvider.EP_NAME, FileContextProvider.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, MetaDataContributor.EP_NAME, MetaDataContributor.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, PsiAugmentProvider.EP_NAME, PsiAugmentProvider.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, JavaMainMethodProvider.EP_NAME, JavaMainMethodProvider.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, ContainerProvider.EP_NAME, ContainerProvider.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, ClsCustomNavigationPolicy.EP_NAME, ClsCustomNavigationPolicy.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, ClassFileDecompilers.EP_NAME, ClassFileDecompilers.Decompiler.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, TypeAnnotationModifier.EP_NAME, TypeAnnotationModifier.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, MetaLanguage.EP_NAME, MetaLanguage.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, BinaryFileStubBuilders.EP_NAME, FileTypeExtensionPoint.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, FileContextProvider.EP_NAME, FileContextProvider.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, MetaDataContributor.EP_NAME, MetaDataContributor.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, PsiAugmentProvider.EP_NAME, PsiAugmentProvider.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, JavaMainMethodProvider.EP_NAME, JavaMainMethodProvider.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, ContainerProvider.EP_NAME, ContainerProvider.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, ClsCustomNavigationPolicy.EP_NAME, ClsCustomNavigationPolicy.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, ClassFileDecompilers.EP_NAME, ClassFileDecompilers.Decompiler.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, TypeAnnotationModifier.EP_NAME, TypeAnnotationModifier.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, MetaLanguage.EP_NAME, MetaLanguage.class);
 
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, CustomExceptionHandler.KEY, CustomExceptionHandler.class); // TODO: Remove
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, JavaModuleSystem.EP_NAME, JavaModuleSystem.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea,
+                UastLanguagePlugin.Companion.getExtensionPointName(),
+                UastLanguagePlugin.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, CustomExceptionHandler.KEY, CustomExceptionHandler.class); // TODO: Remove
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, JavaModuleSystem.EP_NAME, JavaModuleSystem.class);
 
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, DiagnosticSuppressor.Companion.getEP_NAME(), DiagnosticSuppressor.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                rootArea, DiagnosticSuppressor.Companion.getEP_NAME(), DiagnosticSuppressor.class);
 
-        rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).registerExtension(
-                new org.jetbrains.uast.java.JavaUastLanguagePlugin());
+        rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName())
+                .registerExtension(new org.jetbrains.uast.java.JavaUastLanguagePlugin());
 
         KotlinUastLanguagePlugin plugin = new KotlinUastLanguagePlugin();
-        rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).
-                                    registerExtension(plugin);
+        rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName())
+                .registerExtension(plugin);
     }
 
-    private static void registerApplicationServicesForCLI(JavaCoreApplicationEnvironment applicationEnvironment) {
+    private static void registerApplicationServicesForCLI(
+            JavaCoreApplicationEnvironment applicationEnvironment) {
         // ability to get text from annotations xml files
         applicationEnvironment.registerFileType(PlainTextFileType.INSTANCE, "xml");
         applicationEnvironment.registerParserDefinition(new JavaParserDefinition());
     }
 
-    private static void registerApplicationServices(JavaCoreApplicationEnvironment applicationEnvironment) {
-        applicationEnvironment.getApplication().registerService(JavaClassSupers.class, JavaClassSupersImpl.class);
-        applicationEnvironment.getApplication().registerService(TransactionGuard.class, TransactionGuardImpl.class);
+    private static void registerApplicationServices(
+            JavaCoreApplicationEnvironment applicationEnvironment) {
+        applicationEnvironment
+                .getApplication()
+                .registerService(JavaClassSupers.class, JavaClassSupersImpl.class);
+        applicationEnvironment
+                .getApplication()
+                .registerService(TransactionGuard.class, TransactionGuardImpl.class);
     }
 
     static void registerProjectExtensionPoints(ExtensionsArea area) {
-        CoreApplicationEnvironment.registerExtensionPoint(area, PsiTreeChangePreprocessor.EP_NAME, PsiTreeChangePreprocessor.class);
-        CoreApplicationEnvironment.registerExtensionPoint(area, PsiElementFinder.EP_NAME, PsiElementFinder.class);
-        CoreApplicationEnvironment.registerExtensionPoint(area, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
-        CoreApplicationEnvironment.registerExtensionPoint(area, UEvaluatorExtension.Companion.getEXTENSION_POINT_NAME(), UEvaluatorExtension.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                area, PsiTreeChangePreprocessor.EP_NAME, PsiTreeChangePreprocessor.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                area, PsiElementFinder.EP_NAME, PsiElementFinder.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                area,
+                UastLanguagePlugin.Companion.getExtensionPointName(),
+                UastLanguagePlugin.class);
+        CoreApplicationEnvironment.registerExtensionPoint(
+                area,
+                UEvaluatorExtension.Companion.getEXTENSION_POINT_NAME(),
+                UEvaluatorExtension.class);
     }
 
     public static void registerProjectServices(JavaCoreProjectEnvironment projectEnvironment) {
         MockProject project = projectEnvironment.getProject();
         project.registerService(UastContext.class, new UastContext(project));
-        project.registerService(ExternalAnnotationsManager.class, LintExternalAnnotationsManager.class);
-        project.registerService(InferredAnnotationsManager.class, LintInferredAnnotationsManager.class);
+        project.registerService(
+                ExternalAnnotationsManager.class, LintExternalAnnotationsManager.class);
+        project.registerService(
+                InferredAnnotationsManager.class, LintInferredAnnotationsManager.class);
     }
 }

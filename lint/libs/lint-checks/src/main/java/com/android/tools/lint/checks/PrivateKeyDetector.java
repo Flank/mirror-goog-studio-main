@@ -33,38 +33,34 @@ import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
 
-/**
- * Looks for packaged private key files.
- */
+/** Looks for packaged private key files. */
 public class PrivateKeyDetector extends Detector implements OtherFileScanner {
     /** Packaged private key files */
-    public static final Issue ISSUE = Issue.create(
-            "PackagedPrivateKey",
-            "Packaged private key",
-
-            "In general, you should not package private key files inside your app.",
-
-            Category.SECURITY,
-            8,
-            Severity.FATAL,
-            new Implementation(PrivateKeyDetector.class, Scope.OTHER_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "PackagedPrivateKey",
+                    "Packaged private key",
+                    "In general, you should not package private key files inside your app.",
+                    Category.SECURITY,
+                    8,
+                    Severity.FATAL,
+                    new Implementation(PrivateKeyDetector.class, Scope.OTHER_SCOPE));
 
     /** Constructs a new {@link PrivateKeyDetector} check */
-    public PrivateKeyDetector() {
-    }
+    public PrivateKeyDetector() {}
 
     private static boolean isPrivateKeyFile(File file) {
-        if (!file.isFile() ||
-            (!LintUtils.endsWith(file.getPath(), "pem") &&
-             !LintUtils.endsWith(file.getPath(), "key"))) {
+        if (!file.isFile()
+                || (!LintUtils.endsWith(file.getPath(), "pem")
+                        && !LintUtils.endsWith(file.getPath(), "key"))) {
             return false;
         }
 
         try {
             String firstLine = Files.readFirstLine(file, Charsets.US_ASCII);
-            return firstLine != null &&
-                firstLine.startsWith("---") &&
-                firstLine.contains("PRIVATE KEY");
+            return firstLine != null
+                    && firstLine.startsWith("---")
+                    && firstLine.contains("PRIVATE KEY");
         } catch (IOException ex) {
             // Don't care
         }
@@ -90,11 +86,12 @@ public class PrivateKeyDetector extends Detector implements OtherFileScanner {
         File file = context.file;
         if (isPrivateKeyFile(file)) {
             String fileName = LintUtils.getFileNameWithParent(context.getClient(), file);
-            String message = String.format(
-                "The `%1$s` file seems to be a private key file. " +
-                "Please make sure not to embed this in your APK file.", fileName);
+            String message =
+                    String.format(
+                            "The `%1$s` file seems to be a private key file. "
+                                    + "Please make sure not to embed this in your APK file.",
+                            fileName);
             context.report(ISSUE, Location.create(file), message);
         }
     }
-
 }

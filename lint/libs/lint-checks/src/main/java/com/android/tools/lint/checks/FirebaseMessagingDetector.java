@@ -37,39 +37,35 @@ import org.jetbrains.uast.UClass;
 public class FirebaseMessagingDetector extends Detector implements SourceCodeScanner {
 
     private static final String FIREBASE_IID_PACKAGE = "com.google.firebase.iid";
-    private static final String FIREBASE_IID_CLASS_NAME = FIREBASE_IID_PACKAGE
-            + ".FirebaseInstanceId";
-    private static final String FIREBASE_IID_SERVICE_CLASS_NAME = FIREBASE_IID_PACKAGE
-            + ".FirebaseInstanceIdService";
+    private static final String FIREBASE_IID_CLASS_NAME =
+            FIREBASE_IID_PACKAGE + ".FirebaseInstanceId";
+    private static final String FIREBASE_IID_SERVICE_CLASS_NAME =
+            FIREBASE_IID_PACKAGE + ".FirebaseInstanceIdService";
     private static final String ON_TOKEN_REFRESH_METHOD_NAME = "onTokenRefresh";
     private static final String GET_TOKEN_METHOD_NAME = "getToken";
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            FirebaseMessagingDetector.class,
-            Scope.JAVA_FILE_SCOPE,
-            Scope.ALL);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(FirebaseMessagingDetector.class, Scope.JAVA_FILE_SCOPE, Scope.ALL);
 
-    public static final Issue MISSING_TOKEN_REFRESH = Issue.create(
-            "MissingFirebaseInstanceTokenRefresh",
-            "Missing Firebase Instance ID Token Refresh",
-            "Apps that check the Firebase Instance ID should usually implement the " +
-                    "FirebaseInstanceIdService#onTokenRefresh() callback in order to observe " +
-                    "changes.",
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo(
-                    "https://firebase.google.com/docs/cloud-messaging/android/client#monitor-token-generation");
+    public static final Issue MISSING_TOKEN_REFRESH =
+            Issue.create(
+                            "MissingFirebaseInstanceTokenRefresh",
+                            "Missing Firebase Instance ID Token Refresh",
+                            "Apps that check the Firebase Instance ID should usually implement the "
+                                    + "FirebaseInstanceIdService#onTokenRefresh() callback in order to observe "
+                                    + "changes.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://firebase.google.com/docs/cloud-messaging/android/client#monitor-token-generation");
 
     private boolean mIsOnTokenRefreshDefined;
     private UCallExpression mGetTokenCallSite;
     private JavaContext mGetTokenContext;
 
-    /**
-     * Constructs a new {@link FirebaseMessagingDetector}
-     */
-    public FirebaseMessagingDetector() {
-    }
+    /** Constructs a new {@link FirebaseMessagingDetector} */
+    public FirebaseMessagingDetector() {}
 
     @Override
     public void beforeCheckProject(@NonNull Context context) {
@@ -79,17 +75,18 @@ public class FirebaseMessagingDetector extends Detector implements SourceCodeSca
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         PsiClass containingClass = method.getContainingClass();
-        if (containingClass != null &&
-                FIREBASE_IID_CLASS_NAME.equals(containingClass.getQualifiedName()) &&
-              !context.getDriver().isSuppressed(context, MISSING_TOKEN_REFRESH,
-                      mGetTokenCallSite)) {
+        if (containingClass != null
+                && FIREBASE_IID_CLASS_NAME.equals(containingClass.getQualifiedName())
+                && !context.getDriver()
+                        .isSuppressed(context, MISSING_TOKEN_REFRESH, mGetTokenCallSite)) {
             mGetTokenCallSite = call;
             mGetTokenContext = context;
         }
-
     }
 
     @Override

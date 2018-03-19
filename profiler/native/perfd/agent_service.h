@@ -28,7 +28,7 @@ namespace profiler {
 class AgentServiceImpl : public proto::AgentService::Service {
  public:
   explicit AgentServiceImpl(
-      const Clock& clock,
+      Clock* clock,
       std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
       : clock_(clock), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
@@ -37,7 +37,7 @@ class AgentServiceImpl : public proto::AgentService::Service {
                          proto::HeartBeatResponse* response) override;
 
  private:
-  const Clock& clock_;
+  Clock* clock_;
   // used for marking the last time this service receives a ping from the agent.
   std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
 };

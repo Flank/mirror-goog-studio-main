@@ -21,8 +21,13 @@ import com.google.common.io.Files
 import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.*
-import java.util.*
+import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.HashMap
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
 
@@ -35,36 +40,40 @@ val GMAVEN_BASE_URL = System.getenv(GMAVEN_TEST_BASE_URL_ENV_VAR) ?: DEFAULT_GMA
  * Provides information about the artifacts and versions available on maven.google.com
  */
 abstract class GoogleMavenRepository @JvmOverloads constructor(
-        /** Location to search for cached repository content files */
-        val cacheDir: File? = null,
+    /** Location to search for cached repository content files */
+    val cacheDir: File? = null,
 
-        /**
-         * Number of milliseconds to wait until timing out attempting to access the remote
-         * repository
-         */
-        private val networkTimeoutMs: Int = 3000,
+    /**
+     * Number of milliseconds to wait until timing out attempting to access the remote
+     * repository
+     */
+    private val networkTimeoutMs: Int = 3000,
 
-        /** Maximum allowed age of cached data; default is 7 days */
-        private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()) {
+    /** Maximum allowed age of cached data; default is 7 days */
+    private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()
+) {
 
     companion object {
         /** Key used in cache directories to locate the maven.google.com network cache */
-        @JvmField val MAVEN_GOOGLE_CACHE_DIR_KEY = "maven.google"
+        const val MAVEN_GOOGLE_CACHE_DIR_KEY = "maven.google"
     }
 
     /** Reads the given query URL in, with the given time out, and returns the bytes found */
-    abstract protected fun readUrlData(url: String, timeout: Int): ByteArray?
+    protected abstract fun readUrlData(url: String, timeout: Int): ByteArray?
 
     /** Reports an error found during I/O */
-    abstract protected fun error(throwable: Throwable, message: String?)
+    protected abstract fun error(throwable: Throwable, message: String?)
 
     private var packageMap: MutableMap<String, PackageInfo>? = null
 
     fun findVersion(dependency: GradleCoordinate, filter: Predicate<GradleVersion>? = null):
             GradleVersion? = findVersion(dependency, filter, dependency.isPreview)
 
-    fun findVersion(dependency: GradleCoordinate, predicate: Predicate<GradleVersion>?,
-                    allowPreview: Boolean = false): GradleVersion? {
+    fun findVersion(
+        dependency: GradleCoordinate,
+        predicate: Predicate<GradleVersion>?,
+        allowPreview: Boolean = false
+    ): GradleVersion? {
         val groupId = dependency.groupId ?: return null
         val artifactId = dependency.artifactId ?: return null
         val filter = when {
@@ -86,16 +95,20 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         return findVersion(groupId, artifactId, filter, allowPreview)
     }
 
-    fun findVersion(groupId: String,
-                    artifactId: String,
-                    filter: Predicate<GradleVersion>?,
-                    allowPreview: Boolean = false): GradleVersion? =
-            findVersion(groupId, artifactId, { filter?.test(it) != false }, allowPreview)
+    fun findVersion(
+        groupId: String,
+        artifactId: String,
+        filter: Predicate<GradleVersion>?,
+        allowPreview: Boolean = false
+    ): GradleVersion? =
+        findVersion(groupId, artifactId, { filter?.test(it) != false }, allowPreview)
 
-    fun findVersion(groupId: String,
-                    artifactId: String,
-                    filter: ((GradleVersion) -> Boolean)? = null,
-                    allowPreview: Boolean = false): GradleVersion? {
+    fun findVersion(
+        groupId: String,
+        artifactId: String,
+        filter: ((GradleVersion) -> Boolean)? = null,
+        allowPreview: Boolean = false
+    ): GradleVersion? {
         val artifactInfo = findArtifact(groupId, artifactId) ?: return null
         return artifactInfo.findVersion(filter, allowPreview)
     }
@@ -118,12 +131,12 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     private data class ArtifactInfo(val id: String, val versions: String) {
         fun findVersion(filter: ((GradleVersion) -> Boolean)?, allowPreview: Boolean = false):
                 GradleVersion? =
-                versions.splitToSequence(",")
-                        .map { GradleVersion.tryParse(it) }
-                        .filterNotNull()
-                        .filter { filter == null || filter(it) }
-                        .filter { allowPreview || !it.isPreview }
-                        .max()
+            versions.splitToSequence(",")
+                .map { GradleVersion.tryParse(it) }
+                .filterNotNull()
+                .filter { filter == null || filter(it) }
+                .filter { allowPreview || !it.isPreview }
+                .max()
     }
 
     private fun findData(relative: String): InputStream? {
@@ -144,8 +157,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 }
 
                 try {
-                    val index = readUrlData("$GMAVEN_BASE_URL$relative",
-                            networkTimeoutMs)
+                    val index = readUrlData(
+                        "$GMAVEN_BASE_URL$relative",
+                        networkTimeoutMs
+                    )
                     if (index != null) {
                         val parent = file.parentFile
                         parent?.mkdirs()
@@ -162,31 +177,31 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         return readDefaultData(relative)
     }
 
-    open protected fun readDefaultData(relative: String): InputStream? {
+    protected open fun readDefaultData(relative: String): InputStream? {
         return GoogleMavenRepository::class.java.getResourceAsStream("/versions-offline/$relative")
     }
 
     private fun readMasterIndex(stream: InputStream, map: MutableMap<String, PackageInfo>) =
-            try {
-                stream.use {
-                    val parser = KXmlParser()
-                    parser.setInput(it, SdkConstants.UTF_8)
-                    while (parser.next() != XmlPullParser.END_DOCUMENT) {
-                        val eventType = parser.eventType
-                        if (eventType == XmlPullParser.END_TAG) {
-                            val tag = parser.name
-                            val packageInfo = PackageInfo(tag)
-                            map[tag] = packageInfo
-                        } else if (eventType != XmlPullParser.START_TAG) {
-                            continue
-                        }
+        try {
+            stream.use {
+                val parser = KXmlParser()
+                parser.setInput(it, SdkConstants.UTF_8)
+                while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                    val eventType = parser.eventType
+                    if (eventType == XmlPullParser.END_TAG) {
+                        val tag = parser.name
+                        val packageInfo = PackageInfo(tag)
+                        map[tag] = packageInfo
+                    } else if (eventType != XmlPullParser.START_TAG) {
+                        continue
                     }
                 }
-            } catch (e: IOException) {
-                error(e, null)
-            } catch (e: XmlPullParserException) {
-                error(e, null)
             }
+        } catch (e: IOException) {
+            error(e, null)
+        } catch (e: XmlPullParserException) {
+            error(e, null)
+        }
 
     private inner class PackageInfo(val pkg: String) {
         private val artifacts: Map<String, ArtifactInfo> by lazy {
@@ -203,25 +218,24 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         }
 
         private fun readGroupData(stream: InputStream, map: MutableMap<String, ArtifactInfo>) =
-                try {
-                    stream.use {
-                        val parser = KXmlParser()
-                        parser.setInput(it, SdkConstants.UTF_8)
-                        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-                            val eventType = parser.eventType
-                            if (eventType == XmlPullParser.START_TAG) {
-                                val artifactId = parser.name
-                                val versions = parser.getAttributeValue(null, "versions")
-                                if (versions != null) {
-                                    val artifactInfo = ArtifactInfo(artifactId, versions)
-                                    map[artifactId] = artifactInfo
-                                }
+            try {
+                stream.use {
+                    val parser = KXmlParser()
+                    parser.setInput(it, SdkConstants.UTF_8)
+                    while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                        val eventType = parser.eventType
+                        if (eventType == XmlPullParser.START_TAG) {
+                            val artifactId = parser.name
+                            val versions = parser.getAttributeValue(null, "versions")
+                            if (versions != null) {
+                                val artifactInfo = ArtifactInfo(artifactId, versions)
+                                map[artifactId] = artifactInfo
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    error(e, null)
                 }
+            } catch (e: Exception) {
+                error(e, null)
+            }
     }
 }
-

@@ -90,8 +90,10 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         val issue = warning.issue
         writeAttribute(writer, 2, "id", issue.id)
         if (!isIntendedForBaseline) {
-            writeAttribute(writer, 2, "severity",
-                    warning.severity.description)
+            writeAttribute(
+                writer, 2, "severity",
+                warning.severity.description
+            )
         }
         writeAttribute(writer, 2, "message", warning.message)
 
@@ -124,8 +126,18 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         }
 
         if (warning.isVariantSpecific) {
-            writeAttribute(writer, 2, "includedVariants", Joiner.on(',').join(warning.includedVariantNames))
-            writeAttribute(writer, 2, "excludedVariants", Joiner.on(',').join(warning.excludedVariantNames))
+            writeAttribute(
+                writer,
+                2,
+                "includedVariants",
+                Joiner.on(',').join(warning.includedVariantNames)
+            )
+            writeAttribute(
+                writer,
+                2,
+                "excludedVariants",
+                Joiner.on(',').join(warning.excludedVariantNames)
+            )
         }
 
         if (!isIntendedForBaseline && client.getRegistry() is BuiltinIssueRegistry) {
@@ -146,10 +158,12 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             while (location != null) {
                 indent(writer, 2)
                 writer.write("<location")
-                val path = LintCliClient.getDisplayPath(warning.project,
-                        location.file,
-                        // Don't use absolute paths in baseline files
-                        client.flags.isFullPath && !isIntendedForBaseline)
+                val path = LintCliClient.getDisplayPath(
+                    warning.project,
+                    location.file,
+                    // Don't use absolute paths in baseline files
+                    client.flags.isFullPath && !isIntendedForBaseline
+                )
                 writeAttribute(writer, 3, "file", path)
                 val start = location.start
                 if (start != null) {

@@ -34,6 +34,7 @@ import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 import java.util.ArrayList;
@@ -77,6 +78,17 @@ public abstract class AbstractResourceRepository {
     @Deprecated
     public final boolean isFramework() {
         return false;
+    }
+
+    /**
+     * Returns all leaf resource repositories contained in this resource repository including this
+     * repository itself, if it does not contain any other repositories.
+     *
+     * @param result the collection to add the leaf repositories to
+     */
+    public void getLeafResourceRepositories(
+            @NonNull Collection<AbstractResourceRepository> result) {
+        result.add(this);
     }
 
     /**
@@ -167,7 +179,7 @@ public abstract class AbstractResourceRepository {
      * predicate.
      *
      * @param namespace the namespace of the resources to return
-     * @param resourceType the namespace of the resources to return
+     * @param resourceType the type of the resources to return
      * @param nameFilter the predicate for checking resource names
      * @return the resources matching the namespace, type, and satisfying the name filter
      */
@@ -192,6 +204,27 @@ public abstract class AbstractResourceRepository {
         }
 
         return result == null ? Collections.emptyList() : result;
+    }
+
+    /**
+     * Returns the resources with the given namespace and type.
+     *
+     * @param namespace the namespace of the resources to return
+     * @param resourceType the type of the resources to return
+     * @return the resources matching the namespace and type
+     */
+    @NonNull
+    public List<ResourceItem> getResourceItems(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
+        List<ResourceItem> result = new ArrayList<>();
+        synchronized (ITEM_MAP_LOCK) {
+            ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
+            if (map != null) {
+                result.addAll(map.values());
+            }
+        }
+
+        return result;
     }
 
     @NonNull
@@ -368,7 +401,7 @@ public abstract class AbstractResourceRepository {
      *
      * <p>Do not call this method if you you are going to call
      * {@link #getItemsOfType(ResourceNamespace, ResourceType)} or
-     * {@link #getResourceItemsOfType(ResourceNamespace, ResourceType)} immediately after.
+     * {@link #getResourceItems(ResourceNamespace, ResourceType)} immediately after.
      *
      * @param resourceType the type of resource to check.
      * @return true if the repository contains resources of the given type, false otherwise.
@@ -382,19 +415,18 @@ public abstract class AbstractResourceRepository {
     }
 
     @NonNull
-    public Set<ResourceType> getAvailableResourceTypes() {
-        EnumSet<ResourceType> result = null;
+    public ImmutableSet<ResourceType> getAvailableResourceTypes(
+            @NonNull ResourceNamespace namespace) {
         synchronized (ITEM_MAP_LOCK) {
-            for (ResourceNamespace namespace : getNamespaces()) {
-                Set<ResourceType> types = getFullTable().row(namespace).keySet();
-                if (result == null) {
-                    result = EnumSet.copyOf(types);
-                } else {
-                    result.addAll(types);
+            EnumSet<ResourceType> result = EnumSet.noneOf(ResourceType.class);
+            for (ResourceType resourceType : ResourceType.values()) {
+                if (hasResourcesOfType(namespace, resourceType)) {
+                    result.add(resourceType);
                 }
             }
+
+            return Sets.immutableEnumSet(result);
         }
-        return result == null ? EnumSet.noneOf(ResourceType.class) : result;
     }
 
     /**
@@ -589,7 +621,7 @@ public abstract class AbstractResourceRepository {
 
             // look for the best match for the given configuration
             // the match has to be of type ResourceFile since that's what the input list contains
-            ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
+            ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
             return match != null ? match.getResourceValue() : null;
         }
     }

@@ -28,7 +28,7 @@ namespace profiler {
 // Class to provide a graphics data saving and loading interface.
 class GraphicsCache {
  public:
-  explicit GraphicsCache(const Clock& clock, int32_t capacity);
+  explicit GraphicsCache(Clock* clock, int32_t capacity);
 
   void SaveGraphicsDataVector(
       const std::vector<profiler::proto::GraphicsData> data_vector);
@@ -37,7 +37,7 @@ class GraphicsCache {
                         profiler::proto::GraphicsDataResponse* response);
 
  private:
-  const Clock& clock_;
+  Clock* clock_;
   CircularBuffer<profiler::proto::GraphicsData> graphics_samples_;
   std::mutex graphics_samples_mutex_;
 };

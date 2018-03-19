@@ -25,7 +25,7 @@ class DuplicateIdDetectorTest : AbstractCheckTest() {
 
     fun testDuplicate() {
         val expected =
-                """
+            """
 res/layout/duplicate.xml:5: Error: Duplicate id @+id/android_logo, already defined earlier in this layout [DuplicateIds]
     <ImageButton android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,7 +34,8 @@ res/layout/duplicate.xml:5: Error: Duplicate id @+id/android_logo, already defin
 """
 
         lint().files(
-                xml("res/layout/duplicate.xml", """
+            xml(
+                "res/layout/duplicate.xml", """
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
     <Button android:text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
     <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
@@ -42,9 +43,9 @@ res/layout/duplicate.xml:5: Error: Duplicate id @+id/android_logo, already defin
     <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
 </LinearLayout>
 
-"""))
-                .run()
-                .expect(expected)
+"""
+            )
+        ).run().expect(expected)
     }
 
     fun testDuplicateChains() {
@@ -80,7 +81,8 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
         // In layout1, there'sa duplicate definition of button2 (coming from 1 and 4)
 
         lint().files(
-                xml("res/layout/layout1.xml", """
+            xml(
+                "res/layout/layout1.xml", """
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -104,9 +106,9 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
         android:text="Button" />
 
 </LinearLayout>
-"""), mLayout2, mLayout3, mLayout4)
-                .run()
-                .expect(expected)
+"""
+            ), mLayout2, mLayout3, mLayout4
+        ).run().expect(expected)
     }
 
     fun testSuppress() {
@@ -119,7 +121,8 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
 0 errors, 1 warnings
 """
         lint().files(
-                xml("res/layout/layout1.xml", """
+            xml(
+                "res/layout/layout1.xml", """
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -145,14 +148,15 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
         android:text="Button" />
 
 </LinearLayout>
-"""), mLayout2, mLayout3, mLayout4)
-                .run()
-                .expect(expected)
+"""
+            ), mLayout2, mLayout3, mLayout4
+        ).run().expect(expected)
     }
 
     fun testSuppressForConstraintsSet() {
         lint().files(
-                xml("res/layout/layout1.xml", """
+            xml(
+                "res/layout/layout1.xml", """
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -249,14 +253,15 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
     </android.support.constraint.Constraints>
 
 </android.support.constraint.ConstraintLayout>
-"""))
-                .run()
-                .expectClean()
+"""
+            )
+        ).run().expectClean()
     }
 
     fun testSuppressForEmbeddedTags() {
         lint().files(
-                xml("res/layout/layout1.xml", """
+            xml(
+                "res/layout/layout1.xml", """
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -311,15 +316,16 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
         app:layout_constraintGuide_end="43dp" />
 
 </android.support.constraint.ConstraintLayout>
-"""))
-                .run()
-                .expectClean()
+"""
+            )
+        ).run().expectClean()
     }
 
     fun testNavigationOk() {
         lint().files(
-                xml("res/navigation/test.xml",
-                        """
+            xml(
+                "res/navigation/test.xml",
+                """
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
    xmlns:app="http://schemas.android.com/apk/res-auto">
   <fragment android:id="@+id/first">
@@ -329,34 +335,38 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
     <action android:id="@+id/next" app:destination="@+id/second" />
   </fragment>
   <fragment android:id="@+id/third" />
-</navigation>"""))
-                .run()
-                .expectClean()
+</navigation>"""
+            )
+        ).run().expectClean()
     }
 
     fun testNavigationDuplicate() {
         lint().files(
-                xml("res/navigation/test.xml",
-                        """
+            xml(
+                "res/navigation/test.xml",
+                """
 <navigation xmlns:android="http://schemas.android.com/apk/res/android">
   <foo>
   <fragment android:id="@+id/first" />
   </foo>
   <fragment android:id="@+id/first" />
   <fragment android:id="@+id/first" />
-</navigation>"""))
-                .run()
-                .expect("""
+</navigation>"""
+            )
+        ).run().expect(
+            """
 res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earlier in this layout [DuplicateIds]
   <fragment android:id="@+id/first" />
             ~~~~~~~~~~~~~~~~~~~~~~~
     res/navigation/test.xml:6: Duplicate id @+id/first originally defined here
 1 errors, 0 warnings
 
-""")
+"""
+        )
     }
 
-    private val mLayout2 = xml("res/layout/layout2.xml", """
+    private val mLayout2 = xml(
+        "res/layout/layout2.xml", """
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -379,10 +389,12 @@ res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earli
         layout="@layout/layout4" />
 
 </LinearLayout>
-""")
+"""
+    )
 
     private // Sample code
-    val mLayout3 = xml("res/layout/layout3.xml", """<?xml version="1.0" encoding="utf-8"?>
+    val mLayout3 = xml(
+        "res/layout/layout3.xml", """<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -401,9 +413,11 @@ res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earli
         android:text="CheckBox" />
 
 </LinearLayout>
-""")
+"""
+    )
 
-    private val mLayout4 = xml("res/layout/layout4.xml", """
+    private val mLayout4 = xml(
+        "res/layout/layout4.xml", """
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -422,5 +436,6 @@ res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earli
         android:text="Button" />
 
 </LinearLayout>
-""")
+"""
+    )
 }

@@ -102,6 +102,11 @@ message Session {
 }
 
 message SessionMetaData {
+  enum SessionType {
+    UNSPECIFIED = 0;
+    FULL = 1;
+    MEMORY_CAPTURE = 2;
+  }
   // References Session's |session_id| field
   int64 session_id = 1;
   // Session start time (unix epoch) as provided by the BeginSessionRequest.
@@ -114,4 +119,6 @@ message SessionMetaData {
   bool jvmti_enabled = 4;
   // Whether JVMTI live allocation is enabled for the session.
   bool live_allocation_enabled = 5;
+  // Session's type which indicates what data it has.
+  SessionType type = 6;
 }

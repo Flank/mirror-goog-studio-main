@@ -20,10 +20,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.junit.ClassRule
 import org.junit.Test
-import java.io.File
 import java.io.IOException
 
 class DynamicAppTest {
@@ -55,10 +55,16 @@ class DynamicAppTest {
     }
 
     @Test
-    fun testBundle() {
-        project.execute("bundle:bundle")
+    fun testBundleFromApp() {
+        project.execute("app:bundleDebug")
 
-        val bundleFile = File(project.getSubproject("bundle").buildDir, "bundle.aab")
+        //TODO: update model with this stuff?
+        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
+            "outputs",
+            "bundle",
+            "debug",
+            "bundleDebug", // FIXME with proper BuildableArtifact based output file path
+            "bundle.aab")
         FileSubject.assertThat(bundleFile).exists()
 
         val zipFile = Zip(bundleFile)
@@ -72,5 +78,17 @@ class DynamicAppTest {
             "/feature1/manifest/AndroidManifest.xml",
             "/feature1/res/layout/feature_layout.xml",
             "/feature1/resources.pb")
+
+
+        // also test that the feature manifest contains the feature name.
+        val manifestFile = FileUtils.join(project.getSubproject("feature1").buildDir,
+            "intermediates",
+            "merged_manifests",
+            "debug",
+            "processDebugManifest",
+            "merged",
+            "AndroidManifest.xml")
+        FileSubject.assertThat(manifestFile).isFile()
+        FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
     }
 }

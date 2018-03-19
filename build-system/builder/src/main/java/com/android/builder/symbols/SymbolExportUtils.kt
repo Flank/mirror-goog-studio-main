@@ -90,7 +90,7 @@ fun processLibraryMainSymbolTable(
 
     // Generate R.txt file.
     Files.createDirectories(symbolFileOut.toPath().parent)
-    SymbolIo.write(mainSymbolTable, symbolFileOut)
+    SymbolIo.writeForAar(mainSymbolTable, symbolFileOut)
 
     val tablesToWrite = RGeneration.generateAllSymbolTablesToWrite(mainSymbolTable, depSymbolTables)
 

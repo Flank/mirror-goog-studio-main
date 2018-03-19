@@ -79,30 +79,28 @@ import org.jetbrains.uast.UastLiteralUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Ensures that layout width and height attributes are specified
- */
+/** Ensures that layout width and height attributes are specified */
 public class RequiredAttributeDetector extends LayoutDetector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "RequiredSize",
-            "Missing `layout_width` or `layout_height` attributes",
+    public static final Issue ISSUE =
+            Issue.create(
+                    "RequiredSize",
+                    "Missing `layout_width` or `layout_height` attributes",
+                    "All views must specify an explicit `layout_width` and `layout_height` attribute. "
+                            + "There is a runtime check for this, so if you fail to specify a size, an exception "
+                            + "is thrown at runtime.\n"
+                            + "\n"
+                            + "It's possible to specify these widths via styles as well. GridLayout, as a special "
+                            + "case, does not require you to specify a size.",
+                    Category.CORRECTNESS,
+                    4,
+                    Severity.ERROR,
+                    new Implementation(
+                            RequiredAttributeDetector.class,
+                            EnumSet.of(Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)));
 
-            "All views must specify an explicit `layout_width` and `layout_height` attribute. " +
-            "There is a runtime check for this, so if you fail to specify a size, an exception " +
-            "is thrown at runtime.\n" +
-            "\n" +
-            "It's possible to specify these widths via styles as well. GridLayout, as a special " +
-            "case, does not require you to specify a size.",
-            Category.CORRECTNESS,
-            4,
-            Severity.ERROR,
-            new Implementation(
-                    RequiredAttributeDetector.class,
-                    EnumSet.of(Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)));
-
-    public static final String PERCENT_RELATIVE_LAYOUT
-            = "android.support.percent.PercentRelativeLayout";
+    public static final String PERCENT_RELATIVE_LAYOUT =
+            "android.support.percent.PercentRelativeLayout";
     public static final String ATTR_LAYOUT_WIDTH_PERCENT = "layout_widthPercent";
     public static final String ATTR_LAYOUT_HEIGHT_PERCENT = "layout_heightPercent";
 
@@ -115,20 +113,28 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
     /** Set of style names where the style sets the layout height */
     @Nullable private Set<String> mHeightStyles;
 
-    /** Set of layout names for layouts that are included by an {@code <include>} tag
-     * where the width is set on the include */
+    /**
+     * Set of layout names for layouts that are included by an {@code <include>} tag where the width
+     * is set on the include
+     */
     @Nullable private Set<String> mIncludedWidths;
 
-    /** Set of layout names for layouts that are included by an {@code <include>} tag
-     * where the height is set on the include */
+    /**
+     * Set of layout names for layouts that are included by an {@code <include>} tag where the
+     * height is set on the include
+     */
     @Nullable private Set<String> mIncludedHeights;
 
-    /** Set of layout names for layouts that are included by an {@code <include>} tag
-     * where the width is <b>not</b> set on the include */
+    /**
+     * Set of layout names for layouts that are included by an {@code <include>} tag where the width
+     * is <b>not</b> set on the include
+     */
     @Nullable private Set<String> mNotIncludedWidths;
 
-    /** Set of layout names for layouts that are included by an {@code <include>} tag
-     * where the height is <b>not</b> set on the include */
+    /**
+     * Set of layout names for layouts that are included by an {@code <include>} tag where the
+     * height is <b>not</b> set on the include
+     */
     @Nullable private Set<String> mNotIncludedHeights;
 
     /** Whether the width was set in a theme definition */
@@ -138,8 +144,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
     private boolean mSetHeightInTheme;
 
     /** Constructs a new {@link RequiredAttributeDetector} */
-    public RequiredAttributeDetector() {
-    }
+    public RequiredAttributeDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -202,9 +207,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
         return false;
     }
 
-    private boolean isSizeStyle(
-            @NonNull String style,
-            @NonNull Set<String> sizeStyles, int depth) {
+    private boolean isSizeStyle(@NonNull String style, @NonNull Set<String> sizeStyles, int depth) {
         if (depth == 30) {
             // Cycle between local and framework attribute style missed
             // by the fact that we're stripping the distinction between framework
@@ -368,16 +371,16 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
             } else if (TAG_ITEM.equals(tag)
                     && TAG_STYLE.equals(element.getParentNode().getNodeName())) {
                 String name = element.getAttribute(ATTR_NAME);
-                if (name.endsWith(ATTR_LAYOUT_WIDTH) &&
-                        name.equals(ANDROID_NS_NAME_PREFIX + ATTR_LAYOUT_WIDTH)) {
+                if (name.endsWith(ATTR_LAYOUT_WIDTH)
+                        && name.equals(ANDROID_NS_NAME_PREFIX + ATTR_LAYOUT_WIDTH)) {
                     if (mWidthStyles == null) {
                         mWidthStyles = Sets.newHashSet();
                     }
                     String styleName = ((Element) element.getParentNode()).getAttribute(ATTR_NAME);
                     mWidthStyles.add(styleName);
                 }
-                if (name.endsWith(ATTR_LAYOUT_HEIGHT) &&
-                        name.equals(ANDROID_NS_NAME_PREFIX + ATTR_LAYOUT_HEIGHT)) {
+                if (name.endsWith(ATTR_LAYOUT_HEIGHT)
+                        && name.equals(ANDROID_NS_NAME_PREFIX + ATTR_LAYOUT_HEIGHT)) {
                     if (mHeightStyles == null) {
                         mHeightStyles = Sets.newHashSet();
                     }
@@ -391,10 +394,10 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                 if (element.getTagName().equals(VIEW_INCLUDE)) {
                     String layout = element.getAttribute(ATTR_LAYOUT);
                     if (layout != null && !layout.isEmpty()) {
-                        recordIncludeWidth(layout,
-                                element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH));
-                        recordIncludeHeight(layout,
-                                element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT));
+                        recordIncludeWidth(
+                                layout, element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH));
+                        recordIncludeHeight(
+                                layout, element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT));
                     }
                 }
             } else {
@@ -429,8 +432,10 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                     return;
                 }
 
-                String parentTag = element.getParentNode() != null
-                        ?  element.getParentNode().getNodeName() : "";
+                String parentTag =
+                        element.getParentNode() != null
+                                ? element.getParentNode().getNodeName()
+                                : "";
                 if (TABLE_LAYOUT.equals(parentTag)
                         || TABLE_ROW.equals(parentTag)
                         || GRID_LAYOUT.equals(parentTag)
@@ -455,8 +460,8 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
 
                 boolean certain = true;
                 boolean isRoot = isRootElement(element);
-                if (isRoot || isRootElement(element.getParentNode())
-                        && VIEW_MERGE.equals(parentTag)) {
+                if (isRoot
+                        || isRootElement(element.getParentNode()) && VIEW_MERGE.equals(parentTag)) {
                     String name = LAYOUT_RESOURCE_PREFIX + getLayoutName(context.file);
                     if (!hasWidth && mIncludedWidths != null) {
                         hasWidth = mIncludedWidths.contains(name);
@@ -502,20 +507,25 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                 String message;
                 if (!(hasWidth || hasHeight)) {
                     if (certain) {
-                        message = "The required `layout_width` and `layout_height` attributes " +
-                                "are missing";
+                        message =
+                                "The required `layout_width` and `layout_height` attributes "
+                                        + "are missing";
                     } else {
-                        message = "The required `layout_width` and `layout_height` attributes " +
-                                "*may* be missing";
+                        message =
+                                "The required `layout_width` and `layout_height` attributes "
+                                        + "*may* be missing";
                     }
                 } else {
                     String attribute = hasWidth ? ATTR_LAYOUT_HEIGHT : ATTR_LAYOUT_WIDTH;
                     if (certain) {
-                        message = String.format("The required `%1$s` attribute is missing",
-                                attribute);
+                        message =
+                                String.format(
+                                        "The required `%1$s` attribute is missing", attribute);
                     } else {
-                        message = String.format("The required `%1$s` attribute *may* be missing",
-                                attribute);
+                        message =
+                                String.format(
+                                        "The required `%1$s` attribute *may* be missing",
+                                        attribute);
                     }
                 }
                 if (isPercent) {
@@ -523,12 +533,17 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                     String escapedLayoutHeight = '`' + ATTR_LAYOUT_HEIGHT + '`';
                     String escapedLayoutWidthPercent = '`' + ATTR_LAYOUT_WIDTH_PERCENT + '`';
                     String escapedLayoutHeightPercent = '`' + ATTR_LAYOUT_HEIGHT_PERCENT + '`';
-                    message = message.replace(escapedLayoutWidth, escapedLayoutWidth + " or "
-                            + escapedLayoutWidthPercent).replace(escapedLayoutHeight,
-                            escapedLayoutHeight + " or " + escapedLayoutHeightPercent);
+                    message =
+                            message.replace(
+                                            escapedLayoutWidth,
+                                            escapedLayoutWidth + " or " + escapedLayoutWidthPercent)
+                                    .replace(
+                                            escapedLayoutHeight,
+                                            escapedLayoutHeight
+                                                    + " or "
+                                                    + escapedLayoutHeightPercent);
                 }
-                context.report(ISSUE, element, context.getElementLocation(element),
-                        message);
+                context.report(ISSUE, element, context.getElementLocation(element), message);
             }
         }
     }
@@ -570,7 +585,9 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         // Handle
         //    View#inflate(Context context, int resource, ViewGroup root)

@@ -143,7 +143,7 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
   }
 
   if (!is_heap_dump_running_.exchange(true)) {
-    int64_t request_time = clock_.GetCurrentTime();
+    int64_t request_time = clock_->GetCurrentTime();
     std::stringstream ss;
     ss << pid_ << "_" << request_time << ".hprof";
     auto file = file_cache_->GetFile(ss.str());
@@ -184,7 +184,7 @@ void MemoryCollector::HeapDumpMain(std::shared_ptr<File> file) {
     }
   }
 
-  if (!memory_cache_.EndHeapDump(clock_.GetCurrentTime(), result)) {
+  if (!memory_cache_.EndHeapDump(clock_->GetCurrentTime(), result)) {
     Log::V("EndHeapDumpSample failed.");
   }
 

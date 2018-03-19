@@ -69,10 +69,12 @@ public class PluralsDatabaseTest extends TestCase {
         PluralsDatabase db = PluralsDatabase.get();
 
         //noinspection ConstantConditions
-        assertEquals("1, 101, 201, 301, 401, 501, 601, 701, 1001, \u2026",
+        assertEquals(
+                "1, 101, 201, 301, 401, 501, 601, 701, 1001, \u2026",
                 db.findIntegerExamples("sl", Quantity.one));
 
-        assertEquals("1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, \u2026",
+        assertEquals(
+                "1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, \u2026",
                 db.findIntegerExamples("ru", Quantity.one));
     }
 
@@ -90,10 +92,9 @@ public class PluralsDatabaseTest extends TestCase {
     }
 
     /**
-     * If the lint unit test data/ folder contains a plurals.txt database file,
-     * this test will parse that file and ensure that our current database produces
-     * exactly the same results as those inferred from the file. If not, it will
-     * dump out updated data structures for the database.
+     * If the lint unit test data/ folder contains a plurals.txt database file, this test will parse
+     * that file and ensure that our current database produces exactly the same results as those
+     * inferred from the file. If not, it will dump out updated data structures for the database.
      */
     public void testDatabaseAccurate() {
         List<String> languages = new ArrayList<>(LocaleManager.getLanguageCodes());
@@ -144,8 +145,8 @@ public class PluralsDatabaseTest extends TestCase {
         db.ensureInitialized();
 
         db.getRelevant("en"); // ensure initialized
-        Map<String,String> languageMap = Maps.newHashMap();
-        Map<String,EnumSet<Quantity>> setMap = Maps.newHashMap();
+        Map<String, String> languageMap = Maps.newHashMap();
+        Map<String, EnumSet<Quantity>> setMap = Maps.newHashMap();
         for (String language : languages) {
             String set = db.getSetName(language);
             if (set == null) {
@@ -166,7 +167,7 @@ public class PluralsDatabaseTest extends TestCase {
         Collections.sort(setNames);
 
         // Compute uniqueness
-        Map<String,String> sameAs = Maps.newHashMap();
+        Map<String, String> sameAs = Maps.newHashMap();
         for (int i = 0, n = setNames.size(); i < n; i++) {
             for (int j = i + 1; j < n; j++) {
                 String iSetName = setNames.get(i);
@@ -199,14 +200,14 @@ public class PluralsDatabaseTest extends TestCase {
             languageMap.put(set, language); // Could be multiple
         }
 
-        Map<String,Integer> indices = Maps.newTreeMap();
+        Map<String, Integer> indices = Maps.newTreeMap();
         int index = 0;
         for (String set : setNames) {
             indices.put(set, index++);
         }
 
         // Language indices
-        Map<String,Integer> languageIndices = Maps.newTreeMap();
+        Map<String, Integer> languageIndices = Maps.newTreeMap();
         index = 0;
         for (String language : languages) {
             String set = db.getSetName(language);
@@ -240,7 +241,7 @@ public class PluralsDatabaseTest extends TestCase {
                 sb.append(indent);
                 column = 0;
             }
-            assertEquals((int)languageIndices.get(language), index);
+            assertEquals((int) languageIndices.get(language), index);
             index++;
         }
         stripLastComma(sb);
@@ -249,10 +250,11 @@ public class PluralsDatabaseTest extends TestCase {
 
         // Quantity map
         sb.setLength(0);
-        sb.append("/**\n"
-                + " * Relevant flags for each language (corresponding to each language listed\n"
-                + " * in the same position in {@link #LANGUAGE_CODES})\n"
-                + " */\n");
+        sb.append(
+                "/**\n"
+                        + " * Relevant flags for each language (corresponding to each language listed\n"
+                        + " * in the same position in {@link #LANGUAGE_CODES})\n"
+                        + " */\n");
         sb.append("private static final int[] FLAGS = new int[] {\n");
         column = 0;
         sb.append(indent);
@@ -262,7 +264,7 @@ public class PluralsDatabaseTest extends TestCase {
             if (setName == null) {
                 continue;
             }
-            assertEquals((int)languageIndices.get(language), index);
+            assertEquals((int) languageIndices.get(language), index);
 
             // Compute flag
             int flag = 0;
@@ -311,7 +313,6 @@ public class PluralsDatabaseTest extends TestCase {
         printSwitch(db, Quantity.zero, languages, languageIndices, indices, zero);
         printSwitch(db, Quantity.one, languages, languageIndices, indices, one);
         printSwitch(db, Quantity.two, languages, languageIndices, indices, two);
-
     }
 
     private static String stripLastComma(String s) {
@@ -332,8 +333,11 @@ public class PluralsDatabaseTest extends TestCase {
         }
     }
 
-    private static Map<String, String> computeExamples(PluralsTextDatabase db, Quantity quantity,
-            Set<String> sets, Map<String, String> languageMap) {
+    private static Map<String, String> computeExamples(
+            PluralsTextDatabase db,
+            Quantity quantity,
+            Set<String> sets,
+            Map<String, String> languageMap) {
 
         Map<String, String> setsWithExamples = Maps.newHashMap();
         for (String set : sets) {
@@ -347,12 +351,11 @@ public class PluralsDatabaseTest extends TestCase {
         return setsWithExamples;
     }
 
-
     private static void printSwitch(
             PluralsTextDatabase db,
             Quantity quantity,
             List<String> languages,
-            Map<String,Integer> languageIndices,
+            Map<String, Integer> languageIndices,
             Map<String, Integer> indices,
             Map<String, String> setsWithExamples) {
 
@@ -362,11 +365,12 @@ public class PluralsDatabaseTest extends TestCase {
         StringBuilder sb = new StringBuilder();
         String quantityName = quantity.name();
         quantityName = Character.toUpperCase(quantityName.charAt(0)) + quantityName.substring(1);
-        sb.append("    @Nullable\n"
-                + "    private static String getExampleForQuantity").append(quantityName)
-                               .append("(@NonNull String language) {\n"
-                                       + "        int index = getLanguageIndex(language);\n"
-                                       + "        switch (index) {\n");
+        sb.append("    @Nullable\n    private static String getExampleForQuantity")
+                .append(quantityName)
+                .append(
+                        "(@NonNull String language) {\n"
+                                + "        int index = getLanguageIndex(language);\n"
+                                + "        switch (index) {\n");
 
         for (Map.Entry<String, Integer> entry : indices.entrySet()) {
             String set = entry.getKey();
@@ -390,18 +394,17 @@ public class PluralsDatabaseTest extends TestCase {
             sb.append(";\n");
         }
 
-        sb.append("            case -1:\n"
-                + "            default:\n"
-                + "                return null;\n"
-                + "        }\n"
-                + "    }\n");
+        sb.append(
+                "            case -1:\n"
+                        + "            default:\n"
+                        + "                return null;\n"
+                        + "        }\n"
+                        + "    }\n");
 
         System.out.println(sb);
     }
 
-    /**
-     * Plurals database backed by a plurals.txt file from ICU
-     */
+    /** Plurals database backed by a plurals.txt file from ICU */
     private static class PluralsTextDatabase {
         private static final boolean DEBUG = false;
         private static final EnumSet<Quantity> NONE = EnumSet.noneOf(Quantity.class);
@@ -412,7 +415,7 @@ public class PluralsDatabaseTest extends TestCase {
         private Map<Quantity, Set<String>> mMultiValueSetNames = Maps.newEnumMap(Quantity.class);
         private String mDescriptions;
         private int mRuleSetOffset;
-        private Map<String,String> mSetNamePerLanguage;
+        private Map<String, String> mSetNamePerLanguage;
 
         @NonNull
         public static PluralsTextDatabase get() {
@@ -478,8 +481,8 @@ public class PluralsDatabaseTest extends TestCase {
                                     // @decimal always comes after @integer
                                     break;
                                 }
-                            } else if ((c == 'i' || c == 'n') && Character
-                                    .isWhitespace(s.charAt(i + 1))) {
+                            } else if ((c == 'i' || c == 'n')
+                                    && Character.isWhitespace(s.charAt(i + 1))) {
                                 appliesToIntegers = true;
                                 break;
                             }
@@ -488,9 +491,14 @@ public class PluralsDatabaseTest extends TestCase {
 
                     if (!appliesToIntegers) {
                         if (DEBUG) {
-                            System.out.println("Skipping quantity " + s.substring(offset, begin)
-                                    + " in set for locale " + language + " (" + getSetName(language)
-                                    + ")");
+                            System.out.println(
+                                    "Skipping quantity "
+                                            + s.substring(offset, begin)
+                                            + " in set for locale "
+                                            + language
+                                            + " ("
+                                            + getSetName(language)
+                                            + ")");
                         }
                         continue;
                     }
@@ -519,8 +527,7 @@ public class PluralsDatabaseTest extends TestCase {
         }
 
         public boolean hasMultipleValuesForQuantity(
-                @NonNull String language,
-                @NonNull Quantity quantity) {
+                @NonNull String language, @NonNull Quantity quantity) {
             if (quantity == Quantity.one || quantity == Quantity.two || quantity == Quantity.zero) {
                 ensureInitialized();
                 String setName = getSetName(language);
@@ -561,7 +568,7 @@ public class PluralsDatabaseTest extends TestCase {
             // since it looks to me like this only differs from 1 in the fractional part.
             mSetNamePerLanguage = Maps.newHashMapWithExpectedSize(20);
             mMultiValueSetNames = Maps.newEnumMap(Quantity.class);
-            Quantity[] quantities = new Quantity[] { Quantity.zero, Quantity.one, Quantity.two };
+            Quantity[] quantities = new Quantity[] {Quantity.zero, Quantity.one, Quantity.two};
             for (Quantity quantity : quantities) {
                 mMultiValueSetNames.put(quantity, Sets.newHashSet());
                 for (String language : LocaleManager.getLanguageCodes()) {
@@ -601,7 +608,8 @@ public class PluralsDatabaseTest extends TestCase {
         @NonNull
         private String getPluralsDescriptions() {
             if (mDescriptions == null) {
-                InputStream stream = PluralsDatabaseTest.class.getResourceAsStream("data/plurals.txt");
+                InputStream stream =
+                        PluralsDatabaseTest.class.getResourceAsStream("data/plurals.txt");
                 if (stream != null) {
                     try {
                         byte[] bytes = ByteStreams.toByteArray(stream);

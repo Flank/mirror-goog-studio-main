@@ -26,7 +26,7 @@ namespace profiler {
 
 class EventProfilerComponent final : public ProfilerComponent {
  public:
-  explicit EventProfilerComponent(const Daemon::Utilities& utilities)
+  explicit EventProfilerComponent(Daemon::Utilities* utilities)
       : cache_(utilities),
         public_service_(&cache_),
         internal_service_(&cache_) {}

@@ -74,13 +74,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/**
- * Checks for duplicate ids within a layout and within an included layout
- */
+/** Checks for duplicate ids within a layout and within an included layout */
 public class WrongIdDetector extends LayoutDetector {
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            WrongIdDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(WrongIdDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** Ids bound to widgets in any of the layout files */
     private final Set<String> mGlobalIds = new HashSet<>(100);
@@ -92,89 +89,86 @@ public class WrongIdDetector extends LayoutDetector {
     private Set<String> mDeclaredIds;
 
     /**
-     * Location handles for the various id references that were not found as
-     * defined in the same layout, to be checked after the whole project has
-     * been scanned
+     * Location handles for the various id references that were not found as defined in the same
+     * layout, to be checked after the whole project has been scanned
      */
     private List<Pair<String, Location.Handle>> mHandles;
 
     /**
-     * List of RelativeLayout elements in the current layout (and percent layouts,
-     * and constraint layouts, etc -- any elements that have constraints among their
-     * children with id references
+     * List of RelativeLayout elements in the current layout (and percent layouts, and constraint
+     * layouts, etc -- any elements that have constraints among their children with id references
      */
     private List<Element> mRelativeLayouts;
 
     /** Reference to an unknown id */
     @SuppressWarnings("unchecked")
-    public static final Issue UNKNOWN_ID = Issue.create(
-            "UnknownId",
-            "Reference to an unknown id",
-            "The `@+id/` syntax refers to an existing id, or creates a new one if it has " +
-            "not already been defined elsewhere. However, this means that if you have a " +
-            "typo in your reference, or if the referred view no longer exists, you do not " +
-            "get a warning since the id will be created on demand. This check catches " +
-            "errors where you have renamed an id without updating all of the references to " +
-            "it.",
-            Category.CORRECTNESS,
-            8,
-            Severity.FATAL,
-            new Implementation(
-                    WrongIdDetector.class,
-                    Scope.ALL_RESOURCES_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue UNKNOWN_ID =
+            Issue.create(
+                    "UnknownId",
+                    "Reference to an unknown id",
+                    "The `@+id/` syntax refers to an existing id, or creates a new one if it has "
+                            + "not already been defined elsewhere. However, this means that if you have a "
+                            + "typo in your reference, or if the referred view no longer exists, you do not "
+                            + "get a warning since the id will be created on demand. This check catches "
+                            + "errors where you have renamed an id without updating all of the references to "
+                            + "it.",
+                    Category.CORRECTNESS,
+                    8,
+                    Severity.FATAL,
+                    new Implementation(
+                            WrongIdDetector.class,
+                            Scope.ALL_RESOURCES_SCOPE,
+                            Scope.RESOURCE_FILE_SCOPE));
 
     /** Reference to an id that is not a sibling */
-    public static final Issue NOT_SIBLING = Issue.create(
-            "NotSibling",
-            "Invalid Constraints",
-            "Layout constraints in a given `ConstraintLayout` or `RelativeLayout` should " +
-            "reference other views within the same relative layout (but not itself!)",
-            Category.CORRECTNESS,
-            6,
-            Severity.FATAL,
-            IMPLEMENTATION);
+    public static final Issue NOT_SIBLING =
+            Issue.create(
+                    "NotSibling",
+                    "Invalid Constraints",
+                    "Layout constraints in a given `ConstraintLayout` or `RelativeLayout` should "
+                            + "reference other views within the same relative layout (but not itself!)",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    IMPLEMENTATION);
 
     /** An ID declaration which is not valid */
-    public static final Issue INVALID = Issue.create(
-            "InvalidId",
-            "Invalid ID declaration",
-            "An id definition **must** be of the form `@+id/yourname`. The tools have not " +
-            "rejected strings of the form `@+foo/bar` in the past, but that was an error, " +
-            "and could lead to tricky errors because of the way the id integers are assigned.\n" +
-            "\n" +
-            "If you really want to have different \"scopes\" for your id's, use prefixes " +
-            "instead, such as `login_button1` and `login_button2`.",
-            Category.CORRECTNESS,
-            6,
-            Severity.FATAL,
-            IMPLEMENTATION);
+    public static final Issue INVALID =
+            Issue.create(
+                    "InvalidId",
+                    "Invalid ID declaration",
+                    "An id definition **must** be of the form `@+id/yourname`. The tools have not "
+                            + "rejected strings of the form `@+foo/bar` in the past, but that was an error, "
+                            + "and could lead to tricky errors because of the way the id integers are assigned.\n"
+                            + "\n"
+                            + "If you really want to have different \"scopes\" for your id's, use prefixes "
+                            + "instead, such as `login_button1` and `login_button2`.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    IMPLEMENTATION);
 
     /** Reference to an id that is not in the current layout */
-    public static final Issue UNKNOWN_ID_LAYOUT = Issue.create(
-            "UnknownIdInLayout",
-            "Reference to an id that is not in the current layout",
-
-            "The `@+id/` syntax refers to an existing id, or creates a new one if it has " +
-            "not already been defined elsewhere. However, this means that if you have a " +
-            "typo in your reference, or if the referred view no longer exists, you do not " +
-            "get a warning since the id will be created on demand.\n" +
-            "\n" +
-            "This is sometimes intentional, for example where you are referring to a view " +
-            "which is provided in a different layout via an include. However, it is usually " +
-            "an accident where you have a typo or you have renamed a view without updating " +
-            "all the references to it.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    WrongIdDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue UNKNOWN_ID_LAYOUT =
+            Issue.create(
+                    "UnknownIdInLayout",
+                    "Reference to an id that is not in the current layout",
+                    "The `@+id/` syntax refers to an existing id, or creates a new one if it has "
+                            + "not already been defined elsewhere. However, this means that if you have a "
+                            + "typo in your reference, or if the referred view no longer exists, you do not "
+                            + "get a warning since the id will be created on demand.\n"
+                            + "\n"
+                            + "This is sometimes intentional, for example where you are referring to a view "
+                            + "which is provided in a different layout via an include. However, it is usually "
+                            + "an accident where you have a typo or you have renamed a view without updating "
+                            + "all the references to it.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(WrongIdDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a duplicate id check */
-    public WrongIdDetector() {
-    }
+    public WrongIdDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -241,15 +235,14 @@ public class WrongIdDetector extends LayoutDetector {
             for (int i = 0, n = attributes.getLength(); i < n; i++) {
                 Attr attr = (Attr) attributes.item(i);
                 String value = attr.getValue();
-                if (value.startsWith(NEW_ID_PREFIX) ||
-                        value.startsWith(ID_PREFIX)) {
+                if (value.startsWith(NEW_ID_PREFIX) || value.startsWith(ID_PREFIX)) {
                     String localName = attr.getLocalName();
                     if (localName != null
                             && localName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
-                            && (ANDROID_URI.equals(attr.getNamespaceURI()) ||
-                            AUTO_URI.equals(attr.getNamespaceURI()))) {
-                        checkIdReference(context, layout, ids, isConstraintLayout, selfId, attr,
-                                value);
+                            && (ANDROID_URI.equals(attr.getNamespaceURI())
+                                    || AUTO_URI.equals(attr.getNamespaceURI()))) {
+                        checkIdReference(
+                                context, layout, ids, isConstraintLayout, selfId, attr, value);
                     }
                 } else if (isConstraintLayout
                         && CONSTRAINT_REFERENCED_IDS.equals(attr.getLocalName())) {
@@ -262,8 +255,14 @@ public class WrongIdDetector extends LayoutDetector {
         }
     }
 
-    private void checkIdReference(@NonNull Context context, Element layout, Set<String> ids,
-            boolean isConstraintLayout, String selfId, Attr attr, String id) {
+    private void checkIdReference(
+            @NonNull Context context,
+            Element layout,
+            Set<String> ids,
+            boolean isConstraintLayout,
+            String selfId,
+            Attr attr,
+            String id) {
         if (!idDefined(mFileIds, id)) {
             // Stash a reference to this id and location such that
             // we can check after the *whole* layout has been processed,
@@ -286,9 +285,10 @@ public class WrongIdDetector extends LayoutDetector {
                         && id.endsWith(selfId)
                         && stripIdPrefix(id).equals(selfId)) {
                     XmlContext xmlContext = (XmlContext) context;
-                    String message = String.format(
-                            "Cannot be relative to self: id=%1$s, %2$s=%3$s",
-                            selfId, attr.getLocalName(), selfId);
+                    String message =
+                            String.format(
+                                    "Cannot be relative to self: id=%1$s, %2$s=%3$s",
+                                    selfId, attr.getLocalName(), selfId);
                     Location location = xmlContext.getLocation(attr);
                     xmlContext.report(NOT_SIBLING, attr, location, message);
                 }
@@ -315,10 +315,10 @@ public class WrongIdDetector extends LayoutDetector {
             }
             if (context.isEnabled(NOT_SIBLING)) {
                 XmlContext xmlContext = (XmlContext) context;
-                String message = String.format(
-                        "`%1$s` is not a sibling in the same `%2$s`",
-                        id,
-                        isConstraintLayout ? "ConstraintLayout" : "RelativeLayout");
+                String message =
+                        String.format(
+                                "`%1$s` is not a sibling in the same `%2$s`",
+                                id, isConstraintLayout ? "ConstraintLayout" : "RelativeLayout");
                 Location location = xmlContext.getLocation(attr);
                 xmlContext.report(NOT_SIBLING, attr, location, message);
             }
@@ -339,10 +339,13 @@ public class WrongIdDetector extends LayoutDetector {
             boolean projectScope = context.getScope().contains(Scope.ALL_RESOURCE_FILES);
             for (Pair<String, Handle> pair : mHandles) {
                 String id = pair.getFirst();
-                boolean isBound = projectScope ? idDefined(mGlobalIds, id) :
-                        idDefined(context, id, context.file);
+                boolean isBound =
+                        projectScope
+                                ? idDefined(mGlobalIds, id)
+                                : idDefined(context, id, context.file);
                 LintClient client = context.getClient();
-                if (!isBound && checkExists
+                if (!isBound
+                        && checkExists
                         && (projectScope || client.supportsProjectResources())) {
                     Handle handle = pair.getSecond();
                     boolean isDeclared = idDefined(mDeclaredIds, id);
@@ -353,39 +356,47 @@ public class WrongIdDetector extends LayoutDetector {
                         AbstractResourceRepository resources =
                                 client.getResourceRepository(context.getProject(), true, false);
                         if (resources != null) {
-                            spellingDictionary = Sets.newHashSet(
-                                    resources.getItemsOfType(ResourceType.ID));
+                            spellingDictionary =
+                                    Sets.newHashSet(resources.getItemsOfType(ResourceType.ID));
                             spellingDictionary.remove(id);
                         }
                     }
                     List<String> suggestions = getSpellingSuggestions(id, spellingDictionary);
                     if (suggestions.size() > 1) {
-                        suggestionMessage = String.format(" Did you mean one of {%2$s} ?",
-                                id, Joiner.on(", ").join(suggestions));
+                        suggestionMessage =
+                                String.format(
+                                        " Did you mean one of {%2$s} ?",
+                                        id, Joiner.on(", ").join(suggestions));
                     } else if (!suggestions.isEmpty()) {
-                        suggestionMessage = String.format(" Did you mean %2$s ?",
-                                id, suggestions.get(0));
+                        suggestionMessage =
+                                String.format(" Did you mean %2$s ?", id, suggestions.get(0));
                     } else {
                         suggestionMessage = "";
                     }
                     String message;
                     if (isDeclared) {
-                        message = String.format(
-                                "The id \"`%1$s`\" is defined but not assigned to any views.%2$s",
-                                id, suggestionMessage);
+                        message =
+                                String.format(
+                                        "The id \"`%1$s`\" is defined but not assigned to any views.%2$s",
+                                        id, suggestionMessage);
                     } else {
-                        message = String.format(
-                                "The id \"`%1$s`\" is not defined anywhere.%2$s",
-                                id, suggestionMessage);
+                        message =
+                                String.format(
+                                        "The id \"`%1$s`\" is not defined anywhere.%2$s",
+                                        id, suggestionMessage);
                     }
                     report(context, UNKNOWN_ID, handle, message);
-                } else if (checkSameLayout && (!projectScope || isBound)
+                } else if (checkSameLayout
+                        && (!projectScope || isBound)
                         && id.startsWith(NEW_ID_PREFIX)) {
                     // The id was defined, but in a different layout. Usually not intentional
                     // (might be referring to a random other view that happens to have the same
                     // name.)
                     Handle handle = pair.getSecond();
-                    report(context, UNKNOWN_ID_LAYOUT, handle,
+                    report(
+                            context,
+                            UNKNOWN_ID_LAYOUT,
+                            handle,
                             String.format(
                                     "The id \"`%1$s`\" is not referring to any views in this layout",
                                     stripIdPrefix(id)));
@@ -441,15 +452,16 @@ public class WrongIdDetector extends LayoutDetector {
         if (id.equals(NEW_ID_PREFIX) || id.equals(ID_PREFIX) || "@+id".equals(ID_PREFIX)) {
             String message = "Invalid id: missing value";
             context.report(INVALID, attribute, context.getLocation(attribute), message);
-        } else if (id.startsWith("@+") && !id.startsWith(NEW_ID_PREFIX)
-                && !id.startsWith("@+android:id/")
-                || id.startsWith(NEW_ID_PREFIX)
-                && id.indexOf('/', NEW_ID_PREFIX.length()) != -1) {
+        } else if (id.startsWith("@+")
+                        && !id.startsWith(NEW_ID_PREFIX)
+                        && !id.startsWith("@+android:id/")
+                || id.startsWith(NEW_ID_PREFIX) && id.indexOf('/', NEW_ID_PREFIX.length()) != -1) {
             int nameStart = id.startsWith(NEW_ID_PREFIX) ? NEW_ID_PREFIX.length() : 2;
             String suggested = NEW_ID_PREFIX + id.substring(nameStart).replace('/', '_');
-            String message = String.format(
-                    "ID definitions **must** be of the form `@+id/name`; try using `%1$s`",
-                    suggested);
+            String message =
+                    String.format(
+                            "ID definitions **must** be of the form `@+id/name`; try using `%1$s`",
+                            suggested);
             context.report(INVALID, attribute, context.getLocation(attribute), message);
         }
     }
@@ -461,27 +473,23 @@ public class WrongIdDetector extends LayoutDetector {
         boolean definedLocally = ids.contains(id);
         if (!definedLocally) {
             if (id.startsWith(NEW_ID_PREFIX)) {
-                return ids.contains(ID_PREFIX +
-                        id.substring(NEW_ID_PREFIX.length()));
+                return ids.contains(ID_PREFIX + id.substring(NEW_ID_PREFIX.length()));
             } else if (id.startsWith(ID_PREFIX)) {
-                return ids.contains(NEW_ID_PREFIX +
-                        id.substring(ID_PREFIX.length()));
+                return ids.contains(NEW_ID_PREFIX + id.substring(ID_PREFIX.length()));
             } else {
-                return ids.contains(NEW_ID_PREFIX + id) ||
-                        ids.contains(ID_PREFIX + id);
+                return ids.contains(NEW_ID_PREFIX + id) || ids.contains(ID_PREFIX + id);
             }
         }
 
         return true;
     }
 
-    private boolean idDefined(@NonNull Context context, @NonNull String id,
-            @Nullable File notIn) {
+    private boolean idDefined(@NonNull Context context, @NonNull String id, @Nullable File notIn) {
         AbstractResourceRepository resources =
                 context.getClient().getResourceRepository(context.getProject(), true, true);
         if (resources != null) {
-            List<ResourceItem> items = resources.getResourceItem(ResourceType.ID,
-                    stripIdPrefix(id));
+            List<ResourceItem> items =
+                    resources.getResourceItem(ResourceType.ID, stripIdPrefix(id));
             if (items == null || items.isEmpty()) {
                 return false;
             }

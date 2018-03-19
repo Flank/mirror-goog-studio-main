@@ -67,36 +67,33 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Detects references to resources in the manifest that vary by configuration
- */
+/** Detects references to resources in the manifest that vary by configuration */
 public class ManifestResourceDetector extends ResourceXmlDetector {
     /** Using resources in the manifest that vary by configuration */
     @SuppressWarnings("unchecked")
-    public static final Issue ISSUE = Issue.create(
-            "ManifestResource",
-            "Manifest Resource References",
-            "Elements in the manifest can reference resources, but those resources cannot " +
-            "vary across configurations (except as a special case, by version, and except " +
-            "for a few specific package attributes such as the application title and icon).",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.FATAL,
-            new Implementation(
-                    ManifestResourceDetector.class,
-                    Scope.MANIFEST_AND_RESOURCE_SCOPE,
-                    Scope.MANIFEST_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ManifestResource",
+                    "Manifest Resource References",
+                    "Elements in the manifest can reference resources, but those resources cannot "
+                            + "vary across configurations (except as a special case, by version, and except "
+                            + "for a few specific package attributes such as the application title and icon).",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    new Implementation(
+                            ManifestResourceDetector.class,
+                            Scope.MANIFEST_AND_RESOURCE_SCOPE,
+                            Scope.MANIFEST_SCOPE));
 
     /**
-     * Map from resource name to resource type to manifest location; used
-     * in batch mode to report errors when resource overrides are found
+     * Map from resource name to resource type to manifest location; used in batch mode to report
+     * errors when resource overrides are found
      */
     private Map<String, Multimap<ResourceType, Location>> mManifestLocations;
 
     /** Constructs a new {@link ManifestResourceDetector} */
-    public ManifestResourceDetector() {
-    }
+    public ManifestResourceDetector() {}
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
@@ -128,7 +125,9 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
         }
     }
 
-    private void visit(@NonNull XmlContext context, @NonNull Element element,
+    private void visit(
+            @NonNull XmlContext context,
+            @NonNull Element element,
             @Nullable AbstractResourceRepository repository) {
         if (NODE_METADATA.equals(element.getTagName())) {
             return;
@@ -150,26 +149,26 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                visit(context, ((Element)child), repository);
+                visit(context, ((Element) child), repository);
             }
         }
     }
 
     /**
-     * Is the given attribute allowed to reference a resource that has different
-     * values across configurations (other than with version qualifiers) ?
-     * <p>
-     * When the manifest is read, it has a fixed configuration with only the API level set.
-     * When strings are read, we can either read the actual string, or a resource reference.
-     * For labels and icons, we only read the resource reference -- that is the package manager
-     * doesn't need the actual string (like it would need for, say, the name of an activity),
-     * but just gets the resource ID, and then clients if they need the actual resource value can
-     * load it at that point using their current configuration.
-     * <p>
-     * To see which specific attributes in the manifest are processed this way, look at
-     * android.content.pm.PackageItemInfo to see what pieces of data are kept as raw resource
-     * IDs instead of loading their value. (For label resources we also keep the non localized
-     * label resource to allow people to specify hardcoded strings instead of a resource reference.)
+     * Is the given attribute allowed to reference a resource that has different values across
+     * configurations (other than with version qualifiers) ?
+     *
+     * <p>When the manifest is read, it has a fixed configuration with only the API level set. When
+     * strings are read, we can either read the actual string, or a resource reference. For labels
+     * and icons, we only read the resource reference -- that is the package manager doesn't need
+     * the actual string (like it would need for, say, the name of an activity), but just gets the
+     * resource ID, and then clients if they need the actual resource value can load it at that
+     * point using their current configuration.
+     *
+     * <p>To see which specific attributes in the manifest are processed this way, look at
+     * android.content.pm.PackageItemInfo to see what pieces of data are kept as raw resource IDs
+     * instead of loading their value. (For label resources we also keep the non localized label
+     * resource to allow people to specify hardcoded strings instead of a resource reference.)
      *
      * @param attribute the attribute node to look up
      * @return true if this resource is allowed to have delayed configuration values
@@ -225,13 +224,16 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                         }
                         DensityQualifier densityQualifier = configuration.getDensityQualifier();
                         VersionQualifier versionQualifier = configuration.getVersionQualifier();
-                        if (qualifierCount == 1 &&
-                                (versionQualifier != null && versionQualifier.isValid()
-                                || densityQualifier != null && densityQualifier.isValid())) {
+                        if (qualifierCount == 1
+                                && (versionQualifier != null && versionQualifier.isValid()
+                                        || densityQualifier != null
+                                                && densityQualifier.isValid())) {
                             continue;
-                        } else if (qualifierCount == 2 &&
-                                densityQualifier != null && densityQualifier.isValid() &&
-                                versionQualifier != null && versionQualifier.isValid()) {
+                        } else if (qualifierCount == 2
+                                && densityQualifier != null
+                                && densityQualifier.isValid()
+                                && versionQualifier != null
+                                && versionQualifier.isValid()) {
                             continue;
                         }
 
@@ -240,8 +242,8 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                     if (!list.isEmpty()) {
                         Collections.sort(list);
                         String message = getErrorMessage(Joiner.on(", ").join(list));
-                        context.report(ISSUE, attribute, context.getValueLocation(attribute),
-                                message);
+                        context.report(
+                                ISSUE, attribute, context.getValueLocation(attribute), message);
                     }
                 }
             } else if (!context.getDriver().isSuppressed(context, ISSUE, attribute)) {
@@ -260,9 +262,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
         }
     }
 
-    private void checkResourceFile(
-            @NonNull XmlContext context,
-            @NonNull Document document) {
+    private void checkResourceFile(@NonNull XmlContext context, @NonNull Document document) {
         File parentFile = context.file.getParentFile();
         if (parentFile == null) {
             return;
@@ -288,7 +288,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                 for (int i = 0, n = children.getLength(); i < n; i++) {
                     Node child = children.item(i);
                     if (child.getNodeType() == Node.ELEMENT_NODE) {
-                        Element item = (Element)child;
+                        Element item = (Element) child;
                         String name = item.getAttribute(ATTR_NAME);
                         if (name != null && mManifestLocations.containsKey(name)) {
                             String tag = item.getTagName();
@@ -303,7 +303,6 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                         }
                     }
                 }
-
             }
         } else if (folderType != null) {
             String name = LintUtils.getBaseName(context.file.getName());
@@ -317,8 +316,12 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
         }
     }
 
-    private void reportIfFound(@NonNull XmlContext context, @NonNull  String qualifiers,
-            @NonNull String name, @NonNull ResourceType type, @Nullable Node secondary) {
+    private void reportIfFound(
+            @NonNull XmlContext context,
+            @NonNull String qualifiers,
+            @NonNull String name,
+            @NonNull ResourceType type,
+            @Nullable Node secondary) {
         Multimap<ResourceType, Location> typeMap = mManifestLocations.get(name);
         if (typeMap != null) {
             Collection<Location> locations = typeMap.get(type);
@@ -338,8 +341,9 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
     }
 
     @NonNull
-    private static String getErrorMessage(@NonNull  String qualifiers) {
+    private static String getErrorMessage(@NonNull String qualifiers) {
         return "Resources referenced from the manifest cannot vary by configuration "
-                + "(except for version qualifiers, e.g. `-v21`). Found variation in " + qualifiers;
+                + "(except for version qualifiers, e.g. `-v21`). Found variation in "
+                + qualifiers;
     }
 }

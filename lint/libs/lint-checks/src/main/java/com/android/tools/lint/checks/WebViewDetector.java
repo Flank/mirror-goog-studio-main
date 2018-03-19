@@ -37,27 +37,24 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 public class WebViewDetector extends LayoutDetector {
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            WebViewDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(WebViewDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "WebViewLayout",
-            "WebViews in wrap_content parents",
-
-            "The WebView implementation has certain performance optimizations which will not " +
-            "work correctly if the parent view is using `wrap_content` rather than " +
-            "`match_parent`. This can lead to subtle UI bugs.",
-
-            Category.CORRECTNESS,
-            7,
-            Severity.ERROR,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "WebViewLayout",
+                    "WebViews in wrap_content parents",
+                    "The WebView implementation has certain performance optimizations which will not "
+                            + "work correctly if the parent view is using `wrap_content` rather than "
+                            + "`match_parent`. This can lead to subtle UI bugs.",
+                    Category.CORRECTNESS,
+                    7,
+                    Severity.ERROR,
+                    IMPLEMENTATION);
 
     /** Constructs a new {@link WebViewDetector} */
-    public WebViewDetector() {
-    }
+    public WebViewDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -68,7 +65,7 @@ public class WebViewDetector extends LayoutDetector {
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         Node parentNode = element.getParentNode();
         if (parentNode != null && parentNode.getNodeType() == Node.ELEMENT_NODE) {
-            Element parent = (Element)parentNode;
+            Element parent = (Element) parentNode;
             Attr width = parent.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
             Attr height = parent.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_HEIGHT);
             Attr attr = null;
@@ -79,9 +76,12 @@ public class WebViewDetector extends LayoutDetector {
                 attr = height;
             }
             if (attr != null) {
-                String message = String.format("Placing a `<WebView>` in a parent element that "
-                        + "uses a `wrap_content %1$s` can lead to subtle bugs; use `match_parent` "
-                        + "instead", attr.getLocalName());
+                String message =
+                        String.format(
+                                "Placing a `<WebView>` in a parent element that "
+                                        + "uses a `wrap_content %1$s` can lead to subtle bugs; use `match_parent` "
+                                        + "instead",
+                                attr.getLocalName());
                 Location location = context.getElementLocation(element);
                 Location secondary = context.getLocation(attr);
                 secondary.setMessage("`wrap_content` here may not work well with WebView below");

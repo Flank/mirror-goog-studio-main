@@ -48,9 +48,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PLATFORM_R_TXT;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_DEX;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_JAVA_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,7 +85,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -97,6 +93,7 @@ import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -114,7 +111,6 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.tasks.PipelineToPublicationTask;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -224,6 +220,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
@@ -1588,9 +1585,7 @@ public abstract class TaskManager {
     protected void createCompileTask(@NonNull VariantScope variantScope) {
         JavaCompile javacTask = createJavacTask(variantScope);
         VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
-            return;
-        }
+
         // Only warn for users of retrolambda
         String pluginName = null;
         if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
@@ -2257,7 +2252,6 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         maybeCreateResourcesShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
-            publishTransformOutputs(variantScope, transformManager);
             return;
         }
 
@@ -2346,44 +2340,6 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
-
-        publishTransformOutputs(variantScope, transformManager);
-    }
-
-    /** Creates tasks to publish the pipeline output as needed. */
-    private void publishTransformOutputs(
-            @NonNull VariantScope variantScope, @NonNull TransformManager transformManager) {
-        final File intermediatesDir = variantScope.getGlobalScope().getIntermediatesDir();
-        createPipelineToPublishTask(
-                variantScope,
-                transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX),
-                FileUtils.join(intermediatesDir, "bundling", "dex"),
-                PUBLISHED_DEX);
-
-        createPipelineToPublishTask(
-                variantScope,
-                transformManager.getPipelineOutputAsFileCollection(StreamFilter.RESOURCES),
-                FileUtils.join(intermediatesDir, "bundling", "java-res"),
-                PUBLISHED_JAVA_RES);
-
-        createPipelineToPublishTask(
-                variantScope,
-                transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS),
-                FileUtils.join(intermediatesDir, "bundling", "native-libs"),
-                PUBLISHED_NATIVE_LIBS);
-    }
-
-    private void createPipelineToPublishTask(
-            @NonNull VariantScope variantScope,
-            @NonNull FileCollection fileCollection,
-            @NonNull File outputFile,
-            @NonNull InternalArtifactType outputType) {
-        PipelineToPublicationTask task =
-                taskFactory.create(
-                        new PipelineToPublicationTask.ConfigAction(
-                                variantScope, fileCollection, outputFile, outputType));
-
-        variantScope.addTaskOutput(outputType, outputFile, task.getName());
     }
 
     private void maybeCreateDesugarTask(
@@ -2944,16 +2900,27 @@ public abstract class TaskManager {
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
             File baseFeatureInfoFolder = null;
-            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
+            BuildArtifactsHolder buildArtifactsHolder = scope.getBuildArtifactsHolder();
+            if (buildArtifactsHolder.hasArtifact(
+                    InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
                 baseFeatureInfoFolder =
-                        scope.getIntermediateDir(
-                                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
+                        Iterables.getOnlyElement(
+                                buildArtifactsHolder
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
+                                        .get());
             }
             File featureInfoFile = null;
-            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
+            if (buildArtifactsHolder.hasArtifact(
+                    InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
                 featureInfoFile =
-                        scope.getIntermediateDir(
-                                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
+                        Iterables.getOnlyElement(
+                                buildArtifactsHolder
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_FEATURE_INFO)
+                                        .get());
             }
             // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
@@ -3800,14 +3767,17 @@ public abstract class TaskManager {
             if (variantType.isBaseModule()) {
                 kaptTask.getInputs()
                         .file(
-                                scope.getOutput(
-                                        InternalArtifactType
-                                                .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
+                                scope.getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
             } else {
                 kaptTask.getInputs()
                         .file(
-                                scope.getOutput(
-                                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO));
+                                scope.getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_FEATURE_INFO));
             }
         }
     }

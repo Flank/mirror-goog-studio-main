@@ -23,6 +23,7 @@ import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.utils.FileUtils.mkdirs;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -52,8 +53,9 @@ public class ExtractAarTransform extends ArtifactTransform {
     @Inject
     public ExtractAarTransform() {}
 
+    @NonNull
     @Override
-    public List<File> transform(File input) {
+    public List<File> transform(@NonNull File input) {
         File outputDir = getOutputDirectory();
 
         mkdirs(outputDir);

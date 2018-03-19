@@ -67,142 +67,139 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Checks that exported services request a permission.
- */
+/** Checks that exported services request a permission. */
 public class SecurityDetector extends Detector implements XmlScanner, SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION_MANIFEST = new Implementation(
-            SecurityDetector.class,
-            Scope.MANIFEST_SCOPE);
+    private static final Implementation IMPLEMENTATION_MANIFEST =
+            new Implementation(SecurityDetector.class, Scope.MANIFEST_SCOPE);
 
-    private static final Implementation IMPLEMENTATION_JAVA = new Implementation(
-            SecurityDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION_JAVA =
+            new Implementation(SecurityDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Exported services */
-    public static final Issue EXPORTED_SERVICE = Issue.create(
-            "ExportedService",
-            "Exported service does not require permission",
-            "Exported services (services which either set `exported=true` or contain " +
-            "an intent-filter and do not specify `exported=false`) should define a " +
-            "permission that an entity must have in order to launch the service " +
-            "or bind to it. Without this, any application can use this service.",
-            Category.SECURITY,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION_MANIFEST);
+    public static final Issue EXPORTED_SERVICE =
+            Issue.create(
+                    "ExportedService",
+                    "Exported service does not require permission",
+                    "Exported services (services which either set `exported=true` or contain "
+                            + "an intent-filter and do not specify `exported=false`) should define a "
+                            + "permission that an entity must have in order to launch the service "
+                            + "or bind to it. Without this, any application can use this service.",
+                    Category.SECURITY,
+                    5,
+                    Severity.WARNING,
+                    IMPLEMENTATION_MANIFEST);
 
     /** Exported content providers */
-    public static final Issue EXPORTED_PROVIDER = Issue.create(
-            "ExportedContentProvider",
-            "Content provider does not require permission",
-            "Content providers are exported by default and any application on the " +
-            "system can potentially use them to read and write data. If the content " +
-            "provider provides access to sensitive data, it should be protected by " +
-            "specifying `export=false` in the manifest or by protecting it with a " +
-            "permission that can be granted to other applications.",
-            Category.SECURITY,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION_MANIFEST);
+    public static final Issue EXPORTED_PROVIDER =
+            Issue.create(
+                    "ExportedContentProvider",
+                    "Content provider does not require permission",
+                    "Content providers are exported by default and any application on the "
+                            + "system can potentially use them to read and write data. If the content "
+                            + "provider provides access to sensitive data, it should be protected by "
+                            + "specifying `export=false` in the manifest or by protecting it with a "
+                            + "permission that can be granted to other applications.",
+                    Category.SECURITY,
+                    5,
+                    Severity.WARNING,
+                    IMPLEMENTATION_MANIFEST);
 
     /** Exported receivers */
-    public static final Issue EXPORTED_RECEIVER = Issue.create(
-            "ExportedReceiver",
-            "Receiver does not require permission",
-            "Exported receivers (receivers which either set `exported=true` or contain " +
-            "an intent-filter and do not specify `exported=false`) should define a " +
-            "permission that an entity must have in order to launch the receiver " +
-            "or bind to it. Without this, any application can use this receiver.",
-            Category.SECURITY,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION_MANIFEST);
+    public static final Issue EXPORTED_RECEIVER =
+            Issue.create(
+                    "ExportedReceiver",
+                    "Receiver does not require permission",
+                    "Exported receivers (receivers which either set `exported=true` or contain "
+                            + "an intent-filter and do not specify `exported=false`) should define a "
+                            + "permission that an entity must have in order to launch the receiver "
+                            + "or bind to it. Without this, any application can use this receiver.",
+                    Category.SECURITY,
+                    5,
+                    Severity.WARNING,
+                    IMPLEMENTATION_MANIFEST);
 
     /** Content provides which grant all URIs access */
-    public static final Issue OPEN_PROVIDER = Issue.create(
-            "GrantAllUris",
-            "Content provider shares everything",
-            "The `<grant-uri-permission>` element allows specific paths to be shared. " +
-            "This detector checks for a path URL of just '/' (everything), which is " +
-            "probably not what you want; you should limit access to a subset.",
-            Category.SECURITY,
-            7,
-            Severity.WARNING,
-            IMPLEMENTATION_MANIFEST);
+    public static final Issue OPEN_PROVIDER =
+            Issue.create(
+                    "GrantAllUris",
+                    "Content provider shares everything",
+                    "The `<grant-uri-permission>` element allows specific paths to be shared. "
+                            + "This detector checks for a path URL of just '/' (everything), which is "
+                            + "probably not what you want; you should limit access to a subset.",
+                    Category.SECURITY,
+                    7,
+                    Severity.WARNING,
+                    IMPLEMENTATION_MANIFEST);
 
     /** Using java.io.File.setReadable(true, false) to set file world-readable */
-    public static final Issue SET_READABLE = Issue.create(
-            "SetWorldReadable",
-            "`File.setReadable()` used to make file world-readable",
-            "Setting files world-readable is very dangerous, and likely to cause security " +
-            "holes in applications. It is strongly discouraged; instead, applications should " +
-            "use more formal mechanisms for interactions such as `ContentProvider`, " +
-            "`BroadcastReceiver`, and `Service`.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION_JAVA);
+    public static final Issue SET_READABLE =
+            Issue.create(
+                    "SetWorldReadable",
+                    "`File.setReadable()` used to make file world-readable",
+                    "Setting files world-readable is very dangerous, and likely to cause security "
+                            + "holes in applications. It is strongly discouraged; instead, applications should "
+                            + "use more formal mechanisms for interactions such as `ContentProvider`, "
+                            + "`BroadcastReceiver`, and `Service`.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     /** Using java.io.File.setWritable(true, false) to set file world-writable */
-    public static final Issue SET_WRITABLE = Issue.create(
-            "SetWorldWritable",
-            "`File.setWritable()` used to make file world-writable",
-            "Setting files world-writable is very dangerous, and likely to cause security " +
-            "holes in applications. It is strongly discouraged; instead, applications should " +
-            "use more formal mechanisms for interactions such as `ContentProvider`, " +
-            "`BroadcastReceiver`, and `Service`.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION_JAVA);
+    public static final Issue SET_WRITABLE =
+            Issue.create(
+                    "SetWorldWritable",
+                    "`File.setWritable()` used to make file world-writable",
+                    "Setting files world-writable is very dangerous, and likely to cause security "
+                            + "holes in applications. It is strongly discouraged; instead, applications should "
+                            + "use more formal mechanisms for interactions such as `ContentProvider`, "
+                            + "`BroadcastReceiver`, and `Service`.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     /** Using the world-writable flag */
-    public static final Issue WORLD_WRITEABLE = Issue.create(
-            "WorldWriteableFiles",
-            "`openFileOutput()` or similar call passing `MODE_WORLD_WRITEABLE`",
-            "There are cases where it is appropriate for an application to write " +
-            "world writeable files, but these should be reviewed carefully to " +
-            "ensure that they contain no private data, and that if the file is " +
-            "modified by a malicious application it does not trick or compromise " +
-            "your application.",
-            Category.SECURITY,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION_JAVA);
-
+    public static final Issue WORLD_WRITEABLE =
+            Issue.create(
+                    "WorldWriteableFiles",
+                    "`openFileOutput()` or similar call passing `MODE_WORLD_WRITEABLE`",
+                    "There are cases where it is appropriate for an application to write "
+                            + "world writeable files, but these should be reviewed carefully to "
+                            + "ensure that they contain no private data, and that if the file is "
+                            + "modified by a malicious application it does not trick or compromise "
+                            + "your application.",
+                    Category.SECURITY,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     /** Using the world-readable flag */
-    public static final Issue WORLD_READABLE = Issue.create(
-            "WorldReadableFiles",
-            "`openFileOutput()` or similar call passing `MODE_WORLD_READABLE`",
-            "There are cases where it is appropriate for an application to write " +
-            "world readable files, but these should be reviewed carefully to " +
-            "ensure that they contain no private data that is leaked to other " +
-            "applications.",
-            Category.SECURITY,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION_JAVA);
+    public static final Issue WORLD_READABLE =
+            Issue.create(
+                    "WorldReadableFiles",
+                    "`openFileOutput()` or similar call passing `MODE_WORLD_READABLE`",
+                    "There are cases where it is appropriate for an application to write "
+                            + "world readable files, but these should be reviewed carefully to "
+                            + "ensure that they contain no private data that is leaked to other "
+                            + "applications.",
+                    Category.SECURITY,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     private static final String FILE_CLASS = "java.io.File";
 
     /** Constructs a new {@link SecurityDetector} check */
-    public SecurityDetector() {
-    }
+    public SecurityDetector() {}
 
     // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
-            TAG_SERVICE,
-            TAG_GRANT_PERMISSION,
-            TAG_PROVIDER,
-            TAG_ACTIVITY,
-            TAG_RECEIVER
-        );
+                TAG_SERVICE, TAG_GRANT_PERMISSION, TAG_PROVIDER, TAG_ACTIVITY, TAG_RECEIVER);
     }
 
     @Override
@@ -237,7 +234,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
             }
         }
 
-      return false;
+        return false;
     }
 
     private static boolean isUnprotectedByPermission(Element element) {
@@ -258,14 +255,13 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     /**
-     * See https://labs.mwrinfosecurity.com/blog/android-wear-security-analysis
-     * for information about why an exported declaration of WearListenerService
-     * does not need a permission. (Since the service itself checks to see if the caller is
-     * Play services)
+     * See https://labs.mwrinfosecurity.com/blog/android-wear-security-analysis for information
+     * about why an exported declaration of WearListenerService does not need a permission. (Since
+     * the service itself checks to see if the caller is Play services)
      *
      * @param element The service element to be checked.
-     * @return whether a service has an `intent-filter` action pointing to the ones supported
-     * by WearListenerService.
+     * @return whether a service has an `intent-filter` action pointing to the ones supported by
+     *     WearListenerService.
      */
     private static boolean isWearableListenerServiceAction(@NonNull Element element) {
         // Checks whether a service has an action for a WearableListenerService
@@ -276,7 +272,8 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                 for (Element innerChild : XmlUtils.getSubTags(child)) {
                     if (innerChild.getTagName().equals(NODE_ACTION)) {
                         String name = innerChild.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                        if ("com.google.android.gms.wearable.BIND_LISTENER".equals(name) // deprecated
+                        if ("com.google.android.gms.wearable.BIND_LISTENER".equals(name)
+                                // deprecated
                                 || "com.google.android.gms.wearable.DATA_CHANGED".equals(name)
                                 || "com.google.android.gms.wearable.MESSAGE_RECEIVED".equals(name)
                                 || "com.google.android.gms.wearable.CAPABILITY_CHANGED".equals(name)
@@ -315,22 +312,32 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     private static void checkReceiver(XmlContext context, Element element) {
-        if (getExported(element) && isUnprotectedByPermission(element) &&
-                !isStandardReceiver(element)) {
+        if (getExported(element)
+                && isUnprotectedByPermission(element)
+                && !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
             LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
-            context.report(EXPORTED_RECEIVER, element, context.getNameLocation(element),
-                           "Exported receiver does not require permission", fix);
+            context.report(
+                    EXPORTED_RECEIVER,
+                    element,
+                    context.getNameLocation(element),
+                    "Exported receiver does not require permission",
+                    fix);
         }
     }
 
     private static void checkService(XmlContext context, Element element) {
-        if (getExported(element) && isUnprotectedByPermission(element)
+        if (getExported(element)
+                && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
             LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
-            context.report(EXPORTED_SERVICE, element, context.getNameLocation(element),
-                           "Exported service does not require permission", fix);
+            context.report(
+                    EXPORTED_SERVICE,
+                    element,
+                    context.getNameLocation(element),
+                    "Exported service does not require permission",
+                    fix);
         }
     }
 
@@ -346,8 +353,9 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         if (prefix != null && prefix.getValue().equals("/")) {
             context.report(OPEN_PROVIDER, prefix, context.getLocation(prefix), msg);
         }
-        if (pattern != null && (pattern.getValue().equals("/")
-               /* || pattern.getValue().equals(".*")*/)) {
+        if (pattern != null
+                && (pattern.getValue().equals("/")
+                /* || pattern.getValue().equals(".*")*/ )) {
             context.report(OPEN_PROVIDER, pattern, context.getLocation(pattern), msg);
         }
     }
@@ -384,12 +392,17 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                         }
 
                         if (!hasPermission) {
-                            LintFix fix = LintFix.create()
-                                    .set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE).build();
-                            context.report(EXPORTED_PROVIDER, element,
+                            LintFix fix =
+                                    LintFix.create()
+                                            .set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE)
+                                            .build();
+                            context.report(
+                                    EXPORTED_PROVIDER,
+                                    element,
                                     context.getNameLocation(element),
-                                    "Exported content providers can provide access to " +
-                                            "potentially sensitive data", fix);
+                                    "Exported content providers can provide access to "
+                                            + "potentially sensitive data",
+                                    fix);
                         }
                     }
                 }
@@ -413,7 +426,9 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         List<UExpression> args = node.getValueArguments();
         String methodName = getMethodName(node);
@@ -421,20 +436,26 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
             // Report calls to java.io.File.setReadable(true, false) or
             // java.io.File.setWritable(true, false)
             if ("setReadable".equals(methodName)) {
-                if (args.size() == 2 &&
-                        Boolean.TRUE.equals(ConstantEvaluator.evaluate(context, args.get(0))) &&
-                        Boolean.FALSE.equals(ConstantEvaluator.evaluate(context, args.get(1)))) {
-                    context.report(SET_READABLE, node, context.getLocation(node),
-                            "Setting file permissions to world-readable can be " +
-                                    "risky, review carefully");
+                if (args.size() == 2
+                        && Boolean.TRUE.equals(ConstantEvaluator.evaluate(context, args.get(0)))
+                        && Boolean.FALSE.equals(ConstantEvaluator.evaluate(context, args.get(1)))) {
+                    context.report(
+                            SET_READABLE,
+                            node,
+                            context.getLocation(node),
+                            "Setting file permissions to world-readable can be "
+                                    + "risky, review carefully");
                 }
             } else if ("setWritable".equals(methodName)) {
-                if (args.size() == 2 &&
-                        Boolean.TRUE.equals(ConstantEvaluator.evaluate(context, args.get(0))) &&
-                        Boolean.FALSE.equals(ConstantEvaluator.evaluate(context, args.get(1)))) {
-                    context.report(SET_WRITABLE, node, context.getLocation(node),
-                            "Setting file permissions to world-writable can be " +
-                                    "risky, review carefully");
+                if (args.size() == 2
+                        && Boolean.TRUE.equals(ConstantEvaluator.evaluate(context, args.get(0)))
+                        && Boolean.FALSE.equals(ConstantEvaluator.evaluate(context, args.get(1)))) {
+                    context.report(
+                            SET_WRITABLE,
+                            node,
+                            context.getLocation(node),
+                            "Setting file permissions to world-writable can be "
+                                    + "risky, review carefully");
                 }
             }
         }
@@ -459,18 +480,25 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         }
 
         @Override
-        public void visitSimpleNameReferenceExpression(@NonNull USimpleNameReferenceExpression node) {
+        public void visitSimpleNameReferenceExpression(
+                @NonNull USimpleNameReferenceExpression node) {
             String name = node.getIdentifier();
             if ("MODE_WORLD_WRITEABLE".equals(name)) {
                 Location location = context.getLocation(node);
-                context.report(WORLD_WRITEABLE, node, location,
-                        "Using `MODE_WORLD_WRITEABLE` when creating files can be " +
-                                "risky, review carefully");
+                context.report(
+                        WORLD_WRITEABLE,
+                        node,
+                        location,
+                        "Using `MODE_WORLD_WRITEABLE` when creating files can be "
+                                + "risky, review carefully");
             } else if ("MODE_WORLD_READABLE".equals(name)) {
                 Location location = context.getLocation(node);
-                context.report(WORLD_READABLE, node, location,
-                        "Using `MODE_WORLD_READABLE` when creating files can be " +
-                                "risky, review carefully");
+                context.report(
+                        WORLD_READABLE,
+                        node,
+                        location,
+                        "Using `MODE_WORLD_READABLE` when creating files can be "
+                                + "risky, review carefully");
             }
         }
     }

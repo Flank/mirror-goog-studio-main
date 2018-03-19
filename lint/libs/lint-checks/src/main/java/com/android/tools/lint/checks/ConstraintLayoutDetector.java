@@ -52,26 +52,25 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
- * Check which looks for potential errors in declarations of ConstraintLayout, such as
- * under specifying constraints
+ * Check which looks for potential errors in declarations of ConstraintLayout, such as under
+ * specifying constraints
  */
 public class ConstraintLayoutDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "MissingConstraints",
-            "Missing Constraints in ConstraintLayout",
-            "The layout editor allows you to place widgets anywhere on the canvas, and it " +
-            "records the current position with designtime attributes (such as " +
-            "`layout_editor_absoluteX`). These attributes are **not** applied at runtime, so if " +
-            "you push your layout on a device, the widgets may appear in a different location " +
-            "than shown in the editor. To fix this, make sure a widget has both horizontal and " +
-            "vertical constraints by dragging from the edge connections.",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            new Implementation(
-                    ConstraintLayoutDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "MissingConstraints",
+                    "Missing Constraints in ConstraintLayout",
+                    "The layout editor allows you to place widgets anywhere on the canvas, and it "
+                            + "records the current position with designtime attributes (such as "
+                            + "`layout_editor_absoluteX`). These attributes are **not** applied at runtime, so if "
+                            + "you push your layout on a device, the widgets may appear in a different location "
+                            + "than shown in the editor. To fix this, make sure a widget has both horizontal and "
+                            + "vertical constraints by dragging from the edge connections.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.ERROR,
+                    new Implementation(ConstraintLayoutDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     private static final String LAYOUT_CONSTRAINT_PREFIX = "layout_constraint";
 
@@ -85,8 +84,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                     SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
 
     /** Constructs a new {@link ConstraintLayoutDetector} check */
-    public ConstraintLayoutDetector() {
-    }
+    public ConstraintLayoutDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -104,20 +102,27 @@ public class ConstraintLayoutDetector extends LayoutDetector {
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 MavenCoordinates rc = library.getResolvedCoordinates();
                 if (CONSTRAINT_LAYOUT_LIB_GROUP_ID.equals(rc.getGroupId())
-                    && CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID.equals(rc.getArtifactId())) {
+                        && CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID.equals(rc.getArtifactId())) {
                     if (latestAvailable == null) {
                         latestAvailable = getLatestVersion(context);
                     }
-                    GradleCoordinate version = new GradleCoordinate(
-                            CONSTRAINT_LAYOUT_LIB_GROUP_ID,
-                            CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID,
-                            rc.getVersion());
+                    GradleCoordinate version =
+                            new GradleCoordinate(
+                                    CONSTRAINT_LAYOUT_LIB_GROUP_ID,
+                                    CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID,
+                                    rc.getVersion());
                     if (COMPARE_PLUS_LOWER.compare(latestAvailable, version) > 0) {
-                        String message = "Using version " + version.getRevision()
-                                + " of the constraint library, which is obsolete";
+                        String message =
+                                "Using version "
+                                        + version.getRevision()
+                                        + " of the constraint library, which is obsolete";
                         LintFix fix = fix().data(ConstraintLayoutDetector.class);
-                        context.report(GradleDetector.DEPENDENCY, layout,
-                                context.getLocation(layout), message, fix);
+                        context.report(
+                                GradleDetector.DEPENDENCY,
+                                layout,
+                                context.getLocation(layout),
+                                message,
+                                fix);
                     }
                 }
             }
@@ -128,7 +133,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
             if (child.getNodeType() != Node.ELEMENT_NODE) {
                 continue;
             }
-            Element element = (Element)child;
+            Element element = (Element) child;
 
             if (CLASS_CONSTRAINT_LAYOUT_GUIDELINE.isEquals(element.getTagName())) {
                 continue;
@@ -152,7 +157,6 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                     continue;
                 }
             }
-
 
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0; i < attributes.getLength(); i++) {
@@ -190,14 +194,17 @@ public class ConstraintLayoutDetector extends LayoutDetector {
 
                 String message;
                 if (isConstrainedVertically) {
-                    message = "This view is not constrained horizontally: at runtime it will "
-                            + "jump to the left unless you add a horizontal constraint";
+                    message =
+                            "This view is not constrained horizontally: at runtime it will "
+                                    + "jump to the left unless you add a horizontal constraint";
                 } else if (isConstrainedHorizontally) {
-                    message = "This view is not constrained vertically: at runtime it will "
-                            + "jump to the top unless you add a vertical constraint";
+                    message =
+                            "This view is not constrained vertically: at runtime it will "
+                                    + "jump to the top unless you add a vertical constraint";
                 } else {
-                    message = "This view is not constrained. It only has designtime positions, "
-                            + "so it will jump to (0,0) at runtime unless you add the constraints";
+                    message =
+                            "This view is not constrained. It only has designtime positions, "
+                                    + "so it will jump to (0,0) at runtime unless you add the constraints";
                 }
                 context.report(ISSUE, element, context.getNameLocation(element), message);
             }
@@ -210,13 +217,14 @@ public class ConstraintLayoutDetector extends LayoutDetector {
         AndroidSdkHandler sdkHandler = context.getClient().getSdk();
         if (sdkHandler != null) {
             ProgressIndicator progress = context.getClient().getRepositoryLogger();
-            RepoPackage latestPackage = SdkMavenRepository
-                    .findLatestVersion(LATEST_KNOWN_VERSION, sdkHandler, null, progress);
+            RepoPackage latestPackage =
+                    SdkMavenRepository.findLatestVersion(
+                            LATEST_KNOWN_VERSION, sdkHandler, null, progress);
             if (latestPackage != null) {
-                GradleCoordinate fromPackage = SdkMavenRepository
-                        .getCoordinateFromSdkPath(latestPackage.getPath());
-                if (fromPackage != null &&
-                        COMPARE_PLUS_LOWER.compare(latestAvailable, fromPackage) < 0) {
+                GradleCoordinate fromPackage =
+                        SdkMavenRepository.getCoordinateFromSdkPath(latestPackage.getPath());
+                if (fromPackage != null
+                        && COMPARE_PLUS_LOWER.compare(latestAvailable, fromPackage) < 0) {
                     latestAvailable = fromPackage;
                 }
             }

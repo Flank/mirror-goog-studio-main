@@ -152,7 +152,6 @@ public class TypoLookupTest extends AbstractCheckTest {
         assertNotNull(db.getTypos(text, 0, 3));
         assertEquals("allzu", db.getTypos(text, 0, text.length).get(1));
 
-
         text = ") all zu (".getBytes(Charsets.UTF_8);
         assertNotNull(db.getTypos(text, 2, 8));
         assertEquals("allzu", db.getTypos(text, 2, 8).get(1));
@@ -191,7 +190,7 @@ public class TypoLookupTest extends AbstractCheckTest {
         // Ensure that the two comparison methods agree
 
         LintClient client = createClient();
-        for (String locale : new String[] { "de", "nb", "es", "en", "pt", "hu", "it", "tr" }) {
+        for (String locale : new String[] {"de", "nb", "es", "en", "pt", "hu", "it", "tr"}) {
             File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
             assertTrue(locale, f != null && f.exists());
 
@@ -223,12 +222,14 @@ public class TypoLookupTest extends AbstractCheckTest {
                 String text = words.get(i) + '\000';
                 byte[] bytes = text.getBytes(Charsets.UTF_8);
 
-                int textCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, text, 0,
-                        text.length());
-                int byteCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, bytes, 0,
-                        bytes.length);
-                assertEquals("Word " + text + " versus prev " + prevText + " at " + i,
-                        Math.signum(textCompare), Math.signum(byteCompare));
+                int textCompare =
+                        TypoLookup.compare(prevBytes, 0, (byte) 0, text, 0, text.length());
+                int byteCompare =
+                        TypoLookup.compare(prevBytes, 0, (byte) 0, bytes, 0, bytes.length);
+                assertEquals(
+                        "Word " + text + " versus prev " + prevText + " at " + i,
+                        Math.signum(textCompare),
+                        Math.signum(byteCompare));
             }
         }
     }
@@ -240,15 +241,14 @@ public class TypoLookupTest extends AbstractCheckTest {
         String text = "Päsident\u0000";
         byte[] bytes = text.getBytes(Charsets.UTF_8);
 
-
-        int textCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, text, 0,
-                text.length());
-        int byteCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, bytes, 0,
-                bytes.length);
+        int textCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, text, 0, text.length());
+        int byteCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, bytes, 0, bytes.length);
         assertTrue(byteCompare < 0);
         assertTrue(textCompare < 0);
-        assertEquals("Word " + text + " versus prev " + prevText,
-                Math.signum(textCompare), Math.signum(byteCompare));
+        assertEquals(
+                "Word " + text + " versus prev " + prevText,
+                Math.signum(textCompare),
+                Math.signum(byteCompare));
     }
 
     public void testComparison2() {
@@ -262,8 +262,10 @@ public class TypoLookupTest extends AbstractCheckTest {
         int byteCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, bytes, 0, bytes.length);
         assertTrue(byteCompare < 0);
         assertTrue(textCompare < 0);
-        assertEquals("Word " + text + " versus prev " + prevText,
-                Math.signum(textCompare), Math.signum(byteCompare));
+        assertEquals(
+                "Word " + text + " versus prev " + prevText,
+                Math.signum(textCompare),
+                Math.signum(byteCompare));
 
         // Reverse capitalization and ensure that it's still the same
         prevText = "Intepretation\u0000";
@@ -276,19 +278,22 @@ public class TypoLookupTest extends AbstractCheckTest {
         byteCompare = TypoLookup.compare(prevBytes, 0, (byte) 0, bytes, 0, bytes.length);
         assertTrue(byteCompare < 0);
         assertTrue(textCompare < 0);
-        assertEquals("Word " + text + " versus prev " + prevText,
-                Math.signum(textCompare), Math.signum(byteCompare));
+        assertEquals(
+                "Word " + text + " versus prev " + prevText,
+                Math.signum(textCompare),
+                Math.signum(byteCompare));
     }
 
     // Some dictionaries contain actual sentences regarding usage; these must be stripped out.
     // They're just hardcoded here as we find them
-    private static final String[] sRemove = new String[] {
-        "- besser ganz darauf verzichten",
-        "oft fälschlich für \"angekündigt\"",
-        "hinausgehende* − insb. „darüber hinausgehende“",
-        " - besser ganz darauf verzichten",
-        "svw. bzw. so viel wie bzw. sprachverwandt"
-    };
+    private static final String[] sRemove =
+            new String[] {
+                "- besser ganz darauf verzichten",
+                "oft fälschlich für \"angekündigt\"",
+                "hinausgehende* − insb. „darüber hinausgehende“",
+                " - besser ganz darauf verzichten",
+                "svw. bzw. so viel wie bzw. sprachverwandt"
+            };
 
     private void validateDictionary(String locale) throws Exception {
         // Check that all the typo files are well formed
@@ -306,8 +311,7 @@ public class TypoLookupTest extends AbstractCheckTest {
                 continue;
             }
 
-            assertTrue(msg(f, i, "Line should contain '->': %1$s", line),
-                    line.contains(SEPARATOR));
+            assertTrue(msg(f, i, "Line should contain '->': %1$s", line), line.contains(SEPARATOR));
             int index = line.indexOf(SEPARATOR);
             String typo = line.substring(0, index).trim();
             String replacements = line.substring(index + SEPARATOR.length()).trim();
@@ -325,35 +329,56 @@ public class TypoLookupTest extends AbstractCheckTest {
                     if (seen.contains(s)) {
                         seen.add(s);
                         fixDictionary(f);
-                        fail(msg(f, i, "For typo " + typo
-                                + " there are repeated replacements (" + s + "): " + line));
+                        fail(
+                                msg(
+                                        f,
+                                        i,
+                                        "For typo "
+                                                + typo
+                                                + " there are repeated replacements ("
+                                                + s
+                                                + "): "
+                                                + line));
                     }
                 }
             }
 
             assertTrue(msg(f, i, "Typo entry was empty: %1$s", line), !typo.isEmpty());
-            assertTrue(msg(f, i, "Typo replacements was empty: %1$s", line),
-                    !replacements.isEmpty());
+            assertTrue(
+                    msg(f, i, "Typo replacements was empty: %1$s", line), !replacements.isEmpty());
 
             for (String blacklist : sRemove) {
                 if (replacements.contains(blacklist)) {
-                    fail(msg(f, i, "Replacements for typo %1$s contain description: %2$s",
-                            typo, replacements));
+                    fail(
+                            msg(
+                                    f,
+                                    i,
+                                    "Replacements for typo %1$s contain description: %2$s",
+                                    typo,
+                                    replacements));
                 }
             }
             if (typo.equals("sólo") && locale.equals("es")) {
                 // sólo->solo
                 // This seems to trigger a lot of false positives
-                fail(msg(f, i, "Typo %1$s triggers a lot of false positives, should be omitted",
-                        typo));
+                fail(
+                        msg(
+                                f,
+                                i,
+                                "Typo %1$s triggers a lot of false positives, should be omitted",
+                                typo));
             }
-            if (locale.equals("tr") && (typo.equals("hiç bir")|| typo.equals("öğe"))) {
+            if (locale.equals("tr") && (typo.equals("hiç bir") || typo.equals("öğe"))) {
                 // hiç bir->hiçbir
                 // öğe->öge
                 // According to a couple of native speakers these are not necessarily
                 // typos
-                fail(msg(f, i, "Typo %1$s triggers a lot of false positives, should be omitted",
-                        typo));
+                fail(
+                        msg(
+                                f,
+                                i,
+                                "Typo %1$s triggers a lot of false positives, should be omitted",
+                                typo));
             }
 
             if (typo.contains("*")) {
@@ -367,7 +392,6 @@ public class TypoLookupTest extends AbstractCheckTest {
                     }
                 }
             }
-
 
             if (typos.contains(typo)) {
                 fixDictionary(f);
@@ -427,8 +451,13 @@ public class TypoLookupTest extends AbstractCheckTest {
                 boolean rewrite = false;
                 for (String s : Splitter.on(',').omitEmptyStrings().split(replacements)) {
                     if (seen.contains(s)) {
-                        System.err.println("For typo " + typo
-                                + " there are repeated replacements (" + s + "): " + line);
+                        System.err.println(
+                                "For typo "
+                                        + typo
+                                        + " there are repeated replacements ("
+                                        + s
+                                        + "): "
+                                        + line);
                         rewrite = true;
                     }
                     seen.add(s);
@@ -451,21 +480,26 @@ public class TypoLookupTest extends AbstractCheckTest {
                 if (!typo.endsWith("*")) {
                     // Globbing not supported anywhere but the end
                     // Drop the whole word
-                    System.err.println("Skipping typo " + typo
-                            + " because globbing is only supported at the end of the word");
+                    System.err.println(
+                            "Skipping typo "
+                                    + typo
+                                    + " because globbing is only supported at the end of the word");
                     continue;
                 }
                 patterns.add(Pattern.compile(typo.replace("*", ".*")));
             } else if (replacements.contains("*")) {
-                System.err.println("Skipping typo " + typo + " because unexpected " +
-                        "globbing character found in replacements: "
-                        + replacements);
+                System.err.println(
+                        "Skipping typo "
+                                + typo
+                                + " because unexpected "
+                                + "globbing character found in replacements: "
+                                + replacements);
                 continue;
             } else if (!patterns.isEmpty()) {
                 for (Pattern pattern : patterns) {
                     if (pattern.matcher(typo).matches()) {
-                        System.err.println("The typo " + typo
-                                + " matches an earlier glob: ignoring");
+                        System.err.println(
+                                "The typo " + typo + " matches an earlier glob: ignoring");
                         continue wordLoop;
                     }
                 }
@@ -481,8 +515,8 @@ public class TypoLookupTest extends AbstractCheckTest {
                 // Append new replacements and put back into the list
                 // (unless they're already listed as replacements)
                 Set<String> seen = new HashSet<>();
-                for (String s : Splitter.on(',').split(prev.substring(prev.indexOf(SEPARATOR)
-                        + 2))) {
+                for (String s :
+                        Splitter.on(',').split(prev.substring(prev.indexOf(SEPARATOR) + 2))) {
                     seen.add(s);
                 }
                 for (String s : Splitter.on(',').omitEmptyStrings().split(replacements)) {
@@ -509,8 +543,12 @@ public class TypoLookupTest extends AbstractCheckTest {
     }
 
     private static String msg(File file, int line, String message, Object... args) {
-        return file.getName() + ':' + Integer.toString(line + 1) + ':' + ' ' +
-                String.format(message, args);
+        return file.getName()
+                + ':'
+                + Integer.toString(line + 1)
+                + ':'
+                + ' '
+                + String.format(message, args);
     }
 
     @Override

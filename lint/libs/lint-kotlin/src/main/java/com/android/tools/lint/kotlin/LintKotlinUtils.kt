@@ -42,15 +42,17 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
         return null
     }
 
-    val service = ServiceManager.getService(receiver.project,
-            KotlinUastBindingContextProviderService::class.java) ?: return null
+    val service = ServiceManager.getService(
+        receiver.project,
+        KotlinUastBindingContextProviderService::class.java
+    ) ?: return null
     val bindingContext = service.getBindingContext(receiver)
     val parameters = method.parameterList.parameters
     val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
     val valueArguments = resolvedCall.valueArguments
     val elementMap = mutableMapOf<PsiElement, UExpression>()
     for (parameter in call.valueArguments) {
-        elementMap.put(parameter.psi ?: continue, parameter)
+        elementMap[parameter.psi ?: continue] = parameter
     }
     if (valueArguments.isNotEmpty()) {
         var firstParameterIndex = 0
@@ -66,7 +68,7 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
                 val arg = elementMap[expression] ?: continue
                 val index = firstParameterIndex + parameterDescriptor.index
                 if (index < parameters.size) {
-                    mapping.put(arg, parameters[index])
+                    mapping[arg] = parameters[index]
                 }
             }
         }

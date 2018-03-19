@@ -41,32 +41,38 @@ class DefaultJavaEvaluatorTest {
     @Test
     fun lookUpAnnotationsOnUastModifierLists() {
         lint().files(
-                AbstractCheckTest.java("""
+            AbstractCheckTest.java(
+                """
                     package foo;
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public class MyTest {
                         public void myTest(@Override int something) { }
-                    }""").indented())
-                .sdkHome(TestUtils.getSdk())
-                .issues(TestAnnotationLookupDetector.ISSUE)
-                .run()
-                .expectClean()
+                    }"""
+            ).indented()
+        )
+            .sdkHome(TestUtils.getSdk())
+            .issues(TestAnnotationLookupDetector.ISSUE)
+            .run()
+            .expectClean()
     }
 
     class TestAnnotationLookupDetector : Detector(), SourceCodeScanner {
         companion object Issues {
             val ISSUE = Issue.create(
-                    "Order",
-                    "Dummy test detector summary",
-                    "Dummy test detector explanation",
+                "Order",
+                "Dummy test detector summary",
+                "Dummy test detector explanation",
 
-                    Category.CORRECTNESS, 6, Severity.WARNING,
-                    Implementation(TestAnnotationLookupDetector::class.java,
-                            Scope.JAVA_FILE_SCOPE))
+                Category.CORRECTNESS, 6, Severity.WARNING,
+                Implementation(
+                    TestAnnotationLookupDetector::class.java,
+                    Scope.JAVA_FILE_SCOPE
+                )
+            )
         }
 
         override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-                listOf(UMethod::class.java, UVariable::class.java)
+            listOf(UMethod::class.java, UVariable::class.java)
 
         class AnnotationOrderVisitor(private val context: JavaContext) : UElementHandler() {
             override fun visitVariable(node: UVariable) {
@@ -80,8 +86,10 @@ class DefaultJavaEvaluatorTest {
             private fun processAnnotations(modifierListOwner: PsiModifierListOwner) {
                 context.evaluator.findAnnotationInHierarchy(modifierListOwner, "org.foo.bar")
                 context.evaluator.findAnnotation(modifierListOwner, "org.foo.bar")
-                context.evaluator.getAllAnnotations(modifierListOwner,
-                        true).mapNotNull { it.qualifiedName?.split(".")?.lastOrNull() }
+                context.evaluator.getAllAnnotations(
+                    modifierListOwner,
+                    true
+                ).mapNotNull { it.qualifiedName?.split(".")?.lastOrNull() }
                 // This detector doesn't actually report anything; the regression test
                 // ensures that the above calls don't crash
             }

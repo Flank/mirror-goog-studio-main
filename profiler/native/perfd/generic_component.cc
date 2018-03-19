@@ -22,9 +22,10 @@
 
 namespace profiler {
 
-GenericComponent::GenericComponent(Daemon::Utilities* utilities,
+GenericComponent::GenericComponent(Daemon* daemon,
+                                   Daemon::Utilities* utilities,
                                    SessionsManager* sessions)
-    : generic_public_service_(utilities, sessions, &heartbeat_timestamp_map_),
+    : generic_public_service_(daemon, &heartbeat_timestamp_map_),
       agent_service_(utilities->clock(), &heartbeat_timestamp_map_),
       clock_(utilities->clock()) {
   status_thread_ = std::thread(&GenericComponent::RunAgentStatusThread, this);
@@ -33,7 +34,7 @@ GenericComponent::GenericComponent(Daemon::Utilities* utilities,
 void GenericComponent::RunAgentStatusThread() {
   SetThreadName("AgentStatus");
   while (true) {
-    int64_t current_time = clock_.GetCurrentTime();
+    int64_t current_time = clock_->GetCurrentTime();
     for (auto map : heartbeat_timestamp_map_) {
       proto::AgentStatusResponse::Status status =
           kHeartbeatThresholdNs > (current_time - map.second)

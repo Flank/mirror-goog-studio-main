@@ -17,6 +17,7 @@ package com.android.layoutinspector
 
 import com.android.layoutinspector.model.ClientWindow
 import com.android.layoutinspector.model.ViewNode
+import com.android.layoutinspector.parser.ViewNodeParser
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.ObjectOutputStream
@@ -32,7 +33,7 @@ object LayoutInspectorBridge {
                 "Unexpected error: empty view hierarchy"
         )
 
-        val root = ViewNode.parseFlatString(hierarchy) ?: return LayoutInspectorResult(
+        val root = ViewNodeParser.parse(hierarchy) ?: return LayoutInspectorResult(
                 null,
                 "Unable to parse view hierarchy"
         )

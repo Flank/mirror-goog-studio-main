@@ -57,14 +57,15 @@ import java.util.Collections
  * up.
  */
 class LintBaseline(
-        /** Client to log to  */
-        private val client: LintClient?,
+    /** Client to log to  */
+    private val client: LintClient?,
 
-        /**
-         * The file to read the baselines from, and if [.writeOnClose] is set, to write
-         * to when the baseline is [.close]'ed.
-         */
-        val file: File) {
+    /**
+     * The file to read the baselines from, and if [.writeOnClose] is set, to write
+     * to when the baseline is [.close]'ed.
+     */
+    val file: File
+) {
 
     /** Count of number of errors that were filtered out  */
     /** Returns the number of errors that have been matched from the baseline  */
@@ -135,10 +136,14 @@ class LintBaseline(
         if (foundErrorCount > 0 || foundWarningCount > 0) {
             val client = driver.client
             val baselineFile = file
-            val message = describeBaselineFilter(foundErrorCount,
-                    foundWarningCount, getDisplayPath(project, baselineFile))
-            LintClient.report(client, IssueRegistry.BASELINE, message,
-                    file = baselineFile, project = project, driver = driver)
+            val message = describeBaselineFilter(
+                foundErrorCount,
+                foundWarningCount, getDisplayPath(project, baselineFile)
+            )
+            LintClient.report(
+                client, IssueRegistry.BASELINE, message,
+                file = baselineFile, project = project, driver = driver
+            )
         }
 
         val fixedCount = fixedCount
@@ -153,7 +158,7 @@ class LintBaseline(
                 } else {
                     count += 1
                 }
-                ids.put(entry.issueId, count)
+                ids[entry.issueId] = count
             }
             val sorted = Lists.newArrayList(ids.keys)
             Collections.sort(sorted)
@@ -170,11 +175,14 @@ class LintBaseline(
             }
 
             // Keep in sync with isFixedMessage() below
-            var message = String.format("%1\$d errors/warnings were listed in the "
-                    + "baseline file (%2\$s) but not found in the project; perhaps they have "
-                    + "been fixed?", fixedCount, getDisplayPath(project, baselineFile))
+            var message = String.format(
+                "%1\$d errors/warnings were listed in the " +
+                        "baseline file (%2\$s) but not found in the project; perhaps they have " +
+                        "been fixed?", fixedCount, getDisplayPath(project, baselineFile)
+            )
             if (LintClient.isGradle && project.gradleProjectModel != null &&
-                    !project.gradleProjectModel!!.lintOptions.isCheckDependencies) {
+                !project.gradleProjectModel!!.lintOptions.isCheckDependencies
+            ) {
                 message += " Another possible explanation is that lint recently stopped " +
                         "analyzing (and including results from) dependent projects by default. " +
                         "You can turn this back on with " +
@@ -182,8 +190,10 @@ class LintBaseline(
             }
             message += " Unmatched issue types: " + issueTypes
 
-            LintClient.report(client, IssueRegistry.BASELINE, message,
-                    file = baselineFile, project = project, driver = driver)
+            LintClient.report(
+                client, IssueRegistry.BASELINE, message,
+                file = baselineFile, project = project, driver = driver
+            )
         }
     }
 
@@ -198,16 +208,21 @@ class LintBaseline(
      * matched during the run, and [.getFixedCount] to get a count of the issues
      * that were present in the baseline that were not matched (e.g. have been fixed.)
      *
-     * @param issue    the issue type
+     * @param issue the issue type
      * @param location the location of the error
-     * @param message  the exact error message (in [TextFormat.RAW] format)
+     * @param message the exact error message (in [TextFormat.RAW] format)
      * @param severity the severity of the issue, used to count baseline match as error or warning
-     * @param project  the relevant project, if any
+     * @param project the relevant project, if any
      * @return true if this error was found in the baseline and marked as used, and false if this
      * issue is not part of the baseline
      */
-    fun findAndMark(issue: Issue, location: Location,
-            message: String, severity: Severity?, project: Project?): Boolean {
+    fun findAndMark(
+        issue: Issue,
+        location: Location,
+        message: String,
+        severity: Severity?,
+        project: Project?
+    ): Boolean {
         val found = findAndMark(issue, location, message, severity)
         if (isWriteOnClose && (!isRemoveFixed || found)) {
 
@@ -219,8 +234,12 @@ class LintBaseline(
         return found
     }
 
-    private fun findAndMark(issue: Issue, location: Location,
-            message: String, severity: Severity?): Boolean {
+    private fun findAndMark(
+        issue: Issue,
+        location: Location,
+        message: String,
+        severity: Severity?
+    ): Boolean {
         val entries = messageToEntry.get(message)
         if (entries == null || entries.isEmpty()) {
             return false
@@ -265,8 +284,11 @@ class LintBaseline(
         }
 
         try {
-            BufferedReader(InputStreamReader(
-                    FileInputStream(file), StandardCharsets.UTF_8)).use { reader ->
+            BufferedReader(
+                InputStreamReader(
+                    FileInputStream(file), StandardCharsets.UTF_8
+                )
+            ).use { reader ->
                 val parser = KXmlParser()
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
                 parser.setInput(reader)
@@ -320,8 +342,8 @@ class LintBaseline(
                                 }
                             }
                             ATTR_FILE -> path = value
-                            // For now not reading ATTR_LINE; not used for baseline entry matching
-                            //ATTR_LINE -> line = value
+                        // For now not reading ATTR_LINE; not used for baseline entry matching
+                        //ATTR_LINE -> line = value
                         }
                         i++
                     }
@@ -340,7 +362,6 @@ class LintBaseline(
                 e.printStackTrace()
             }
         }
-
     }
 
     /** Finishes writing the baseline  */
@@ -385,7 +406,6 @@ class LintBaseline(
             } catch (ioe: IOException) {
                 client!!.log(ioe, null)
             }
-
         }
     }
 
@@ -394,8 +414,12 @@ class LintBaseline(
      * when we need to write a baseline file (since we need to sort them before
      * writing out the result file, to ensure stable files.
      */
-    private class ReportedEntry(val issue: Issue, val project: Project?,
-            val location: Location, val message: String) : Comparable<ReportedEntry> {
+    private class ReportedEntry(
+        val issue: Issue,
+        val project: Project?,
+        val location: Location,
+        val message: String
+    ) : Comparable<ReportedEntry> {
 
         override fun compareTo(other: ReportedEntry): Int {
             // Sort by category, then by priority, then by id,
@@ -418,7 +442,8 @@ class LintBaseline(
             val file = location.file
             val otherFile = other.location.file
             val fileDelta = file.name.compareTo(
-                    otherFile.name)
+                otherFile.name
+            )
             if (fileDelta != 0) {
                 return fileDelta
             }
@@ -452,10 +477,9 @@ class LintBaseline(
                 } else {
                     -1
                 }
-            } else
-                if (secondaryFile2 != null) {
-                    return 1
-                }
+            } else if (secondaryFile2 != null) {
+                return 1
+            }
 
             // This handles the case where you have a huge XML document without hewlines,
             // such that all the errors end up on the same line.
@@ -473,8 +497,9 @@ class LintBaseline(
          * Given the report of an issue, add it to the baseline being built in the XML writer
          */
         internal fun write(
-                writer: Writer,
-                client: LintClient) {
+            writer: Writer,
+            client: LintClient
+        ) {
             try {
                 writer.write("\n")
                 indent(writer, 1)
@@ -520,7 +545,6 @@ class LintBaseline(
             } catch (ioe: IOException) {
                 client.log(ioe, null)
             }
-
         }
     }
 
@@ -529,9 +553,10 @@ class LintBaseline(
      * there may be multiple entries; these are linked by next/previous fields.
      */
     private class Entry(
-            val issueId: String,
-            val message: String,
-            val path: String) {
+        val issueId: String,
+        val message: String,
+        val path: String
+    ) {
         /**
          * An issue can have multiple locations; we create a separate entry for each
          * but we link them together such that we can mark them all fixed
@@ -567,8 +592,11 @@ class LintBaseline(
             return format.toText(errorMessage).contains("perhaps they have been fixed")
         }
 
-        fun describeBaselineFilter(errors: Int, warnings: Int,
-                baselineDisplayPath: String): String {
+        fun describeBaselineFilter(
+            errors: Int,
+            warnings: Int,
+            baselineDisplayPath: String
+        ): String {
             val counts = LintUtils.describeCounts(errors, warnings, false, true)
             // Keep in sync with isFilteredMessage() below
             return if (errors + warnings == 1) {

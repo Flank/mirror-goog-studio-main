@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -41,13 +40,13 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
+import com.android.build.gradle.internal.tasks.BundleTask;
+import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
@@ -225,15 +224,23 @@ public class ApplicationTaskManager extends TaskManager {
         // Add feature related tasks if necessary
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
-            createFeatureIdsWriterTask(variantScope);
+            taskFactory.create(new FeatureSetMetadataWriterTask.ConfigAction(variantScope));
+
             if (extension.getDataBinding().isEnabled()) {
-                createDataBindingExportFeaturePackagesTask(variantScope);
+                // Create a task that will package the manifest ids(the R file packages) of all features into a
+                // file. This file's path is passed into the Data Binding annotation processor which uses it to
+                // known about all available features.
+                //
+                // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
+                taskFactory.create(
+                        new DataBindingExportFeatureApplicationIdsTask.ConfigAction(variantScope));
+
             }
         } else {
             // Non-base feature specific task.
-            createFeatureDeclarationTasks(variantScope);
+            taskFactory.create(new FeatureSplitDeclarationWriterTask.ConfigAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
-                createDataBindingExportFeatureInfoTask(variantScope);
+                taskFactory.create(new DataBindingExportFeatureInfoTask.ConfigAction(variantScope));
             }
         }
 
@@ -285,6 +292,8 @@ public class ApplicationTaskManager extends TaskManager {
                 () -> createLintTasks(variantScope));
 
         createTransitiveDepsTask(variantScope);
+
+        createDynamicBundleTask(variantScope);
     }
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */
@@ -392,41 +401,35 @@ public class ApplicationTaskManager extends TaskManager {
                 scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
         // Create the classes artifact for uses by external test modules.
-        File dest =
-                new File(
-                        globalScope.getBuildDir(),
-                        FileUtils.join(
-                                FD_INTERMEDIATES,
-                                "classes-jar",
-                                scope.getVariantConfiguration().getDirName()));
+        taskFactory.create(
+                new TaskConfigAction<Jar>() {
+                    @NonNull
+                    @Override
+                    public String getName() {
+                        return scope.getTaskName("bundleAppClasses");
+                    }
 
-        Jar task =
-                taskFactory.create(
-                        new TaskConfigAction<Jar>() {
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return scope.getTaskName("bundleAppClasses");
-                            }
+                    @NonNull
+                    @Override
+                    public Class<Jar> getType() {
+                        return Jar.class;
+                    }
 
-                            @NonNull
-                            @Override
-                            public Class<Jar> getType() {
-                                return Jar.class;
-                            }
-
-                            @Override
-                            public void execute(@NonNull Jar task) {
-                                task.from(javacOutput);
-                                task.from(preJavacGeneratedBytecode);
-                                task.from(postJavacGeneratedBytecode);
-                                task.setDestinationDir(dest);
-                                task.setArchiveName("classes.jar");
-                            }
-                        });
-
-        scope.addTaskOutput(
-                InternalArtifactType.APP_CLASSES, new File(dest, "classes.jar"), task.getName());
+                    @Override
+                    public void execute(@NonNull Jar task) {
+                        File outputFile =
+                                scope.getBuildArtifactsHolder()
+                                        .appendArtifact(
+                                                InternalArtifactType.APP_CLASSES,
+                                                task,
+                                                "classes.jar");
+                        task.from(javacOutput);
+                        task.from(preJavacGeneratedBytecode);
+                        task.from(postJavacGeneratedBytecode);
+                        task.setDestinationDir(outputFile.getParentFile());
+                        task.setArchiveName(outputFile.getName());
+                    }
+                });
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
@@ -498,90 +501,6 @@ public class ApplicationTaskManager extends TaskManager {
         return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
     }
 
-    /**
-     * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
-     */
-    private void createFeatureDeclarationTasks(@NonNull VariantScope variantScope) {
-
-        File featureSplitDeclarationOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "feature-split",
-                        "declaration",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        FeatureSplitDeclarationWriterTask featureSplitWriterTaskAndroidTask =
-                taskFactory.create(
-                        new FeatureSplitDeclarationWriterTask.ConfigAction(
-                                variantScope, featureSplitDeclarationOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.METADATA_FEATURE_DECLARATION,
-                FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
-                featureSplitWriterTaskAndroidTask.getName());
-    }
-
-    /**
-     * Create a task that will package necessary information about the feature into a file. This
-     * file's path is passed into the Data Binding annotation processor.
-     *
-     * <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
-     */
-    private void createDataBindingExportFeatureInfoTask(@NonNull VariantScope variantScope) {
-        File outFolder =
-                variantScope.getIntermediateDir(
-                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
-
-        DataBindingExportFeatureInfoTask exportPackagesTask =
-                taskFactory.create(
-                        new DataBindingExportFeatureInfoTask.ConfigAction(variantScope, outFolder));
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
-                outFolder,
-                exportPackagesTask.getName());
-    }
-
-    private void createFeatureIdsWriterTask(@NonNull VariantScope variantScope) {
-        File featureIdsOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "feature-split",
-                        "ids",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        FeatureSplitPackageIdsWriterTask writeTask =
-                taskFactory.create(
-                        new FeatureSplitPackageIdsWriterTask.ConfigAction(
-                                variantScope, featureIdsOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_IDS_DECLARATION,
-                FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
-                writeTask.getName());
-    }
-
-    /**
-     * Create a task that will package the manifest ids(the R file packages) of all features into a
-     * file. This file's path is passed into the Data Binding annotation processor which uses it to
-     * known about all available features.
-     *
-     * <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
-     */
-    private void createDataBindingExportFeaturePackagesTask(@NonNull VariantScope variantScope) {
-        File featurePackagesOutputDirectory =
-                variantScope.getIntermediateDir(
-                        InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
-
-        DataBindingExportFeatureApplicationIdsTask exportPackagesTask =
-                taskFactory.create(
-                        new DataBindingExportFeatureApplicationIdsTask.ConfigAction(
-                                variantScope, featurePackagesOutputDirectory));
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
-                featurePackagesOutputDirectory,
-                exportPackagesTask.getName());
-    }
-
     private void createTransitiveDepsTask(@NonNull VariantScope scope) {
         File textFile =
                 new File(
@@ -597,5 +516,23 @@ public class ApplicationTaskManager extends TaskManager {
                         new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
 
         scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
+    }
+
+    private void createDynamicBundleTask(@NonNull VariantScope scope) {
+
+        // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
+        // and the bundle can't be created. For now, just don't add the bundle task.
+        if (Boolean.TRUE.equals(
+                scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+            return;
+        }
+
+        if (!scope.getType().isHybrid()) {
+            taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
+
+            if (scope.getType().isBaseModule()) {
+                taskFactory.create(new BundleTask.ConfigAction(scope));
+            }
+        }
     }
 }
