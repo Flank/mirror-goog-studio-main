@@ -30,7 +30,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultVectorDrawablesOptions;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -87,7 +86,7 @@ public class GradleVariantConfigurationTest {
                 projectOptions,
                 null,
                 mockCoreProductFlavor(),
-                mock(SourceProvider.class),
+                new MockSourceProvider("src/main"),
                 null,
                 buildType,
                 null,
