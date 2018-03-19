@@ -170,6 +170,11 @@ tasks.jar {
 tasks.sourcesJar {
     from({zipTree(configurations.sourcesSubsumedProvided.singleFile)})
 }
+tasks.processResources {
+    from(rootProject.file("../prebuilts/tools/common/aapt/aapt2_version.properties")) {
+        into "com/android/build/gradle/internal/res/"
+    }
+}
 javadoc {
     classpath += configurations.subsumedProvided
 }

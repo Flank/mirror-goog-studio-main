@@ -1,8 +1,14 @@
 apply plugin: 'maven'
+// Only present so gets released in 'release' mode.
+apply plugin: 'signing'
+
+File aaptVersionPropertiesFile = rootProject.file('../prebuilts/tools/common/aapt/aapt2_version.properties')
+Properties aaptVersionProperties = new Properties()
+aaptVersionPropertiesFile.withReader { aaptVersionProperties.load(it) }
 
 group = 'com.android.tools.build'
 archivesBaseName = 'aapt2'
-version = rootProject.ext.buildVersion
+version = rootProject.ext.buildVersion + '-' + aaptVersionProperties.getProperty("aapt2Version")
 
 publishLocal {
     repositories {

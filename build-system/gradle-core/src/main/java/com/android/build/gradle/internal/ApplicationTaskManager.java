@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
+import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;

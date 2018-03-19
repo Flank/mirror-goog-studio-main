@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,7 +87,7 @@ public class PomGenerator {
         String artifact = null;
         String version = null;
         String version_property = null;
-        File properties = null;
+        List<File> properties_files = null;
         boolean export = false;
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
@@ -111,7 +112,13 @@ public class PomGenerator {
             } else if (arg.equals("--version_property") && it.hasNext()) {
                 version_property = it.next();
             } else if (arg.equals("--properties") && it.hasNext()) {
-                properties = new File(it.next());
+                String val = it.next();
+                if (!val.isEmpty()) {
+                    properties_files =
+                            Arrays.stream(val.split(":"))
+                                    .map(File::new)
+                                    .collect(Collectors.toList());
+                }
             } else if (arg.equals("--exclusion")) {
                 exclusions.putAll(it.next(), Splitter.on(',').split(it.next()));
             } else if (arg.equals("-x")) {
@@ -127,17 +134,41 @@ public class PomGenerator {
             return;
         }
         if (version_property != null) {
-            if (properties == null) {
+            if (properties_files == null) {
                 System.err.println("version_property needs a properties file.");
                 return;
             }
-            try (FileInputStream fis = new FileInputStream(properties)) {
-                Properties p = new Properties();
-                p.load(fis);
-                version = p.getProperty(version_property);
-            }
+            version = getVersionFromPropertiesFiles(properties_files, version_property);
         }
         generatePom(in, out, deps, group, artifact, version, export);
+    }
+
+    private static String getVersionFromPropertiesFiles(
+            final List<File> propertiesFiles, final String version_property) throws IOException {
+        Properties properties = new Properties();
+        for (File propertiesFile : propertiesFiles) {
+            try (FileInputStream fis = new FileInputStream(propertiesFile)) {
+                properties.load(fis);
+            }
+        }
+        if (!version_property.contains("$")) {
+            // Simple case, not a format string.
+            return properties.getProperty(version_property);
+        }
+        // Replace all instances of ${myVersionKey} with myVersionValue
+        String version = version_property;
+        for (String name : properties.stringPropertyNames()) {
+            version = version.replace("${" + name + "}", properties.getProperty(name));
+        }
+        if (version.contains("$")) {
+            throw new IOException(
+                    "Invalid version_property='"
+                            + version_property
+                            + "'\n"
+                            + "available names: "
+                            + String.join(", ", properties.stringPropertyNames()));
+        }
+        return version;
     }
 
     /**
