@@ -317,7 +317,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/ir/desugar/",
                 "com/android/tools/r8/ir/optimize/",
                 "com/android/tools/r8/ir/optimize/lambda/",
-                "com/android/tools/r8/ir/optimize/lambda/kstyle/",
+                "com/android/tools/r8/ir/optimize/lambda/kotlin/",
                 "com/android/tools/r8/ir/regalloc/",
                 "com/android/tools/r8/ir/synthetic/",
                 "com/android/tools/r8/it/",
