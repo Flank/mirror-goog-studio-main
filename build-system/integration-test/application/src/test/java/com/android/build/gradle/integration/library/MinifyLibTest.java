@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -35,7 +34,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Rule;
@@ -84,9 +82,10 @@ public class MinifyLibTest {
                         .fetchAndroidProjects()
                         .getOnlyModelMap()
                         .get(":lib");
-        assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
-        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
-                .contains(
+        assertThat(model)
+                .hasSingleError(SyncIssue.TYPE_GENERIC)
+                .that()
+                .hasMessageThatContains(
                         "proguard-android.txt should not be used as a consumer configuration file");
     }
 

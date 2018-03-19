@@ -22,13 +22,14 @@ import com.android.builder.model.AndroidProject
 enum class BooleanOption(
     override val propertyName: String,
     override val defaultValue: Boolean = false,
-    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+    override val status: Option.Status = Option.Status.EXPERIMENTAL
 ) : Option<Boolean> {
     ENABLE_AAPT2("android.enableAapt2", true, DeprecationReporter.DeprecationTarget.AAPT),
 
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
     ENABLE_PROFILE_JSON("android.enableProfileJson", false),
-    ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
+    // Used by Studio as workaround for b/71054106, b/75955471
+    ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true, status = Option.Status.STABLE),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     ENABLE_DEX_ARCHIVE(
             "android.useDexArchive", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
@@ -61,7 +62,8 @@ enum class BooleanOption(
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
 
-    ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
+    // Marked as stable to avoid reporting deprecation twice.
+    ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk", status = Option.Status.STABLE),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),
     CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies"),
@@ -75,18 +77,20 @@ enum class BooleanOption(
 
     ENABLE_DATA_BINDING_V2("android.databinding.enableV2", true),
 
-    IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE),
-    IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY),
-    IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED),
+    IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE, status = Option.Status.STABLE),
+    IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY, status = Option.Status.STABLE),
+    IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED, status = Option.Status.STABLE),
     IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES(
-            AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES),
-    IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL),
-    IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY),
+            AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, status = Option.Status.STABLE),
+    IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, status = Option.Status.STABLE),
+    IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, status = Option.Status.STABLE),
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
     ENABLE_SEPARATE_R_CLASS_COMPILATION("android.enableSeparateRClassCompilation"),
     ;
 
+    constructor(propertyName: String, defaultValue: Boolean, deprecationTarget: DeprecationReporter.DeprecationTarget):
+            this(propertyName, defaultValue, Option.Status.Deprecated(deprecationTarget))
 
     override fun parse(value: Any): Boolean {
         return when (value) {

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.bundle
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
@@ -52,7 +53,10 @@ class DynamicAppTest {
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
-        val rootBuildModelMap = project.model().fetchAndroidProjects().rootBuildModelMap
+        val rootBuildModelMap = project.model()
+            .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
+            .fetchAndroidProjects()
+            .rootBuildModelMap
 
         val appModel = rootBuildModelMap[":app"]
         Truth.assertThat(appModel).named("app model").isNotNull()

@@ -155,6 +155,16 @@ public class ProjectOptionsTest {
     }
 
     @Test
+    public void experimentalOptionsUse() {
+        ProjectOptions projectOptions =
+                new ProjectOptions(ImmutableMap.of("android.enableProfileJson", "true"));
+
+        assertThat(projectOptions.getExperimentalOptions()).hasSize(1);
+        assertThat(projectOptions.getExperimentalOptions().keySet())
+                .containsExactly(BooleanOption.ENABLE_PROFILE_JSON);
+    }
+
+    @Test
     public void ensureUniqueness() {
         List<String> optionsNames =
                 Stream.of(

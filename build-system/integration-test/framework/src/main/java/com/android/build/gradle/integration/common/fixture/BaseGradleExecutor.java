@@ -21,9 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -35,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -239,6 +242,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
 
         return arguments;
+    }
+
+    protected final Set<String> getOptionPropertyNames() {
+        return options.getOptions()
+                .map(Option::getPropertyName)
+                .collect(ImmutableSet.toImmutableSet());
     }
 
     protected final void setJvmArguments(@NonNull LongRunningOperation launcher)

@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.Option;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -29,11 +30,14 @@ import com.android.utils.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.gradle.tooling.BuildAction;
@@ -50,6 +54,7 @@ import org.gradle.tooling.model.GradleTask;
  * all subprojects as Studio 1.0 does.
  */
 public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
+    private Set<String> explicitlyAllowedOptions = new HashSet<>();
     private int maxSyncIssueSeverityLevel = 0;
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
 
@@ -104,6 +109,12 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 "incorrect severity, must be one of SyncIssue.SEVERITY_WARNING or SyncIssue.SEVERITY_ERROR");
 
         maxSyncIssueSeverityLevel = severity;
+        return this;
+    }
+
+    @NonNull
+    public ModelBuilder allowOptionWarning(@NonNull Option<?> option) {
+        explicitlyAllowedOptions.add(option.getPropertyName());
         return this;
     }
 
@@ -290,6 +301,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
 
     private ModelContainer<AndroidProject> assertNoSyncIssues(
             @NonNull ModelContainer<AndroidProject> container) {
+        Set<String> allowedOptions = Sets.union(explicitlyAllowedOptions, getOptionPropertyNames());
         container
                 .getModelMaps()
                 .entrySet()
@@ -306,11 +318,13 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                                                                         + "@@"
                                                                         + entry2.getKey(),
                                                                 entry2.getValue())))
-                .forEach(this::assertNoSyncIssues);
+                .forEach(projectPair -> assertNoSyncIssues(projectPair, allowedOptions));
         return container;
     }
 
-    private void assertNoSyncIssues(@NonNull Pair<String, AndroidProject> projectPair) {
+    private void assertNoSyncIssues(
+            @NonNull Pair<String, AndroidProject> projectPair,
+            @NonNull Set<String> allowedOptions) {
         List<SyncIssue> issues =
                 projectPair
                         .getSecond()
@@ -318,6 +332,12 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                         .stream()
                         .filter(syncIssue -> syncIssue.getSeverity() > maxSyncIssueSeverityLevel)
                         .filter(syncIssue -> syncIssue.getType() != SyncIssue.TYPE_DEPRECATED_DSL)
+                        .filter(
+                                syncIssue ->
+                                        syncIssue.getType()
+                                                        != SyncIssue
+                                                                .TYPE_UNSUPPORTED_PROJECT_OPTION_USE
+                                                || !allowedOptions.contains(syncIssue.getData()))
                         .collect(Collectors.toList());
 
         if (!issues.isEmpty()) {

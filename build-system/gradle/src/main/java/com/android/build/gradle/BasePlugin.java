@@ -369,6 +369,12 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     .reportDeprecatedOptions(projectOptions.getDeprecatedOptions());
         }
 
+        if (!projectOptions.getExperimentalOptions().isEmpty()) {
+            projectOptions
+                    .getExperimentalOptions()
+                    .forEach(extraModelInfo.getDeprecationReporter()::reportExperimentalOption);
+        }
+
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 

@@ -16,39 +16,40 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.Option.Status.EXPERIMENTAL
+import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
 enum class StringOption(
     override val propertyName: String,
-    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+    override val status: Option.Status = EXPERIMENTAL
 ) : Option<String> {
-    BUILD_CACHE_DIR("android.buildCacheDir"),
+    BUILD_CACHE_DIR("android.buildCacheDir", status = STABLE),
 
-    IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY),
-    IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI),
+    IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY, status = STABLE),
+    IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI, status = STABLE),
 
-    IDE_RESTRICT_VARIANT_PROJECT(AndroidProject.PROPERTY_RESTRICT_VARIANT_PROJECT),
-    IDE_RESTRICT_VARIANT_NAME(AndroidProject.PROPERTY_RESTRICT_VARIANT_NAME),
+    IDE_RESTRICT_VARIANT_PROJECT(AndroidProject.PROPERTY_RESTRICT_VARIANT_PROJECT, status = STABLE),
+    IDE_RESTRICT_VARIANT_NAME(AndroidProject.PROPERTY_RESTRICT_VARIANT_NAME, status = STABLE),
 
     // Signing options
-    IDE_SIGNING_STORE_TYPE(AndroidProject.PROPERTY_SIGNING_STORE_TYPE),
-    IDE_SIGNING_STORE_FILE(AndroidProject.PROPERTY_SIGNING_STORE_FILE),
-    IDE_SIGNING_STORE_PASSWORD(AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD),
-    IDE_SIGNING_KEY_ALIAS(AndroidProject.PROPERTY_SIGNING_KEY_ALIAS),
-    IDE_SIGNING_KEY_PASSWORD(AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD),
+    IDE_SIGNING_STORE_TYPE(AndroidProject.PROPERTY_SIGNING_STORE_TYPE, status = STABLE),
+    IDE_SIGNING_STORE_FILE(AndroidProject.PROPERTY_SIGNING_STORE_FILE, status = STABLE),
+    IDE_SIGNING_STORE_PASSWORD(AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD, status = STABLE),
+    IDE_SIGNING_KEY_ALIAS(AndroidProject.PROPERTY_SIGNING_KEY_ALIAS, status = STABLE),
+    IDE_SIGNING_KEY_PASSWORD(AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD, status = STABLE),
 
-    IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION),
+    IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION, status = STABLE),
 
     // Instant run
-    IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS),
-    IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE),
-    IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME),
+    IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS, status = STABLE),
+    IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, status = STABLE),
+    IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME, status = STABLE),
 
-    IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME),
+    IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME, status = STABLE),
 
     // Profiler plugin
-    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms"),
+    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms", status = STABLE),
 
     // Testing
     DEVICE_POOL_SERIAL("com.android.test.devicepool.serial"),

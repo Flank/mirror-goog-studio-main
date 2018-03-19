@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
 enum class IntegerOption(
     override val propertyName: String,
-    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+    override val status: Option.Status = Option.Status.EXPERIMENTAL
 ) : Option<Int> {
     ANDROID_TEST_SHARD_COUNT("android.androidTest.numShards"),
     ANDROID_SDK_CHANNEL("android.sdk.channel"),
@@ -38,7 +38,7 @@ enum class IntegerOption(
      * @see AndroidProject#MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
      */
-    IDE_BUILD_MODEL_ONLY_VERSION(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED),
+    IDE_BUILD_MODEL_ONLY_VERSION(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, status = STABLE),
 
     /**
      * The api level for the target device.
@@ -46,9 +46,9 @@ enum class IntegerOption(
      * <p>For preview versions that is the last stable version, and the {@link
      * StringOption#IDE_TARGET_DEVICE_CODENAME} will also be set.
      */
-    IDE_TARGET_DEVICE_API(AndroidProject.PROPERTY_BUILD_API),
+    IDE_TARGET_DEVICE_API(AndroidProject.PROPERTY_BUILD_API, status = STABLE),
 
-    IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE),
+    IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE, status = STABLE),
 
     /**
      * Size of the buffers in kilobytes used to read .class files and storage for writing .dex files

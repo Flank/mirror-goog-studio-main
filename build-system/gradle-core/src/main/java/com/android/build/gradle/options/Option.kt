@@ -20,16 +20,19 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 
 interface Option<out T> {
 
+    sealed class Status {
+        object EXPERIMENTAL: Status()
+        object STABLE: Status()
+        class Deprecated(val deprecationTarget: DeprecationReporter.DeprecationTarget): Status()
+        object REMOVED: Status()
+    }
+
     val propertyName: String
 
     val defaultValue: T?
         get() = null
 
-    fun isDeprecated(): Boolean {
-        return deprecationTarget != null
-    }
-
-    val deprecationTarget: DeprecationReporter.DeprecationTarget?
+    val status: Status
 
     fun parse(value: Any): T
 }
