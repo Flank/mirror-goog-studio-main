@@ -304,9 +304,6 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
     ServerContext* context, const ProfilingStateRequest* request,
     ProfilingStateResponse* response) {
   int32_t pid = request->session().pid();
-  ProcessManager process_manager;
-  string app_pkg_name = process_manager.GetCmdlineForPid(pid);
-
   ProfilingApp* app = cache_.GetOngoingCapture(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)

@@ -27,6 +27,7 @@ using grpc::ClientContext;
 using grpc::Status;
 using profiler::Agent;
 using profiler::JStringWrapper;
+using profiler::Log;
 using profiler::SteadyClock;
 using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
@@ -49,51 +50,63 @@ class TraceMonitor {
 
  private:
   // Use TraceMonitor::Instance() to initialize.
-  explicit TraceMonitor() {}
+  explicit TraceMonitor() { reset(); }
   ~TraceMonitor() = delete;  // TODO: Support destroying the agent
+
+  void reset() {
+    api_initiated_trace_in_progress_ = false;
+    trace_id_ = -1;
+    trace_path_.clear();
+  }
 
   SteadyClock clock_;
   // Absolute path of the file being created and written by the app.
-  string trace_path_;
+  bool api_initiated_trace_in_progress_;
   int trace_id_;
-  bool api_initiated_trace_in_progress_{false};
+  string trace_path_;
 };
 
 void TraceMonitor::SubmitStartEvent(
     const CpuTraceOperationRequest& input_request) {
-  api_initiated_trace_in_progress_ = true;
   int64_t timestamp = clock_.GetCurrentTime();
-  Agent::Instance().SubmitCpuTasks(
-      {[this, input_request, timestamp](InternalCpuService::Stub& stub,
+  Agent::Instance().SubmitCpuTasks({[this, input_request, timestamp](
+                                        InternalCpuService::Stub& stub,
                                         ClientContext& ctx) {
-        int pid = getpid();
-        CpuTraceOperationRequest request;
-        request.CopyFrom(input_request);
-        request.set_pid(pid);
-        request.set_timestamp(timestamp);
-        CpuTraceOperationResponse response;
-        Status status = stub.SendTraceEvent(&ctx, request, &response);
-        if (status.ok()) {
-          trace_id_ = response.trace_id();
+    int pid = getpid();
+    CpuTraceOperationRequest request;
+    request.CopyFrom(input_request);
+    request.set_pid(pid);
+    request.set_timestamp(timestamp);
+    CpuTraceOperationResponse response;
+    Status status = stub.SendTraceEvent(&ctx, request, &response);
+    if (status.ok()) {
+      if (response.start_operation_allowed()) {
+        api_initiated_trace_in_progress_ = true;
+        trace_id_ = response.trace_id();
 
-          // TODO(b/74405724): Get the absolute path properly.
-          string absolute_path{"/sdcard/Android/data/"};
-          string app_pkg_name = profiler::ProcessManager::GetCmdlineForPid(pid);
-          absolute_path.append(app_pkg_name)
-              .append("/files/")
-              .append(request.start().arg_trace_path());
-          trace_path_ = absolute_path;
-        } else {
-          // Not receiving a trace id. Ignore this catpure.
-          api_initiated_trace_in_progress_ = false;
-        }
-        return status;
-      }});
+        // TODO(b/74405724): Get the absolute path properly.
+        string absolute_path{"/sdcard/Android/data/"};
+        string app_pkg_name = profiler::ProcessManager::GetCmdlineForPid(pid);
+        absolute_path.append(app_pkg_name)
+            .append("/files/")
+            .append(request.start().arg_trace_path());
+        trace_path_ = absolute_path;
+      } else {
+        // This start operation isn't allowed. Ignore it.
+        Log::W(
+            "Debug.startMethodTracing(String) called while tracing is already "
+            "in progress; the call is ignored.");
+      }
+    } else {
+      // Not receiving a response from perfd. Since the profiling state is
+      // unknown, ignore this start operation.
+    }
+    return status;
+  }});
 }
 
 void TraceMonitor::SubmitStopEvent(int tid) {
   if (!api_initiated_trace_in_progress_) return;
-  api_initiated_trace_in_progress_ = false;
   int64_t timestamp = clock_.GetCurrentTime();
   Agent::Instance().SubmitCpuTasks(
       {[this, tid, timestamp](InternalCpuService::Stub& stub,
@@ -109,6 +122,7 @@ void TraceMonitor::SubmitStopEvent(int tid) {
         request.mutable_stop()->set_trace_content(trace_content);
         CpuTraceOperationResponse response;
         Status status = stub.SendTraceEvent(&ctx, request, &response);
+        reset();
         return status;
       }});
 }

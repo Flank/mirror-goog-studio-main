@@ -34,6 +34,13 @@ Status InternalCpuServiceImpl::SendTraceEvent(
   std::cout << "CPU SendTraceEvent " << pid << " " << request->timestamp()
             << " " << request->detail_case();
   if (request->has_start()) {
+    ProfilingApp* ongoing_capture = cache_.GetOngoingCapture(pid);
+    if (ongoing_capture != nullptr) {
+      response->set_start_operation_allowed(false);
+      std::cout << " START request ignored" << std::endl;
+      return Status::OK;
+    }
+
     ProfilingApp capture;
     ProcessManager process_manager;
 
@@ -44,6 +51,7 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     capture.configuration.set_profiler_type(CpuProfilerType::ART);
     capture.initiation_type = TraceInitiationType::INITIATED_BY_API;
     int32_t trace_id = cache_.AddProfilingStart(pid, capture);
+    response->set_start_operation_allowed(true);
     response->set_trace_id(trace_id);
     std::cout << " START " << request->start().method_name() << " "
               << request->start().method_signature() << " '"
