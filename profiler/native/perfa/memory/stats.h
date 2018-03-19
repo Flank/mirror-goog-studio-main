@@ -142,6 +142,8 @@ class TimingStats {
         return "ResolveCallstack";
       case kResolveLineNumber:
         return "ResolveLineNumber";
+      case kNativeBacktrace:
+        return "NativeBacktrace";
       default:
         return "Unknown";
     }
