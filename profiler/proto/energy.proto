@@ -43,6 +43,10 @@ service EnergyService {
   // Response data includes repeated data in time order.
   rpc GetEvents(EnergyRequest) returns (EnergyEventsResponse) {
   }
+
+  // Requests an event group (where all events in a series share the same ID)
+  rpc GetEventGroup(EnergyEventGroupRequest) returns (EnergyEventsResponse) {
+  }
 }
 
 message EnergyStartRequest {
@@ -63,6 +67,11 @@ message EnergyRequest {
   Session session = 1;
   int64 start_timestamp = 2;
   int64 end_timestamp = 3;
+}
+
+message EnergyEventGroupRequest {
+  Session session = 1;
+  int32 event_id = 2;
 }
 
 message EnergySample {
