@@ -498,7 +498,17 @@ public final class GradleTestProject implements TestRule {
             // https://issuetracker.google.com/69271554
             // This exception is unexpected, let's investigate further.
             // This handling can be removed once the root cause has been found and fixed.
+            System.err.println(
+                    String.format(
+                            "Failed to delete directory the first time: %s.",
+                            testDir.getAbsolutePath()));
+
+            System.err.println("Now printing thread dump for debugging:");
+            printThreadDump();
+
+            System.err.println("Retrying to delete directory.");
             forceDeleteDirectory(testDir);
+            System.err.println("Directory deleted after second attempt.");
         }
 
         FileUtils.mkdirs(testDir);
@@ -532,6 +542,16 @@ public final class GradleTestProject implements TestRule {
         createGradleProp();
     }
 
+    /** Prints out the current thread dump for debugging. */
+    private static void printThreadDump() {
+        for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
+            System.err.println(entry.getKey().toString());
+            for (StackTraceElement stackTraceElement : entry.getValue()) {
+                System.err.println("    " + stackTraceElement.toString());
+            }
+        }
+    }
+
     /**
      * Deletes an existing directory and all its contents, and logs debugging info as much as
      * possible when it fails. This method should typically be used when a prior attempt to delete
@@ -546,7 +566,7 @@ public final class GradleTestProject implements TestRule {
             String[] filesInDirAfter = checkNotNull(directory.list());
             throw new IOException(
                     String.format(
-                            "Failed to delete directory %s.\n"
+                            "Failed to delete directory the second time: %s.\n"
                                     + "Files in directory before deletion: %s.\n"
                                     + "Files in directory after deletion: %s.",
                             directory.getAbsolutePath(),
