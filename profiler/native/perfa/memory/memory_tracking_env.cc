@@ -835,7 +835,7 @@ void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
     event->CopyFrom(queued_data.front());
     queued_data.pop_front();
 
-    // Switch to storing the thread id in the allocation event.
+    // Switch to storing the thread id in the JNI event.
     auto thread_id = ObtainThreadId(event->thread_name(), event->timestamp(),
                                     batch.mutable_thread_infos());
     event->set_thread_id(thread_id);
