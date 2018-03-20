@@ -139,6 +139,13 @@ ProfilingApp* CpuCache::GetOngoingCapture(int32_t pid) {
   if (found == nullptr) return nullptr;
   if (found->ongoing_capture != nullptr) return found->ongoing_capture;
 
+  // If there is no apps under startup profiling, there is no point in trying to
+  // find a package name corresponding to |pid|, so we return early to prevent a
+  // call to |ProcessManager::GetCmdlineForPid|, which can be quite expensive.
+  if (startup_profiling_apps_.empty()) {
+    return nullptr;
+  }
+
   // Not in |app_caches_|, try to find in |startup_profiling_apps_|.
   string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
   if (app_pkg_name.empty()) {
