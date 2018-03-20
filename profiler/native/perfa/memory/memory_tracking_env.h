@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "perfa/jni_function_table.h"
+#include "proto/agent_service.grpc.pb.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.grpc.pb.h"
 #include "stats.h"
@@ -34,9 +35,11 @@
 #include "utils/memory_map.h"
 #include "utils/procfs_files.h"
 #include "utils/producer_consumer_queue.h"
+#include "utils/shared_mutex.h"
 #include "utils/trie.h"
 
 using profiler::Clock;
+using profiler::proto::AgentConfig;
 using profiler::proto::AllocatedClass;
 using profiler::proto::AllocationEvent;
 using profiler::proto::BatchAllocationSample;
@@ -87,12 +90,12 @@ using ThreadIdMap = std::unordered_map<std::string, int32_t>;
 
 class MemoryTrackingEnv : public GlobalRefListener {
  public:
-  static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count,
-                                     int max_stack_depth,
-                                     bool track_global_jni_refs);
+  static MemoryTrackingEnv* Instance(
+      JavaVM* vm, const AgentConfig::MemoryConfig& mem_config);
 
-  void AfterGlobalRefCreated(jobject prototype, jobject gref) override;
-  void BeforeGlobalRefDeleted(jobject gref) override;
+  void AfterGlobalRefCreated(jobject prototype, jobject gref,
+                             void* caller_address) override;
+  void BeforeGlobalRefDeleted(jobject gref, void* caller_address) override;
 
  private:
   // POD for encoding the method/instruction location data into trie.
@@ -103,8 +106,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
     }
   };
 
-  explicit MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
-                             int max_stack_depth, bool track_global_jni_refs);
+  explicit MemoryTrackingEnv(jvmtiEnv* jvmti,
+                             const AgentConfig::MemoryConfig& mem_config);
 
   // Environment is alive through the app's lifetime, don't bother cleaning up.
   ~MemoryTrackingEnv() = delete;
@@ -127,8 +130,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
 
   void HandleControlSignal(const MemoryControlRequest* request);
 
-  void PublishJNIGlobalRefEvent(jobject obj,
-                                JNIGlobalReferenceEvent::Type type);
+  void PublishJNIGlobalRefEvent(jobject obj, JNIGlobalReferenceEvent::Type type,
+                                void* caller_address);
 
   // An heap walker used for setting up an initial snapshot of live objects.
   static jint JNICALL HeapIterationCallback(jlong class_tag, jlong size,
@@ -223,7 +226,9 @@ class MemoryTrackingEnv : public GlobalRefListener {
   MethodIdMap known_methods_;
   ThreadIdMap thread_id_map_;
   ProcfsFiles procfs_;
+  shared_mutex mem_map_mutex_;
   MemoryMap memory_map_;
+  const std::string app_dir_;
 };
 
 }  // namespace profiler

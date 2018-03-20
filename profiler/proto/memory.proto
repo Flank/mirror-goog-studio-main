@@ -532,10 +532,6 @@ message JNIGlobalReferenceEvent {
 
   // Same as in AllocationEvent.
   string thread_name = 7;
-
-  // Symbolized native callstack, populated by Android Studio
-  // from |backtrace| and MemoryMap.
-  NativeCallStack callstack = 8;
 }
 
 message JNIGlobalRefsEventsRequest {

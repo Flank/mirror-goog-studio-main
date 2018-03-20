@@ -49,6 +49,8 @@ message AgentConfig {
     int32 max_stack_depth = 2;
     // Enable tracking of creation and deletion of globla JNI references.
     bool track_global_jni_refs = 3;
+    // Path to the app dir: usually /data/app/
+    string app_dir = 4;
   }
 
   // equivalent to profiler.jvmti flag in Studio

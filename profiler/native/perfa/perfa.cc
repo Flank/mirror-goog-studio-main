@@ -719,10 +719,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     // case. If we don't postpone until there is a connection, MemoryTackingEnv
     // is going to busy-wait, so not allowing the application to finish
     // initialization. This callback will be called each time perfd connects.
-    MemoryTrackingEnv::Instance(
-        vm, agent_config.mem_config().use_live_alloc(),
-        agent_config.mem_config().max_stack_depth(),
-        agent_config.mem_config().track_global_jni_refs());
+    MemoryTrackingEnv::Instance(vm, agent_config.mem_config());
     // Perf-test currently waits on this message to determine that perfa is
     // connected to perfd.
     Log::V("Perfa connected to Perfd.");
