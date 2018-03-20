@@ -40,7 +40,7 @@ class DynamicAppTest {
         .create()
 
     private val bundleContent: Array<String> = arrayOf(
-        "/BundleManifest.pb",
+        "/BundleConfig.pb",
         "/base/dex/classes.dex",
         "/base/manifest/AndroidManifest.xml",
         "/base/res/layout/base_layout.xml",
@@ -126,7 +126,7 @@ class DynamicAppTest {
         TestFileUtils.appendToFile(appProject.buildFile,
             "\n" +
                     "android.defaultConfig.ndk {\n" +
-                    "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}', '${SdkConstants.ABI_INTEL_ATOM}')\n" +
+                    "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}')\n" +
                     "}")
 
         val featureProject = project.getSubproject(":feature1")
@@ -156,7 +156,6 @@ class DynamicAppTest {
         val bundleContentWithAbis = bundleContent.plus(listOf(
             "/base/native.pb",
             "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
-            "/base/lib/${SdkConstants.ABI_INTEL_ATOM}/libbase.so",
             "/feature1/native.pb",
             "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"))
 

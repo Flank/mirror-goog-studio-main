@@ -36,7 +36,7 @@ public class HelpfulEnumConverter<T extends Enum<T>> extends Converter<String, T
     }
 
     @Override
-    public T doForward(@NonNull String value) {
+    protected T doForward(@NonNull String value) {
         try {
             return delegate.convert(value);
         } catch (IllegalArgumentException e) {
@@ -52,7 +52,7 @@ public class HelpfulEnumConverter<T extends Enum<T>> extends Converter<String, T
     }
 
     @Override
-    public String doBackward(@NonNull T anEnum) {
+    protected String doBackward(@NonNull T anEnum) {
         return delegate.reverse().convert(anEnum);
     }
 }

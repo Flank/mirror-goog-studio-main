@@ -19,7 +19,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_aapt2-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.2.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.3.0:jar",
     visibility = ["//visibility:public"],
     exports = [":com.google.protobuf_protobuf-java"],
 )
@@ -27,9 +27,10 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.1.0-alpha04:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.2.0-alpha03:jar",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = [],
+    runtime_deps = [
         ":com.android.tools.build_aapt2-proto",
         ":com.google.auto.value_auto-value",
         ":com.google.errorprone_error_prone_annotations",
@@ -125,7 +126,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/22.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
@@ -1318,7 +1319,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/6.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1326,7 +1327,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-analysis",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/6.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
@@ -1334,7 +1335,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-commons",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/6.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
@@ -1342,7 +1343,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-tree",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/6.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm"],
 )
@@ -1350,7 +1351,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/6.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
