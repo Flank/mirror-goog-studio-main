@@ -6,14 +6,15 @@ def _gradle_build_impl(ctx):
   args += ["--out_file", output_file.path]
   args += ["--gradle_file", ctx.file.build_file.path]
   args += ["--out_path", ctx.attr.output_file_source]
-  args += ["--gradle_version", ctx.attr.gradle_version]
+  distribution = ctx.attr._distribution.files.to_list()[0]
+  args += ["--distribution", distribution.path]
   for repo in ctx.files.repos:
     args += ["--repo", repo.path]
   for task in ctx.attr.tasks:
     args += ["--task", task]
 
   ctx.action(
-    inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file],
+    inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, distribution],
     outputs = [output_file],
     mnemonic = "gradlew",
     arguments = args,
@@ -29,6 +30,10 @@ gradle_build = rule(
         "build_file": attr.label(allow_files = True, single_file = True),
         "gradle_version": attr.string(),
         "repos": attr.label_list(allow_files = True),
+        "_distribution" : attr.label(
+                          default = Label("//tools/base/build-system:gradle-distrib"),
+                          allow_files = True,
+        ),
         "_gradlew": attr.label(
                     executable = True,
                     cfg = "host",
