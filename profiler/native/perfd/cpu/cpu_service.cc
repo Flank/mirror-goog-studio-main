@@ -307,7 +307,6 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   ProfilingApp* app = cache_.GetOngoingCapture(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
-  response->set_check_timestamp(clock_->GetCurrentTime());
   bool is_being_profiled = app != nullptr;
   response->set_being_profiled(is_being_profiled);
 
