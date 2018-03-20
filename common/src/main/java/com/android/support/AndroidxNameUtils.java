@@ -24,9 +24,12 @@ import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AndroidxNameUtils {
+    private static final Logger LOG = Logger.getLogger(AndroidxName.class.getName());
+
     static final String ANDROID_SUPPORT_PKG = "android.support.";
 
     /** Package mappings for package that have been just renamed */
@@ -70,8 +73,7 @@ public class AndroidxNameUtils {
                         }
                     });
         } catch (Throwable e) {
-            Logger.getLogger(AndroidxName.class.getName())
-                    .severe("Error loading androidx migration mapping: " + e.getLocalizedMessage());
+            LOG.severe("Error loading androidx migration mapping: " + e.getLocalizedMessage());
         }
 
         ANDROIDX_FULL_CLASS_MAPPING = classTransformMap.build();
@@ -96,9 +98,8 @@ public class AndroidxNameUtils {
             }
         }
 
-        if (strictChecking) {
-            Logger.getLogger(AndroidxName.class.getName())
-                    .warning("support library package not found: " + oldPkgName);
+        if (strictChecking && LOG.isLoggable(Level.FINE)) {
+            LOG.fine("support library package not found: " + oldPkgName);
         }
         return oldPkgName;
     }
