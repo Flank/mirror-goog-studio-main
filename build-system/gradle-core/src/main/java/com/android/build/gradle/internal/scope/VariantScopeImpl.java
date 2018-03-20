@@ -915,7 +915,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
             mainCollection =
                     mainCollection.plus(
-                            getOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
+                            buildArtifactsHolder
+                                    .getFinalArtifactFiles(
+                                            InternalArtifactType
+                                                    .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                                    .get());
             mainCollection =
                     mainCollection.plus(
                             getArtifactFileCollection(
@@ -944,9 +948,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 mainCollection =
                         mainCollection.plus(
                                 tested.getScope()
-                                        .getOutput(
+                                        .getArtifacts()
+                                        .getFinalArtifactFiles(
                                                 InternalArtifactType
-                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
+                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                                        .get());
             }
         } else {
             if (buildArtifactsHolder.hasArtifact(

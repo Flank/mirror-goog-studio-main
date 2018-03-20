@@ -824,17 +824,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     public static final class NamespacedConfigAction
             implements TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
-        @NonNull private final File sourceOutputDir;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
 
         public NamespacedConfigAction(
                 @NonNull VariantScope scope,
-                @NonNull File sourceOutputDir,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName) {
             this.variantScope = scope;
-            this.sourceOutputDir = sourceOutputDir;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
@@ -878,7 +875,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
             task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
-            task.sourceOutputDir = sourceOutputDir;
+            task.sourceOutputDir =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, task, "out");
 
             if (variantScope.getCodeShrinker() != null) {
                 task.setProguardOutputFile(
@@ -909,7 +910,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     variantScope.getArtifacts().getFinalArtifactFiles(task.taskInputType));
 
             List<FileCollection> dependencies = new ArrayList<>(2);
-            dependencies.add(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY));
+            dependencies.add(
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY)
+                            .get());
             dependencies.add(
                     variantScope.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,

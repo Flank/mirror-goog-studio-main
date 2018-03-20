@@ -15,7 +15,9 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.compile.JavaCompile
@@ -32,19 +34,19 @@ import java.io.File
 @CacheableTask
 open class CompileRClassTask : JavaCompile() {
 
-    class ConfigAction(
-            private val name: String,
-            private val rClassSource: FileCollection,
-            private val rClassDir: File) : TaskConfigAction<CompileRClassTask> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<CompileRClassTask> {
 
-        override fun getName() = name
+        override fun getName() = scope.getTaskName("compile", "FinalRClass")
 
         override fun getType() = CompileRClassTask::class.java
 
         override fun execute(task: CompileRClassTask) {
+            val artifacts = scope.artifacts
             task.classpath = task.project.files()
-            task.source(rClassSource)
-            task.destinationDir = rClassDir
+            task.source(
+                artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))
+            task.destinationDir =
+                    artifacts.appendArtifact(InternalArtifactType.RUNTIME_R_CLASS_CLASSES, task)
         }
     }
 

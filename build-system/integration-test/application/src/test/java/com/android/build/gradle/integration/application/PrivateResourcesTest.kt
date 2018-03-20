@@ -100,7 +100,11 @@ class PrivateResourcesTest {
 
         val publicR = FileUtils.join(
                 project.getSubproject("app").generatedDir,
-                "source", "final-r", "debug", "com", "example", "android", "multiproject", "R.java")
+            "runtime_r_class_sources",
+            "debug",
+            "processDebugResources",
+            "out",
+            "com", "example", "android", "multiproject", "R.java")
         assertThat(publicR).exists()
 
         val publicLines = Files.readAllLines(publicR.toPath())
@@ -110,7 +114,11 @@ class PrivateResourcesTest {
 
         val privateR = FileUtils.join(
                 project.getSubproject("app").generatedDir,
-                "source", "final-r", "debug", "com", "foo", "bar", "symbols", "R.java")
+            "runtime_r_class_sources",
+            "debug",
+            "processDebugResources" ,
+            "out",
+            "com", "foo", "bar", "symbols", "R.java")
         assertThat(privateR).exists()
 
         val privateLines = Files.readAllLines(privateR.toPath())
@@ -167,7 +175,11 @@ class PrivateResourcesTest {
 
         val publicR = FileUtils.join(
                 project.getSubproject("app").generatedDir,
-                "source", "final-r", "debug", "com", "example", "android", "multiproject", "R.java")
+            "runtime_r_class_sources",
+            "debug",
+            "processDebugResources",
+            "out",
+            "com", "example", "android", "multiproject", "R.java")
         assertThat(publicR).exists()
 
         val publicLines = Files.readAllLines(publicR.toPath())
@@ -177,7 +189,11 @@ class PrivateResourcesTest {
 
         val privateR = FileUtils.join(
                 project.getSubproject("app").generatedDir,
-                "source", "final-r", "debug", "com", "foo", "bar", "symbols", "R.java")
+            "runtime_r_class_sources",
+            "debug",
+            "processDebugResources",
+            "out",
+            "com", "foo", "bar", "symbols", "R.java")
         assertThat(privateR).doesNotExist()
 
     }

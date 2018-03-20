@@ -66,7 +66,6 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -1447,9 +1446,8 @@ public abstract class TaskManager {
      * This should not be called for classes that will also be compiled from source by jack.
      */
     public void addJavacClassesStream(VariantScope scope) {
-        FileCollection javaOutputs =
-                ((BuildableArtifactImpl) scope.getArtifacts().getArtifactFiles(JAVAC))
-                        .getFileCollection();
+        BuildArtifactsHolder artifacts = scope.getArtifacts();
+        FileCollection javaOutputs = artifacts.getFinalArtifactFiles(JAVAC).get();
         Preconditions.checkNotNull(javaOutputs);
         // create separate streams for the output of JAVAC and for the pre/post javac
         // bytecode hooks
@@ -1484,7 +1482,7 @@ public abstract class TaskManager {
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
                                 .build());
 
-        if (scope.hasOutput(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)) {
+        if (artifacts.hasArtifact(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)) {
             scope.getTransformManager()
                     .addStream(
                             OriginalStream.builder(project, "final-r-classes")
@@ -1493,8 +1491,11 @@ public abstract class TaskManager {
                                             DefaultContentType.RESOURCES)
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
-                                            scope.getOutput(
-                                                    InternalArtifactType.RUNTIME_R_CLASS_CLASSES))
+                                            artifacts
+                                                    .getFinalArtifactFiles(
+                                                            InternalArtifactType
+                                                                    .RUNTIME_R_CLASS_CLASSES)
+                                                    .get())
                                     .build());
         }
     }
@@ -1729,8 +1730,10 @@ public abstract class TaskManager {
         }
 
         // Empty R class jar. TODO: Resources support for unit tests?
-        variantScope.addTaskOutput(
-                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR, project.files(), null);
+        variantScope
+                .getArtifacts()
+                .appendArtifact(
+                        InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR, project.files());
 
         JavaCompile javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);

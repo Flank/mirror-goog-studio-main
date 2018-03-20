@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.SdkConstants
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.base.Suppliers
@@ -54,12 +56,13 @@ open class StaticLibraryManifestTask @Inject constructor(
     }
 
     class ConfigAction(
-                private val scope: VariantScope,
-                private val manifestFile: File) : TaskConfigAction<StaticLibraryManifestTask> {
+                private val scope: VariantScope) : TaskConfigAction<StaticLibraryManifestTask> {
         override fun getName() = scope.getTaskName("create", "StaticLibraryManifest")
         override fun getType() = StaticLibraryManifestTask::class.java
         override fun execute(task: StaticLibraryManifestTask) {
-            task.manifestFile = manifestFile
+            task.manifestFile = scope.artifacts.appendArtifact(InternalArtifactType.STATIC_LIBRARY_MANIFEST,
+                task,
+                SdkConstants.ANDROID_MANIFEST_XML)
             task.packageNameSupplier =
                     Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
         }

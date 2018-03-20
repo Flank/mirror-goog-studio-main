@@ -107,11 +107,12 @@ open class AndroidZip : Zip() {
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
             bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
-            if (variantScope.hasOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
-                bundle.from(variantScope.getOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
+            if (artifacts.hasArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
+                bundle.from(artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
-            if (variantScope.hasOutput(InternalArtifactType.RES_STATIC_LIBRARY)) {
-                bundle.from(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY))
+            if (artifacts.hasArtifact(InternalArtifactType.RES_STATIC_LIBRARY)) {
+                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY))
             }
             bundle.from(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),
