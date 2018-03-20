@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,6 +71,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.internal.impldep.org.codehaus.plexus.util.StringUtils;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
@@ -494,7 +496,7 @@ public final class GradleTestProject implements TestRule {
         sourceDir = new File(testDir, "src");
 
         try {
-            FileUtils.deleteRecursivelyIfExists(testDir);
+            deleteRecursivelyIfExistsExperimental(testDir.toPath());
         } catch (DirectoryNotEmptyException e) {
             // https://issuetracker.google.com/69271554
             // This exception is unexpected, let's investigate further.
@@ -543,6 +545,56 @@ public final class GradleTestProject implements TestRule {
         createGradleProp();
     }
 
+    /**
+     * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
+     * be deleted recursively.
+     *
+     * <p>This method is experimental. It is used to debug the DirectoryNotEmptyException when
+     * deleting directories on Windows.
+     */
+    private static void deleteRecursivelyIfExistsExperimental(@NonNull Path path)
+            throws IOException {
+        if (java.nio.file.Files.isDirectory(path)) {
+            try (Stream<Path> pathsInDir = java.nio.file.Files.list(path)) {
+                Iterator<Path> iterator = pathsInDir.iterator();
+                while (iterator.hasNext()) {
+                    deleteRecursivelyIfExistsExperimental(iterator.next());
+                }
+            }
+        }
+
+        try {
+            java.nio.file.Files.deleteIfExists(path);
+        } catch (DirectoryNotEmptyException e) {
+            // Theory: There seems to be a timing/visibility issue on Windows filesystem, such that
+            // even if we delete the contents of the directory before deleting the directory itself
+            // (and no other thread/process is accessing the directory), the directory is still
+            // being seen as non-empty. Let's try again and hope that the directory will be seen as
+            // empty shortly.
+            System.err.println(
+                    "DirectoryNotEmptyException was thrown when deleting " + path.toAbsolutePath());
+            System.err.println(
+                    "Number of files in directory: " + checkNotNull(path.toFile().list()).length);
+            boolean directoryDeleted = false;
+            int attempts = 0;
+            while (!directoryDeleted && attempts < 10) {
+                System.err.println("Trying to delete directory again, attempt " + (++attempts));
+                try {
+                    java.nio.file.Files.deleteIfExists(path);
+                    directoryDeleted = true;
+                } catch (DirectoryNotEmptyException ignored) {
+                    System.err.println("Failed with DirectoryNotEmptyException again");
+                    System.err.println(
+                            "Number of files in directory: "
+                                    + checkNotNull(path.toFile().list()).length);
+                }
+            }
+            if (!directoryDeleted) {
+                throw e;
+            }
+        }
+    }
+
     /** Prints out the current thread dump for debugging. */
     private static void printThreadDump() {
         for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
@@ -562,7 +614,7 @@ public final class GradleTestProject implements TestRule {
         Preconditions.checkArgument(directory.isDirectory());
         String[] filesInDirBefore = checkNotNull(directory.list());
         try {
-            FileUtils.deleteRecursivelyIfExists(directory);
+            deleteRecursivelyIfExistsExperimental(directory.toPath());
         } catch (IOException e) {
             String[] filesInDirAfter = checkNotNull(directory.list());
             throw new IOException(
