@@ -43,7 +43,10 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
         thread_monitor_(*thread_monitor),
         simpleperf_manager_(clock, simpleperf_),
         // Number of millis to wait between atrace dumps when profiling.
-        atrace_manager_(clock, 500) {}
+        // The average user will run a capture around 20 seconds, however to
+        // support longer captures we should dump the data (causing a hitch).
+        // This data dump enables us to have long captures.
+        atrace_manager_(clock, 1000 * 30) {}
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,
@@ -59,10 +62,9 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::GetTraceInfoRequest* request,
       profiler::proto::GetTraceInfoResponse* response) override;
 
-  grpc::Status GetTrace(
-      grpc::ServerContext* context,
-      const profiler::proto::GetTraceRequest* request,
-      profiler::proto::GetTraceResponse* response) override;
+  grpc::Status GetTrace(grpc::ServerContext* context,
+                        const profiler::proto::GetTraceRequest* request,
+                        profiler::proto::GetTraceResponse* response) override;
 
   // TODO: Handle the case if there is no such a running process.
   grpc::Status StartMonitoringApp(

@@ -43,7 +43,7 @@ const char *kCategories[] = {"gfx", "input",  "view", "wm",   "am",
                              "pm",  "sched",  "freq", "idle", "load"};
 const int kCategoriesCount = sizeof(kCategories) / sizeof(kCategories[0]);
 
-AtraceManager::AtraceManager(Clock* clock, int dump_data_interval_ms)
+AtraceManager::AtraceManager(Clock *clock, int dump_data_interval_ms)
     : clock_(clock),
       dump_data_interval_ms_(dump_data_interval_ms),
       dumps_created_(0),
@@ -81,10 +81,14 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
 void AtraceManager::RunAtrace(const string &app_pkg_name, const string &path,
                               const string &command) {
   std::ostringstream args;
-  args << "-z -b 4096"
+  args << "-z -b 32768"  // 32mb buffer should be large enough for all 30sec
+                         // captures.
        << " -a " << app_pkg_name << " -o " << path << " " << command << " "
        << categories_;
   profiler::BashCommandRunner atrace(kAtraceExecutable);
+  // Log when we run an atrace command, this will help in the future if we have
+  // any errors.
+  Log::D("Atrace Args: %s", args.str().c_str());
   atrace.Run(args.str(), nullptr);
 }
 
@@ -120,9 +124,16 @@ std::set<std::string> AtraceManager::ParseListCategoriesOutput(
 
 void AtraceManager::DumpData() {
   while (is_profiling_) {
-    RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_dump");
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(dump_data_interval_ms_));
+    std::unique_lock<std::mutex> lock(dump_data_mutex_);
+    dump_data_condition_.wait_for(
+        lock, std::chrono::milliseconds(dump_data_interval_ms_),
+        [this] { return !is_profiling_; });
+    // Our condition can be woken via time, or stop profiling. If we are no
+    // longer profiling we do not need to collect an async_dump as stop
+    // profiling will do that for us.
+    if (is_profiling_) {
+      RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_dump");
+    }
   }
 }
 
@@ -147,12 +158,14 @@ string AtraceManager::GetNextDumpPath() {
   return path.str();
 }
 
-bool AtraceManager::StopProfiling(const std::string &app_pkg_name, bool need_result,
-                                  std::string *error) {
+bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
+                                  bool need_result, std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling atrace");
   Log::D("Profiler:Stopping profiling for %s", app_pkg_name.c_str());
   is_profiling_ = false;
+  // Should occur after is_profiling is set to false to stop our polling thread.
+  dump_data_condition_.notify_all();
   atrace_thread_.join();
   RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_stop");
   if (need_result) {
