@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.internal.transforms
 
-import com.android.SdkConstants
 import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.*
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.SecondaryFile
 import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
@@ -37,7 +36,6 @@ import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.runR8
 import com.android.builder.packaging.JarMerger
-import com.android.builder.packaging.ZipEntryFilter
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -216,7 +214,7 @@ class R8Transform(
 
         JarMerger(
             outputLocation.toPath(),
-            ZipEntryFilter { name -> !name.endsWith(SdkConstants.DOT_CLASS) }).use { jarMerger ->
+            JarMerger.EXCLUDE_CLASSES).use { jarMerger ->
             inputs.forEach { input ->
                 input.directoryInputs.forEach { dirInput ->
                     if (containsResources(dirInput)) {

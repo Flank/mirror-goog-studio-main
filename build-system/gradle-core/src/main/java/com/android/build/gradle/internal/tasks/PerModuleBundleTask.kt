@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
-import com.android.builder.packaging.ZipEntryFilter
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -37,6 +36,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.function.Predicate
 import java.util.function.Supplier
 
 /**
@@ -93,7 +93,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         val jarMerger = JarMerger(File(outputDir, fileName).toPath())
 
         val filters = abiFilters
-        val abiFilter: AbiFilter? = if (filters != null) AbiFilter(filters) else null
+        val abiFilter: Predicate<String>? = if (filters != null) NativeLibraryAbiPredicate(filters, false) else null
 
         jarMerger.use { it ->
 
@@ -111,7 +111,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
             addHybridFolder(it, javaResFiles.files,
                 Relocator("root"),
-                ZipEntryFilter.EXCLUDE_CLASSES)
+                JarMerger.EXCLUDE_CLASSES)
 
             addHybridFolder(it, nativeLibsFiles.files, fileFilter = abiFilter)
         }
@@ -121,7 +121,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         jarMerger: JarMerger,
         files: Set<File>,
         relocator: Relocator? = null,
-        fileFilter: ZipEntryFilter? = null ) {
+        fileFilter: Predicate<String>? = null ) {
         // in this case the artifact is a folder containing things to add
         // to the zip. These can be file to put directly, jars to copy the content
         // of, or folders
@@ -129,7 +129,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             if (file.isFile) {
                 if (file.name.endsWith(SdkConstants.DOT_JAR)) {
                     jarMerger.addJar(file.toPath(), fileFilter, relocator)
-                } else if (fileFilter == null || fileFilter.checkEntry(file.name)) {
+                } else if (fileFilter == null || fileFilter.test(file.name)) {
                     if (relocator != null) {
                         jarMerger.addFile(relocator.relocate(file.name), file.toPath())
                     } else {
@@ -191,10 +191,3 @@ private class ResRelocator : JarMerger.Relocator {
         else -> entryPath
     }
 }
-
-private class AbiFilter(abiFilters: Set<String>): ZipEntryFilter {
-    private val predicate = NativeLibraryAbiPredicate(abiFilters, false)
-
-    override fun checkEntry(archivePath: String) = predicate.test(archivePath)
-}
-

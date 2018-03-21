@@ -25,8 +25,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.PackagingFileAction;
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions;
-import com.android.builder.packaging.ZipAbortException;
-import com.android.builder.packaging.ZipEntryFilter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -36,13 +34,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Defines a file filter contract which will use {@link PackagingOptions} to take appropriate
  * action.
  */
 @VisibleForTesting
-public class FileFilter implements ZipEntryFilter {
+public class FileFilter implements Predicate<String> {
 
     public static class SubStream {
         private final File folder;
@@ -75,15 +74,14 @@ public class FileFilter implements ZipEntryFilter {
     }
 
     /**
-     * Implementation of the {@link ZipEntryFilter} contract which only
-     * cares about copying or ignoring files since merging is handled differently.
+     * Implementation of the {@link Predicate<String>} contract which only cares about copying or
+     * ignoring files since merging is handled differently.
+     *
      * @param archivePath the archive file path of the entry
      * @return true if the archive entry satisfies the filter, false otherwise.
-     * @throws ZipAbortException
      */
     @Override
-    public boolean checkEntry(@NonNull String archivePath)
-            throws ZipAbortException {
+    public boolean test(@NonNull String archivePath) {
         PackagingFileAction action = getPackagingAction(archivePath);
         switch(action) {
             case EXCLUDE:

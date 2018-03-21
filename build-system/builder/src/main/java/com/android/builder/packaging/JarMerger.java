@@ -16,6 +16,7 @@
 
 package com.android.builder.packaging;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.PathUtils;
@@ -32,6 +33,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
@@ -39,6 +41,11 @@ import java.util.zip.ZipInputStream;
 
 /** Jar Merger class. */
 public class JarMerger implements Closeable {
+
+    public static final Predicate<String> CLASSES_ONLY =
+            archivePath -> archivePath.endsWith(SdkConstants.DOT_CLASS);
+    public static final Predicate<String> EXCLUDE_CLASSES =
+            archivePath -> !archivePath.endsWith(SdkConstants.DOT_CLASS);
 
     public interface Transformer {
         /**
@@ -64,13 +71,13 @@ public class JarMerger implements Closeable {
 
     @NonNull private final JarOutputStream jarOutputStream;
 
-    @Nullable private final ZipEntryFilter filter;
+    @Nullable private final Predicate<String> filter;
 
     public JarMerger(@NonNull Path jarFile) throws IOException {
         this(jarFile, null);
     }
 
-    public JarMerger(@NonNull Path jarFile, @Nullable ZipEntryFilter filter) throws IOException {
+    public JarMerger(@NonNull Path jarFile, @Nullable Predicate<String> filter) throws IOException {
         this.filter = filter;
         Files.createDirectories(jarFile.getParent());
         jarOutputStream =
@@ -83,7 +90,7 @@ public class JarMerger implements Closeable {
 
     public void addDirectory(
             @NonNull Path directory,
-            @Nullable ZipEntryFilter filterOverride,
+            @Nullable Predicate<String> filterOverride,
             @Nullable Transformer transformer,
             @Nullable Relocator relocator)
             throws IOException {
@@ -92,16 +99,11 @@ public class JarMerger implements Closeable {
                 directory,
                 new SimpleFileVisitor<Path>() {
                     @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                            throws IOException {
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                         String entryPath =
                                 PathUtils.toSystemIndependentPath(directory.relativize(file));
-                        try {
-                            if (filterOverride != null && !filterOverride.checkEntry(entryPath)) {
-                                return FileVisitResult.CONTINUE;
-                            }
-                        } catch (ZipAbortException e) {
-                            throw new IOException(e);
+                        if (filterOverride != null && !filterOverride.test(entryPath)) {
+                            return FileVisitResult.CONTINUE;
                         }
 
                         if (relocator != null) {
@@ -134,7 +136,7 @@ public class JarMerger implements Closeable {
 
     public void addJar(
             @NonNull Path file,
-            @Nullable ZipEntryFilter filterOverride,
+            @Nullable Predicate<String> filterOverride,
             @Nullable Relocator relocator)
             throws IOException {
         try (ZipInputStream zis =
@@ -150,12 +152,8 @@ public class JarMerger implements Closeable {
 
                 // Filter out files, e.g. META-INF folder, not classes.
                 String name = entry.getName();
-                try {
-                    if (filterOverride != null && !filterOverride.checkEntry(name)) {
-                        continue;
-                    }
-                } catch (ZipAbortException e) {
-                    throw new IOException(e);
+                if (filterOverride != null && !filterOverride.test(name)) {
+                    continue;
                 }
 
                 if (relocator != null) {

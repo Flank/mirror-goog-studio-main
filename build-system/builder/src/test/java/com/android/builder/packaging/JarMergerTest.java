@@ -17,12 +17,10 @@
 package com.android.builder.packaging;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
@@ -113,7 +111,7 @@ public class JarMergerTest {
     @Test
     public void basicFilter() throws Exception {
         Path out = Jimfs.newFileSystem(Configuration.unix()).getPath("/out/output.jar");
-        try (JarMerger merger = new JarMerger(out, ZipEntryFilter.CLASSES_ONLY)) {
+        try (JarMerger merger = new JarMerger(out, JarMerger.CLASSES_ONLY)) {
             merger.addDirectory(createDirectoryWithClassAndResource());
             merger.addJar(createJarWithClass());
         }
@@ -129,7 +127,7 @@ public class JarMergerTest {
     @Test
     public void basicFilter2() throws Exception {
         Path out = Jimfs.newFileSystem(Configuration.unix()).getPath("/out/output.jar");
-        try (JarMerger merger = new JarMerger(out, ZipEntryFilter.EXCLUDE_CLASSES)) {
+        try (JarMerger merger = new JarMerger(out, JarMerger.EXCLUDE_CLASSES)) {
             merger.addDirectory(createDirectoryWithClassAndResource());
             merger.addJar(createJarWithClass());
         }
@@ -149,10 +147,10 @@ public class JarMergerTest {
                             throw new IllegalArgumentException("Unexpected path" + path);
                     }
                 };
-        try (JarMerger merger = new JarMerger(out, ZipEntryFilter.CLASSES_ONLY)) {
+        try (JarMerger merger = new JarMerger(out, JarMerger.CLASSES_ONLY)) {
             merger.addDirectory(
                     createDirectoryWithClassAndResource(),
-                    ZipEntryFilter.CLASSES_ONLY,
+                    JarMerger.CLASSES_ONLY,
                     transformer,
                     null);
         }
@@ -174,37 +172,11 @@ public class JarMergerTest {
         try (JarMerger merger = new JarMerger(out)) {
             merger.addDirectory(
                     createDirectoryWithClassAndResource(),
-                    ZipEntryFilter.CLASSES_ONLY,
+                    JarMerger.CLASSES_ONLY,
                     transformer,
                     null);
         }
         assertThat(getEntries(out)).isEmpty();
-    }
-
-    @Test
-    public void throwingFilter() throws IOException {
-        Path out = Jimfs.newFileSystem(Configuration.unix()).getPath("/out/output.jar");
-
-        ZipEntryFilter zipEntryFilter =
-                entry -> {
-                    throw new ZipAbortException("Abort!!");
-                };
-        try (JarMerger merger = new JarMerger(out, zipEntryFilter)) {
-            try {
-                merger.addJar(createJarWithClass());
-                fail("Expected IOException");
-            } catch (IOException e) {
-                assertThat(Throwables.getRootCause(e)).hasMessage("Abort!!");
-            }
-        }
-        try (JarMerger merger = new JarMerger(out, zipEntryFilter)) {
-            try {
-                merger.addDirectory(createDirectoryWithClassAndResource());
-                fail("Expected IOException");
-            } catch (IOException e) {
-                assertThat(Throwables.getRootCause(e)).hasMessage("Abort!!");
-            }
-        }
     }
 
     @Test
