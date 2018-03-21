@@ -16,25 +16,27 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
+import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 
 class DynamicAppTest {
-    companion object {
-        @ClassRule
-        @JvmField
-        val project: GradleTestProject = GradleTestProject.builder()
-            .fromTestProject("dynamicApp")
-            .withoutNdk()
-            .create()
-    }
+
+    @get:Rule
+    val project: GradleTestProject = GradleTestProject.builder()
+        .fromTestProject("dynamicApp")
+        .withoutNdk()
+        .create()
 
     private val bundleContent: Array<String> = arrayOf(
         "/BundleManifest.pb",
@@ -49,7 +51,7 @@ class DynamicAppTest {
 
     @Test
     @Throws(IOException::class)
-    fun testModel() {
+    fun `test model contains feature information`() {
         val rootBuildModelMap = project.model().fetchAndroidProjects().rootBuildModelMap
 
         val appModel = rootBuildModelMap[":app"]
@@ -66,7 +68,7 @@ class DynamicAppTest {
     }
 
     @Test
-    fun testBundleDebugFromApp() {
+    fun `test bundleDebug task`() {
         project.execute("app:bundleDebug")
 
         //TODO: update model with this stuff?
@@ -81,7 +83,6 @@ class DynamicAppTest {
         val zipFile = Zip(bundleFile)
         Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
 
-
         // also test that the feature manifest contains the feature name.
         val manifestFile = FileUtils.join(project.getSubproject("feature1").buildDir,
             "intermediates",
@@ -95,7 +96,7 @@ class DynamicAppTest {
     }
 
     @Test
-    fun testBundleReleaseFromApp() {
+    fun `test bundleRelease task`() {
         project.execute("app:bundleRelease")
 
         //TODO: update model with this stuff?
@@ -109,5 +110,63 @@ class DynamicAppTest {
 
         val zipFile = Zip(bundleFile)
         Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
+    }
+
+    @Test
+    fun `test abiFilter with Bundle task`() {
+        val appProject = project.getSubproject(":app")
+        createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
+        createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")
+        createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM64, "libbase.so")
+
+        TestFileUtils.appendToFile(appProject.buildFile,
+            "\n" +
+                    "android.defaultConfig.ndk {\n" +
+                    "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}', '${SdkConstants.ABI_INTEL_ATOM}')\n" +
+                    "}")
+
+        val featureProject = project.getSubproject(":feature1")
+        createAbiFile(featureProject, SdkConstants.ABI_ARMEABI_V7A, "libfeature1.so")
+        createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM, "libfeature1.so")
+        createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM64, "libfeature1.so")
+
+        TestFileUtils.appendToFile(featureProject.buildFile,
+            "\n" +
+                    "android.defaultConfig.ndk {\n" +
+                    "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}')\n" +
+                    "}")
+
+        project.execute("app:bundleDebug")
+
+        //TODO: update model with this stuff?
+        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
+            "outputs",
+            "bundle",
+            "debug",
+            "bundleDebug", // FIXME with proper BuildableArtifact based output file path
+            "bundle.aab")
+        FileSubject.assertThat(bundleFile).exists()
+
+        val zipFile = Zip(bundleFile)
+
+        val bundleContentWithAbis = bundleContent.plus(listOf(
+            "/base/native.pb",
+            "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
+            "/base/lib/${SdkConstants.ABI_INTEL_ATOM}/libbase.so",
+            "/feature1/native.pb",
+            "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"))
+
+        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContentWithAbis)
+    }
+
+    private fun createAbiFile(
+        project: GradleTestProject,
+        abiName: String,
+        libName: String
+    ) {
+        val abiFolder = File(project.getMainSrcDir("jniLibs"), abiName)
+        FileUtils.mkdirs(abiFolder)
+
+        Files.write(File(abiFolder, libName).toPath(), "some content".toByteArray())
     }
 }

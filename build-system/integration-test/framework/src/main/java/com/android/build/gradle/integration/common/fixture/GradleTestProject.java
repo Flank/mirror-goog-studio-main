@@ -838,7 +838,12 @@ public final class GradleTestProject implements TestRule {
 
     /** Return the path to the default Java main source dir. */
     public File getMainSrcDir() {
-        return FileUtils.join(getTestDir(), "src", "main", "java");
+        return getMainSrcDir("java");
+    }
+
+    /** Return the path to the default Java main source dir. */
+    public File getMainSrcDir(@NonNull String language) {
+        return FileUtils.join(getTestDir(), "src", "main", language);
     }
 
     /** Return the build.gradle of the test project. */

@@ -24,12 +24,14 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.ZipEntryFilter
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -74,6 +76,11 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     lateinit var nativeLibsFiles: FileCollection
         private set
 
+    @get:Input
+    @get:Optional
+    var abiFilters: Set<String>? = null
+        private set
+
     private lateinit var fileNameSupplier: Supplier<String>
 
     @get:Input
@@ -84,6 +91,9 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     fun zip() {
         FileUtils.cleanOutputDir(outputDir)
         val jarMerger = JarMerger(File(outputDir, fileName).toPath())
+
+        val filters = abiFilters
+        val abiFilter: AbiFilter? = if (filters != null) AbiFilter(filters) else null
 
         jarMerger.use { it ->
 
@@ -103,7 +113,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 Relocator("root"),
                 ZipEntryFilter.EXCLUDE_CLASSES)
 
-            addHybridFolder(it, nativeLibsFiles.files)
+            addHybridFolder(it, nativeLibsFiles.files, fileFilter = abiFilter)
         }
     }
 
@@ -136,7 +146,6 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         }
     }
 
-
     class ConfigAction(
             private val variantScope: VariantScope
     ) : TaskConfigAction<PerModuleBundleTask> {
@@ -166,6 +175,8 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 StreamFilter.RESOURCES)
             task.nativeLibsFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.NATIVE_LIBS)
+
+            task.abiFilters = variantScope.variantConfiguration.supportedAbis
         }
     }
 }
@@ -179,5 +190,11 @@ private class ResRelocator : JarMerger.Relocator {
         SdkConstants.FN_ANDROID_MANIFEST_XML -> "manifest/" + SdkConstants.FN_ANDROID_MANIFEST_XML
         else -> entryPath
     }
+}
+
+private class AbiFilter(abiFilters: Set<String>): ZipEntryFilter {
+    private val predicate = NativeLibraryAbiPredicate(abiFilters, false)
+
+    override fun checkEntry(archivePath: String) = predicate.test(archivePath)
 }
 
