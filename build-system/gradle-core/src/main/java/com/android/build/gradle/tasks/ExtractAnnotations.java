@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
+import com.android.build.gradle.internal.utils.AndroidXDependency;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.TypedefRemover;
@@ -87,6 +88,12 @@ import org.gradle.api.tasks.TaskAction;
  */
 @CacheableTask
 public class ExtractAnnotations extends AbstractAndroidCompile {
+
+    @NonNull
+    private static final AndroidXDependency ANDROIDX_ANNOTATIONS =
+            AndroidXDependency.fromPreAndroidXDependency(
+                    "com.android.support", "support-annotations");
+
     private Supplier<List<String>> bootClasspath;
 
     private File typedefFile;
@@ -279,8 +286,12 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             if (id instanceof ModuleComponentIdentifier) {
                 ModuleComponentIdentifier moduleId = (ModuleComponentIdentifier) id;
 
-                if (moduleId.getModule().equals("support-annotations") &&
-                        moduleId.getGroup().equals("com.android.support")) {
+                // Search in both AndroidX and pre-AndroidX libraries
+                if (moduleId.getGroup().equals(ANDROIDX_ANNOTATIONS.getGroup())
+                                && moduleId.getModule().equals(ANDROIDX_ANNOTATIONS.getModule())
+                        || moduleId.getGroup().equals(ANDROIDX_ANNOTATIONS.getOldGroup())
+                                && moduleId.getModule()
+                                        .equals(ANDROIDX_ANNOTATIONS.getOldModule())) {
                     return true;
                 }
             }
