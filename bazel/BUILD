@@ -26,6 +26,7 @@ java_library(
     # TODO: Update and use the prebuilts dependency
     deps = [
         ":utils",
+        "//tools/idea/.idea/libraries:Ant",
         "//tools/idea/.idea/libraries:Groovy",
     ],
 )
