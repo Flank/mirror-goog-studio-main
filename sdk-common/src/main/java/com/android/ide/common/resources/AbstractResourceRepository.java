@@ -70,17 +70,6 @@ public abstract class AbstractResourceRepository {
     public AbstractResourceRepository() {}
 
     /**
-     * For now we don't use {@link AbstractResourceRepository} for framework resources, but
-     * eventually we will start at which point a single repository may contain both framework and
-     * app resources. The "truth" lies in the namespace of the {@link ResourceItem}s. Soon we'll get
-     * rid of this method.
-     */
-    @Deprecated
-    public final boolean isFramework() {
-        return false;
-    }
-
-    /**
      * Returns all leaf resource repositories contained in this resource repository including this
      * repository itself, if it does not contain any other repositories.
      *
@@ -471,8 +460,8 @@ public abstract class AbstractResourceRepository {
         return getMatchingFiles(name, type, config, new HashSet<>(), 0);
     }
 
-    @NonNull
     // TODO: namespaces
+    @NonNull
     private List<ResourceFile> getMatchingFiles(
             @NonNull String name,
             @NonNull ResourceType type,
@@ -501,7 +490,8 @@ public abstract class AbstractResourceRepository {
                     String value = resourceValue.getValue();
                     if (value != null && value.startsWith(PREFIX_RESOURCE_REF)) {
                         ResourceUrl url = ResourceUrl.parse(value);
-                        if (url != null && url.type == type && url.isFramework() == isFramework()) {
+                        // TODO: namespaces
+                        if (url != null && url.type == type && !url.isFramework()) {
                             if (!seenNames.contains(url.name)) {
                                 // This resource alias needs to be resolved again.
                                 output.addAll(getMatchingFiles(
@@ -512,7 +502,6 @@ public abstract class AbstractResourceRepository {
                     }
                 }
                 output.add(match.getSource());
-
             }
         }
 
