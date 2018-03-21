@@ -28,7 +28,6 @@ gradle_build = rule(
         "output_file_source" : attr.string(),
         "tasks" : attr.string_list(),
         "build_file": attr.label(allow_files = True, single_file = True),
-        "gradle_version": attr.string(),
         "repos": attr.label_list(allow_files = True),
         "_distribution" : attr.label(
                           default = Label("//tools/base/build-system:gradle-distrib"),

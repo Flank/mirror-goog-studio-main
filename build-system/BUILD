@@ -121,7 +121,6 @@ gradle_build(
     name = "gradle_api_jar",
     build_file = "extract-gradle-api/build.gradle",
     data = [":gradle-distrib"],
-    gradle_version = GRADLE_VERSION,
     output_file = "gradle-api_neverlink.jar",
     output_file_source = "gradle-api-" + GRADLE_VERSION + ".jar",
     tasks = [":copyApiJar"],
