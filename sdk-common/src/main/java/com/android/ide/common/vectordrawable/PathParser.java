@@ -129,7 +129,7 @@ public class PathParser {
             }
             return Arrays.copyOfRange(results, 0, count);
         } catch (NumberFormatException e) {
-            throw new RuntimeException("error in parsing \"" + s + "\"", e);
+            throw new RuntimeException("Error in parsing \"" + s + "\"", e);
         }
     }
 

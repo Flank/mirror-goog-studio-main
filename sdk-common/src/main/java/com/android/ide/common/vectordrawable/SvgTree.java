@@ -20,16 +20,20 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
+import com.google.common.base.Preconditions;
 import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -122,7 +126,7 @@ class SvgTree {
 
         @NonNull
         String getFormattedMessage() {
-            return level.name() + (line == 0 ? "" : " @ line " + line) + ' ' + message;
+            return level.name() + (line == 0 ? "" : " @ line " + line) + ": " + message;
         }
 
         @Override
@@ -139,7 +143,7 @@ class SvgTree {
         }
     }
 
-    public Document parse(File f) throws Exception {
+    public Document parse(@NonNull File f) throws Exception {
         mFileName = f.getName();
         return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
     }
@@ -152,11 +156,11 @@ class SvgTree {
         logger.log(Level.FINE, "matrix=" + mRootTransform);
     }
 
-    private void transform(AffineTransform rootTransform) {
+    private void transform(@NonNull AffineTransform rootTransform) {
         mRoot.transformIfNeeded(rootTransform);
     }
 
-    public void dump(SvgGroupNode root) {
+    public void dump(@NonNull SvgGroupNode root) {
         logger.log(Level.FINE, "current file is :" + mFileName);
         root.dumpNode("");
     }
@@ -220,7 +224,7 @@ class SvgTree {
         PERCENTAGE
     }
 
-    public void parseDimension(Node nNode) {
+    public void parseDimension(@NonNull Node nNode) {
         NamedNodeMap a = nNode.getAttributes();
         int len = a.getLength();
         SizeType widthType = SizeType.PIXEL;
@@ -282,10 +286,11 @@ class SvgTree {
         return mIdMap.get(id);
     }
 
-    public void addToUseSet(SvgGroupNode useGroup) {
+    public void addToUseSet(@NonNull SvgGroupNode useGroup) {
         mUseGroupSet.add(useGroup);
     }
 
+    @NonNull
     public Set<SvgGroupNode> getUseSet() {
         return mUseGroupSet;
     }
@@ -297,12 +302,13 @@ class SvgTree {
         mClipPathAffectedNodes.put(child, Pair.of(currentGroup, clipPathName));
     }
 
+    @NonNull
     public Set<Map.Entry<SvgNode, Pair<SvgGroupNode, String>>> getClipPathAffectedNodesSet() {
         return mClipPathAffectedNodes.entrySet();
     }
 
     /** Adds child to set of SvgNodes that reference the style class with id className. */
-    public void addAffectedNodeToStyleClass(String className, SvgNode child) {
+    public void addAffectedNodeToStyleClass(@NonNull String className, @NonNull SvgNode child) {
         if (mStyleAffectedNodes.containsKey(className)) {
             mStyleAffectedNodes.get(className).add(child);
         } else {
@@ -312,18 +318,19 @@ class SvgTree {
         }
     }
 
-    public void addStyleClassToTree(String className, String attributes) {
+    public void addStyleClassToTree(@NonNull String className, @NonNull String attributes) {
         mStyleClassAttributeMap.put(className, attributes);
     }
 
-    public boolean containsStyleClass(String classname) {
+    public boolean containsStyleClass(@NonNull String classname) {
         return mStyleClassAttributeMap.containsKey(classname);
     }
 
-    public String getStyleClassAttr(String classname) {
+    public String getStyleClassAttr(@NonNull String classname) {
         return mStyleClassAttributeMap.get(classname);
     }
 
+    @NonNull
     public Set<Map.Entry<String, HashSet<SvgNode>>> getStyleAffectedNodes() {
         return mStyleAffectedNodes.entrySet();
     }
