@@ -76,6 +76,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         private set
     @get:OutputDirectory lateinit var classInfoBundleDir: File
         private set
+    @get:Input
+    var useAndroidX: Boolean = false
+        private set
 
     @TaskAction
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
@@ -96,7 +99,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
                 .files
                 .filter {
                     it.name.endsWith(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX) &&
-                            !it.name.startsWith(BASE_ADAPTERS_ARTIFACT) // ignore our libs
+                            !BASE_ADAPTERS_ARTIFACTS.any {
+                                    artifact -> it.name.startsWith(artifact)
+                            } // ignore our libs
                 }
                 .map {
                     it.name.substringBefore(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX)
@@ -138,7 +143,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
                 incremental = inputs.isIncremental,
                 packageName = packageName,
                 artifactFolder = classInfoBundleDir,
-                v1ArtifactsFolder = if (v1Artifacts.isEmpty()) null else v1Artifacts.single()
+                v1ArtifactsFolder = if (v1Artifacts.isEmpty()) null else v1Artifacts.single(),
+                useAndroidX = useAndroidX
         )
     }
 
@@ -168,6 +174,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.classInfoBundleDir = artifacts.appendArtifact(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                 task)
+            task.useAndroidX = variantScope.globalScope.projectOptions.get(
+                BooleanOption.USE_ANDROID_X)
         }
     }
 
@@ -180,6 +188,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     }
 
     companion object {
-        private const val BASE_ADAPTERS_ARTIFACT = "com.android.databinding.library.baseAdapters"
+        private val BASE_ADAPTERS_ARTIFACTS = listOf(
+            "com.android.databinding.library.baseAdapters",
+            "androidx.databinding.library.baseAdapters")
     }
 }

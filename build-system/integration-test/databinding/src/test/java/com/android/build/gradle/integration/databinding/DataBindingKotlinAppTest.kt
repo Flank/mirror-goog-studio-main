@@ -52,7 +52,6 @@ class DataBindingKotlinAppTest(private val useV2 : Boolean) {
         project.executor().run("app:assembleDebug");
         val appBindingClass = "Lcom/example/android/kotlin/databinding/ActivityLayoutBinding;"
         val libBindingClass = "Lcom/example/android/kotlin/lib/databinding/LibActivityLayoutBinding;"
-        //val apk = project.getApk("app", GradleTestProject.ApkType.DEBUG)
         val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk).containsClass(appBindingClass)
         assertThat(apk).containsClass(libBindingClass)

@@ -3455,15 +3455,17 @@ public abstract class TaskManager {
         if (!options.isEnabled()) {
             return;
         }
-
+        boolean useAndroidX = globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X);
         String version = MoreObjects.firstNonNull(options.getVersion(),
                 dataBindingBuilder.getCompilerVersion());
+        String baseLibArtifact =
+                useAndroidX
+                        ? SdkConstants.ANDROIDX_DATA_BINDING_BASELIB_ARTIFACT
+                        : SdkConstants.DATA_BINDING_BASELIB_ARTIFACT;
         project.getDependencies()
                 .add(
                         "api",
-                        SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
-                                + ":"
-                                + dataBindingBuilder.getBaseLibraryVersion(version));
+                        baseLibArtifact + ":" + dataBindingBuilder.getBaseLibraryVersion(version));
         project.getDependencies()
                 .add(
                         "annotationProcessor",
@@ -3479,18 +3481,21 @@ public abstract class TaskManager {
                                     + ":"
                                     + version);
         }
-
         if (options.getAddDefaultAdapters()) {
+            String libArtifact =
+                    useAndroidX
+                            ? SdkConstants.ANDROIDX_DATA_BINDING_LIB_ARTIFACT
+                            : SdkConstants.DATA_BINDING_LIB_ARTIFACT;
+            String adaptersArtifact =
+                    useAndroidX
+                            ? SdkConstants.ANDROIDX_DATA_BINDING_ADAPTER_LIB_ARTIFACT
+                            : SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT;
+            project.getDependencies()
+                    .add("api", libArtifact + ":" + dataBindingBuilder.getLibraryVersion(version));
             project.getDependencies()
                     .add(
                             "api",
-                            SdkConstants.DATA_BINDING_LIB_ARTIFACT
-                                    + ":"
-                                    + dataBindingBuilder.getLibraryVersion(version));
-            project.getDependencies()
-                    .add(
-                            "api",
-                            SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT
+                            adaptersArtifact
                                     + ":"
                                     + dataBindingBuilder.getBaseAdaptersVersion(version));
         }

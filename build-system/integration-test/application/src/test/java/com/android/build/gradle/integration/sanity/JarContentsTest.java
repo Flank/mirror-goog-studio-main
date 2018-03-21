@@ -1061,7 +1061,7 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "com/android/databinding/compilerCommon",
+                "androidx/databinding/compilerCommon",
                 "android/",
                 "android/databinding/",
                 "android/databinding/parser/",
@@ -1085,7 +1085,14 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "com/android/databinding/compiler",
+                "androidx/databinding/baseLibrary",
+                "androidx/",
+                "androidx/databinding/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
+        expected.putAll(
+                "androidx/databinding/compiler",
                 "android/",
                 "android/databinding/",
                 "android/databinding/annotationprocessor/",
@@ -1155,9 +1162,10 @@ public class JarContentsTest {
     @Test
     public void checkDataBinding() throws Exception {
         // Checks compiler and compilerCommon
-        checkGroup("com/android/databinding/compilerCommon", GMAVEN_ZIP);
-        checkGroup("com/android/databinding/compiler", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/compilerCommon", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/compiler", GMAVEN_ZIP);
         checkGroup("com/android/databinding/baseLibrary", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/baseLibrary", GMAVEN_ZIP);
     }
 
     @Test

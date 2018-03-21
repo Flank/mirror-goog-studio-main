@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.util.Collection;
 import java.util.function.Supplier;
@@ -44,7 +45,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
 /**
  * This task creates a class which includes the build environment information, which is needed for
@@ -62,6 +62,8 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     private File dataBindingClassOutput;
 
+    private boolean useAndroidX;
+
     private Supplier<FileCollection> compilerClasspath;
     private Supplier<Collection<ConfigurableFileTree>> compilerSources;
     private BuildableArtifact mergedResources;
@@ -74,9 +76,18 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
     }
 
     @TaskAction
-    public void exportInfo(IncrementalTaskInputs inputs) {
-        xmlProcessor.writeEmptyInfoClass();
+    public void exportInfo() {
+        xmlProcessor.writeEmptyInfoClass(useAndroidX);
         Scope.assertNoError();
+    }
+
+    @Input
+    public boolean isUseAndroidX() {
+        return useAndroidX;
+    }
+
+    public void setUseAndroidX(boolean useAndroidX) {
+        this.useAndroidX = useAndroidX;
     }
 
     public LayoutXmlProcessor getXmlProcessor() {
@@ -163,7 +174,11 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
             task.setXmlProcessor(variantData.getLayoutXmlProcessor());
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
-
+            task.setUseAndroidX(
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.USE_ANDROID_X));
             // we need the external classpath, so we don't want to use scope.getClassPath as that
             // includes internal (to the module) classpath in case there's registered bytecode
             // generator (kotlin) which can trigger a cyclic dependencies.
@@ -171,10 +186,15 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
                     () -> variantScope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
 
             task.compilerSources =
-                    () -> variantData.getJavaSources().stream()
+                    () ->
+                            variantData
+                                    .getJavaSources()
+                                    .stream()
                                     .filter(
-                                            input -> !variantScope.getClassOutputForDataBinding()
-                                                    .equals(input.getDir()))
+                                            input ->
+                                                    !variantScope
+                                                            .getClassOutputForDataBinding()
+                                                            .equals(input.getDir()))
                                     .collect(Collectors.toList());
 
             task.mergedResources =
