@@ -620,7 +620,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     }
 
     /** Registers a builder for the custom tooling model. */
-    @NonNull
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
@@ -1069,6 +1068,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
         try {
             // No null checks below because we're catching all exceptions.
+            @SuppressWarnings("JavaReflectionMemberAccess")
             Method method = plugin.getClass().getMethod("getKotlinPluginVersion");
             method.setAccessible(true);
             return method.invoke(plugin).toString();
