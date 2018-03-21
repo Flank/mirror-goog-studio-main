@@ -122,6 +122,11 @@ public class VariantManager implements VariantModel {
     protected static final String COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION =
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
+    protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
+            "androidx.multidex:multidex:1.0.0-alpha1";
+    protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
+            "androidx.multidex:multidex-instrumentation:1.0.0-alpha1";
+
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final AndroidBuilder androidBuilder;
@@ -521,14 +526,18 @@ public class VariantManager implements VariantModel {
 
             if (variantType.isApk()) { // ANDROID_TEST
                 if (variantConfig.isLegacyMultiDexMode()) {
+                    String multiDexInstrumentationDep =
+                            globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                                    ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
+                                    : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
                     project.getDependencies()
                             .add(
                                     variantDep.getCompileClasspath().getName(),
-                                    COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                                    multiDexInstrumentationDep);
                     project.getDependencies()
                             .add(
                                     variantDep.getRuntimeClasspath().getName(),
-                                    COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                                    multiDexInstrumentationDep);
                 }
 
                 taskManager.createAndroidTestVariantTasks((TestVariantData) variantData);
@@ -996,10 +1005,14 @@ public class VariantManager implements VariantModel {
         variantData.setVariantDependency(variantDep);
 
         if (variantConfig.isLegacyMultiDexMode()) {
-            project.getDependencies().add(
-                    variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
-            project.getDependencies().add(
-                    variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
+            String multiDexDependency =
+                    globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                            ? ANDROIDX_MULTIDEX_MULTIDEX
+                            : COM_ANDROID_SUPPORT_MULTIDEX;
+            project.getDependencies()
+                    .add(variantDep.getCompileClasspath().getName(), multiDexDependency);
+            project.getDependencies()
+                    .add(variantDep.getRuntimeClasspath().getName(), multiDexDependency);
         }
 
         if (variantConfig.getRenderscriptSupportModeEnabled()) {
