@@ -17,6 +17,8 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.sdklib.AndroidTargetHash;
@@ -54,7 +56,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     File annotationProcessorOutputFolder;
 
-    FileCollection processorListFile;
+    BuildableArtifact processorListFile;
 
     String variantName;
 
@@ -74,7 +76,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     @PathSensitive(PathSensitivity.NONE)
     @InputFiles
-    public FileCollection getProcessorListFile() {
+    public BuildableArtifact getProcessorListFile() {
         return processorListFile;
     }
 
@@ -131,7 +133,8 @@ public class AndroidJavaCompile extends JavaCompile {
     void processAnalytics() {
         Gson gson = new GsonBuilder().create();
         List<String> classNames;
-        try (FileReader reader = new FileReader(processorListFile.getSingleFile())) {
+        try (FileReader reader =
+                new FileReader(BuildableArtifactUtil.singleFile(processorListFile))) {
             classNames = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
         } catch (IOException e) {
             throw new UncheckedIOException(e);

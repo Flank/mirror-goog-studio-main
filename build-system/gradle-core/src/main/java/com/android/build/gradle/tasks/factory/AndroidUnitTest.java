@@ -34,7 +34,6 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.Input;
@@ -175,7 +174,10 @@ public class AndroidUnitTest extends Test {
             // the test classpath is made up of:
             // - the config file
             if (includeAndroidResources) {
-                collection.from(scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
+                collection.from(
+                        scope.getArtifacts()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
             }
             // - the test component classes and java_res
             collection.from(scope.getOutput(ALL_CLASSES));

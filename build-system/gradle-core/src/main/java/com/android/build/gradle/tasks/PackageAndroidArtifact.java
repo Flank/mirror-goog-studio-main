@@ -117,7 +117,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public FileCollection getResourceFiles() {
+    public BuildableArtifact getResourceFiles() {
         return resourceFiles;
     }
 
@@ -154,7 +154,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return jniFolders;
     }
 
-    protected FileCollection resourceFiles;
+    protected BuildableArtifact resourceFiles;
 
     protected FileCollection dexFolders;
 
@@ -903,7 +903,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             variantScope.getIncrementalDir(packageAndroidArtifact.getName()),
                             "aapt-temp");
 
-            packageAndroidArtifact.resourceFiles = variantScope.getOutput(inputResourceFilesType);
+            packageAndroidArtifact.resourceFiles =
+                    variantScope.getArtifacts().getFinalArtifactFiles(inputResourceFilesType);
             packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact.setIncrementalFolder(
                     new File(

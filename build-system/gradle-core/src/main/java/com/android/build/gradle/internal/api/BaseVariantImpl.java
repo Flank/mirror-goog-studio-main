@@ -24,6 +24,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -276,8 +277,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public File getMappingFile() {
         VariantScope scope = getVariantData().getScope();
-        if (scope.hasOutput(InternalArtifactType.APK_MAPPING)) {
-            return scope.getOutput(InternalArtifactType.APK_MAPPING).getSingleFile();
+        if (scope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)) {
+            return BuildableArtifactUtil.singleFile(
+                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK_MAPPING));
         }
         return null;
     }

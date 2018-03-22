@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
@@ -33,7 +32,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
@@ -44,7 +42,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -198,7 +195,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SyncIssue;
@@ -1389,17 +1385,9 @@ public abstract class TaskManager {
      * always used when running unit tests.
      */
     public JavaCompile createJavacTask(@NonNull final VariantScope scope) {
-        File processorListFile =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "javaPrecompile",
-                        scope.getDirName(),
-                        "annotationProcessors.json");
-
         JavaPreCompileTask preCompileTask =
-                taskFactory.create(new JavaPreCompileTask.ConfigAction(scope, processorListFile));
+                taskFactory.create(new JavaPreCompileTask.ConfigAction(scope));
         preCompileTask.dependsOn(scope.getPreBuildTask());
-        scope.addTaskOutput(ANNOTATION_PROCESSOR_LIST, processorListFile, preCompileTask.getName());
 
         final JavaCompile javacTask = taskFactory.create(new JavaCompileConfigAction(scope));
         scope.setJavacTask(javacTask);
@@ -1646,17 +1634,8 @@ public abstract class TaskManager {
         createCompileAnchorTask(variantScope);
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
-            File unitTestConfigDir =
-                    new File(
-                            globalScope.getIntermediatesDir(),
-                            "unitTestConfig/" + variantData.getVariantConfiguration().getDirName());
             GenerateTestConfig generateTestConfig =
-                    taskFactory.create(
-                            new GenerateTestConfig.ConfigAction(variantScope, unitTestConfigDir));
-            variantScope.addTaskOutput(
-                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
-                    unitTestConfigDir,
-                    generateTestConfig.getName());
+                    taskFactory.create(new GenerateTestConfig.ConfigAction(variantScope));
             variantScope.getCompileTask().dependsOn(generateTestConfig);
         }
 
@@ -3130,8 +3109,14 @@ public abstract class TaskManager {
         ProGuardTransform transform = new ProGuardTransform(variantScope);
 
         FileCollection inputProguardMapping;
-        if (testedVariantData != null && testedVariantData.getScope().hasOutput(APK_MAPPING)) {
-            inputProguardMapping = testedVariantData.getScope().getOutput(APK_MAPPING);
+        if (testedVariantData != null
+                && testedVariantData.getScope().getArtifacts().hasArtifact(APK_MAPPING)) {
+            inputProguardMapping =
+                    testedVariantData
+                            .getScope()
+                            .getArtifacts()
+                            .getFinalArtifactFiles(APK_MAPPING)
+                            .get();
         } else {
             inputProguardMapping = mappingFileCollection;
         }
@@ -3187,10 +3172,12 @@ public abstract class TaskManager {
         // FIXME remove once the transform support secondary file as a FileCollection.
         task.ifPresent(
                 t -> {
-                    variantScope.addTaskOutput(
-                            InternalArtifactType.APK_MAPPING,
-                            checkNotNull(outputProguardMapping),
-                            t.getName());
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.APK_MAPPING,
+                                    ImmutableList.of(checkNotNull(outputProguardMapping)),
+                                    t);
 
                     if (inputProguardMapping != null) {
                         t.dependsOn(inputProguardMapping);
@@ -3278,8 +3265,14 @@ public abstract class TaskManager {
         }
 
         FileCollection inputProguardMapping;
-        if (testedVariantData != null && testedVariantData.getScope().hasOutput(APK_MAPPING)) {
-            inputProguardMapping = testedVariantData.getScope().getOutput(APK_MAPPING);
+        if (testedVariantData != null
+                && testedVariantData.getScope().getArtifacts().hasArtifact(APK_MAPPING)) {
+            inputProguardMapping =
+                    testedVariantData
+                            .getScope()
+                            .getArtifacts()
+                            .getFinalArtifactFiles(APK_MAPPING)
+                            .get();
         } else {
             inputProguardMapping = MoreObjects.firstNonNull(mappingFileCollection, project.files());
         }
@@ -3330,10 +3323,11 @@ public abstract class TaskManager {
                 scope.getTransformManager().addTransform(taskFactory, scope, shrinkResTransform);
 
         if (shrinkTask.isPresent()) {
-            scope.addTaskOutput(
-                    InternalArtifactType.SHRUNK_PROCESSED_RES,
-                    shrinkerOutput,
-                    shrinkTask.get().getName());
+            scope.getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.SHRUNK_PROCESSED_RES,
+                            ImmutableList.of(shrinkerOutput),
+                            shrinkTask.get());
         } else {
             androidBuilder
                     .getIssueReporter()

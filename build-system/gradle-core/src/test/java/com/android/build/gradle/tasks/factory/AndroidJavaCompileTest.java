@@ -18,6 +18,8 @@ package com.android.build.gradle.tasks.factory;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
@@ -34,6 +36,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 /** Test for AndroidJavaCompileTest. */
 public class AndroidJavaCompileTest {
@@ -48,6 +51,7 @@ public class AndroidJavaCompileTest {
         File testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         ProcessProfileWriterFactory.initializeForTests();
+        BuildableArtifactImpl.Companion.enableResolution();
     }
 
     @Test
@@ -57,7 +61,8 @@ public class AndroidJavaCompileTest {
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
         task.variantName = VARIANT_NAME;
-        task.processorListFile = project.files(inputFile);
+        task.processorListFile =
+                new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
 
         task.processAnalytics();
 
@@ -72,7 +77,8 @@ public class AndroidJavaCompileTest {
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[\"processor1\", \"processor2\"]".getBytes("utf-8"));
         task.variantName = VARIANT_NAME;
-        task.processorListFile = project.files(inputFile);
+        task.processorListFile =
+                new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
         task.processAnalytics();
         Collection<String> processorNames = getProcessorList();
         assertThat(processorNames).containsExactly("processor1", "processor2");

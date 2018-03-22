@@ -41,7 +41,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
@@ -150,15 +149,13 @@ public class GenerateTestConfig extends DefaultTask {
 
         @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;
-        @NonNull private final File outputDirectory;
 
-        public ConfigAction(@NonNull VariantScope scope, @NonNull File outputDirectory) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
             this.testedScope =
                     Preconditions.checkNotNull(
                                     scope.getTestedVariantData(), "Not a unit test variant.")
                             .getScope();
-            this.outputDirectory = outputDirectory;
         }
 
         @NonNull
@@ -190,7 +187,10 @@ public class GenerateTestConfig extends DefaultTask {
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
-            task.generatedJavaResourcesDirectory = outputDirectory;
+            task.generatedJavaResourcesDirectory =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY, task, "out");
             task.packageForR = testedScope.getVariantConfiguration().getOriginalApplicationId();
         }
     }

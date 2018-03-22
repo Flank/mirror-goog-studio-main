@@ -219,7 +219,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             }
         }
 
-        javacTask.processorListFile = scope.getOutput(ANNOTATION_PROCESSOR_LIST);
+        javacTask.processorListFile =
+                scope.getArtifacts().getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST);
         javacTask.variantName = scope.getFullVariantName();
     }
 }

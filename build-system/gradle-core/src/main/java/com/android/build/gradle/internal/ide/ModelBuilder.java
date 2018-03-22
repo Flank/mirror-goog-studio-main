@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
@@ -578,10 +579,12 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
-        if (scope.hasOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
+        if (scope.getArtifacts().hasArtifact(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
             additionalTestClasses.add(
-                    scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
-                            .getSingleFile());
+                    BuildableArtifactUtil.singleFile(
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(
+                                            InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)));
         }
         // The separately compile R class, if applicable.
         VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();

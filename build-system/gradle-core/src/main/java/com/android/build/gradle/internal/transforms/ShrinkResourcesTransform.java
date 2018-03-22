@@ -62,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.xml.sax.SAXException;
@@ -97,7 +96,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     @NonNull private final BuildableArtifact sourceDir;
     @NonNull private final BuildableArtifact resourceDir;
-    @Nullable private final FileCollection mappingFileSrc;
+    @Nullable private final BuildableArtifact mappingFileSrc;
     @NonNull private final BuildableArtifact mergedManifests;
     @NonNull private final BuildableArtifact uncompressedResources;
 
@@ -129,8 +128,10 @@ public class ShrinkResourcesTransform extends Transform {
         this.resourceDir = variantScope.getArtifacts().getFinalArtifactFiles(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
-                variantScope.hasOutput(InternalArtifactType.APK_MAPPING)
-                        ? variantScope.getOutput(InternalArtifactType.APK_MAPPING)
+                variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
+                        ? variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                         : null;
         this.mergedManifests =
                 artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
@@ -278,7 +279,8 @@ public class ShrinkResourcesTransform extends Transform {
         }
 
         File reportFile = null;
-        File mappingFile = mappingFileSrc != null ? mappingFileSrc.getSingleFile() : null;
+        File mappingFile =
+                mappingFileSrc != null ? BuildableArtifactUtil.singleFile(mappingFileSrc) : null;
         if (mappingFile != null) {
             File logDir = mappingFile.getParentFile();
             if (logDir != null) {

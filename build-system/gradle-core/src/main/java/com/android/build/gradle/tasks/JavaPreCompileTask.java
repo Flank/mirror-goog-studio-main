@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
@@ -220,11 +221,9 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
 
         private final VariantScope scope;
-        private final File processorListFile;
 
-        public ConfigAction(VariantScope scope, File processorListFile) {
+        public ConfigAction(VariantScope scope) {
             this.scope = scope;
-            this.processorListFile = processorListFile;
         }
 
         @NonNull
@@ -242,7 +241,11 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         @Override
         public void execute(@NonNull JavaPreCompileTask task) {
             task.init(
-                    processorListFile,
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.ANNOTATION_PROCESSOR_LIST,
+                                    task,
+                                    "annotationProcessors.json"),
                     scope.getVariantData().getType().isTestComponent()
                             ? scope.getVariantData().getType().getPrefix() + "AnnotationProcessor"
                             : "annotationProcessor",
