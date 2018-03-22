@@ -30,9 +30,11 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -193,7 +195,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return applicationId.get();
     }
 
-    FileCollection splitListInput;
+    BuildableArtifact splitListInput;
 
 
     private OutputFactory outputFactory;
@@ -502,7 +504,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         configBuilder.setLibrarySymbolTableFiles(dependencies);
                     }
                     configBuilder.setResourceDir(
-                            checkNotNull(getInputResourcesDir()).getSingleFile());
+                            BuildableArtifactUtil.singleFile(checkNotNull(getInputResourcesDir())));
                 }
                 AaptPackageConfig config = configBuilder.build();
 
@@ -722,7 +724,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             if (variantData.getType().getCanHaveSplits()) {
                 processResources.splitListInput =
-                        variantScope.getOutput(InternalArtifactType.SPLIT_LIST);
+                        variantScope.getArtifacts().getFinalArtifactFiles(
+                                InternalArtifactType.SPLIT_LIST);
             }
 
             processResources.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
@@ -779,7 +782,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             .getFinalArtifactFiles(processResources.taskInputType));
 
             processResources.inputResourcesDir =
-                    variantScope.getOutput(sourceArtifactType.getOutputType());
+                    variantScope.getArtifacts()
+                            .getFinalArtifactFiles(sourceArtifactType.getOutputType());
 
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -870,7 +874,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             if (variantData.getType().getCanHaveSplits()) {
-                task.splitListInput = variantScope.getOutput(InternalArtifactType.SPLIT_LIST);
+                task.splitListInput = variantScope.getArtifacts()
+                        .getFinalArtifactFiles(InternalArtifactType.SPLIT_LIST);
             }
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
             task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
@@ -982,13 +987,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return this.buildContext.isInInstantRunMode();
     }
 
-    @Nullable private FileCollection inputResourcesDir;
+    @Nullable private BuildableArtifact inputResourcesDir;
 
     @Nullable
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getInputResourcesDir() {
+    public BuildableArtifact getInputResourcesDir() {
         return inputResourcesDir;
     }
 
@@ -1149,7 +1154,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
-    FileCollection getSplitListInput() {
+    BuildableArtifact getSplitListInput() {
         return splitListInput;
     }
 

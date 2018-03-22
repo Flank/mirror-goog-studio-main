@@ -117,7 +117,6 @@ public abstract class BaseVariantData implements TaskContainer {
     public MergeSourceSetFolders mergeAssetsTask;
     public GenerateBuildConfig generateBuildConfigTask;
     public GenerateResValues generateResValuesTask;
-    public Copy copyApkTask;
     public GenerateApkDataTask generateApkDataTask;
     public ShaderCompile shaderCompileTask;
 

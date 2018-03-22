@@ -897,12 +897,14 @@ public abstract class TaskManager {
                                 true,
                                 flags));
 
-        scope.addTaskOutput(
-                mergeType.getOutputType(), mergedOutputDir, mergeResourcesTask.getName());
+        scope.getArtifacts().appendArtifact(mergeType.getOutputType(),
+                ImmutableList.of(mergedOutputDir), mergeResourcesTask);
 
         if (alsoOutputNotCompiledResources) {
-            scope.addTaskOutput(
-                    MERGED_NOT_COMPILED_RES, mergedNotCompiledDir, mergeResourcesTask.getName());
+            scope.getArtifacts().appendArtifact(
+                    InternalArtifactType.MERGED_NOT_COMPILED_RES,
+                    ImmutableList.of(mergedNotCompiledDir),
+                    mergeResourcesTask);
         }
 
         mergeResourcesTask.dependsOn(
@@ -1203,29 +1205,19 @@ public abstract class TaskManager {
      * all --split provided parameters. These split packages should be signed and moved unchanged to
      * the FULL_APK build output directory.
      */
-    @NonNull
-    public PackageSplitRes createSplitResourcesTasks(@NonNull VariantScope scope) {
+    public void createSplitResourcesTasks(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
                 variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "Can only create split resources tasks for pure splits.");
 
-        File densityOrLanguagesPackages = scope.getSplitDensityOrLanguagesPackagesOutputDirectory();
-        PackageSplitRes packageSplitRes =
-                taskFactory.create(
-                        new PackageSplitRes.ConfigAction(scope, densityOrLanguagesPackages));
-        variantData.packageSplitResourcesTask = packageSplitRes;
-        scope.addTaskOutput(
-                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                densityOrLanguagesPackages,
-                packageSplitRes.getName());
+        variantData.packageSplitResourcesTask =
+                taskFactory.create(new PackageSplitRes.ConfigAction(scope));
 
         if (scope.getVariantConfiguration().getSigningConfig() != null) {
-            packageSplitRes.dependsOn(getValidateSigningTask(scope));
+            variantData.packageSplitResourcesTask.dependsOn(getValidateSigningTask(scope));
         }
-
-        return packageSplitRes;
     }
 
     @Nullable
@@ -1252,29 +1244,12 @@ public abstract class TaskManager {
                             + Joiner.on(",").join(filters));
         }
 
-        File generateSplitAbiResOutputDirectory = scope.getGenerateSplitAbiResOutputDirectory();
         // first create the ABI specific split FULL_APK resources.
-        GenerateSplitAbiRes generateSplitAbiRes =
-                taskFactory.create(
-                        new GenerateSplitAbiRes.ConfigAction(
-                                scope, generateSplitAbiResOutputDirectory));
-        scope.addTaskOutput(
-                InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
-                generateSplitAbiResOutputDirectory,
-                generateSplitAbiRes.getName());
+        taskFactory.create(new GenerateSplitAbiRes.ConfigAction(scope));
 
         // then package those resources with the appropriate JNI libraries.
-        File generateSplitAbiPackagesOutputDirectory = scope.getSplitAbiPackagesOutputDirectory();
         PackageSplitAbi packageSplitAbiTask =
-                taskFactory.create(
-                        new PackageSplitAbi.ConfigAction(
-                                scope,
-                                generateSplitAbiPackagesOutputDirectory,
-                                scope.getOutput(InternalArtifactType.ABI_PROCESSED_SPLIT_RES)));
-        scope.addTaskOutput(
-                InternalArtifactType.ABI_PACKAGED_SPLIT,
-                generateSplitAbiPackagesOutputDirectory,
-                packageSplitAbiTask.getName());
+                taskFactory.create(new PackageSplitAbi.ConfigAction(scope));
         variantData.packageSplitAbiTask = packageSplitAbiTask;
 
         packageSplitAbiTask.dependsOn(scope.getNdkBuildable());
@@ -1398,13 +1373,9 @@ public abstract class TaskManager {
         // TODO do we support non compiled shaders in aars?
         //mergeShadersTask.dependsOn( scope.getVariantData().prepareDependenciesTask);
 
-        File outputDir = scope.getGeneratedAssetsDir("shaders");
-
         // compile the shaders
         ShaderCompile shaderCompileTask =
-                taskFactory.create(new ShaderCompile.ConfigAction(scope, outputDir));
-        scope.addTaskOutput(
-                InternalArtifactType.SHADER_ASSETS, outputDir, shaderCompileTask.getName());
+                taskFactory.create(new ShaderCompile.ConfigAction(scope));
         shaderCompileTask.dependsOn(mergeShadersTask);
 
         scope.getAssetGenTask().dependsOn(shaderCompileTask);
@@ -1729,18 +1700,9 @@ public abstract class TaskManager {
     protected void createSplitsDiscovery(VariantScope variantScope) {
         if (variantScope.getVariantData().getType().getCanHaveSplits()) {
             // split list calculation and save to this file.
-            File splitListOutputFile =
-                    new File(
-                            new File(variantScope.getSplitSupportDirectory(), "split-list"),
-                            FN_SPLIT_LIST);
             SplitsDiscovery splitsDiscoveryAndroidTask =
                     taskFactory.create(
-                            new SplitsDiscovery.ConfigAction(variantScope, splitListOutputFile));
-
-            variantScope.addTaskOutput(
-                    InternalArtifactType.SPLIT_LIST,
-                    splitListOutputFile,
-                    splitsDiscoveryAndroidTask.getName());
+                            new SplitsDiscovery.ConfigAction(variantScope));
         }
     }
 
@@ -2925,7 +2887,9 @@ public abstract class TaskManager {
                                 variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
                                 taskOutputType));
-        variantScope.addTaskOutput(taskOutputType, outputDirectory, packageApp.getName());
+        variantScope.getArtifacts().appendArtifact(taskOutputType,
+                ImmutableList.of(outputDirectory),
+                packageApp);
 
         Task packageInstantRunResources = null;
 
@@ -3015,8 +2979,9 @@ public abstract class TaskManager {
             CopyOutputs copyOutputsTask =
                     taskFactory.create(
                             new CopyOutputs.ConfigAction(variantScope, finalApkLocation));
-            variantScope.addTaskOutput(
-                    InternalArtifactType.APK, finalApkLocation, copyOutputsTask.getName());
+            variantScope.getArtifacts().appendArtifact(InternalArtifactType.APK,
+                    ImmutableList.of(finalApkLocation),
+                    copyOutputsTask);
             variantScope.getAssembleTask().dependsOn(copyOutputsTask);
         }
 

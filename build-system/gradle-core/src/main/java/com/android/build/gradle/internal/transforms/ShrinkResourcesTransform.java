@@ -30,6 +30,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -95,7 +96,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final Logger logger;
 
     @NonNull private final BuildableArtifact sourceDir;
-    @NonNull private final FileCollection resourceDir;
+    @NonNull private final BuildableArtifact resourceDir;
     @Nullable private final FileCollection mappingFileSrc;
     @NonNull private final BuildableArtifact mergedManifests;
     @NonNull private final BuildableArtifact uncompressedResources;
@@ -125,7 +126,8 @@ public class ShrinkResourcesTransform extends Transform {
         this.sourceDir =
                 artifacts.getFinalArtifactFiles(
                         InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
-        this.resourceDir = variantScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
+        this.resourceDir = variantScope.getArtifacts().getFinalArtifactFiles(
+                InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
                 variantScope.hasOutput(InternalArtifactType.APK_MAPPING)
                         ? variantScope.getOutput(InternalArtifactType.APK_MAPPING)
@@ -308,7 +310,7 @@ public class ShrinkResourcesTransform extends Transform {
                         classes,
                         mergedManifest.getOutputFile(),
                         mappingFile,
-                        resourceDir.getSingleFile(),
+                        BuildableArtifactUtil.singleFile(resourceDir),
                         reportFile);
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));

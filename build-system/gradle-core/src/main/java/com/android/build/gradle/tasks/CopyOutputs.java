@@ -17,6 +17,9 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -44,9 +47,9 @@ import org.gradle.tooling.BuildException;
  */
 public class CopyOutputs extends AndroidVariantTask {
 
-    FileCollection fullApks;
-    FileCollection abiSplits;
-    FileCollection resourcesSplits;
+    BuildableArtifact fullApks;
+    BuildableArtifact abiSplits;
+    BuildableArtifact resourcesSplits;
     File destinationDir;
 
     @OutputDirectory
@@ -55,19 +58,19 @@ public class CopyOutputs extends AndroidVariantTask {
     }
 
     @InputFiles
-    public FileCollection getFullApks() {
+    public BuildableArtifact getFullApks() {
         return fullApks;
     }
 
     @InputFiles
     @Optional
-    public FileCollection getAbiSplits() {
+    public BuildableArtifact getAbiSplits() {
         return abiSplits;
     }
 
     @InputFiles
     @Optional
-    public FileCollection getResourcesSplits() {
+    public BuildableArtifact getResourcesSplits() {
         return resourcesSplits;
     }
 
@@ -78,11 +81,13 @@ public class CopyOutputs extends AndroidVariantTask {
         FileUtils.cleanOutputDir(getDestinationDir());
         // TODO : parallelize at this level.
         ImmutableList.Builder<BuildOutput> allCopiedFiles = ImmutableList.builder();
-        allCopiedFiles.addAll(parallelCopy(InternalArtifactType.FULL_APK, fullApks));
-        allCopiedFiles.addAll(parallelCopy(InternalArtifactType.ABI_PACKAGED_SPLIT, abiSplits));
+        allCopiedFiles.addAll(parallelCopy(InternalArtifactType.FULL_APK, fullApks.get()));
+        allCopiedFiles.addAll(
+                parallelCopy(InternalArtifactType.ABI_PACKAGED_SPLIT, abiSplits.get()));
         allCopiedFiles.addAll(
                 parallelCopy(
-                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, resourcesSplits));
+                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                        resourcesSplits.get()));
         // now save the merged list.
         new BuildElements(allCopiedFiles.build()).save(getDestinationDir());
     }
@@ -130,17 +135,13 @@ public class CopyOutputs extends AndroidVariantTask {
         @Override
         public void execute(@NonNull CopyOutputs task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.fullApks = variantScope.getOutput(InternalArtifactType.FULL_APK);
-            Project project = variantScope.getGlobalScope().getProject();
-            task.abiSplits =
-                    variantScope.hasOutput(InternalArtifactType.ABI_PACKAGED_SPLIT)
-                            ? variantScope.getOutput(InternalArtifactType.ABI_PACKAGED_SPLIT)
-                            : project.files();
-            task.resourcesSplits =
-                    variantScope.hasOutput(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
-                            ? variantScope.getOutput(
-                                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
-                            : project.files();
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            task.fullApks = artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.FULL_APK);
+            task.abiSplits = artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.ABI_PACKAGED_SPLIT);
+            task.resourcesSplits = artifacts.getFinalArtifactFiles(
+                                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
             task.destinationDir = outputDirectory;
         }
     }

@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -54,7 +55,7 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class GenerateTestConfig extends DefaultTask {
 
-    FileCollection resourcesDirectory;
+    BuildableArtifact resourcesDirectory;
     BuildableArtifact assets;
     Path sdkHome;
     File generatedJavaResourcesDirectory;
@@ -83,7 +84,7 @@ public class GenerateTestConfig extends DefaultTask {
                         .element(mainApkInfo);
         generateTestConfigForOutput(
                 Iterables.getOnlyElement(assets).toPath().toAbsolutePath(),
-                resourcesDirectory.getSingleFile().toPath().toAbsolutePath(),
+                BuildableArtifactUtil.singleFile(resourcesDirectory).toPath().toAbsolutePath(),
                 sdkHome,
                 packageForR,
                 checkNotNull(output, "Unable to find manifest output").getOutputFile().toPath(),
@@ -122,7 +123,7 @@ public class GenerateTestConfig extends DefaultTask {
 
     @Input // No need for @InputDirectory, we only care about the path.
     public String getResourcesDirectory() {
-        return resourcesDirectory.getSingleFile().getPath();
+        return BuildableArtifactUtil.singleFile(resourcesDirectory).getPath();
     }
 
     @Input // No need for @InputDirectory, we only care about the path.
@@ -177,7 +178,8 @@ public class GenerateTestConfig extends DefaultTask {
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
 
-            task.resourcesDirectory = testedScope.getOutput(MERGED_NOT_COMPILED_RES);
+            task.resourcesDirectory =
+                    testedScope.getArtifacts().getFinalArtifactFiles(MERGED_NOT_COMPILED_RES);
             task.dependsOn(task.resourcesDirectory);
             task.manifests =
                     testedScope

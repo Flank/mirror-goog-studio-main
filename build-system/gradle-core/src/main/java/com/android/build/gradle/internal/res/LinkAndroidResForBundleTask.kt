@@ -167,7 +167,7 @@ open class LinkAndroidResForBundleTask
                 packageId =  resOffset,
                 dependentFeatures = featurePackagesBuilder.build(),
                 pseudoLocalize = getPseudoLocalesEnabled(),
-                resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))
+                resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).single()))
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", bundledResFile.absolutePath)
         }
@@ -211,12 +211,12 @@ open class LinkAndroidResForBundleTask
     lateinit var manifestFiles: BuildableArtifact
         private set
 
-    private var inputResourcesDir: FileCollection? = null
+    private var inputResourcesDir: BuildableArtifact? = null
 
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getInputResourcesDir(): FileCollection? {
+    fun getInputResourcesDir(): BuildableArtifact? {
         return inputResourcesDir
     }
 
@@ -275,7 +275,8 @@ open class LinkAndroidResForBundleTask
             processResources.manifestFiles = variantScope.artifacts
                 .getFinalArtifactFiles(MERGED_MANIFESTS)
 
-            processResources.inputResourcesDir = variantScope.getOutput(InternalArtifactType.MERGED_RES)
+            processResources.inputResourcesDir =
+                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
             processResources.featureResourcePackages = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG)

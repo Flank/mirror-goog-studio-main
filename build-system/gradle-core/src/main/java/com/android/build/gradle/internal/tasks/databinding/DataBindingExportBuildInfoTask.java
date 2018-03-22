@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -63,12 +64,12 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     private Supplier<FileCollection> compilerClasspath;
     private Supplier<Collection<ConfigurableFileTree>> compilerSources;
-    private FileCollection mergedResources;
+    private BuildableArtifact mergedResources;
 
     @NonNull
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getMergedResources() {
+    public BuildableArtifact getMergedResources() {
         return mergedResources;
     }
 
@@ -176,7 +177,8 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
                                                     .equals(input.getDir()))
                                     .collect(Collectors.toList());
 
-            task.mergedResources = variantScope.getOutput(mergeType.getOutputType());
+            task.mergedResources =
+                    variantScope.getArtifacts().getFinalArtifactFiles(mergeType.getOutputType());
             task.setExportClassListTo(variantData.getType().isExportDataBindingClassList() ?
                     variantScope.getGeneratedClassListOutputFileForDataBinding() : null);
             task.setDataBindingClassOutput(variantScope.getClassOutputForDataBinding());

@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -51,7 +52,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.inject.Inject;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
@@ -92,7 +92,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     // for the dependencies
     private ArtifactCollection libraries = null;
 
-    private FileCollection shadersOutputDir = null;
+    private BuildableArtifact shadersOutputDir = null;
     private FileCollection copyApk = null;
     private String ignoreAssets = null;
 
@@ -245,12 +245,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getShadersOutputDir() {
+    public BuildableArtifact getShadersOutputDir() {
         return shadersOutputDir;
     }
 
     @VisibleForTesting
-    void setShadersOutputDir(FileCollection shadersOutputDir) {
+    void setShadersOutputDir(BuildableArtifact shadersOutputDir) {
         this.shadersOutputDir = shadersOutputDir;
     }
 
@@ -399,7 +399,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
             super.execute(mergeAssetsTask);
             final BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
-            final Project project = scope.getGlobalScope().getProject();
 
             variantData.mergeAssetsTask = mergeAssetsTask;
 
@@ -411,10 +410,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
                     TaskInputHelper.bypassFileSupplier(
                             () -> variantConfig.getSourceFiles(assetDirFunction));
 
-            mergeAssetsTask.shadersOutputDir = scope.getOutput(InternalArtifactType.SHADER_ASSETS);
-            if (variantData.copyApkTask != null) {
-                mergeAssetsTask.copyApk = project.files(variantData.copyApkTask.getDestinationDir());
-            }
+            mergeAssetsTask.shadersOutputDir = scope.getArtifacts()
+                    .getFinalArtifactFiles(InternalArtifactType.SHADER_ASSETS);
 
             AaptOptions options = scope.getGlobalScope().getExtension().getAaptOptions();
             if (options != null) {

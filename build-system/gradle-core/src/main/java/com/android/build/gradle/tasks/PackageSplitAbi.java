@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -54,7 +55,7 @@ import org.gradle.tooling.BuildException;
 /** Package a abi dimension specific split APK */
 public class PackageSplitAbi extends AndroidBuilderTask {
 
-    private FileCollection processedAbiResources;
+    private BuildableArtifact processedAbiResources;
 
     private File outputDirectory;
 
@@ -73,7 +74,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     private Set<String> splits;
 
     @InputFiles
-    public FileCollection getProcessedAbiResources() {
+    public BuildableArtifact getProcessedAbiResources() {
         return processedAbiResources;
     }
 
@@ -169,14 +170,9 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     public static class ConfigAction implements TaskConfigAction<PackageSplitAbi> {
 
         private VariantScope scope;
-        private File outputDirectory;
-        private FileCollection processedAbiResources;
 
-        public ConfigAction(
-                VariantScope scope, File outputDirectory, FileCollection processedAbiResources) {
+        public ConfigAction(VariantScope scope) {
             this.scope = scope;
-            this.outputDirectory = outputDirectory;
-            this.processedAbiResources = processedAbiResources;
         }
 
         @Override
@@ -194,9 +190,13 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         @Override
         public void execute(@NonNull PackageSplitAbi packageSplitAbiTask) {
             VariantConfiguration config = this.scope.getVariantConfiguration();
-            packageSplitAbiTask.processedAbiResources = processedAbiResources;
+            packageSplitAbiTask.processedAbiResources = scope.getArtifacts()
+                    .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
             packageSplitAbiTask.signingConfig = config.getSigningConfig();
-            packageSplitAbiTask.outputDirectory = outputDirectory;
+            packageSplitAbiTask.outputDirectory = scope.getArtifacts().appendArtifact(
+                    InternalArtifactType.ABI_PACKAGED_SPLIT,
+                    packageSplitAbiTask,
+                    "out");
             packageSplitAbiTask.setAndroidBuilder(this.scope.getGlobalScope().getAndroidBuilder());
             packageSplitAbiTask.setVariantName(config.getFullName());
             packageSplitAbiTask.minSdkVersion = config.getMinSdkVersion();

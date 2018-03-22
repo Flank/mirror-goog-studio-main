@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.resources.AssetSet;
 import com.google.common.collect.ImmutableSet;
@@ -118,7 +119,7 @@ public class MergeSourceSetFoldersTest {
         AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
 
         File shaderFile = new File("shader");
-        setFileCollection(task::setShadersOutputDir, shaderFile);
+        setBuildableArtifact(task::setShadersOutputDir, shaderFile);
 
         assertThat(task.computeAssetSetList()).containsExactly(mainSet);
         // shader file should have been added to the main resource sets.
@@ -160,7 +161,7 @@ public class MergeSourceSetFoldersTest {
         AssetSet librarySet2 = librarySets.get(1);
 
         File shaderFile = new File("shader");
-        setFileCollection(task::setShadersOutputDir, shaderFile);
+        setBuildableArtifact(task::setShadersOutputDir, shaderFile);
 
         File copyApkFile = new File("copyApk");
         setFileCollection(task::setCopyApk, copyApkFile);
@@ -189,6 +190,14 @@ public class MergeSourceSetFoldersTest {
 
     private static void setFileCollection(Consumer<FileCollection> setter, File... files) {
         FileCollection fileCollection = mock(FileCollection.class);
+        Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
+        when(fileCollection.getFiles()).thenReturn(fileSet);
+        setter.accept(fileCollection);
+    }
+
+
+    private static void setBuildableArtifact(Consumer<BuildableArtifact> setter, File... files) {
+        BuildableArtifact fileCollection = mock(BuildableArtifact.class);
         Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
         when(fileCollection.getFiles()).thenReturn(fileSet);
         setter.accept(fileCollection);

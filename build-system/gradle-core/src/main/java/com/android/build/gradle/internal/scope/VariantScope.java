@@ -276,15 +276,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getProcessAndroidResourcesProguardOutputFile();
 
     @NonNull
-    File getGenerateSplitAbiResOutputDirectory();
-
-    @NonNull
-    File getSplitDensityOrLanguagesPackagesOutputDirectory();
-
-    @NonNull
-    File getSplitAbiPackagesOutputDirectory();
-
-    @NonNull
     File getFullApkPackagesOutputDirectory();
 
     @NonNull

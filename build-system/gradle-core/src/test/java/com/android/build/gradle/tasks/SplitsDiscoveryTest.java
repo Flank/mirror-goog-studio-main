@@ -20,7 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.SplitList;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -28,7 +30,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -36,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
@@ -50,7 +52,7 @@ public class SplitsDiscoveryTest {
     SplitsDiscovery task;
     File outputFile;
 
-    @Mock FileCollection outputs;
+    @Mock BuildableArtifact outputs;
 
     @Before
     public void setUp() throws IOException {
@@ -58,7 +60,7 @@ public class SplitsDiscoveryTest {
         MockitoAnnotations.initMocks(this);
         File testDir = temporaryFolder.newFolder();
         outputFile = temporaryFolder.newFile();
-        when(outputs.getSingleFile()).thenReturn(outputFile);
+        when(outputs.iterator()).thenReturn(ImmutableList.of(outputFile).iterator());
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", SplitsDiscovery.class);
@@ -138,7 +140,7 @@ public class SplitsDiscoveryTest {
         // wrong name, should not be picked up
         assertThat(new File(mergedFolder, "xxhdpi").mkdirs()).isTrue();
 
-        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
+        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
 
         task.densityAuto = true;
         task.taskAction();
@@ -161,7 +163,7 @@ public class SplitsDiscoveryTest {
         // wrong name, should not be picked up
         assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
 
-        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
+        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
 
         task.languageAuto = true;
         task.taskAction();
@@ -187,8 +189,7 @@ public class SplitsDiscoveryTest {
         // wrong name, should not be picked up
         assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
 
-        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
-
+        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
         task.languageAuto = true;
         task.aapt2Enabled = false;
         task.taskAction();
@@ -218,7 +219,7 @@ public class SplitsDiscoveryTest {
         assertThat(new File(mergedFolder, "values-fr_be").mkdirs()).isTrue();
         // wrong name, should not be picked up
         assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
-        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
+        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
 
         task.densityAuto = true;
         task.languageAuto = true;
@@ -257,8 +258,7 @@ public class SplitsDiscoveryTest {
                 .isTrue();
         // Wrong name, should not be picked up.
         assertThat(new File(mergedFolder, "en_values-en.arsc.flat").mkdirs()).isTrue();
-        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
-
+        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
         task.densityAuto = true;
         task.languageAuto = true;
         task.taskAction();
@@ -280,14 +280,20 @@ public class SplitsDiscoveryTest {
         File mergedFolder = temporaryFolder.newFolder();
         assertThat(new File(mergedFolder, "arm").mkdirs()).isTrue();
         assertThat(new File(mergedFolder, "x86").mkdirs()).isTrue();
-        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
-
+        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
         task.taskAction();
 
         SplitList splitList = SplitList.load(outputs);
         assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
         assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
         assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
+    }
+
+    private BuildableArtifact createBuildableArtifact(File mergedFolder) {
+        BuildableArtifact buildableArtifact = Mockito.mock(BuildableArtifact.class);
+        when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.of(mergedFolder));
+        when(buildableArtifact.getBuildDependencies()).thenReturn(t -> ImmutableSet.of(task));
+        return buildableArtifact;
     }
 
     private static void validateLanguageFilterNames(

@@ -1532,39 +1532,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getGenerateSplitAbiResOutputDirectory() {
-        return new File(
-                globalScope.getIntermediatesDir(),
-                FileUtils.join("splits", "res", "abi", getVariantConfiguration().getDirName()));
-    }
-
-    @Override
-    @NonNull
     public File getSplitSupportDirectory() {
         return new File(
                 globalScope.getIntermediatesDir(),
                 "splits-support/" + getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getSplitDensityOrLanguagesPackagesOutputDirectory() {
-        return new File(
-                globalScope.getBuildDir(),
-                FileUtils.join(
-                        FD_OUTPUTS,
-                        "splits",
-                        "densityLanguage",
-                        getVariantConfiguration().getDirName()));
-    }
-
-    @NonNull
-    @Override
-    public File getSplitAbiPackagesOutputDirectory() {
-        return new File(
-                globalScope.getBuildDir(),
-                FileUtils.join(
-                        FD_OUTPUTS, "splits", "abi", getVariantConfiguration().getDirName()));
     }
 
     @NonNull

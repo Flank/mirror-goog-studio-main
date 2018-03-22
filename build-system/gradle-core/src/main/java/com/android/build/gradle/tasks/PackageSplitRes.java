@@ -122,11 +122,9 @@ public class PackageSplitRes extends AndroidBuilderTask {
     public static class ConfigAction implements TaskConfigAction<PackageSplitRes> {
 
         private VariantScope scope;
-        private File outputDirectory;
 
-        public ConfigAction(VariantScope scope, File outputDirectory) {
+        public ConfigAction(VariantScope scope) {
             this.scope = scope;
-            this.outputDirectory = outputDirectory;
         }
 
         @Override
@@ -149,7 +147,9 @@ public class PackageSplitRes extends AndroidBuilderTask {
             packageSplitResourcesTask.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
             packageSplitResourcesTask.signingConfig = config.getSigningConfig();
-            packageSplitResourcesTask.splitResApkOutputDirectory = outputDirectory;
+            packageSplitResourcesTask.splitResApkOutputDirectory = scope.getArtifacts()
+                    .appendArtifact(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                            packageSplitResourcesTask, "out");
             packageSplitResourcesTask.incrementalDir = scope.getIncrementalDir(getName());
             packageSplitResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             packageSplitResourcesTask.setVariantName(config.getFullName());
