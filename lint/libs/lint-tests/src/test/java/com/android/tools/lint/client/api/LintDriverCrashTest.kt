@@ -105,7 +105,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
     class CrashingDetector : Detector(), SourceCodeScanner {
 
         override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-            listOf<Class<out UElement>>(UFile::class.java)
+            listOf(UFile::class.java)
 
         override fun createUastHandler(context: JavaContext): UElementHandler? =
             object : UElementHandler() {
@@ -150,7 +150,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
     class LinkageErrorDetector : Detector(), SourceCodeScanner {
 
         override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-            listOf<Class<out UElement>>(UFile::class.java)
+            listOf(UFile::class.java)
 
         override fun createUastHandler(context: JavaContext): UElementHandler? =
             object : UElementHandler() {

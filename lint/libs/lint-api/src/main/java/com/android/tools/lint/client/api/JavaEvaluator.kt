@@ -49,6 +49,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.getContainingUClass
 import java.io.File
 import java.util.ArrayList
 
@@ -225,6 +226,14 @@ class JavaEvaluator {
         if (owner != null) {
             val modifierList = owner.modifierList
             return modifierList != null && modifierList.hasModifierProperty(PsiModifier.PUBLIC)
+        }
+        return false
+    }
+
+    open fun isProtected(owner: PsiModifierListOwner?): Boolean {
+        if (owner != null) {
+            val modifierList = owner.modifierList
+            return modifierList != null && modifierList.hasModifierProperty(PsiModifier.PROTECTED)
         }
         return false
     }
@@ -966,6 +975,56 @@ class JavaEvaluator {
         return if (result != null)
             result.toTypedArray()
         else PsiAnnotation.EMPTY_ARRAY
+    }
+
+    /**
+     * Returns true if this method is overriding a method from a super class, or
+     * optionally if it is implementing a method from an interface
+     */
+    fun isOverride(method: UMethod, includeInterfaces: Boolean = true): Boolean {
+        if (isStatic(method)) {
+            return false
+        }
+
+        if (isPublic(method) || isProtected(method)) {
+            val cls = method.getContainingUClass() ?: return false
+            val superCls = cls.superClass ?: return false
+
+            if (includeInterfaces) {
+                val superMethods = method.findSuperMethods()
+                return superMethods.isNotEmpty()
+            }
+
+            val superMethod = superCls.findMethodBySignature(method.psi, true)
+            return superMethod != null
+        }
+
+        return false
+    }
+
+    /**
+     * Returns true if this method is overriding a method from a super class, or
+     * optionally if it is implementing a method from an interface
+     */
+    fun isOverride(method: PsiMethod, includeInterfaces: Boolean = true): Boolean {
+        if (isStatic(method)) {
+            return false
+        }
+
+        if (isPublic(method) || isProtected(method)) {
+            val cls = method.containingClass ?: return false
+            val superCls = cls.superClass ?: return false
+
+            if (includeInterfaces) {
+                val superMethods = method.findSuperMethods()
+                return superMethods.isNotEmpty()
+            }
+
+            val superMethod = superCls.findMethodBySignature(method, true)
+            return superMethod != null
+        }
+
+        return false
     }
 
     /**

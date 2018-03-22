@@ -29,6 +29,7 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Strings;
@@ -56,12 +57,46 @@ public class SyncOptions {
             @Nullable Project project,
             @Nullable File reportsDir,
             boolean report) {
-        flags.getSuppressedIds().addAll(options.getDisable());
-        flags.getEnabledIds().addAll(options.getEnable());
+
+        Set<String> disabled = options.getDisable();
+        if (!disabled.isEmpty()) {
+            for (String id : disabled) {
+                Category category = Category.getCategory(id);
+                if (category != null) {
+                    // Disabling a whole category
+                    flags.addDisabledCategory(category);
+                } else {
+                    flags.getSuppressedIds().add(id);
+                }
+            }
+        }
+
+        Set<String> enabled = options.getEnable();
+        if (!enabled.isEmpty()) {
+            for (String id : enabled) {
+                Category category = Category.getCategory(id);
+                if (category != null) {
+                    // Enabling a whole category
+                    flags.addEnabledCategory(category);
+                } else {
+                    flags.getEnabledIds().add(id);
+                }
+            }
+        }
+
         Set<String> check = options.getCheck();
         if (check != null && !check.isEmpty()) {
-            flags.setExactCheckedIds(check);
+            for (String id : check) {
+                Category category = Category.getCategory(id);
+                if (category != null) {
+                    // Checking a whole category
+                    flags.addExactCategory(category);
+                } else {
+                    flags.addExactId(id);
+                }
+            }
         }
+
         flags.setSetExitCode(options.isAbortOnError());
         flags.setFullPath(options.isAbsolutePaths());
         flags.setShowSourceLines(!options.isNoLines());
@@ -87,7 +122,19 @@ public class SyncOptions {
                 Issue issue = registry.getIssue(id);
                 Severity severity =
                         issue != null ? getSeverity(issue, severityInt) : Severity.WARNING;
-                map.put(id, severity);
+
+                Category category = Category.getCategory(id);
+                if (category != null) {
+                    for (Issue current : registry.getIssues()) {
+                        Category currentCategory = current.getCategory();
+                        if (currentCategory == category
+                                || currentCategory.getParent() == category) {
+                            map.put(current.getId(), severity);
+                        }
+                    }
+                } else {
+                    map.put(id, severity);
+                }
             }
             flags.setSeverityOverrides(map);
         } else {

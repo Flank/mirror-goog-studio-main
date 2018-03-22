@@ -69,7 +69,7 @@ implementation as part of your method.
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-        listOf<Class<out UElement>>(UMethod::class.java)
+        listOf(UMethod::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? =
         object : UElementHandler() {

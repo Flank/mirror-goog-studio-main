@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 327;
+    static final int INITIAL_CAPACITY = 331;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -167,6 +167,10 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(InefficientWeightDetector.ORIENTATION);
         issues.add(InefficientWeightDetector.WRONG_0DP);
         issues.add(IntentDetector.ISSUE);
+        issues.add(InteroperabilityDetector.KOTLIN_PROPERTY);
+        issues.add(InteroperabilityDetector.LAMBDA_LAST);
+        issues.add(InteroperabilityDetector.NO_HARD_KOTLIN_KEYWORDS);
+        issues.add(InteroperabilityDetector.PLATFORM_NULLNESS);
         issues.add(InstantAppDetector.ISSUE);
         issues.add(InvalidImeActionIdDetector.ISSUE);
         issues.add(InvalidPackageDetector.ISSUE);
@@ -389,7 +393,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 105;
+                initialSize += 110;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {

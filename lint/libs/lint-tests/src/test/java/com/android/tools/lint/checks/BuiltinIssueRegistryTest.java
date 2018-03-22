@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import java.lang.reflect.Field;
@@ -61,10 +62,31 @@ public class BuiltinIssueRegistryTest extends TestCase {
     public void testUnique() {
         // Check that ids are unique
         Set<String> ids = new HashSet<>();
+        Set<Category> categories = new HashSet<>();
         for (Issue issue : new TestIssueRegistry().getIssues()) {
             String id = issue.getId();
             assertTrue("Duplicate id " + id, !ids.contains(id));
             ids.add(id);
+            categories.add(issue.getCategory());
+        }
+
+        // Also make sure that none of the category names clash with
+        // the id's since we want to let you enable/disable checks
+        // with category names too
+        for (Category category : categories) {
+            String id = category.getName();
+            if (ids.contains(id)) {
+                assertTrue("Category id clashes with issue id " + id, !ids.contains(id));
+            }
+        }
+
+        // Might as well make sure category id's are unique too
+        ids.clear();
+        for (Category category : categories) {
+            String id = category.getName();
+            if (ids.contains(id)) {
+                assertTrue("Duplicate category name " + id, !ids.contains(id));
+            }
         }
     }
 

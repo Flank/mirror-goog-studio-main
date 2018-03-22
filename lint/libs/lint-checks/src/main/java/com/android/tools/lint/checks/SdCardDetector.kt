@@ -59,7 +59,7 @@ Instead, use `Context.getFilesDir().getPath()`.""",
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-        listOf<Class<out UElement>>(ULiteralExpression::class.java)
+        listOf(ULiteralExpression::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? =
         object : UElementHandler() {

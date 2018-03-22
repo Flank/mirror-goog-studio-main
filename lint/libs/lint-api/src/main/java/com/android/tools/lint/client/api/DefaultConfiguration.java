@@ -24,6 +24,7 @@ import static com.android.utils.SdkUtils.globToRegexp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
@@ -293,6 +294,21 @@ public class DefaultConfiguration extends Configuration {
 
         Severity severity = this.severity.get(issue.getId());
         if (severity == null) {
+            // id's can also refer to categories
+            Category category = issue.getCategory();
+            severity = this.severity.get(category.getName());
+            if (severity != null) {
+                return severity;
+            }
+
+            category = category.getParent();
+            if (category != null) {
+                severity = this.severity.get(category.getName());
+                if (severity != null) {
+                    return severity;
+                }
+            }
+
             severity = this.severity.get(VALUE_ALL);
         }
 
