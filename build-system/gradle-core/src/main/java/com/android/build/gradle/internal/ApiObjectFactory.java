@@ -150,8 +150,8 @@ public class ApiObjectFactory {
                 .getApkDatas()
                 .forEach(
                         apkData -> {
-                            apkData.setVersionCode(config.getVersionCode());
-                            apkData.setVersionName(config.getVersionName());
+                            apkData.setVersionCode(config.getVersionCodeSerializableSupplier());
+                            apkData.setVersionName(config.getVersionNameSerializableSupplier());
                             variantData.variantOutputFactory.create(apkData);
                         });
     }

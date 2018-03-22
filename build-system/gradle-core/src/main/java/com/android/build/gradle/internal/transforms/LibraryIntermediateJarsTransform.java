@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -67,9 +68,9 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
             @NonNull File mainClassLocation,
             @NonNull File resJarLocation,
             @Nullable BuildableArtifact typedefRecipe,
-            @NonNull String packageName,
+            @NonNull Supplier<String> packageNameSupplier,
             boolean packageBuildConfig) {
-        super(mainClassLocation, null, typedefRecipe, packageName, packageBuildConfig);
+        super(mainClassLocation, null, typedefRecipe, packageNameSupplier, packageBuildConfig);
         this.resJarLocation = resJarLocation;
     }
 

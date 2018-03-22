@@ -859,6 +859,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     });
         }
         BuildableArtifactImpl.Companion.enableResolution();
+        variantManager.setHasCreatedTasks(true);
     }
 
     private void checkSplitConfiguration() {

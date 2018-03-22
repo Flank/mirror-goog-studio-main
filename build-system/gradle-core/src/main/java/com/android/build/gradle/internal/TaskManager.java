@@ -2698,7 +2698,6 @@ public abstract class TaskManager {
                     && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
                 ots.className(DataBindingBuilder.PROCESSOR_NAME);
             }
-            String packageName = variantConfiguration.getOriginalApplicationId();
 
             final BaseVariantData artifactVariantData;
             final boolean isTest;
@@ -2750,6 +2749,7 @@ public abstract class TaskManager {
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)
                                         .get());
             }
+            String packageName = variantConfiguration.getOriginalApplicationId();
             // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()

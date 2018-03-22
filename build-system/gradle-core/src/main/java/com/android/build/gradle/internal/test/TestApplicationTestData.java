@@ -38,18 +38,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Implementation of {@link TestData} for separate test modules. */
 public class TestApplicationTestData extends AbstractTestDataImpl {
 
-    private final String testApplicationId;
+    private final Supplier<String> testApplicationId;
     private final Map<String, String> testedProperties;
     private final GradleVariantConfiguration variantConfiguration;
 
     public TestApplicationTestData(
             GradleVariantConfiguration variantConfiguration,
-            String testApplicationId,
+            Supplier<String> testApplicationId,
             @NonNull BuildableArtifact testApkDir,
             @NonNull BuildableArtifact testedApksDir) {
         super(variantConfiguration, testApkDir, testedApksDir);
@@ -77,7 +78,7 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     @NonNull
     @Override
     public String getApplicationId() {
-        return testApplicationId;
+        return testApplicationId.get();
     }
 
     @Nullable

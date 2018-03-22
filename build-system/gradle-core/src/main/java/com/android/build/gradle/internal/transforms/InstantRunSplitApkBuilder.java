@@ -58,6 +58,7 @@ import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -77,7 +78,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     protected final File outputDirectory;
     @Nullable protected final CoreSigningConfig signingConf;
-    @NonNull private final String applicationId;
+    @NonNull private final Supplier<String> applicationIdSupplier;
     @NonNull
     private final AaptOptions aaptOptions;
     @NonNull protected final File supportDirectory;
@@ -101,7 +102,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCollection aapt2FromMaven,
-            @NonNull String applicationId,
+            @NonNull Supplier<String> applicationIdSupplier,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
@@ -116,7 +117,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         this.buildContext = buildContext;
         this.androidBuilder = androidBuilder;
         this.aapt2FromMaven = aapt2FromMaven;
-        this.applicationId = applicationId;
+        this.applicationIdSupplier = applicationIdSupplier;
         this.signingConf = signingConf;
         this.aaptGeneration = aaptGeneration;
         this.aaptOptions = aaptOptions;
@@ -178,7 +179,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     public final Map<String, Object> getParameterInputs() {
         ImmutableMap.Builder<String, Object> builder =
                 ImmutableMap.<String, Object>builder()
-                        .put("applicationId", applicationId)
+                        .put("applicationId", applicationIdSupplier.get())
                         .put(
                                 "aaptVersion",
                                 androidBuilder.getBuildToolInfo().getRevision().toString())
@@ -222,7 +223,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                     generateSplitApkResourcesAp(
                             logger,
                             aapt,
-                            applicationId,
+                            applicationIdSupplier,
                             apkData,
                             supportDirectory,
                             aaptOptions,
@@ -259,7 +260,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     public static File generateSplitApkManifest(
             @NonNull File apkSupportDir,
             @NonNull String splitName,
-            @NonNull String packageId,
+            @NonNull Supplier<String> packageIdSupplier,
             @Nullable String versionName,
             int versionCode,
             @Nullable String minSdkVersion)
@@ -279,7 +280,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                     .append(
                             "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
                     .append("      package=\"")
-                    .append(packageId)
+                    .append(packageIdSupplier.get())
                     .append("\"\n");
             if (versionCode != VersionQualifier.DEFAULT_VERSION) {
                 fileWriter
@@ -309,7 +310,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     public static File generateSplitApkResourcesAp(
             @NonNull Logger logger,
             @NonNull BlockingResourceLinker aapt,
-            @NonNull String applicationId,
+            @NonNull Supplier<String> applicationIdSupplier,
             @NonNull ApkInfo apkInfo,
             @NonNull File supportDirectory,
             @NonNull AaptOptions aaptOptions,
@@ -326,7 +327,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                 generateSplitApkManifest(
                         apkSupportDir,
                         uniqueName,
-                        applicationId,
+                        applicationIdSupplier,
                         apkInfo.getVersionName(),
                         apkInfo.getVersionCode(),
                         null);

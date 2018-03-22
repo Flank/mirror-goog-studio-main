@@ -21,7 +21,10 @@ import com.google.common.base.Preconditions.checkState
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
 import com.google.common.base.Strings
+import java.io.Serializable
 import java.io.File
+import java.util.function.IntSupplier
+import java.util.function.Supplier
 
 /**
  * Provides attributes for the variant.
@@ -184,7 +187,7 @@ class VariantAttributesProvider(
         if (isTestVariant) {
             id = mergedFlavor.testApplicationId
             if (id == null) {
-                id = testedPackage + ".test"
+                id = "$testedPackage.test"
             } else {
                 if (id == testedPackage) {
                     throw RuntimeException(
@@ -233,4 +236,63 @@ class VariantAttributesProvider(
             getApplicationId(testedPackage)
         }
     }
+
+    val versionNameSerializableSupplier: Supplier<String?>
+        get() {
+            val file = if (isTestVariant) null else manifestFile
+            val versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
+                buildType.versionNameSuffix, mergedFlavor.versionNameSuffix
+            )
+            return SerializableStringSupplier(file, mergedFlavor.versionName, versionSuffix)
+        }
+
+    val versionCodeSerializableSupplier: IntSupplier
+        get() {
+            val versionCode = mergedFlavor.versionCode ?: -1
+            val file = if (isTestVariant) null else manifestFile
+            return SerializableIntSupplier(file, versionCode)
+        }
+
+    private class SerializableStringSupplier(
+            private val manifestFile: File? = null,
+            private val versionName: String? = null,
+            private val versionSuffix: String? = null) : Supplier<String?>, Serializable {
+
+        private var cachedVersionName: String? = null
+
+        override fun get(): String? {
+            if (cachedVersionName != null) {
+                return cachedVersionName
+            }
+            cachedVersionName = versionName
+            if (cachedVersionName == null && manifestFile != null) {
+                cachedVersionName = DefaultManifestParser(manifestFile) { true }.versionName
+            }
+
+            if (versionSuffix != null && !versionSuffix.isEmpty()) {
+                cachedVersionName = Strings.nullToEmpty(cachedVersionName) + versionSuffix
+            }
+
+            return cachedVersionName
+        }
+    }
+
+    private class SerializableIntSupplier(
+                private val manifestFile: File? = null,
+                private var versionCode: Int = -1) : IntSupplier, Serializable
+    {
+        private var isCached: Boolean = false
+
+        override fun getAsInt(): Int {
+            if (isCached) {
+                return versionCode
+            }
+            if (versionCode == -1 && manifestFile != null) {
+                versionCode = DefaultManifestParser(manifestFile) { true }.versionCode
+            }
+            isCached = true
+            return versionCode
+        }
+    }
+
 }

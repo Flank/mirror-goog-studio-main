@@ -58,6 +58,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 /**
  * A Variant configuration.
@@ -216,7 +218,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @Nullable VariantConfiguration<T, D, F> testedConfig,
             @Nullable SigningConfig signingConfigOverride,
             @NonNull EvalIssueReporter issueReporter,
-            @NonNull BooleanSupplier canParseManifest) {
+            @NonNull BooleanSupplier isInExecutionPhase) {
         checkNotNull(defaultConfig);
         checkNotNull(defaultSourceProvider);
         checkNotNull(buildType);
@@ -241,7 +243,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                 mainManifestAttributeSupplier != null
                         ? mainManifestAttributeSupplier
                         : new DefaultManifestParser(
-                                mDefaultSourceProvider.getManifestFile(), canParseManifest);
+                                mDefaultSourceProvider.getManifestFile(), isInExecutionPhase);
         mVariantAttributesProvider =
                 new VariantAttributesProvider(
                         mMergedFlavor,
@@ -766,6 +768,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     public int getVersionCode() {
         return mVariantAttributesProvider.getVersionCode();
+    }
+
+    public Supplier<String> getVersionNameSerializableSupplier() {
+        return mVariantAttributesProvider.getVersionNameSerializableSupplier();
+    }
+
+    public IntSupplier getVersionCodeSerializableSupplier() {
+        return mVariantAttributesProvider.getVersionCodeSerializableSupplier();
     }
 
     private static final String DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner";

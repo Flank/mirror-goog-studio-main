@@ -250,8 +250,6 @@ public class LibraryTaskManager extends TaskManager {
                             });
         }
 
-        String packageName = variantConfig.getPackageFromManifest();
-
         // Now add transforms for intermediate publishing (projects to projects).
         File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
         File mainClassJar = new File(jarOutputFolder, FN_CLASSES_JAR);
@@ -261,7 +259,7 @@ public class LibraryTaskManager extends TaskManager {
                         mainClassJar,
                         mainResJar,
                         null,
-                        packageName,
+                        variantConfig::getPackageFromManifest,
                         extension.getPackageBuildConfig());
         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
 
@@ -339,7 +337,7 @@ public class LibraryTaskManager extends TaskManager {
                                 ? artifacts.getFinalArtifactFiles(
                                         InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
                                 : null,
-                        packageName,
+                        variantConfig::getPackageFromManifest,
                         extension.getPackageBuildConfig());
 
         excludeDataBindingClassesIfNecessary(variantScope, transform);

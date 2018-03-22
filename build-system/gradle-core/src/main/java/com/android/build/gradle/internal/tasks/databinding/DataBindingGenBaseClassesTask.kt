@@ -38,6 +38,7 @@ import java.io.File
 import java.io.Serializable
 import java.util.ArrayList
 import javax.inject.Inject
+import kotlin.reflect.KFunction
 
 /**
  * Generates base classes from data binding info files.
@@ -55,8 +56,10 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     @get:InputDirectory lateinit var xmlInfoFolder: File
         private set
     // the package name for the module / app
-    @get:Input lateinit var packageName: String
+    lateinit var packageNameSupplier: KFunction<String>
         private set
+    @get:Input val packageName: String
+        get() = packageNameSupplier.call()
     // list of artifacts from dependencies
     @get:InputFiles lateinit var mergedArtifactsFromDependencies: BuildableArtifact
         private set
@@ -159,7 +162,7 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.xmlInfoFolder = variantScope.layoutInfoOutputForDataBinding
             val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
-            task.packageName = variantData.variantConfiguration.originalApplicationId
+            task.packageNameSupplier = variantData.variantConfiguration::getOriginalApplicationId
             task.mergedArtifactsFromDependencies = artifacts.getFinalArtifactFiles(
                     DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS)
             task.v1Artifacts = artifacts.getFinalArtifactFiles(

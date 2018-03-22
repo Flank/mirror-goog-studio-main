@@ -52,7 +52,7 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class DataBindingExportBuildInfoTask extends DefaultTask {
 
-    private LayoutXmlProcessor xmlProcessor;
+    private Supplier<LayoutXmlProcessor> xmlProcessor;
 
     private File sdkDir;
 
@@ -77,7 +77,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     @TaskAction
     public void exportInfo() {
-        xmlProcessor.writeEmptyInfoClass(useAndroidX);
+        getXmlProcessor().writeEmptyInfoClass(useAndroidX);
         Scope.assertNoError();
     }
 
@@ -91,10 +91,10 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
     }
 
     public LayoutXmlProcessor getXmlProcessor() {
-        return xmlProcessor;
+        return xmlProcessor.get();
     }
 
-    public void setXmlProcessor(LayoutXmlProcessor xmlProcessor) {
+    public void setXmlProcessor(Supplier<LayoutXmlProcessor> xmlProcessor) {
         this.xmlProcessor = xmlProcessor;
     }
 
@@ -171,7 +171,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         @Override
         public void execute(@NonNull DataBindingExportBuildInfoTask task) {
             final BaseVariantData variantData = variantScope.getVariantData();
-            task.setXmlProcessor(variantData.getLayoutXmlProcessor());
+            task.setXmlProcessor(variantData::getLayoutXmlProcessor);
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
             task.setUseAndroidX(

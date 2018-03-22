@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -41,8 +43,8 @@ import java.util.stream.Collectors;
 public abstract class ApkData implements ApkInfo, VariantOutput {
 
     // TO DO : move it to a subclass, we cannot override versions for SPLIT
-    private String versionName;
-    private int versionCode;
+    private Supplier<String> versionName = () -> null;
+    private IntSupplier versionCode = () -> 0;
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private String outputFileName;
 
@@ -107,11 +109,11 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     @NonNull
     public abstract String getDirName();
 
-    public void setVersionCode(int versionCode) {
+    public void setVersionCode(IntSupplier versionCode) {
         this.versionCode = versionCode;
     }
 
-    public void setVersionName(String versionName) {
+    public void setVersionName(Supplier<String> versionName) {
         this.versionName = versionName;
     }
 
@@ -121,13 +123,13 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
 
     @Override
     public int getVersionCode() {
-        return versionCode;
+        return versionCode.getAsInt();
     }
 
     @Nullable
     @Override
     public String getVersionName() {
-        return versionName;
+        return versionName.get();
     }
 
     @Nullable
@@ -142,6 +144,8 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
                 .add("type", getType())
                 .add("fullName", getFullName())
                 .add("filters", getFilters())
+                .add("versionCode", getVersionCode())
+                .add("versionName", getVersionName())
                 .toString();
     }
 
@@ -199,14 +203,14 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
             return false;
         }
         ApkData that = (ApkData) o;
-        return versionCode == that.versionCode
+        return getVersionCode() == that.getVersionCode()
                 && Objects.equals(outputFileName, that.outputFileName)
-                && Objects.equals(versionName, that.versionName)
+                && Objects.equals(getVersionName(), that.getVersionName())
                 && Objects.equals(enabled.get(), that.enabled.get());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(versionCode, enabled.get(), versionName, outputFileName);
+        return Objects.hash(getVersionCode(), enabled.get(), getVersionName(), outputFileName);
     }
 }

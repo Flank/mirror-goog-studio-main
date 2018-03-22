@@ -37,6 +37,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
@@ -58,7 +59,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCollection aapt2FromMaven,
-            @NonNull String applicationId,
+            @NonNull Supplier<String> applicationIdSupplier,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
@@ -74,7 +75,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
                 buildContext,
                 androidBuilder,
                 aapt2FromMaven,
-                applicationId,
+                applicationIdSupplier,
                 signingConf,
                 aaptGeneration,
                 aaptOptions,

@@ -61,6 +61,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Set;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
@@ -85,15 +86,15 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         this.workerExecutor = workerExecutor;
     }
 
-    private String applicationId;
+    private Supplier<String> applicationId;
     private String outputBaseName;
 
     // these are the default values set in the variant's configuration, although they
     // are not directly use in this task, they will be used when versionName and versionCode
     // is not changed by the user's scripts. Therefore, if those values change, this task
     // should be considered out of date.
-    private String versionName;
-    private int versionCode;
+    private Supplier<String> versionName;
+    private IntSupplier versionCode;
     private AaptGeneration aaptGeneration;
 
     private Set<String> splits;
@@ -109,18 +110,18 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     @Input
     public String getApplicationId() {
-        return applicationId;
+        return applicationId.get();
     }
 
     @Input
     public int getVersionCode() {
-        return versionCode;
+        return versionCode.getAsInt();
     }
 
     @Input
     @Optional
     public String getVersionName() {
-        return versionName;
+        return versionName.get();
     }
 
     @Input
@@ -185,8 +186,10 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             ApkData abiApkData =
                     outputFactory.addConfigurationSplit(
                             OutputFile.FilterType.ABI, split, resPackageFile.getName());
-            abiApkData.setVersionCode(variantScope.getVariantConfiguration().getVersionCode());
-            abiApkData.setVersionName(variantScope.getVariantConfiguration().getVersionName());
+            abiApkData.setVersionCode(
+                    variantScope.getVariantConfiguration().getVersionCodeSerializableSupplier());
+            abiApkData.setVersionName(
+                    variantScope.getVariantConfiguration().getVersionNameSerializableSupplier());
 
             // call user's script for the newly discovered ABI pure split.
             if (variantScope.getVariantData().variantOutputFactory != null) {
@@ -283,7 +286,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             manifestAppId =
                     ApplicationId.load(applicationIdOverride.getSingleFile()).getApplicationId();
         } else {
-            manifestAppId = applicationId;
+            manifestAppId = applicationId.get();
         }
 
         try (OutputStreamWriter fileWriter =
@@ -371,8 +374,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             }
 
             // not used directly, but considered as input for the task.
-            generateSplitAbiRes.versionCode = config.getVersionCode();
-            generateSplitAbiRes.versionName = config.getVersionName();
+            generateSplitAbiRes.versionCode = config::getVersionCode;
+            generateSplitAbiRes.versionName = config::getVersionName;
             generateSplitAbiRes.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
 
@@ -386,7 +389,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                     AbiSplitOptions.getAbiFilters(
                             scope.getGlobalScope().getExtension().getSplits().getAbiFilters());
             generateSplitAbiRes.outputBaseName = config.getBaseName();
-            generateSplitAbiRes.applicationId = config.getApplicationId();
+            generateSplitAbiRes.applicationId = config::getApplicationId;
             generateSplitAbiRes.debuggable = config.getBuildType().isDebuggable();
             generateSplitAbiRes.aaptOptions =
                     scope.getGlobalScope().getExtension().getAaptOptions();

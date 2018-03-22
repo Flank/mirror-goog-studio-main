@@ -338,11 +338,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     configurationApkData.setVersionCode(
                                             variantScope
                                                     .getVariantConfiguration()
-                                                    .getVersionCode());
+                                                    .getVersionCodeSerializableSupplier());
                                     configurationApkData.setVersionName(
                                             variantScope
                                                     .getVariantConfiguration()
-                                                    .getVersionName());
+                                                    .getVersionNameSerializableSupplier());
 
                                     // call user's script for the newly discovered resources split.
                                     variantScope
@@ -464,7 +464,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         InstantRunSliceSplitApkBuilder.generateSplitApkManifest(
                                 supportDirectory,
                                 IR_APK_FILE_NAME,
-                                applicationId.get(),
+                                applicationId,
                                 apkData.getVersionName(),
                                 apkData.getVersionCode(),
                                 manifestOutput
@@ -718,7 +718,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
 
-            processResources.applicationId = TaskInputHelper.memoize(config::getApplicationId);
+            processResources.applicationId = config::getApplicationId;
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));

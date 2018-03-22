@@ -117,7 +117,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         TestApplicationTestData testData =
                 new TestApplicationTestData(
                         variantScope.getVariantConfiguration(),
-                        variantScope.getVariantData().getApplicationId(),
+                        variantScope.getVariantData()::getApplicationId,
                         testingApk,
                         new BuildableArtifactImpl(testedApks, globalScope.getDslScope()));
 

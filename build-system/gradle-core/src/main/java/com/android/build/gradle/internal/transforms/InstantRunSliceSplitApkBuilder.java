@@ -44,6 +44,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -62,7 +63,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCollection aapt2FromMaven,
-            @NonNull String applicationId,
+            @NonNull Supplier<String> applicationIdSupplier,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
@@ -78,7 +79,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 buildContext,
                 androidBuilder,
                 aapt2FromMaven,
-                applicationId,
+                applicationIdSupplier,
                 signingConf,
                 aaptGeneration,
                 aaptOptions,

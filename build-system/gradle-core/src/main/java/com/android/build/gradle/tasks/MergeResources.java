@@ -898,23 +898,32 @@ public class MergeResources extends IncrementalTask {
 
                 mergeResourcesTask.dataBindingLayoutProcessor =
                         new SingleFileProcessor() {
-                            final LayoutXmlProcessor processor =
-                                    variantData.getLayoutXmlProcessor();
+
+                            // Lazily instantiate the processor to avoid parsing the manifest.
+                            private LayoutXmlProcessor processor;
+
+                            private LayoutXmlProcessor getProcessor() {
+                                if (processor == null) {
+                                    processor = variantData.getLayoutXmlProcessor();
+                                }
+                                return processor;
+                            }
 
                             @Override
                             public boolean processSingleFile(File file, File out) throws Exception {
-                                return processor.processSingleFile(file, out);
+                                return getProcessor().processSingleFile(file, out);
                             }
 
                             @Override
                             public void processRemovedFile(File file) {
-                                processor.processRemovedFile(file);
+                                getProcessor().processRemovedFile(file);
                             }
 
                             @Override
                             public void end() throws JAXBException {
-                                processor.writeLayoutInfoFiles(
-                                        mergeResourcesTask.dataBindingLayoutInfoOutFolder);
+                                getProcessor()
+                                        .writeLayoutInfoFiles(
+                                                mergeResourcesTask.dataBindingLayoutInfoOutFolder);
                             }
                         };
             }
