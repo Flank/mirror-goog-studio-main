@@ -89,6 +89,9 @@ std::string GraphicsFrameStatsSampler::GetForefrontActivity() {
   if (output.empty()) {
     return "";
   }
+  // Some apis produce duplicate lines for the forefront activity.
+  // Just take the first line.
+  output = Split(output, '\n').front();
   if (isspace(output.back())) {
     output.pop_back();
   }

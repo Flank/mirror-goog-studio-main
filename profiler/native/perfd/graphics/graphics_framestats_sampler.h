@@ -50,7 +50,7 @@ class GraphicsFrameStatsSampler {
       const std::vector<std::string>& frame_stats_string,
       const int64_t start_timestamp_exclusive,
       std::vector<proto::GraphicsData>* data_vector);
-  std::vector<std::string> Split(const std::string str, const char delimiter);
+  static std::vector<std::string> Split(const std::string str, const char delimiter);
 };
 
 }  // namespace profiler
