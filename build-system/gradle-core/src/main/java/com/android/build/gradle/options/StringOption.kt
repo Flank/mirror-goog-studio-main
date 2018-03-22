@@ -39,6 +39,10 @@ enum class StringOption(
     IDE_SIGNING_KEY_ALIAS(AndroidProject.PROPERTY_SIGNING_KEY_ALIAS, status = STABLE),
     IDE_SIGNING_KEY_PASSWORD(AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD, status = STABLE),
 
+    // device config for ApkSelect
+    IDE_APK_SELECT_CONFIG(AndroidProject.PROPERTY_APK_SELECT_CONFIG, status = STABLE),
+
+    // location where to write the APK/BUNDLE
     IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION, status = STABLE),
 
     // Instant run

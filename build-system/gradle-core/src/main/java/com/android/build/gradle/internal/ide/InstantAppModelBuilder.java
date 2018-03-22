@@ -102,6 +102,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 || modelName.equals(InstantAppProjectBuildOutput.class.getName());
     }
 
+    @NonNull
     @Override
     public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         if (modelName.equals(AndroidProject.class.getName())) {
@@ -110,7 +111,9 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
         if (modelName.equals(InstantAppProjectBuildOutput.class.getName())) {
             return buildMinimalisticModel();
         }
-        return null;
+
+        // should not happen based on canBuild
+        throw new RuntimeException("Cannot build model " + modelName);
     }
 
     private Object buildAndroidProject(Project project) {
@@ -297,6 +300,8 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                                                                 outputLocation,
                                                                 baseName + SdkConstants.DOT_ZIP))),
                         new BuildOutputsSupplier(ImmutableList.of(), ImmutableList.of()),
+                        null,
+                        null,
                         null,
                         null);
 

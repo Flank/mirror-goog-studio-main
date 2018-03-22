@@ -19,8 +19,13 @@ package com.android.build.gradle.integration.bundle
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.utils.getOutputByName
+import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.AppBundleProjectBuildOutput
+import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
@@ -30,6 +35,8 @@ import org.junit.Test
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.test.fail
 
 class DynamicAppTest {
 
@@ -73,15 +80,10 @@ class DynamicAppTest {
 
     @Test
     fun `test bundleDebug task`() {
-        project.execute("app:bundleDebug")
+        val bundleTaskName = getBundleTaskName("debug")
+        project.execute("app:$bundleTaskName")
 
-        //TODO: update model with this stuff?
-        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
-            "outputs",
-            "bundle",
-            "debug",
-            "bundleDebug", // FIXME with proper BuildableArtifact based output file path
-            "bundle.aab")
+        val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
         val zipFile = Zip(bundleFile)
@@ -101,15 +103,10 @@ class DynamicAppTest {
 
     @Test
     fun `test bundleRelease task`() {
-        project.execute("app:bundleRelease")
+        val bundleTaskName = getBundleTaskName("release")
+        project.execute("app:$bundleTaskName")
 
-        //TODO: update model with this stuff?
-        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
-            "outputs",
-            "bundle",
-            "release",
-            "bundleRelease", // FIXME with proper BuildableArtifact based output file path
-            "bundle.aab")
+        val bundleFile = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
         val zipFile = Zip(bundleFile)
@@ -140,15 +137,10 @@ class DynamicAppTest {
                     "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}')\n" +
                     "}")
 
-        project.execute("app:bundleDebug")
+        val bundleTaskName = getBundleTaskName("debug")
+        project.execute("app:$bundleTaskName")
 
-        //TODO: update model with this stuff?
-        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
-            "outputs",
-            "bundle",
-            "debug",
-            "bundleDebug", // FIXME with proper BuildableArtifact based output file path
-            "bundle.aab")
+        val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
         val zipFile = Zip(bundleFile)
@@ -160,6 +152,91 @@ class DynamicAppTest {
             "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"))
 
         Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContentWithAbis)
+    }
+
+    @Test
+    fun `test making APKs from bundle`() {
+        val apkFromBundleTaskName = getApkFromBundleTaskName("debug")
+
+        // -------------
+        // build apks for API 27
+        // create a small json file with device filtering
+        var jsonFile = getJsonFile(27)
+
+        project
+            .executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+            .run("app:$apkFromBundleTaskName")
+
+        // fetch the build output model
+        var apkFolder = getApkFolderOutput("debug").apkFolder
+        FileSubject.assertThat(apkFolder).isDirectory()
+
+        var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
+        Truth.assertThat(apkFileArray.toList()).named("APK List for API 27")
+            .containsExactly("base-master.apk", "feature1-master.apk")
+
+        // -------------
+        // build apks for API 18
+        // create a small json file with device filtering
+        jsonFile = getJsonFile(18)
+
+        project
+            .executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+            .run("app:$apkFromBundleTaskName")
+
+        // fetch the build output model
+        apkFolder = getApkFolderOutput("debug").apkFolder
+        FileSubject.assertThat(apkFolder).isDirectory()
+
+        apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
+        Truth.assertThat(apkFileArray.toList()).named("APK List for API 18")
+            .containsExactly("standalone.apk")
+    }
+
+    private fun getBundleTaskName(name: String): String {
+        // query the model to get the task name
+        val syncModels = project.model().allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
+            .fetchAndroidProjects()
+        val appModel =
+            syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
+
+        val debugArtifact = appModel.getVariantByName(name).mainArtifact
+        return debugArtifact.bundleTaskName ?: fail("Module App does not have bundle task name")
+    }
+
+    private fun getApkFromBundleTaskName(name: String): String {
+        // query the model to get the task name
+        val syncModels = project.model().allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
+            .fetchAndroidProjects()
+        val appModel =
+            syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
+
+        val debugArtifact = appModel.getVariantByName(name).mainArtifact
+        return debugArtifact.apkFromBundleTaskName ?: fail("Module App does not have apkFromBundle task name")
+    }
+
+    private fun getApkFolderOutput(variantName: String): AppBundleVariantBuildOutput {
+        val outputModels = project.model().allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
+            .fetchContainer(AppBundleProjectBuildOutput::class.java)
+
+        val outputAppModel = outputModels.rootBuildModelMap[":app"]
+                ?: fail("Failed to get output model for :app module")
+
+        return outputAppModel.getOutputByName(variantName)
+    }
+
+    private fun getJsonFile(api: Int): Path {
+        val tempFile = Files.createTempFile("", "dynamic-app-test")
+
+        Files.write(
+            tempFile, listOf(
+                "{ \"supportedAbis\": [ \"X86\", \"ARMEABI_V7A\" ], \"supportedLocales\": [ \"en\", \"fr\" ], \"screenDensity\": 480, \"sdkVersion\": $api }"
+            )
+        )
+
+        return tempFile
     }
 
     private fun createAbiFile(

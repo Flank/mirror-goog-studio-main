@@ -38,6 +38,8 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Nullable private final Set<String> myAbiFilters;
     @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final String myInstrumentedTestTaskName;
+    @Nullable private final String myBundleTaskName;
+    @Nullable private final String myApkFromBundleTaskName;
     private final boolean mySigned;
 
     public AndroidArtifactStub() {
@@ -54,6 +56,8 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 Collections.emptyList(),
                 new TestOptionsStub(),
                 "instrumentedTestsTaskName",
+                "bundleTaskName",
+                "apkFromBundleTaskNam",
                 true);
     }
 
@@ -70,6 +74,8 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
             @NonNull Collection<File> apks,
             @Nullable TestOptions testOptions,
             @Nullable String instrumentedTestTaskName,
+            @Nullable String bundleTaskName,
+            @Nullable String apkFromBundleTaskName,
             boolean signed) {
         myOutputs = outputs;
         myApplicationId = applicationId;
@@ -83,6 +89,8 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         myAdditionalRuntimeApks = apks;
         myTestOptions = testOptions;
         myInstrumentedTestTaskName = instrumentedTestTaskName;
+        myBundleTaskName = bundleTaskName;
+        myApkFromBundleTaskName = apkFromBundleTaskName;
         mySigned = signed;
     }
 
@@ -146,6 +154,18 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
         return myInstrumentedTestTaskName;
     }
 
+    @Nullable
+    @Override
+    public String getBundleTaskName() {
+        return myBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public String getApkFromBundleTaskName() {
+        return myApkFromBundleTaskName;
+    }
+
     @Override
     @Nullable
     public String getSigningConfigName() {
@@ -206,6 +226,8 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 && Objects.equals(getTestOptions(), artifact.getTestOptions())
                 && Objects.equals(
                         getInstrumentedTestTaskName(), artifact.getInstrumentedTestTaskName())
+                && Objects.equals(getBundleTaskName(), artifact.getBundleTaskName())
+                && Objects.equals(getApkFromBundleTaskName(), artifact.getApkFromBundleTaskName())
                 && Objects.equals(getNativeLibraries(), artifact.getNativeLibraries());
     }
 
@@ -237,7 +259,9 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 isSigned(),
                 getAdditionalRuntimeApks(),
                 getTestOptions(),
-                getInstrumentedTestTaskName());
+                getInstrumentedTestTaskName(),
+                getBundleTaskName(),
+                getApkFromBundleTaskName());
     }
 
     @Override
@@ -270,6 +294,11 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
                 + mySigned
                 + ", myInstrumentedTestTaskName="
                 + myInstrumentedTestTaskName
+                + ", myBundleTaskName="
+                + myBundleTaskName
+                + "} "
+                + ", myApkFromBundleTaskName"
+                + myApkFromBundleTaskName
                 + "} "
                 + super.toString();
     }

@@ -51,7 +51,9 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.SelectApksTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -191,6 +193,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                 || modelName.equals(Variant.class.getName());
     }
 
+    @NonNull
     @Override
     public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         // build a map from included build name to rootDir (as rootDir is the only thing
@@ -209,6 +212,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
 
     // Build parameterized model. This method is invoked if model is obtained by
     // BuildController::findModel(Model var1, Class<T> var2, Class<P> var3, Action<? super P> var4).
+    @NonNull
     @Override
     public Object buildAll(
             @NonNull String modelName,
@@ -818,7 +822,9 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                 splitOutputsProxy,
                 manifestsProxy,
                 testOptions,
-                scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName());
+                scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName(),
+                BundleTask.Companion.getTaskName(scope),
+                SelectApksTask.Companion.getTaskName(scope));
     }
 
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {

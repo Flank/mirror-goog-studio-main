@@ -6,7 +6,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
 	
 	defaultConfig {
-		minSdkVersion 27
+		minSdkVersion 18
 	}
 }
 

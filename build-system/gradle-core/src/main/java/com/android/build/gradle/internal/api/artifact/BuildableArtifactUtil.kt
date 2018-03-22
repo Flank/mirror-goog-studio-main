@@ -20,6 +20,7 @@ package com.android.build.gradle.internal.api.artifact
 import com.android.build.api.artifact.BuildableArtifact
 import com.google.common.collect.Iterators
 import java.io.File
+import java.nio.file.Path
 
 /**
  * Returns the first file in the [BuildableArtifact] by name if it exists, or null otherwise.
@@ -47,4 +48,13 @@ private fun forNameInFolder(files: Array<File>, name:String): File? {
  */
 fun BuildableArtifact.singleFile() : File {
     return Iterators.getOnlyElement(iterator())
+}
+
+/**
+ * Returns the single element of a [BuildableArtifact] as a [Path]
+ *
+ * @throws IllegalArgumentException if the BuildableArtifact contains zero or more than one element.
+ */
+fun BuildableArtifact.singlePath() : Path {
+    return Iterators.getOnlyElement(iterator()).toPath()
 }

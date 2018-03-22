@@ -17,13 +17,21 @@
 package com.android.build.gradle.internal
 
 import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.ide.BaseModuleModelBuilder
+import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
+import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
+import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.model.NativeLibraryFactory
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.core.AndroidBuilder
-import com.android.build.gradle.internal.ide.ModelBuilder
-import com.android.build.gradle.AppPlugin
+import com.android.builder.model.AppBundleProjectBuildOutput
+import com.android.builder.model.AppBundleVariantBuildOutput
+import com.google.common.collect.ImmutableList
+import org.gradle.api.Project
 
 /**
  * [ModelBuilder] class created by [AppPlugin]. It needs to be put in a separate file to work around
@@ -32,7 +40,7 @@ import com.android.build.gradle.AppPlugin
 class AppModelBuilder(
     globalScope: GlobalScope,
     androidBuilder: AndroidBuilder,
-    variantManager: VariantManager,
+    private val variantManager: VariantManager,
     taskManager: TaskManager,
     config: AndroidConfig,
     extraModelInfo: ExtraModelInfo,
@@ -54,5 +62,31 @@ class AppModelBuilder(
 ) {
     override fun isBaseSplit(): Boolean {
         return true
+    }
+
+    override fun canBuild(modelName: String): Boolean {
+        return super.canBuild(modelName) || modelName == AppBundleProjectBuildOutput::class.java.name
+    }
+
+    override fun buildAll(modelName: String, project: Project): Any {
+        return if (modelName == AppBundleProjectBuildOutput::class.java.name) {
+            buildMinimalisticModel()
+        } else super.buildAll(modelName, project)
+    }
+
+    private fun buildMinimalisticModel(): Any {
+        val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
+
+        for (variantScope in variantManager.variantScopes) {
+            if (variantScope.hasOutput(InternalArtifactType.BUNDLE)) {
+                val bundleFile = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE).singleFile()
+                val apkFolder = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.SELECTED_APKS).singleFile()
+                variantsOutput.add(
+                        DefaultAppBundleVariantBuildOutput(
+                            variantScope.fullVariantName, bundleFile, apkFolder))
+            }
+        }
+
+        return DefaultAppBundleProjectBuildOutput(variantsOutput.build())
     }
 }

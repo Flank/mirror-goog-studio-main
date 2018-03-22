@@ -17,10 +17,12 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -33,26 +35,33 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.io.Serializable
 import java.nio.file.Path
+import javax.inject.Inject
 
 /**
  * Task that generates the final bundle (.aab) with all the modules.
  */
-open class BundleTask : AndroidVariantTask() {
+open class BundleTask @Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+
+    companion object {
+        fun getTaskName(scope: VariantScope) = scope.getTaskName("bundle")
+    }
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     lateinit var baseModuleZip: BuildableArtifact
         private set
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     lateinit var featureZips: FileCollection
         private set
 
     @get:OutputFile
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.NONE)
     lateinit var bundleFile: File
         private set
 
@@ -66,38 +75,64 @@ open class BundleTask : AndroidVariantTask() {
 
     @TaskAction
     fun bundleModules() {
-        // BundleTool requires that the destination directory for the bundle file exists,
-        // and that the bundle file itself does not
-        FileUtils.mkdirs(bundleFile.parentFile)
+        val adapter = WorkerExecutorAdapter<Params>(workerExecutor, BundleToolRunnable::class.java)
 
-        if (bundleFile.isFile) {
-            FileUtils.delete(bundleFile)
-        }
+        adapter.submit(
+            Params(
+                baseModuleZip.singleFile(),
+                featureZips.files,
+                configFile,
+                bundleFile
+            )
+        )
 
-        val builder = ImmutableList.builder<Path>()
-        builder.add(getBundlePath(baseModuleZip.files.single()))
-        featureZips.forEach { builder.add(getBundlePath(it)) }
-
-        val command = BuildBundleCommand.builder().setOutputPath(bundleFile.toPath())
-            .setModulesPaths(builder.build())
-        configFile?.let {
-            command.setBundleConfigPath(it.toPath())
-        }
-
-        command.build().execute()
+        adapter.taskActionDone()
     }
 
-    private fun getBundlePath(folder: File): Path {
-        val children = folder.listFiles()
-        Preconditions.checkNotNull(children)
-        Preconditions.checkState(children.size == 1)
+    private data class Params(
+        val baseModuleFile: File,
+        val featureFiles: Set<File>,
+        val configFile: File?,
+        val bundleFile: File
+    ) : Serializable
 
-        return children[0].toPath()
+    private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
+        override fun run() {
+            // BundleTool requires that the destination directory for the bundle file exists,
+            // and that the bundle file itself does not
+            val bundleFile = params.bundleFile
+            FileUtils.mkdirs(bundleFile.parentFile)
+
+            if (bundleFile.isFile) {
+                FileUtils.delete(bundleFile)
+            }
+
+            val builder = ImmutableList.builder<Path>()
+            builder.add(getBundlePath(params.baseModuleFile))
+            params.featureFiles.forEach { builder.add(getBundlePath(it)) }
+
+            val command = BuildBundleCommand.builder().setOutputPath(bundleFile.toPath())
+                .setModulesPaths(builder.build())
+            params.configFile?.let {
+                command.setBundleConfigPath(it.toPath())
+            }
+
+            command.build().execute()
+        }
+
+        private fun getBundlePath(folder: File): Path {
+            val children = folder.listFiles()
+            Preconditions.checkNotNull(children)
+            Preconditions.checkState(children.size == 1)
+
+            return children[0].toPath()
+        }
     }
+
 
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
 
-        override fun getName() = scope.getTaskName("bundle")
+        override fun getName() = getTaskName(scope)
         override fun getType() = BundleTask::class.java
 
         override fun execute(task: BundleTask) {

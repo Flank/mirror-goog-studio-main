@@ -47,7 +47,6 @@ public class AppPlugin extends AbstractAppPlugin {
         featureSplit.setCanBeResolved(false);
     }
 
-    @NonNull
     @Override
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
