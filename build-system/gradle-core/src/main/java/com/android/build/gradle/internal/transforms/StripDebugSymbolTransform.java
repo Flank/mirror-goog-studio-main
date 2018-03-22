@@ -72,12 +72,14 @@ public class StripDebugSymbolTransform extends Transform {
     @NonNull
     private final Set<PathMatcher> excludeMatchers;
     private final boolean isLibrary;
+    private final boolean includeFeaturesInScopes;
 
     public StripDebugSymbolTransform(
             @NonNull Project project,
             @NonNull NdkHandler ndkHandler,
             @NonNull Set<String> excludePattern,
-            boolean isLibrary) {
+            boolean isLibrary,
+            boolean includeFeaturesInScopes) {
 
         this.excludeMatchers = excludePattern.stream()
                 .map(StripDebugSymbolTransform::compileGlob)
@@ -86,6 +88,7 @@ public class StripDebugSymbolTransform extends Transform {
         checkArgument(ndkHandler.isConfigured());
         stripToolFinder = createSymbolStripExecutableFinder(ndkHandler);
         this.project = project;
+        this.includeFeaturesInScopes = includeFeaturesInScopes;
     }
 
     @NonNull
@@ -105,6 +108,8 @@ public class StripDebugSymbolTransform extends Transform {
     public Set<? super Scope> getScopes() {
         if (isLibrary) {
             return TransformManager.PROJECT_ONLY;
+        } else if (includeFeaturesInScopes) {
+            return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;
     }

@@ -98,6 +98,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isCrunchPngs();
 
+    boolean consumesFeatureJars();
+
     @Override
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();

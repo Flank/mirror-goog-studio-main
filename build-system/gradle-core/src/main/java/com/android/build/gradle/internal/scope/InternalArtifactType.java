@@ -216,6 +216,9 @@ public enum InternalArtifactType implements ArtifactType {
     // processor (for feature compilation). Created by DataBindingExportFeatureInfoTask and passed
     // into the annotation processor via processor args.
     FEATURE_DATA_BINDING_FEATURE_INFO,
+    // The feature dex files output by the DexSplitter from the base. The base produces and
+    // publishes these files when there's multi-apk code shrinking.
+    FEATURE_DEX,
 
     // Project metadata
     METADATA_FEATURE_DECLARATION,

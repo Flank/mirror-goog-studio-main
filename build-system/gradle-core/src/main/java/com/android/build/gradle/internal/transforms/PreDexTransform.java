@@ -86,17 +86,21 @@ public class PreDexTransform extends Transform {
 
     private final int minSdkVersion;
 
+    private final boolean includeFeaturesInScopes;
+
     public PreDexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache buildCache,
             @NonNull DexingType dexingType,
-            int minSdkVersion) {
+            int minSdkVersion,
+            boolean includeFeaturesInScopes) {
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
         this.buildCache = buildCache;
         this.dexingType = dexingType;
         this.minSdkVersion = minSdkVersion;
+        this.includeFeaturesInScopes = includeFeaturesInScopes;
     }
 
     @NonNull
@@ -120,6 +124,9 @@ public class PreDexTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
+        if (includeFeaturesInScopes) {
+            return TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES;
+        }
         return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 

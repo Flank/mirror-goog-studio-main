@@ -28,6 +28,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
@@ -125,6 +126,7 @@ import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
+import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
@@ -641,15 +643,24 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
 
-        // if base module, add stream of classes from features or dynamic-features for Proguard/R8
-        if (variantScope.getVariantData().getType().isBaseModule()) {
+        // if variantScope.consumesFeatureJars(), add streams of classes and java resources from
+        // features or dynamic-features.
+        if (variantScope.consumesFeatureJars()) {
             transformManager.addStream(
                     OriginalStream.builder(project, "feature-classes")
-                            .addContentTypes(TransformManager.CONTENT_JARS)
+                            .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
                                             METADATA_VALUES, MODULE, METADATA_CLASSES))
+                            .build());
+            transformManager.addStream(
+                    OriginalStream.builder(project, "feature-java-res")
+                            .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                            .addScope(InternalScope.FEATURES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            METADATA_VALUES, MODULE, METADATA_JAVA_RES))
                             .build());
         }
 
@@ -1625,7 +1636,8 @@ public abstract class TaskManager {
                         globalScope.getProject(),
                         globalScope.getNdkHandler(),
                         globalScope.getExtension().getPackagingOptions().getDoNotStrip(),
-                        scope.getVariantConfiguration().getType().isAar()));
+                        scope.getVariantConfiguration().getType().isAar(),
+                        scope.consumesFeatureJars()));
     }
 
     /** Creates the tasks to build unit tests. */
@@ -2111,11 +2123,12 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         maybeCreateResourcesShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
+            maybeCreateDexSplitterTransform(variantScope);
+            // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
             return;
         }
 
         // ----- 10x support
-
         PreColdSwapTask preColdSwapTask = null;
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
 
@@ -2132,8 +2145,8 @@ public abstract class TaskManager {
 
             extension.getDexOptions().setJumboMode(true);
         }
-        // ----- Multi-Dex support
 
+        // ----- Multi-Dex support
         DexingType dexingType = variantScope.getDexingType();
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
@@ -2218,6 +2231,10 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
+
+        // TODO: support DexSplitterTransform when IR enabled (http://b/77585545)
+        maybeCreateDexSplitterTransform(variantScope);
+        // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
     }
 
     private void maybeCreateDesugarTask(
@@ -2328,6 +2345,7 @@ public abstract class TaskManager {
                         .setProjectVariant(getProjectVariantId(variantScope))
                         .setNumberOfBuckets(
                                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))
+                        .setIncludeFeaturesInScope(variantScope.consumesFeatureJars())
                         .createDexArchiveBuilderTransform();
         transformManager
                 .addTransform(taskFactory, variantScope, preDexTransform)
@@ -2361,7 +2379,8 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
-                        isDebuggable);
+                        isDebuggable,
+                        variantScope.consumesFeatureJars());
         Optional<TransformTask> dexTask =
                 transformManager.addTransform(taskFactory, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2446,7 +2465,8 @@ public abstract class TaskManager {
                             androidBuilder,
                             buildCache,
                             dexingType,
-                            variantScope.getMinSdkVersion().getFeatureLevel());
+                            variantScope.getMinSdkVersion().getFeatureLevel(),
+                            variantScope.consumesFeatureJars());
             transformManager
                     .addTransform(taskFactory, variantScope, preDexTransform)
                     .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2467,7 +2487,8 @@ public abstract class TaskManager {
                             checkNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
                             variantScope.getGlobalScope().getMessageReceiver(),
-                            variantScope.getMinSdkVersion().getFeatureLevel());
+                            variantScope.getMinSdkVersion().getFeatureLevel(),
+                            variantScope.consumesFeatureJars());
             Optional<TransformTask> dexTask =
                     transformManager.addTransform(taskFactory, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -3312,6 +3333,50 @@ public abstract class TaskManager {
                 variantScope.getOutputProguardMappingFile(),
                 testedVariantData,
                 transform);
+    }
+
+    private void maybeCreateDexSplitterTransform(@NonNull VariantScope variantScope) {
+        if (!variantScope.consumesFeatureJars()) {
+            return;
+        }
+
+        File dexSplitterOutput =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "dex-splitter",
+                        variantScope.getVariantConfiguration().getDirName());
+        FileCollection featureJars =
+                variantScope.getArtifactFileCollection(METADATA_VALUES, MODULE, METADATA_CLASSES);
+        BuildableArtifact mappingFileSrc =
+                variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
+                        ? variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+                        : null;
+
+        DexSplitterTransform transform =
+                new DexSplitterTransform(dexSplitterOutput, featureJars, mappingFileSrc);
+
+        Optional<TransformTask> transformTask =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(taskFactory, variantScope, transform);
+
+        if (transformTask.isPresent()) {
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.FEATURE_DEX,
+                            ImmutableList.of(dexSplitterOutput),
+                            transformTask.get());
+        } else {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(
+                                    "Internal error, could not add the DexSplitterTransform"));
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
+import static com.android.builder.packaging.JarMerger.MODULE_PATH;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -63,6 +64,7 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
@@ -376,6 +378,10 @@ public class ApplicationTaskManager extends TaskManager {
                         task.from(postJavacGeneratedBytecode);
                         task.setDestinationDir(outputFile.getParentFile());
                         task.setArchiveName(outputFile.getName());
+                        task.manifest(
+                                it -> {
+                                    it.attributes(ImmutableMap.of(MODULE_PATH, project.getPath()));
+                                });
                     }
                 });
 
@@ -405,6 +411,9 @@ public class ApplicationTaskManager extends TaskManager {
     @NonNull
     @Override
     protected Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
+        if (variantScope.consumesFeatureJars()) {
+            return TransformManager.SCOPE_FULL_WITH_FEATURES;
+        }
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 

@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,45 +48,230 @@ import org.junit.runners.Parameterized
  * </pre>
  */
 @RunWith(FilterableParameterized::class)
-class MinifyFeaturesTest(val codeShrinker: CodeShrinker) {
+class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean) {
 
     companion object {
+
         @JvmStatic
-        @Parameterized.Parameters(name = "codeShrinker {0}")
-        fun getConfigurations() = listOf(CodeShrinker.PROGUARD, CodeShrinker.R8)
+        @Parameterized.Parameters(name = "codeShrinker {0}, useDexArchive={1}")
+        fun getConfigurations(): Collection<Array<Any>> =
+            listOf(
+                arrayOf(CodeShrinker.PROGUARD, true),
+                arrayOf(CodeShrinker.PROGUARD, false),
+                arrayOf(CodeShrinker.R8, true),
+                arrayOf(CodeShrinker.R8, false),
+                arrayOf(CodeShrinker.ANDROID_GRADLE, true),
+                arrayOf(CodeShrinker.ANDROID_GRADLE, false)
+            )
     }
 
-    // TODO: add java classes and proguard rules to modules below, similar to "minify" test project.
 
-    private val lib1 = MinimalSubProject.lib("com.example.lib1")
+    private val lib1 =
+            MinimalSubProject.lib("com.example.lib1")
+                    .appendToBuild(
+                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
 
-    private val lib2 = MinimalSubProject.lib("com.example.lib2")
+    private val lib2 =
+            MinimalSubProject.lib("com.example.lib2")
+                    .appendToBuild(
+                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
 
-    private val baseFeature = MinimalSubProject.feature("com.example.baseFeature")
-            .appendToBuild("""
-                    android {
-                        baseFeature true
-                        buildTypes {
-                            debug {
-                                minifyEnabled true
-                                proguardFiles getDefaultProguardFile('proguard-android.txt'),
-                                        "proguard-rules.pro"
+    private val baseFeature =
+            MinimalSubProject.feature("com.example.baseFeature")
+                    .appendToBuild("""
+                            android {
+                                baseFeature true
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                    minified {
+                                        minifyEnabled true
+                                        useProguard ${codeShrinker == CodeShrinker.PROGUARD}
+                                        proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                                                "proguard-rules.pro"
+                                    }
+                                }
                             }
-                        }
-                    }
-                    """)
-            .withFile(
-                    "src/main/java/com/example/baseFeature/EmptyClassToKeep.java",
-                    """package com.example.baseFeature;
-                    public class EmptyClassToKeep {
-                    }""")
-            .withFile(
-                    "proguard-rules.pro",
-                    """-keep public class com.example.baseFeature.EmptyClassToKeep""")
+                            """)
+                    .withFile(
+                            "src/main/AndroidManifest.xml",
+                            """<?xml version="1.0" encoding="utf-8"?>
+                            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                                  package="com.example.baseFeature">
+                                <application android:label="app_name">
+                                    <activity android:name=".Main"
+                                              android:label="app_name">
+                                        <intent-filter>
+                                            <action android:name="android.intent.action.MAIN" />
+                                            <category android:name="android.intent.category.LAUNCHER" />
+                                        </intent-filter>
+                                    </activity>
+                                </application>
+                            </manifest>""")
+                    .withFile(
+                            "src/main/res/layout/base_main.xml",
+                            """<?xml version="1.0" encoding="utf-8"?>
+                            <LinearLayout
+                                    xmlns:android="http://schemas.android.com/apk/res/android"
+                                    android:orientation="vertical"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent" >
+                                <TextView
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="Test App - Basic"
+                                        android:id="@+id/text" />
+                                <TextView
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text=""
+                                        android:id="@+id/dateText" />
+                            </LinearLayout>""")
+                    .withFile("src/main/resources/base_java_res.txt", "base")
+                    .withFile(
+                            "src/main/java/com/example/baseFeature/Main.java",
+                            """package com.example.baseFeature;
 
-    private val otherFeature = MinimalSubProject.feature("com.example.otherFeature")
+                            import android.app.Activity;
+                            import android.os.Bundle;
+                            import android.widget.TextView;
 
-    private val app = MinimalSubProject.app("com.example.app")
+                            import java.lang.Exception;
+                            import java.lang.RuntimeException;
+
+                            public class Main extends Activity {
+
+                                private int foo = 1234;
+
+                                private final StringProvider stringProvider = new StringProvider();
+
+                                /** Called when the activity is first created. */
+                                @Override
+                                public void onCreate(Bundle savedInstanceState) {
+                                    super.onCreate(savedInstanceState);
+                                    setContentView(R.layout.base_main);
+
+                                    TextView tv = (TextView) findViewById(R.id.dateText);
+                                    tv.setText(getStringProvider().getString(foo));
+                                }
+
+                                public StringProvider getStringProvider() {
+                                    return stringProvider;
+                                }
+
+                                public void handleOnClick(android.view.View view) {
+                                    // This method should be kept by the default ProGuard rules.
+                                }
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/baseFeature/StringProvider.java",
+                            """package com.example.baseFeature;
+
+                            public class StringProvider {
+
+                                public String getString(int foo) {
+                                    return Integer.toString(foo);
+                                }
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/baseFeature/EmptyClassToKeep.java",
+                            """package com.example.baseFeature;
+                            public class EmptyClassToKeep {
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/baseFeature/EmptyClassToRemove.java",
+                            """package com.example.baseFeature;
+                            public class EmptyClassToRemove {
+                            }""")
+                    .withFile(
+                            "proguard-rules.pro",
+                            """-keep public class com.example.baseFeature.EmptyClassToKeep""")
+
+    private val otherFeature =
+            MinimalSubProject.feature("com.example.otherFeature")
+                    .appendToBuild(
+                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+                    .withFile(
+                            "src/main/AndroidManifest.xml",
+                            """<?xml version="1.0" encoding="utf-8"?>
+                            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                                  package="com.example.otherFeature">
+                                <application android:label="app_name">
+                                    <activity android:name=".Main"
+                                              android:label="app_name">
+                                        <intent-filter>
+                                            <action android:name="android.intent.action.MAIN" />
+                                            <category android:name="android.intent.category.LAUNCHER" />
+                                        </intent-filter>
+                                    </activity>
+                                </application>
+                            </manifest>""")
+                    .withFile(
+                            "src/main/res/layout/other_main.xml",
+                            """<?xml version="1.0" encoding="utf-8"?>
+                            <LinearLayout
+                                    xmlns:android="http://schemas.android.com/apk/res/android"
+                                    android:orientation="vertical"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent" >
+                                <TextView
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="Test App - Basic"
+                                        android:id="@+id/text" />
+                                <TextView
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text=""
+                                        android:id="@+id/dateText" />
+                            </LinearLayout>""")
+                    .withFile("src/main/resources/other_java_res.txt", "other")
+                    .withFile(
+                            "src/main/java/com/example/otherFeature/Main.java",
+                            """package com.example.otherFeature;
+
+                            import android.app.Activity;
+                            import android.os.Bundle;
+                            import android.widget.TextView;
+
+                            import java.lang.Exception;
+                            import java.lang.RuntimeException;
+
+                            import com.example.baseFeature.StringProvider;
+
+                            public class Main extends Activity {
+
+                                private int foo = 1234;
+
+                                private final StringProvider stringProvider = new StringProvider();
+
+                                /** Called when the activity is first created. */
+                                @Override
+                                public void onCreate(Bundle savedInstanceState) {
+                                    super.onCreate(savedInstanceState);
+                                    setContentView(R.layout.other_main);
+
+                                    TextView tv = (TextView) findViewById(R.id.dateText);
+                                    tv.setText(getStringProvider().getString(foo));
+                                }
+
+                                public StringProvider getStringProvider() {
+                                    return stringProvider;
+                                }
+
+                                public void handleOnClick(android.view.View view) {
+                                    // This method should be kept by the default ProGuard rules.
+                                }
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/otherFeature/EmptyClassToRemove.java",
+                            """package com.example.otherFeature;
+                            public class EmptyClassToRemove {
+                            }""")
+
+    private val app =
+            MinimalSubProject.app("com.example.app")
+                    .appendToBuild(
+                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
 
     private val instantApp = MinimalSubProject.instantApp()
 
@@ -94,7 +280,7 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker) {
                     .subproject(":lib1", lib1)
                     .subproject(":lib2", lib2)
                     .subproject(":baseFeature", baseFeature)
-                    .subproject(":otherFeature", otherFeature)
+                    .subproject(":foo:otherFeature", otherFeature)
                     .subproject(":app", app)
                     .subproject(":instantApp", instantApp)
                     .dependency(app, otherFeature)
@@ -110,18 +296,38 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker) {
                     .build()
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(testApp).create()
+    val project =
+            GradleTestProject.builder()
+                    .fromTestApp(testApp)
+                    .addGradleProperties(
+                            "${BooleanOption.ENABLE_DEX_ARCHIVE.propertyName}=$useDexArchive")
+                    .create()
 
     @Test
     fun testApksAreMinified() {
         project.executor()
                 .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
-                .run("assembleDebug")
+                .run("assembleMinified")
 
         val baseFeatureApk =
                 project.getSubproject(":baseFeature")
-                        .getFeatureApk(GradleTestProject.ApkType.DEBUG)
+                        .getFeatureApk(object: GradleTestProject.ApkType {
+                            override fun getBuildType() = "minified"
+                            override fun getTestName(): String? = null
+                            override fun isSigned() = true
+                        })
+        assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/Main;")
+        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
+            assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/StringProvider;")
+        } else {
+            assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/a;")
+        }
         assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/EmptyClassToKeep;")
+        assertThat(baseFeatureApk).containsJavaResource("base_java_res.txt")
+        assertThat(baseFeatureApk).containsJavaResource("other_java_res.txt")
+        assertThat(baseFeatureApk).doesNotContainClass(
+            "Lcom/example/baseFeature/EmptyClassToRemove;")
+        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/otherFeature/Main;")
     }
 }
 

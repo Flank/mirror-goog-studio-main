@@ -340,7 +340,7 @@ public class GradleVariantConfiguration
      * @return the {@link IncrementalMode} for this variant.
      */
     protected IncrementalMode getIncrementalMode(@NonNull GlobalScope globalScope) {
-        if (isInstantRunSupported()
+        if (isInstantRunSupported(globalScope)
                 && targetDeviceSupportsInstantRun(this, globalScope.getProjectOptions())
                 && globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
             return IncrementalMode.FULL;
@@ -437,19 +437,20 @@ public class GradleVariantConfiguration
         return mergedJavaCompileOptions;
     }
 
-    public boolean isInstantRunSupported() {
-        return getInstantRunSupportStatus() == InstantRun.STATUS_SUPPORTED;
+    public boolean isInstantRunSupported(@NonNull GlobalScope globalScope) {
+        return getInstantRunSupportStatus(globalScope) == InstantRun.STATUS_SUPPORTED;
     }
 
-    /**
-     * Returns a status code indicating whether Instant Run is supported and why.
-     */
-    public int getInstantRunSupportStatus() {
+    /** Returns a status code indicating whether Instant Run is supported and why. */
+    public int getInstantRunSupportStatus(@NonNull GlobalScope globalScope) {
         if (!getBuildType().isDebuggable()) {
             return InstantRun.STATUS_NOT_SUPPORTED_FOR_NON_DEBUG_VARIANT;
         }
         if (getType().isForTesting()) {
             return InstantRun.STATUS_NOT_SUPPORTED_VARIANT_USED_FOR_TESTING;
+        }
+        if (getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
+            return InstantRun.STATUS_NOT_SUPPORTED_FOR_MULTI_APK;
         }
         return InstantRun.STATUS_SUPPORTED;
     }

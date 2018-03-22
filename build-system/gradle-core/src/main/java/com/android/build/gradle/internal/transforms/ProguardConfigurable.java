@@ -39,14 +39,22 @@ public abstract class ProguardConfigurable extends Transform {
 
     private final VariantType variantType;
 
+    private final boolean includeFeaturesInScopes;
+
     ProguardConfigurable(@NonNull VariantScope scope) {
-        this(scope.getGlobalScope().getProject().files(), scope.getVariantData().getType());
+        this(
+                scope.getGlobalScope().getProject().files(),
+                scope.getVariantData().getType(),
+                scope.consumesFeatureJars());
     }
 
     ProguardConfigurable(
-            @NonNull ConfigurableFileCollection configurationFiles, @NonNull VariantType type) {
+            @NonNull ConfigurableFileCollection configurationFiles,
+            @NonNull VariantType type,
+            boolean includeFeaturesInScopes) {
         this.configurationFiles = configurationFiles;
         this.variantType = type;
+        this.includeFeaturesInScopes = includeFeaturesInScopes;
     }
 
     public void setConfigurationFiles(FileCollection configFiles) {
@@ -62,8 +70,9 @@ public abstract class ProguardConfigurable extends Transform {
     public Set<? super Scope> getScopes() {
         if (variantType.isAar()) {
             return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
+        } else if (includeFeaturesInScopes) {
+            return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
-
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 

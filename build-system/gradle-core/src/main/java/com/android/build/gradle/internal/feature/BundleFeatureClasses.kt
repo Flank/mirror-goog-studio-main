@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.builder.packaging.JarMerger.MODULE_PATH
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -56,7 +57,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
     @get:InputFiles lateinit var postJavacClasses: FileCollection
     @get:InputFiles private var thisRClassClasses: BuildableArtifact? = null
     @get:InputFiles private var dependencyRClassClasses: FileCollection? = null
-    @get:Input private lateinit var featurePath: String
+    @get:Input private lateinit var modulePath: String
 
     @TaskAction
     fun merge() {
@@ -79,8 +80,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
                 JarRequest(toFile = outputJar,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
                     fromFiles = files,
-                    manifestProperties = mapOf(
-                        "feature-path" to featurePath)))
+                    manifestProperties = mapOf(MODULE_PATH to modulePath)))
         }
     }
 
@@ -98,7 +98,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope
-            task.featurePath = globalScope.project.path
+            task.modulePath = globalScope.project.path
             if (java.lang.Boolean.TRUE == globalScope.extension.aaptOptions.namespaced) {
                 task.thisRClassClasses = scope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)

@@ -112,6 +112,7 @@ public class DexMergerTransform extends Transform {
     private final boolean isDebuggable;
     @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
+    private final boolean includeFeaturesInScopes;
 
     public DexMergerTransform(
             @NonNull DexingType dexingType,
@@ -119,7 +120,8 @@ public class DexMergerTransform extends Transform {
             @NonNull MessageReceiver messageReceiver,
             @NonNull DexMergerTool dexMerger,
             int minSdkVersion,
-            boolean isDebuggable) {
+            boolean isDebuggable,
+            boolean includeFeaturesInScopes) {
         this.dexingType = dexingType;
         this.mainDexListFile = mainDexListFile;
         this.dexMerger = dexMerger;
@@ -129,6 +131,7 @@ public class DexMergerTransform extends Transform {
                 (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexListFile != null),
                 "Main dex list must only be set when in legacy multidex");
         this.messageReceiver = messageReceiver;
+        this.includeFeaturesInScopes = includeFeaturesInScopes;
     }
 
     @NonNull
@@ -152,6 +155,9 @@ public class DexMergerTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
+        if (includeFeaturesInScopes) {
+            return TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES;
+        }
         return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 

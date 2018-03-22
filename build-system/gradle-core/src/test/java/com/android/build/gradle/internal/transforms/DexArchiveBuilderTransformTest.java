@@ -346,6 +346,7 @@ public class DexArchiveBuilderTransformTest {
                         .setProjectVariant("myVariant")
                         // Should not matter but for the sake of completeness.
                         .setEnableIncrementalDesugaring(true)
+                        .setIncludeFeaturesInScope(false)
                         .createDexArchiveBuilderTransform();
         useDifferentDexerTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5);
@@ -686,6 +687,7 @@ public class DexArchiveBuilderTransformTest {
                 .setJava8LangSupportType(java8Support)
                 .setEnableIncrementalDesugaring(true)
                 .setProjectVariant("myVariant")
+                .setIncludeFeaturesInScope(false)
                 .createDexArchiveBuilderTransform();
     }
 

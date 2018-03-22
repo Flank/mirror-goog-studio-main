@@ -92,6 +92,7 @@ public class AndroidArtifacts {
             "android-metadata-feature-manifest";
     private static final String TYPE_METADATA_APP_ID_DECLARATION = "android-metadata-app-id-decl";
     private static final String TYPE_METADATA_CLASSES = "android-metadata-classes";
+    private static final String TYPE_METADATA_JAVA_RES = "android-metadata-java-res";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -222,6 +223,7 @@ public class AndroidArtifacts {
         METADATA_FEATURE_MANIFEST(TYPE_METADATA_FEATURE_MANIFEST),
         METADATA_APP_ID_DECLARATION(TYPE_METADATA_APP_ID_DECLARATION),
         METADATA_CLASSES(TYPE_METADATA_CLASSES),
+        METADATA_JAVA_RES(TYPE_METADATA_JAVA_RES),
 
         // types for querying only. Not publishable.
         AAR(TYPE_AAR),

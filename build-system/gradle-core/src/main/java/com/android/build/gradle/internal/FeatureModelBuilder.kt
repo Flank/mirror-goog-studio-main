@@ -58,15 +58,21 @@ class FeatureModelBuilder(
     }
 
     override fun getDynamicFeatures(): MutableCollection<String> {
+        return getDynamicFeatures(globalScope)
+    }
 
-        @Suppress("DEPRECATION")
-        val featureConfig = globalScope.project.configurations.getByName(VariantDependencies.CONFIG_NAME_FEATURE)
-        val dependencies = featureConfig.dependencies
-
-        return dependencies
-            .asSequence()
-            .filter { it is ProjectDependency }
-            .map { (it as ProjectDependency).dependencyProject.path }
-            .toMutableList()
+    companion object {
+        @JvmStatic
+        fun getDynamicFeatures(globalScope: GlobalScope): MutableCollection<String> {
+            @Suppress("DEPRECATION")
+            val featureConfig =
+                globalScope.project.configurations.getByName(VariantDependencies.CONFIG_NAME_FEATURE)
+            val dependencies = featureConfig.dependencies
+            return dependencies
+                .asSequence()
+                .filter { it is ProjectDependency }
+                .map { (it as ProjectDependency).dependencyProject.path }
+                .toMutableList()
+        }
     }
 }

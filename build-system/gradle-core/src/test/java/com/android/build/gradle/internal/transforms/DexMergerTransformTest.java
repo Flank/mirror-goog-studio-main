@@ -332,7 +332,8 @@ public class DexMergerTransformTest {
                         new NoOpMessageReceiver(),
                         DexMergerTool.DX,
                         21,
-                        true);
+                        true,
+                        false);
         androidLDexMerger.transform(
                 invocationBuilder.setTransformOutputProvider(outputProvider).build());
         Truth.assertThat(
@@ -348,7 +349,8 @@ public class DexMergerTransformTest {
                         new NoOpMessageReceiver(),
                         DexMergerTool.DX,
                         23,
-                        true);
+                        true,
+                        false);
         postLDexMerger.transform(
                 invocationBuilder.setTransformOutputProvider(outputProvider).build());
         Truth.assertThat(
@@ -402,7 +404,8 @@ public class DexMergerTransformTest {
                 new NoOpMessageReceiver(),
                 DexMergerTool.DX,
                 1,
-                isDebuggable);
+                isDebuggable,
+                false);
     }
 
     @NonNull

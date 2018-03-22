@@ -429,6 +429,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return false;
         }
 
+        // TODO: support resource shrinking for multi-apk applications http://b/78119690
+        if (variantData.getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(
+                                    "Resource shrinker cannot be used for multi-apk applications"));
+            return false;
+        }
+
         if (variantData.getType().isAar()) {
             if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
@@ -473,6 +484,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // If not overridden, use the default from the build type.
         //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
         return getVariantConfiguration().getBuildType().isCrunchPngsDefault();
+    }
+
+    @Override
+    public boolean consumesFeatureJars() {
+        return getVariantData().getType().isBaseModule()
+                && getVariantConfiguration().getBuildType().isMinifyEnabled()
+                && globalScope.hasDynamicFeatures();
     }
 
     @Nullable
