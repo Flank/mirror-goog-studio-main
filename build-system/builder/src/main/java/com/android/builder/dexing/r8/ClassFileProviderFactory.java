@@ -17,68 +17,103 @@
 package com.android.builder.dexing.r8;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.tools.r8.ClassFileResourceProvider;
 import com.android.tools.r8.DirectoryClassFileProvider;
+import com.android.tools.r8.ProgramResource;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
  * Provides {@link ClassFileResourceProvider} suitable for D8/R8 classpath and bootclasspath
  * entries. Some of those may be shared.
  */
-public class ClassFileProviderFactory implements Serializable {
+public class ClassFileProviderFactory implements Closeable {
 
-    public class Handler implements Closeable {
+    /**
+     * Ordered class file provider. When looking for a descriptor, it searches from the first, until
+     * the last specified provider.
+     */
+    private static class OrderedClassFileResourceProvider implements ClassFileResourceProvider {
+        private final Supplier<Map<String, ClassFileResourceProvider>> descriptors;
 
-        @NonNull private final AtomicBoolean closed = new AtomicBoolean(false);
-
-        private Handler() {}
-
-        @NonNull
-        public ClassFileResourceProvider getProvider(@NonNull Path path) throws IOException {
-            return ClassFileProviderFactory.this.getProvider(path);
+        OrderedClassFileResourceProvider(List<ClassFileResourceProvider> providers) {
+            this.descriptors =
+                    Suppliers.memoize(
+                            () -> {
+                                Map<String, ClassFileResourceProvider> descs = Maps.newHashMap();
+                                for (ClassFileResourceProvider provider : providers) {
+                                    for (String s : provider.getClassDescriptors()) {
+                                        if (!descs.containsKey(s)) {
+                                            descs.put(s, provider);
+                                        }
+                                    }
+                                }
+                                return descs;
+                            });
         }
 
         @Override
-        public void close() throws IOException {
-            if (!closed.getAndSet(true)) {
-                handlerClosed();
+        public Set<String> getClassDescriptors() {
+            return descriptors.get().keySet();
+        }
+
+        @Override
+        public ProgramResource getProgramResource(String descriptor) {
+            ClassFileResourceProvider provider = descriptors.get().get(descriptor);
+            if (provider == null) {
+                return null;
             }
+            return provider.getProgramResource(descriptor);
         }
     }
 
-    private static final long serialVersionUID = 1L;
-
     @NonNull private static final AtomicLong nextId = new AtomicLong();
 
-    @NonNull
-    private static final WeakHashMap<Long, ClassFileProviderFactory> liveInstances =
-            new WeakHashMap<>();
-
+    @NonNull private List<ClassFileResourceProvider> providers;
+    @NonNull private final OrderedClassFileResourceProvider orderedClassFileResourceProvider;
     private final long id;
 
-    // transient because ClassFileResourceProvider are not Serializable, thus the map can not be
-    // serialized.
-    @VisibleForTesting @NonNull
-    transient Map<Path, ClassFileResourceProvider> providers = createProviders();
+    public ClassFileProviderFactory(@NonNull Collection<Path> paths) throws IOException {
+        id = nextId.addAndGet(1);
 
-    private transient int openedHandlers = 0;
-
-    public ClassFileProviderFactory() {
-        synchronized (liveInstances) {
-            id = nextId.addAndGet(1);
-            liveInstances.put(Long.valueOf(id), this);
+        providers = Lists.newArrayListWithExpectedSize(paths.size());
+        for (Path path : paths) {
+            providers.add(createProvider(path));
         }
+
+        orderedClassFileResourceProvider = new OrderedClassFileResourceProvider(providers);
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    @Override
+    public void close() throws IOException {
+        // Close providers and clear
+        for (ClassFileResourceProvider provider : providers) {
+            if (provider instanceof Closeable) {
+                ((Closeable) provider).close();
+            }
+        }
+        providers.clear();
+    }
+
+    @NonNull
+    public ClassFileResourceProvider getOrderedProvider() {
+        return orderedClassFileResourceProvider;
     }
 
     @NonNull
@@ -91,63 +126,5 @@ public class ClassFileProviderFactory implements Serializable {
         } else {
             throw new FileNotFoundException(entry.toString());
         }
-    }
-
-    @NonNull
-    public synchronized Handler open() {
-        ++openedHandlers;
-        return new Handler();
-    }
-
-    private synchronized void handlerClosed() throws IOException {
-        --openedHandlers;
-        if (openedHandlers == 0) {
-            // Close providers and clear
-            for (ClassFileResourceProvider provider : providers.values()) {
-                if (provider instanceof Closeable) {
-                    ((Closeable) provider).close();
-                }
-            }
-            providers.clear();
-        }
-    }
-
-    @NonNull
-    private synchronized ClassFileResourceProvider getProvider(@NonNull Path path)
-            throws IOException {
-        ClassFileResourceProvider provider = providers.get(path);
-        if (provider == null) {
-            provider = createProvider(path);
-            providers.put(path, provider);
-        }
-        return provider;
-    }
-
-    // Serialization is saving no state, just the id. It is just ensuring that no duplicate per ID
-    // is created in each VM.
-    @NonNull
-    private Object readResolve() throws ObjectStreamException {
-        Long key = Long.valueOf(id);
-        synchronized (liveInstances) {
-            ClassFileProviderFactory existing = liveInstances.get(key);
-            if (existing != null) {
-                return existing;
-            } else {
-                // Reallocate providers that was not deserialized since it is transient.
-                providers = createProviders();
-                // Lets be safe in case it ever happens that we deserialize instances created in a
-                // separate VM/ClassLoader and there could be new instances created in the current
-                // VM/ClassLoader.
-                nextId.set(Math.max(nextId.get(), id + 1));
-                liveInstances.put(key, this);
-                return this;
-            }
-        }
-    }
-
-    private static final Map<Path, ClassFileResourceProvider> createProviders() {
-        // We can allow usage of WeakHashMap because ArchiveClassFileProvider is closing in its
-        // finalizer.
-        return new WeakHashMap<>();
     }
 }

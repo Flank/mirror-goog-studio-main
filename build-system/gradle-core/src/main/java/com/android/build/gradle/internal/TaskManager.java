@@ -2306,6 +2306,8 @@ public abstract class TaskManager {
                         .setEnableIncrementalDesugaring(
                                 projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING))
                         .setProjectVariant(getProjectVariantId(variantScope))
+                        .setNumberOfBuckets(
+                                projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))
                         .createDexArchiveBuilderTransform();
         transformManager
                 .addTransform(taskFactory, variantScope, preDexTransform)

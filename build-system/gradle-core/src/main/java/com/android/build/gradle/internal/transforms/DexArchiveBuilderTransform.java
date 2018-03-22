@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.INSTANCE;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,6 +39,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.SerializableMessageReceiver;
@@ -84,6 +87,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -93,6 +97,7 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import org.gradle.tooling.BuildException;
 import org.gradle.workers.IsolationMode;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Transform that converts CLASS files to dex archives, {@link
@@ -105,12 +110,71 @@ import org.gradle.workers.IsolationMode;
  */
 public class DexArchiveBuilderTransform extends Transform {
 
+    /**
+     * Classpath resources provider is shared between invocations, and this key uniquely identifies
+     * it.
+     */
+    public static final class ClasspathServiceKey
+            implements WorkerActionServiceRegistry.ServiceKey<ClassFileProviderFactory> {
+        private final long id;
+
+        public ClasspathServiceKey(long id) {
+            this.id = id;
+        }
+
+        @NotNull
+        @Override
+        public Class<ClassFileProviderFactory> getType() {
+            return ClassFileProviderFactory.class;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ClasspathServiceKey that = (ClasspathServiceKey) o;
+            return id == that.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id);
+        }
+    }
+
+    /** Wrapper around the {@link com.android.builder.dexing.r8.ClassFileProviderFactory}. */
+    public static final class ClasspathService
+            implements WorkerActionServiceRegistry.RegisteredService<ClassFileProviderFactory> {
+
+        private final ClassFileProviderFactory providerFactory;
+
+        public ClasspathService(ClassFileProviderFactory providerFactory) {
+            this.providerFactory = providerFactory;
+        }
+
+        @NotNull
+        @Override
+        public ClassFileProviderFactory getService() {
+            return providerFactory;
+        }
+
+        @Override
+        public void shutdown() {
+            // nothing to be done, as providerFactory is a closable
+        }
+    }
+
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
 
     public static final int DEFAULT_BUFFER_SIZE_IN_KB = 100;
 
-    public static final int NUMBER_OF_BUCKETS = 1;
+    private static final int DEFAULT_NUM_BUCKETS =
+            Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
 
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final DexOptions dexOptions;
@@ -126,6 +190,7 @@ public class DexArchiveBuilderTransform extends Transform {
     private final int outBufferSize;
     private final boolean isDebuggable;
     @NonNull private final VariantScope.Java8LangSupport java8LangSupportType;
+    private final int numberOfBuckets;
 
     DexArchiveBuilderTransform(
             @NonNull Supplier<List<File>> androidJarClasspath,
@@ -140,7 +205,8 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isDebuggable,
             @NonNull VariantScope.Java8LangSupport java8LangSupportType,
             @NonNull String projectVariant,
-            boolean enableIncrementalDesugaring) {
+            boolean enableIncrementalDesugaring,
+            @Nullable Integer numberOfBuckets) {
         this.androidJarClasspath = androidJarClasspath;
         this.dexOptions = dexOptions;
         this.messageReceiver = messageReceiver;
@@ -159,6 +225,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 (outBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : outBufferSize) * 1024;
         this.isDebuggable = isDebuggable;
         this.java8LangSupportType = java8LangSupportType;
+        this.numberOfBuckets = numberOfBuckets == null ? DEFAULT_NUM_BUCKETS : numberOfBuckets;
     }
 
     @NonNull
@@ -245,15 +312,33 @@ public class DexArchiveBuilderTransform extends Transform {
                             .collect(Collectors.toSet());
         }
 
-        ClassFileProviderFactory classFileProviderFactory = new ClassFileProviderFactory();
         List<DexArchiveBuilderCacheHandler.CacheableItem> cacheableItems = new ArrayList<>();
         boolean isIncremental = transformInvocation.isIncremental();
-        try {
-            for (TransformInput input : transformInvocation.getInputs()) {
+        List<Path> classpath =
+                getClasspath(transformInvocation, java8LangSupportType)
+                        .stream()
+                        .map(Paths::get)
+                        .collect(Collectors.toList());
+        List<Path> bootclasspath =
+                getBootClasspath(androidJarClasspath, java8LangSupportType)
+                        .stream()
+                        .map(Paths::get)
+                        .collect(Collectors.toList());
 
-                List<String> bootclasspath =
-                        getBootClasspath(androidJarClasspath, java8LangSupportType);
-                List<String> classpath = getClasspath(transformInvocation, java8LangSupportType);
+        ClasspathServiceKey bootclasspathServiceKey = null;
+        ClasspathServiceKey classpathServiceKey = null;
+        try (ClassFileProviderFactory bootClasspathProvider =
+                        new ClassFileProviderFactory(bootclasspath);
+                ClassFileProviderFactory libraryClasspathProvider =
+                        new ClassFileProviderFactory(classpath)) {
+            bootclasspathServiceKey = new ClasspathServiceKey(bootClasspathProvider.getId());
+            classpathServiceKey = new ClasspathServiceKey(libraryClasspathProvider.getId());
+            INSTANCE.registerService(
+                    bootclasspathServiceKey, () -> new ClasspathService(bootClasspathProvider));
+            INSTANCE.registerService(
+                    classpathServiceKey, () -> new ClasspathService(libraryClasspathProvider));
+
+            for (TransformInput input : transformInvocation.getInputs()) {
 
                 for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                     logger.verbose("Dir input %s", dirInput.getFile().toString());
@@ -262,9 +347,8 @@ public class DexArchiveBuilderTransform extends Transform {
                             dirInput,
                             outputProvider,
                             isIncremental,
-                            classFileProviderFactory,
-                            bootclasspath,
-                            classpath,
+                            bootclasspathServiceKey,
+                            classpathServiceKey,
                             additionalPaths);
                 }
 
@@ -284,9 +368,8 @@ public class DexArchiveBuilderTransform extends Transform {
                                     isIncremental,
                                     jarInput,
                                     outputProvider,
-                                    classFileProviderFactory,
-                                    bootclasspath,
-                                    classpath,
+                                    bootclasspathServiceKey,
+                                    classpathServiceKey,
                                     additionalPaths,
                                     cacheInfo);
                     if (cacheInfo != D8DesugaringCacheInfo.DONT_CACHE && !dexArchives.isEmpty()) {
@@ -325,14 +408,21 @@ public class DexArchiveBuilderTransform extends Transform {
         } catch (Exception e) {
             logger.error(null, Throwables.getStackTraceAsString(e));
             throw new TransformException(e);
+        } finally {
+            if (classpathServiceKey != null) {
+                INSTANCE.removeService(classpathServiceKey);
+            }
+            if (bootclasspathServiceKey != null) {
+                INSTANCE.removeService(bootclasspathServiceKey);
+            }
         }
     }
 
     @NonNull
     private D8DesugaringCacheInfo getD8DesugaringCacheInfo(
             @Nullable DesugarIncrementalTransformHelper desugarIncrementalTransformHelper,
-            @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath,
+            @NonNull List<Path> bootclasspath,
+            @NonNull List<Path> classpath,
             @NonNull JarInput jarInput) {
 
         if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
@@ -345,7 +435,6 @@ public class DexArchiveBuilderTransform extends Transform {
             return new D8DesugaringCacheInfo(
                     Stream.concat(bootclasspath.stream(), classpath.stream())
                             .distinct()
-                            .map(string -> Paths.get(string))
                             .collect(Collectors.toList()));
         }
 
@@ -370,14 +459,12 @@ public class DexArchiveBuilderTransform extends Transform {
                 bootclasspath
                         .stream()
                         .distinct()
-                        .map(string -> Paths.get(string))
                         .collect(Collectors.toList());
 
         List<Path> classpathJars =
                 classpath
                         .stream()
                         .distinct()
-                        .map((string) -> Paths.get(string))
                         .filter((path) -> unorderedD8DesugaringDependencies.contains(path))
                         .collect(Collectors.toList());
 
@@ -422,9 +509,8 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isIncremental,
             @NonNull JarInput jarInput,
             @NonNull TransformOutputProvider transformOutputProvider,
-            @NonNull ClassFileProviderFactory classFileProviderFactory,
-            @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath,
+            @NonNull ClasspathServiceKey bootclasspath,
+            @NonNull ClasspathServiceKey classpath,
             @NonNull Set<File> additionalPaths,
             @NonNull D8DesugaringCacheInfo cacheInfo)
             throws Exception {
@@ -438,13 +524,12 @@ public class DexArchiveBuilderTransform extends Transform {
                     context,
                     jarInput,
                     transformOutputProvider,
-                    classFileProviderFactory,
                     bootclasspath,
                     classpath,
                     cacheInfo);
         } else if (jarInput.getStatus() != Status.NOTCHANGED) {
             // delete all preDex jars if they exists.
-            for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
+            for (int bucketId = 0; bucketId < numberOfBuckets; bucketId++) {
                 File shardedOutput = getPreDexJar(transformOutputProvider, jarInput, bucketId);
                 FileUtils.deleteIfExists(shardedOutput);
                 if (jarInput.getStatus() != Status.REMOVED) {
@@ -463,7 +548,6 @@ public class DexArchiveBuilderTransform extends Transform {
                         context,
                         jarInput,
                         transformOutputProvider,
-                        classFileProviderFactory,
                         bootclasspath,
                         classpath,
                         cacheInfo);
@@ -476,9 +560,8 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull Context context,
             @NonNull JarInput toConvert,
             @NonNull TransformOutputProvider transformOutputProvider,
-            @NonNull ClassFileProviderFactory classFileProviderFactory,
-            @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath,
+            @NonNull ClasspathServiceKey bootclasspath,
+            @NonNull ClasspathServiceKey classpath,
             @NonNull D8DesugaringCacheInfo cacheInfo)
             throws Exception {
 
@@ -501,7 +584,6 @@ public class DexArchiveBuilderTransform extends Transform {
                 toConvert,
                 transformOutputProvider,
                 false,
-                classFileProviderFactory,
                 bootclasspath,
                 classpath,
                 ImmutableSet.of());
@@ -509,8 +591,8 @@ public class DexArchiveBuilderTransform extends Transform {
 
     public static class DexConversionParameters implements Serializable {
         private final QualifiedContent input;
-        private final List<String> bootClasspath;
-        private final List<String> classpath;
+        private final ClasspathServiceKey bootClasspath;
+        private final ClasspathServiceKey classpath;
         private final String output;
         private final int numberOfBuckets;
         private final int buckedId;
@@ -521,15 +603,14 @@ public class DexArchiveBuilderTransform extends Transform {
         private final DexerTool dexer;
         private final boolean isDebuggable;
         private final boolean isIncremental;
-        private final ClassFileProviderFactory classFileProviderFactory;
         private final VariantScope.Java8LangSupport java8LangSupportType;
         @NonNull private final Set<File> additionalPaths;
         @Nonnull private final MessageReceiver messageReceiver;
 
         public DexConversionParameters(
                 @NonNull QualifiedContent input,
-                @NonNull List<String> bootClasspath,
-                @NonNull List<String> classpath,
+                @NonNull ClasspathServiceKey bootClasspath,
+                @NonNull ClasspathServiceKey classpath,
                 @NonNull File output,
                 int numberOfBuckets,
                 int buckedId,
@@ -540,7 +621,6 @@ public class DexArchiveBuilderTransform extends Transform {
                 @NonNull DexerTool dexer,
                 boolean isDebuggable,
                 boolean isIncremental,
-                @NonNull ClassFileProviderFactory classFileProviderFactory,
                 @NonNull VariantScope.Java8LangSupport java8LangSupportType,
                 @NonNull Set<File> additionalPaths,
                 @Nonnull MessageReceiver messageReceiver) {
@@ -557,7 +637,6 @@ public class DexArchiveBuilderTransform extends Transform {
             this.dexer = dexer;
             this.isDebuggable = isDebuggable;
             this.isIncremental = isIncremental;
-            this.classFileProviderFactory = classFileProviderFactory;
             this.java8LangSupportType = java8LangSupportType;
             this.additionalPaths = additionalPaths;
             this.messageReceiver = messageReceiver;
@@ -617,16 +696,14 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull List<String> dexAdditionalParameters,
             int inBufferSize,
             int outBufferSize,
-            @NonNull List<String> bootClasspath,
-            @NonNull List<String> classpath,
+            @NonNull ClasspathServiceKey bootClasspath,
+            @NonNull ClasspathServiceKey classpath,
             @NonNull DexerTool dexer,
             boolean isDebuggable,
-            @NonNull ClassFileProviderFactory classFileProviderFactory,
             boolean d8DesugaringEnabled,
             @NonNull OutputStream outStream,
             @NonNull OutputStream errStream,
-            @NonNull MessageReceiver messageReceiver)
-            throws IOException {
+            @NonNull MessageReceiver messageReceiver) {
 
         DexArchiveBuilder dexArchiveBuilder;
         switch (dexer) {
@@ -650,15 +727,8 @@ public class DexArchiveBuilderTransform extends Transform {
                         DexArchiveBuilder.createD8DexBuilder(
                                 minSdkVersion,
                                 isDebuggable,
-                                bootClasspath
-                                        .stream()
-                                        .map(string -> Paths.get(string))
-                                        .collect(Collectors.toList()),
-                                classpath
-                                        .stream()
-                                        .map(string -> Paths.get(string))
-                                        .collect(Collectors.toList()),
-                                classFileProviderFactory,
+                                INSTANCE.getService(bootClasspath).getService(),
+                                INSTANCE.getService(classpath).getService(),
                                 d8DesugaringEnabled,
                                 messageReceiver);
                 break;
@@ -673,16 +743,15 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull QualifiedContent input,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
-            @NonNull ClassFileProviderFactory classFileProviderFactory,
-            @NonNull List<String> bootClasspath,
-            @NonNull List<String> classpath,
+            @NonNull ClasspathServiceKey bootClasspath,
+            @NonNull ClasspathServiceKey classpath,
             @NonNull Set<File> additionalPaths)
             throws Exception {
 
         logger.verbose("Dexing %s", input.getFile().getAbsolutePath());
 
         ImmutableList.Builder<File> dexArchives = ImmutableList.builder();
-        for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
+        for (int bucketId = 0; bucketId < numberOfBuckets; bucketId++) {
 
             File preDexOutputFile = getPreDexFile(outputProvider, input, bucketId);
             dexArchives.add(preDexOutputFile);
@@ -692,7 +761,7 @@ public class DexArchiveBuilderTransform extends Transform {
                             bootClasspath,
                             classpath,
                             preDexOutputFile,
-                            NUMBER_OF_BUCKETS,
+                            numberOfBuckets,
                             bucketId,
                             minSdkVersion,
                             dexOptions.getAdditionalParameters(),
@@ -701,7 +770,6 @@ public class DexArchiveBuilderTransform extends Transform {
                             dexer,
                             isDebuggable,
                             isIncremental,
-                            classFileProviderFactory,
                             java8LangSupportType,
                             additionalPaths,
                             new SerializableMessageReceiver(messageReceiver));
@@ -762,7 +830,6 @@ public class DexArchiveBuilderTransform extends Transform {
                         dexConversionParameters.classpath,
                         dexConversionParameters.dexer,
                         dexConversionParameters.isDebuggable,
-                        dexConversionParameters.classFileProviderFactory,
                         VariantScope.Java8LangSupport.D8
                                 == dexConversionParameters.java8LangSupportType,
                         outStream,

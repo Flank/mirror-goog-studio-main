@@ -81,9 +81,8 @@ public final class DexArchiveTestUtil {
                         DexArchiveBuilder.createD8DexBuilder(
                                 minSdkVersion,
                                 true,
-                                Collections.emptyList(),
-                                Collections.emptyList(),
-                                new ClassFileProviderFactory(),
+                                new ClassFileProviderFactory(Collections.emptyList()),
+                                new ClassFileProviderFactory(Collections.emptyList()),
                                 true,
                                 new StandardOutErrMessageReceiver());
             }

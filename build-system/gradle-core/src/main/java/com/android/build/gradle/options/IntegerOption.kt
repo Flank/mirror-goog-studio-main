@@ -55,7 +55,9 @@ enum class IntegerOption(
      * translations into.
      */
     DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size"),
-    DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size");
+    DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size"),
+    DEXING_NUMBER_OF_BUCKETS("android.dexingNumberOfBuckets"),
+    ;
 
     override fun parse(value: Any): Int {
         if (value is CharSequence) {

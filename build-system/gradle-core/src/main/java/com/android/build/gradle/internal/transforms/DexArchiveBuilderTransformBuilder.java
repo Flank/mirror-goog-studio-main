@@ -42,6 +42,7 @@ public class DexArchiveBuilderTransformBuilder {
     private VariantScope.Java8LangSupport java8LangSupportType;
     private String projectVariant;
     private boolean enableIncrementalDesugaring;
+    private Integer numberOfBuckets;
 
     @NonNull
     public DexArchiveBuilderTransformBuilder setAndroidJarClasspath(
@@ -126,6 +127,12 @@ public class DexArchiveBuilderTransformBuilder {
     }
 
     @NonNull
+    public DexArchiveBuilderTransformBuilder setNumberOfBuckets(@Nullable Integer numberOfBuckets) {
+        this.numberOfBuckets = numberOfBuckets;
+        return this;
+    }
+
+    @NonNull
     public DexArchiveBuilderTransform createDexArchiveBuilderTransform() {
         Preconditions.checkNotNull(androidJarClasspath);
         Preconditions.checkNotNull(dexOptions);
@@ -146,6 +153,7 @@ public class DexArchiveBuilderTransformBuilder {
                 isDebuggable,
                 java8LangSupportType,
                 projectVariant,
-                enableIncrementalDesugaring);
+                enableIncrementalDesugaring,
+                numberOfBuckets);
     }
 }
