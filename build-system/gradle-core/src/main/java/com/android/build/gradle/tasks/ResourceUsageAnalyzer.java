@@ -28,7 +28,6 @@ import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static com.google.common.base.Charsets.UTF_8;
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
 import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
@@ -37,6 +36,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.ByteCodeUtils;
+import com.android.builder.dexing.AnalysisCallback;
+import com.android.builder.dexing.R8ResourceShrinker;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.ide.common.xml.XmlPrettyPrinter;
@@ -73,45 +74,16 @@ import java.util.jar.JarOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jf.dexlib2.Opcode;
-import org.jf.dexlib2.ReferenceType;
-import org.jf.dexlib2.ValueType;
-import org.jf.dexlib2.dexbacked.DexBackedAnnotation;
-import org.jf.dexlib2.dexbacked.DexBackedAnnotationElement;
-import org.jf.dexlib2.dexbacked.DexBackedClassDef;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.dexbacked.DexBackedField;
-import org.jf.dexlib2.dexbacked.DexBackedMethod;
-import org.jf.dexlib2.dexbacked.DexBackedMethodImplementation;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction11n;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction21c;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction21ih;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction21s;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction31c;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction31i;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction35c;
-import org.jf.dexlib2.dexbacked.instruction.DexBackedInstruction3rc;
-import org.jf.dexlib2.iface.AnnotationElement;
-import org.jf.dexlib2.iface.instruction.Instruction;
-import org.jf.dexlib2.iface.reference.FieldReference;
-import org.jf.dexlib2.iface.reference.MethodReference;
-import org.jf.dexlib2.iface.reference.StringReference;
-import org.jf.dexlib2.iface.value.AnnotationEncodedValue;
-import org.jf.dexlib2.iface.value.ArrayEncodedValue;
-import org.jf.dexlib2.iface.value.EncodedValue;
-import org.jf.dexlib2.iface.value.IntEncodedValue;
-import org.jf.dexlib2.iface.value.StringEncodedValue;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -1456,7 +1428,45 @@ public class ResourceUsageAnalyzer {
             classReader.accept(new UsageVisitor(file, name), SKIP_DEBUG | SKIP_FRAMES);
         } else {
             assert name.endsWith(DOT_DEX);
-            new DexFileUsageVisitor(bytes, file).visit();
+            AnalysisCallback callback =
+                    new AnalysisCallback() {
+                        @Override
+                        public boolean shouldProcess(@NotNull String internalName) {
+                            return !isResourceClass(internalName + DOT_CLASS);
+                        }
+
+                        @Override
+                        public void referencedInt(int value) {
+                            ResourceUsageAnalyzer.this.referencedInt("dex", value, file, name);
+                        }
+
+                        @Override
+                        public void referencedString(@NotNull String value) {
+                            ResourceUsageAnalyzer.this.referencedString(value);
+                        }
+
+                        @Override
+                        public void referencedStaticField(
+                                @NotNull String internalName, @NotNull String fieldName) {
+                            Resource resource = getResourceFromCode(internalName, fieldName);
+                            if (resource != null) {
+                                ResourceUsageModel.markReachable(resource);
+                            }
+                        }
+
+                        @Override
+                        public void referencedMethod(
+                                @NotNull String internalName,
+                                @NotNull String methodName,
+                                @NotNull String methodDescriptor) {
+                            ResourceUsageAnalyzer.this.referencedMethodInvocation(
+                                    internalName,
+                                    methodName,
+                                    methodDescriptor,
+                                    internalName + DOT_CLASS);
+                        }
+                    };
+            R8ResourceShrinker.runResourceShrinkerAnalysis(bytes, file, callback);
         }
     }
 
@@ -1791,269 +1801,6 @@ public class ResourceUsageAnalyzer {
         }
         if (owner.equals("android/webkit/WebView") && name.startsWith("load")) {
             mFoundWebContent = true;
-        }
-    }
-
-    private class DexFileUsageVisitor {
-        @NonNull private final byte[] bytes;
-        @NonNull private final File dexFile;
-
-        public DexFileUsageVisitor(@NonNull byte[] bytes, @NonNull File dexFile) {
-            this.bytes = bytes;
-            this.dexFile = dexFile;
-        }
-
-        public void visit() {
-            DexBackedDexFile dexBackedDexFile =
-                    new DexBackedDexFile(org.jf.dexlib2.Opcodes.getDefault(), bytes);
-
-            for (DexBackedClassDef classDef : dexBackedDexFile.getClasses()) {
-                new DexClassUsageVisitor(classDef, dexFile).visit();
-            }
-        }
-    }
-
-    private final class DexClassUsageVisitor {
-        @NonNull private final DexBackedClassDef classDef;
-        @NonNull private final String originalClassFile;
-        @NonNull private final File dexFile;
-
-        public DexClassUsageVisitor(@NonNull DexBackedClassDef classDef, @NonNull File dexFile) {
-            this.classDef = classDef;
-            this.originalClassFile =
-                    Type.getType(classDef.getType()).getInternalName() + SdkConstants.DOT_CLASS;
-            this.dexFile = dexFile;
-        }
-
-        public void visit() {
-            if (isResourceClass(originalClassFile)) {
-                // Skip resource type classes like R$drawable; they will
-                // reference the integer id's we're looking for, but these aren't
-                // actual usages we need to track; if somebody references the
-                // field elsewhere, we'll catch that
-                return;
-            }
-            for (DexBackedField field : classDef.getStaticFields()) {
-                if (field.getInitialValue() != null) {
-                    processFieldValue(field.getInitialValue());
-                }
-            }
-
-            for (DexBackedMethod method : classDef.getMethods()) {
-                processMethod(method);
-            }
-
-            for (DexBackedAnnotation annotation : classDef.getAnnotations()) {
-                for (DexBackedAnnotationElement annotationElement : annotation.getElements()) {
-                    EncodedValue value = annotationElement.getValue();
-                    processAnnotationValue(value);
-                }
-            }
-        }
-
-        /**
-         * Process a value that fields has been initialized with. Only integer, string, and array or
-         * integer values are analyzed.
-         */
-        private void processFieldValue(@NonNull EncodedValue value) {
-            int type = value.getValueType();
-            if (type == ValueType.STRING) {
-                referencedString(((StringEncodedValue) value).getValue());
-            } else if (type == ValueType.INT) {
-                int constantValue = ((IntEncodedValue) value).getValue();
-                referencedInt("field", constantValue, dexFile, originalClassFile);
-            } else if (type == ValueType.ARRAY) {
-                ArrayEncodedValue arrayEncodedValue = (ArrayEncodedValue) value;
-                for (EncodedValue encodedValue : arrayEncodedValue.getValue()) {
-                    if (encodedValue.getValueType() == ValueType.INT) {
-                        int constantValue = ((IntEncodedValue) value).getValue();
-                        referencedInt("field", constantValue, dexFile, originalClassFile);
-                    }
-                }
-            }
-        }
-
-        private void processMethod(@NonNull DexBackedMethod method) {
-            DexBackedMethodImplementation implementation = method.getImplementation();
-            if (implementation != null) {
-                for (Instruction instruction : implementation.getInstructions()) {
-                    if (isIntConstInstruction(instruction)) {
-                        processIntConstInstruction(instruction);
-                    } else if (isStringConstInstruction(instruction)) {
-                        processStringConstantInstruction(instruction);
-                    } else if (isGetStatic(instruction)) {
-                        processGetStatic(instruction);
-                    } else if (isInvokeInstruction(instruction)) {
-                        processInvokeInstruction(instruction);
-                    } else if (isInvokeRangeInstruction(instruction)) {
-                        processInvokeRangeInstruction(instruction);
-                    }
-                }
-            }
-        }
-
-        private void processAnnotationValue(EncodedValue value) {
-            int type = value.getValueType();
-            if (type == ValueType.INT) {
-                referencedInt(
-                        "annotation",
-                        ((IntEncodedValue) value).getValue(),
-                        dexFile,
-                        originalClassFile);
-            } else if (type == ValueType.STRING) {
-                referencedString(((StringEncodedValue) value).getValue());
-            } else if (type == ValueType.ARRAY) {
-                ArrayEncodedValue arrayEncodedValue = (ArrayEncodedValue) value;
-                for (EncodedValue nestedValue : arrayEncodedValue.getValue()) {
-                    processAnnotationValue(nestedValue);
-                }
-            } else if (type == ValueType.ANNOTATION) {
-                AnnotationEncodedValue annotationEncodedValue = (AnnotationEncodedValue) value;
-                for (AnnotationElement nestedAnnotation : annotationEncodedValue.getElements()) {
-                    processAnnotationValue(nestedAnnotation.getValue());
-                }
-            }
-        }
-
-        private boolean isIntConstInstruction(Instruction instruction) {
-            // const-wide/high16 and const-wide contain constants of type long, so ignore those
-            Opcode opcode = instruction.getOpcode();
-            return opcode == Opcode.CONST_4
-                    || opcode == Opcode.CONST_16
-                    || opcode == Opcode.CONST
-                    || opcode == Opcode.CONST_WIDE_32
-                    || opcode == Opcode.CONST_HIGH16
-                    || opcode == Opcode.CONST_WIDE_16;
-        }
-
-        private void processIntConstInstruction(Instruction instruction) {
-            checkArgument(isIntConstInstruction(instruction), "Not an int constant instruction.");
-
-            int constantValue;
-            switch (instruction.getOpcode()) {
-                case CONST:
-                case CONST_WIDE_32:
-                    DexBackedInstruction31i ins31n = (DexBackedInstruction31i) instruction;
-                    constantValue = ins31n.getNarrowLiteral();
-                    break;
-                case CONST_4:
-                    DexBackedInstruction11n ins11n = (DexBackedInstruction11n) instruction;
-                    constantValue = ins11n.getNarrowLiteral();
-                    break;
-                case CONST_16:
-                case CONST_WIDE_16:
-                    DexBackedInstruction21s ins21s = (DexBackedInstruction21s) instruction;
-                    constantValue = ins21s.getNarrowLiteral();
-                    break;
-                case CONST_HIGH16:
-                    DexBackedInstruction21ih ins21ih = (DexBackedInstruction21ih) instruction;
-                    constantValue = ins21ih.getNarrowLiteral();
-                    break;
-                default:
-                    throw new AssertionError("Not an int const instruction.");
-            }
-
-            referencedInt("constant", constantValue, dexFile, originalClassFile);
-        }
-
-        private boolean isStringConstInstruction(Instruction instruction) {
-            Opcode opcode = instruction.getOpcode();
-            return opcode == Opcode.CONST_STRING || opcode == Opcode.CONST_STRING_JUMBO;
-        }
-
-        private void processStringConstantInstruction(Instruction instruction) {
-            checkArgument(
-                    isStringConstInstruction(instruction), "Not a string constant instruction");
-
-            String constantValue;
-            switch (instruction.getOpcode()) {
-                case CONST_STRING:
-                    DexBackedInstruction21c ins21c = (DexBackedInstruction21c) instruction;
-                    assert ins21c.getReference() instanceof StringReference;
-                    constantValue = ((StringReference) ins21c.getReference()).getString();
-                    break;
-                case CONST_STRING_JUMBO:
-                    DexBackedInstruction31c ins31c = (DexBackedInstruction31c) instruction;
-                    assert ins31c.getReference() instanceof StringReference;
-                    constantValue = ((StringReference) ins31c.getReference()).getString();
-                    break;
-                default:
-                    throw new AssertionError("Not a string constant instruction.");
-            }
-            referencedString(constantValue);
-        }
-
-        private boolean isGetStatic(Instruction instruction) {
-            Opcode opcode = instruction.getOpcode();
-            return opcode == Opcode.SGET
-                    || opcode == Opcode.SGET_BOOLEAN
-                    || opcode == Opcode.SGET_BYTE
-                    || opcode == Opcode.SGET_CHAR
-                    || opcode == Opcode.SGET_OBJECT
-                    || opcode == Opcode.SGET_SHORT
-                    || opcode == Opcode.SGET_WIDE;
-        }
-
-        private void processGetStatic(Instruction instruction) {
-            checkArgument(isGetStatic(instruction), "Not a get static instruction");
-
-            DexBackedInstruction21c ins21c = (DexBackedInstruction21c) instruction;
-            assert ins21c.getReferenceType() == ReferenceType.FIELD;
-            FieldReference field = (FieldReference) ins21c.getReference();
-            String ownerDescriptor = Type.getType(field.getDefiningClass()).getInternalName();
-            Resource resource = getResourceFromCode(ownerDescriptor, field.getName());
-            if (resource != null) {
-                ResourceUsageModel.markReachable(resource);
-            }
-        }
-
-        private boolean isInvokeInstruction(Instruction instruction) {
-            Opcode opcode = instruction.getOpcode();
-            return opcode == Opcode.INVOKE_VIRTUAL
-                    || opcode == Opcode.INVOKE_SUPER
-                    || opcode == Opcode.INVOKE_DIRECT
-                    || opcode == Opcode.INVOKE_STATIC
-                    || opcode == Opcode.INVOKE_INTERFACE;
-        }
-
-        private void processInvokeInstruction(Instruction instruction) {
-            checkArgument(isInvokeInstruction(instruction), "Not an invoke instruction.");
-
-            DexBackedInstruction35c ins35c = (DexBackedInstruction35c) instruction;
-            MethodReference method = (MethodReference) ins35c.getReference();
-
-            markMethodInvocation(method);
-        }
-
-        private boolean isInvokeRangeInstruction(Instruction instruction) {
-            Opcode opcode = instruction.getOpcode();
-            return opcode == Opcode.INVOKE_VIRTUAL_RANGE
-                    || opcode == Opcode.INVOKE_SUPER_RANGE
-                    || opcode == Opcode.INVOKE_DIRECT_RANGE
-                    || opcode == Opcode.INVOKE_STATIC_RANGE
-                    || opcode == Opcode.INVOKE_INTERFACE_RANGE;
-        }
-
-        private void processInvokeRangeInstruction(Instruction instruction) {
-            checkArgument(
-                    isInvokeRangeInstruction(instruction), "Not an invoke-range instruction.");
-
-            DexBackedInstruction3rc ins3rc = (DexBackedInstruction3rc) instruction;
-            MethodReference method = (MethodReference) ins3rc.getReference();
-
-            markMethodInvocation(method);
-        }
-
-        private void markMethodInvocation(MethodReference method) {
-            String owner = Type.getType(method.getDefiningClass()).getInternalName();
-            String name = method.getName();
-            String descriptor =
-                    "("
-                            + method.getParameterTypes().stream().collect(Collectors.joining(""))
-                            + ")"
-                            + method.getReturnType();
-
-            referencedMethodInvocation(owner, name, descriptor, originalClassFile);
         }
     }
 

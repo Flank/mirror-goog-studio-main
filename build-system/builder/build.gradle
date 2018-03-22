@@ -138,3 +138,9 @@ tasks.sourcesJar {
 javadoc {
     classpath += configurations.provided
 }
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
