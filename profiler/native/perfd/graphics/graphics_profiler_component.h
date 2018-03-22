@@ -26,14 +26,13 @@ namespace profiler {
 
 class GraphicsProfilerComponent final : public ProfilerComponent {
  public:
-  explicit GraphicsProfilerComponent(Daemon::Utilities *utilities)
-      : public_service_(utilities) {}
+  explicit GraphicsProfilerComponent(Clock* clock) : public_service_(clock) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
-  grpc::Service *GetPublicService() override { return &public_service_; }
+  grpc::Service* GetPublicService() override { return &public_service_; }
 
   // Returns the service that talks to device clients (e.g., agent).
-  grpc::Service *GetInternalService() override { return nullptr; }
+  grpc::Service* GetInternalService() override { return nullptr; }
 
  private:
   GraphicsServiceImpl public_service_;

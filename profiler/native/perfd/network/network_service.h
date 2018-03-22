@@ -30,8 +30,8 @@ namespace profiler {
 // Service class to pass profiler data through grpc.
 class NetworkServiceImpl final : public proto::NetworkService::Service {
  public:
-  explicit NetworkServiceImpl(NetworkCache *network_cache)
-      : network_cache_(*network_cache), collector_(kSampleRateMs) {}
+  explicit NetworkServiceImpl(Clock *clock, NetworkCache *network_cache)
+      : network_cache_(*network_cache), collector_(clock, kSampleRateMs) {}
 
   grpc::Status GetData(grpc::ServerContext *context,
                        const proto::NetworkDataRequest *request,

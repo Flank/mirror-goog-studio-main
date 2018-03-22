@@ -21,7 +21,6 @@
 #include <mutex>
 #include <unordered_set>
 
-#include "perfd/daemon.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/procfs_files.h"
@@ -33,10 +32,8 @@ class CpuCache;
 class CpuUsageSampler {
  public:
   // Creates a CPU usage data collector that saves data to |cpu_cache|.
-  CpuUsageSampler(Daemon::Utilities* utilities, CpuCache* cpu_cache)
-      : clock_(utilities->clock()),
-        cache_(*cpu_cache),
-        usage_files_(new ProcfsFiles()) {}
+  CpuUsageSampler(Clock* clock, CpuCache* cpu_cache)
+      : clock_(clock), cache_(*cpu_cache), usage_files_(new ProcfsFiles()) {}
 
   // Starts collecting usage data for process with ID of |pid|, if not already.
   profiler::proto::CpuStartResponse::Status AddProcess(int32_t pid);

@@ -42,13 +42,13 @@ class CpuProfilerComponent final : public ProfilerComponent {
 
  public:
   // Creates a CPU perfd component and starts sampling right away.
-  explicit CpuProfilerComponent(Daemon::Utilities* utilities,
+  explicit CpuProfilerComponent(Clock* clock, FileCache* file_cache,
                                 TerminationService* termination_service)
-      : clock_(utilities->clock()),
-        cache_(kBufferCapacity, utilities->clock(), utilities->file_cache()),
-        usage_sampler_(utilities, &cache_),
-        thread_monitor_(utilities, &cache_),
-        public_service_(clock_, &cache_, &usage_sampler_, &thread_monitor_,
+      : clock_(clock),
+        cache_(kBufferCapacity, clock, file_cache),
+        usage_sampler_(clock, &cache_),
+        thread_monitor_(clock, &cache_),
+        public_service_(clock, &cache_, &usage_sampler_, &thread_monitor_,
                         termination_service) {
     collector_.Start();
   }

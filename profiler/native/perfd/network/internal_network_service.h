@@ -28,7 +28,7 @@ namespace profiler {
 class InternalNetworkServiceImpl final
     : public proto::InternalNetworkService::Service {
  public:
-  InternalNetworkServiceImpl(Daemon::Utilities *utilities,
+  InternalNetworkServiceImpl(FileCache *file_cache,
                              NetworkCache *network_cache);
 
   grpc::Status RegisterHttpData(grpc::ServerContext *context,
@@ -58,8 +58,8 @@ class InternalNetworkServiceImpl final
  private:
   const std::string GetPayloadFileName(int64_t conn_id, bool isRequestPayload);
 
-  FileCache &file_cache_;
-  NetworkCache &network_cache_;
+  FileCache *file_cache_;
+  NetworkCache *network_cache_;
 };
 
 }  // namespace profiler

@@ -16,7 +16,6 @@
 #ifndef PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 #define PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 
-#include "perfd/daemon.h"
 #include "perfd/network/internal_network_service.h"
 #include "perfd/network/network_collector.h"
 #include "perfd/network/network_service.h"
@@ -27,9 +26,9 @@ namespace profiler {
 
 class NetworkProfilerComponent final : public ProfilerComponent {
  public:
-  explicit NetworkProfilerComponent(Daemon::Utilities* utilities)
-      : public_service_(&network_cache_),
-        internal_service_(utilities, &network_cache_) {}
+  explicit NetworkProfilerComponent(Clock* clock, FileCache* file_cache)
+      : public_service_(clock, &network_cache_),
+        internal_service_(file_cache, &network_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }

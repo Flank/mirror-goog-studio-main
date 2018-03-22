@@ -31,12 +31,12 @@ namespace profiler {
 class MemoryServiceImpl final
     : public ::profiler::proto::MemoryService::Service {
  public:
-  MemoryServiceImpl(InternalMemoryServiceImpl* private_service,
-                    Daemon::Utilities* utilities,
+  MemoryServiceImpl(InternalMemoryServiceImpl* private_service, Clock* clock,
+                    FileCache* file_cache,
                     std::unordered_map<int32_t, MemoryCollector>* collectors)
       : private_service_(private_service),
-        clock_(utilities->clock()),
-        file_cache_(utilities->file_cache()),
+        clock_(clock),
+        file_cache_(file_cache),
         collectors_(*collectors) {}
   virtual ~MemoryServiceImpl() = default;
 

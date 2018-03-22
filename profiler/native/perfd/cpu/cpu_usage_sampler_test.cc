@@ -23,12 +23,15 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/daemon.h"
 #include "test/utils.h"
-#include "utils/clock.h"
+#include "utils/fake_clock.h"
+#include "utils/fs/memory_file_system.h"
 #include "utils/procfs_files.h"
 
+using profiler::Clock;
 using profiler::CpuCache;
 using profiler::CpuUsageSampler;
 using profiler::Daemon;
+using profiler::FileSystem;
 using profiler::ProcfsFiles;
 using profiler::TestUtils;
 using std::string;
@@ -62,8 +65,8 @@ class CpuUsageSamplerToTest final : public CpuUsageSampler {
  public:
   // Replace the real procfs by a mock one for testing, making it possible
   // to run this test on systems that do not have /proc such as Mac.
-  CpuUsageSamplerToTest(Daemon::Utilities* utilities, CpuCache* cpu_cache)
-      : CpuUsageSampler(utilities, cpu_cache) {
+  CpuUsageSamplerToTest(Clock* clock, CpuCache* cpu_cache)
+      : CpuUsageSampler(clock, cpu_cache) {
     ResetUsageFiles(std::unique_ptr<ProcfsFiles>(new MockProcfsFiles()));
   }
 };
@@ -82,11 +85,16 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kSystemCpuTime = 25299780;
   const int64_t kElapsedTime = 1175801430;
 
-  Daemon::Utilities utilities("", "");
-  CpuCache cache{100, utilities.clock(), utilities.file_cache()};
+  FakeClock clock;
+  FileCache file_cache(
+      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
+      "/");
+  CpuCache cache(100, &clock, &file_cache);
   cache.AllocateAppCache(kMockAppPid);
-  CpuUsageSamplerToTest sampler{&utilities, &cache};
+  CpuUsageSamplerToTest sampler(&clock, &cache);
   sampler.AddProcess(kMockAppPid);
+
+  clock.Elapse(10);
   bool sample_result = sampler.Sample();
   ASSERT_TRUE(sample_result);
 
@@ -94,7 +102,7 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   auto samples = cache.Retrieve(kMockAppPid, INT64_MIN, INT64_MAX);
   ASSERT_EQ(1, samples.size());
   auto sample = samples[0];
-  EXPECT_LT(0, sample.end_timestamp());
+  EXPECT_EQ(10, sample.end_timestamp());
   EXPECT_EQ(kAppCpuTime, sample.app_cpu_time_in_millisec());
   EXPECT_EQ(kSystemCpuTime, sample.system_cpu_time_in_millisec());
   EXPECT_EQ(kElapsedTime, sample.elapsed_time_in_millisec());
@@ -119,11 +127,14 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_1 = 13780;
   const int64_t kAppCpuTime_2 = 140;
 
-  Daemon::Utilities utilities("", "");
-  CpuCache cache{100, utilities.clock(), utilities.file_cache()};
+  FakeClock clock;
+  FileCache file_cache(
+      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
+      "/");
+  CpuCache cache(100, &clock, &file_cache);
   cache.AllocateAppCache(kMockAppPid_1);
   cache.AllocateAppCache(kMockAppPid_2);
-  CpuUsageSamplerToTest sampler{&utilities, &cache};
+  CpuUsageSamplerToTest sampler(&clock, &cache);
   sampler.AddProcess(kMockAppPid_1);
   sampler.AddProcess(kMockAppPid_2);
   bool sample_result = sampler.Sample();

@@ -19,9 +19,7 @@
 
 namespace profiler {
 
-void SpeedSampler::Refresh() {
-  stats_reader_.Refresh();
-}
+void SpeedSampler::Refresh() { stats_reader_.Refresh(); }
 
 proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
   proto::NetworkProfilerData data;
@@ -29,16 +27,13 @@ proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
   uint64_t bytes_sent = stats_reader_.bytes_tx(uid);
   uint64_t bytes_received = stats_reader_.bytes_rx(uid);
 
-  // TODO: Use clock from Daemon::Utilities from profiler component
-  SteadyClock clock;
-  auto time = clock.GetCurrentTime();
+  auto time = clock_->GetCurrentTime();
   if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
     SpeedConverter tx_converter(time, bytes_sent);
     SpeedConverter rx_converter(time, bytes_received);
     tx_speed_converters_.emplace(uid, tx_converter);
     rx_speed_converters_.emplace(uid, rx_converter);
-  }
-  else {
+  } else {
     tx_speed_converters_.at(uid).Add(time, bytes_sent);
     rx_speed_converters_.at(uid).Add(time, bytes_received);
   }

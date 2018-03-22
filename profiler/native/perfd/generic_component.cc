@@ -22,12 +22,11 @@
 
 namespace profiler {
 
-GenericComponent::GenericComponent(Daemon* daemon,
-                                   Daemon::Utilities* utilities,
+GenericComponent::GenericComponent(Daemon* daemon, Clock* clock,
                                    SessionsManager* sessions)
     : generic_public_service_(daemon, &heartbeat_timestamp_map_),
-      agent_service_(utilities->clock(), &heartbeat_timestamp_map_),
-      clock_(utilities->clock()) {
+      agent_service_(clock, &heartbeat_timestamp_map_),
+      clock_(clock) {
   status_thread_ = std::thread(&GenericComponent::RunAgentStatusThread, this);
 }
 
@@ -51,4 +50,4 @@ void GenericComponent::RunAgentStatusThread() {
     usleep(Clock::ns_to_us(kHeartbeatThresholdNs));
   }
 }
-}
+}  // namespace profiler

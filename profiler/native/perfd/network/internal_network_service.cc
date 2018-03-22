@@ -24,16 +24,16 @@ using grpc::Status;
 using profiler::proto::ChunkRequest;
 
 InternalNetworkServiceImpl::InternalNetworkServiceImpl(
-    Daemon::Utilities *utilities, NetworkCache *network_cache)
-    : file_cache_(*utilities->file_cache()), network_cache_(*network_cache) {}
+    FileCache *file_cache, NetworkCache *network_cache)
+    : file_cache_(file_cache), network_cache_(network_cache) {}
 
 Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
     proto::EmptyNetworkReply *reply) {
-  auto details = network_cache_.AddConnection(
+  auto details = network_cache_->AddConnection(
       httpData->conn_id(), httpData->pid(), httpData->start_timestamp());
   details->request.url = httpData->url();
-  details->request.trace_id = file_cache_.AddString(httpData->trace());
+  details->request.trace_id = file_cache_->AddString(httpData->trace());
   return Status::OK;
 }
 
@@ -42,7 +42,7 @@ Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
                                              proto::EmptyNetworkReply *reply) {
   auto &filename = GetPayloadFileName(chunk->conn_id(),
                                       chunk->type() == ChunkRequest::REQUEST);
-  file_cache_.AddChunk(filename, chunk->content());
+  file_cache_->AddChunk(filename, chunk->content());
   return Status::OK;
 }
 
@@ -72,7 +72,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     break;
 
     case proto::HttpEventRequest::DOWNLOAD_STARTED: {
-      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      auto details = network_cache_->GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
         details->downloading_timestamp = httpEvent->timestamp();
       }
@@ -82,9 +82,9 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 
     case proto::HttpEventRequest::DOWNLOAD_COMPLETED: {
       auto &filename = GetPayloadFileName(httpEvent->conn_id(), false);
-      auto payload_file = file_cache_.Complete(filename);
+      auto payload_file = file_cache_->Complete(filename);
 
-      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      auto details = network_cache_->GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
         details->response.payload_id = payload_file->name();
         details->response.payload_size = payload_file->size();
@@ -96,8 +96,8 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 
     case proto::HttpEventRequest::UPLOAD_COMPLETED: {
       auto &filename = GetPayloadFileName(httpEvent->conn_id(), true);
-      auto payload_file = file_cache_.Complete(filename);
-      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      auto payload_file = file_cache_->Complete(filename);
+      auto details = network_cache_->GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
         details->request.payload_id = payload_file->name();
         details->uploaded_timestamp = httpEvent->timestamp();
@@ -108,9 +108,9 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 
     case proto::HttpEventRequest::ABORTED: {
       auto &filename = GetPayloadFileName(httpEvent->conn_id(), false);
-      file_cache_.Abort(filename);
+      file_cache_->Abort(filename);
 
-      auto details = network_cache_.GetDetails(httpEvent->conn_id());
+      auto details = network_cache_->GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
         details->end_timestamp = httpEvent->timestamp();
       }
@@ -127,7 +127,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 Status InternalNetworkServiceImpl::SendHttpRequest(
     ServerContext *context, const proto::HttpRequestRequest *httpRequest,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails *conn = network_cache_.GetDetails(httpRequest->conn_id());
+  ConnectionDetails *conn = network_cache_->GetDetails(httpRequest->conn_id());
   if (conn != nullptr) {
     conn->request.fields = httpRequest->fields();
     conn->request.method = httpRequest->method();
@@ -140,7 +140,7 @@ Status InternalNetworkServiceImpl::SendHttpRequest(
 Status InternalNetworkServiceImpl::SendHttpResponse(
     ServerContext *context, const proto::HttpResponseRequest *httpResponse,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails *conn = network_cache_.GetDetails(httpResponse->conn_id());
+  ConnectionDetails *conn = network_cache_->GetDetails(httpResponse->conn_id());
   if (conn != nullptr) {
     conn->response.fields = httpResponse->fields();
   } else {
@@ -153,7 +153,7 @@ Status InternalNetworkServiceImpl::SendHttpResponse(
 Status InternalNetworkServiceImpl::TrackThread(
     ServerContext *context, const proto::JavaThreadRequest *threadData,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails *conn = network_cache_.GetDetails(threadData->conn_id());
+  ConnectionDetails *conn = network_cache_->GetDetails(threadData->conn_id());
   if (conn != nullptr) {
     bool found = false;
     for (auto thread : conn->threads) {

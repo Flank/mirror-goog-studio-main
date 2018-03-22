@@ -33,7 +33,7 @@ class GenericComponent final : public ProfilerComponent {
  public:
   static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
 
-  explicit GenericComponent(Daemon* daemon, Daemon::Utilities* utilities,
+  explicit GenericComponent(Daemon* daemon, Clock* clock,
                             SessionsManager* sessions);
 
   // Returns the service that talks to desktop clients (e.g., Studio).

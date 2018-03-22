@@ -161,7 +161,7 @@ Status ProfilerServiceImpl::GetCurrentTime(
     profiler::proto::TimeResponse* response) {
   Trace trace("PRO:GetTimes");
 
-  response->set_timestamp_ns(daemon_->utilities()->clock()->GetCurrentTime());
+  response->set_timestamp_ns(daemon_->clock()->GetCurrentTime());
   // TODO: Move this to utils.
   timeval time;
   gettimeofday(&time, nullptr);
@@ -182,7 +182,7 @@ Status ProfilerServiceImpl::GetVersion(
 Status ProfilerServiceImpl::GetBytes(
     ServerContext* context, const profiler::proto::BytesRequest* request,
     profiler::proto::BytesResponse* response) {
-  auto* file_cache = daemon_->utilities()->file_cache();
+  auto* file_cache = daemon_->file_cache();
   response->set_contents(file_cache->GetFile(request->id())->Contents());
   return Status::OK;
 }
@@ -192,7 +192,7 @@ Status ProfilerServiceImpl::GetAgentStatus(
     profiler::proto::AgentStatusResponse* response) {
   auto got = heartbeat_timestamp_map_.find(request->pid());
   if (got != heartbeat_timestamp_map_.end()) {
-    int64_t current_time = daemon_->utilities()->clock()->GetCurrentTime();
+    int64_t current_time = daemon_->clock()->GetCurrentTime();
     if (GenericComponent::kHeartbeatThresholdNs >
         (current_time - got->second)) {
       response->set_status(AgentStatusResponse::ATTACHED);
@@ -239,7 +239,7 @@ Status ProfilerServiceImpl::TryAttachAppAgent(
     // exist if we have profiled the same app before, and either Studio/perfd
     // has restarted and has lost any knowledge about such agent.
     if (!IsAppAgentAlive(app_pid, package_name)) {
-      auto* config = daemon_->utilities()->config();
+      auto* config = daemon_->config();
       RunAgent(app_name, package_name, config->GetConfigFilePath(),
                agent_lib_file_name);
     }
@@ -256,7 +256,7 @@ Status ProfilerServiceImpl::TryAttachAppAgent(
       } else if (fork_pid == 0) {
         // child process
         string socket_name;
-        auto* config = daemon_->utilities()->config();
+        auto* config = daemon_->config();
         socket_name.append(config->GetAgentConfig().service_socket_name());
         RunConnector(app_pid, package_name, socket_name);
         // RunConnector calls execl() at the end. It returns only if an error
@@ -270,7 +270,8 @@ Status ProfilerServiceImpl::TryAttachAppAgent(
 }
 
 Status ProfilerServiceImpl::ConfigureStartupAgent(
-    ServerContext* context, const profiler::proto::ConfigureStartupAgentRequest* request,
+    ServerContext* context,
+    const profiler::proto::ConfigureStartupAgentRequest* request,
     profiler::proto::ConfigureStartupAgentResponse* response) {
   if (profiler::DeviceInfo::feature_level() < Device::O) {
     return Status(StatusCode::UNIMPLEMENTED,
@@ -282,7 +283,7 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
   CopyFileToPackageFolder(package_name, kAgentJarFileName);
   CopyFileToPackageFolder(package_name, agent_lib_file_name);
 
-  auto* config = daemon_->utilities()->config();
+  auto* config = daemon_->config();
   PackageManager package_manager;
   string data_path;
   string error;
@@ -290,7 +291,11 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
 
   string agent_args = "";
   if (package_manager.GetAppDataPath(package_name, &data_path, &error)) {
-    agent_args.append(data_path).append("/").append(agent_lib_file_name).append("=").append(config_path);
+    agent_args.append(data_path)
+        .append("/")
+        .append(agent_lib_file_name)
+        .append("=")
+        .append(config_path);
   }
   response->set_agent_args(agent_args);
   return Status::OK;
@@ -300,7 +305,7 @@ Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
   daemon_->sessions()->BeginSession(request->device_id(), request->pid(),
-                          response->mutable_session());
+                                    response->mutable_session());
 
   Status status = Status::OK;
   if (request->jvmti_config().attach_agent()) {
@@ -314,22 +319,24 @@ Status ProfilerServiceImpl::BeginSession(
 Status ProfilerServiceImpl::EndSession(
     ServerContext* context, const profiler::proto::EndSessionRequest* request,
     profiler::proto::EndSessionResponse* response) {
-  daemon_->sessions()->EndSession(request->session_id(), response->mutable_session());
+  daemon_->sessions()->EndSession(request->session_id(),
+                                  response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSession(
     ServerContext* context, const profiler::proto::GetSessionRequest* request,
     profiler::proto::GetSessionResponse* response) {
-  daemon_->sessions()->GetSession(request->session_id(), response->mutable_session());
+  daemon_->sessions()->GetSession(request->session_id(),
+                                  response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSessions(
     ServerContext* context, const profiler::proto::GetSessionsRequest* request,
     profiler::proto::GetSessionsResponse* response) {
-  auto matching_sessions = daemon_->sessions()->GetSessions(request->start_timestamp(),
-                                                  request->end_timestamp());
+  auto matching_sessions = daemon_->sessions()->GetSessions(
+      request->start_timestamp(), request->end_timestamp());
   for (const auto& session : matching_sessions) {
     response->add_sessions()->CopyFrom(session);
   }
@@ -358,7 +365,7 @@ bool ProfilerServiceImpl::IsAppAgentAlive(int app_pid, const string& app_name) {
 bool ProfilerServiceImpl::CheckAppHeartBeat(int app_pid) {
   auto got = heartbeat_timestamp_map_.find(app_pid);
   if (got != heartbeat_timestamp_map_.end()) {
-    int64_t current_time = daemon_->utilities()->clock()->GetCurrentTime();
+    int64_t current_time = daemon_->clock()->GetCurrentTime();
     if (GenericComponent::kHeartbeatThresholdNs >
         (current_time - got->second)) {
       return true;
