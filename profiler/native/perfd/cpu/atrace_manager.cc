@@ -29,8 +29,8 @@
 #include "utils/current_process.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
-#include "utils/trace.h"
 #include "utils/tokenizer.h"
+#include "utils/trace.h"
 
 using std::string;
 
@@ -173,6 +173,17 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
                         profiled_app_.trace_path.c_str());
   } else {
     return true;
+  }
+}
+
+void AtraceManager::Shutdown() {
+  std::lock_guard<std::mutex> lock(start_stop_mutex_);
+  Trace trace("CPU:Shutdown atrace");
+  if (is_profiling_) {
+    Log::D("Profiler:Shutdown atrace");
+    is_profiling_ = false;
+    profiler::BashCommandRunner atrace(kAtraceExecutable);
+    atrace.Run("--async_stop", nullptr);
   }
 }
 

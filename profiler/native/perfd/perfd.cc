@@ -24,6 +24,7 @@
 #include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
+#include "perfd/termination_service.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -67,6 +68,9 @@ int main(int argc, char** argv) {
   }
 
   profiler::Trace::Init();
+  auto termination_service =
+      profiler::TerminationService::GetTerminationService();
+
   profiler::Daemon daemon(config_path, is_testing_profiler
                                            ? getenv("TEST_TMPDIR")
                                            : profiler::CurrentProcess::dir());
@@ -76,7 +80,8 @@ int main(int argc, char** argv) {
                                                daemon.sessions());
   daemon.RegisterComponent(&generic_component);
 
-  profiler::CpuProfilerComponent cpu_component(daemon.utilities());
+  profiler::CpuProfilerComponent cpu_component(daemon.utilities(),
+                                               termination_service);
   daemon.RegisterComponent(&cpu_component);
 
   profiler::MemoryProfilerComponent memory_component(daemon.utilities());
@@ -108,6 +113,7 @@ int main(int argc, char** argv) {
     // gRPC that this is a Unix socket name.
     std::string grpc_target{profiler::kGrpcUnixSocketAddrPrefix};
     grpc_target.append(agent_config.service_socket_name());
+
     daemon.RunServer(grpc_target);
   } else {
     // For legacy devices (Nougat or older), use an internet address.

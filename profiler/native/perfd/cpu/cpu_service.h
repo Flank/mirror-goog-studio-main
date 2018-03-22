@@ -26,6 +26,7 @@
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
+#include "perfd/termination_service.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -36,7 +37,8 @@ namespace profiler {
 class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
-                 CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor)
+                 CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
+                 TerminationService* termination_service)
       : cache_(*cpu_cache),
         clock_(clock),
         usage_sampler_(*usage_sampler),
@@ -46,7 +48,10 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
         // The average user will run a capture around 20 seconds, however to
         // support longer captures we should dump the data (causing a hitch).
         // This data dump enables us to have long captures.
-        atrace_manager_(clock, 1000 * 30) {}
+        atrace_manager_(clock, 1000 * 30) {
+    termination_service->RegisterShutdownCallback(
+        [this](int signal) { this->atrace_manager_.Shutdown(); });
+  }
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,

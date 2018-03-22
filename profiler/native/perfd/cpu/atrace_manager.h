@@ -17,12 +17,12 @@
 #ifndef PERFD_CPU_ATRACE_MANAGER_H_
 #define PERFD_CPU_ATRACE_MANAGER_H_
 
+#include <condition_variable>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <thread>
-#include <set>
-#include <condition_variable>
 
 #include "utils/clock.h"
 
@@ -51,6 +51,7 @@ class AtraceManager {
                       std::string *trace_path, std::string *error);
   bool StopProfiling(const std::string &app_name, bool need_result,
                      std::string *error);
+  void Shutdown();
   bool IsProfiling() { return is_profiling_; }
   int GetDumpCount() { return dumps_created_; }
 

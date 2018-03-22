@@ -23,6 +23,7 @@
 #include "perfd/cpu/thread_monitor.h"
 #include "perfd/daemon.h"
 #include "perfd/profiler_component.h"
+#include "perfd/termination_service.h"
 
 namespace profiler {
 
@@ -41,11 +42,14 @@ class CpuProfilerComponent final : public ProfilerComponent {
 
  public:
   // Creates a CPU perfd component and starts sampling right away.
-  explicit CpuProfilerComponent(Daemon::Utilities* utilities)
+  explicit CpuProfilerComponent(Daemon::Utilities* utilities,
+                                TerminationService* termination_service)
       : clock_(utilities->clock()),
         cache_(kBufferCapacity, utilities->clock(), utilities->file_cache()),
         usage_sampler_(utilities, &cache_),
-        thread_monitor_(utilities, &cache_) {
+        thread_monitor_(utilities, &cache_),
+        public_service_(clock_, &cache_, &usage_sampler_, &thread_monitor_,
+                        termination_service) {
     collector_.Start();
   }
 
@@ -62,8 +66,7 @@ class CpuProfilerComponent final : public ProfilerComponent {
   ThreadMonitor thread_monitor_;
   CpuCollector collector_{kDefaultCollectionIntervalUs, &usage_sampler_,
                           &thread_monitor_};
-  CpuServiceImpl public_service_{clock_, &cache_, &usage_sampler_,
-                                 &thread_monitor_};
+  CpuServiceImpl public_service_;
   InternalCpuServiceImpl internal_service_{&cache_};
 };
 
