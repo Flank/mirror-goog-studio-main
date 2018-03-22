@@ -208,6 +208,9 @@ public class MergedResourceWriter
 
                     @Override
                     public void await() {}
+
+                    @Override
+                    public void taskActionDone() {}
                 },
                 rootFolder,
                 publicFile,

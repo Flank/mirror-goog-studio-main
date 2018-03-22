@@ -135,6 +135,9 @@ public class MergeResourceWriterWithCompilerTest {
 
                 @Override
                 public void await() {}
+
+                @Override
+                public void taskActionDone() {}
             };
 
     public void addAndDeleteFile(@NonNull String name) throws Exception {
