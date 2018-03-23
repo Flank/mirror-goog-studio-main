@@ -16,4 +16,41 @@
 
 package android.location;
 
-public class Location {}
+public class Location {
+    private String myProvider;
+    private float myAccuracy = 0.0f;
+    private double myLatitude = 0.0;
+    private double myLongitude = 0.0;
+
+    public Location(String provider) {
+        myProvider = provider;
+    }
+
+    public String getProvider() {
+        return myProvider;
+    }
+
+    public float getAccuracy() {
+        return myAccuracy;
+    }
+
+    public void setAccuracy(float accuracy) {
+        myAccuracy = accuracy;
+    }
+
+    public double getLatitude() {
+        return myLatitude;
+    }
+
+    public void setLatitude(double latitude) {
+        myLatitude = latitude;
+    }
+
+    public double getLongitude() {
+        return myLongitude;
+    }
+
+    public void setLongitude(double longitude) {
+        myLongitude = longitude;
+    }
+}

@@ -26,6 +26,7 @@ import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
+import com.android.tools.profiler.proto.EnergyProfiler.Location;
 import com.android.tools.profiler.proto.EnergyProfiler.LocationChanged;
 import com.android.tools.profiler.proto.EnergyProfiler.LocationRequest;
 import com.android.tools.profiler.proto.EnergyProfiler.LocationRequest.Priority;
@@ -101,6 +102,11 @@ public class LocationTest {
         assertThat(locationChangeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_CHANGED);
         assertThat(locationChangeEvent.getLocationChanged().getActionCase())
                 .isEqualTo(LocationChanged.ActionCase.LISTENER);
+        Location location = locationChangeEvent.getLocationChanged().getListener().getLocation();
+        assertThat(location.getProvider()).isEqualTo("network");
+        assertThat(location.getAccuracy()).isEqualTo(100.0f);
+        assertThat(location.getLatitude()).isEqualTo(30.0);
+        assertThat(location.getLongitude()).isEqualTo(60.0);
 
         EnergyEvent removeEvent = response.getEvents(2);
         assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);

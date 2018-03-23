@@ -39,7 +39,11 @@ public class LocationActivity extends PerfdTestActivity {
         LocationManager locationManager = new LocationManager();
         LocationListener listener = new DefaultLocationListener();
         locationManager.requestLocationUpdates("gps", 1000, 100.0f, listener);
-        locationManager.changeLocation();
+        Location location = new Location("network");
+        location.setAccuracy(100.0f);
+        location.setLatitude(30.0);
+        location.setLongitude(60.0);
+        locationManager.changeLocation(location);
         locationManager.removeUpdates(listener);
         System.out.println("LISTENER LOCATION UPDATES");
     }

@@ -585,11 +585,19 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationChanged(
-    JNIEnv* env, jclass clazz, jint event_id) {
+    JNIEnv* env, jclass clazz, jint event_id, jstring provider, jfloat accuracy,
+    jdouble latitude, jdouble longitude) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
-  energy_event.mutable_location_changed()->mutable_listener();
+  auto location = energy_event.mutable_location_changed()
+                      ->mutable_listener()
+                      ->mutable_location();
+  JStringWrapper provider_str(env, provider);
+  location->set_provider(provider_str.get());
+  location->set_accuracy(accuracy);
+  location->set_latitude(latitude);
+  location->set_longitude(longitude);
   SubmitEnergyEvent(energy_event);
 }
 };
