@@ -343,14 +343,6 @@ Status ProfilerServiceImpl::GetSessions(
   return Status::OK;
 }
 
-Status ProfilerServiceImpl::DeleteSession(
-    ServerContext* context,
-    const profiler::proto::DeleteSessionRequest* request,
-    profiler::proto::DeleteSessionResponse* response) {
-  daemon_->sessions()->DeleteSession(request->session_id());
-  return Status::OK;
-}
-
 // Runs the connector as the application user and tries to send a message
 // (e.g. |kHeartBeatRequest|) to the agent via unix socket. If the agent's
 // unix socket server is up, the send operation should be sucessful, in which
