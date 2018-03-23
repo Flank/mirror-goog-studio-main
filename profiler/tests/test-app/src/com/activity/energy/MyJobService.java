@@ -29,6 +29,6 @@ public class MyJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         System.out.println("JOB STOPPED");
-        return true;
+        return false;
     }
 }

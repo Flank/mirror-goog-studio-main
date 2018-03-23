@@ -443,6 +443,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
       break;
   }
   energy_event.mutable_job_scheduled()->set_result(result);
+  // If result is failure, the job will never run and thus terminal.
+  energy_event.set_is_terminal(result == JobScheduled::RESULT_FAILURE);
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
 }
@@ -456,6 +458,9 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStarted(
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
+  // If there is no more ongoing work, the job is already finished and
+  // considered terminal.
+  energy_event.set_is_terminal(!work_ongoing);
   auto params = energy_event.mutable_job_started()->mutable_params();
   PopulateJobParams(env, params, job_id, triggered_content_authorities,
                     triggered_content_uris, is_override_deadline_expired,
@@ -473,6 +478,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStopped(
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
+  // If rescheduling, this job is not yet terminal.
+  energy_event.set_is_terminal(!reschedule);
   auto params = energy_event.mutable_job_stopped()->mutable_params();
   PopulateJobParams(env, params, job_id, triggered_content_authorities,
                     triggered_content_uris, is_override_deadline_expired,
@@ -491,12 +498,13 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
+  // If rescheduling, this job is not yet terminal.
+  energy_event.set_is_terminal(!needs_reschedule);
   auto params = energy_event.mutable_job_finished()->mutable_params();
   PopulateJobParams(env, params, job_id, triggered_content_authorities,
                     triggered_content_uris, is_override_deadline_expired,
                     extras, transient_extras);
   energy_event.mutable_job_finished()->set_needs_reschedule(needs_reschedule);
-  energy_event.set_is_terminal(true);
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
 }
