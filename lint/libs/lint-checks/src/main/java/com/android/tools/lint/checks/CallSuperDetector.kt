@@ -25,7 +25,6 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintUtils.skipParentheses
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -150,7 +149,7 @@ implementation as part of your method.
         var callsSuper: Boolean = false
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
-            val parent = skipParentheses(node.uastParent)
+            val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
                 if (targetMethod == resolved

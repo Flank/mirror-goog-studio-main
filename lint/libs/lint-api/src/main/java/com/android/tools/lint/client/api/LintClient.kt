@@ -43,12 +43,12 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.LintUtils.endsWith
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
@@ -1238,7 +1238,7 @@ abstract class LintClient {
      * @return true if the directory represents a lint project
      */
     open fun isProjectDirectory(dir: File): Boolean =
-        LintUtils.isManifestFolder(dir) ||
+        isManifestFolder(dir) ||
                 Project.isAospFrameworksRelatedProject(dir) ||
                 File(dir, FN_BUILD_GRADLE).exists()
 

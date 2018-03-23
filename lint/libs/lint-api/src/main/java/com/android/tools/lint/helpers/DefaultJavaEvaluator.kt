@@ -18,7 +18,6 @@ package com.android.tools.lint.helpers
 
 import com.android.builder.model.Dependencies
 import com.android.tools.lint.client.api.JavaEvaluator
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Project
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.AnnotationUtil
@@ -236,7 +235,7 @@ open class DefaultJavaEvaluator(
 
     @Suppress("OverridingDeprecatedMember")
     override fun getInternalName(psiClass: PsiClass): String? {
-        return LintUtils.getInternalName(psiClass)
+        return com.android.tools.lint.detector.api.getInternalName(psiClass)
     }
 
     override fun erasure(type: PsiType?): PsiType? {

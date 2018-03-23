@@ -41,7 +41,6 @@ import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceEvaluator
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -49,6 +48,9 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.getLanguageLevel
+import com.android.tools.lint.detector.api.skipParentheses
+import com.android.tools.lint.detector.api.stripIdPrefix
 import com.android.utils.CharSequences
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -178,7 +180,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         method: PsiMethod
     ) {
         val client = context.client
-        val current = LintUtils.skipParentheses(node) ?: return
+        val current = skipParentheses(node) ?: return
         var parent = current.uastParent
 
         val errorNode: UElement
@@ -327,7 +329,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         surroundingCall: UCallExpression
     ) {
         // This issue only applies in Java, not Kotlin etc - and for language level 1.8
-        val languageLevel = LintUtils.getLanguageLevel(surroundingCall, JDK_1_7)
+        val languageLevel = getLanguageLevel(surroundingCall, JDK_1_7)
         if (languageLevel.isLessThan(JDK_1_8)) {
             return
         }
@@ -429,7 +431,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             if (event == XmlPullParser.START_TAG) {
                 var id: String? = parser.getAttributeValue(ANDROID_URI, ATTR_ID)
                 if (id != null && !id.isEmpty()) {
-                    id = LintUtils.stripIdPrefix(id)
+                    id = stripIdPrefix(id)
                     var tag = parser.name ?: continue
                     if (tag == VIEW_TAG || tag == VIEW_FRAGMENT) {
                         tag = parser.getAttributeValue(null, ATTR_CLASS)

@@ -8,10 +8,10 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.guessGradleLocation
 import org.jetbrains.uast.UClass
 
 /**
@@ -73,7 +73,7 @@ Please upgrade to version 24.0.0 or higher of the Support Library.""",
                 val libVersion = GradleCoordinate.parseVersionOnly(mc.version)
                 if (COMPARE_PLUS_HIGHER.compare(libVersion, MIN_SUPPORT_V4_VERSION) < 0) {
 
-                    val location = LintUtils.guessGradleLocation(
+                    val location = guessGradleLocation(
                         context.client, context.project.dir,
                         "${mc.groupId}:${mc.artifactId}:${mc.version}"
                     )

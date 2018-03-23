@@ -25,11 +25,11 @@ import com.android.SdkConstants.TAG_ISSUE
 import com.android.SdkConstants.TAG_ISSUES
 import com.android.SdkConstants.TAG_LOCATION
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.describeCounts
 import com.android.utils.XmlUtils
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
@@ -597,7 +597,7 @@ class LintBaseline(
             warnings: Int,
             baselineDisplayPath: String
         ): String {
-            val counts = LintUtils.describeCounts(errors, warnings, false, true)
+            val counts = describeCounts(errors, warnings, false, true)
             // Keep in sync with isFilteredMessage() below
             return if (errors + warnings == 1) {
                 "$counts was filtered out because it is listed in the baseline file, $baselineDisplayPath\n"

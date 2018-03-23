@@ -35,12 +35,12 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.resolveManifestName
 import com.android.utils.XmlUtils
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
@@ -114,7 +114,7 @@ app if this state is detected.
         if (activity == null || !activity.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
             return
         }
-        val name = LintUtils.resolveManifestName(activity)
+        val name = resolveManifestName(activity)
 
         val theme = activity.getAttributeNS(ANDROID_URI, ATTR_THEME)
         if (theme.isBlank()) {

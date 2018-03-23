@@ -20,7 +20,6 @@ import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintUtils.skipParentheses
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.google.common.collect.Multimap
 import com.intellij.psi.PsiAnnotation
@@ -66,7 +65,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         var call = origCall
         // Handle typedefs and resource types: if you're comparing it, check that
         // it's being compared with something compatible
-        var p = skipParentheses(call.uastParent) ?: return
+        var p = com.android.tools.lint.detector.api.skipParentheses(call.uastParent) ?: return
 
         if (p is UQualifiedReferenceExpression) {
             call = p

@@ -24,10 +24,11 @@ import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
 import com.intellij.psi.PsiFile
@@ -262,7 +263,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
             element: UElement,
             nameLookup: NameLookup? = null
         ): Boolean {
-            var current = LintUtils.skipParentheses(element.uastParent)
+            var current = skipParentheses(element.uastParent)
             var prev = element
             while (current != null) {
                 if (current is UIfExpression) {
@@ -315,7 +316,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                             val parameterName = parameter.name
                             uMethod.accept(object : AbstractUastVisitor() {
                                 override fun visitCallExpression(node: UCallExpression): Boolean {
-                                    val callName = LintUtils.getMethodName(node)
+                                    val callName = getMethodName(node)
                                     if (callName == parameterName) {
                                         // Potentially not correct due to scopes, but these lambda
                                         // utility methods tend to be short and for lambda function
@@ -339,7 +340,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                     return false
                 }
                 prev = current
-                current = LintUtils.skipParentheses(current.uastParent)
+                current = skipParentheses(current.uastParent)
             }
 
             return false

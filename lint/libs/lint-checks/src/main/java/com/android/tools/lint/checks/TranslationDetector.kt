@@ -51,7 +51,6 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
@@ -60,6 +59,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.getLocaleAndRegion
 import com.android.utils.SdkUtils.fileNameToResourceName
 import com.android.utils.SdkUtils.isServiceKey
 import com.android.utils.XmlUtils
@@ -535,7 +535,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             if (!isDefaultFolder &&
                 // Ensure that we're really in a locale folder, not just some non-default
                 // folder (for example, values-en is a locale folder, values-v19 is not)
-                LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null
+                getLocaleAndRegion(context.file.parentFile.name) != null
             ) {
                 reportTranslatedUntranslatable(context, name, element, translatable, true)
             }
@@ -552,7 +552,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             recordTranslatable(context, name)
             return true
         } else if (!isDefaultFolder && nonTranslatable?.contains(name) == true &&
-            LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null
+            getLocaleAndRegion(context.file.parentFile.name) != null
         ) {
             reportTranslatedUntranslatable(
                 context,

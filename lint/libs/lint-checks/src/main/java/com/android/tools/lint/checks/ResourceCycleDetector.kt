@@ -50,12 +50,12 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.getBaseName
 import com.android.utils.XmlUtils
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -246,7 +246,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             } else if (folderType == ResourceFolderType.COLOR) {
                 val color = element.getAttributeNS(ANDROID_URI, ATTR_COLOR)
                 if (color != null && color.startsWith(COLOR_RESOURCE_PREFIX)) {
-                    val currentColor = LintUtils.getBaseName(context.file.name)
+                    val currentColor = getBaseName(context.file.name)
                     handleReference(
                         context,
                         element,
@@ -258,7 +258,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             } else if (folderType == ResourceFolderType.DRAWABLE) {
                 val drawable = element.getAttributeNS(ANDROID_URI, ATTR_DRAWABLE)
                 if (drawable != null && drawable.startsWith(DRAWABLE_PREFIX)) {
-                    val currentColor = LintUtils.getBaseName(context.file.name)
+                    val currentColor = getBaseName(context.file.name)
                     handleReference(
                         context,
                         element,
@@ -323,7 +323,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             if (layoutNode != null) {
                 val layout = layoutNode.value
                 if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) {
-                    val currentLayout = LintUtils.getBaseName(context.file.name)
+                    val currentLayout = getBaseName(context.file.name)
                     handleReference(
                         context,
                         layoutNode,
@@ -366,7 +366,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             val text = element.getAttributeNodeNS(ANDROID_URI, ATTR_FONT)
             if (text != null && text.value.startsWith(FONT_PREFIX)) {
                 val font = text.value.trim { it <= ' ' }.substring(FONT_PREFIX.length)
-                val currentFont = LintUtils.getBaseName(context.file.name)
+                val currentFont = getBaseName(context.file.name)
                 handleReference(context, text, ResourceType.FONT, currentFont, font)
             }
         }
@@ -481,7 +481,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             return
         }
 
-        val from = LintUtils.getBaseName(context.file.name)
+        val from = getBaseName(context.file.name)
         handleReference(context, attribute, url.type, from, url.name)
     }
 
