@@ -177,6 +177,11 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         access = transformAccessForInstantRun(access);
 
         MethodVisitor defaultVisitor = super.visitMethod(access, name, desc, signature, exceptions);
+        // Install the Jsr/Ret inliner adapter, we have had reports of code still using the
+        // Jsr/Ret deprecated byte codes.
+        // see https://code.google.com/p/android/issues/detail?id=220019
+        defaultVisitor =
+                new JSRInlinerAdapter(defaultVisitor, access, name, desc, signature, exceptions);
         MethodNode method =
                 checkNotNull(
                         getMethodByNameInClass(name, desc, classAndInterfaceNode),
@@ -205,16 +210,10 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             args.add(0, Type.getType(Object.class));
         }
 
-        // Install the Jsr/Ret inliner adapter, we have had reports of code still using the
-        // Jsr/Ret deprecated byte codes.
-        // see https://code.google.com/p/android/issues/detail?id=220019
-        JSRInlinerAdapter jsrInlinerAdapter =
-                new JSRInlinerAdapter(defaultVisitor, access, name, desc, signature, exceptions);
-
         ISAbstractMethodVisitor mv =
                 isInterface
-                        ? new ISDefaultMethodVisitor(jsrInlinerAdapter, access, name, desc)
-                        : new ISMethodVisitor(jsrInlinerAdapter, access, name, desc);
+                        ? new ISDefaultMethodVisitor(defaultVisitor, access, name, desc)
+                        : new ISMethodVisitor(defaultVisitor, access, name, desc);
 
         if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
             if ((access & Opcodes.ACC_SYNTHETIC) != 0
