@@ -20,9 +20,9 @@ import com.android.SdkConstants.FD_RESOURCES
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.annotations.NonNull
 import com.android.ide.common.symbols.IdProvider
-import com.android.ide.common.symbols.ResourceDirectoryParser
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.android.ide.common.xml.AndroidManifestParser
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.transform.ArtifactTransform
@@ -54,7 +54,7 @@ class LibraryDefinedSymbolTableTransform : ArtifactTransform() {
         // We pass [null] for the platform attr symbols and use the constant [IdProvider] since we
         // don't care about the real values here.
         val symbols = if (resDir.isDirectory) {
-            ResourceDirectoryParser.parseDirectory(
+            parseResourceSourceSetDirectory(
                 resDir,
                 IdProvider.constant(),
                 null

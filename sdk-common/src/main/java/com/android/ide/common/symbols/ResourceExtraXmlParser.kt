@@ -14,34 +14,33 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.symbols;
+@file:JvmName("ResourceExtraXmlParser")
 
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
+package com.android.ide.common.symbols
+
+import com.android.SdkConstants
+import com.android.resources.ResourceType
+import org.w3c.dom.Attr
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
 
 /**
- * A parser used for finding all inline declaration of android resources in XML files.
+ * A parser method used for finding all inline declaration of android resources in XML files.
  *
- * <p>Apart from placing files into sub-directories of the resource directory and declaring them in
- * XML files inside the {@code values} directory, {@code id} resources can also be lazily declared
- * in other XML files in non-values directories.
+ * Apart from placing files into sub-directories of the resource directory and declaring them in XML
+ * files inside the `values` directory, `id` resources can also be lazily declared in other XML
+ * files in non-values directories.
  *
- * <p>For example, inside {@code layout/main_activity.xml} we could have a line such as:
+ * For example, inside `layout/main_activity.xml` we could have a line such as:
  *
  * <pre>
- *     {@code android:id="@+id/activity_main"}
+ * `android:id="@+id/activity_main"`
  * </pre>
  *
- * <p>This construction is an example of a inline declaration of a resource with the type {@code id}
- * and name {@code activity_main}. Even though it is not declared inside a {@code values} directory,
- * it still needs to be parsed and processed into a Symbol:
+ * This construction is an example of a inline declaration of a resource with the type `id` and name
+ * `activity_main`. Even though it is not declared inside a `values` directory, it still needs to be
+ * parsed and processed into a Symbol:
  *
  * <table>
  *     <caption>Parsing result</caption>
@@ -49,76 +48,69 @@ import org.w3c.dom.Node;
  *     <tr><td>int        </td><td>id             </td><td>activity_main    </td><td>0 </td></tr>
  * </table>
  *
- * <p>It is also worth noting that some resources can be declared with a prefix like {@code aapt:}
- * or {@code android:}. Following aapt's original behaviour, we strip the type names from those
- * prefixes. This behaviour is deprecated and might be the support for it might end in the near
- * future.
+ * It is also worth noting that some resources can be declared with a prefix like `aapt:` or
+ * `android:`. Following aapt's original behaviour, we strip the type names from those prefixes.
+ * This behaviour is deprecated and might be the support for it might end in the near future.
+ *
+ * This method finds all constructions of type <@code '"@+id/name"'> in the given file and returns
+ * a [SymbolTable] containing these symbols.
+ *
+ * @param xmlDocument an xml file to parse
+ * @param idProvider the provider for IDs to assign to the resources
+ * @return the symbols for all resources in the file
  */
-public class ResourceExtraXmlParser {
-    /**
-     * Finds all constructions of type <@code '"@+id/name"'> in the given file.
-     *
-     * @param xmlDocument an xml file to parse
-     * @param idProvider the provider for IDs to assign to the resources
-     * @return the symbols for all resources in the file
-     */
-    @NonNull
-    public static SymbolTable parse(@NonNull Document xmlDocument, @NonNull IdProvider idProvider) {
-        Element root = xmlDocument.getDocumentElement();
-        if (root == null) {
-            throw new ResourceValuesXmlParseException("XML document does not have a root element.");
-        }
-        SymbolTable.Builder builder = SymbolTable.builder();
-        parseChild(root, builder, idProvider);
+fun parseResourceForInlineResources(xmlDocument: Document, idProvider: IdProvider): SymbolTable {
+    val root = xmlDocument.documentElement ?:
+            throw ResourceValuesXmlParseException("XML document does not have a root element.")
+    val builder = SymbolTable.builder()
+    parseChild(root, builder, idProvider)
 
-        return builder.build();
+    return builder.build()
+}
+
+/**
+ * Parses an Element in search of lazy resource declarations and afterwards parses the Element's
+ * children recursively.
+ */
+private fun parseChild(
+        element: Element,
+        builder: SymbolTable.Builder,
+        idProvider: IdProvider) {
+
+    // Check if the node contains any lazy resource declarations.
+    val attrs = element.attributes
+    for (i in 0 until attrs.length) {
+        val attr = attrs.item(i)
+        checkForResources((attr as Attr).value, builder, idProvider)
     }
 
-    /**
-     * Parses an Element in search of lazy resource declarations and afterwards parses the Element's
-     * children recursively.
-     */
-    private static void parseChild(
-            @NonNull Element element,
-            @NonNull SymbolTable.Builder builder,
-            @NonNull IdProvider idProvider) {
-
-        // Check if the node contains any lazy resource declarations.
-        NamedNodeMap attrs = element.getAttributes();
-        for (int i = 0; i < attrs.getLength(); i++) {
-            Node attr = attrs.item(i);
-            checkForResources(((Attr) attr).getValue(), builder, idProvider);
+    // Parse all of the Element's children as well, in case they contain lazy declarations.
+    var current: Node? = element.firstChild
+    while (current != null) {
+        if (current.nodeType == Node.ELEMENT_NODE) {
+            parseChild((current as Element?)!!, builder, idProvider)
         }
-
-        // Parse all of the Element's children as well, in case they contain lazy declarations.
-        Node current = element.getFirstChild();
-        while (current != null) {
-            if (current.getNodeType() == Node.ELEMENT_NODE) {
-                parseChild((Element) current, builder, idProvider);
-            }
-            current = current.getNextSibling();
-        }
+        current = current.nextSibling
     }
+}
 
-    /**
-     * Checks whether a given text is a lazy declaration of type "@+id/name". If it is, changes it
-     * into a new Symbol and adds it into the SymbolTable builder.
-     */
-    private static void checkForResources(
-            @Nullable String text,
-            @NonNull SymbolTable.Builder builder,
-            @NonNull IdProvider idProvider) {
-        if (text != null && text.startsWith(SdkConstants.NEW_ID_PREFIX)) {
+/**
+ * Checks whether a given text is a lazy declaration of type "@+id/name". If it is, changes it into
+ * a new Symbol and adds it into the SymbolTable builder.
+ */
+private fun checkForResources(
+        text: String?,
+        builder: SymbolTable.Builder,
+        idProvider: IdProvider) {
+    if (text != null && text.startsWith(SdkConstants.NEW_ID_PREFIX)) {
 
-            String name = text.substring(SdkConstants.NEW_ID_PREFIX.length(), text.length());
-            Symbol newSymbol =
-                    Symbol.createAndValidateSymbol(
-                            ResourceType.ID,
-                            SymbolUtils.canonicalizeValueResourceName(name),
-                            idProvider);
-            if (!builder.contains(newSymbol)) {
-                builder.add(newSymbol);
-            }
+        val name = text.substring(SdkConstants.NEW_ID_PREFIX.length, text.length)
+        val newSymbol = Symbol.createAndValidateSymbol(
+                ResourceType.ID,
+                canonicalizeValueResourceName(name),
+                idProvider)
+        if (!builder.contains(newSymbol)) {
+            builder.add(newSymbol)
         }
     }
 }

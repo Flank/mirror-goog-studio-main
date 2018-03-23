@@ -14,60 +14,57 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.symbols;
+@file:JvmName("ResourceValuesXmlParser")
 
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
-import static com.android.SdkConstants.TAG_EAT_COMMENT;
+package com.android.ide.common.symbols
 
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
-import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import com.android.SdkConstants
+import com.android.SdkConstants.ANDROID_NS_NAME_PREFIX
+import com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN
+import com.android.SdkConstants.TAG_EAT_COMMENT
+import com.android.resources.ResourceType
+import com.google.common.collect.ImmutableList
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+import java.util.ArrayList
 
 /**
- * Parser that can load a {@link SymbolTable} from a resource XML file. Resource XML files contain
+ * Parser method that can read a [SymbolTable] from a resource XML file. Resource XML files contain
  * zero or multiple resources of the following types:
  *
  * <table>
  *     <caption>Types of resources</caption>
- *     <tr><th>Type         </th><th>XML Tag (*1)             </th><th>Symbol Type          </th><th>Java Type    </th></tr>
- *     <tr><td>Animation    </td><td>{@code anim}             </td><td>{@code anim}         </td><td>{@code int}  </td></tr>
- *     <tr><td>Animator     </td><td>{@code animator}         </td><td>{@code animator}     </td><td>{@code int}  </td></tr>
- *     <tr><td>Attribute    </td><td>{@code attr}             </td><td>{@code attr}         </td><td>{@code int}  </td></tr>
- *     <tr><td>Boolean      </td><td>{@code bool}             </td><td>{@code bool}         </td><td>{@code int}  </td></tr>
- *     <tr><td>Color        </td><td>{@code color}            </td><td>{@code color}        </td><td>{@code int}  </td></tr>
- *     <tr><td>Dimension    </td><td>{@code dimen}            </td><td>{@code dimen}        </td><td>{@code int}  </td></tr>
- *     <tr><td>Drawable     </td><td>{@code drawable}         </td><td>{@code drawable}     </td><td>{@code int}  </td></tr>
- *     <tr><td>Enumeration  </td><td>{@code enum}             </td><td>{@code id}           </td><td>{@code int}  </td></tr>
- *     <tr><td>Fraction     </td><td>{@code fraction}         </td><td>{@code fraction}     </td><td>{@code int}  </td></tr>
- *     <tr><td>ID           </td><td>{@code id}               </td><td>{@code id}           </td><td>{@code int}  </td></tr>
- *     <tr><td>Integer      </td><td>{@code integer}          </td><td>{@code integer}      </td><td>{@code int}  </td></tr>
- *     <tr><td>Integer Array</td><td>{@code integer-array}    </td><td>{@code array}        </td><td>{@code int}  </td></tr>
- *     <tr><td>Menu         </td><td>{@code menu}             </td><td>{@code menu}         </td><td>{@code int}  </td></tr>
- *     <tr><td>MipMap       </td><td>{@code mipmap}           </td><td>{@code mipmap}       </td><td>{@code int}  </td></tr>
- *     <tr><td>Plural       </td><td>{@code plurals}          </td><td>{@code plurals}      </td><td>{@code int}  </td></tr>
- *     <tr><td>Raw          </td><td>{@code raw}              </td><td>{@code raw}          </td><td>{@code int}  </td></tr>
- *     <tr><td>String       </td><td>{@code string}           </td><td>{@code string}       </td><td>{@code int}  </td></tr>
- *     <tr><td>String Array </td><td>{@code string-array}     </td><td>{@code array}        </td><td>{@code int}  </td></tr>
- *     <tr><td>Style        </td><td>{@code style}            </td><td>{@code style}        </td><td>{@code int}  </td></tr>
- *     <tr><td>Styleable    </td><td>{@code declare-styleable}</td><td>{@code styleable}(*2)</td><td>{@code int[]}</td></tr>
- *     <tr><td>Transition   </td><td>{@code transition}       </td><td>{@code transition}   </td><td>{@code int}  </td></tr>
- *     <tr><td>Typed Array  </td><td>{@code array}            </td><td>{@code array}        </td><td>{@code int}  </td></tr>
- *     <tr><td>XML          </td><td>{@code xml}              </td><td>{@code xml}          </td><td>{@code int}  </td></tr>
+ *     <tr><th>Type         </th><th>XML Tag (*1)       </th><th>Symbol Type    </th><th>Java Type</th></tr>
+ *     <tr><td>Animation    </td><td>`anim`             </td><td>`anim`         </td><td>`int`    </td></tr>
+ *     <tr><td>Animator     </td><td>`animator`         </td><td>`animator`     </td><td>`int`    </td></tr>
+ *     <tr><td>Attribute    </td><td>`attr`             </td><td>`attr`         </td><td>`int`    </td></tr>
+ *     <tr><td>Boolean      </td><td>`bool`             </td><td>`bool`         </td><td>`int`    </td></tr>
+ *     <tr><td>Color        </td><td>`color`            </td><td>`color`        </td><td>`int`    </td></tr>
+ *     <tr><td>Dimension    </td><td>`dimen`            </td><td>`dimen`        </td><td>`int`    </td></tr>
+ *     <tr><td>Drawable     </td><td>`drawable`         </td><td>`drawable`     </td><td>`int`    </td></tr>
+ *     <tr><td>Enumeration  </td><td>`enum`             </td><td>`id`           </td><td>`int`    </td></tr>
+ *     <tr><td>Fraction     </td><td>`fraction`         </td><td>`fraction`     </td><td>`int`    </td></tr>
+ *     <tr><td>ID           </td><td>`id`               </td><td>`id`           </td><td>`int`    </td></tr>
+ *     <tr><td>Integer      </td><td>`integer`          </td><td>`integer`      </td><td>`int`    </td></tr>
+ *     <tr><td>Integer Array</td><td>`integer-array`    </td><td>`array`        </td><td>`int`    </td></tr>
+ *     <tr><td>Menu         </td><td>`menu`             </td><td>`menu`         </td><td>`int`    </td></tr>
+ *     <tr><td>MipMap       </td><td>`mipmap`           </td><td>`mipmap`       </td><td>`int`    </td></tr>
+ *     <tr><td>Plural       </td><td>`plurals`          </td><td>`plurals`      </td><td>`int`    </td></tr>
+ *     <tr><td>Raw          </td><td>`raw`              </td><td>`raw`          </td><td>`int`    </td></tr>
+ *     <tr><td>String       </td><td>`string`           </td><td>`string`       </td><td>`int`    </td></tr>
+ *     <tr><td>String Array </td><td>`string-array`     </td><td>`array`        </td><td>`int`    </td></tr>
+ *     <tr><td>Style        </td><td>`style`            </td><td>`style`        </td><td>`int`    </td></tr>
+ *     <tr><td>Styleable    </td><td>`declare-styleable`</td><td>`styleable`(*2)</td><td>`int[]`  </td></tr>
+ *     <tr><td>Transition   </td><td>`transition`       </td><td>`transition`   </td><td>`int`    </td></tr>
+ *     <tr><td>Typed Array  </td><td>`array`            </td><td>`array`        </td><td>`int`    </td></tr>
+ *     <tr><td>XML          </td><td>`xml`              </td><td>`xml`          </td><td>`int`    </td></tr>
  * </table>
  *
- * <p>(*1) Resources can be also declared in an extended form where the XML Tag is {@code "item"}
- * and the attribute {@code "type"} specifies whether the resource is an {@code "attr"}, a {@code
- * string} et cetera. Therefore a construction like this:
+ *
+ * (*1) Resources can be also declared in an extended form where the XML Tag is `item` and the
+ * attribute `type` specifies whether the resource is an `attr`, a `string` et cetera. Therefore a
+ * construction like this:
  *
  * <pre>
  * <resources>
@@ -81,7 +78,8 @@ import org.w3c.dom.Node;
  * </resources>
  * </pre>
  *
- * <p>Is equal to the following construction that uses {@code "item"} tag:
+ *
+ * Is equal to the following construction that uses `item` tag:
  *
  * <pre>
  * <resources>
@@ -95,19 +93,19 @@ import org.w3c.dom.Node;
  * </resources>
  * </pre>
  *
- * <p>It is also worth noting that some resources can be declared with a prefix like {@code aapt:}
- * or {@code android:}. Following aapt's original behaviour, we strip the type names from those
- * prefixes. This behaviour is deprecated and might be the support for it might end in the near
- * future.
  *
- * <p>(*2)The mapping of {@code declare-styleable} to symbols is complex. For each styleable, a
- * symbol of resource type {@code styleabe} is created of java type {@code int[]}. For each
- * attribute ({@code attr}) in the {@code declare-styleable} a symbol of resource type {@code
- * styleable} with java type {@code int} is created as well as a symbol of resource type {@code
- * attr} with hava type {@code int}. In case of the symbol with {@code styleable} type, its name is
- * the symbol name of the {@code declare-styleable} element joined with the name of the {@code attr}
- * element by an underscore character. The value of the int array in the {@code declare-styleable}
- * contains the IDs of all {@code styleable} symbols. So, for example, the following XML:
+ * It is also worth noting that some resources can be declared with a prefix like `aapt:` or
+ * `android:`. Following aapt's original behaviour, we strip the type names from those prefixes.
+ * This behaviour is deprecated and might be the support for it might end in the near future.
+ *
+ *
+ * (*2)The mapping of `declare-styleable` to symbols is complex. For each styleable, a symbol of
+ * resource type `styleable` is created of java type `int[]`. For each attribute (`attr`) in the
+ * `declare-styleable` a child of that parent is created and added under that symbol as well as a
+ * symbol of resource type `attr` with java type `int`. In case of the symbol with `styleable` type,
+ * its name is the symbol name of the `declare-styleable` element joined with the name of the `attr`
+ * element by an underscore character. The value of the int array in the `declare-styleable`
+ * contains the IDs of all `styleable` symbols. So, for example, the following XML:
  *
  * <pre>
  * <resources>
@@ -118,7 +116,8 @@ import org.w3c.dom.Node;
  * </resources>
  * </pre>
  *
- * <p>Will generate the following {@code R.java}:
+ *
+ * Will generate the following `R.java`:
  *
  * <pre>
  * class R {
@@ -133,311 +132,283 @@ import org.w3c.dom.Node;
  *     }
  * }
  * </pre>
+ * Constructs a [SymbolTable] from the given parsed XML document. The values for the resource are
+ * drawn from the given provider. For testing purposes, this method guarantees that IDs are assigned
+ * in the order the resources are provided in the XML document. However, this guarantee is only to
+ * make testing simpler and non-test code should not rely on this assumption as it may change, along
+ * with the required refactoring of the test code.
+ *
+ * @param xmlDocument the parsed XML document
+ * @param idProvider the provider for IDs to assign to the resources
+ * @param platformAttrSymbols the platform attr symbols
+ * @return the symbols for all resources in the document
  */
-public final class ResourceValuesXmlParser {
+fun parseValuesResource(
+        xmlDocument: Document,
+        idProvider: IdProvider,
+        platformAttrSymbols: SymbolTable?
+): SymbolTable {
+    val root = xmlDocument.documentElement ?:
+            throw ResourceValuesXmlParseException("XML document does not have a root element.")
 
-    private ResourceValuesXmlParser() {}
-
-
-    /**
-     * Constructs a {@link SymbolTable} from the given parsed XML document. The values for the
-     * resource are drawn from the given provider. For testing purposes, this method guarantees that
-     * IDs are assigned in the order the resources are provided in the XML document. However, this
-     * guarantee is only to make testing simpler and non-test code should not rely on this
-     * assumption as it may change, along with the required refactoring of the test code.
-     *
-     * @param xmlDocument the parsed XML document
-     * @param idProvider the provider for IDs to assign to the resources
-     * @param platformAttrSymbols the platform attr symbols
-     * @return the symbols for all resources in the document
-     */
-    @NonNull
-    public static SymbolTable parse(
-            @NonNull Document xmlDocument,
-            @NonNull IdProvider idProvider,
-            @Nullable SymbolTable platformAttrSymbols) {
-        Element root = xmlDocument.getDocumentElement();
-        if (root == null) {
-            throw new ResourceValuesXmlParseException("XML document does not have a root element.");
-        }
-
-        if (!"resources".equals(root.getTagName())) {
-            throw new ResourceValuesXmlParseException("XML document root is not 'resources'");
-        }
-
-        if (root.getNamespaceURI() != null) {
-            throw new ResourceValuesXmlParseException("XML document root has a namespace");
-        }
-
-        SymbolTable.Builder builder = SymbolTable.builder();
-        List<Symbol> enumSymbols = new ArrayList<>();
-
-        Node current = root.getFirstChild();
-        while (current != null) {
-            if (current.getNodeType() == Node.ELEMENT_NODE) {
-                parseChild(
-                        (Element) current, builder, idProvider, enumSymbols, platformAttrSymbols);
-            }
-            current = current.getNextSibling();
-        }
-
-        for (Symbol enumSymbol : enumSymbols) {
-            if (!builder.contains(enumSymbol)) {
-                builder.add(enumSymbol);
-            }
-        }
-        return builder.build();
+    if (root.tagName != "resources") {
+        throw ResourceValuesXmlParseException("XML document root is not 'resources'")
     }
 
-    /**
-     * Parses a single child element from the main XML document.
-     *
-     * @param child the element to be parsed
-     * @param builder the builder for the SymbolTable
-     * @param idProvider the provider for IDs to assign to the resources
-     * @param enumSymbols out list of enum symbols discovered in declare-styleable
-     * @param platformAttrSymbols the platform attr symbols
-     */
-    private static void parseChild(
-            @NonNull Element child,
-            @NonNull SymbolTable.Builder builder,
-            @NonNull IdProvider idProvider,
-            @NonNull List<Symbol> enumSymbols,
-            @Nullable SymbolTable platformAttrSymbols) {
-
-        String type = child.getTagName();
-
-        if (type.equals(SdkConstants.TAG_EAT_COMMENT)) {
-            // Doesn't declare a resource.
-            return;
-        }
-
-        if (type.equals(SdkConstants.TAG_ITEM)) {
-            type = child.getAttribute(SdkConstants.ATTR_TYPE);
-        }
-
-        // Strip the type name of prefixes.
-        if (type.contains(":")) {
-            type = type.substring(type.lastIndexOf(':') + 1, type.length());
-        }
-
-        ResourceType resourceType = ResourceType.getEnum(type);
-
-        if (resourceType == null) {
-            throw new ResourceValuesXmlParseException(
-                    "Unknown resource value XML element '" + type + "'");
-        }
-
-        if (resourceType == ResourceType.PUBLIC) {
-            // Doesn't declare a resource.
-            return;
-        }
-
-        String name = SymbolUtils.canonicalizeValueResourceName(getMandatoryAttr(child, "name"));
-
-        switch (resourceType) {
-            case ANIM:
-            case ANIMATOR:
-            case ARRAY:
-            case BOOL:
-            case COLOR:
-            case DIMEN:
-            case DRAWABLE:
-            case FONT:
-            case FRACTION:
-            case ID:
-            case INTEGER:
-            case INTERPOLATOR:
-            case LAYOUT:
-            case MENU:
-            case MIPMAP:
-            case PLURALS:
-            case RAW:
-            case STRING:
-            case STYLE:
-            case TRANSITION:
-            case XML:
-                builder.add(Symbol.createAndValidateSymbol(resourceType, name, idProvider));
-                break;
-            case DECLARE_STYLEABLE:
-                // We also need to find all the attributes declared under declare styleable.
-                parseDeclareStyleable(
-                        child, idProvider, name, builder, enumSymbols, platformAttrSymbols);
-                break;
-            case ATTR:
-                // We also need to find all the enums declared under attr (if there are any).
-                parseAttr(child, idProvider, name, builder, enumSymbols);
-                break;
-            case PUBLIC:
-                throw new AssertionError("Already checked above.");
-            default:
-                throw new ResourceValuesXmlParseException(
-                        "Unknown resource value XML element '" + type + "'");
-        }
+    if (root.namespaceURI != null) {
+        throw ResourceValuesXmlParseException("XML document root has a namespace")
     }
 
-    /**
-     * Parses a declare styleable element and finds all it's {@code attr} children to create new
-     * Symbols for each them: a {@code styleable} Symbol with the name which is a concatenation of
-     * the declare styleable's name, an underscore and the child's name; and a {@code attr} Symbol
-     * with the name equal to the child's name.
-     *
-     * @param declareStyleable the declare styleable element we are parsing
-     * @param idProvider the provider for IDs to assign to the resources
-     * @param name name of the declare styleable element
-     * @param builder the builder for the SymbolTable
-     * @param enumSymbols out list of enum symbols discovered in declare-styleable
-     * @param platformAttrSymbols the platform attr symbols
-     * @throws ResourceValuesXmlParseException if there is an illegal type under declare-styleable
-     */
-    private static void parseDeclareStyleable(
-            @NonNull Element declareStyleable,
-            @NonNull IdProvider idProvider,
-            @NonNull String name,
-            @NonNull SymbolTable.Builder builder,
-            @NonNull List<Symbol> enumSymbols,
-            @Nullable SymbolTable platformAttrSymbols) {
-        ImmutableList.Builder<Integer> attrValues = ImmutableList.builder();
-        List<String> attrNames = new ArrayList<>();
+    val builder = SymbolTable.builder()
+    val enumSymbols = ArrayList<Symbol>()
 
-        Node attrNode = declareStyleable.getFirstChild();
-        while (attrNode != null) {
-            if (attrNode.getNodeType() != Node.ELEMENT_NODE) {
-                attrNode = attrNode.getNextSibling();
-                continue;
+    var current: Node? = root.firstChild
+    while (current != null) {
+        if (current.nodeType == Node.ELEMENT_NODE) {
+            parseChild(
+                    (current as Element?)!!,
+                    builder,
+                    idProvider,
+                    enumSymbols,
+                    platformAttrSymbols)
+        }
+        current = current.nextSibling
+    }
+
+    for (enumSymbol in enumSymbols) {
+        if (!builder.contains(enumSymbol)) {
+            builder.add(enumSymbol)
+        }
+    }
+    return builder.build()
+}
+
+/**
+ * Parses a single child element from the main XML document.
+ *
+ * @param child the element to be parsed
+ * @param builder the builder for the SymbolTable
+ * @param idProvider the provider for IDs to assign to the resources
+ * @param enumSymbols out list of enum symbols discovered in declare-styleable
+ * @param platformAttrSymbols the platform attr symbols
+ */
+private fun parseChild(
+        child: Element,
+        builder: SymbolTable.Builder,
+        idProvider: IdProvider,
+        enumSymbols: MutableList<Symbol>,
+        platformAttrSymbols: SymbolTable?) {
+
+    var type = child.tagName
+
+    if (type == SdkConstants.TAG_EAT_COMMENT) {
+        // Doesn't declare a resource.
+        return
+    }
+
+    if (type == SdkConstants.TAG_ITEM) {
+        type = child.getAttribute(SdkConstants.ATTR_TYPE)
+    }
+
+    // Strip the type name of prefixes.
+    if (type.contains(":")) {
+        type = type.substring(type.lastIndexOf(':') + 1, type.length)
+    }
+
+    val resourceType = ResourceType.getEnum(type) ?: throw ResourceValuesXmlParseException(
+            "Unknown resource value XML element '$type'")
+
+    if (resourceType == ResourceType.PUBLIC) {
+        // Doesn't declare a resource.
+        return
+    }
+
+    val name = canonicalizeValueResourceName(getMandatoryAttr(child, "name"))
+
+    when (resourceType) {
+        ResourceType.ANIM,
+        ResourceType.ANIMATOR,
+        ResourceType.ARRAY,
+        ResourceType.BOOL,
+        ResourceType.COLOR,
+        ResourceType.DIMEN,
+        ResourceType.DRAWABLE,
+        ResourceType.FONT,
+        ResourceType.FRACTION,
+        ResourceType.ID,
+        ResourceType.INTEGER,
+        ResourceType.INTERPOLATOR,
+        ResourceType.LAYOUT,
+        ResourceType.MENU,
+        ResourceType.MIPMAP,
+        ResourceType.PLURALS,
+        ResourceType.RAW,
+        ResourceType.STRING,
+        ResourceType.STYLE,
+        ResourceType.TRANSITION,
+        ResourceType.XML ->
+            builder.add(Symbol.createAndValidateSymbol(resourceType, name, idProvider))
+        ResourceType.DECLARE_STYLEABLE ->
+            // We also need to find all the attributes declared under declare styleable.
+            parseDeclareStyleable(
+                    child, idProvider, name, builder, enumSymbols, platformAttrSymbols)
+        ResourceType.ATTR ->
+            // We also need to find all the enums declared under attr (if there are any).
+            parseAttr(child, idProvider, name, builder, enumSymbols)
+        ResourceType.PUBLIC ->
+            throw AssertionError("Already checked above.")
+        else -> throw ResourceValuesXmlParseException(
+                "Unknown resource value XML element '$type'")
+    }
+}
+
+/**
+ * Parses a declare styleable element and finds all it's `attr` children to create new Symbols for
+ * each them: a `styleable` Symbol with the name which is a concatenation of the declare styleable's
+ * name, an underscore and the child's name; and a `attr` Symbol with the name equal to the child's
+ * name.
+ *
+ * @param declareStyleable the declare styleable element we are parsing
+ * @param idProvider the provider for IDs to assign to the resources
+ * @param name name of the declare styleable element
+ * @param builder the builder for the SymbolTable
+ * @param enumSymbols out list of enum symbols discovered in declare-styleable
+ * @param platformAttrSymbols the platform attr symbols
+ */
+private fun parseDeclareStyleable(
+        declareStyleable: Element,
+        idProvider: IdProvider,
+        name: String,
+        builder: SymbolTable.Builder,
+        enumSymbols: MutableList<Symbol>,
+        platformAttrSymbols: SymbolTable?) {
+    val attrValues = ImmutableList.builder<Int>()
+    val attrNames = ArrayList<String>()
+
+    var attrNode: Node? = declareStyleable.firstChild
+    while (attrNode != null) {
+        if (attrNode.nodeType != Node.ELEMENT_NODE) {
+            attrNode = attrNode.nextSibling
+            continue
+        }
+
+        val attrElement = attrNode as Element?
+        var tagName = attrElement!!.tagName
+        if (tagName == SdkConstants.TAG_ITEM) {
+            tagName = attrElement.getAttribute(SdkConstants.ATTR_TYPE)
+        }
+
+        if (tagName != ResourceType.ATTR.getName() || attrElement.namespaceURI != null) {
+            if (tagName == TAG_EAT_COMMENT) {
+                attrNode = attrNode.nextSibling
+                continue
             }
 
-            Element attrElement = (Element) attrNode;
-            String tagName = attrElement.getTagName();
-            if (tagName.equals(SdkConstants.TAG_ITEM)) {
-                tagName = attrElement.getAttribute(SdkConstants.ATTR_TYPE);
-            }
+            throw ResourceValuesXmlParseException(
+                    "Illegal type under declare-styleable: was <$tagName>, only accepted is " +
+                            "<attr>")
+        }
 
-            if (!tagName.equals(ResourceType.ATTR.getName())
-                    || attrElement.getNamespaceURI() != null) {
-                if (tagName.equals(TAG_EAT_COMMENT)) {
-                    attrNode = attrNode.getNextSibling();
-                    continue;
-                }
+        var attrName = getMandatoryAttr(attrElement, "name")
 
-                throw new ResourceValuesXmlParseException(
-                        String.format(
-                                "Illegal type under declare-styleable:"
-                                        + " was <%s>, only accepted is <attr>",
-                                tagName));
-            }
-
-            String attrName = getMandatoryAttr(attrElement, "name");
-
-            if (attrName.startsWith(ANDROID_NS_NAME_PREFIX)) {
-                if (platformAttrSymbols == null) {
-                    // If platform attr symbols are not provided, we don't need the actual values.
-                    // Use a fake ID to signal this is the case.
-                    attrName = SymbolUtils.canonicalizeValueResourceName(attrName);
-                    attrValues.add(-1);
-                } else {
-                    // this is an android attr.
-                    String realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN);
-
-                    final Symbol attrSymbol =
-                            platformAttrSymbols.getSymbols().get(ResourceType.ATTR, realAttrName);
-
-                    if (attrSymbol != null) {
-                        attrValues.add(((Symbol.NormalSymbol) attrSymbol).getIntValue());
-                    } else {
-                        throw new ResourceValuesXmlParseException(
-                                String.format("Unknown android attribute '%s'", name));
-                    }
-                }
+        if (attrName.startsWith(ANDROID_NS_NAME_PREFIX)) {
+            if (platformAttrSymbols == null) {
+                // If platform attr symbols are not provided, we don't need the actual values.
+                // Use a fake ID to signal this is the case.
+                attrName = canonicalizeValueResourceName(attrName)
+                attrValues.add(-1)
             } else {
-                attrName = SymbolUtils.canonicalizeValueResourceName(attrName);
-                attrValues.add(parseAttr(attrElement, idProvider, attrName, builder, enumSymbols));
+                // this is an android attr.
+                val realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN)
+
+                val attrSymbol =
+                        platformAttrSymbols.symbols.get(ResourceType.ATTR, realAttrName)
+
+                if (attrSymbol != null) {
+                    attrValues.add((attrSymbol as Symbol.NormalSymbol).intValue)
+                } else {
+                    throw ResourceValuesXmlParseException(
+                            String.format("Unknown android attribute '%s'", name))
+                }
             }
-
-            attrNames.add(attrName);
-
-            attrNode = attrNode.getNextSibling();
+        } else {
+            attrName = canonicalizeValueResourceName(attrName)
+            attrValues.add(parseAttr(attrElement, idProvider, attrName, builder, enumSymbols))
         }
-        builder.add(Symbol.createAndValidateStyleableSymbol(name, attrValues.build(), attrNames));
+
+        attrNames.add(attrName)
+
+        attrNode = attrNode.nextSibling
+    }
+    builder.add(Symbol.createAndValidateStyleableSymbol(name, attrValues.build(), attrNames))
+}
+
+/**
+ * Parses an attribute element and finds all it's `enum` children to create new Symbols for each of
+ * them: an `id` Symbol with the name equal to the child's name.
+ *
+ * @param attr the declare styleable element we are parsing
+ * @param idProvider the provider for IDs to assign to the resources
+ * @param name name of the attr element
+ * @param builder the builder for the SymbolTable
+ * @return the symbol value of the parsed attribute
+ */
+private fun parseAttr(
+        attr: Element,
+        idProvider: IdProvider,
+        name: String,
+        builder: SymbolTable.Builder,
+        enumSymbols: MutableList<Symbol>): Int {
+    var enumNode: Node? = attr.firstChild
+    while (enumNode != null) {
+        if (enumNode.nodeType != Node.ELEMENT_NODE) {
+            enumNode = enumNode.nextSibling
+            continue
+        }
+
+        val enumElement = enumNode as Element?
+        var tagName = enumElement!!.tagName
+        if (tagName == SdkConstants.TAG_ITEM) {
+            tagName = enumElement.getAttribute(SdkConstants.ATTR_TYPE)
+        }
+
+        if (tagName != SdkConstants.TAG_ENUM || enumElement.namespaceURI != null) {
+            // We only care about enums. If there is a different tag (e.g. "flag") we ignore it.
+            enumNode = enumNode.nextSibling
+            continue
+        }
+
+        val newEnum = Symbol.createAndValidateSymbol(
+                ResourceType.ID,
+                canonicalizeValueResourceName(
+                        getMandatoryAttr(enumElement, "name")),
+                idProvider)
+
+        enumSymbols.add(newEnum)
+        enumNode = enumNode.nextSibling
     }
 
-    /**
-     * Parses an attribute element and finds all it's {@code enum} children to create new Symbols
-     * for each them: an {@code id} Symbol with the name equal to the child's name.
-     *
-     * @param attr the declare styleable element we are parsing
-     * @param idProvider the provider for IDs to assign to the resources
-     * @param name name of the attr element
-     * @param builder the builder for the SymbolTable
-     * @return the symbol value of the parsed attribute
-     * @throws ResourceValuesXmlParseException if there is an illegal type under attr
-     */
-    private static int parseAttr(
-            @NonNull Element attr,
-            @NonNull IdProvider idProvider,
-            @NonNull String name,
-            @NonNull SymbolTable.Builder builder,
-            @NonNull List<Symbol> enumSymbols) {
-        Node enumNode = attr.getFirstChild();
-        while (enumNode != null) {
-            if (enumNode.getNodeType() != Node.ELEMENT_NODE) {
-                enumNode = enumNode.getNextSibling();
-                continue;
-            }
+    val newAttr = Symbol.createAndValidateSymbol(ResourceType.ATTR, name, idProvider)
 
-            Element enumElement = (Element) enumNode;
-            String tagName = enumElement.getTagName();
-            if (tagName.equals(SdkConstants.TAG_ITEM)) {
-                tagName = enumElement.getAttribute(SdkConstants.ATTR_TYPE);
-            }
-
-            if (!tagName.equals(SdkConstants.TAG_ENUM) || enumElement.getNamespaceURI() != null) {
-                // We only care about enums. If there is a different tag (e.g. "flag") we ignore it.
-                enumNode = enumNode.getNextSibling();
-                continue;
-            }
-
-            Symbol newEnum =
-                    Symbol.createAndValidateSymbol(
-                            ResourceType.ID,
-                            SymbolUtils.canonicalizeValueResourceName(
-                                    getMandatoryAttr(enumElement, "name")),
-                            idProvider);
-
-            enumSymbols.add(newEnum);
-            enumNode = enumNode.getNextSibling();
-        }
-
-        Symbol.NormalSymbol newAttr =
-                Symbol.createAndValidateSymbol(ResourceType.ATTR, name, idProvider);
-
-        if (!builder.contains(newAttr)) {
-            builder.add(newAttr);
-            return newAttr.getIntValue();
-        }
-
-        return Objects.requireNonNull((Symbol.NormalSymbol) builder.get(newAttr)).getIntValue();
+    if (!builder.contains(newAttr)) {
+        builder.add(newAttr)
+        return newAttr.intValue
     }
 
-    /**
-     * Obtains an attribute in an element that must exist.
-     *
-     * @param element the XML element
-     * @param attrName the attribute name
-     * @return the attribute value
-     * @throws ResourceValuesXmlParseException the attribute does not exist
-     */
-    @NonNull
-    private static String getMandatoryAttr(@NonNull Element element, @NonNull String attrName) {
-        Attr attr = element.getAttributeNodeNS(null, attrName);
-        if (attr == null) {
-            throw new ResourceValuesXmlParseException(
-                    "Element '"
-                            + element.getTagName()
-                            + "' should have attribute '"
-                            + attrName
-                            + "'");
-        }
-        return attr.getValue();
-    }
+    return (builder[newAttr] as Symbol.NormalSymbol).intValue
+}
+
+/**
+ * Obtains an attribute in an element that must exist.
+ *
+ * @param element the XML element
+ * @param attrName the attribute name
+ * @return the attribute value
+ * @throws ResourceValuesXmlParseException the attribute does not exist
+ */
+private fun getMandatoryAttr(element: Element, attrName: String): String {
+    val attr = element.getAttributeNodeNS(null, attrName) ?:
+            throw ResourceValuesXmlParseException(
+                    "Element '${element.tagName}' should have attribute '$attrName'")
+    return attr.value
 }

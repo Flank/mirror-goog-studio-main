@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.symbols;
+package com.android.ide.common.symbols
 
 /**
  * Exception thrown when failed to parse a resource directory.
  */
-public class ResourceDirectoryParseException extends RuntimeException {
+class ResourceDirectoryParseException : RuntimeException {
 
     /**
      * Creates a new exception.
      *
      * @param description a description of the exception
      */
-    public ResourceDirectoryParseException(String description) {
-        super(description);
-    }
+    constructor(description: String) : super(description)
 
     /**
      * Creates a new exception.
@@ -36,7 +34,5 @@ public class ResourceDirectoryParseException extends RuntimeException {
      * @param description a description of the exception
      * @param cause a cause of the exception
      */
-    public ResourceDirectoryParseException(String description, Throwable cause) {
-        super(description, cause);
-    }
+    constructor(description: String, cause: Throwable) : super(description, cause)
 }

@@ -14,43 +14,46 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.symbols;
+package com.android.ide.common.symbols
 
-import com.android.annotations.NonNull;
-import com.android.resources.ResourceType;
+import com.android.resources.ResourceType
 
-/** Provides IDs for resource assignment. It is essentially a supplier of unique integer values. */
-public interface IdProvider {
+/** Provides IDs for resource assignment. It is essentially a supplier of unique integer values.  */
+interface IdProvider {
 
     /**
      * Provides another unique ID.
      *
      * @return an ID that has never been returned from this provider.
      */
-    int next(ResourceType resourceType);
+    fun next(resourceType: ResourceType): Int
 
-    /**
-     * Obtains a new ID provider that provides sequential IDs.
-     *
-     * <p>The generated IDs follow the usual aapt format of {@code PPTTNNNN}.
-     */
-    @NonNull
-    static IdProvider sequential() {
-        return new IdProvider() {
-            private short[] next = new short[ResourceType.values().length];
+    companion object {
 
-            @Override
-            public int next(ResourceType resourceType) {
-                int typeIndex = resourceType.ordinal();
-                int value = (0x7f << 24) | ((typeIndex + 1) << 16) | ++next[typeIndex];
-                return value;
+        /**
+         * Obtains a new ID provider that provides sequential IDs.
+         *
+         *
+         * The generated IDs follow the usual aapt format of `PPTTNNNN`.
+         */
+        fun sequential(): IdProvider {
+            return object : IdProvider {
+                private val next = ShortArray(ResourceType.values().size)
+
+                override fun next(resourceType: ResourceType): Int {
+                    val typeIndex = resourceType.ordinal
+                    return 0x7f shl 24 or (typeIndex + 1 shl 16) or (++next[typeIndex]).toInt()
+                }
             }
-        };
-    }
+        }
 
-    /** Obtains a new constant ID provider that provides constant IDs of "-1". */
-    @NonNull
-    static IdProvider constant() {
-        return resourceType -> -1;
+        /** Obtains a new constant ID provider that provides constant IDs of "-1".  */
+        fun constant(): IdProvider {
+            return object : IdProvider{
+                override fun next(resourceType: ResourceType): Int {
+                    return -1
+                }
+            }
+        }
     }
 }

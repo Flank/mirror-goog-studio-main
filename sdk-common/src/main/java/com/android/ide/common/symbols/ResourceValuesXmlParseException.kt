@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.symbols;
+package com.android.ide.common.symbols
 
 /**
  * Exception thrown when failed to parse the resource values XML.
  */
-public class ResourceValuesXmlParseException extends RuntimeException {
-
-    /**
-     * Creates a new exception.
-     *
-     * @param description a description of the exception
-     */
-    public ResourceValuesXmlParseException(String description) {
-        super(description);
-    }
-}
+class ResourceValuesXmlParseException(description: String) : RuntimeException(description)

@@ -30,9 +30,9 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
-import com.android.ide.common.symbols.ResourceDirectoryParser
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
@@ -101,7 +101,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
         val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile())
 
-        val symbolTable = ResourceDirectoryParser.parseDirectory(
+        val symbolTable = parseResourceSourceSetDirectory(
                 inputResourcesDir.singleFile,
                 IdProvider.sequential(),
                 androidAttrSymbol)

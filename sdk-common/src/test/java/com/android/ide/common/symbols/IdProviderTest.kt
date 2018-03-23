@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.symbols;
+package com.android.ide.common.symbols
 
-import static com.google.common.truth.Truth.assertThat;
+import com.android.resources.ResourceType
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
 
-import com.android.resources.ResourceType;
-import org.junit.Test;
-
-public class IdProviderTest {
+class IdProviderTest {
     @Test
-    public void aaptFormat() throws Exception {
+    fun aaptFormat() {
         // Sanity check.
-        assertThat(ResourceType.ANIM.ordinal()).isEqualTo(0);
-        assertThat(ResourceType.ATTR.ordinal()).isEqualTo(3);
+        assertThat(ResourceType.ANIM.ordinal).isEqualTo(0)
+        assertThat(ResourceType.ATTR.ordinal).isEqualTo(3)
 
-        IdProvider provider = IdProvider.sequential();
-        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f010001);
-        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f010002);
-        assertThat(provider.next(ResourceType.ATTR)).isEqualTo(0x7f040001);
-        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f010003);
-        assertThat(provider.next(ResourceType.ATTR)).isEqualTo(0x7f040002);
+        val provider = IdProvider.sequential()
+        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f010001)
+        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f010002)
+        assertThat(provider.next(ResourceType.ATTR)).isEqualTo(0x7f040001)
+        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f010003)
+        assertThat(provider.next(ResourceType.ATTR)).isEqualTo(0x7f040002)
     }
 }
