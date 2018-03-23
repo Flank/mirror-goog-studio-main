@@ -81,6 +81,7 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
@@ -715,6 +716,20 @@ public abstract class BasePlugin<E extends BaseExtension2>
         if (project.getPlugins().hasPlugin(JavaPlugin.class)) {
             throw new BadPluginException(
                     "The 'java' plugin has been applied, but it is not compatible with the Android plugins.");
+        }
+
+        if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
+            String warningMsg =
+                    "One of the plugins you are using supports Java 8 "
+                            + "language features. To try the support built into"
+                            + " the Android plugin, remove the following from "
+                            + "your build.gradle:\n"
+                            + "    apply plugin: 'me.tatarka.retrolambda'\n"
+                            + "To learn more, go to https://d.android.com/r/"
+                            + "tools/java-8-support-message.html\n";
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
         }
 
         boolean targetSetupSuccess = ensureTargetSetup();
