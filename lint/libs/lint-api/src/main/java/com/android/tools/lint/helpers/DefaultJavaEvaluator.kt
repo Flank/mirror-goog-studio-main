@@ -42,17 +42,19 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.MethodSignatureUtil
 import com.intellij.psi.util.TypeConversionUtil
+import org.jetbrains.uast.UAnnotated
+import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.getContainingUFile
+import org.jetbrains.uast.java.JavaUAnnotation
 
 open class DefaultJavaEvaluator(
     private val myProject: com.intellij.openapi.project.Project?,
     private val myLintProject: Project?
 ) : JavaEvaluator() {
-
     override val dependencies: Dependencies?
         get() {
             if (myLintProject != null && myLintProject.isAndroidProject) {
@@ -93,6 +95,51 @@ open class DefaultJavaEvaluator(
         return if (myProject != null && psiClass != null)
             JavaPsiFacade.getElementFactory(myProject).createType(psiClass)
         else null
+    }
+
+    override fun getAllAnnotations(
+        owner: UAnnotated,
+        inHierarchy: Boolean
+    ): List<UAnnotation> {
+        if (owner is UDeclaration) {
+            // Going to PSI means we drop vital context from Kotlin annotations.
+            // Therefore, call into UAST to get the full Kotlin annotations, but also
+            // merge in external annotations and inherited annotations from the class
+            // files, and pick unique.
+            val annotations = owner.annotations
+            val psiAnnotations = getAllAnnotations(owner.psi, inHierarchy)
+
+            if (!annotations.isEmpty()) {
+                if (psiAnnotations.isEmpty()) {
+                    return annotations
+                }
+
+                // Filter with preference given to the builtins
+                val result = mutableListOf<UAnnotation>()
+                for (psi in psiAnnotations) {
+                    val signature = psi.qualifiedName
+                    var handled = false
+                    for (ua in annotations) {
+                        if (ua.qualifiedName == signature) {
+                            result.add(ua)
+                            handled = true
+                            break
+                        }
+                    }
+                    if (!handled) {
+                        result.add(JavaUAnnotation.wrap(psi))
+                    }
+                }
+
+                return result
+            }
+
+            // Work around bug: Passing in a UAST node to this method generates a
+            // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
+            return JavaUAnnotation.wrap(psiAnnotations)
+        }
+
+        return owner.annotations
     }
 
     override fun getAllAnnotations(

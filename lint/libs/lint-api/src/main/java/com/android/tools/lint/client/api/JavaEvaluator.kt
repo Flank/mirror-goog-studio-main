@@ -600,6 +600,11 @@ class JavaEvaluator {
     abstract fun getClassType(psiClass: PsiClass?): PsiClassType?
 
     abstract fun getAllAnnotations(
+        owner: UAnnotated,
+        inHierarchy: Boolean
+    ): List<UAnnotation>
+
+    abstract fun getAllAnnotations(
         owner: PsiModifierListOwner,
         inHierarchy: Boolean
     ): Array<PsiAnnotation>

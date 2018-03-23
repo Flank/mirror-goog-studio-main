@@ -26,6 +26,7 @@ import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -212,10 +213,9 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val evaluator = context.evaluator
         val methodAnnotations = filterRelevantAnnotations(
             evaluator,
-            evaluator.getAllAnnotations(method, true)
+            evaluator.getAllAnnotations(method as UAnnotated, true)
         )
         if (methodAnnotations.isNotEmpty()) {
-            val annotations = JavaUAnnotation.wrap(methodAnnotations)
 
             // Check return values
 
@@ -227,8 +227,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     argument = body,
                     type = AnnotationUsageType.METHOD_RETURN,
                     method = method,
-                    annotations = annotations,
-                    allMethodAnnotations = annotations
+                    annotations = methodAnnotations,
+                    allMethodAnnotations = methodAnnotations
                 )
             } else {
                 method.accept(object : AbstractUastVisitor() {
@@ -240,8 +240,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                                 argument = returnValue,
                                 type = AnnotationUsageType.METHOD_RETURN,
                                 method = method,
-                                annotations = annotations,
-                                allMethodAnnotations = annotations
+                                annotations = methodAnnotations,
+                                allMethodAnnotations = methodAnnotations
                             )
                         }
                         return super.visitReturnExpression(node)
@@ -286,14 +286,13 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 )
                 if (methodAnnotations.isNotEmpty()) {
                     val value = expression.expression
-                    val annotations = JavaUAnnotation.wrap(methodAnnotations)
                     checkAnnotations(
                         context = context,
                         argument = value,
                         type = AnnotationUsageType.ANNOTATION_REFERENCE,
                         method = method,
-                        annotations = annotations,
-                        allMethodAnnotations = annotations
+                        annotations = methodAnnotations,
+                        allMethodAnnotations = methodAnnotations
                     )
                 }
             }
@@ -316,13 +315,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             val resolved = arrayExpression.resolve()
             if (resolved is PsiModifierListOwner) {
                 val evaluator = context.evaluator
-                var methodAnnotations = evaluator.getAllAnnotations(resolved, true)
-                methodAnnotations = filterRelevantAnnotations(evaluator, methodAnnotations)
+                val allAnnotations = evaluator.getAllAnnotations(resolved, true)
+                val methodAnnotations =
+                    filterRelevantAnnotations(evaluator, allAnnotations, expression)
                 if (methodAnnotations.isNotEmpty()) {
-                    checkContextAnnotations(
-                        context, null, expression,
-                        JavaUAnnotation.wrap(methodAnnotations)
-                    )
+                    checkContextAnnotations(context, null, expression, methodAnnotations)
                 }
             }
         }
@@ -333,11 +330,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val psi = variable.psi
         val methodAnnotations = filterRelevantAnnotations(
             evaluator,
-            evaluator.getAllAnnotations(psi, true)
+            evaluator.getAllAnnotations(psi, true),
+            variable
         )
         if (methodAnnotations.isNotEmpty()) {
-            val annotations = JavaUAnnotation.wrap(methodAnnotations)
-            checkContextAnnotations(context, null, variable, annotations)
+            checkContextAnnotations(context, null, variable, methodAnnotations)
         }
     }
 
@@ -348,9 +345,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     ) {
         val evaluator = context.evaluator
         val allAnnotations = evaluator.getAllAnnotations(method, true)
-        val methodAnnotations: List<UAnnotation> = JavaUAnnotation.wrap(
-            filterRelevantAnnotations(evaluator, allAnnotations)
-        )
+        val methodAnnotations: List<UAnnotation> =
+            filterRelevantAnnotations(evaluator, allAnnotations, call)
 
         // Look for annotations on the class as well: these trickle
         // down to all the methods in the class
@@ -359,13 +355,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val pkgAnnotations: List<UAnnotation>
         if (containingClass != null) {
             val annotations = evaluator.getAllAnnotations(containingClass, true)
-            classAnnotations = JavaUAnnotation
-                .wrap(filterRelevantAnnotations(evaluator, annotations))
+            classAnnotations = filterRelevantAnnotations(evaluator, annotations, call)
 
             val pkg = evaluator.getPackage(containingClass)
             pkgAnnotations = if (pkg != null) {
                 val annotations2 = evaluator.getAllAnnotations(pkg, false)
-                JavaUAnnotation.wrap(filterRelevantAnnotations(evaluator, annotations2))
+                filterRelevantAnnotations(evaluator, annotations2)
             } else {
                 emptyList()
             }
@@ -400,23 +395,83 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val mapping = evaluator.computeArgumentMapping(call, method)
         for ((argument, parameter) in mapping) {
             val allParameterAnnotations = evaluator.getAllAnnotations(parameter, true)
-            val filtered = filterRelevantAnnotations(evaluator, allParameterAnnotations)
+            val filtered = filterRelevantAnnotations(evaluator, allParameterAnnotations, call)
             if (filtered.isEmpty()) {
                 continue
             }
-            val annotations = JavaUAnnotation.wrap(filtered)
+
             checkAnnotations(
                 context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
-                annotations, methodAnnotations, classAnnotations, pkgAnnotations
+                filtered, methodAnnotations, classAnnotations, pkgAnnotations
             )
         }
     }
 
     private fun filterRelevantAnnotations(
         evaluator: JavaEvaluator,
-        annotations: Array<PsiAnnotation>
-    ): Array<PsiAnnotation> {
-        var result: MutableList<PsiAnnotation>? = null
+        annotations: Array<PsiAnnotation>,
+        context: UElement? = null
+    ): List<UAnnotation> {
+        var result: MutableList<UAnnotation>? = null
+        val length = annotations.size
+        if (length == 0) {
+            return emptyList()
+        }
+        for (annotation in annotations) {
+            val signature = annotation.qualifiedName
+            if (signature == null ||
+                signature.startsWith("java.") && !relevantAnnotations.contains(signature)
+            ) {
+                // @Override, @SuppressWarnings etc. Ignore
+                continue
+            }
+
+            if (relevantAnnotations.contains(signature)) {
+                val uAnnotation = JavaUAnnotation.wrap(annotation)
+
+                // Common case: there's just one annotation; no need to create a list copy
+                if (length == 1) {
+                    return listOf(uAnnotation)
+                }
+                if (result == null) {
+                    result = ArrayList(2)
+                }
+                result.add(uAnnotation)
+                continue
+            }
+
+            // Special case @IntDef and @StringDef: These are used on annotations
+            // themselves. For example, you create a new annotation named @foo.bar.Baz,
+            // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
+            // Here we want to map from @foo.bar.Baz to the corresponding int def.
+            // Don't need to compute this if performing @IntDef or @StringDef lookup
+            val ref = annotation.nameReferenceElement ?: continue
+            val cls = ref.resolve()
+            if (cls !is PsiClass || !cls.isAnnotationType) {
+                continue
+            }
+            val innerAnnotations = evaluator.getAllAnnotations(cls, false)
+            for (j in innerAnnotations.indices) {
+                val inner = innerAnnotations[j]
+                val a = inner.qualifiedName
+                if (a != null && relevantAnnotations.contains(a)) {
+                    if (result == null) {
+                        result = ArrayList(2)
+                    }
+                    val innerU = annotationLookup.findRealAnnotation(inner, cls, context)
+                    result.add(innerU)
+                }
+            }
+        }
+
+        return result ?: emptyList()
+    }
+
+    private fun filterRelevantAnnotations(
+        evaluator: JavaEvaluator,
+        annotations: List<UAnnotation>
+    ): List<UAnnotation> {
+        var result: MutableList<UAnnotation>? = null
         val length = annotations.size
         if (length == 0) {
             return annotations
@@ -447,9 +502,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
             // Here we want to map from @foo.bar.Baz to the corresponding int def.
             // Don't need to compute this if performing @IntDef or @StringDef lookup
-            val ref = annotation.nameReferenceElement ?: continue
-            val cls = ref.resolve()
-            if (cls !is PsiClass || !cls.isAnnotationType) {
+            val cls = annotation.resolve()
+            if (cls == null || !cls.isAnnotationType) {
                 continue
             }
             val innerAnnotations = evaluator.getAllAnnotations(cls, false)
@@ -457,19 +511,19 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 val inner = innerAnnotations[j]
                 val a = inner.qualifiedName
                 if (a != null && relevantAnnotations.contains(a)) {
-                    if (length == 1 && j == innerAnnotations.size - 1 && result == null) {
-                        return innerAnnotations
-                    }
                     if (result == null) {
                         result = ArrayList(2)
                     }
-                    result.add(inner)
+                    val innerU = annotationLookup.findRealAnnotation(inner, cls)
+                    result.add(innerU)
                 }
             }
         }
 
         return if (result != null)
-            result.toTypedArray()
-        else PsiAnnotation.EMPTY_ARRAY
+            result
+        else emptyList()
     }
+
+    private val annotationLookup = AnnotationLookup()
 }
