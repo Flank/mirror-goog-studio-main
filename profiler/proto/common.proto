@@ -106,6 +106,7 @@ message SessionMetaData {
     UNSPECIFIED = 0;
     FULL = 1;
     MEMORY_CAPTURE = 2;
+    CPU_CAPTURE = 3;
   }
   // References Session's |session_id| field
   int64 session_id = 1;
