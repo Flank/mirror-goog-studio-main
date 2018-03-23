@@ -212,6 +212,7 @@ public final class GradleTestProject implements TestRule {
 
     private final String targetGradleVersion;
 
+    @NonNull private final String compileSdkVersion;
     @Nullable private final String buildToolsVersion;
 
     @Nullable private final Path profileDirectory;
@@ -240,6 +241,7 @@ public final class GradleTestProject implements TestRule {
             boolean withDependencyChecker,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
+            @Nullable String compileSdkVersion,
             @Nullable String buildToolsVersion,
             @Nullable Path profileDirectory,
             @NonNull String cmakeVersion,
@@ -268,6 +270,8 @@ public final class GradleTestProject implements TestRule {
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
+        this.compileSdkVersion =
+                compileSdkVersion != null ? compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION;
         this.openConnections = Lists.newArrayList();
         this.rootProject = this;
         this.profileDirectory = profileDirectory;
@@ -302,7 +306,8 @@ public final class GradleTestProject implements TestRule {
         testProject = null;
         targetGradleVersion = rootProject.targetGradleVersion;
         openConnections = null;
-        buildToolsVersion = null;
+        this.compileSdkVersion = rootProject.compileSdkVersion;
+        this.buildToolsVersion = rootProject.buildToolsVersion;
         this.rootProject = rootProject;
         this.profileDirectory = rootProject.profileDirectory;
         this.cmakeVersion = rootProject.cmakeVersion;
@@ -660,7 +665,7 @@ public final class GradleTestProject implements TestRule {
                                 + "}\n"
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
-                        DEFAULT_COMPILE_SDK_VERSION,
+                        compileSdkVersion,
                         false,
                         kotlinVersion);
 
