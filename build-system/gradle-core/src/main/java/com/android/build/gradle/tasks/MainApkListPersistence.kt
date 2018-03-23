@@ -61,13 +61,10 @@ open class MainApkListPersistence : AndroidVariantTask() {
             task.variantName = scope.fullVariantName
             task.apkData = scope.outputScope.apkDatas
 
-            task.outputFile = File(
-                    File(scope.splitSupportDirectory, "apk-list"),
-                    SdkConstants.FN_APK_LIST)
-            scope.addTaskOutput(InternalArtifactType.APK_LIST,
-                    task.outputFile,
-                    name)
-
+            task.outputFile = scope.artifacts.appendArtifact(
+                InternalArtifactType.APK_LIST,
+                task,
+                SdkConstants.FN_APK_LIST)
         }
     }
 }

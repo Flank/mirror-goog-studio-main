@@ -141,9 +141,7 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         )
     }
 
-    class ConfigAction(val variantScope: VariantScope,
-            private val sourceOutFolder: File,
-            private var logArtifactFolder: File)
+    class ConfigAction(val variantScope: VariantScope)
         : TaskConfigAction<DataBindingGenBaseClassesTask> {
 
         override fun getName(): String = variantScope.getTaskName("dataBindingGenBaseClasses")
@@ -162,8 +160,12 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
             task.generateSources = variantScope.globalScope.projectOptions.get(
                     BooleanOption.ENABLE_DATA_BINDING_V2)
-            task.sourceOutFolder = sourceOutFolder
-            task.classInfoBundleDir = logArtifactFolder
+            task.sourceOutFolder = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
+                task)
+            task.classInfoBundleDir = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                task)
         }
     }
 

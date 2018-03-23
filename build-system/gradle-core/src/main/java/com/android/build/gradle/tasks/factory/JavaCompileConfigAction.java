@@ -13,6 +13,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -22,6 +23,7 @@ import com.android.builder.core.VariantType;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Map;
 import org.gradle.api.Project;
@@ -58,6 +60,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         scope.getVariantData().javaCompilerTask = javacTask;
         final GlobalScope globalScope = scope.getGlobalScope();
         final Project project = globalScope.getProject();
+        BuildArtifactsHolder artifacts = scope.getArtifacts();
         boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
 
         javacTask.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
@@ -107,7 +110,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.setClasspath(classpath);
 
         javacTask.setDestinationDir(
-                scope.getArtifacts()
+                artifacts
                         .appendArtifact(InternalArtifactType.JAVAC, javacTask, "classes"));
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
@@ -177,32 +180,32 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
         if (isDataBindingEnabled) {
 
-            if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
+            if (artifacts.hasArtifact(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
                 // if data binding is enabled and this variant has merged dependency artifacts, then
                 // make the javac task depend on them. (test variants don't do the merge so they
                 // could not have the artifacts)
                 javacTask.dataBindingDependencyArtifacts =
-                        scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS);
+                        artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS);
             }
-            if (scope.hasOutput(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
+            if (artifacts.hasArtifact(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
                 javacTask.dataBindingClassLogDir =
-                        scope.getOutput(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
+                        artifacts.getFinalArtifactFiles(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
             }
             // the data binding artifact is created by the annotation processor, so we register this
             // task output (which also publishes it) with javac as the generating task.
             javacTask.dataBindingArtifactOutputDirectory =
                     scope.getBundleArtifactFolderForDataBinding();
-            scope.addTaskOutput(
-                    InternalArtifactType.DATA_BINDING_ARTIFACT,
-                    javacTask.dataBindingArtifactOutputDirectory,
-                    javacTask.getName());
+
+            artifacts.appendArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT,
+                    ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
+                    javacTask);
 
             VariantType variantType = scope.getType();
             if (variantType.isBaseModule()) {
                 javacTask
                         .getInputs()
                         .file(
-                                scope.getArtifacts()
+                                artifacts
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
@@ -211,7 +214,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 javacTask
                         .getInputs()
                         .file(
-                                scope.getArtifacts()
+                                artifacts
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)
@@ -220,7 +223,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         }
 
         javacTask.processorListFile =
-                scope.getArtifacts().getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST);
+                artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST);
         javacTask.variantName = scope.getFullVariantName();
     }
 }

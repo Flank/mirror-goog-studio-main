@@ -347,11 +347,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.placeholdersValues =
                     TaskInputHelper.memoize(config::getManifestPlaceholders);
 
-            scope.addTaskOutput(
+            scope.getArtifacts().appendArtifact(
                     InternalArtifactType.MANIFEST_METADATA,
-                    ExistingBuildElements.getMetadataFile(
-                            processTestManifestTask.getManifestOutputDirectory()),
-                    getName());
+                    scope.getArtifacts().getFinalArtifactFiles(
+                            InternalArtifactType.MERGED_MANIFESTS));
 
             scope.getVariantData()
                     .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processTestManifestTask);

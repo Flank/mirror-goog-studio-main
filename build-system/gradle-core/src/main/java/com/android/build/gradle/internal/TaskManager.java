@@ -2609,10 +2609,10 @@ public abstract class TaskManager {
 
         dataBindingMergeTask.ifPresent(
                 task ->
-                        variantScope.addTaskOutput(
+                        variantScope.getArtifacts().appendArtifact(
                                 InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
-                                outFolder,
-                                task.getName()));
+                                ImmutableList.of(outFolder),
+                                task));
     }
 
     private void createDataBindingMergeBaseClassesTask(@NonNull VariantScope variantScope) {
@@ -2638,10 +2638,10 @@ public abstract class TaskManager {
 
         mergeBaseClassesTask.ifPresent(
                 task ->
-                        variantScope.addTaskOutput(
+                        variantScope.getArtifacts().appendArtifact(
                                 DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                                outFolder,
-                                task.getName()));
+                                ImmutableList.of(outFolder),
+                                task));
     }
 
     protected void createDataBindingTasksIfNecessary(
@@ -2672,28 +2672,8 @@ public abstract class TaskManager {
         scope.setDataBindingExportBuildInfoTask(exportBuildInfo);
 
         // setup generate base class task
-        File baseClassOutFolder =
-                new File(
-                        globalScope.getGeneratedDir(),
-                        "source/dataBinding/baseClasses/"
-                                + scope.getVariantConfiguration().getDirName());
-        File baseClassLogFolder =
-                scope.getIntermediateDir(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
-
-        DataBindingGenBaseClassesTask.ConfigAction genBaseClassConfigAction =
-                new DataBindingGenBaseClassesTask.ConfigAction(
-                        scope, baseClassOutFolder, baseClassLogFolder);
-
         DataBindingGenBaseClassesTask generateBaseClasses =
-                taskFactory.create(genBaseClassConfigAction);
-        scope.addTaskOutput(
-                DATA_BINDING_BASE_CLASS_SOURCE_OUT,
-                baseClassOutFolder,
-                generateBaseClasses.getName());
-        scope.addTaskOutput(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                baseClassLogFolder,
-                generateBaseClasses.getName());
+                taskFactory.create(new DataBindingGenBaseClassesTask.ConfigAction(scope));
         generateBaseClasses.dependsOn(scope.getVariantData().mergeResourcesTask);
 
         setDataBindingAnnotationProcessorParams(scope);
@@ -2742,9 +2722,9 @@ public abstract class TaskManager {
             }
 
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
-            File classLogDir =
-                    scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                            .getSingleFile();
+            File classLogDir = Iterables.getOnlyElement(
+                    scope.getArtifacts().getFinalArtifactFiles(
+                            InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT).get());
             File baseFeatureInfoFolder = null;
             BuildArtifactsHolder buildArtifactsHolder = scope.getArtifacts();
             if (buildArtifactsHolder.hasArtifact(
@@ -3598,7 +3578,8 @@ public abstract class TaskManager {
 
     // TODO we should merge this w/ JavaCompileConfigAction
     private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
-        if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
+        BuildArtifactsHolder artifacts = scope.getArtifacts();
+        if (artifacts.hasArtifact(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
             // if data binding is enabled and this variant has merged dependency artifacts, then
             // make the compilation task depend on them. (test variants don't do the merge so they
             // could not have the artifacts)
@@ -3607,24 +3588,22 @@ public abstract class TaskManager {
                     .withPathSensitivity(PathSensitivity.RELATIVE)
                     .withPropertyName("dataBindingDependencyArtifacts");
         }
-        if (scope.hasOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
-            kaptTask.getInputs()
-                    .files(
-                            scope.getOutput(
-                                    InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
-                    .withPathSensitivity(PathSensitivity.RELATIVE)
-                    .withPropertyName("dataBindingClassLogDir");
-        }
+        kaptTask.getInputs()
+                .files(artifacts.getFinalArtifactFiles(
+                                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
+                .withPathSensitivity(PathSensitivity.RELATIVE)
+                .withPropertyName("dataBindingClassLogDir");
+        
         // the data binding artifact is created by the annotation processor, so we register this
         // task output (which also publishes it) with javac as the generating task.
         kaptTask.getOutputs()
                 .file(scope.getBundleArtifactFolderForDataBinding())
                 .withPropertyName("dataBindingArtifactOutputDir");
-        if (!scope.hasOutput(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
-            scope.addTaskOutput(
+        if (!artifacts.hasArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
+            artifacts.appendArtifact(
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
-                    scope.getBundleArtifactFolderForDataBinding(),
-                    kaptTask.getName());
+                    ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
+                    kaptTask);
         }
 
         final VariantType variantType = scope.getType();
@@ -3632,14 +3611,14 @@ public abstract class TaskManager {
             if (variantType.isBaseModule()) {
                 kaptTask.getInputs()
                         .file(
-                                scope.getArtifacts()
+                                artifacts
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
             } else {
                 kaptTask.getInputs()
                         .file(
-                                scope.getArtifacts()
+                                artifacts
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO));

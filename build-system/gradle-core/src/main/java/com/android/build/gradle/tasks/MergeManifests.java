@@ -575,10 +575,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             artifacts.appendArtifact(
                     InternalArtifactType.MANIFEST_METADATA,
-                    ImmutableList.of(
-                            ExistingBuildElements.getMetadataFile(
-                                    processManifestTask.getManifestOutputDirectory())),
-                    processManifestTask);
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
 
             variantScope
                     .getVariantData()

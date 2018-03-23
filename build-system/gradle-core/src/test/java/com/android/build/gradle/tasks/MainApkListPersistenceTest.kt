@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -52,6 +55,7 @@ open class MainApkListPersistenceTest {
 
     @Mock private lateinit var variantScope: VariantScope
     @Mock private lateinit var config: GradleVariantConfiguration
+    @Mock private lateinit var artifacts: BuildArtifactsHolder
 
     private lateinit var outputScope: OutputScope
     internal lateinit var project: Project
@@ -69,10 +73,12 @@ open class MainApkListPersistenceTest {
         Mockito.`when`(variantScope.getTaskName(ArgumentMatchers.any(String::class.java)))
                 .thenReturn("taskFoo")
         Mockito.`when`(variantScope.outputScope).thenReturn(outputScope)
-        Mockito.`when`(variantScope.splitSupportDirectory).thenReturn(temporaryFolder.root)
+        Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
 
         task = project.tasks.create("test", MainApkListPersistence::class.java)
         configAction = MainApkListPersistence.ConfigAction(variantScope)
+        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APK_LIST,
+            task, SdkConstants.FN_APK_LIST)).thenReturn(temporaryFolder.newFolder())
     }
 
     @Test

@@ -34,6 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import org.gradle.api.Buildable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
@@ -64,13 +65,13 @@ public class AndroidJavaCompile extends JavaCompile {
      * Collection of artifacts that were produced by dependencies' data binding annotation
      * processors.
      */
-    FileCollection dataBindingDependencyArtifacts;
+    BuildableArtifact dataBindingDependencyArtifacts;
 
     /**
      * Log file created by GenBaseClassesTask which is used to generate implementations in the data
      * binding annotation processor.
      */
-    FileCollection dataBindingClassLogDir;
+    BuildableArtifact dataBindingClassLogDir;
 
     File dataBindingArtifactOutputDirectory;
 
@@ -94,14 +95,14 @@ public class AndroidJavaCompile extends JavaCompile {
     @PathSensitive(PathSensitivity.RELATIVE)
     @InputFiles
     @Optional
-    public FileCollection getDataBindingDependencyArtifacts() {
+    public BuildableArtifact getDataBindingDependencyArtifacts() {
         return dataBindingDependencyArtifacts;
     }
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @InputFiles
     @Optional
-    public FileCollection getDataBindingClassLogDir() {
+    public BuildableArtifact getDataBindingClassLogDir() {
         return dataBindingClassLogDir;
     }
 
