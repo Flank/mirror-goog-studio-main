@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -78,7 +79,7 @@ public class JacocoReportTask extends DefaultTask {
     private FileCollection jacocoClasspath;
 
     private Supplier<File> coverageDirectory;
-    private FileCollection classFileCollection;
+    private BuildableArtifact classFileCollection;
     private Supplier<Collection<File>> sourceFolders;
 
     private File coverageFile;
@@ -122,7 +123,7 @@ public class JacocoReportTask extends DefaultTask {
     }
 
     @InputFiles
-    public FileCollection getClassFileCollection() {
+    public BuildableArtifact getClassFileCollection() {
         return classFileCollection;
     }
 
@@ -238,7 +239,9 @@ public class JacocoReportTask extends DefaultTask {
                                             .connectedTestTask.getCoverageDir());
 
             task.classFileCollection =
-                    testedScope.getOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
+                    testedScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
 
             task.sourceFolders =
                     TaskInputHelper.bypassFileSupplier(

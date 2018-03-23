@@ -34,7 +34,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
@@ -696,7 +695,11 @@ public abstract class TaskManager {
                     OriginalStream.builder(project, "tested-code-classes")
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
-                            .setFileCollection(testedVariantScope.getOutput(testedOutputType))
+                            .setFileCollection(
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(testedOutputType)
+                                            .get())
                             .build());
 
             transformManager.addStream(
@@ -1309,11 +1312,13 @@ public abstract class TaskManager {
         processJavaResourcesTask.dependsOn(variantScope.getPreBuildTask());
 
         // create the task outputs for others to consume
-        FileCollection collection =
-                variantScope.addTaskOutput(
-                        InternalArtifactType.JAVA_RES,
-                        destinationDir,
-                        processJavaResourcesTask.getName());
+        BuildableArtifact javaRes =
+                variantScope
+                        .getArtifacts()
+                        .appendArtifact(
+                                InternalArtifactType.JAVA_RES,
+                                ImmutableList.of(destinationDir),
+                                processJavaResourcesTask);
 
         // create the stream generated from this task
         variantScope
@@ -1322,7 +1327,7 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "processed-java-res")
                                 .addContentType(DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(collection)
+                                .setFileCollection(javaRes.get())
                                 .build());
     }
 
@@ -1931,13 +1936,14 @@ public abstract class TaskManager {
         TestDataImpl testData =
                 new TestDataImpl(
                         testVariantData,
-                        variantScope.getOutput(InternalArtifactType.APK),
+                        variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK),
                         isLibrary
                                 ? null
                                 : testVariantData
                                         .getTestedVariantData()
                                         .getScope()
-                                        .getOutput(InternalArtifactType.APK));
+                                        .getArtifacts()
+                                        .getFinalArtifactFiles(InternalArtifactType.APK));
         testData.setExtraInstrumentationTestRunnerArgs(
                 projectOptions.getExtraInstrumentationTestRunnerArgs());
 
@@ -2857,7 +2863,6 @@ public abstract class TaskManager {
                     taskFactory.create(
                             new InstantRunResourcesApkBuilder.ConfigAction(
                                     resourceFilesInputType,
-                                    variantScope.getOutput(resourceFilesInputType),
                                     variantScope));
             packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
             // make sure the task run even if none of the files we consume are available,
@@ -3584,7 +3589,7 @@ public abstract class TaskManager {
             // make the compilation task depend on them. (test variants don't do the merge so they
             // could not have the artifacts)
             kaptTask.getInputs()
-                    .files(scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS))
+                    .files(artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS))
                     .withPathSensitivity(PathSensitivity.RELATIVE)
                     .withPropertyName("dataBindingDependencyArtifacts");
         }

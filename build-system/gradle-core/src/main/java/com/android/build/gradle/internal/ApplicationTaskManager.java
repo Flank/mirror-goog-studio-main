@@ -338,7 +338,7 @@ public class ApplicationTaskManager extends TaskManager {
                                 variantScope.getDirName()),
                         artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
                         artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
-                        variantScope.getOutput(InternalArtifactType.APK_LIST),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> dependenciesApkBuilderTask =
@@ -365,7 +365,7 @@ public class ApplicationTaskManager extends TaskManager {
                         getIncrementalFolder(variantScope, "ir_slices"),
                         artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
                         artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
-                        variantScope.getOutput(InternalArtifactType.APK_LIST),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> transformTaskAndroidTask =
@@ -426,11 +426,11 @@ public class ApplicationTaskManager extends TaskManager {
                 });
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(javacOutput);
-        fileCollection.from(preJavacGeneratedBytecode);
-        fileCollection.from(postJavacGeneratedBytecode);
+        ConfigurableFileCollection files =
+                scope.getGlobalScope()
+                        .getProject()
+                        .files(javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
+        scope.getArtifacts().appendArtifact(TaskOutputHolder.AnchorOutputType.ALL_CLASSES, files);
     }
 
     @Override

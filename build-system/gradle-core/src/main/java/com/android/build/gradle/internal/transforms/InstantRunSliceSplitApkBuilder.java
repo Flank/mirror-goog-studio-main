@@ -70,7 +70,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull File supportDirectory,
             @NonNull BuildableArtifact resources,
             @NonNull BuildableArtifact resourcesWithMainManifest,
-            @NonNull FileCollection apkList,
+            @NonNull BuildableArtifact apkList,
             @NonNull ApkInfo mainApk) {
         super(
                 logger,

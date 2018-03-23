@@ -91,7 +91,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var inputResourcesDir: FileCollection
+    lateinit var inputResourcesDir: BuildableArtifact
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
@@ -102,7 +102,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
         val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile())
 
         val symbolTable = parseResourceSourceSetDirectory(
-                inputResourcesDir.singleFile,
+                inputResourcesDir.single(),
                 IdProvider.sequential(),
                 androidAttrSymbol)
 
@@ -115,7 +115,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 rClassOutputJar = rClassOutputJar,
                 symbolFileOut = textSymbolOutputFile,
                 proguardOut = proguardOutputFile,
-                mergedResources = inputResourcesDir.singleFile,
+                mergedResources = inputResourcesDir.single(),
                 platformSymbols = androidAttrSymbol,
                 disableMergeInLib = true)
 
@@ -182,7 +182,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.manifestFiles = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.MERGED_MANIFESTS)
 
-            task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)
+            task.inputResourcesDir = variantScope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.PACKAGED_RES)
 
             task.outputScope = variantScope.outputScope
         }

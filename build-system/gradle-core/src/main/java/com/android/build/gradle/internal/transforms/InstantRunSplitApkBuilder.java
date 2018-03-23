@@ -92,7 +92,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     // secondary input so we don't repackage all of our slices when only the resources change.
     @NonNull protected final BuildableArtifact resourcesWithMainManifest;
 
-    @NonNull private final FileCollection apkList;
+    @NonNull private final BuildableArtifact apkList;
     @NonNull protected final ApkInfo mainApk;
 
     public InstantRunSplitApkBuilder(
@@ -109,7 +109,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull File supportDirectory,
             @NonNull BuildableArtifact resources,
             @NonNull BuildableArtifact resourcesWithMainManifest,
-            @NonNull FileCollection apkList,
+            @NonNull BuildableArtifact apkList,
             @NonNull ApkInfo mainApk) {
         this.logger = logger;
         this.project = project;

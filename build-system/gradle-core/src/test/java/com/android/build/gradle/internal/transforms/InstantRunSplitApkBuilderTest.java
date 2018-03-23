@@ -78,7 +78,7 @@ public class InstantRunSplitApkBuilderTest {
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
-    @Mock FileCollection apkList;
+    @Mock BuildableArtifact apkList;
     @Mock IAndroidTarget target;
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
@@ -104,7 +104,7 @@ public class InstantRunSplitApkBuilderTest {
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         FileUtils.write(
                 apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
-        when(apkList.getSingleFile()).thenReturn(apkListFile);
+        when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());
 
         instantRunFolder = supportDirectory.newFolder("instant-run");
         aaptTempFolder = supportDirectory.newFolder("aapt-temp");
@@ -234,7 +234,7 @@ public class InstantRunSplitApkBuilderTest {
         ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1);
 
         FileUtils.write(apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of()));
-        when(apkList.getSingleFile()).thenReturn(apkListFile);
+        when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());
 
         InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(

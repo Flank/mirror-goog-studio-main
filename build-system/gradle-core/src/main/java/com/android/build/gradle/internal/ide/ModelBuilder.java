@@ -27,6 +27,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -876,9 +877,11 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
-                                        variantScope
-                                                .getOutput(InternalArtifactType.AAR)
-                                                .getSingleFile())));
+                                        BuildableArtifactUtil.singleFile(
+                                                variantScope
+                                                        .getArtifacts()
+                                                        .getFinalArtifactFiles(
+                                                                InternalArtifactType.AAR)))));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(InternalArtifactType.APK),
@@ -912,7 +915,8 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                                             ImmutableList.of(),
                                             variantData.getVariantConfiguration().getVersionCode(),
                                             variantScope
-                                                    .getOutput(testedOutputType)
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(testedOutputType)
                                                     // We used to call .getSingleFile() but Kotlin projects
                                                     // currently have 2 output dirs specified for test classes.
                                                     // This supplier is going away in beta3, so this is obsolete
@@ -1049,8 +1053,9 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             folders.add(scope.getRenderscriptSourceOutputDir());
         }
         if (addDataBindingSources) {
-            FileCollection output = scope.getOutput(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
-            folders.add(output.getSingleFile());
+            BuildableArtifact output =
+                    scope.getArtifacts().getFinalArtifactFiles(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+            folders.add(BuildableArtifactUtil.singleFile(output));
         }
         return folders;
     }

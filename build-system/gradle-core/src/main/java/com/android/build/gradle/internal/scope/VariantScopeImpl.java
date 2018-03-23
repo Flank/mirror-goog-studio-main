@@ -2003,7 +2003,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             result =
                                     plusFunction.apply(
                                             result,
-                                            testedScope.getOutput(taskOutputType),
+                                            testedScope
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(taskOutputType)
+                                                    .get(),
                                             testedScope.getFullVariantName());
                         }
                     }

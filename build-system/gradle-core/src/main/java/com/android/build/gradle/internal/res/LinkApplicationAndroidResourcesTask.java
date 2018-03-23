@@ -208,11 +208,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getApkList() {
+    public BuildableArtifact getApkList() {
         return apkList;
     }
 
-    private FileCollection apkList;
+    private BuildableArtifact apkList;
 
     // FIX-ME : make me incremental !
     @Override
@@ -728,7 +728,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 InternalArtifactType.SPLIT_LIST);
             }
 
-            processResources.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            processResources.apkList =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             processResources.multiOutputPolicy = variantData.getMultiOutputPolicy();
 
@@ -878,7 +881,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         .getFinalArtifactFiles(InternalArtifactType.SPLIT_LIST);
             }
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
-            task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            task.apkList =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             task.sourceOutputDir =
                     variantScope

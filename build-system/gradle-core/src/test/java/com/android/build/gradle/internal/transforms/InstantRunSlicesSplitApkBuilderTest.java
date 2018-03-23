@@ -50,7 +50,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,7 +73,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
-    @Mock FileCollection apkList;
+    @Mock BuildableArtifact apkList;
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
@@ -101,7 +100,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         org.apache.commons.io.FileUtils.write(
                 apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
-        when(apkList.getSingleFile()).thenReturn(apkListFile);
+        when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());
 
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(

@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -42,7 +41,7 @@ import org.gradle.api.tasks.TaskAction;
 /** Task sending APKs out to a {@link TestServer} */
 public class TestServerTask extends AndroidVariantTask {
 
-    private FileCollection testApks;
+    private BuildableArtifact testApks;
 
     @Nullable private BuildableArtifact testedApks;
 
@@ -75,7 +74,7 @@ public class TestServerTask extends AndroidVariantTask {
     }
 
     @InputFiles
-    public FileCollection getTestApks() {
+    public BuildableArtifact getTestApks() {
         return testApks;
     }
 
@@ -102,7 +101,7 @@ public class TestServerTask extends AndroidVariantTask {
         this.testServer = testServer;
     }
 
-    public void setTestApks(FileCollection testApks) {
+    public void setTestApks(BuildableArtifact testApks) {
         this.testApks = testApks;
     }
 
@@ -160,7 +159,8 @@ public class TestServerTask extends AndroidVariantTask {
                                 .getFinalArtifactFiles(InternalArtifactType.APK));
             }
 
-            serverTask.setTestApks(scope.getOutput(InternalArtifactType.APK));
+            serverTask.setTestApks(
+                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
 
             if (!testServer.isConfigured()) {
                 serverTask.setEnabled(false);

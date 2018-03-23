@@ -569,11 +569,14 @@ public class LibraryTaskManager extends TaskManager {
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
         // create an anchor collection for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(scope.getArtifacts().getArtifactFiles(JAVAC));
-        fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
-        fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        ConfigurableFileCollection files =
+                scope.getGlobalScope()
+                        .getProject()
+                        .files(
+                                scope.getArtifacts().getArtifactFiles(JAVAC),
+                                scope.getVariantData().getAllPreJavacGeneratedBytecode(),
+                                scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        scope.getArtifacts().appendArtifact(TaskOutputHolder.AnchorOutputType.ALL_CLASSES, files);
     }
 
     private void excludeDataBindingClassesIfNecessary(

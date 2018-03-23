@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.variant.TestVariantFactory.getTe
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -93,7 +94,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         .getByName(
                                 getTestedApksConfigurationName(variantScope.getFullVariantName()));
 
-        FileCollection testingApk = variantScope.getOutput(InternalArtifactType.APK);
+        BuildableArtifact testingApk =
+                variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration
@@ -117,7 +119,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         variantScope.getVariantConfiguration(),
                         variantScope.getVariantData().getApplicationId(),
                         testingApk,
-                        testedApks);
+                        new BuildableArtifactImpl(testedApks, globalScope.getDslScope()));
 
         configureTestData(testData);
 

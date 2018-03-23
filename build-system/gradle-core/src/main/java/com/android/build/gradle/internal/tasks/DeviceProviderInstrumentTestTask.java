@@ -27,6 +27,7 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -320,13 +321,13 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @InputFiles
-    FileCollection getTestApkDir() {
+    BuildableArtifact getTestApkDir() {
         return testData.getTestApkDir();
     }
 
     @InputFiles
     @Optional
-    FileCollection getTestedApksDir() {
+    BuildableArtifact getTestedApksDir() {
         return testData.getTestedApksDir();
     }
 

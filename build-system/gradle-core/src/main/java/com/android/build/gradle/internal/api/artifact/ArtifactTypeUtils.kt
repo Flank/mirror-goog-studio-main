@@ -20,6 +20,7 @@ package com.android.build.gradle.internal.api.artifact
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.TaskOutputHolder
 
 /**
  * Utility class for [ArtifactType]
@@ -31,6 +32,8 @@ private val buildArtifactMap : Map<String, ArtifactType> =
         BuildArtifactType.values().associateBy(ArtifactType::name)
 private val internalArtifactMap : Map<String, ArtifactType> =
         InternalArtifactType.values().associateBy(ArtifactType::name)
+private val anchorArtifactMap : Map<String, ArtifactType> =
+        TaskOutputHolder.AnchorOutputType.values().associateBy(ArtifactType::name)
 
 /**
  * Return the enum of [ArtifactType] base on the name.
@@ -43,4 +46,5 @@ fun String.toArtifactType() : ArtifactType =
     sourceArtifactMap[this] ?:
             buildArtifactMap[this]  ?:
             internalArtifactMap[this] ?:
+            anchorArtifactMap[this] ?:
             throw IllegalArgumentException("'$this' is not a value ArtifactType.")

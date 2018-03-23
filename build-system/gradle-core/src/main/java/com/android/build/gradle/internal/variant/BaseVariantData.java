@@ -80,7 +80,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -715,10 +714,13 @@ public abstract class BaseVariantData implements TaskContainer {
                 sourceSets.add(
                         project.fileTree(scope.getClassOutputForDataBinding())
                                 .builtBy(scope.getDataBindingExportBuildInfoTask().getName()));
-                FileCollection baseClassSource =
-                        scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                BuildableArtifact baseClassSource =
+                        scope.getArtifacts()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT);
                 sourceSets.add(
-                        project.fileTree(baseClassSource.getSingleFile()).builtBy(baseClassSource));
+                        project.fileTree(baseClassSource.get().getSingleFile())
+                                .builtBy(baseClassSource));
             }
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()

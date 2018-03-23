@@ -164,11 +164,11 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                     dependencyLintJarCollection =
                             variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
-            BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
-            if (buildArtifactsHolder.hasArtifact(MERGED_MANIFESTS)) {
-                mergedManifest = buildArtifactsHolder.getFinalArtifactFiles(MERGED_MANIFESTS);
-            } else if (buildArtifactsHolder.hasArtifact(LIBRARY_MANIFEST)) {
-                mergedManifest = buildArtifactsHolder.getFinalArtifactFiles(LIBRARY_MANIFEST);
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            if (artifacts.hasArtifact(MERGED_MANIFESTS)) {
+                mergedManifest = artifacts.getFinalArtifactFiles(MERGED_MANIFESTS);
+            } else if (artifacts.hasArtifact(LIBRARY_MANIFEST)) {
+                mergedManifest = artifacts.getFinalArtifactFiles(LIBRARY_MANIFEST);
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest on: "
@@ -176,10 +176,10 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             }
             allInputs.from(mergedManifest);
 
-            if (buildArtifactsHolder.hasArtifact(MANIFEST_MERGE_REPORT)) {
+            if (artifacts.hasArtifact(MANIFEST_MERGE_REPORT)) {
                 allInputs.from(
                         mergedManifestReport =
-                                buildArtifactsHolder.getFinalArtifactFiles(MANIFEST_MERGE_REPORT));
+                                artifacts.getFinalArtifactFiles(MANIFEST_MERGE_REPORT));
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
@@ -188,7 +188,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
 
             // these inputs are only there to ensure that the lint task runs after these build
             // intermediates are built.
-            allInputs.from(variantScope.getOutput(ALL_CLASSES));
+            allInputs.from(artifacts.getFinalArtifactFiles(ALL_CLASSES));
         }
 
         @NonNull

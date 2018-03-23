@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOut
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -112,7 +113,8 @@ public class AndroidUnitTest extends Test {
                             + testedVariantData.getVariantConfiguration().getFullName()
                             + " build.");
 
-            runTestsTask.setTestClassesDirs(scope.getOutput(ALL_CLASSES));
+            runTestsTask.setTestClassesDirs(
+                    scope.getArtifacts().getFinalArtifactFiles(ALL_CLASSES).get());
 
             boolean includeAndroidResources =
                     scope.getGlobalScope()
@@ -171,18 +173,18 @@ public class AndroidUnitTest extends Test {
         private ConfigurableFileCollection computeClasspath(boolean includeAndroidResources) {
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
 
+            BuildArtifactsHolder artifacts = scope.getArtifacts();
             // the test classpath is made up of:
             // - the config file
             if (includeAndroidResources) {
                 collection.from(
-                        scope.getArtifacts()
-                                .getFinalArtifactFiles(
-                                        InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
+                        artifacts.getFinalArtifactFiles(
+                                InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
             }
             // - the test component classes and java_res
-            collection.from(scope.getOutput(ALL_CLASSES));
+            collection.from(artifacts.getFinalArtifactFiles(ALL_CLASSES).get());
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
-            collection.from(scope.getOutput(InternalArtifactType.JAVA_RES));
+            collection.from(artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES));
 
             // - the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(

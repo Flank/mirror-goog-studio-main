@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -58,7 +59,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var resFiles: FileCollection
+    lateinit var resFiles: BuildableArtifact
         private set
 
     @get:InputFiles
@@ -68,7 +69,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var assetsFiles: FileCollection
+    lateinit var assetsFiles: BuildableArtifact
         private set
 
     @get:InputFiles
@@ -98,13 +99,13 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         jarMerger.use { it ->
 
             it.addDirectory(
-                assetsFiles.singleFile.toPath(),
+                assetsFiles.single().toPath(),
                 null,
                 null,
                 Relocator(FD_ASSETS)
             )
 
-            it.addJar(resFiles.singleFile.toPath(), null, ResRelocator())
+            it.addJar(resFiles.single().toPath(), null, ResRelocator())
 
             // dex files
             addHybridFolder(it, dexFiles.files, Relocator(FD_DEX))
@@ -156,6 +157,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         override fun execute(task: PerModuleBundleTask) {
             task.variantName = variantScope.fullVariantName
 
+            val artifacts = variantScope.artifacts
             task.fileNameSupplier = if (variantScope.type.isBaseModule)
                 Supplier { "base.zip"}
             else {
@@ -164,11 +166,12 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 Supplier { "${featureName.get()}.zip"}
             }
 
-            task.outputDir = variantScope.artifacts.appendArtifact(
+            task.outputDir = artifacts.appendArtifact(
                 InternalArtifactType.MODULE_BUNDLE, task)
 
-            task.assetsFiles = variantScope.getOutput(InternalArtifactType.MERGED_ASSETS)
-            task.resFiles = variantScope.getOutput(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
+            task.assetsFiles = artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS)
+            task.resFiles = artifacts.getFinalArtifactFiles(
+                InternalArtifactType.LINKED_RES_FOR_BUNDLE)
             task.dexFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.DEX)
             task.javaResFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(

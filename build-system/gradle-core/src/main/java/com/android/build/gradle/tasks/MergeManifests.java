@@ -103,7 +103,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private FileCollection microApkManifest;
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
-    private FileCollection apkList;
+    private BuildableArtifact apkList;
     private Supplier<EnumSet<Feature>> optionalFeatures;
     private OutputScope outputScope;
 
@@ -430,7 +430,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getApkList() {
+    public BuildableArtifact getApkList() {
         return apkList;
     }
 
@@ -536,7 +536,8 @@ public class MergeManifests extends ManifestProcessorTask {
                     TaskInputHelper.memoize(
                             () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));
 
-            processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            processManifestTask.apkList =
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {

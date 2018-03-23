@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.BaseDataBinder
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.LayoutInfoInput
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -26,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
@@ -58,11 +58,11 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     @get:Input lateinit var packageName: String
         private set
     // list of artifacts from dependencies
-    @get:InputFiles lateinit var mergedArtifactsFromDependencies: FileCollection
+    @get:InputFiles lateinit var mergedArtifactsFromDependencies: BuildableArtifact
         private set
     // list of v1 artifacts from dependencies
     @Optional
-    @get:InputFiles var v1Artifacts: FileCollection? = null
+    @get:InputFiles lateinit var v1Artifacts: BuildableArtifact
     // where to keep the log of the task
     @get:OutputDirectory lateinit var logOutFolder: File
         private set
@@ -91,6 +91,7 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             FileUtils.cleanOutputDir(logOutFolder)
             // check if there are any v2 if so, fail the build.
             val v2Dependencies = mergedArtifactsFromDependencies
+                .get()
                 .asFileTree
                 .files
                 .filter {
@@ -132,12 +133,12 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
                 outOfDate = outOfDate,
                 removed = removed,
                 infoFolder = xmlInfoFolder,
-                dependencyClassesFolder = mergedArtifactsFromDependencies.singleFile,
+                dependencyClassesFolder = mergedArtifactsFromDependencies.single(),
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
                 packageName = packageName,
                 artifactFolder = classInfoBundleDir,
-                v1ArtifactsFolder = v1Artifacts?.singleFile
+                v1ArtifactsFolder = if (v1Artifacts.isEmpty()) null else v1Artifacts.single()
         )
     }
 
@@ -151,19 +152,20 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         override fun execute(task: DataBindingGenBaseClassesTask) {
             task.xmlInfoFolder = variantScope.layoutInfoOutputForDataBinding
             val variantData = variantScope.variantData
+            val artifacts = variantScope.artifacts
             task.packageName = variantData.variantConfiguration.originalApplicationId
-            task.mergedArtifactsFromDependencies = variantScope.getOutput(
+            task.mergedArtifactsFromDependencies = artifacts.getFinalArtifactFiles(
                     DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS)
-            task.v1Artifacts = variantScope.getOutput(
+            task.v1Artifacts = artifacts.getFinalArtifactFiles(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
             )
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
             task.generateSources = variantScope.globalScope.projectOptions.get(
                     BooleanOption.ENABLE_DATA_BINDING_V2)
-            task.sourceOutFolder = variantScope.artifacts.appendArtifact(
+            task.sourceOutFolder = artifacts.appendArtifact(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
                 task)
-            task.classInfoBundleDir = variantScope.artifacts.appendArtifact(
+            task.classInfoBundleDir = artifacts.appendArtifact(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                 task)
         }

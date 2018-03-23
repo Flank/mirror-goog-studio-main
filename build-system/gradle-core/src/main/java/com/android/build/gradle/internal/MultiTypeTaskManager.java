@@ -111,10 +111,13 @@ public class MultiTypeTaskManager extends TaskManager {
         // This task manager is used when creating the unit tests of a variant so we need to do this.
         // FIXME remove when we remove the unit test of a feature (Since the aar variant is already tested with unit tests).
         // create an anchor collection for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(scope.getArtifacts().getArtifactFiles(JAVAC));
-        fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
-        fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        ConfigurableFileCollection files =
+                scope.getGlobalScope()
+                        .getProject()
+                        .files(
+                                scope.getArtifacts().getArtifactFiles(JAVAC),
+                                scope.getVariantData().getAllPreJavacGeneratedBytecode(),
+                                scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        scope.getArtifacts().appendArtifact(TaskOutputHolder.AnchorOutputType.ALL_CLASSES, files);
     }
 }

@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.ide;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
@@ -31,12 +31,14 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
@@ -48,16 +50,15 @@ import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
 import org.junit.Before;
@@ -84,6 +85,7 @@ public class ModelBuilderTest {
     @Mock ExtraModelInfo extraModelInfo;
     @Mock NdkHandler ndkHandler;
     @Mock NativeLibraryFactory nativeLibraryFactory;
+    @Mock BuildArtifactsHolder artifacts;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -346,15 +348,14 @@ public class ModelBuilderTest {
 
         VariantScope variantScope =
                 createVariantScope("variantName", "variant/name", variantConfiguration);
+        when(variantScope.getArtifacts()).thenReturn(artifacts);
         BaseVariantData variantData = createVariantData(variantScope, variantConfiguration);
 
-        FileCollection outputCollection = Mockito.mock(FileCollection.class);
-        when(outputCollection.getSingleFile()).thenReturn(temporaryFolder.getRoot());
-        Iterator outputIterator = Mockito.mock(Iterator.class);
-        when(outputIterator.next()).thenReturn(temporaryFolder.getRoot());
-        when(outputCollection.iterator()).thenReturn(outputIterator);
-        when(variantScope.getOutput(ArgumentMatchers.eq(InternalArtifactType.AAR)))
-                .thenReturn(outputCollection);
+        BuildableArtifact buildableArtifact = Mockito.mock(BuildableArtifact.class);
+        when(buildableArtifact.iterator())
+                .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
+        when(artifacts.getFinalArtifactFiles(ArgumentMatchers.eq(InternalArtifactType.AAR)))
+                .thenReturn(buildableArtifact);
 
         GradleVariantConfiguration testVariantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);
@@ -368,13 +369,12 @@ public class ModelBuilderTest {
         when(testVariantData.getType()).thenReturn(VariantTypeImpl.UNIT_TEST);
         when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
 
-        FileCollection testOutputCollection = Mockito.mock(FileCollection.class);
-        when(testOutputCollection.getSingleFile()).thenReturn(temporaryFolder.getRoot());
-        Iterator testOutputIterator = Mockito.mock(Iterator.class);
-        when(testOutputIterator.next()).thenReturn(temporaryFolder.getRoot());
-        when(testOutputCollection.iterator()).thenReturn(testOutputIterator);
-        when(testVariantScope.getOutput(ArgumentMatchers.eq(ALL_CLASSES)))
-                .thenReturn(testOutputCollection);
+        when(testVariantScope.getArtifacts()).thenReturn(artifacts);
+        BuildableArtifact testBuildableArtifact = Mockito.mock(BuildableArtifact.class);
+        when(artifacts.getFinalArtifactFiles(TaskOutputHolder.AnchorOutputType.ALL_CLASSES))
+                .thenReturn(testBuildableArtifact);
+        when(testBuildableArtifact.iterator())
+                .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 
         when(variantManager.getVariantScopes())
                 .thenReturn(ImmutableList.of(variantScope, testVariantScope));

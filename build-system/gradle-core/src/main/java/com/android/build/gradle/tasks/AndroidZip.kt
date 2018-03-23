@@ -99,12 +99,12 @@ open class AndroidZip : Zip() {
                     )
                 )
             }
-            bundle.from(variantScope.getOutput(InternalArtifactType.LIBRARY_MANIFEST))
+            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522
             if (java.lang.Boolean.TRUE != variantScope.globalScope.extension.aaptOptions.namespaced) {
-                bundle.from(variantScope.getOutput(InternalArtifactType.SYMBOL_LIST))
+                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
                 bundle.from(
-                    variantScope.getOutput(InternalArtifactType.PACKAGED_RES),
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
                 )
             }
