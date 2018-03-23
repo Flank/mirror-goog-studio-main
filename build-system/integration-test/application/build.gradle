@@ -232,7 +232,7 @@ task tarProjects(type: Tar) {
 
 task tarGradle(type: Tar) {
     from('../../../../../tools/external/gradle/') {
-        include 'gradle-4.5-bin.zip'
+        include 'gradle-' + gradle.gradleVersion + '-bin.zip'
     }
     archiveName "gradle.tar"
 }
