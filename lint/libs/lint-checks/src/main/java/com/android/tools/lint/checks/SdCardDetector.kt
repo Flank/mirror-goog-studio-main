@@ -71,11 +71,11 @@ Instead, use `Context.getFilesDir().getPath()`.""",
                         return
                     }
 
-                    if (s.startsWith("/sdcard")
-                        || s.startsWith("/mnt/sdcard/")
-                        || s.startsWith("/system/media/sdcard")
-                        || s.startsWith("file://sdcard/")
-                        || s.startsWith("file:///sdcard/")
+                    if (s.startsWith("/sdcard") ||
+                        s.startsWith("/mnt/sdcard/") ||
+                        s.startsWith("/system/media/sdcard") ||
+                        s.startsWith("file://sdcard/") ||
+                        s.startsWith("file:///sdcard/")
                     ) {
                         val message =
                             """Do not hardcode "/sdcard/"; use `Environment.getExternalStorageDirectory().getPath()` instead"""

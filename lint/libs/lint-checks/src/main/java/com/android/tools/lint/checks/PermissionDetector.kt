@@ -181,8 +181,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     )
                 )
             }
-        } else if (requirement.isRevocable(permissions)
-            && context.mainProject.targetSdkVersion.featureLevel >= 23 &&
+        } else if (requirement.isRevocable(permissions) &&
+            context.mainProject.targetSdkVersion.featureLevel >= 23 &&
             requirement.lastApplicableApi >= 23 &&
             !isAndroidThingsProject(context)
         ) {
@@ -322,8 +322,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             val name = node.methodName
             if (name != null &&
-                (name.startsWith("check") || name.startsWith("enforce"))
-                && name.endsWith("Permission")
+                (name.startsWith("check") || name.startsWith("enforce")) &&
+                name.endsWith("Permission")
             ) {
                 mChecksPermission = true
                 mDone = true
@@ -368,9 +368,9 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (mergedManifest != null) {
                 for (element in XmlUtils.getSubTags(mergedManifest.documentElement)) {
                     val nodeName = element.nodeName
-                    if (TAG_USES_PERMISSION == nodeName
-                        || TAG_USES_PERMISSION_SDK_23 == nodeName
-                        || TAG_USES_PERMISSION_SDK_M == nodeName
+                    if (TAG_USES_PERMISSION == nodeName ||
+                        TAG_USES_PERMISSION_SDK_23 == nodeName ||
+                        TAG_USES_PERMISSION_SDK_M == nodeName
                     ) {
                         val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
                         if (!name.isEmpty()) {

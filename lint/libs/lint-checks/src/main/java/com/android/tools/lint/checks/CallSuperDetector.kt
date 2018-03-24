@@ -152,9 +152,9 @@ implementation as part of your method.
             val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
-                if (targetMethod == resolved
+                if (targetMethod == resolved ||
                     // Avoid false positives when there are type resolution problems
-                    || resolved == null
+                    resolved == null
                 ) {
                     callsSuper = true
                 }

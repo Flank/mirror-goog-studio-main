@@ -142,8 +142,8 @@ are typically more intended for tools usage than runtime checks.)""",
             is UBinaryExpression -> {
                 val lOperand = expression.leftOperand
                 val rOperand = expression.rightOperand
-                lOperand.isNullLiteral() || rOperand.isNullLiteral()
-                        || isNullCheck(lOperand) && isNullCheck(rOperand)
+                lOperand.isNullLiteral() || rOperand.isNullLiteral() ||
+                        isNullCheck(lOperand) && isNullCheck(rOperand)
             }
             is UPolyadicExpression -> {
                 for (operand in expression.operands) {

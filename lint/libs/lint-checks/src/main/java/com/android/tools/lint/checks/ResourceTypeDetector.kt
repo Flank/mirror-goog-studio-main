@@ -217,8 +217,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                     val types = ResourceEvaluator.getTypesFromAnnotations(annotations)
                     if (types != null) {
-                        if (types.contains(ResourceType.STYLEABLE)
-                            && type == AnnotationUsageType.ASSIGNMENT
+                        if (types.contains(ResourceType.STYLEABLE) &&
+                            type == AnnotationUsageType.ASSIGNMENT
                         ) {
                             // Allow assigning constants to R.styleable; this is done
                             // for example in the support library
@@ -418,8 +418,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             )
         ) {
             val call = argument.getParentOfType<UExpression>(UCallExpression::class.java, false)
-            if (call is UCallExpression
-                && typeArrayFromArrayLiteral(call.receiver, context)
+            if (call is UCallExpression &&
+                typeArrayFromArrayLiteral(call.receiver, context)
             ) {
                 // You're generally supposed to provide a styleable to the TypedArray methods,
                 // but you're also allowed to supply an integer array

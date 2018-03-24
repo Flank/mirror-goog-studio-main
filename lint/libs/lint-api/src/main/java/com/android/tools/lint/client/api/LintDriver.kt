@@ -910,10 +910,10 @@ class LintDriver
 
             // Process both Scope.RESOURCE_FILE and Scope.ALL_RESOURCE_FILES detectors together
             // in a single pass through the resource directories.
-            if (scope.contains(Scope.ALL_RESOURCE_FILES)
-                || scope.contains(Scope.RESOURCE_FILE)
-                || scope.contains(Scope.RESOURCE_FOLDER)
-                || scope.contains(Scope.BINARY_RESOURCE_FILE)
+            if (scope.contains(Scope.ALL_RESOURCE_FILES) ||
+                scope.contains(Scope.RESOURCE_FILE) ||
+                scope.contains(Scope.RESOURCE_FOLDER) ||
+                scope.contains(Scope.BINARY_RESOURCE_FILE)
             ) {
                 val dirChecks = scopeDetectors[Scope.RESOURCE_FOLDER]
                 val binaryChecks = scopeDetectors[Scope.BINARY_RESOURCE_FILE]
@@ -934,9 +934,9 @@ class LintDriver
                 } else {
                     xmlDetectors = mutableListOf()
                 }
-                if (haveXmlChecks
-                    || dirChecks != null && !dirChecks.isEmpty()
-                    || binaryChecks != null && !binaryChecks.isEmpty()
+                if (haveXmlChecks ||
+                    dirChecks != null && !dirChecks.isEmpty() ||
+                    binaryChecks != null && !binaryChecks.isEmpty()
                 ) {
                     val files = project.subset
                     if (files != null) {
@@ -1001,9 +1001,9 @@ class LintDriver
             return
         }
 
-        if (scope.contains(Scope.CLASS_FILE)
-            || scope.contains(Scope.ALL_CLASS_FILES)
-            || scope.contains(Scope.JAVA_LIBRARIES)
+        if (scope.contains(Scope.CLASS_FILE) ||
+            scope.contains(Scope.ALL_CLASS_FILES) ||
+            scope.contains(Scope.JAVA_LIBRARIES)
         ) {
             checkClasses(project, main)
         }
@@ -1650,8 +1650,8 @@ class LintDriver
             }
 
             // If the list of detectors hasn't changed, then just use the current visitor!
-            if (currentXmlDetectors != null && currentXmlDetectors == applicableXmlChecks
-                && Objects.equal(currentBinaryDetectors, applicableBinaryChecks)
+            if (currentXmlDetectors != null && currentXmlDetectors == applicableXmlChecks &&
+                Objects.equal(currentBinaryDetectors, applicableBinaryChecks)
             ) {
                 return currentVisitor
             }
@@ -2450,8 +2450,8 @@ class LintDriver
         if (currentNode is Attr) {
             currentNode = currentNode.ownerElement
         }
-        val checkComments = client.checkForSuppressComments()
-                && context != null && context.containsCommentSuppress()
+        val checkComments = client.checkForSuppressComments() &&
+                context != null && context.containsCommentSuppress()
         while (currentNode != null) {
             if (currentNode.nodeType == org.w3c.dom.Node.ELEMENT_NODE) {
                 val element = currentNode as Element
@@ -2740,15 +2740,15 @@ class LintDriver
                 if (id.equals(issueId, ignoreCase = true)) {
                     return true
                 }
-                if (id.startsWith(STUDIO_ID_PREFIX)
-                    && id.regionMatches(
+                if (id.startsWith(STUDIO_ID_PREFIX) &&
+                    id.regionMatches(
                         STUDIO_ID_PREFIX.length,
                         issueId,
                         0,
                         issueId.length,
                         ignoreCase = true
-                    )
-                    && id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
+                    ) &&
+                    id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
                 ) {
                     return true
                 }
@@ -2813,10 +2813,10 @@ class LintDriver
 
             for (annotation in modifierList.annotations) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
-                            || fqcn == SUPPRESS_WARNINGS_FQCN
-                            || fqcn == KOTLIN_SUPPRESS
-                            || fqcn == SUPPRESS_LINT)
+                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
+                            fqcn == SUPPRESS_WARNINGS_FQCN ||
+                            fqcn == KOTLIN_SUPPRESS ||
+                            fqcn == SUPPRESS_LINT)
                 ) { // when missing imports
                     val parameterList = annotation.parameterList
                     for (pair in parameterList.attributes) {
@@ -2850,10 +2850,10 @@ class LintDriver
 
             for (annotation in annotations) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
-                            || fqcn == SUPPRESS_WARNINGS_FQCN
-                            || fqcn == KOTLIN_SUPPRESS
-                            || fqcn == SUPPRESS_LINT)
+                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
+                            fqcn == SUPPRESS_WARNINGS_FQCN ||
+                            fqcn == KOTLIN_SUPPRESS ||
+                            fqcn == SUPPRESS_LINT)
                 ) { // when missing imports
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {

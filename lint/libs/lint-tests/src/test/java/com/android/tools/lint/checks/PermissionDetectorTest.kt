@@ -120,13 +120,13 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    <uses-sdk android:minSdkVersion=\"" + minSdk + "\" android:targetSdkVersion=\"" +
                     targetSdk + "\" />\n" +
                     "\n" +
-                    permissionBlock.toString()
-                    + "\n" +
+                    permissionBlock.toString() +
+                    "\n" +
                     "    <application\n" +
                     "        android:icon=\"@drawable/ic_launcher\"\n" +
                     "        android:label=\"@string/app_name\" >\n" +
-                    (applicationBlock ?: "")
-                    + "    </application>\n" +
+                    (applicationBlock ?: "") +
+                    "    </application>\n" +
                     "\n" +
                     "</manifest>"
         )

@@ -66,8 +66,8 @@ Please upgrade to version 24.0.0 or higher of the Support Library.""",
             val mc = library.resolvedCoordinates
             @Suppress("SENSELESS_COMPARISON")
             if (mc != null &&
-                mc.groupId == SdkConstants.SUPPORT_LIB_GROUP_ID
-                && mc.artifactId == "support-v4" &&
+                mc.groupId == SdkConstants.SUPPORT_LIB_GROUP_ID &&
+                mc.artifactId == "support-v4" &&
                 mc.version != null
             ) {
                 val libVersion = GradleCoordinate.parseVersionOnly(mc.version)

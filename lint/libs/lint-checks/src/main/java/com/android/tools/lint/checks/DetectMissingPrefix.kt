@@ -87,13 +87,13 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean =
-        folderType == LAYOUT
-                || folderType == MENU
-                || folderType == DRAWABLE
-                || folderType == ANIM
-                || folderType == ANIMATOR
-                || folderType == COLOR
-                || folderType == INTERPOLATOR
+        folderType == LAYOUT ||
+                folderType == MENU ||
+                folderType == DRAWABLE ||
+                folderType == ANIM ||
+                folderType == ANIMATOR ||
+                folderType == COLOR ||
+                folderType == INTERPOLATOR
 
     override fun getApplicableAttributes(): Collection<String>? = ALL
 
@@ -145,18 +145,18 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
                 context.getLocation(attribute),
                 "Attribute is missing the Android namespace prefix"
             )
-        } else if (ANDROID_URI != uri
-            && TOOLS_URI != uri
-            && context.resourceFolderType == LAYOUT
-            && !isCustomView(attribute.ownerElement)
-            && !isFragment(attribute.ownerElement)
-            && !attribute.localName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
+        } else if (ANDROID_URI != uri &&
+            TOOLS_URI != uri &&
+            context.resourceFolderType == LAYOUT &&
+            !isCustomView(attribute.ownerElement) &&
+            !isFragment(attribute.ownerElement) &&
+            !attribute.localName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) &&
             // TODO: Consider not enforcing that the parent is a custom view
             // too, though in that case we should filter out views that are
             // layout params for the custom view parent:
-            // ....&& !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
-            && attribute.ownerElement.parentNode.nodeType == Node.ELEMENT_NODE
-            && !isCustomView(attribute.ownerElement.parentNode as Element)
+            // ... !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) &&
+            attribute.ownerElement.parentNode.nodeType == Node.ELEMENT_NODE &&
+            !isCustomView(attribute.ownerElement.parentNode as Element)
         ) {
 
             if (context.resourceFolderType == LAYOUT && AUTO_URI == uri) {

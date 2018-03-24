@@ -132,14 +132,13 @@ class ResourceReference(
             }
 
             val variable = declaration as PsiVariable?
-            if (variable !is PsiField
-                || (variable.type != PsiType.INT && !isIntArray(variable.type))
-
+            if (variable !is PsiField ||
+                (variable.type != PsiType.INT && !isIntArray(variable.type)) ||
                 // Note that we don't check for PsiModifier.FINAL; in library projects
                 // the R class fields are deliberately not made final such that their
                 // values can be substituted when all the resources are merged together
                 // in the app module and unique id's can be assigned for all resources
-                || !variable.hasModifierProperty(PsiModifier.STATIC)
+                !variable.hasModifierProperty(PsiModifier.STATIC)
             ) {
                 return null
             }

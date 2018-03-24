@@ -75,11 +75,11 @@ For more details on how to update your code, please seehttp://developer.android.
         assert(element.tagName == TAG_ACTION)
         val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
         val name = attr.value
-        if ("android.net.conn.CONNECTIVITY_CHANGE" == name
-            && element.parentNode != null &&
+        if ("android.net.conn.CONNECTIVITY_CHANGE" == name &&
+            element.parentNode != null &&
             element.parentNode.parentNode != null &&
-            TAG_RECEIVER == element.parentNode.parentNode.nodeName
-            && context.mainProject.targetSdkVersion.featureLevel >= 24
+            TAG_RECEIVER == element.parentNode.parentNode.nodeName &&
+            context.mainProject.targetSdkVersion.featureLevel >= 24
         ) {
             val message = "Declaring a broadcastreceiver for " +
                     "`android.net.conn.CONNECTIVITY_CHANGE` is deprecated for apps targeting " +
@@ -99,9 +99,9 @@ For more details on how to update your code, please seehttp://developer.android.
             )
         }
 
-        if ("android.hardware.action.NEW_PICTURE" == name
-            || "android.hardware.action.NEW_VIDEO" == name
-            || "com.android.camera.NEW_PICTURE" == name
+        if ("android.hardware.action.NEW_PICTURE" == name ||
+            "android.hardware.action.NEW_VIDEO" == name ||
+            "com.android.camera.NEW_PICTURE" == name
         ) {
             val message = "Use of `$name` is deprecated for all apps starting " +
                     "with the N release independent of the target SDK. Apps should not " +
@@ -122,8 +122,8 @@ For more details on how to update your code, please seehttp://developer.android.
             context.evaluator.isMemberInSubClassOf(
                 referenced,
                 "android.provider.Settings", false
-            )
-            && context.mainProject.targetSdkVersion.featureLevel >= 23
+            ) &&
+            context.mainProject.targetSdkVersion.featureLevel >= 23
         ) {
             context.report(
                 ISSUE, reference, context.getNameLocation(reference),

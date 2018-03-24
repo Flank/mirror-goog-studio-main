@@ -141,10 +141,10 @@ Log tags are only allowed to be at most 23 tag characters long.""",
 
         // See if it's surrounded by an if statement (and it's one of the non-error, spammy
         // log methods (info, verbose, etc))
-        if (("i" == name || "d" == name || "v" == name || PRINTLN == name)
-            && !withinConditional
-            && performsWork(node)
-            && context.isEnabled(CONDITIONAL)
+        if (("i" == name || "d" == name || "v" == name || PRINTLN == name) &&
+            !withinConditional &&
+            performsWork(node) &&
+            context.isEnabled(CONDITIONAL)
         ) {
             val message = String.format(
                 "The log call Log.%1\$s(...) should be " +
@@ -254,11 +254,11 @@ Log tags are only allowed to be at most 23 tag characters long.""",
                 }
 
                 return true
-            } else if (curr is UCallExpression
-                || curr is UMethod
-                || curr is UClassInitializer
-                || curr is UField
-                || curr is UClass
+            } else if (curr is UCallExpression ||
+                curr is UMethod ||
+                curr is UClassInitializer ||
+                curr is UField ||
+                curr is UClass
             ) { // static block
                 break
             }
@@ -331,8 +331,8 @@ Log tags are only allowed to be at most 23 tag characters long.""",
         if (resolved is PsiVariable) {
             val containingClass = resolved.getContainingClass()
             if (containingClass == null ||
-                "android.util.Log" != containingClass.qualifiedName
-                || resolved.getName() == null ||
+                "android.util.Log" != containingClass.qualifiedName ||
+                resolved.getName() == null ||
                 resolved.getName() == getTagForMethod(logCallName)
             ) {
                 return

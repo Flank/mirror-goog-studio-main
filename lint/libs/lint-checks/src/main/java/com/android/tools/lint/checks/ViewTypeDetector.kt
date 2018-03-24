@@ -229,8 +229,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         }
 
         val castTypeClass = castType.canonicalText
-        if (castTypeClass == CLASS_VIEW
-            || castTypeClass == "kotlin.Unit" ||
+        if (castTypeClass == CLASS_VIEW ||
+            castTypeClass == "kotlin.Unit" ||
             castTypeClass == "android.app.Fragment" ||
             castTypeClass == "android.support.v4.app.Fragment" ||
             castTypeClass == "androidx.fragment.app.Fragment"
@@ -253,8 +253,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             } else {
                 val resourceUrl = ResourceEvaluator.getResource(context.evaluator, first)
                 if (resourceUrl != null &&
-                    resourceUrl.type == ResourceType.ID
-                    && !resourceUrl.isFramework
+                    resourceUrl.type == ResourceType.ID &&
+                    !resourceUrl.isFramework
                 ) {
                     id = resourceUrl.name
                 }

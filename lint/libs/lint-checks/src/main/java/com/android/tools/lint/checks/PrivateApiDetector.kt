@@ -80,8 +80,8 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
     override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val evaluator = context.evaluator
         if (LOAD_CLASS == method.name) {
-            if (evaluator.isMemberInClass(method, "java.lang.ClassLoader")
-                || evaluator.isMemberInClass(method, "dalvik.system.DexFile")
+            if (evaluator.isMemberInClass(method, "java.lang.ClassLoader") ||
+                evaluator.isMemberInClass(method, "dalvik.system.DexFile")
             ) {
                 checkLoadClass(context, node)
             }

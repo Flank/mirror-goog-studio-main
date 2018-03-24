@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:JvmName("Lint") // Class name to help Java access of the package functions
+// Class name to help Java access of the package functions
+@file:JvmName("Lint")
 
 package com.android.tools.lint.detector.api
 
@@ -550,13 +551,13 @@ fun splitPath(path: String): Iterable<String> {
         val p = combined[i]
         if (p.length == 1 &&
             i < n - 1 &&
-            Character.isLetter(p[0])
+            Character.isLetter(p[0]) &&
             // Technically, Windows paths do not have to have a \ after the :,
             // which means it would be using the current directory on that drive,
             // but that's unlikely to be the case in a path since it would have
             // unpredictable results
-            && !combined[i + 1].isEmpty()
-            && combined[i + 1][0] == '\\'
+            !combined[i + 1].isEmpty() &&
+            combined[i + 1][0] == '\\'
         ) {
             combined[i] = p + ':'.toString() + combined[i + 1]
             combined.removeAt(i + 1)
@@ -700,19 +701,19 @@ fun getEncodedString(data: ByteArray?, createString: Boolean): CharSequence {
             charset = UTF_16
             defaultCharset = charset
             offset += 2
-        } else if (data[0] == 0x0.toByte()
-            && data[1] == 0x0.toByte()
-            && data[2] == 0xfe.toByte()
-            && data[3] == 0xff.toByte()
+        } else if (data[0] == 0x0.toByte() &&
+            data[1] == 0x0.toByte() &&
+            data[2] == 0xfe.toByte() &&
+            data[3] == 0xff.toByte()
         ) {
             // UTF-32, big-endian
             charset = "UTF_32"
             defaultCharset = charset
             offset += 4
-        } else if (data[0] == 0xff.toByte()
-            && data[1] == 0xfe.toByte()
-            && data[2] == 0x0.toByte()
-            && data[3] == 0x0.toByte()
+        } else if (data[0] == 0xff.toByte() &&
+            data[1] == 0xfe.toByte() &&
+            data[2] == 0x0.toByte() &&
+            data[3] == 0x0.toByte()
         ) {
             // UTF-32, little-endian. We must check for this *before* looking for
             // UTF_16LE since UTF_32LE has the same prefix!
@@ -854,9 +855,9 @@ fun getPrevInstruction(node: AbstractInsnNode): AbstractInsnNode? {
             return null
         } else {
             val type = prev.type
-            if (type != AbstractInsnNode.LINE
-                && type != AbstractInsnNode.LABEL
-                && type != AbstractInsnNode.FRAME
+            if (type != AbstractInsnNode.LINE &&
+                type != AbstractInsnNode.LABEL &&
+                type != AbstractInsnNode.FRAME
             ) {
                 return prev
             }
@@ -889,9 +890,9 @@ fun getNextInstruction(node: AbstractInsnNode): AbstractInsnNode? {
             return null
         } else {
             val type = next.type
-            if (type != AbstractInsnNode.LINE
-                && type != AbstractInsnNode.LABEL
-                && type != AbstractInsnNode.FRAME
+            if (type != AbstractInsnNode.LINE &&
+                type != AbstractInsnNode.LABEL &&
+                type != AbstractInsnNode.FRAME
             ) {
                 return next
             }

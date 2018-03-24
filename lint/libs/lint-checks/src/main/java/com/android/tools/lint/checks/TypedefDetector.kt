@@ -223,9 +223,9 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             } else {
                 val operator = argument.operator
-                if (operator === UastBinaryOperator.BITWISE_AND
-                    || operator === UastBinaryOperator.BITWISE_OR
-                    || operator === UastBinaryOperator.BITWISE_XOR
+                if (operator === UastBinaryOperator.BITWISE_AND ||
+                    operator === UastBinaryOperator.BITWISE_OR ||
+                    operator === UastBinaryOperator.BITWISE_XOR
                 ) {
                     report(
                         context, TYPE_DEF, argument, context.getLocation(argument),

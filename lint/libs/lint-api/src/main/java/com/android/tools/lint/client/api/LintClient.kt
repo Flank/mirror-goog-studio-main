@@ -642,9 +642,9 @@ abstract class LintClient {
                         if (sources.isEmpty()) {
                             var src = File(
                                 projectDir,
-                                "src" + File.separator
-                                        + "main" + File.separator
-                                        + "java"
+                                "src" + File.separator +
+                                        "main" + File.separator +
+                                        "java"
                             )
                             if (src.exists()) {
                                 sources.add(src)
@@ -657,9 +657,9 @@ abstract class LintClient {
 
                             val gen = File(
                                 projectDir,
-                                "target" + File.separator
-                                        + "generated-sources" + File.separator
-                                        + "r"
+                                "target" + File.separator +
+                                        "generated-sources" + File.separator +
+                                        "r"
                             )
                             if (gen.exists()) {
                                 generated.add(gen)

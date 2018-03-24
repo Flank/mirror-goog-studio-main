@@ -80,8 +80,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
     ) {
         method ?: return
 
-        if (type != AnnotationUsageType.METHOD_CALL && type != AnnotationUsageType.METHOD_CALL_CLASS
-            && type != AnnotationUsageType.METHOD_CALL_PACKAGE
+        if (type != AnnotationUsageType.METHOD_CALL && type != AnnotationUsageType.METHOD_CALL_CLASS &&
+            type != AnnotationUsageType.METHOD_CALL_PACKAGE
         ) {
             return
         }
@@ -469,9 +469,9 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                     if (returnValue != null) {
                         val arguments = (call as? UCallExpression)?.valueArguments ?: emptyList()
                         if (arguments.isEmpty()) {
-                            if (returnValue is UPolyadicExpression
-                                || returnValue is UCallExpression
-                                || returnValue is UQualifiedReferenceExpression
+                            if (returnValue is UPolyadicExpression ||
+                                returnValue is UCallExpression ||
+                                returnValue is UQualifiedReferenceExpression
                             ) {
                                 val isConditional = isNameCheckConditional(
                                     returnValue,

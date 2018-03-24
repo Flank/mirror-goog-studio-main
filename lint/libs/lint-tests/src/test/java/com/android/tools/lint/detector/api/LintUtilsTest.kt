@@ -635,10 +635,10 @@ class LintUtilsTest : TestCase() {
                 TestLintClient(),
                 File(
                     "tmp" +
-                            File.separator
-                            + "foo" +
-                            File.separator
-                            + "bar.baz"
+                            File.separator +
+                            "foo" +
+                            File.separator +
+                            "bar.baz"
                 )
             )
         )
@@ -648,10 +648,10 @@ class LintUtilsTest : TestCase() {
                 LintCliClient(),
                 File(
                     "tmp" +
-                            File.separator
-                            + "foo" +
-                            File.separator
-                            + "bar.baz"
+                            File.separator +
+                            "foo" +
+                            File.separator +
+                            "bar.baz"
                 )
             )
         )
@@ -702,13 +702,13 @@ class LintUtilsTest : TestCase() {
             // Norwegian extra vowel characters such as "latin small letter a with ring above"
             val value = "\u00e6\u00d8\u00e5"
             val expected = ("First line." +
-                    lineEnding
-                    + "Second line." +
-                    lineEnding
-                    + "Third line." +
-                    lineEnding
-                    + value
-                    + lineEnding)
+                    lineEnding +
+                    "Second line." +
+                    lineEnding +
+                    "Third line." +
+                    lineEnding +
+                    value +
+                    lineEnding)
             sb.append(expected)
             val file = File.createTempFile("getEncodingTest$encoding$writeBom", ".txt")
             file.deleteOnExit()
@@ -830,11 +830,11 @@ class LintUtilsTest : TestCase() {
                 assert(name != null)
                 path = File(
                     "src" +
-                            File.separatorChar
-                            + pkg!!.replace('.', File.separatorChar)
-                            + File.separatorChar
-                            + name
-                            + DOT_JAVA
+                            File.separatorChar +
+                            pkg!!.replace('.', File.separatorChar) +
+                            File.separatorChar +
+                            name +
+                            DOT_JAVA
                 )
             }
 
@@ -855,11 +855,11 @@ class LintUtilsTest : TestCase() {
                 assert(name != null)
                 path = File(
                     "src" +
-                            File.separatorChar
-                            + pkg!!.replace('.', File.separatorChar)
-                            + File.separatorChar
-                            + name
-                            + DOT_KT
+                            File.separatorChar +
+                            pkg!!.replace('.', File.separatorChar) +
+                            File.separatorChar +
+                            name +
+                            DOT_KT
                 )
             }
 

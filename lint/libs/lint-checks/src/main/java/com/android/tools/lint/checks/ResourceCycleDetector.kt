@@ -105,11 +105,11 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return (folderType == ResourceFolderType.VALUES
-                || folderType == ResourceFolderType.FONT
-                || folderType == ResourceFolderType.COLOR
-                || folderType == ResourceFolderType.DRAWABLE
-                || folderType == ResourceFolderType.LAYOUT)
+        return (folderType == ResourceFolderType.VALUES ||
+                folderType == ResourceFolderType.FONT ||
+                folderType == ResourceFolderType.COLOR ||
+                folderType == ResourceFolderType.DRAWABLE ||
+                folderType == ResourceFolderType.LAYOUT)
     }
 
     override fun getApplicableElements(): Collection<String>? {
@@ -275,9 +275,9 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             if (parentNode != null && nameNode != null) {
                 val name = nameNode.value
                 val parent = parentNode.value
-                if (parent.startsWith(STYLE_RESOURCE_PREFIX)
-                    && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length)
-                    && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length + name.length)
+                if (parent.startsWith(STYLE_RESOURCE_PREFIX) &&
+                    parent.startsWith(name, STYLE_RESOURCE_PREFIX.length) &&
+                    parent.startsWith(".", STYLE_RESOURCE_PREFIX.length + name.length)
                 ) {
                     if (context.isEnabled(CYCLE) && context.driver.phase == 1) {
                         context.report(
@@ -401,8 +401,8 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         if (!itemLocations.isEmpty()) {
                             val itemLocation = itemLocations.iterator().next()
                             val next = chain[(i + 1) % chain.size]
-                            val label = ("Reference from @" + type.getName() + "/" + item
-                                    + " to " + type.getName() + "/" + next + " here")
+                            val label = ("Reference from @" + type.getName() + "/" + item +
+                                    " to " + type.getName() + "/" + next + " here")
                             itemLocation.message = label
                             itemLocation.secondary = location
                             location = itemLocation
@@ -494,8 +494,8 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     ) {
         if (from == to) {
             // Report immediately; don't record
-            if (context.isEnabled(CYCLE)
-                && context.driver.phase == 1
+            if (context.isEnabled(CYCLE) &&
+                context.driver.phase == 1
             ) {
 
                 context.report(

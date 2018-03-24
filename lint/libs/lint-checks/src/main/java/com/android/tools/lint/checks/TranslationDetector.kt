@@ -541,10 +541,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             }
             recordTranslatable(context, name)
             return true
-        } else if ((isServiceKey(name)
+        } else if ((isServiceKey(name) ||
                     // Older versions of the templates shipped with these not marked as
                     // non-translatable; don't flag them
-                    || name == "google_maps_key" ||
+                    name == "google_maps_key" ||
                     name == "google_maps_key_instructions")
         ) {
             // Mark translatable, but don't flag it as an error do have these translatable

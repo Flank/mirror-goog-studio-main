@@ -258,11 +258,11 @@ internal class UElementVisitor constructor(
                     })
                 }
 
-                if (!methodDetectors.isEmpty()
-                    || !resourceFieldDetectors.isEmpty()
-                    || !constructorDetectors.isEmpty()
-                    || !referenceDetectors.isEmpty()
-                    || annotationHandler != null
+                if (!methodDetectors.isEmpty() ||
+                    !resourceFieldDetectors.isEmpty() ||
+                    !constructorDetectors.isEmpty() ||
+                    !referenceDetectors.isEmpty() ||
+                    annotationHandler != null
                 ) {
                     client.runReadAction(Runnable {
                         // TODO: Do we need to break this one up into finer grain locking units

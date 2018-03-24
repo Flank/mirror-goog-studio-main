@@ -164,8 +164,8 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun isThreadingAnnotation(annotation: UAnnotation): Boolean {
         val signature = annotation.qualifiedName
         return (signature != null &&
-                signature.endsWith(THREAD_SUFFIX)
-                && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature))
+                signature.endsWith(THREAD_SUFFIX) &&
+                SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature))
     }
 
     private fun describeThreads(annotations: List<String>, any: Boolean): String {
@@ -293,8 +293,8 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ): MutableList<String>? {
         var resultList = result
         val name = annotation.qualifiedName
-        if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name)
-            && name.endsWith(THREAD_SUFFIX)
+        if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name) &&
+            name.endsWith(THREAD_SUFFIX)
         ) {
             if (resultList == null) {
                 resultList = ArrayList(4)
