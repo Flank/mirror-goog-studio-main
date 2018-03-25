@@ -34,12 +34,8 @@ public class AndroidArtifacts {
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
-    public static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
+    private static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
     private static final String TYPE_BUNDLE = "aab";
-
-    // types for jetified artifacts
-    public static final String TYPE_JETIFIED_AAR = "jetified-aar";
-    public static final String TYPE_JETIFIED_JAR = "jetified-jar";
 
     // types for AAR content
     private static final String TYPE_CLASSES = "android-classes";
