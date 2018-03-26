@@ -16,13 +16,13 @@
 #ifndef PERFD_DAEMON_H_
 #define PERFD_DAEMON_H_
 
-#include <string>
-#include <vector>
-
 #include <grpc++/grpc++.h>
-
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "perfd/profiler_component.h"
 #include "perfd/sessions/sessions_manager.h"
+#include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/config.h"
 #include "utils/file_cache.h"
@@ -40,11 +40,7 @@ class Daemon {
   // will fail to load and an empty config will be used.
   // |cache_path| is a path where a temporary file cache will live. This
   // cache will be cleared each time the daemon starts up.
-  Daemon(Clock* clock, Config* config, FileCache* file_cache)
-      : clock_(clock),
-        config_(config),
-        file_cache_(file_cache),
-        sessions_(clock) {}
+  Daemon(Clock* clock, Config* config, FileCache* file_cache);
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
@@ -77,9 +73,44 @@ class Daemon {
   const Config* config() { return config_; }
 
   // Return SessionsManager shared across all profilers.
-  SessionsManager* sessions() { return &sessions_; }
+  SessionsManager* sessions() { return &session_manager_; }
+
+  void GetAgentStatus(const proto::AgentStatusRequest* request,
+                      proto::AgentStatusResponse* response);
+
+  grpc::Status ConfigureStartupAgent(
+      const profiler::proto::ConfigureStartupAgentRequest* request,
+      profiler::proto::ConfigureStartupAgentResponse* response);
+
+  // Attaches an JVMTI agent to an app. Returns true if |agent_lib_file_name| is
+  // attached successfully (either an agent already exists or a new one
+  // attaches), otherwise returns false.
+  // Note: |agent_lib_file_name| refers to the name of the agent library file
+  // located within the perfd directory, and it needs to be compatible with the
+  // app's CPU architecture.
+  bool TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
+                         const std::string& agent_lib_file_name);
+
+  void SetHeartBeatTimestamp(int32_t app_pid, int64_t timestamp);
+
+  const std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map() {
+    return heartbeat_timestamp_map_;
+  }
+
+  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>&
+  agent_status_map() {
+    return agent_status_map_;
+  }
 
  private:
+  // True if there is an JVMTI agent attached to an app. False otherwise.
+  bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name);
+
+  // True if perfd has received a heartbeat from an app within the last
+  // time interval (as specified by |GenericComponent::kHeartbeatThresholdNs|.
+  // False otherwise.
+  bool CheckAppHeartBeat(int32_t app_pid);
+
   // Builder of the gRPC server.
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
@@ -91,7 +122,12 @@ class Daemon {
   // A shared cache for all profiler services
   FileCache* file_cache_;
   // Session management across the profiling services in perfd.
-  SessionsManager sessions_;
+  SessionsManager session_manager_;
+
+  std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
+  // Mapping pid -> latest status of agent (Attached / Detached).
+  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>
+      agent_status_map_;
 };
 
 }  // namespace profiler

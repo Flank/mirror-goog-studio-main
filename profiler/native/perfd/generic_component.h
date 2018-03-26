@@ -33,8 +33,7 @@ class GenericComponent final : public ProfilerComponent {
  public:
   static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
 
-  explicit GenericComponent(Daemon* daemon, Clock* clock,
-                            SessionsManager* sessions);
+  explicit GenericComponent(Daemon* daemon, SessionsManager* sessions);
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override {
@@ -51,16 +50,12 @@ class GenericComponent final : public ProfilerComponent {
  private:
   void RunAgentStatusThread();
 
+  Daemon* daemon_;
   ProfilerServiceImpl generic_public_service_;
   AgentServiceImpl agent_service_;
 
-  Clock* clock_;
-  // Mapping pid -> timestamp of last ping from the agent.
-  std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
   std::list<AgentStatusChanged> agent_status_changed_callbacks_;
-  // Mapping pid -> latest status of agent (Attached / Detached).
-  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>
-      agent_status_map_;
+
   std::thread status_thread_;
 };
 

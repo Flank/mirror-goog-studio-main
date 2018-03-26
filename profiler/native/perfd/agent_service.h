@@ -18,6 +18,7 @@
 
 #include <grpc++/grpc++.h>
 
+#include "perfd/daemon.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "utils/clock.h"
 
@@ -27,19 +28,14 @@ namespace profiler {
 
 class AgentServiceImpl : public proto::AgentService::Service {
  public:
-  explicit AgentServiceImpl(
-      Clock* clock,
-      std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
-      : clock_(clock), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
+  explicit AgentServiceImpl(Daemon* daemon) : daemon_(daemon) {}
 
   grpc::Status HeartBeat(grpc::ServerContext* context,
                          const proto::HeartBeatRequest* request,
                          proto::HeartBeatResponse* response) override;
 
  private:
-  Clock* clock_;
-  // used for marking the last time this service receives a ping from the agent.
-  std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
+  Daemon* daemon_;
 };
 
 }  // namespace profiler

@@ -24,7 +24,8 @@ namespace profiler {
 grpc::Status AgentServiceImpl::HeartBeat(ServerContext* context,
                                          const HeartBeatRequest* request,
                                          HeartBeatResponse* response) {
-  heartbeat_timestamp_map_[request->pid()] = clock_->GetCurrentTime();
+  auto now = daemon_->clock()->GetCurrentTime();
+  daemon_->SetHeartBeatTimestamp(request->pid(), now);
   return grpc::Status::OK;
 }
 

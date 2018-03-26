@@ -21,18 +21,12 @@
 #include "perfd/daemon.h"
 #include "proto/profiler.grpc.pb.h"
 
-#include <unordered_map>
-
 namespace profiler {
 
 class ProfilerServiceImpl final
     : public profiler::proto::ProfilerService::Service {
  public:
-  explicit ProfilerServiceImpl(
-      Daemon* daemon,
-      std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>*
-          agent_status_map)
-      : daemon_(daemon), agent_status_map_(*agent_status_map) {}
+  explicit ProfilerServiceImpl(Daemon* daemon) : daemon_(daemon) {}
 
   grpc::Status GetCurrentTime(grpc::ServerContext* context,
                               const profiler::proto::TimeRequest* request,
@@ -81,29 +75,8 @@ class ProfilerServiceImpl final
       const profiler::proto::GetSessionsRequest* request,
       profiler::proto::GetSessionsResponse* response) override;
 
- private:
-  // Attaches an JVMTI agent to an app. Returns true if |agent_lib_file_name| is
-  // attached successfully (either an agent already exists or a new one
-  // attaches), otherwise returns false.
-  // Note: |agent_lib_file_name| refers to the name of the agent library file
-  // located within the perfd directory, and it needs to be compatible with the
-  // app's CPU architecture.
-  bool TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
-                         const std::string& agent_lib_file_name);
-
-  // True if there is an JVMTI agent attached to an app. False otherwise.
-  bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name);
-
-  // True if perfd has received a heartbeat from an app within the last
-  // time interval (as specified by |GenericComponent::kHeartbeatThresholdNs|.
-  // False otherwise.
-  bool CheckAppHeartBeat(int32_t app_pid);
-
   // The daemon this service talks to.
   Daemon* daemon_;
-
-  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>&
-      agent_status_map_;
 };
 
 }  // namespace profiler

@@ -212,7 +212,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
-MemoryCollector* MemoryServiceImpl::GetCollector(const Session& session) {
+MemoryCollector* MemoryServiceImpl::GetCollector(const proto::Session& session) {
   auto got = collectors_.find(session.pid());
   if (got == collectors_.end()) {
     // Use the forward version of pair to avoid defining a move constructor.
