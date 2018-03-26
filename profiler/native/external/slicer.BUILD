@@ -19,13 +19,13 @@ cc_library(
         "writer.cc",
     ],
     hdrs = glob([
-        "slicer/*.h",
+        "export/slicer/*.h",
     ]),
     includes = ["export"],
     tags = [
         "no_foundry",  # b/73948555
         "no_test_foundry",  # b/73948555
-        "no_windows"
+        "no_windows",
     ],
     visibility = ["//visibility:public"],
     deps = [
