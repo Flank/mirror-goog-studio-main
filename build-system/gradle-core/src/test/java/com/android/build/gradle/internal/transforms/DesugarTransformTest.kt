@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.transform.Status
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.testutils.truth.PathSubject.assertThat
@@ -324,8 +325,7 @@ class DesugarTransformTest {
             additionalPaths: Set<File> = setOf()): DesugarTransform {
         val executor = WaitableExecutor.useDirectExecutor()
         val transform = DesugarTransform(
-                Supplier<List<File>> { listOf() },
-                tmp.newFolder().toString(),
+                FakeFileCollection(),
                 null,
                 19,
                 processExecutor,

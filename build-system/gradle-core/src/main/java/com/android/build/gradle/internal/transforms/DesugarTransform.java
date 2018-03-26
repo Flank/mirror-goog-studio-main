@@ -73,11 +73,15 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.file.FileCollection;
 import org.gradle.workers.WorkerExecutor;
 
-/** Desugar all Java 8 bytecode. */
+/**
+ * Desugar all bytecode that is using Java 8 langauge features, using the desugar tool. This
+ * transform processes all runtime classes and it uses the runtime classpath and bootclasspath to
+ * rewrite the code.
+ */
 public class DesugarTransform extends Transform {
 
     private enum FileCacheInputParams {
@@ -145,8 +149,7 @@ public class DesugarTransform extends Transform {
      */
     static final int MIN_INPUT_SIZE_TO_COPY_TO_TMP = 400;
 
-    @NonNull private final Supplier<List<File>> androidJarClasspath;
-    @NonNull private final List<Path> compilationBootclasspath;
+    @NonNull private final FileCollection bootClasspath;
     @Nullable private final FileCache userCache;
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
@@ -160,8 +163,7 @@ public class DesugarTransform extends Transform {
     @NonNull private Set<InputEntry> cacheMisses = Sets.newConcurrentHashSet();
 
     public DesugarTransform(
-            @NonNull Supplier<List<File>> androidJarClasspath,
-            @NonNull String compilationBootclasspath,
+            @NonNull FileCollection bootClasspath,
             @Nullable FileCache userCache,
             int minSdk,
             @NonNull JavaProcessExecutor executor,
@@ -171,8 +173,7 @@ public class DesugarTransform extends Transform {
             @NonNull String projectVariant,
             boolean enableIncrementalDesugaring) {
         this(
-                androidJarClasspath,
-                compilationBootclasspath,
+                bootClasspath,
                 userCache,
                 minSdk,
                 executor,
@@ -186,8 +187,7 @@ public class DesugarTransform extends Transform {
 
     @VisibleForTesting
     DesugarTransform(
-            @NonNull Supplier<List<File>> androidJarClasspath,
-            @NonNull String compilationBootclasspath,
+            @NonNull FileCollection bootClasspath,
             @Nullable FileCache userCache,
             int minSdk,
             @NonNull JavaProcessExecutor executor,
@@ -197,8 +197,7 @@ public class DesugarTransform extends Transform {
             @NonNull String projectVariant,
             boolean enableIncrementalDesugaring,
             @NonNull WaitableExecutor waitableExecutor) {
-        this.androidJarClasspath = androidJarClasspath;
-        this.compilationBootclasspath = PathUtils.getClassPathItems(compilationBootclasspath);
+        this.bootClasspath = bootClasspath;
         this.userCache = null;
         this.minSdk = minSdk;
         this.executor = executor;
@@ -243,13 +242,7 @@ public class DesugarTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        ImmutableList.Builder<SecondaryFile> files = ImmutableList.builder();
-        androidJarClasspath.get().forEach(file -> files.add(SecondaryFile.nonIncremental(file)));
-
-        compilationBootclasspath.forEach(
-                file -> files.add(SecondaryFile.nonIncremental(file.toFile())));
-
-        return files.build();
+        return ImmutableList.of(SecondaryFile.nonIncremental(bootClasspath));
     }
 
     @Override
@@ -531,11 +524,12 @@ public class DesugarTransform extends Transform {
 
     @NonNull
     private List<String> getBootclasspath() {
-        List<String> desugarBootclasspath =
-                androidJarClasspath.get().stream().map(File::toString).collect(Collectors.toList());
-        compilationBootclasspath.forEach(p -> desugarBootclasspath.add(p.toString()));
-
-        return desugarBootclasspath;
+        return bootClasspath
+                .getFiles()
+                .stream()
+                .filter(File::exists)
+                .map(File::toString)
+                .collect(Collectors.toList());
     }
 
     private void processSingle(

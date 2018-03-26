@@ -41,8 +41,10 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.fixtures.FakeFileCollection;
 import com.android.builder.utils.FileCache;
 import com.android.testutils.TestInputsGenerator;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +65,7 @@ import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.file.FileCollection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,16 +81,16 @@ import org.objectweb.asm.Opcodes;
  */
 public class FixStackFramesTransformTest {
 
+    private static final FileCollection ANDROID_JAR =
+            new FakeFileCollection(TestUtils.getPlatformFile("android.jar"));
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
     private TestTransformOutputProvider outputProvider;
     private Path output;
-    private String emptyBootclasspath;
 
     @Before
     public void setUp() throws IOException {
         output = tmp.newFolder("out").toPath();
         outputProvider = new TestTransformOutputProvider(output);
-        emptyBootclasspath = tmp.newFolder().toString();
     }
 
     @Test
@@ -108,8 +111,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertAllClassesAreValid(output.resolve("input.jar"));
@@ -133,8 +135,7 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmp.newFolder());
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, cache);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, cache);
         transform.transform(invocation);
         assertThat(cache.getCacheDirectory().list()).hasLength(1);
 
@@ -161,8 +162,7 @@ public class FixStackFramesTransformTest {
                         .setIncremental(true)
                         .build();
 
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
         transform.transform(invocation);
         assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
 
@@ -222,8 +222,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertThat(output.toFile().list()).named("output artifacts").hasLength(1);
@@ -245,8 +244,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertThat(readZipEntry(jar, "test/A.class"))
@@ -285,8 +283,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertThatZip(output.resolve("input.jar").toFile()).doesNotContain("LICENSE");
@@ -302,8 +299,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .setIncremental(false)
                         .build();
-        FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
+        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
         transform.transform(invocation);
         assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
     }

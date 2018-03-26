@@ -2203,17 +2203,15 @@ public abstract class TaskManager {
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
 
+            JavaCompile javacTask = Preconditions.checkNotNull(variantScope.getJavacTask());
             FixStackFramesTransform fixFrames =
                     new FixStackFramesTransform(
-                            () -> androidBuilder.getBootClasspath(true),
-                            System.getProperty("sun.boot.class.path"),
-                            userCache);
+                            javacTask.getOptions().getBootstrapClasspath(), userCache);
             transformManager.addTransform(taskFactory, variantScope, fixFrames);
 
             DesugarTransform desugarTransform =
                     new DesugarTransform(
-                            () -> androidBuilder.getBootClasspath(true),
-                            System.getProperty("sun.boot.class.path"),
+                            javacTask.getOptions().getBootstrapClasspath(),
                             userCache,
                             minSdk.getFeatureLevel(),
                             androidBuilder.getJavaProcessExecutor(),

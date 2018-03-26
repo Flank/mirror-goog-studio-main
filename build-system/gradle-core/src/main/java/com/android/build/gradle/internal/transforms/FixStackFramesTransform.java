@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -54,17 +53,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.file.FileCollection;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
@@ -137,18 +134,14 @@ public class FixStackFramesTransform extends Transform {
      */
     private static final long CACHE_VERSION = 1;
 
-    @NonNull private final Supplier<List<File>> androidJarClasspath;
-    @NonNull private final List<Path> compilationBootclasspath;
+    @NonNull private final FileCollection bootClasspath;
     @Nullable private final FileCache userCache;
     @NonNull private final WaitableExecutor waitableExecutor;
     @Nullable private URLClassLoader classLoader = null;
 
     public FixStackFramesTransform(
-            @NonNull Supplier<List<File>> androidJarClasspath,
-            @NonNull String compilationBootclasspath,
-            @Nullable FileCache userCache) {
-        this.androidJarClasspath = androidJarClasspath;
-        this.compilationBootclasspath = PathUtils.getClassPathItems(compilationBootclasspath);
+            @NonNull FileCollection bootClasspath, @Nullable FileCache userCache) {
+        this.bootClasspath = bootClasspath;
         this.userCache = userCache;
         this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
     }
@@ -181,13 +174,7 @@ public class FixStackFramesTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        ImmutableList.Builder<SecondaryFile> files = ImmutableList.builder();
-        androidJarClasspath.get().forEach(file -> files.add(SecondaryFile.nonIncremental(file)));
-
-        compilationBootclasspath.forEach(
-                file -> files.add(SecondaryFile.nonIncremental(file.toFile())));
-
-        return files.build();
+        return ImmutableList.of(SecondaryFile.nonIncremental(bootClasspath));
     }
 
     @Override
@@ -200,12 +187,9 @@ public class FixStackFramesTransform extends Transform {
             throws MalformedURLException {
         if (classLoader == null) {
             ImmutableList.Builder<URL> urls = new ImmutableList.Builder<>();
-            for (File file : androidJarClasspath.get()) {
-                urls.add(file.toURI().toURL());
-            }
-            for (Path bootClasspath : this.compilationBootclasspath) {
-                if (Files.exists(bootClasspath)) {
-                    urls.add(bootClasspath.toUri().toURL());
+            for (File file : bootClasspath.getFiles()) {
+                if (file.exists()) {
+                    urls.add(file.toURI().toURL());
                 }
             }
             for (TransformInput inputs :
