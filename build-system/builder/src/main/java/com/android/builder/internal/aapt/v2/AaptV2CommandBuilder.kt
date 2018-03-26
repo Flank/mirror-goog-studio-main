@@ -214,11 +214,6 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         builder.addAll(additionalParameters)
     }
 
-    val privateRDotJavaPackage = config.options.privateRDotJavaPackage
-    if (privateRDotJavaPackage != null) {
-        builder.add("--private-symbols", privateRDotJavaPackage)
-    }
-
     val resourceConfigs = ArrayList(config.resourceConfigs)
 
     /*

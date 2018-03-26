@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceVisibility;
 import com.android.testutils.TestResources;
 import com.android.testutils.truth.FileSubject;
 import com.google.common.base.Charsets;
@@ -856,19 +856,19 @@ public class SymbolIoTest {
         assertThat(table.getSymbols().values())
                 .containsExactly(
                         new Symbol.NormalSymbol(
-                                ResourceType.DRAWABLE, "img", 0, ResourceAccessibility.PUBLIC),
+                                ResourceType.DRAWABLE, "img", 0, ResourceVisibility.PUBLIC),
                         new Symbol.NormalSymbol(
-                                ResourceType.ID, "bar", 0, ResourceAccessibility.DEFAULT),
+                                ResourceType.ID, "bar", 0, ResourceVisibility.PRIVATE_XML_ONLY),
                         new Symbol.NormalSymbol(
-                                ResourceType.STRING, "beep", 0, ResourceAccessibility.PRIVATE),
+                                ResourceType.STRING, "beep", 0, ResourceVisibility.PRIVATE),
                         new Symbol.NormalSymbol(
-                                ResourceType.STRING, "foo", 0, ResourceAccessibility.DEFAULT),
+                                ResourceType.STRING, "foo", 0, ResourceVisibility.PRIVATE_XML_ONLY),
                         new Symbol.StyleableSymbol(
                                 "s1",
                                 ImmutableList.of(),
                                 ImmutableList.of("a1", "a2"),
-                                ResourceAccessibility.DEFAULT),
+                                ResourceVisibility.PRIVATE_XML_ONLY),
                         new Symbol.NormalSymbol(
-                                ResourceType.TRANSITION, "t", 0, ResourceAccessibility.PUBLIC));
+                                ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC));
     }
 }

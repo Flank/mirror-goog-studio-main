@@ -29,10 +29,9 @@ public class AaptOptionsStub extends BaseStub implements AaptOptions {
     private final boolean failOnMissingConfigEntry;
     @NonNull private final List<String> additionalParameters;
     @NonNull private final Namespacing namespacing;
-    @Nullable private final String privateRDotJavaPackage;
 
     public AaptOptionsStub() {
-        this(null, null, false, Collections.emptyList(), Namespacing.DISABLED, null);
+        this(null, null, false, Collections.emptyList(), Namespacing.DISABLED);
     }
 
     public AaptOptionsStub(
@@ -40,14 +39,12 @@ public class AaptOptionsStub extends BaseStub implements AaptOptions {
             @Nullable Collection<String> noCompress,
             boolean failOnMissingConfigEntry,
             @NonNull List<String> additionalParameters,
-            @NonNull Namespacing namespacing,
-            @Nullable String privateRDotJavaPackage) {
+            @NonNull Namespacing namespacing) {
         this.ignoreAssets = ignoreAssets;
         this.noCompress = noCompress;
         this.failOnMissingConfigEntry = failOnMissingConfigEntry;
         this.additionalParameters = additionalParameters;
         this.namespacing = namespacing;
-        this.privateRDotJavaPackage = privateRDotJavaPackage;
     }
 
     @Override
@@ -80,12 +77,6 @@ public class AaptOptionsStub extends BaseStub implements AaptOptions {
     }
 
     @Override
-    @Nullable
-    public String getPrivateRDotJavaPackage() {
-        return privateRDotJavaPackage;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -98,8 +89,7 @@ public class AaptOptionsStub extends BaseStub implements AaptOptions {
                 && Objects.equals(getIgnoreAssets(), that.getIgnoreAssets())
                 && Objects.equals(getNoCompress(), that.getNoCompress())
                 && Objects.equals(getAdditionalParameters(), that.getAdditionalParameters())
-                && getNamespacing() == that.getNamespacing()
-                && Objects.equals(getPrivateRDotJavaPackage(), that.getPrivateRDotJavaPackage());
+                && getNamespacing() == that.getNamespacing();
     }
 
     @Override
@@ -109,7 +99,6 @@ public class AaptOptionsStub extends BaseStub implements AaptOptions {
                 getNoCompress(),
                 getFailOnMissingConfigEntry(),
                 getAdditionalParameters(),
-                getNamespacing(),
-                getPrivateRDotJavaPackage());
+                getNamespacing());
     }
 }

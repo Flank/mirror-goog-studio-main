@@ -48,8 +48,6 @@ public class AaptOptions {
 
     private int cruncherProcesses = 0;
 
-    @Nullable public String privateRDotJavaPackage;
-
     public void setIgnoreAssetsPattern(@Nullable String ignoreAssetsPattern) {
         this.ignoreAssetsPattern = ignoreAssetsPattern;
     }
@@ -258,17 +256,5 @@ public class AaptOptions {
 
     public void namespaced(@Nullable Boolean namespaced) {
         this.namespaced = namespaced;
-    }
-
-    @Nullable
-    @Optional
-    @Internal
-    @Input
-    public String getPrivateRDotJavaPackage() {
-        return privateRDotJavaPackage;
-    }
-
-    public void setPrivateRDotJavaPackage(@Nullable String privateRDotJavaPackage) {
-        this.privateRDotJavaPackage = privateRDotJavaPackage;
     }
 }

@@ -84,12 +84,12 @@ class LibraryDefinedSymbolTableTransformTest {
         val lines = Files.readAllLines(result[0].toPath())
         Truth.assertThat(lines).containsExactly(
                 "com.example.mylibrary",
-                "default int attr myAttr",
-                "default int string app_name",
-                "default int string desc",
-                "default int[] styleable ds",
-                "default int styleable ds_android_name",
-                "default int styleable ds_android_color",
-                "default int styleable ds_myAttr")
+                "undefined int attr myAttr",
+                "undefined int string app_name",
+                "undefined int string desc",
+                "undefined int[] styleable ds",
+                "undefined int styleable ds_android_name",
+                "undefined int styleable ds_android_color",
+                "undefined int styleable ds_myAttr")
     }
 }

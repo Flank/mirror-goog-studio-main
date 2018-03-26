@@ -20,8 +20,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.AndroidManifestParser;
-import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceVisibility;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -320,7 +320,7 @@ public final class SymbolIo {
     }
 
     private static class SymbolData {
-        @NonNull final ResourceAccessibility accessibility;
+        @NonNull final ResourceVisibility accessibility;
         @NonNull final ResourceType resourceType;
         @NonNull final String name;
         @NonNull final SymbolJavaType javaType;
@@ -331,7 +331,7 @@ public final class SymbolIo {
                 @NonNull String name,
                 @NonNull SymbolJavaType javaType,
                 @NonNull String value) {
-            this.accessibility = ResourceAccessibility.DEFAULT;
+            this.accessibility = ResourceVisibility.UNDEFINED;
             this.resourceType = resourceType;
             this.name = name;
             this.javaType = javaType;
@@ -339,7 +339,7 @@ public final class SymbolIo {
         }
 
         public SymbolData(
-                @NonNull ResourceAccessibility accessibility,
+                @NonNull ResourceVisibility accessibility,
                 @NonNull ResourceType resourceType,
                 @NonNull String name,
                 @NonNull SymbolJavaType javaType,
@@ -383,7 +383,7 @@ public final class SymbolIo {
         // format is "<access qualifier> <type> <class> <name>"
         int pos = line.indexOf(' ');
         String accessName = line.substring(0, pos);
-        ResourceAccessibility accessibility = ResourceAccessibility.getEnum(accessName);
+        ResourceVisibility accessibility = ResourceVisibility.getEnum(accessName);
         if (accessibility == null) {
             throw new IOException("Invalid resource access qualifier " + accessName);
         }
@@ -578,7 +578,7 @@ public final class SymbolIo {
                 }
 
                 for (Symbol s : symbols) {
-                    pw.print(s.getResourceAccessibility().getName());
+                    pw.print(s.getResourceVisibility().getName());
                     pw.print(' ');
                     pw.print(s.getJavaType().getTypeName());
                     pw.print(' ');
@@ -593,7 +593,7 @@ public final class SymbolIo {
                     if (s.getResourceType() == ResourceType.STYLEABLE) {
                         List<String> children = s.getChildren();
                         for (String child : children) {
-                            pw.print(s.getResourceAccessibility().getName());
+                            pw.print(s.getResourceVisibility().getName());
                             pw.print(' ');
                             pw.print(SymbolJavaType.INT.getTypeName());
                             pw.print(' ');

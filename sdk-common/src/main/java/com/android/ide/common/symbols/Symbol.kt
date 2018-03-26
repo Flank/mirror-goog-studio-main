@@ -19,7 +19,7 @@ package com.android.ide.common.symbols
 import com.android.annotations.concurrency.Immutable
 import com.android.ide.common.resources.MergingException
 import com.android.ide.common.resources.ValueResourceNameValidator
-import com.android.resources.ResourceAccessibility
+import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -56,7 +56,7 @@ import com.google.common.collect.ImmutableList
 @Immutable
 sealed class Symbol {
 
-    abstract val resourceAccessibility : ResourceAccessibility
+    abstract val resourceVisibility: ResourceVisibility
     abstract val resourceType: ResourceType
     abstract val name:String
     /** The value as a string. */
@@ -162,7 +162,7 @@ sealed class Symbol {
         override val resourceType: ResourceType,
         override val name: String,
         val intValue: Int,
-        override val resourceAccessibility: ResourceAccessibility = ResourceAccessibility.DEFAULT
+        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED
     ) : Symbol() {
         init {
             Preconditions.checkArgument(resourceType != ResourceType.STYLEABLE,
@@ -174,7 +174,8 @@ sealed class Symbol {
         override val children: ImmutableList<String>
             get() = throw UnsupportedOperationException("Only styleables have children.")
 
-        override fun toString(): String = "$resourceAccessibility $resourceType $name = 0x${intValue.toString(16)}"
+        override fun toString(): String =
+                "$resourceVisibility $resourceType $name = 0x${intValue.toString(16)}"
     }
 
     data class StyleableSymbol @JvmOverloads constructor(
@@ -192,7 +193,8 @@ sealed class Symbol {
          * "attr2"}`.
          * */
         override val children: ImmutableList<String>,
-        override val resourceAccessibility: ResourceAccessibility = ResourceAccessibility.DEFAULT        ) : Symbol() {
+        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED
+    ) : Symbol() {
         override val resourceType: ResourceType
             get() = ResourceType.STYLEABLE
 
