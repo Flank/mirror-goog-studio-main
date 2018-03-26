@@ -31,6 +31,7 @@ import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.IOException
 import java.lang.reflect.Field
 import java.net.URLClassLoader
 import java.nio.file.Files
@@ -184,15 +185,15 @@ class BytecodeRClassWriterTest {
         try {
             parseArrayLiteral(3, "{0x1,0x2}")
             fail("Expected failure - too few listed values")
-        } catch (e: IllegalArgumentException) {
-            // Expected.
+        } catch (e: IOException) {
+            assertThat(e).hasMessageThat().contains("should have 3 item(s)")
         }
 
         try {
             parseArrayLiteral(1, "{0x1,0x2}")
             fail("Expected failure - too many listed values")
-        } catch (e: IllegalArgumentException) {
-            // Expected.
+        } catch (e: IOException) {
+            assertThat(e).hasMessageThat().contains("should have 1 item(s)")
         }
 
     }
