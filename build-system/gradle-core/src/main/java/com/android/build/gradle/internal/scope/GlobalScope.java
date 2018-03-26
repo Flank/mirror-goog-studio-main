@@ -71,6 +71,7 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final DslScope dslScope;
 
     @NonNull private Configuration lintChecks;
+    @NonNull private Configuration lintPublish;
 
     private Configuration androidJarConfig;
 
@@ -239,6 +240,10 @@ public class GlobalScope implements TransformGlobalScope {
         this.lintChecks = lintChecks;
     }
 
+    public void setLintPublish(@NonNull Configuration lintPublish) {
+        this.lintPublish = lintPublish;
+    }
+
     public void setAndroidJarConfig(@NonNull Configuration androidJarConfig) {
         this.androidJarConfig = androidJarConfig;
     }
@@ -294,6 +299,11 @@ public class GlobalScope implements TransformGlobalScope {
         return androidBuilder.getMessageReceiver();
     }
 
+    /**
+     * Gets the lint JAR from the lint checking configuration.
+     *
+     * @return the resolved lint.jar ArtifactFile from the lint checking configuration
+     */
     @NonNull
     public FileCollection getLocalCustomLintChecks() {
         // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
@@ -303,6 +313,26 @@ public class GlobalScope implements TransformGlobalScope {
                                 ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.getType());
 
         return lintChecks
+                .getIncoming()
+                .artifactView(config -> config.attributes(attributes))
+                .getArtifacts()
+                .getArtifactFiles();
+    }
+
+    /**
+     * Gets the lint JAR from the lint publishing configuration.
+     *
+     * @return the resolved lint.jar ArtifactFile from the lint publishing configuration
+     */
+    @NonNull
+    public FileCollection getPublishedCustomLintChecks() {
+        // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
+        Action<AttributeContainer> attributes =
+                container ->
+                        container.attribute(
+                                ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.getType());
+
+        return lintPublish
                 .getIncoming()
                 .artifactView(config -> config.attributes(attributes))
                 .getArtifacts()

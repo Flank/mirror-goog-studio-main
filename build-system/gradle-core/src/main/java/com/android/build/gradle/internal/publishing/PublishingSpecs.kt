@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_CLAS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
@@ -240,7 +240,7 @@ class PublishingSpecs {
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
                 runtime(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 runtime(LIBRARY_JNI, ArtifactType.JNI)
-                runtime(LINT_JAR, ArtifactType.LINT)
+                runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // unit test need ALL_CLASSES instead of LIBRARY_CLASSES to get

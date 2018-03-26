@@ -5,7 +5,6 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {
         minSdkVersion 16
-        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 24
     }
 
@@ -13,6 +12,7 @@ android {
         textReport true
         textOutput file("lint-results.txt")
         check 'UnitTestLintCheck'
+        check 'UnitTestLintCheck2'
         absolutePaths false
     }
 }
