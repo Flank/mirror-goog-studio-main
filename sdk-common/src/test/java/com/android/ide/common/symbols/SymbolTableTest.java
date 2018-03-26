@@ -24,8 +24,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceVisibility;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -206,39 +206,33 @@ public class SymbolTableTest {
                 SymbolTable.builder()
                         .add(
                                 new Symbol.NormalSymbol(
-                                        ResourceType.DRAWABLE,
-                                        "img",
-                                        0,
-                                        ResourceAccessibility.PUBLIC))
+                                        ResourceType.DRAWABLE, "img", 0, ResourceVisibility.PUBLIC))
                         .add(
                                 new Symbol.NormalSymbol(
-                                        ResourceType.ID, "bar", 0, ResourceAccessibility.DEFAULT))
+                                        ResourceType.ID,
+                                        "bar",
+                                        0,
+                                        ResourceVisibility.PRIVATE_XML_ONLY))
                         .add(
                                 new Symbol.NormalSymbol(
-                                        ResourceType.STRING,
-                                        "beep",
-                                        0,
-                                        ResourceAccessibility.PRIVATE))
+                                        ResourceType.STRING, "beep", 0, ResourceVisibility.PRIVATE))
                         .add(
                                 new Symbol.NormalSymbol(
                                         ResourceType.STRING,
                                         "foo",
                                         0,
-                                        ResourceAccessibility.DEFAULT))
+                                        ResourceVisibility.PRIVATE_XML_ONLY))
                         .add(
                                 new Symbol.NormalSymbol(
-                                        ResourceType.TRANSITION,
-                                        "t",
-                                        0,
-                                        ResourceAccessibility.PUBLIC))
+                                        ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC))
                         .add(
                                 new Symbol.NormalSymbol(
-                                        ResourceType.XML, "xml", 0, ResourceAccessibility.PUBLIC))
+                                        ResourceType.XML, "xml", 0, ResourceVisibility.PUBLIC))
                         .build();
 
-        assertThat(table.getSymbolByAccessibility(ResourceAccessibility.DEFAULT)).hasSize(2);
-        assertThat(table.getSymbolByAccessibility(ResourceAccessibility.PRIVATE)).hasSize(1);
-        assertThat(table.getSymbolByAccessibility(ResourceAccessibility.PUBLIC)).hasSize(3);
+        assertThat(table.getSymbolByVisibility(ResourceVisibility.PRIVATE_XML_ONLY)).hasSize(2);
+        assertThat(table.getSymbolByVisibility(ResourceVisibility.PRIVATE)).hasSize(1);
+        assertThat(table.getSymbolByVisibility(ResourceVisibility.PUBLIC)).hasSize(3);
     }
 
     @Test

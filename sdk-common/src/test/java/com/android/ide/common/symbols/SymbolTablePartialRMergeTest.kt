@@ -16,7 +16,7 @@
 
 package com.android.ide.common.symbols
 
-import com.android.resources.ResourceAccessibility
+import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
@@ -67,19 +67,19 @@ class SymbolTablePartialRMergeTest {
                 ResourceType.STRING,
                 "s1",
                 0,
-                ResourceAccessibility.DEFAULT
+                ResourceVisibility.PRIVATE_XML_ONLY
             ),
             Symbol.NormalSymbol(
                 ResourceType.STRING,
                 "s2",
                 0,
-                ResourceAccessibility.PRIVATE
+                ResourceVisibility.PRIVATE
             ),
             Symbol.NormalSymbol(
                 ResourceType.STRING,
                 "s3",
                 0,
-                ResourceAccessibility.PUBLIC
+                ResourceVisibility.PUBLIC
             )
         )
     }
@@ -131,12 +131,12 @@ class SymbolTablePartialRMergeTest {
                         ResourceType.ID,
                         "idB",
                         0,
-                    ResourceAccessibility.DEFAULT),
+                    ResourceVisibility.PRIVATE_XML_ONLY),
             Symbol.NormalSymbol(
                         ResourceType.LAYOUT,
                         "layout",
                         0,
-                    ResourceAccessibility.DEFAULT))
+                    ResourceVisibility.PRIVATE_XML_ONLY))
 
         result = SymbolTable.mergePartialTables(list(layoutB, layoutA), "")
         assertThat(result.symbols.values()).hasSize(2)
@@ -145,13 +145,13 @@ class SymbolTablePartialRMergeTest {
                 ResourceType.ID,
                 "idA",
                 0,
-                ResourceAccessibility.DEFAULT
+                ResourceVisibility.PRIVATE_XML_ONLY
             ),
             Symbol.NormalSymbol(
                 ResourceType.LAYOUT,
                 "layout",
                 0,
-                ResourceAccessibility.DEFAULT
+                ResourceVisibility.PRIVATE_XML_ONLY
             )
         )
     }

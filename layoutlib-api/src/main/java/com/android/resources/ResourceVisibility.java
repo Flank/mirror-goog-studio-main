@@ -19,9 +19,11 @@ package com.android.resources;
 import com.android.annotations.NonNull;
 
 /**
- * An enum representing accessibility of an android resource.
+ * An enum representing visibility of an android resource.
  *
- * <p>Public accessibility.
+ * <p>The below is the description of how AAPT2 understands resource visibility:
+ *
+ * <p>Public visibility.
  *
  * <p>A resource can be marked as public by adding the {@code public} element to a values XML file:
  *
@@ -30,7 +32,7 @@ import com.android.annotations.NonNull;
  * <p>These elements are usually defined in the {@code public.xml} file inside the {@code
  * res/values} directory.
  *
- * <p>Private accessibility.
+ * <p>Private visibility.
  *
  * <p>Sometimes a libraries can have a great number of resources and it might be confusing or
  * tiresome to find the correct one when writing the Java or Kotlin code. In order to restrict the
@@ -43,39 +45,29 @@ import com.android.annotations.NonNull;
  * res/values} directory. The name {@code private} comes from these resources being present in the
  * {@code private R.java} along with {@code public} resources.
  *
- * <p>Default accessibility.
+ * <p>Private XML only visibility.
  *
  * <p>All resources that were not marked as {@code public} or {@code private} have the {@code
- * default} accessibility.
- *
- * <p>Usage.
- *
- * <p>In order to generate a public R.java containing only the public resources and a private R.java
- * containing both public and private resources, specify the package for the private R.java in the
- * {@code build.gradle} file. For example, if the application's package (or the custom package) is
- * {@code com.foo.bar} you could use {@code com.foo.bar.symbols} for the private R.java:
- *
- * <pre>
- *     android {
- *         ...
- *         aaptOptions {
- *             privateRDotJavaPackage "com.foo.bar.symbols"
- *         }
- *     }
- * </pre>
+ * default} visibility. They are not placed in either {@code public} nor {@code private} R classes
+ * and are only accessible from other XML resources within that library/module.
  *
  * <p>Without the package for the private R.java specified, only the public R.java will be generated
  * and it will contain all resources (ones marked as public, java-symbol and those not marked as
  * either).
+ *
+ * <p>Additionally in the Gradle plugin we have the last enum value, {@code UNDEFINED}. It
+ * represents a case where the visibility was not defined at all. This should be only used in the
+ * case when we are not generating the public and private R class.
  */
-public enum ResourceAccessibility {
-    DEFAULT("default"),
+public enum ResourceVisibility {
+    PRIVATE_XML_ONLY("default"),
     PRIVATE("private"),
-    PUBLIC("public");
+    PUBLIC("public"),
+    UNDEFINED("undefined");
 
     private final String qualifier;
 
-    ResourceAccessibility(String qualifier) {
+    ResourceVisibility(String qualifier) {
         this.qualifier = qualifier;
     }
 
@@ -83,8 +75,8 @@ public enum ResourceAccessibility {
         return qualifier;
     }
 
-    public static ResourceAccessibility getEnum(@NonNull String qualifier) {
-        for (ResourceAccessibility accessibility : values()) {
+    public static ResourceVisibility getEnum(@NonNull String qualifier) {
+        for (ResourceVisibility accessibility : values()) {
             if (accessibility.qualifier.equals(qualifier)) {
                 return accessibility;
             }

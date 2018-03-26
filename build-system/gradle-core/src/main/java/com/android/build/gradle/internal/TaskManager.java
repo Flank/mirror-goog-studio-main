@@ -1184,10 +1184,6 @@ public abstract class TaskManager {
                     boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
                     @NonNull MergeType sourceArtifactType,
                     @NonNull String baseName) {
-        checkState(
-                globalScope.getExtension().getAaptOptions().getPrivateRDotJavaPackage() == null,
-                "Private R.java generation is currently only allowed with resource namespacing"
-                        + " enabled.");
 
         return new LinkApplicationAndroidResourcesTask.ConfigAction(
                 scope,
