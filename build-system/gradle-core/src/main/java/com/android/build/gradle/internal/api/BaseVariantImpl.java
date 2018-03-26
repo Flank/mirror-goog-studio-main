@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -46,6 +47,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -276,10 +278,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public File getMappingFile() {
-        VariantScope scope = getVariantData().getScope();
-        if (scope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)) {
-            return BuildableArtifactUtil.singleFile(
-                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK_MAPPING));
+        BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
+        if (artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
+            // bypass the configuration time resolution check as some calls this API during
+            // configuration.
+            return Iterables.getOnlyElement(
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING).get());
         }
         return null;
     }
