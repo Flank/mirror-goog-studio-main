@@ -170,10 +170,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull private final TransformManager transformManager;
     @Nullable private Collection<Object> ndkBuildable;
     @Nullable private Collection<File> ndkSoFolder;
-    @Nullable private File ndkObjFolder;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
-
-    @Nullable private File mergeResourceOutputDir;
 
     // Tasks
     private DefaultTask assembleTask;
@@ -276,7 +273,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
     }
 
-    @Override
     protected Project getProject() {
         return globalScope.getProject();
     }
@@ -285,69 +281,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public PublishingSpecs.VariantSpec getPublishingSpec() {
         return variantPublishingSpec;
-    }
-
-    @Override
-    public ConfigurableFileCollection addTaskOutput(
-            @NonNull com.android.build.api.artifact.ArtifactType outputType,
-            @NonNull Object file,
-            @Nullable String taskName) {
-        ConfigurableFileCollection fileCollection;
-        try {
-            fileCollection = super.addTaskOutput(outputType, file, taskName);
-        } catch (TaskOutputAlreadyRegisteredException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "OutputType '%s' already registered for variant '%s'",
-                            e.getOutputType(), this.getFullVariantName()),
-                    e);
-        }
-
-        if (file instanceof File) {
-            OutputSpec taskSpec = variantPublishingSpec.getSpec(outputType);
-            if (taskSpec != null) {
-                Preconditions.checkNotNull(taskName);
-                publishIntermediateArtifact(
-                        file,
-                        taskName,
-                        taskSpec.getArtifactType(),
-                        taskSpec.getPublishedConfigTypes());
-            }
-        }
-        return fileCollection;
-    }
-
-    /**
-     * Temporary override to handle artifacts still published in the old TaskOutputHolder and those
-     * published in the new BuildableArtifactHolder.
-     */
-    @Override
-    public boolean hasOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType) {
-        return super.hasOutput(outputType) || buildArtifactsHolder.hasArtifact(outputType);
-    }
-
-    /**
-     * Temporary override to handle artifacts still published in the old TaskOutputHolder and those
-     * published in the new BuildableArtifactHolder.
-     */
-    @NonNull
-    @Override
-    public FileCollection getOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType)
-            throws MissingTaskOutputException {
-        try {
-            return super.getOutput(outputType);
-        } catch (MissingTaskOutputException e) {
-            if (getArtifacts().hasArtifact(outputType)) {
-                return getArtifacts().getFinalArtifactFiles(outputType).get();
-            }
-            throw new RuntimeException(
-                    String.format(
-                            "Variant '%1$s' in project '%2$s' has no output with type '%3$s'",
-                            this.getFullVariantName(),
-                            this.getProject().getPath(),
-                            e.getOutputType()),
-                    e);
-        }
     }
 
     /**
@@ -364,28 +297,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
         // Create Provider so that the BuildableArtifact is not resolved until needed.
-        Provider<File> provider =
+        Provider<File> file =
                 getProject().provider(() -> Iterables.getOnlyElement(artifact.getFiles()));
-        publishIntermediateArtifact(provider, artifact, artifactType, configTypes);
-    }
 
-    /**
-     * Publish an intermediate artifact.
-     *
-     * @deprecated inline this into the other publishIntermediateArtifact when all tasks are
-     *     converted to use BuildArtifactHolder instead of TaskOutputHolder.
-     * @param file file to be published, this should be either a File or a Provider<File>
-     * @param builtBy the tasks that produce the file. This is evaluated as per {@link
-     *     Task#dependsOn(Object...)}.
-     * @param artifactType the artifact type.
-     * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
-     */
-    @Deprecated
-    private void publishIntermediateArtifact(
-            @NonNull Object file,
-            @NonNull Object builtBy,
-            @NonNull ArtifactType artifactType,
-            @NonNull Collection<PublishedConfigType> configTypes) {
         Preconditions.checkState(!configTypes.isEmpty());
 
         // FIXME this needs to be parameterized based on the variant's publishing type.
@@ -397,7 +311,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     "Publishing to API Element with no ApiElements configuration object. VariantType: "
                             + getType());
             publishArtifactToConfiguration(
-                    variantDependency.getApiElements(), file, builtBy, artifactType);
+                    variantDependency.getApiElements(), file, artifact, artifactType);
         }
 
         if (configTypes.contains(RUNTIME_ELEMENTS)) {
@@ -406,7 +320,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     "Publishing to Runtime Element with no RuntimeElements configuration object. VariantType: "
                             + getType());
             publishArtifactToConfiguration(
-                    variantDependency.getRuntimeElements(), file, builtBy, artifactType);
+                    variantDependency.getRuntimeElements(), file, artifact, artifactType);
         }
 
         if (configTypes.contains(METADATA_ELEMENTS)) {
@@ -415,7 +329,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     "Publishing to Metadata Element with no MetaDataElements configuration object. VariantType: "
                             + getType());
             publishArtifactToConfiguration(
-                    variantDependency.getMetadataElements(), file, builtBy, artifactType);
+                    variantDependency.getMetadataElements(), file, artifact, artifactType);
         }
 
         if (configTypes.contains(BUNDLE_ELEMENTS)) {
@@ -424,7 +338,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     "Publishing to Bundle Element with no BundleElements configuration object. VariantType: "
                             + getType());
             publishArtifactToConfiguration(
-                    variantDependency.getBundleElements(), file, builtBy, artifactType);
+                    variantDependency.getBundleElements(), file, artifact, artifactType);
         }
 
     }
@@ -1999,7 +1913,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         // if it's the case then we add the tested artifact.
                         final com.android.build.api.artifact.ArtifactType taskOutputType =
                                 taskOutputSpec.getOutputType();
-                        if (testedScope.hasOutput(taskOutputType)) {
+                        if (testedScope.getArtifacts().hasArtifact(taskOutputType)) {
                             result =
                                     plusFunction.apply(
                                             result,

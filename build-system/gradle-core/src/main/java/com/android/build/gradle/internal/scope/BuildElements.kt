@@ -82,7 +82,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
         gsonBuilder.registerTypeAdapter(
                 InternalArtifactType::class.java, ExistingBuildElements.OutputTypeTypeAdapter())
         gsonBuilder.registerTypeAdapter(
-                TaskOutputHolder.AnchorOutputType::class.java,
+                AnchorOutputType::class.java,
                 ExistingBuildElements.OutputTypeTypeAdapter())
         val gson = gsonBuilder.create()
 

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -38,7 +39,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
@@ -371,7 +371,7 @@ public class ModelBuilderTest {
 
         when(testVariantScope.getArtifacts()).thenReturn(artifacts);
         BuildableArtifact testBuildableArtifact = Mockito.mock(BuildableArtifact.class);
-        when(artifacts.getFinalArtifactFiles(TaskOutputHolder.AnchorOutputType.ALL_CLASSES))
+        when(artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES))
                 .thenReturn(testBuildableArtifact);
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());

@@ -60,9 +60,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 /**
  * A scope containing data for a specific variant.
  */
-public interface VariantScope extends TransformVariantScope, InstantRunVariantScope,
-        TaskOutputHolder {
-
+public interface VariantScope extends TransformVariantScope, InstantRunVariantScope {
     @Override
     @NonNull
     GlobalScope getGlobalScope();

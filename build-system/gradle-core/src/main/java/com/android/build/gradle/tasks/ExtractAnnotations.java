@@ -31,9 +31,9 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
@@ -345,7 +345,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setClassDir(
                     variantScope
                             .getArtifacts()
-                            .getFinalArtifactFiles(TaskOutputHolder.AnchorOutputType.ALL_CLASSES));
+                            .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES));
 
             task.setSource(variantScope.getVariantData().getJavaSources());
             task.setEncoding(extension.getCompileOptions().getEncoding());

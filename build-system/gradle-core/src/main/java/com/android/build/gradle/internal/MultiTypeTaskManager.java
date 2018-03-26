@@ -22,8 +22,8 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -118,6 +118,6 @@ public class MultiTypeTaskManager extends TaskManager {
                                 scope.getArtifacts().getArtifactFiles(JAVAC),
                                 scope.getVariantData().getAllPreJavacGeneratedBytecode(),
                                 scope.getVariantData().getAllPostJavacGeneratedBytecode());
-        scope.getArtifacts().appendArtifact(TaskOutputHolder.AnchorOutputType.ALL_CLASSES, files);
+        scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
     }
 }

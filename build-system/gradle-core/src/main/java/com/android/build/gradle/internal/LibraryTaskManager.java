@@ -33,10 +33,10 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptConfigAction;
@@ -576,7 +576,7 @@ public class LibraryTaskManager extends TaskManager {
                                 scope.getArtifacts().getArtifactFiles(JAVAC),
                                 scope.getVariantData().getAllPreJavacGeneratedBytecode(),
                                 scope.getVariantData().getAllPostJavacGeneratedBytecode());
-        scope.getArtifacts().appendArtifact(TaskOutputHolder.AnchorOutputType.ALL_CLASSES, files);
+        scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
     }
 
     private void excludeDataBindingClassesIfNecessary(

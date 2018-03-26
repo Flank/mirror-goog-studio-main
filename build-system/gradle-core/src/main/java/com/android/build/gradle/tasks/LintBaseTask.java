@@ -25,7 +25,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
+import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -21,8 +21,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -241,7 +241,7 @@ public class JacocoReportTask extends DefaultTask {
             task.classFileCollection =
                     testedScope
                             .getArtifacts()
-                            .getFinalArtifactFiles(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
+                            .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES);
 
             task.sourceFolders =
                     TaskInputHelper.bypassFileSupplier(
