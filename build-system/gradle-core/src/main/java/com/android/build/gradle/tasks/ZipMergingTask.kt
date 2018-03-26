@@ -25,6 +25,12 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.utils.FileUtils
 import com.google.common.collect.Sets
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -32,12 +38,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 
 /** Task to merge the res/classes intermediate jars from a library into a single one  */
 @CacheableTask
@@ -81,9 +81,8 @@ open class ZipMergingTask : AndroidVariantTask() {
                     for (inputFile in libraryInputFiles.files.union(javaResInputFiles.files)) {
                         FileInputStream(inputFile).use { fis ->
                             ZipInputStream(fis).use { zis ->
-
-                                var entry = zis.nextEntry
-                                while (entry != null) {
+                                while (true) {
+                                    val entry = zis.nextEntry ?: break
                                     if (entry.isDirectory) {
                                         continue
                                     }
@@ -111,7 +110,6 @@ open class ZipMergingTask : AndroidVariantTask() {
                                     // close the entries for this file
                                     zos.closeEntry()
                                     zis.closeEntry()
-                                    entry = zis.nextEntry
                                 }
                             }
                         }

@@ -16,22 +16,21 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.testutils.truth.PathSubject.assertThat
-
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.testutils.truth.MoreTruth
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.truth.ZipFileSubject.assertThatZip
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
 
 /** Test for ZipMergingTask.  */
 class ZipMergingTaskTest {
@@ -62,8 +61,34 @@ class ZipMergingTaskTest {
 
         assertThat(output).exists()
 
-        MoreTruth.assertThatZip(output).containsFileWithContent("foo.txt", "foo")
-        MoreTruth.assertThatZip(output).containsFileWithContent("bar.txt", "bar")
+        assertThatZip(output).containsFileWithContent("foo.txt", "foo")
+        assertThatZip(output).containsFileWithContent("bar.txt", "bar")
+    }
+
+    @Test
+    fun mergeDuplicates() {
+        val zip1 = temporaryFolder.newFile("file1.zip")
+        val zip2 = temporaryFolder.newFile("file2.zip")
+
+        createZip(zip1, "foo.txt", "foo")
+        createZip(zip2, "foo.txt", "foo")
+
+        val testDir = temporaryFolder.newFolder()
+        val project = ProjectBuilder.builder().withProjectDir(testDir).build()
+
+        val output = File(temporaryFolder.newFolder(), "output.zip")
+        val task = project.tasks.create("test", ZipMergingTask::class.java)
+
+        val dslScope = Mockito.mock(DslScope::class.java)
+        BuildableArtifactImpl.enableResolution()
+        task.init(BuildableArtifactImpl(project.files(zip1), dslScope),
+            BuildableArtifactImpl(project.files(zip2), dslScope),
+            output)
+        task.merge()
+
+        assertThat(output).exists()
+
+        assertThatZip(output).containsFileWithContent("foo.txt", "foo")
     }
 
     @Throws(IOException::class)
