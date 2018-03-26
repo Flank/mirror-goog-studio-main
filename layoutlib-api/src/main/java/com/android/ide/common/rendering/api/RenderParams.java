@@ -19,7 +19,6 @@ package com.android.ide.common.rendering.api;
 import com.android.ide.common.rendering.api.SessionParams.Key;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +57,7 @@ public abstract class RenderParams {
      * doesn't recognize.
      */
     private Map<Key, Object> mFlags;
+    private boolean mEnableQuickStep;
 
     /**
      * @param projectKey An Object identifying the project. This is used for the cache mechanism.
@@ -153,6 +153,14 @@ public abstract class RenderParams {
 
     public void setAssetRepository(AssetRepository assetRepository) {
         mAssetRepository = assetRepository;
+    }
+
+    /**
+     * Enables/disables the quick step mode in the device. When enabled, this will hide the recents
+     * button and show the quick step home button.
+     */
+    public void setQuickStep(boolean quickStep) {
+        mEnableQuickStep = quickStep;
     }
 
     public Object getProjectKey() {
@@ -279,6 +287,10 @@ public abstract class RenderParams {
 
     public boolean isRtlSupported() {
         return mSupportsRtl;
+    }
+
+    public boolean isQuickStepEnabled() {
+        return mEnableQuickStep;
     }
 
     public <T> void setFlag(Key<T> key, T value) {

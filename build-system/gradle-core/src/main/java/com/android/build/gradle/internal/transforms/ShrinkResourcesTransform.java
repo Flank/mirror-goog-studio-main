@@ -121,7 +121,7 @@ public class ShrinkResourcesTransform extends Transform {
         this.variantData = variantData;
         this.logger = logger;
 
-        BuildArtifactsHolder artifacts = variantScope.getBuildArtifactsHolder();
+        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
         this.sourceDir =
                 artifacts.getFinalArtifactFiles(
                         InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);

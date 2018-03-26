@@ -110,7 +110,6 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
 "      android:versionCode=\"1\"\n" +
 "      android:versionName=\"1.0\">\n" +
 "\n" +
-"    <uses-sdk android:minSdkVersion=\"3\" />\n" +
 "    <application android:label=\"@string/app_name\">\n" +
 "        <activity android:name=\".HelloJni\"\n" +
 "                  android:label=\"@string/app_name\">\n" +

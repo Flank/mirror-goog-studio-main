@@ -25,11 +25,11 @@ namespace profiler {
 // deleted.
 class GlobalRefListener {
  public:
-  virtual void AfterGlobalRefCreated(jobject prototype, jobject gref) = 0;
-  virtual void BeforeGlobalRefDeleted(jobject gref) = 0;
+  virtual void AfterGlobalRefCreated(jobject prototype, jobject gref,
+                                     void *caller_address) = 0;
 
-  virtual void AfterGlobalWeakRefCreated(jobject prototype, jweak gref) = 0;
-  virtual void BeforeGlobalWeakRefDeleted(jweak gref) = 0;
+  virtual void BeforeGlobalRefDeleted(jobject gref, void *caller_address) = 0;
+
  protected:
   // We don't want people to delete instances of children by parent's pointer.
   ~GlobalRefListener() = default;

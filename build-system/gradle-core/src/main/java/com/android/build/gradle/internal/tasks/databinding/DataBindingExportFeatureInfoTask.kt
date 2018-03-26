@@ -28,7 +28,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
@@ -97,7 +96,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
         override fun getType() = DataBindingExportFeatureInfoTask::class.java
 
         override fun execute(task: DataBindingExportFeatureInfoTask) {
-            task.outFolder = variantScope.buildArtifactsHolder
+            task.outFolder = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
                     task)
             task.directDependencies = variantScope.getArtifactFileCollection(

@@ -69,10 +69,10 @@ class PartialRTest {
 
         val stringsR = FileUtils.join(
                 project.getSubproject("app").intermediatesDir,
-                "res",
-                "partial-r",
+            "partial_r_files",
                 "debug",
-                "main",
+                "compileMainResourcesForDebug",
+                "out",
                 "values_strings.arsc.flat-R.txt"
         )
         val publicR = File(stringsR.parentFile, "values_public.arsc.flat-R.txt")

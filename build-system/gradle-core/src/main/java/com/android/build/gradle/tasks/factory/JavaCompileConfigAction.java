@@ -107,7 +107,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.setClasspath(classpath);
 
         javacTask.setDestinationDir(
-                scope.getBuildArtifactsHolder()
+                scope.getArtifacts()
                         .appendArtifact(InternalArtifactType.JAVAC, javacTask, "classes"));
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
@@ -202,7 +202,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 javacTask
                         .getInputs()
                         .file(
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
@@ -211,7 +211,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 javacTask
                         .getInputs()
                         .file(
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)

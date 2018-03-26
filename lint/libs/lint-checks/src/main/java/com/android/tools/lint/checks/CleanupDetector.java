@@ -554,6 +554,13 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             @NonNull UCallExpression node,
             @NonNull PsiMethod calledMethod) {
         if (isSharedEditorCreation(context, calledMethod)) {
+            if (!node.getValueArguments().isEmpty()) {
+                // Passing parameters to edit(); that's not the built-in edit method
+                // on SharedPreferences; it's probably the Android KTX extension method which
+                // handles cleanup
+                return;
+            }
+
             PsiVariable boundVariable = getVariableElement(node, true, true);
             if (isEditorCommittedInChainedCalls(context, node)) {
                 return;

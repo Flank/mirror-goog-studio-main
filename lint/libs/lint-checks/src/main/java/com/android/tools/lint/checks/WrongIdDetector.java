@@ -59,11 +59,11 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -182,7 +182,7 @@ public class WrongIdDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
+        return ImmutableSet.of(
                 RELATIVE_LAYOUT,
                 TAG_ITEM,
                 PERCENT_RELATIVE_LAYOUT,

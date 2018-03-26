@@ -73,7 +73,7 @@ enum class BooleanOption(
 
     ENABLE_NEW_DSL_AND_API("android.enableNewDsl"),
 
-    ENABLE_DATA_BINDING_V2("android.databinding.enableV2", false),
+    ENABLE_DATA_BINDING_V2("android.databinding.enableV2", true),
 
     IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE),
     IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY),

@@ -102,7 +102,7 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
-        `when`(variantScope.buildArtifactsHolder).thenReturn(buildArtifactsHolder)
+        `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(variantScope.getOutput(InternalArtifactType.MERGED_RES))
                 .thenReturn(resources)
         `when`(dslScope.issueReporter).thenReturn(issueReporter)

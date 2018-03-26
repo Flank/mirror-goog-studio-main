@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -52,11 +53,10 @@ class BuildArtifactReportTaskTest {
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
         artifactsHolder =
-                BuildArtifactsHolder(
+                VariantBuildArtifactsHolder(
                     project,
                     "debug",
                     project.file("root"),
-                    "debug",
                     dslScope)
         task0 = project.tasks.create("task0")
         task1 = project.tasks.create("task1")

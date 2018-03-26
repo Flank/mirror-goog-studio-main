@@ -174,7 +174,10 @@ public class PerfDriver {
             myConfigFile.deleteOnExit();
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
             Agent.AgentConfig.MemoryConfig memConfig =
-                    Agent.AgentConfig.MemoryConfig.newBuilder().setTrackGlobalJniRefs(true).build();
+                    Agent.AgentConfig.MemoryConfig.newBuilder()
+                    .setTrackGlobalJniRefs(true)
+                    .setAppDir("/")
+                    .build();
 
             Agent.AgentConfig config =
                     Agent.AgentConfig.newBuilder()

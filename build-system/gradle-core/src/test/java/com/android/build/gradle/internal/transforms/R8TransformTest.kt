@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
@@ -26,9 +28,11 @@ import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
+import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
+import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
@@ -43,6 +47,8 @@ import org.objectweb.asm.Type
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
 
 /**
@@ -276,6 +282,59 @@ class R8TransformTest {
 
         transform.transform(invocation)
         PathSubject.assertThat(outputMapping).exists()
+    }
+
+    @Test
+    fun testJavaResourcesCopied() {
+        val resources = tmp.root.toPath().resolve("java_res.jar")
+        ZipOutputStream(resources.toFile().outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry("metadata1.txt"))
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("metadata2.txt"))
+            zip.closeEntry()
+        }
+        val resInput =
+            TransformTestHelper.singleJarBuilder(resources.toFile())
+                .setContentTypes(RESOURCES)
+                .build()
+
+        val mixedResources = tmp.root.toPath().resolve("classes_and_res.jar")
+        ZipOutputStream(mixedResources.toFile().outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry("data/metadata.txt"))
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("a/b/c/metadata.txt"))
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("test/A.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "A"));
+            zip.closeEntry()
+        }
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(mixedResources.toFile())
+                .setContentTypes(CLASSES, RESOURCES)
+                .build()
+
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .setInputs(resInput, jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val transform = getTransform()
+        transform.keep("class **")
+        transform.transform(invocation)
+
+        val dex = getDex()
+        assertThat(dex).containsClass("Ltest/A;")
+
+        val resourcesCopied =
+            Files.walk(outputDir).filter { it.toString().endsWith(".jar") }.toList().single()
+        assertThat(Zip(resourcesCopied)).containsFileWithContent("metadata1.txt", "")
+        assertThat(Zip(resourcesCopied)).containsFileWithContent("metadata2.txt", "")
+        assertThat(Zip(resourcesCopied)).containsFileWithContent("data/metadata.txt", "")
+        assertThat(Zip(resourcesCopied)).containsFileWithContent("a/b/c//metadata.txt", "")
+        assertThat(Zip(resourcesCopied)).doesNotContain("test/A.class")
     }
 
     private fun getDex(): Dex {

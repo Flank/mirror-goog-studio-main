@@ -4,6 +4,9 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
+    defaultConfig {
+        minSdkVersion 15
+    }
     flavorDimensions 'foo'
     productFlavors {
         flavor1 {

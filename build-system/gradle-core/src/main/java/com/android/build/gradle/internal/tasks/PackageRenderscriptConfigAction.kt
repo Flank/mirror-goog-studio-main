@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import java.io.File
 import org.gradle.api.tasks.Sync
 
 /** Configuration action for a package-renderscript task.  */
@@ -34,7 +33,7 @@ class PackageRenderscriptConfigAction(private val variantScope: VariantScope) :
         packageRenderscript
             .from(variantScope.variantConfiguration.renderscriptSourceList)
             .include("**/*.rsh")
-        packageRenderscript.into(variantScope.buildArtifactsHolder.appendArtifact(
+        packageRenderscript.into(variantScope.artifacts.appendArtifact(
             InternalArtifactType.RENDERSCRIPT_HEADERS, packageRenderscript, "out"))
     }
 }

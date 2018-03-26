@@ -93,9 +93,9 @@ public interface QualifiedContent {
      * of the classes or resources that the build manipulates.
      */
     enum Scope implements ScopeType {
-        /** Only the project content */
+        /** Only the project (module) content */
         PROJECT(0x01),
-        /** Only the sub-projects. */
+        /** Only the sub-projects (other modules) */
         SUB_PROJECTS(0x04),
         /** Only the external libraries */
         EXTERNAL_LIBRARIES(0x10),

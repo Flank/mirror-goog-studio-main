@@ -16,6 +16,7 @@
 
 package com.android.layoutinspector.parser
 
+import com.android.layoutinspector.ProtocolVersion
 import com.android.layoutinspector.model.ViewNode
 import com.google.common.base.Charsets
 import java.io.BufferedReader
@@ -26,8 +27,24 @@ import java.util.Stack
 
 object ViewNodeParser {
     /** Parses the flat string representation of a view node and returns the root node.  */
+    @Throws(IOException::class, StringIndexOutOfBoundsException::class)
     @JvmStatic
-    fun parse(bytes: ByteArray): ViewNode? {
+    @JvmOverloads
+    fun parse(
+        bytes: ByteArray,
+        version: ProtocolVersion = ProtocolVersion.Version1
+    ): ViewNode? {
+        return when (version) {
+            ProtocolVersion.Version1 -> parseV1ViewNode(bytes)
+            ProtocolVersion.Version2 -> parseV2ViewNode(bytes)
+        }
+    }
+
+    private fun parseV2ViewNode(bytes: ByteArray): ViewNode? {
+        return ViewNodeV2Parser().parse(bytes)
+    }
+
+    private fun parseV1ViewNode(bytes: ByteArray): ViewNode? {
         var root: ViewNode? = null
         var lastNode: ViewNode? = null
         var lastWhitespaceCount = Integer.MIN_VALUE
@@ -36,37 +53,34 @@ object ViewNodeParser {
         val input = BufferedReader(
             InputStreamReader(ByteArrayInputStream(bytes), Charsets.UTF_8)
         )
-        try {
-            for (line in input.lines()) {
-                if ("DONE.".equals(line, ignoreCase = true)) {
-                    break
-                }
-                var whitespaceCount = 0
-                while (line[whitespaceCount] == ' ') {
-                    whitespaceCount++
-                }
 
-                if (lastWhitespaceCount < whitespaceCount) {
-                    stack.push(lastNode)
-                } else if (!stack.isEmpty()) {
-                    val count = lastWhitespaceCount - whitespaceCount
-                    for (i in 0 until count) {
-                        stack.pop()
-                    }
-                }
+        for (line in input.lines()) {
+            if ("DONE.".equals(line, ignoreCase = true)) {
+                break
+            }
+            var whitespaceCount = 0
+            while (line[whitespaceCount] == ' ') {
+                whitespaceCount++
+            }
 
-                lastWhitespaceCount = whitespaceCount
-                var parent: ViewNode? = null
-                if (!stack.isEmpty()) {
-                    parent = stack.peek()
-                }
-                lastNode = createViewNode(parent, line.trim { it <= ' ' })
-                if (root == null) {
-                    root = lastNode
+            if (lastWhitespaceCount < whitespaceCount) {
+                stack.push(lastNode)
+            } else if (!stack.isEmpty()) {
+                val count = lastWhitespaceCount - whitespaceCount
+                for (i in 0 until count) {
+                    stack.pop()
                 }
             }
-        } catch (e: IOException) {
-            return null
+
+            lastWhitespaceCount = whitespaceCount
+            var parent: ViewNode? = null
+            if (!stack.isEmpty()) {
+                parent = stack.peek()
+            }
+            lastNode = createViewNode(parent, line.trim { it <= ' ' })
+            if (root == null) {
+                root = lastNode
+            }
         }
 
         root?.updateNodeDrawn(true)
@@ -77,7 +91,7 @@ object ViewNodeParser {
         var data = data
         var delimIndex = data.indexOf('@')
         if (delimIndex < 0) {
-            throw IllegalArgumentException("Invalid format for ViewNode, missing @: " + data)
+            throw IllegalArgumentException("Invalid format for ViewNode, missing @: $data")
         }
         var name = data.substring(0, delimIndex)
         data = data.substring(delimIndex + 1)
@@ -90,7 +104,10 @@ object ViewNodeParser {
             loadProperties(node, data.substring(delimIndex + 1).trim { it <= ' ' })
             node.id = node.getProperty("mID", "id")!!.value
         }
-        node.setup()
+        node.displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
+        parent?.let {
+            it.children.add(node)
+        }
         return node
     }
 

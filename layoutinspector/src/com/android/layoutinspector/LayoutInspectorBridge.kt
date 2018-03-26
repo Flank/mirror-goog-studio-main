@@ -25,27 +25,42 @@ import java.util.concurrent.TimeUnit
 
 object LayoutInspectorBridge {
     @JvmStatic
+    val V2_MIN_API = 23
+
+    @JvmStatic
     fun captureView(
         window: ClientWindow, options: LayoutInspectorCaptureOptions
     ): LayoutInspectorResult {
-        val hierarchy = window.loadWindowData(20, TimeUnit.SECONDS) ?: return LayoutInspectorResult(
+        val hierarchy =
+            window.loadWindowData(options, 20, TimeUnit.SECONDS) ?: return LayoutInspectorResult(
                 null,
                 "Unexpected error: empty view hierarchy"
-        )
+            )
 
-        val root = ViewNodeParser.parse(hierarchy) ?: return LayoutInspectorResult(
+        var root: ViewNode?
+        try {
+            root = ViewNodeParser.parse(hierarchy, options.version)
+        } catch (e: StringIndexOutOfBoundsException) {
+            return LayoutInspectorResult(null, "Unexpected error: $e")
+        } catch (e: IOException) {
+            return LayoutInspectorResult(null, "Unexpected error: $e")
+        }
+
+        if (root == null) {
+            return LayoutInspectorResult(
                 null,
                 "Unable to parse view hierarchy"
-        )
+            )
+        }
 
         //  Get the preview of the root node
         val preview = window.loadViewImage(
-                root,
-                10,
-                TimeUnit.SECONDS
+            root,
+            10,
+            TimeUnit.SECONDS
         ) ?: return LayoutInspectorResult(
-                null,
-                "Unable to obtain preview image"
+            null,
+            "Unable to obtain preview image"
         )
 
         val bytes = ByteArrayOutputStream(4096)
@@ -62,8 +77,8 @@ object LayoutInspectorBridge {
             output.write(preview)
         } catch (e: IOException) {
             return LayoutInspectorResult(
-                    null,
-                    "Unexpected error while saving hierarchy snapshot: " + e
+                null,
+                "Unexpected error while saving hierarchy snapshot: $e"
             )
         } finally {
             try {
@@ -72,8 +87,8 @@ object LayoutInspectorBridge {
                 }
             } catch (e: IOException) {
                 return LayoutInspectorResult(
-                        null,
-                        "Unexpected error while closing hierarchy snapshot: " + e
+                    null,
+                    "Unexpected error while closing hierarchy snapshot: $e"
                 )
             }
 

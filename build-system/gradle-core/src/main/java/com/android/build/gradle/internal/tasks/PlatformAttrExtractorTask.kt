@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.actions.AttrExtractor
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.sdklib.IAndroidTarget
 import org.gradle.api.DefaultTask
@@ -57,7 +59,7 @@ open class PlatformAttrExtractorTask : DefaultTask() {
         })
     }
 
-    class ConfigAction(val scope: GlobalScope, val output: File):
+    class ConfigAction(val scope: GlobalScope):
             TaskConfigAction<PlatformAttrExtractorTask> {
 
         override fun getName() = "platformAttrExtractor"
@@ -70,7 +72,10 @@ open class PlatformAttrExtractorTask : DefaultTask() {
                             .target
                             .getPath(IAndroidTarget.ANDROID_JAR))
 
-            task.outputFile = output
+            task.outputFile = scope.artifacts.appendArtifact(
+                InternalArtifactType.PLATFORM_R_TXT,
+                task,
+                "R.txt")
         }
     }
 }

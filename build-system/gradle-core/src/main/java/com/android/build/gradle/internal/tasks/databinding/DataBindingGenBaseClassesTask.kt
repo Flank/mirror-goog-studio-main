@@ -19,8 +19,9 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.BaseDataBinder
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.LayoutInfoInput
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
@@ -29,6 +30,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
@@ -40,7 +42,7 @@ import javax.inject.Inject
 /**
  * Generates base classes from data binding info files.
  *
- * This class takes the output of XML processor whiech generates binding info files (binding
+ * This class takes the output of XML processor which generates binding info files (binding
  * information in layout files). Then it generates base classes which are the classes accessed
  * by the user code.
  *
@@ -58,6 +60,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     // list of artifacts from dependencies
     @get:InputFiles lateinit var mergedArtifactsFromDependencies: FileCollection
         private set
+    // list of v1 artifacts from dependencies
+    @Optional
+    @get:InputFiles var v1Artifacts: FileCollection? = null
     // where to keep the log of the task
     @get:OutputDirectory lateinit var logOutFolder: File
         private set
@@ -84,6 +89,20 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         } else {
             FileUtils.cleanOutputDir(sourceOutFolder)
             FileUtils.cleanOutputDir(logOutFolder)
+            // check if there are any v2 if so, fail the build.
+            val v2Dependencies = mergedArtifactsFromDependencies
+                .asFileTree
+                .files
+                .filter {
+                    it.name.endsWith(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX) &&
+                            !it.name.startsWith(BASE_ADAPTERS_ARTIFACT) // ignore our libs
+                }
+                .map {
+                    it.name.substringBefore(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX)
+                }
+            if (v2Dependencies.isNotEmpty()) {
+                throw IncompatibleDependencyError(v2Dependencies)
+            }
         }
     }
 
@@ -117,7 +136,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
                 packageName = packageName,
-                artifactFolder = classInfoBundleDir
+                artifactFolder = classInfoBundleDir,
+                v1ArtifactsFolder = v1Artifacts?.singleFile
         )
     }
 
@@ -136,6 +156,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.packageName = variantData.variantConfiguration.originalApplicationId
             task.mergedArtifactsFromDependencies = variantScope.getOutput(
                     DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS)
+            task.v1Artifacts = variantScope.getOutput(
+                    InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
+            )
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
             task.generateSources = variantScope.globalScope.projectOptions.get(
                     BooleanOption.ENABLE_DATA_BINDING_V2)
@@ -150,6 +173,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             BaseDataBinder(LayoutInfoInput(args))
                     .generateAll(DataBindingBuilder.GradleFileWriter(sourceOutFolder.absolutePath))
         }
+    }
 
+    companion object {
+        private const val BASE_ADAPTERS_ARTIFACT = "com.android.databinding.library.baseAdapters"
     }
 }

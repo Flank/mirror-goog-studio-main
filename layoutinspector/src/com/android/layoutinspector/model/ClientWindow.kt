@@ -15,10 +15,12 @@
  */
 package com.android.layoutinspector.model
 
+import com.android.ddmlib.ChunkHandler
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
 import com.android.ddmlib.HandleViewDebug
-import com.android.ddmlib.ChunkHandler
+import com.android.layoutinspector.LayoutInspectorCaptureOptions
+import com.android.layoutinspector.ProtocolVersion
 import com.google.common.collect.Lists
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -45,11 +47,15 @@ class ClientWindow(val title: String, private val client: Client) {
         }
 
     /** Byte array representing the view hierarchy dump of the window.  */
-    fun loadWindowData(timeout: Long, unit: TimeUnit): ByteArray? {
+    fun loadWindowData(
+        options: LayoutInspectorCaptureOptions,
+        timeout: Long,
+        unit: TimeUnit
+    ): ByteArray? {
         val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
         try {
             HandleViewDebug.dumpViewHierarchy(
-                    client, title, false /* skipChildren */, true /* includeProperties */, handler
+                client, title, false, true, options.version == ProtocolVersion.Version2, handler
             )
         } catch (e: IOException) {
             return null
@@ -71,7 +77,7 @@ class ClientWindow(val title: String, private val client: Client) {
     }
 
     private class ListViewRootsHandler :
-            HandleViewDebug.ViewDumpHandler(HandleViewDebug.CHUNK_VULW) {
+        HandleViewDebug.ViewDumpHandler(HandleViewDebug.CHUNK_VULW) {
 
         private val myViewRoots = Lists.newCopyOnWriteArrayList<String>()
 

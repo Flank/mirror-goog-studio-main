@@ -55,6 +55,8 @@ enum class StringOption(
     PROFILE_OUTPUT_DIR("android.advanced.profileOutputDir"),
 
     BUILD_ARTIFACT_REPORT_FILE("android.buildartifact.reportfile"),
+
+    AAPT2_FROM_MAVEN_OVERRIDE("android.aapt2FromMavenOverride")
     ;
 
     override fun parse(value: Any): String {

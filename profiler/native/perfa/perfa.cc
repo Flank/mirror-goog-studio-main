@@ -168,7 +168,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
       Log::E("Error instrumenting OkHttp2 OkHttpClient");
     }
   } else if (strcmp(name, "android/os/Debug") == 0) {
-    // Instrument startMethodTracing(String tracePath).
+    // Instrument startMethodTracing(String tracePath) at entry.
     slicer::MethodInstrumenter mi_start(dex_ir);
     mi_start.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
@@ -178,9 +178,9 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
       Log::E("Error instrumenting Debug.startMethodTracing(String)");
     }
 
-    // Instrument stopMethodTracing().
+    // Instrument stopMethodTracing() at exit.
     slicer::MethodInstrumenter mi_stop(dex_ir);
-    mi_stop.AddTransformation<slicer::EntryHook>(ir::MethodId(
+    mi_stop.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
         "onStopMethodTracing"));
     if (!mi_stop.InstrumentMethod(
@@ -467,16 +467,6 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
 
   // TODO: Removed these once the auto-JNI-binding feature becomes
   // available in all published O system images.
-  if (agent_config->profiler_io_enabled()) {
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "trackIoCall", "(JIJZ)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "trackNewFileSession", "(JLjava/lang/String;)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "trackTerminatingFileSession", "(J)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "nextId", "()J");
-  }
   if (agent_config->energy_profiler_enabled()) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
@@ -486,16 +476,20 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmScheduled", "(IIJJJLjava/lang/String;ILjava/lang/String;)V");
+        "sendIntentAlarmScheduled",
+        "(IIJJJLjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmScheduled", "(IIJJJLjava/lang/String;Ljava/lang/String;)V");
+        "sendListenerAlarmScheduled",
+        "(IIJJJLjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmCancelled", "(ILjava/lang/String;ILjava/lang/String;)V");
+        "sendIntentAlarmCancelled",
+        "(ILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmCancelled", "(ILjava/lang/String;Ljava/lang/String;)V");
+        "sendListenerAlarmCancelled",
+        "(ILjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmFired", "(ILjava/lang/String;)V");
@@ -515,6 +509,24 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendJobFinished",
                   "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
                   "Ljava/lang/String;ZLjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendListenerLocationUpdateRequested",
+        "(ILjava/lang/String;JFIILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendIntentLocationUpdateRequested",
+        "(ILjava/lang/String;JFIILjava/lang/String;ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendListenerLocationUpdateRemoved", "(ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendIntentLocationUpdateRemoved",
+        "(ILjava/lang/String;ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendListenerLocationChanged", "(I)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {
@@ -707,10 +719,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     // case. If we don't postpone until there is a connection, MemoryTackingEnv
     // is going to busy-wait, so not allowing the application to finish
     // initialization. This callback will be called each time perfd connects.
-    MemoryTrackingEnv::Instance(
-        vm, agent_config.mem_config().use_live_alloc(),
-        agent_config.mem_config().max_stack_depth(),
-        agent_config.mem_config().track_global_jni_refs());
+    MemoryTrackingEnv::Instance(vm, agent_config.mem_config());
     // Perf-test currently waits on this message to determine that perfa is
     // connected to perfd.
     Log::V("Perfa connected to Perfd.");

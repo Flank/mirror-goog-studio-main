@@ -94,7 +94,6 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
                         + "      android:versionCode=\"1\"\n"
                         + "      android:versionName=\"1.0\">\n"
                         + "\n"
-                        + "    <uses-sdk android:minSdkVersion=\"3\" />\n"
                         + "    <application android:label=\"@string/app_name\">\n"
                         + "        <activity android:name=\".HelloWorld\"\n"
                         + "                  android:label=\"@string/app_name\">\n"
@@ -151,6 +150,10 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
     }
 
     protected HelloWorldApp(String plugin) {
+        this(plugin, 3);
+    }
+
+    protected HelloWorldApp(String plugin, int minSdkVersion) {
         this();
 
         TestSourceFile buildFile =
@@ -163,6 +166,9 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
                                 + "'\n"
                                 + "\n"
                                 + "android {\n"
+                                + "    defaultConfig.minSdkVersion "
+                                + minSdkVersion
+                                + "\n"
                                 + "    compileSdkVersion "
                                 + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                                 + "\n"
@@ -178,5 +184,9 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
 
     public static HelloWorldApp forPlugin(String plugin) {
         return new HelloWorldApp(plugin);
+    }
+
+    public static HelloWorldApp forPluginWithMinSdkVersion(String plugin, int minSdkVersion) {
+        return new HelloWorldApp(plugin, minSdkVersion);
     }
 }

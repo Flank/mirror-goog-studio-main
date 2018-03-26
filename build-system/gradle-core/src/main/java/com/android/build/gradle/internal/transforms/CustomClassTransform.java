@@ -79,13 +79,22 @@ public class CustomClassTransform extends Transform {
     @NonNull private final String name;
 
     @NonNull private final String path;
+    private final boolean addDependencies;
 
     public static final Set<QualifiedContent.Scope> SCOPE_EXTERNAL =
             Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES);
 
-    public CustomClassTransform(@NonNull String path) {
+    /**
+     * Creates the transform.
+     *
+     * @param path the path to the transform code jar.
+     * @param addDependencies whether to add the dependencies of the transform to the streams for
+     *     inclusion in the APK.
+     */
+    public CustomClassTransform(@NonNull String path, boolean addDependencies) {
         this.name = Files.getNameWithoutExtension(path);
         this.path = path;
+        this.addDependencies = addDependencies;
     }
 
     @NonNull
@@ -103,7 +112,7 @@ public class CustomClassTransform extends Transform {
     @NonNull
     @Override
     public Set<QualifiedContent.ContentType> getOutputTypes() {
-        return ImmutableSet.of(CLASSES, NATIVE_LIBS);
+        return addDependencies ? ImmutableSet.of(CLASSES, NATIVE_LIBS) : ImmutableSet.of(CLASSES);
     }
 
     @NonNull
@@ -134,24 +143,26 @@ public class CustomClassTransform extends Transform {
         if (!invocation.isIncremental()) {
             outputProvider.deleteAll();
 
-            // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
-            // we extract the resources directly as a zip file.
-            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(path))) {
-                ZipEntry entry;
-                Pattern pattern = Pattern.compile("dependencies/(.*)\\.jar");
-                while ((entry = zis.getNextEntry()) != null) {
-                    Matcher matcher = pattern.matcher(entry.getName());
-                    if (matcher.matches()) {
-                        String name = matcher.group(1);
-                        File outputJar =
-                                outputProvider.getContentLocation(
-                                        name, getOutputTypes(), SCOPE_EXTERNAL, Format.JAR);
-                        Files.createParentDirs(outputJar);
-                        try (FileOutputStream fos = new FileOutputStream(outputJar)) {
-                            ByteStreams.copy(zis, fos);
+            if (addDependencies) {
+                // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
+                // we extract the resources directly as a zip file.
+                try (ZipInputStream zis = new ZipInputStream(new FileInputStream(path))) {
+                    ZipEntry entry;
+                    Pattern pattern = Pattern.compile("dependencies/(.*)\\.jar");
+                    while ((entry = zis.getNextEntry()) != null) {
+                        Matcher matcher = pattern.matcher(entry.getName());
+                        if (matcher.matches()) {
+                            String name = matcher.group(1);
+                            File outputJar =
+                                    outputProvider.getContentLocation(
+                                            name, getOutputTypes(), SCOPE_EXTERNAL, Format.JAR);
+                            Files.createParentDirs(outputJar);
+                            try (FileOutputStream fos = new FileOutputStream(outputJar)) {
+                                ByteStreams.copy(zis, fos);
+                            }
                         }
+                        zis.closeEntry();
                     }
-                    zis.closeEntry();
                 }
             }
         }

@@ -98,6 +98,7 @@ class TimingStats {
     kResolveCallstack,   // Method ids -> Method nmaes
     kResolveLineNumber,  // Frame ids -> Line numbers
     kNativeBacktrace,    // Time to unwind native stack.
+    kMemMapLookup,       // Time to check if native stack starts within the app
     kTimingTagCount,
   };
 
@@ -142,6 +143,10 @@ class TimingStats {
         return "ResolveCallstack";
       case kResolveLineNumber:
         return "ResolveLineNumber";
+      case kNativeBacktrace:
+        return "NativeBacktrace";
+      case kMemMapLookup:
+        return "MemMapLookup";
       default:
         return "Unknown";
     }

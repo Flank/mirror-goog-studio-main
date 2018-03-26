@@ -29,7 +29,7 @@ import org.junit.Test
 /**
  * Test injected ABI with ndk.abiFilters in a library project.
  */
-class InjectedAbiNativeLibraryTest() {
+class InjectedAbiNativeLibraryTest {
 
     val testapp = HelloWorldLibraryApp.create()
     @Rule @JvmField
@@ -68,13 +68,13 @@ android {
                 .getApk(GradleTestProject.ApkType.DEBUG))
                 .containsFile("lib/x86/libhello-jni.so")
     }
+
     @Test fun missingAbi() {
-        val result = project.executor()
+        project.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
-                .expectFailure()
                 .run(":app:assembleDebug")
-        assertThat(result.failureMessage).contains("ABIs [armeabi-v7a] set by " +
-                "'android.injected.build.abi' gradle flag is not supported by this project. " +
-                "Supported ABIs are [x86].")
+        assertThat(project.getSubproject(":app")
+            .getApk(GradleTestProject.ApkType.DEBUG))
+            .doesNotContainFile("lib/armeabi-v7a/libhello-jni.so")
     }
 }

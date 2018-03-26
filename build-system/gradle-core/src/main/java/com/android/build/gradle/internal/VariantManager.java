@@ -537,13 +537,12 @@ public class VariantManager implements VariantModel {
 
         } else {
             taskManager.createTasksForVariantScope(variantScope);
-            publishBuildArtifacts(variantScope);
         }
     }
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs. */
-    private void publishBuildArtifacts(VariantScope variantScope) {
-        BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+    public void publishBuildArtifacts(VariantScope variantScope) {
+        BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
         for (PublishingSpecs.OutputSpec outputSpec :
                 variantScope.getPublishingSpec().getOutputs()) {
             com.android.build.api.artifact.ArtifactType buildArtifactType =

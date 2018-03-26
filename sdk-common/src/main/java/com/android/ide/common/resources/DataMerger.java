@@ -60,6 +60,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
 
     @NonNull
     protected final DocumentBuilderFactory mFactory;
+    private boolean mPreserveOriginalItems;
 
     /** All the DataSets. */
     private final List<S> mDataSets = new ArrayList<>();
@@ -87,7 +88,17 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             @NonNull MergeConsumer<I> consumer) throws MergingException;
 
     /**
-     * adds a new {@link DataSet} and overlays it on top of the existing DataSet.
+     * Tells the merger whether to preserve the original items instead of merging them, or not.
+     * By default the items are merged.
+     *
+     * @param value whether to preserve the original items instead of merging them
+     */
+    public void setPreserveOriginalItems(boolean value) {
+        this.mPreserveOriginalItems = value;
+    }
+
+    /**
+     * Adds a new {@link DataSet} and overlays it on top of the existing DataSet.
      *
      * @param resourceSet the ResourceSet to add.
      */
@@ -181,6 +192,19 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
 
             // loop on all the data items.
             for (String dataItemKey : dataItemKeys) {
+                if (mPreserveOriginalItems) {
+                    for (int i = mDataSets.size(); --i >= 0;) {
+                        S dataSet = mDataSets.get(i);
+                        // Look for the resource key in the set.
+                        ListMultimap<String, I> itemMap = dataSet.getDataMap();
+                        List<I> items = itemMap.get(dataItemKey);
+                        for (int j = items.size(); --j >= 0;) {
+                            consumer.addItem(items.get(j));
+                        }
+                    }
+                    continue;
+                }
+
                 if (requiresMerge(dataItemKey)) {
                     // get all the available items, from the lower priority, to the higher
                     // priority

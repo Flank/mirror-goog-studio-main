@@ -271,7 +271,7 @@ open class LinkAndroidResForBundleTask
 
             processResources.mainSplit = variantData.outputScope.mainSplit
 
-            processResources.manifestFiles = variantScope.buildArtifactsHolder
+            processResources.manifestFiles = variantScope.artifacts
                 .getFinalArtifactFiles(MERGED_MANIFESTS)
 
             processResources.inputResourcesDir = variantScope.getOutput(InternalArtifactType.MERGED_RES)

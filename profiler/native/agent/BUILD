@@ -27,7 +27,6 @@ cc_library(
         "support/event_manager.h",
         "support/event_passthrough.cc",
         "support/http_tracker.cc",
-        "support/io_tracker.cc",
         "support/jni_wrappers.h",
         "support/memory_stats_logger.cc",
         "support/memory_stats_logger.h",

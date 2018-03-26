@@ -146,7 +146,7 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     public Object getMinSdkVersion() {
         init();
         String minSdkVersion = attributeValues.get(MIN_SDK_VERSION);
-        return parseIntValueOrDefault(minSdkVersion, minSdkVersion, 1);
+        return parseIntValueOrDefault(minSdkVersion, minSdkVersion, null);
     }
 
     /**
@@ -157,7 +157,7 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     public Object getTargetSdkVersion() {
         init();
         String targetSdkVersion = attributeValues.get(TARGET_SDK_VERSION);
-        return parseIntValueOrDefault(targetSdkVersion, targetSdkVersion, -1);
+        return parseIntValueOrDefault(targetSdkVersion, targetSdkVersion, null);
     }
 
     /**

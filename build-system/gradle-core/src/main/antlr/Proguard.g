@@ -1,9 +1,5 @@
 grammar Proguard;
 
-options{
-  k = 3;
-}
-
 tokens {
   NEGATOR = '!';
 }
@@ -61,6 +57,8 @@ private unsupportedFlag
   :
   (
       '-allowaccessmodification'
+    | '-addconfigurationdebugging'
+    | '-android'
     | '-classobfuscationdictionary' classObfuscationDictionary=NAME
     | '-dontpreverify'
     | '-dontskipnonpubliclibraryclasses'
@@ -84,6 +82,9 @@ private unsupportedFlag
     | ('-adaptresourcefilecontents' {List<FilterSpecification> file_filter = new ArrayList<FilterSpecification>();} filter[file_filter, FilterSeparator.FILE] )
     | ('-adaptresourcefilenames' {List<FilterSpecification> file_filter = new ArrayList<FilterSpecification>();} filter[file_filter, FilterSeparator.FILE] )
     | ('-applymapping' mapping=NAME )
+    | ('-assumenoescapingparameters' classSpecification)
+    | ('-assumenoexternalreturnvalues' classSpecification)
+    | ('-assumenoexternalsideeffects' classSpecification)
     | ('-assumenosideeffects' classSpecification)
     | ('-dontnote' {List<FilterSpecification> class_filter = new ArrayList<FilterSpecification>();} filter[class_filter, FilterSeparator.CLASS])
     | ('-dump' NAME?) //[filename]
@@ -101,6 +102,7 @@ private unsupportedFlag
     | ('-printusage' NAME) //[filename]
     | ('-renamesourcefileattribute' sourceFile=NAME?)
     | ('-repackageclasses' ('\'' newPackage=NAME? '\'')? )
+    | ('-if' classSpecification)
   )
   ;
 

@@ -54,6 +54,16 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::GetThreadsRequest* request,
       profiler::proto::GetThreadsResponse* response) override;
 
+  grpc::Status GetTraceInfo(
+      grpc::ServerContext* context,
+      const profiler::proto::GetTraceInfoRequest* request,
+      profiler::proto::GetTraceInfoResponse* response) override;
+
+  grpc::Status GetTrace(
+      grpc::ServerContext* context,
+      const profiler::proto::GetTraceRequest* request,
+      profiler::proto::GetTraceResponse* response) override;
+
   // TODO: Handle the case if there is no such a running process.
   grpc::Status StartMonitoringApp(
       grpc::ServerContext* context,
@@ -84,6 +94,11 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       grpc::ServerContext* context,
       const profiler::proto::StartupProfilingRequest* request,
       profiler::proto::StartupProfilingResponse* response) override;
+
+  grpc::Status GetCpuCoreConfig(
+      grpc::ServerContext* context,
+      const profiler::proto::CpuCoreConfigRequest* request,
+      profiler::proto::CpuCoreConfigResponse* response) override;
 
  private:
   // Stops profiling process of |pid|, regardless of whether it is alive or

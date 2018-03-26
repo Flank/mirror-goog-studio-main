@@ -28,6 +28,7 @@ import org.gradle.api.artifacts.result.ComponentSelectionReason
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import java.io.File
 import javax.tools.ToolProvider
 
@@ -89,6 +90,7 @@ class MockResolvedComponentResult(
     override fun getDependents(): MutableSet<ResolvedDependencyResult> = error("not implemented")
     override fun getSelectionReason(): ComponentSelectionReason = error("not implemented")
     override fun getModuleVersion(): ModuleVersionIdentifier? = error("not implemented")
+    override fun getVariant(): ResolvedVariantResult = error("not implemented")
 }
 
 private class MockComponentIdentifier(val name: String) : ComponentIdentifier {

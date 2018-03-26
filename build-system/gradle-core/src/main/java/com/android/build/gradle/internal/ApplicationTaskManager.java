@@ -52,13 +52,11 @@ import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBui
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Optional;
@@ -227,9 +225,9 @@ public class ApplicationTaskManager extends TaskManager {
             taskFactory.create(new FeatureSetMetadataWriterTask.ConfigAction(variantScope));
 
             if (extension.getDataBinding().isEnabled()) {
-                // Create a task that will package the manifest ids(the R file packages) of all features into a
-                // file. This file's path is passed into the Data Binding annotation processor which uses it to
-                // known about all available features.
+                // Create a task that will package the manifest ids(the R file packages) of all
+                // features into a file. This file's path is passed into the Data Binding annotation
+                // processor which uses it to known about all available features.
                 //
                 // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
                 taskFactory.create(
@@ -238,8 +236,11 @@ public class ApplicationTaskManager extends TaskManager {
             }
         } else {
             // Non-base feature specific task.
+            // Task will produce artifacts consumed by the base feature
             taskFactory.create(new FeatureSplitDeclarationWriterTask.ConfigAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
+                // Create a task that will package necessary information about the feature into a
+                // file which is passed into the Data Binding annotation processor.
                 taskFactory.create(new DataBindingExportFeatureInfoTask.ConfigAction(variantScope));
             }
         }
@@ -291,7 +292,7 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createLintTasks(variantScope));
 
-        createTransitiveDepsTask(variantScope);
+        taskFactory.create(new FeatureSplitTransitiveDepsWriterTask.ConfigAction(variantScope));
 
         createDynamicBundleTask(variantScope);
     }
@@ -332,10 +333,6 @@ public class ApplicationTaskManager extends TaskManager {
                         new File(
                                 variantScope.getIncrementalDir("ir_dep"),
                                 variantScope.getDirName()),
-                        new File(
-                                getIncrementalFolder(
-                                        variantScope, "InstantRunDependenciesApkBuilder"),
-                                "aapt-temp"),
                         variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
                         variantScope.getOutput(resourcesWithMainManifest),
                         variantScope.getOutput(InternalArtifactType.APK_LIST),
@@ -363,11 +360,6 @@ public class ApplicationTaskManager extends TaskManager {
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),
-                        new File(
-                                getIncrementalFolder(
-                                        variantScope, "InstantRunSliceSplitApkBuilder"),
-                                "aapt-temp"),
-                        globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2),
                         variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
                         variantScope.getOutput(resourcesWithMainManifest),
                         variantScope.getOutput(InternalArtifactType.APK_LIST),
@@ -393,8 +385,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
-        final BuildableArtifact javacOutput =
-                scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC);
+        final BuildableArtifact javacOutput = scope.getArtifacts().getArtifactFiles(JAVAC);
         final FileCollection preJavacGeneratedBytecode =
                 scope.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =
@@ -418,7 +409,7 @@ public class ApplicationTaskManager extends TaskManager {
                     @Override
                     public void execute(@NonNull Jar task) {
                         File outputFile =
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .appendArtifact(
                                                 InternalArtifactType.APP_CLASSES,
                                                 task,
@@ -499,23 +490,6 @@ public class ApplicationTaskManager extends TaskManager {
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
         return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
-    }
-
-    private void createTransitiveDepsTask(@NonNull VariantScope scope) {
-        File textFile =
-                new File(
-                        FileUtils.join(
-                                globalScope.getIntermediatesDir(),
-                                "feature-split",
-                                "transitive-deps",
-                                scope.getVariantConfiguration().getDirName()),
-                        "deps.txt");
-
-        FeatureSplitTransitiveDepsWriterTask task =
-                taskFactory.create(
-                        new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
-
-        scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
     }
 
     private void createDynamicBundleTask(@NonNull VariantScope scope) {

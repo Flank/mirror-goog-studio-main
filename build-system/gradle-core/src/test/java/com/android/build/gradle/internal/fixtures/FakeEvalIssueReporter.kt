@@ -21,16 +21,21 @@ import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 
-class FakeEvalIssueReporter(private val throwOnError : Boolean) : EvalIssueReporter {
-
-    constructor() : this(false) {}
+class FakeEvalIssueReporter(
+    private val throwOnError : Boolean = false) : EvalIssueReporter {
 
     val messages = mutableListOf<String>()
+    val errors = mutableListOf<String>()
+    val warnings = mutableListOf<String>()
 
     override fun reportIssue(type: EvalIssueReporter.Type,
             severity: EvalIssueReporter.Severity,
             exception: EvalIssueException): SyncIssue {
         messages.add(exception.message)
+        when(severity) {
+            EvalIssueReporter.Severity.ERROR -> errors.add(exception.message)
+            EvalIssueReporter.Severity.WARNING -> warnings.add(exception.message)
+        }
         if (severity == EvalIssueReporter.Severity.ERROR && throwOnError) {
             throw exception
         }

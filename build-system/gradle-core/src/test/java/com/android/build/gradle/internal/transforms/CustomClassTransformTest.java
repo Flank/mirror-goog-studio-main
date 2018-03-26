@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
+import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
@@ -29,6 +32,7 @@ import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.truth.Truth;
@@ -49,8 +53,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Before;
@@ -61,11 +67,12 @@ import org.mockito.Mock;
 
 public class CustomClassTransformTest {
 
+    private static final String FAKE_DEPENDENCIES = "fake_dependencies";
     @Mock Context context;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private CustomClassTransform transform;
+    private File transformJar;
 
     public static class TestTransform implements BiConsumer<InputStream, OutputStream> {
         @Override
@@ -85,10 +92,10 @@ public class CustomClassTransformTest {
         String entry = name.replace('.', '/') + ".class";
         String resource = "/" + entry;
         URL url = TestTransform.class.getResource(resource);
-        File jar = temporaryFolder.newFile("transform.jar");
+        transformJar = temporaryFolder.newFile("transform.jar");
 
         try (InputStream res = url.openStream();
-                ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(jar))) {
+                ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(transformJar))) {
             ZipEntry e = new ZipEntry(entry);
             zip.putNextEntry(e);
             ByteStreams.copy(res, zip);
@@ -98,9 +105,12 @@ public class CustomClassTransformTest {
             zip.putNextEntry(e);
             zip.write(name.getBytes(Charsets.UTF_8));
             zip.closeEntry();
-        }
 
-        transform = new CustomClassTransform(jar.getPath());
+            e = new ZipEntry("dependencies/" + FAKE_DEPENDENCIES + ".jar");
+            zip.putNextEntry(e);
+            zip.write("foo".getBytes(Charsets.UTF_8));
+            zip.closeEntry();
+        }
     }
 
     private static File addFakeFile(File file, String name, String content) throws IOException {
@@ -162,21 +172,58 @@ public class CustomClassTransformTest {
         Truth.assertThat(outs).isEmpty();
     }
 
-    private static TransformOutputProvider createTransformOutput(File out) {
-        return new TransformOutputProvider() {
-            @Override
-            public void deleteAll() throws IOException {}
+    private CustomClassTransform getTransform(boolean addDependency) {
+        return new CustomClassTransform(transformJar.getPath(), addDependency);
+    }
 
-            @NonNull
-            @Override
-            public File getContentLocation(
+    private static class CustomOutputProvider implements TransformOutputProvider {
+
+        private static class Output {
+            @NonNull public final String name;
+            @NonNull public final Set<QualifiedContent.ContentType> types;
+            @NonNull public final Set<? super QualifiedContent.Scope> scopes;
+            @NonNull public final Format format;
+
+            Output(
                     @NonNull String name,
                     @NonNull Set<QualifiedContent.ContentType> types,
                     @NonNull Set<? super QualifiedContent.Scope> scopes,
                     @NonNull Format format) {
-                return new File(out, name);
+                this.name = name;
+                this.types = ImmutableSet.copyOf(types);
+                this.scopes = ImmutableSet.copyOf(scopes);
+                this.format = format;
             }
-        };
+        }
+
+        private final File out;
+        private final List<Output> outputs = Lists.newArrayList();
+
+        private CustomOutputProvider(File out) {
+            this.out = out;
+        }
+
+        public List<Output> getOutputs() {
+            return outputs;
+        }
+
+        @Override
+        public void deleteAll() throws IOException {}
+
+        @NonNull
+        @Override
+        public File getContentLocation(
+                @NonNull String name,
+                @NonNull Set<QualifiedContent.ContentType> types,
+                @NonNull Set<? super QualifiedContent.Scope> scopes,
+                @NonNull Format format) {
+            outputs.add(new Output(name, types, scopes, format));
+            return new File(out, name);
+        }
+    }
+
+    private static CustomOutputProvider createTransformOutput(File out) {
+        return new CustomOutputProvider(out);
     }
 
     private static List<TransformInput> createTransformInputs(
@@ -226,7 +273,7 @@ public class CustomClassTransformTest {
                         .addInputs(transformInput)
                         .addOutputProvider(transformOutput)
                         .build();
-        transform.transform(invocation);
+        getTransform(false).transform(invocation);
 
         assertValidTransform(in.toPath(), out.toPath());
     }
@@ -292,8 +339,101 @@ public class CustomClassTransformTest {
                         .addOutputProvider(transformOutput)
                         .setIncrementalMode(true)
                         .build();
-        transform.transform(invocation);
+        getTransform(false).transform(invocation);
 
         assertValidTransform(in.toPath(), out.toPath());
+    }
+
+    @Test
+    public void checkTransformPropertiesBasedOnAddDependencies() {
+        Truth.assertThat(getTransform(false).getOutputTypes())
+                .named("getOutputTypes on addDependency == false")
+                .containsExactly(CLASSES);
+        Truth.assertThat(getTransform(true).getOutputTypes())
+                .named("getOutputTypes on addDependency == true")
+                .containsExactly(CLASSES, NATIVE_LIBS);
+    }
+
+    @Test
+    public void checkAddDependencyTrue() throws Exception {
+        File in = temporaryFolder.newFolder("in");
+        File out = temporaryFolder.newFolder("out");
+        File dir = new File(in, "dir");
+        File jar1 = new File(in, "jar1.jar");
+        File jar2 = new File(in, "jar2.jar");
+
+        addFakeFile(dir, "a.class", "A");
+        addFakeFile(jar1, "x.xml", "X");
+        addFakeFile(jar2, "l.class", "L");
+
+        List<TransformInput> transformInput =
+                createTransformInputs(
+                        dir,
+                        ImmutableMap.of(),
+                        ImmutableMap.of(
+                                jar1, Status.ADDED,
+                                jar2, Status.ADDED));
+        CustomOutputProvider transformOutput = createTransformOutput(out);
+        TransformInvocation invocation =
+                new TransformInvocationBuilder(context)
+                        .addInputs(transformInput)
+                        .addOutputProvider(transformOutput)
+                        .build();
+        getTransform(true).transform(invocation);
+
+        List<String> outputNames =
+                transformOutput
+                        .getOutputs()
+                        .stream()
+                        .map(output -> output.name)
+                        .collect(Collectors.toList());
+
+        Truth.assertThat(outputNames)
+                .containsExactly("dir", "jar1.jar", "jar2.jar", FAKE_DEPENDENCIES);
+        Optional<CustomOutputProvider.Output> depOutput =
+                transformOutput
+                        .getOutputs()
+                        .stream()
+                        .filter(output -> FAKE_DEPENDENCIES.equals(output.name))
+                        .findAny();
+        Truth.assertThat(depOutput.isPresent()).isTrue();
+        Truth.assertThat(depOutput.get().types).containsExactly(CLASSES, NATIVE_LIBS);
+    }
+
+    @Test
+    public void checkAddDependencyFalse() throws Exception {
+        File in = temporaryFolder.newFolder("in");
+        File out = temporaryFolder.newFolder("out");
+        File dir = new File(in, "dir");
+        File jar1 = new File(in, "jar1.jar");
+        File jar2 = new File(in, "jar2.jar");
+
+        addFakeFile(dir, "a.class", "A");
+        addFakeFile(jar1, "x.xml", "X");
+        addFakeFile(jar2, "l.class", "L");
+
+        List<TransformInput> transformInput =
+                createTransformInputs(
+                        dir,
+                        ImmutableMap.of(),
+                        ImmutableMap.of(
+                                jar1, Status.ADDED,
+                                jar2, Status.ADDED));
+        CustomOutputProvider transformOutput = createTransformOutput(out);
+        TransformInvocation invocation =
+                new TransformInvocationBuilder(context)
+                        .addInputs(transformInput)
+                        .addOutputProvider(transformOutput)
+                        .build();
+        getTransform(false).transform(invocation);
+
+        List<String> outputNames =
+                transformOutput
+                        .getOutputs()
+                        .stream()
+                        .map(output -> output.name)
+                        .collect(Collectors.toList());
+
+        Truth.assertThat(outputNames).containsExactly("dir", "jar1.jar", "jar2.jar");
     }
 }

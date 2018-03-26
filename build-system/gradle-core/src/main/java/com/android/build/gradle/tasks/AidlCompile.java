@@ -383,7 +383,7 @@ public class AidlCompile extends IncrementalTask {
 
             if (variantConfiguration.getType().isAar()) {
                 compileTask.setPackagedDir(
-                        scope.getBuildArtifactsHolder()
+                        scope.getArtifacts()
                                 .appendArtifact(
                                         InternalArtifactType.AIDL_PARCELABLE, compileTask, "out"));
                 compileTask.setPackageWhitelist(

@@ -44,8 +44,10 @@ public class AndroidxNameUtilsTest {
             assertFalse(oldCoordinate.startsWith("androidx"));
             // It seems material won't be in the androidx package name
             assertTrue(
+                    androidxCoordinate,
                     androidxCoordinate.startsWith("androidx")
-                            || "com.google.android.material:material".equals(androidxCoordinate));
+                            || androidxCoordinate.startsWith("com.google.android.material")
+                            || androidxCoordinate.startsWith("android.test.legacy"));
             assertEquals(androidxCoordinate, AndroidxNameUtils.getCoordinateMapping(oldCoordinate));
         }
     }

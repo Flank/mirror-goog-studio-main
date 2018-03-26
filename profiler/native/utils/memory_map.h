@@ -17,7 +17,6 @@
 #ifndef UTILS_NATIVE_MEMORYMAP_H_
 #define UTILS_NATIVE_MEMORYMAP_H_
 #include <cstdint>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -32,7 +31,7 @@ class MemoryMap final {
     uintptr_t start_address;
     uintptr_t end_address;
     uintptr_t file_offset;
-    bool contains(uintptr_t addr) {
+    bool contains(uintptr_t addr) const {
       return addr >= start_address && addr < end_address;
     }
   };
@@ -48,7 +47,7 @@ class MemoryMap final {
   const ProcfsFiles& procfs_;
   const int32_t pid_;
   std::vector<MemoryRegion> regions_;
-  std::map<uintptr_t, MemoryRegion*> addr_to_region_;
 };
+
 }  // namespace profiler
 #endif  // UTILS_NATIVE_MEMORYMAP_H_

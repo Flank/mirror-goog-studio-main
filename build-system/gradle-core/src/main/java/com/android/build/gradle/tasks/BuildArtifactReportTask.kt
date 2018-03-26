@@ -99,7 +99,7 @@ open class BuildArtifactReportTask : DefaultTask() {
                     else scope.globalScope.project.file(outputFileName)
 
             task.init(
-                    report = scope.buildArtifactsHolder::createReport,
+                    report = scope.artifacts::createReport,
                     outputFile = outputFile)
         }
     }

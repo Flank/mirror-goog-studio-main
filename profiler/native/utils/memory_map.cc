@@ -16,6 +16,7 @@
  */
 #include "utils/memory_map.h"
 
+#include <algorithm>
 #include "utils/file_reader.h"
 
 using std::string;
@@ -38,7 +39,6 @@ bool MemoryMap::Update() {
   }
   regions_.clear();
   regions_.reserve(lines.size());
-  addr_to_region_.clear();
 
   // /proc/<pid>/maps file contains a sequence of lines in this format:
   // <address range>      <perms> <offset> <dev> <inode>     <pathname>
@@ -85,18 +85,22 @@ bool MemoryMap::Update() {
     }
   }
 
-  for (auto &region : regions_) {
-    addr_to_region_[region.end_address] = &region;
-  }
+  std::sort(regions_.begin(), regions_.end(),
+            [](const MemoryRegion &l, const MemoryRegion &r) {
+              return l.end_address < r.end_address;
+            });
   return true;
 }
 
 const MemoryMap::MemoryRegion *MemoryMap::LookupRegion(uintptr_t address) {
-  auto iter = addr_to_region_.upper_bound(address);
-  if (iter == addr_to_region_.end()) return nullptr;
-  MemoryRegion *region = iter->second;
-  if (region->contains(address)) {
-    return region;
+  auto iter = std::upper_bound(regions_.begin(), regions_.end(), address,
+                               [](uintptr_t addr, const MemoryRegion &region) {
+                                 return addr < region.end_address;
+                               });
+  if (iter == regions_.end()) return nullptr;
+  const MemoryRegion &region = *iter;
+  if (region.contains(address)) {
+    return &region;
   }
   return nullptr;
 }

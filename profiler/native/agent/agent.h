@@ -28,7 +28,6 @@
 #include "proto/internal_cpu.grpc.pb.h"
 #include "proto/internal_energy.grpc.pb.h"
 #include "proto/internal_event.grpc.pb.h"
-#include "proto/internal_io.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
 
 #include "memory_component.h"
@@ -47,11 +46,6 @@ using PerfdStatusChanged = std::function<void(bool)>;
 // |context|. Returns the status from the grpc call.
 using NetworkServiceTask = std::function<grpc::Status(
     proto::InternalNetworkService::Stub& stub, grpc::ClientContext& context)>;
-
-// Function for submitting an I/O grpc request via |stub| using the given
-// |context|. Returns the status from the grpc call.
-using IoServiceTask = std::function<grpc::Status(
-    proto::InternalIoService::Stub& stub, grpc::ClientContext& context)>;
 
 // Function for submitting an event grpc request via |stub| using the given
 // |context|. Returns the status from the grpc call.
@@ -96,8 +90,6 @@ class Agent {
 
   void SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks);
 
-  void SubmitIoTasks(const std::vector<IoServiceTask>& tasks);
-
   void SubmitEventTasks(const std::vector<EventServiceTask>& tasks);
 
   void SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks);
@@ -129,7 +121,6 @@ class Agent {
   proto::InternalEnergyService::Stub& energy_stub();
   proto::InternalEventService::Stub& event_stub();
   proto::InternalNetworkService::Stub& network_stub();
-  proto::InternalIoService::Stub& io_stub();
 
   /**
    * Connects/reconnects to perfd via the provided target.
@@ -171,7 +162,6 @@ class Agent {
   std::unique_ptr<proto::InternalCpuService::Stub> cpu_stub_;
   std::unique_ptr<proto::InternalEnergyService::Stub> energy_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
-  std::unique_ptr<proto::InternalIoService::Stub> io_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
   MemoryComponent* memory_component_;
 

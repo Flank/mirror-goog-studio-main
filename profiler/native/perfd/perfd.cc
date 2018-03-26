@@ -22,7 +22,6 @@
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
-#include "perfd/io/io_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
@@ -91,11 +90,6 @@ int main(int argc, char** argv) {
 
   profiler::NetworkProfilerComponent network_component(daemon.utilities());
   daemon.RegisterComponent(&network_component);
-
-  profiler::IoProfilerComponent io_component;
-  if (agent_config.profiler_io_enabled()) {
-    daemon.RegisterComponent(&io_component);
-  }
 
   profiler::EnergyProfilerComponent energy_component(daemon.utilities());
   if (agent_config.energy_profiler_enabled()) {

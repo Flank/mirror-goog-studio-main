@@ -119,8 +119,8 @@ public class FragmentDetectorTest extends AbstractCheckTest {
                 ""
                         + "src/test/pkg/Parent.java:7: Error: Fragments should be static such that they can be re-instantiated by the system, and anonymous classes are not static [ValidFragment]\n"
                         + "        return new Fragment() {\n"
-                        + "                   ^\n"
-                        + "1 errors, 0 warnings\n";
+                        + "                   ~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                         java(

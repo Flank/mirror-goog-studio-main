@@ -22,7 +22,6 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
 import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -42,7 +41,7 @@ class SvgLeafNode extends SvgNode {
     private SvgGradientNode mFillGradientNode;
     private SvgGradientNode mStrokeGradientNode;
 
-    public SvgLeafNode(SvgTree svgTree, Node node, String nodeName) {
+    public SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @NonNull String nodeName) {
         super(svgTree, node, nodeName);
     }
 
@@ -53,7 +52,7 @@ class SvgLeafNode extends SvgNode {
         return newInstance;
     }
 
-    protected void copyTo(SvgLeafNode newInstance) {
+    protected void copyTo(@NonNull SvgLeafNode newInstance) {
         super.copyTo(newInstance);
         newInstance.setPathData(getPathData());
     }
@@ -172,8 +171,8 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public void transformIfNeeded(AffineTransform rootTransform) {
-        if ((mPathData == null)) {
+    public void transformIfNeeded(@NonNull AffineTransform rootTransform) {
+        if (mPathData == null || mPathData.isEmpty()) {
             // Nothing to draw and transform, early return.
             return;
         }
@@ -189,7 +188,7 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public void flatten(AffineTransform transform) {
+    public void flatten(@NonNull AffineTransform transform) {
         mStackedTransform.setTransform(transform);
         mStackedTransform.concatenate(mLocalTransform);
 
@@ -216,12 +215,14 @@ class SvgLeafNode extends SvgNode {
         String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
         String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
         logger.log(Level.FINE, "fill color " + fillColor);
+        if (mPathData == null || mPathData.isEmpty()) {
+            return; // No path to draw.
+        }
         boolean emptyFill =
                 fillColor != null && ("none".equals(fillColor) || "#000000".equals(fillColor));
         boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);
-        boolean emptyPath = mPathData == null;
-        if (emptyPath || emptyFill && emptyStroke) {
-            return;  // Nothing to draw.
+        if (emptyFill && emptyStroke) {
+            return; // Nothing to draw.
         }
 
         // Second, write the color info handling the default values.

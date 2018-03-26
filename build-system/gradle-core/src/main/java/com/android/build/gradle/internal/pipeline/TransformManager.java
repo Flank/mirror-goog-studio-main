@@ -74,6 +74,8 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_NATIVE_LIBS =
             ImmutableSet.of(NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
+    public static final Set<ContentType> CONTENT_DEX_WITH_RESOURCES =
+            ImmutableSet.of(ExtendedContentType.DEX, RESOURCES);
     public static final Set<ContentType> DATA_BINDING_ARTIFACT =
             ImmutableSet.of(ExtendedContentType.DATA_BINDING);
     public static final Set<ContentType> DATA_BINDING_BASE_CLASS_LOG_ARTIFACT =
@@ -89,6 +91,12 @@ public class TransformManager extends FilterableStreamCollection {
                     .addAll(SCOPE_FULL_PROJECT)
                     .add(InternalScope.MAIN_SPLIT)
                     .build();
+    public static final Set<ScopeType> SCOPE_FULL_WITH_FEATURES =
+            new ImmutableSet.Builder<ScopeType>()
+                    .addAll(SCOPE_FULL_PROJECT)
+                    .add(InternalScope.FEATURES)
+                    .build();
+    public static final Set<ScopeType> SCOPE_FEATURES = ImmutableSet.of(InternalScope.FEATURES);
     public static final Set<ScopeType> SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS =
             ImmutableSet.of(Scope.PROJECT, InternalScope.LOCAL_DEPS);
 

@@ -68,7 +68,14 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
             }
 
             Disposable parentDisposable = Disposer.newDisposable();
-            ourApplicationEnvironment = createApplicationEnvironment(parentDisposable);
+
+            // TODO: Set to true from unit tests.
+            // We can't do it right now because a lot of UAST code throws exceptions
+            // in that mode.
+            boolean unitTestMode = false;
+
+            ourApplicationEnvironment =
+                    createApplicationEnvironment(parentDisposable, unitTestMode);
             ourProjectCount = 0;
             Disposer.register(
                     parentDisposable,
@@ -82,12 +89,12 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         }
     }
 
-    public LintCoreApplicationEnvironment(Disposable parentDisposable) {
-        super(parentDisposable);
+    public LintCoreApplicationEnvironment(Disposable parentDisposable, boolean unitTestMode) {
+        super(parentDisposable, unitTestMode);
     }
 
     private static LintCoreApplicationEnvironment createApplicationEnvironment(
-            Disposable parentDisposable) {
+            Disposable parentDisposable, boolean unitTestMode) {
         // We don't bundle .dll files in the Gradle plugin for native file system access;
         // prevent warning logs on Windows when it's not found (see b.android.com/260180)
         System.setProperty("idea.use.native.fs.for.win", "false");
@@ -95,7 +102,7 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         Extensions.cleanRootArea(parentDisposable);
         registerAppExtensionPoints();
         LintCoreApplicationEnvironment applicationEnvironment =
-                new LintCoreApplicationEnvironment(parentDisposable);
+                new LintCoreApplicationEnvironment(parentDisposable, unitTestMode);
 
         registerApplicationServicesForCLI(applicationEnvironment);
         registerApplicationServices(applicationEnvironment);

@@ -35,6 +35,9 @@ public enum InternalScope implements QualifiedContent.ScopeType {
      * only (and only when building the AAR).
      */
     LOCAL_DEPS(0x20000),
+
+    /** Only the project's feature or dynamic-feature modules. */
+    FEATURES(0x40000),
     ;
 
     private final int value;

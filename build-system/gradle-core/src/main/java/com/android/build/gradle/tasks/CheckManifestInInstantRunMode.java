@@ -224,7 +224,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
             task.instantRunManifests =
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .getFinalArtifactFiles(
                                     InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS);
             task.resInputType =

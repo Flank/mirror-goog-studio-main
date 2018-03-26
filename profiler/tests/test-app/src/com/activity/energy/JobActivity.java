@@ -19,6 +19,7 @@ package com.activity.energy;
 import android.app.job.JobInfo.Builder;
 import android.app.job.JobInfo.TriggerContentUri;
 import android.app.job.JobParameters;
+import android.app.job.JobService;
 import android.app.job.JobServiceEngine;
 import android.content.ComponentName;
 import android.net.Uri;
@@ -31,7 +32,7 @@ public class JobActivity extends PerfdTestActivity {
         super("Job Activity");
     }
 
-    public void scheduleJob() throws Exception {
+    public void scheduleStartAndFinishJob() throws Exception {
         Builder jobBuilder =
                 new Builder(1, new ComponentName("com.example"))
                         .setBackoffCriteria(100, 1)
@@ -50,23 +51,20 @@ public class JobActivity extends PerfdTestActivity {
                         .setExtras(new PersistableBundle("extras"))
                         .setTransientExtras(new Bundle("transient extras"));
         getJobSchedler().schedule(jobBuilder.build());
-        System.out.println("JOB SCHEDULED");
-    }
-
-    public void startJob() {
-        getJobSchedler().schedule(new Builder(2, new ComponentName("com.example")).build());
-        new JobServiceEngine(new MyJobService()).startJob(createJobParams(2));
-    }
-
-    public void stopJob() {
-        getJobSchedler().schedule(new Builder(3, new ComponentName("com.example")).build());
-        new JobServiceEngine(new MyJobService()).stopJob(createJobParams(3));
-    }
-
-    public void finishJob() {
-        getJobSchedler().schedule(new Builder(4, new ComponentName("com.example")).build());
-        new MyJobService().jobFinished(createJobParams(4), true);
+        JobService jobService = new MyJobService();
+        JobServiceEngine engine = new JobServiceEngine(jobService);
+        JobParameters jobParams = createJobParams(1);
+        engine.startJob(jobParams);
+        jobService.jobFinished(jobParams, true);
         System.out.println("JOB FINISHED");
+    }
+
+    public void scheduleStartAndStopJob() {
+        getJobSchedler().schedule(new Builder(2, new ComponentName("com.example")).build());
+        JobServiceEngine engine = new JobServiceEngine(new MyJobService());
+        JobParameters jobParams = createJobParams(2);
+        engine.startJob(jobParams);
+        engine.stopJob(jobParams);
     }
 
     private JobParameters createJobParams(int jobId) {

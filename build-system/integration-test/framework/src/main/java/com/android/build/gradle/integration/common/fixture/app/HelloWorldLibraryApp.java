@@ -48,6 +48,9 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                                 + "     compileSdkVersion "
                                 + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                                 + "\n"
+                                + "    defaultConfig {\n"
+                                + "        minSdkVersion 3\n"
+                                + "    }\n"
                                 + "}\n"));
 
         // Create AndroidManifest.xml that uses the Activity from the library.
@@ -58,7 +61,6 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
 "      android:versionCode=\"1\"\n" +
 "      android:versionName=\"1.0\">\n" +
 "\n" +
-"    <uses-sdk android:minSdkVersion=\"3\" />\n" +
 "    <application android:label=\"@string/app_name\">\n" +
 "        <activity\n" +
 "            android:name=\"com.example.helloworld.HelloWorld\"\n" +

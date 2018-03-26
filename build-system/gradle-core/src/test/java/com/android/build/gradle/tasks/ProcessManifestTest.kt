@@ -68,7 +68,7 @@ class ProcessManifestTest {
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
-        `when`(variantScope.buildArtifactsHolder).thenReturn(buildArtifactsHolder)
+        `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(variantScope.variantData).thenReturn(variantData)
         `when`(variantScope.fullVariantName).thenReturn("fullVariantName")
         `when`(variantScope.getTaskName(any(), any())).thenReturn("processManifest")
@@ -82,9 +82,7 @@ class ProcessManifestTest {
         `when`(mainSplit.fullName).thenReturn("fooRelease")
 
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        val configAction =
-                ProcessManifest.ConfigAction(
-                        variantScope, temporaryFolder.newFile())
+        val configAction = ProcessManifest.ConfigAction(variantScope)
         task = project!!.tasks.create(configAction.name, configAction.type, configAction)
     }
 

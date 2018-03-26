@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.builder.core.BuilderConstants
+import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
@@ -54,7 +55,7 @@ open class AndroidZip : Zip() {
         override fun execute(bundle: AndroidZip) {
             val libVariantData = variantScope.variantData as LibraryVariantData
 
-            val artifacts = variantScope.buildArtifactsHolder
+            val artifacts = variantScope.artifacts
 
             libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle)
 
@@ -74,7 +75,7 @@ open class AndroidZip : Zip() {
             bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName }
             bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
             bundle.from(
-                variantScope.buildArtifactsHolder.getArtifactFiles(
+                variantScope.artifacts.getArtifactFiles(
                     InternalArtifactType.AIDL_PARCELABLE
                 ),
                 prependToCopyPath(SdkConstants.FD_AIDL)
@@ -116,7 +117,8 @@ open class AndroidZip : Zip() {
                 artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
-            bundle.from(variantScope.globalScope.getOutput(InternalArtifactType.LINT_JAR))
+            bundle.from(variantScope.globalScope.artifacts
+                .getFinalArtifactFiles(InternalArtifactType.LINT_JAR))
             if (artifacts.hasArtifact(InternalArtifactType.ANNOTATIONS_ZIP)) {
                 bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.ANNOTATIONS_ZIP))
             }
@@ -126,23 +128,15 @@ open class AndroidZip : Zip() {
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
             bundle.from(
-                variantScope.buildArtifactsHolder
+                variantScope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
 
-            variantScope.addTaskOutput(
+            variantScope.artifacts.appendArtifact(
                 InternalArtifactType.AAR,
-                Callable {
-                    File(
-                        variantScope.aarLocation,
-                        variantScope
-                            .outputScope
-                            .mainSplit
-                            .outputFileName
-                    )
-                },
-                bundle.name
-            )
+                listOf(File(variantScope.aarLocation,
+                    variantScope.outputScope.mainSplit.outputFileName)),
+                bundle)
 
             libVariantData.packageLibTask = bundle
         }

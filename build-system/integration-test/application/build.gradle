@@ -238,20 +238,6 @@ task tarGradle(type: Tar) {
 }
 
 task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', tarPrebuiltsRepo, tarSdk, tarProjects, tarGradle]) {
-    doFirst {
-        if (System.getenv('COMMIT_JSON') == null) {
-            throw new GradleException(
-                    'to build the perf tests jar, you need to bundle information about the commit it ' +
-                            'was built at by passing a COMMIT_JSON environment variable at build ' +
-                            'time. See tools/buildSrc/servers/build_perf_tests.sh for an example')
-        }
-    }
-    if (System.getenv('COMMIT_JSON') != null) {
-        from(System.getenv('COMMIT_JSON')) {
-            rename { "commit.json" }
-        }
-    }
-
     from sourceSets.test.runtimeClasspath
     from(configurations.testCompile.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude 'META-INF/MANIFEST.MF'

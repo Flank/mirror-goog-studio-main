@@ -27,6 +27,7 @@ import com.android.annotations.Nullable;
 public interface ZipEntryFilter {
 
     ZipEntryFilter CLASSES_ONLY = archivePath -> archivePath.endsWith(SdkConstants.DOT_CLASS);
+    ZipEntryFilter EXCLUDE_CLASSES = archivePath -> !archivePath.endsWith(SdkConstants.DOT_CLASS);
 
     @NonNull
     default ZipEntryFilter and(@Nullable ZipEntryFilter other) {
@@ -37,9 +38,10 @@ public interface ZipEntryFilter {
 
     /**
      * Checks a file for inclusion in a Jar archive.
+     *
      * @param archivePath the archive file path of the entry
      * @return should the file be included?
      * @throws ZipAbortException if writing the file should be aborted.
      */
-    boolean checkEntry(String archivePath) throws ZipAbortException;
+    boolean checkEntry(@NonNull String archivePath) throws ZipAbortException;
 }

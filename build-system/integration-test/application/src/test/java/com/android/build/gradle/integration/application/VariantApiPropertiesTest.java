@@ -17,13 +17,13 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,6 +69,7 @@ public class VariantApiPropertiesTest {
         project.executor().run("help");
     }
 
+    @Ignore("b/76091429")
     @Test
     public void checkOutputFileName() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(

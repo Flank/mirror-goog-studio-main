@@ -98,12 +98,13 @@ def _iml_module_jar_impl(ctx,
 
   # Java
   if java_srcs:
-    compile_output = ctx.actions.declare_file(name + ".pjava.jar") if form_srcs else java_jar
+    compiled_java = ctx.actions.declare_file(name + ".pjava.jar") if form_srcs else java_jar
+    formc_input_jars = [compiled_java] + ([kotlin_jar] if kotlin_jar else [])
 
     java_provider = java_common.compile(
       ctx,
       source_files = java_srcs,
-      output = compile_output,
+      output = compiled_java,
       deps = java_deps + kotlin_providers,
       javac_opts = java_common.default_javac_opts(ctx, java_toolchain_attr = "_java_toolchain"),
       java_toolchain = ctx.attr._java_toolchain,
@@ -114,11 +115,11 @@ def _iml_module_jar_impl(ctx,
     if form_srcs:
       forms += relative_paths(ctx, form_srcs, roots)
       args, option_files = create_java_compiler_args_srcs(ctx,
-        [form.path for form in form_srcs] + [k + "=" + v.path for k,v in form_deps] + [compile_output.path],
+        [form.path for form in form_srcs] + [k + "=" + v.path for k,v in form_deps] + [f.path for f in formc_input_jars],
         java_jar,
         transitive_runtime_jars)
       ctx.action(
-          inputs = [v for _,v in form_deps] + form_srcs + [compile_output] + option_files + transitive_runtime_jars.to_list(),
+          inputs = [v for _,v in form_deps] + form_srcs + formc_input_jars + option_files + transitive_runtime_jars.to_list(),
           outputs = [java_jar],
           mnemonic = "formc",
           arguments = args,

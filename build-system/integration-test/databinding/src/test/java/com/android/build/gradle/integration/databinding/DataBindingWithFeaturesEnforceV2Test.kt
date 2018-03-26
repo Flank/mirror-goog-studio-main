@@ -33,6 +33,9 @@ class DataBindingWithFeaturesEnforceV2Test {
         .addGradleProperties(
                 BooleanOption
                     .ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.propertyName + "=true")
+        .addGradleProperties(
+                BooleanOption
+                    .ENABLE_DATA_BINDING_V2.propertyName + "=false")
         .withDependencyChecker(false)
         .create()
 

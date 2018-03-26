@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import static com.android.SdkConstants.FN_LINT_JAR;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
@@ -81,11 +84,9 @@ public class PrepareLintJar extends DefaultTask {
     public static class ConfigAction implements TaskConfigAction<PrepareLintJar> {
 
         @NonNull private final GlobalScope scope;
-        @NonNull private final File destFile;
 
-        public ConfigAction(@NonNull GlobalScope scope, @NonNull File destFile) {
+        public ConfigAction(@NonNull GlobalScope scope) {
             this.scope = scope;
-            this.destFile = destFile;
         }
 
         @NonNull
@@ -102,7 +103,9 @@ public class PrepareLintJar extends DefaultTask {
 
         @Override
         public void execute(@NonNull PrepareLintJar task) {
-            task.outputLintJar = destFile;
+            task.outputLintJar =
+                    scope.getArtifacts()
+                            .appendArtifact(InternalArtifactType.LINT_JAR, task, FN_LINT_JAR);
             task.lintChecks = scope.getLocalCustomLintChecks();
         }
     }

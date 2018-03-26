@@ -98,6 +98,22 @@ public class VmTraceParserTest extends TestCase {
         testTrace("/basic-api10.trace", "AsyncTask #1", expected);
     }
 
+    public void testSpecialChar() throws IOException {
+        File f = getFile("/basic-special_char.trace");
+        VmTraceData.Builder dataBuilder = new VmTraceData.Builder();
+        VmTraceParser parser = new VmTraceParser(f, dataBuilder);
+        parser.parseHeader(f);
+        VmTraceData traceData = dataBuilder.build();
+
+        MethodInfo info = traceData.getMethod(0x6287d960);
+        assertEquals("android/os/Debugò", info.className);
+        assertEquals("startMethodTracingô", info.methodName);
+
+        info = traceData.getMethod(0x6287d9d0);
+        assertEquals("android/os/Debugò", info.className);
+        assertEquals("startMethodTracingö", info.methodName);
+    }
+
     public void testMisMatchedTrace() throws IOException {
         String expected =
                   " -> AsyncTask #1.:  -> com/test/android/traceview/MisMatched.foo: ()V -> com/test/android/traceview/MisMatched.bar: ()V -> android/os/Debug.startMethodTracing: (Ljava/lang/String;)V -> android/os/Debug.startMethodTracing: (Ljava/lang/String;II)V -> dalvik/system/VMDebug.startMethodTracing: (Ljava/lang/String;II)V\n"

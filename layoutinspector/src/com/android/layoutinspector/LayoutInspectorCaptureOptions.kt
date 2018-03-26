@@ -18,25 +18,30 @@ package com.android.layoutinspector
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 
+enum class ProtocolVersion(val value: String) {
+    Version1("1"),
+    Version2("2")
+}
+
 class LayoutInspectorCaptureOptions {
 
-    var version = 1
+    var version = ProtocolVersion.Version1
     var title = ""
 
     override fun toString(): String {
         return serialize()
     }
 
-    fun serialize(): String {
+    private fun serialize(): String {
         val obj = JsonObject()
-        obj.addProperty(VERSION, version)
+        obj.addProperty(VERSION, version.value)
         obj.addProperty(TITLE, title)
         return obj.toString()
     }
 
     fun parse(json: String) {
         val obj = JsonParser().parse(json).asJsonObject
-        version = obj.get(VERSION).asInt
+        version = ProtocolVersion.valueOf("Version${obj.get(VERSION).asString}")
         title = obj.get(TITLE).asString
     }
 

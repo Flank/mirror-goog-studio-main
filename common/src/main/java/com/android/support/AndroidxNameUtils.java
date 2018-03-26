@@ -16,8 +16,6 @@
 
 package com.android.support;
 
-import static com.android.SdkConstants.*;
-
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -32,79 +30,62 @@ public class AndroidxNameUtils {
     static final String ANDROID_SUPPORT_PKG = "android.support.";
 
     /** Package mappings for package that have been just renamed */
-    static final ImmutableMap<String, String> ANDROIDX_PKG_MAPPING =
-            ImmutableMap.<String, String>builder()
-                    .put(ANDROID_SUPPORT_PKG + "design.", ANDROIDX_PKG_PREFIX)
-                    .put(ANDROID_SUPPORT_PKG + "v17.", ANDROIDX_PKG_PREFIX)
-                    .put(ANDROID_SUPPORT_PKG + "v14.", ANDROIDX_PKG_PREFIX)
-                    .put(ANDROID_SUPPORT_PKG + "v13.", ANDROIDX_PKG_PREFIX)
-                    .put(ANDROID_SUPPORT_PKG + "v8.", ANDROIDX_PKG_PREFIX)
-                    .put(ANDROID_SUPPORT_PKG + "v7.", ANDROIDX_PKG_PREFIX)
-                    .put(ANDROID_SUPPORT_PKG + "v4.", ANDROIDX_PKG_PREFIX)
-                    .put(
-                            ANDROID_SUPPORT_PKG + "customtabs.",
-                            ANDROIDX_PKG_PREFIX + "browser.customtabs.")
-                    .put(ANDROID_SUPPORT_PKG + "percent.", ANDROIDX_PKG_PREFIX + "widget.")
-                    .put(ANDROID_SUPPORT_PKG, ANDROIDX_PKG_PREFIX)
-                    .build();
+    static final ImmutableMap<String, String> ANDROIDX_PKG_MAPPING;
 
     /** Mappings for class names that have been moved to a different package */
-    static final ImmutableMap<String, String> ANDROIDX_FULL_CLASS_MAPPING =
-            ImmutableMap.<String, String>builder()
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v4.view.ViewPager",
-                            ANDROIDX_PKG_PREFIX + "widget.ViewPager")
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v4.view.PagerAdapter",
-                            ANDROIDX_PKG_PREFIX + "widget.PagerAdapter")
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v4.view.PagerTabStrip",
-                            ANDROIDX_PKG_PREFIX + "widget.PagerTabStrip")
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v4.view.PagerTitleStrip",
-                            ANDROIDX_PKG_PREFIX + "widget.PagerTitleStrip")
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v7.graphics.ColorCutQuantizer",
-                            ANDROIDX_PKG_PREFIX + "graphics.palette.ColorCutQuantizer")
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v7.graphics.Palette",
-                            ANDROIDX_PKG_PREFIX + "graphics.palette.Palette")
-                    .put(
-                            ANDROID_SUPPORT_PKG + "v7.graphics.Target",
-                            ANDROIDX_PKG_PREFIX + "graphics.palette.Target")
-                    .build();
+    static final ImmutableMap<String, String> ANDROIDX_FULL_CLASS_MAPPING;
 
-    private static final ImmutableBiMap<String, String> ANDROIDX_COORDINATES_MAPPING =
-            ImmutableBiMap.<String, String>builder()
-                    .put(
-                            "com.android.support:support-vector-drawable",
-                            "androidx.graphics.vectordrawable:animatedvectordrawable")
-                    .put(
-                            "com.android.support:animated-vector-drawable",
-                            "androidx.graphics.animatedvectordrawable:vectordrawable")
-                    .put(
-                            "com.android.support:multidex-instrumentation",
-                            "androidx.multidex:instrumentation")
-                    .put(
-                            "com.android.support:preference-leanback-v17",
-                            "androidx.leanback:preference")
-                    .put("com.android.support:appcompat", "androidx.appcompat:appcompat")
-                    .put("com.android.support:design", ANDROIDX_MATERIAL_ARTIFACT)
-                    .put("com.android.support:recyclerview-v7", ANDROIDX_RECYCLER_VIEW_ARTIFACT)
-                    .put("com.android.support:support-annotations", ANDROIDX_ANNOTATIONS_ARTIFACT)
-                    // Just for testing
-
-                    .build();
+    private static final ImmutableBiMap<String, String> ANDROIDX_COORDINATES_MAPPING;
 
     /** Ordered list of old android support packages sorted by decreasing length */
-    static final ImmutableList<String> ANDROIDX_OLD_PKGS =
-            Ordering.from(
-                            (Comparator<String>)
-                                    (left, right) -> {
-                                        // Short with the longest names first
-                                        return Ints.compare(right.length(), left.length());
-                                    })
-                    .immutableSortedCopy(ANDROIDX_PKG_MAPPING.keySet());
+    static final ImmutableList<String> ANDROIDX_OLD_PKGS;
+
+    static {
+        ImmutableMap.Builder<String, String> classTransformMap = ImmutableMap.builder();
+        ImmutableMap.Builder<String, String> packageTransformMap = ImmutableMap.builder();
+        ImmutableBiMap.Builder<String, String> coordinatesTransformMap = ImmutableBiMap.builder();
+        try {
+            AndroidxMigrationParserKt.parseMigrationFile(
+                    new MigrationParserVisitor() {
+                        @Override
+                        public void visitGradleCoordinate(
+                                @NonNull String oldGroupName,
+                                @NonNull String oldArtifactName,
+                                @NonNull String newGroupName,
+                                @NonNull String newArtifactName,
+                                @NonNull String newBaseVersion) {
+                            coordinatesTransformMap.put(
+                                    oldGroupName + ":" + oldArtifactName,
+                                    newGroupName + ":" + newArtifactName);
+                        }
+
+                        @Override
+                        public void visitClass(@NonNull String old, @NonNull String newName) {
+                            classTransformMap.put(old, newName);
+                        }
+
+                        @Override
+                        public void visitPackage(@NonNull String old, @NonNull String newName) {
+                            packageTransformMap.put(old, newName);
+                        }
+                    });
+        } catch (Throwable e) {
+            Logger.getLogger(AndroidxName.class.getName())
+                    .severe("Error loading androidx migration mapping: " + e.getLocalizedMessage());
+        }
+
+        ANDROIDX_FULL_CLASS_MAPPING = classTransformMap.build();
+        ANDROIDX_PKG_MAPPING = packageTransformMap.build();
+        ANDROIDX_OLD_PKGS =
+                Ordering.from(
+                                (Comparator<String>)
+                                        (left, right) -> {
+                                            // Short with the longest names first
+                                            return Ints.compare(right.length(), left.length());
+                                        })
+                        .immutableSortedCopy(ANDROIDX_PKG_MAPPING.keySet());
+        ANDROIDX_COORDINATES_MAPPING = coordinatesTransformMap.build();
+    }
 
     @NonNull
     static String getPackageMapping(@NonNull String oldPkgName, boolean strictChecking) {
@@ -116,9 +97,8 @@ public class AndroidxNameUtils {
         }
 
         if (strictChecking) {
-            assert false : "support library package not found" + oldPkgName;
             Logger.getLogger(AndroidxName.class.getName())
-                    .warning("support library package not found");
+                    .warning("support library package not found: " + oldPkgName);
         }
         return oldPkgName;
     }

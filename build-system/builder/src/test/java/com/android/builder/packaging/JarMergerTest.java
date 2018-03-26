@@ -129,8 +129,7 @@ public class JarMergerTest {
     @Test
     public void basicFilter2() throws Exception {
         Path out = Jimfs.newFileSystem(Configuration.unix()).getPath("/out/output.jar");
-        try (JarMerger merger =
-                new JarMerger(out, entry -> !ZipEntryFilter.CLASSES_ONLY.checkEntry(entry))) {
+        try (JarMerger merger = new JarMerger(out, ZipEntryFilter.EXCLUDE_CLASSES)) {
             merger.addDirectory(createDirectoryWithClassAndResource());
             merger.addJar(createJarWithClass());
         }

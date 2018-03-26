@@ -132,14 +132,14 @@ public class AndroidUnitTest extends Test {
             if (includeAndroidResources) {
                 runTestsTask.assetsCollection =
                         testedScope
-                                .getBuildArtifactsHolder()
+                                .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS);
                 runTestsTask.resCollection =
                         testedScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
             }
             runTestsTask.mergedManifest =
                     testedScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
 
             // Put the variant name in the report path, so that different testing tasks don't
@@ -193,11 +193,11 @@ public class AndroidUnitTest extends Test {
             VariantScope testedScope =
                     Objects.requireNonNull(scope.getTestedVariantData()).getScope();
             if (testedScope
-                    .getBuildArtifactsHolder()
+                    .getArtifacts()
                     .hasArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 collection.from(
                         testedScope
-                                .getBuildArtifactsHolder()
+                                .getArtifacts()
                                 .getFinalArtifactFiles(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
@@ -215,7 +215,10 @@ public class AndroidUnitTest extends Test {
 
             // Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(scope.getGlobalScope().getOutput(InternalArtifactType.MOCKABLE_JAR));
+            collection.from(
+                    scope.getGlobalScope()
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.MOCKABLE_JAR));
             return collection;
         }
     }

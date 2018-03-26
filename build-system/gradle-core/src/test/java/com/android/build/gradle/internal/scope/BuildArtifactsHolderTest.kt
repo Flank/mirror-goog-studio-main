@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -36,7 +37,6 @@ import java.io.File
  */
 class BuildArtifactsHolderTest {
 
-    private val variantDir = "debug"
     lateinit private var project : Project
     lateinit var root : File
     private val dslScope = DslScopeImpl(
@@ -53,11 +53,10 @@ class BuildArtifactsHolderTest {
         BuildableArtifactImpl.enableResolution()
         project = ProjectBuilder.builder().build()
         root = project.file("root")
-        holder = BuildArtifactsHolder(
+        holder = VariantBuildArtifactsHolder(
             project,
             "debug",
             root,
-            variantDir,
             dslScope)
         task0 = project.tasks.create("task0")
         task1 = project.tasks.create("task1")
@@ -159,5 +158,51 @@ class BuildArtifactsHolderTest {
             project.file("element1"),
             project.file("element2"),
             project.file("single_file"))
+    }
+
+    @Test
+    fun earlyFinalOutput() {
+        val finalVersion = holder.getFinalArtifactFiles(JAVAC_CLASSES);
+        // no-one appends or replaces, we should be empty files if resolved.
+        assertThat(finalVersion.files).isEmpty()
+    }
+
+    @Test
+    fun lateFinalOutput() {
+        holder.replaceArtifact(JAVAC_CLASSES, project.files(file("task1", "task1File")).files, task1)
+        val files1 = holder.getArtifactFiles(JAVAC_CLASSES)
+
+        assertThat(files1.single()).isEqualTo(file("task1", "task1File"))
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        assertThat(files1.buildDependencies.getDependencies(null)).containsExactly(task1)
+
+        // now get final version.
+        val finalVersion = holder.getFinalArtifactFiles(JAVAC_CLASSES)
+        assertThat(finalVersion.files).hasSize(1)
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        assertThat(finalVersion.buildDependencies.getDependencies(null)).containsExactly(task1)
+    }
+
+    @Test
+    fun addBuildableArtifact() {
+        holder.replaceArtifact(JAVAC_CLASSES, project.files(file("task1", "task1File")).files, task1)
+        val javaClasses = holder.getArtifactFiles(JAVAC_CLASSES)
+
+        // register the buildable artifact under a different type.
+        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        newHolder.appendArtifact(JAVAC_CLASSES, javaClasses)
+        // and verify that files and dependencies are carried over.
+        val newJavaClasses = newHolder.getArtifactFiles(JAVAC_CLASSES)
+        assertThat(newJavaClasses.single()).isEqualTo(file("task1", "task1File"))
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        assertThat(newJavaClasses.buildDependencies.getDependencies(null)).containsExactly(task1)
+    }
+
+    private class TestBuildArtifactsHolder(
+        project: Project,
+        rootOutputDir: () -> File,
+        dslScope: DslScope) : BuildArtifactsHolder(project, rootOutputDir, dslScope) {
+
+        override fun getIdentifier() = "test"
     }
 }

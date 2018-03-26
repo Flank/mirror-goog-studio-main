@@ -39,6 +39,12 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
     }
 
+    public void testGetVersionNameSanitized() {
+        assertEquals("4.1", SdkVersionInfo.getVersionStringSanitized(16));
+        assertEquals("8.0", SdkVersionInfo.getVersionStringSanitized(26));
+        assertEquals("API 99", SdkVersionInfo.getVersionStringSanitized(99));
+    }
+
     public void testGetBuildCode() {
         assertEquals("JELLY_BEAN", getBuildCode(16));
     }

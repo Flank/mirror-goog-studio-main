@@ -142,10 +142,10 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
 
     public static class VariantInputs implements com.android.tools.lint.gradle.api.VariantInputs {
         @NonNull private final String name;
-        @NonNull private final FileCollection localLintJarCollection;
+        @NonNull private final BuildableArtifact localLintJarCollection;
         @NonNull private final FileCollection dependencyLintJarCollection;
         @NonNull private final BuildableArtifact mergedManifest;
-        @Nullable private final FileCollection mergedManifestReport;
+        @Nullable private final BuildableArtifact mergedManifestReport;
         private List<File> lintRuleJars;
 
         private final ConfigurableFileCollection allInputs;
@@ -155,12 +155,16 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             allInputs = variantScope.getGlobalScope().getProject().files();
 
             allInputs.from(
-                    localLintJarCollection = variantScope.getGlobalScope().getOutput(LINT_JAR));
+                    localLintJarCollection =
+                            variantScope
+                                    .getGlobalScope()
+                                    .getArtifacts()
+                                    .getFinalArtifactFiles(LINT_JAR));
             allInputs.from(
                     dependencyLintJarCollection =
                             variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
-            BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+            BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
             if (buildArtifactsHolder.hasArtifact(MERGED_MANIFESTS)) {
                 mergedManifest = buildArtifactsHolder.getFinalArtifactFiles(MERGED_MANIFESTS);
             } else if (buildArtifactsHolder.hasArtifact(LIBRARY_MANIFEST)) {
@@ -172,9 +176,10 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             }
             allInputs.from(mergedManifest);
 
-            if (variantScope.hasOutput(MANIFEST_MERGE_REPORT)) {
+            if (buildArtifactsHolder.hasArtifact(MANIFEST_MERGE_REPORT)) {
                 allInputs.from(
-                        mergedManifestReport = variantScope.getOutput(MANIFEST_MERGE_REPORT));
+                        mergedManifestReport =
+                                buildArtifactsHolder.getFinalArtifactFiles(MANIFEST_MERGE_REPORT));
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
@@ -262,7 +267,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                 return null;
             }
 
-            return mergedManifestReport.getSingleFile();
+            return Iterables.getOnlyElement(mergedManifestReport);
         }
     }
 

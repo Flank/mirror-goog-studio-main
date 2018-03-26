@@ -88,7 +88,6 @@ class ResourcesAccessInManifest {
                             + "      android:versionName=\"@string/app_version\"\n"
                             + "      android:versionCode=\"1\">\n"
                             + "\n"
-                            + "    <uses-sdk android:minSdkVersion=\"3\" />\n"
                             + "    <application android:label=\"@string/app_name\">\n"
                             + "        <activity android:name=\".HelloWorld\"\n"
                             + "                  android:label=\"@string/app_name\">\n"

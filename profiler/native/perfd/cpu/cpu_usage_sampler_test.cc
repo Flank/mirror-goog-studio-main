@@ -23,15 +23,19 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/daemon.h"
 #include "test/utils.h"
+#include "utils/clock.h"
 #include "utils/procfs_files.h"
 
+using profiler::CpuCache;
+using profiler::CpuUsageSampler;
+using profiler::Daemon;
+using profiler::ProcfsFiles;
+using profiler::TestUtils;
 using std::string;
 using std::unique_ptr;
 using std::vector;
 
-namespace profiler {
-
-// Tests in this file assume a time unit in /proc files is 10 milliseconds.
+namespace {
 
 // A test-use-only class that uses checked-in files as test data to mock /proc
 // files.
@@ -47,7 +51,7 @@ class MockProcfsFiles final : public ProcfsFiles {
     return TestUtils::getCpuTestData(os.str());
   }
 
-  std::string GetSystemCpuFrequencyPath(int32_t cpu) const override {
+  std::string GetSystemCurrentCpuFrequencyPath(int32_t cpu) const override {
     std::ostringstream os;
     os << "cpu" << cpu << "_scaling_cur_freq.txt";
     return TestUtils::getCpuTestData(os.str());
@@ -64,6 +68,12 @@ class CpuUsageSamplerToTest final : public CpuUsageSampler {
   }
 };
 
+}  // namespace
+
+namespace profiler {
+
+// Tests in this file assume a time unit in /proc files is 10 milliseconds.
+
 TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int32_t kMockAppPid = 100;
 
@@ -73,7 +83,7 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kElapsedTime = 1175801430;
 
   Daemon::Utilities utilities("", "");
-  CpuCache cache{100};
+  CpuCache cache{100, utilities.clock(), utilities.file_cache()};
   cache.AllocateAppCache(kMockAppPid);
   CpuUsageSamplerToTest sampler{&utilities, &cache};
   sampler.AddProcess(kMockAppPid);
@@ -110,7 +120,7 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_2 = 140;
 
   Daemon::Utilities utilities("", "");
-  CpuCache cache{100};
+  CpuCache cache{100, utilities.clock(), utilities.file_cache()};
   cache.AllocateAppCache(kMockAppPid_1);
   cache.AllocateAppCache(kMockAppPid_2);
   CpuUsageSamplerToTest sampler{&utilities, &cache};

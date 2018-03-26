@@ -16,6 +16,7 @@
 
 package com.android.tools.perflib.vmtrace;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.ByteBufferUtil;
 import com.google.common.base.Charsets;
@@ -94,7 +95,7 @@ public class VmTraceParser {
         long offset = 0;
         BufferedReader in = null;
         try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(f), Charsets.US_ASCII));
+            in = new BufferedReader(new InputStreamReader(new FileInputStream(f), Charsets.UTF_8));
             int mode = PARSE_VERSION;
             String line;
             while (true) {
@@ -545,12 +546,13 @@ public class VmTraceParser {
          * Reads a given number of bytes from the input stream, converts them to char and returns
          * the resulting string.
          */
+        @NonNull
         private String readString(int length) throws IOException {
-            StringBuilder sb = new StringBuilder();
-            while (length-- > 0) {
-                sb.append((char) mInputStream.readUnsignedByte());
+            byte[] buffer = new byte[length];
+            for (int i = 0; i < length; i++) {
+                buffer[i] = (byte) mInputStream.readUnsignedByte();
             }
-            return sb.toString();
+            return new String(buffer, Charsets.UTF_8);
         }
 
         /**

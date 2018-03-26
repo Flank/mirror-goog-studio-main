@@ -1246,12 +1246,12 @@ public class ApiDetector extends ResourceXmlDetector
             if (interfaceTypeInternal.equals(classTypeInternal)) {
                 message =
                         String.format(
-                                "Cast to %1$s requires API level %2$d (current min is %3$d)",
+                                "Cast to `%1$s` requires API level %2$d (current min is %3$d)",
                                 to, api, min);
             } else {
                 message =
                         String.format(
-                                "Cast from %1$s to %2$s requires API level %3$d "
+                                "Cast from `%1$s` to `%2$s` requires API level %3$d "
                                         + "(current min is %4$d)",
                                 from, to, api, min);
             }
@@ -1548,7 +1548,7 @@ public class ApiDetector extends ResourceXmlDetector
                                     && "java.util.concurrent.ConcurrentHashMap"
                                             .equals(containingClass.getQualifiedName())) {
                                 message +=
-                                        "; to work around this, add an explicit cast to (Map) "
+                                        "; to work around this, add an explicit cast to `(Map)` "
                                                 + "before the `keySet` call.";
                             }
                         }

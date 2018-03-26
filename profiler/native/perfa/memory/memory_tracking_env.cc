@@ -80,6 +80,7 @@ namespace profiler {
 using proto::AllocationStack;
 using proto::BatchAllocationSample;
 using proto::EncodedAllocationStack;
+using proto::ThreadInfo;
 
 // STL container memory tracking for Debug only.
 std::atomic<long> g_max_used[kMemTagCount];
@@ -101,10 +102,8 @@ const char* MemTagToString(MemTag tag) {
   }
 }
 
-MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
-                                               bool log_live_alloc_count,
-                                               int max_stack_depth,
-                                               bool track_global_jni_refs) {
+MemoryTrackingEnv* MemoryTrackingEnv::Instance(
+    JavaVM* vm, const AgentConfig::MemoryConfig& mem_config) {
   if (g_env == nullptr) {
     g_vm = vm;
     // This will attach the current thread to the vm, otherwise
@@ -113,32 +112,32 @@ MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
     // Create a stand-alone jvmtiEnv to avoid any callback conflicts
     // with other profilers' agents.
     jvmtiEnv* jvmti = CreateJvmtiEnv(g_vm);
-    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count, max_stack_depth,
-                                  track_global_jni_refs);
+    g_env = new MemoryTrackingEnv(jvmti, mem_config);
     g_env->Initialize();
   }
 
   return g_env;
 }
 
-MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
-                                     int max_stack_depth,
-                                     bool track_global_jni_refs)
+MemoryTrackingEnv::MemoryTrackingEnv(
+    jvmtiEnv* jvmti, const AgentConfig::MemoryConfig& mem_config)
     : jvmti_(jvmti),
-      log_live_alloc_count_(log_live_alloc_count),
-      track_global_jni_refs_(track_global_jni_refs),
+      log_live_alloc_count_(mem_config.use_live_alloc()),
+      track_global_jni_refs_(mem_config.track_global_jni_refs()),
       is_first_tracking_(true),
       is_live_tracking_(false),
       app_id_(getpid()),
       class_class_tag_(-1),
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
-      max_stack_depth_(max_stack_depth),
+      max_stack_depth_(mem_config.max_stack_depth()),
       total_live_count_(0),
       total_free_count_(0),
       current_class_tag_(kClassStartTag),
       current_object_tag_(kObjectStartTag),
-      memory_map_(procfs_, getpid()) {
+      memory_map_(procfs_, getpid()),
+      app_dir_(mem_config.app_dir().empty() ? "/data/app/"
+                                            : mem_config.app_dir()) {
   // Preallocate space for ClassTagMap to avoid rehashing.
   // Rationale: our logic in VMObjectAlloc depends on the map's iterator not
   // getting invalidated, which can happen if a ClassPrepare from a different
@@ -214,8 +213,15 @@ void MemoryTrackingEnv::Initialize() {
   }
 }
 
+static bool startsWith(const std::string& str, const std::string& prefix) {
+  if (str.size() < prefix.size()) {
+    return false;
+  }
+  return str.compare(0, prefix.size(), prefix) == 0;
+}
+
 void MemoryTrackingEnv::PublishJNIGlobalRefEvent(
-    jobject obj, JNIGlobalReferenceEvent::Type type) {
+    jobject obj, JNIGlobalReferenceEvent::Type type, void* caller_address) {
   jlong obj_tag;
   jvmtiError error = jvmti_->GetTag(obj, &obj_tag);
   if (CheckJvmtiError(jvmti_, error)) {
@@ -232,17 +238,36 @@ void MemoryTrackingEnv::PublishJNIGlobalRefEvent(
   event.set_event_type(type);
   event.set_timestamp(clock_.GetCurrentTime());
   event.set_ref_value(reinterpret_cast<int64_t>(obj));
-
-  Stopwatch stopwatch;
-  const int kMaxFrames = 30;
-  std::vector<std::uintptr_t> addresses = GetBacktrace(kMaxFrames);
-  auto event_backtrace = event.mutable_backtrace()->mutable_addresses();
-  event_backtrace->Resize(addresses.size(), 0);
-  std::copy(addresses.begin(), addresses.end(), event_backtrace->begin());
-  g_env->timing_stats_.Track(TimingStats::kNativeBacktrace,
-                             stopwatch.GetElapsed());
-
   event.set_object_tag(static_cast<int32_t>(obj_tag));
+
+  bool called_by_app = true;
+  {
+    // Check the memory map to see if this JNI event
+    // comes from App's code or platform.
+    Stopwatch stopwatch;
+    shared_lock<shared_mutex> lock(mem_map_mutex_);
+    const MemoryMap::MemoryRegion* region =
+        memory_map_.LookupRegion(reinterpret_cast<uintptr_t>(caller_address));
+    if (region != nullptr && !startsWith(region->name, app_dir_)) {
+      called_by_app = false;
+    }
+    g_env->timing_stats_.Track(TimingStats::kMemMapLookup,
+                               stopwatch.GetElapsed());
+  }
+
+  if (called_by_app) {
+    // Obtain backtrace, only if the JNI event comes from the App.
+    // Platform call stack is not shown in UI and there is no need to
+    // spend time unwinding native stack.
+    Stopwatch stopwatch;
+    const int kMaxFrames = 30;
+    std::vector<std::uintptr_t> addresses = GetBacktrace(kMaxFrames);
+    auto event_backtrace = event.mutable_backtrace()->mutable_addresses();
+    event_backtrace->Resize(addresses.size(), 0);
+    std::copy(addresses.begin(), addresses.end(), event_backtrace->begin());
+    g_env->timing_stats_.Track(TimingStats::kNativeBacktrace,
+                               stopwatch.GetElapsed());
+  }
 
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
   FillThreadName(jvmti_, jni, thread, event.mutable_thread_name());
@@ -250,20 +275,16 @@ void MemoryTrackingEnv::PublishJNIGlobalRefEvent(
   jni_ref_event_queue_.Push(event);
 }
 
-void MemoryTrackingEnv::AfterGlobalRefCreated(jobject prototype, jobject gref) {
-  PublishJNIGlobalRefEvent(gref, JNIGlobalReferenceEvent::CREATE_GLOBAL_REF);
+void MemoryTrackingEnv::AfterGlobalRefCreated(jobject prototype, jobject gref,
+                                              void* caller_address) {
+  PublishJNIGlobalRefEvent(gref, JNIGlobalReferenceEvent::CREATE_GLOBAL_REF,
+                           caller_address);
 }
 
-void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref) {
-  PublishJNIGlobalRefEvent(gref, JNIGlobalReferenceEvent::DELETE_GLOBAL_REF);
-}
-
-void MemoryTrackingEnv::AfterGlobalWeakRefCreated(jobject prototype,
-                                                  jweak gref) {
-  // no-op for now
-}
-void MemoryTrackingEnv::BeforeGlobalWeakRefDeleted(jweak gref) {
-  // no-op for now
+void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref,
+                                               void* caller_address) {
+  PublishJNIGlobalRefEvent(gref, JNIGlobalReferenceEvent::DELETE_GLOBAL_REF,
+                           caller_address);
 }
 
 /**
@@ -325,8 +346,12 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
 
   // Activate tagging of newly allocated objects.
   SetAllocationCallbacksStatus(true);
+
   if (track_global_jni_refs_) {
+    // Set up JNI related callbacks and initiate the memory map.
     SetJNIRefCallbacksStatus(true);
+    std::lock_guard<shared_mutex> write_map_lock(mem_map_mutex_);
+    memory_map_.Update();
   }
 
   // Tag and send all objects already allocated on the heap unless they are
@@ -676,6 +701,25 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 }
 
+int32_t MemoryTrackingEnv::ObtainThreadId(
+    const std::string& thread_name, int64_t timestamp,
+    google::protobuf::RepeatedPtrField<profiler::proto::ThreadInfo>* threads) {
+  // Lookup thread id by name
+  auto thread_result = thread_id_map_.emplace(
+      std::make_pair(thread_name, thread_id_map_.size() + 1));
+
+  const int32_t thread_id = thread_result.first->second;
+  if (thread_result.second) {
+    // New thread. Create and send the mapping along the sample.
+    proto::ThreadInfo* ti = threads->Add();
+    ti->set_thread_id(thread_id);
+    ti->set_thread_name(thread_name);
+    ti->set_timestamp(timestamp);
+  }
+
+  return thread_id;
+}
+
 // Drain allocation_event_queue_ and send events to perfd
 void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::lock_guard<std::mutex> lock(tracking_data_mutex_);
@@ -700,18 +744,11 @@ void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
         int stack_size = alloc_data->method_ids_size();
         assert(stack_size == alloc_data->location_ids_size());
 
-        // Encode thread data.
-        auto thread_result = thread_id_map_.emplace(std::make_pair(
-            alloc_data->thread_name(), thread_id_map_.size() + 1));
-        if (thread_result.second) {
-          // New thread. Create and send the mapping along the sample.
-          proto::ThreadInfo* ti = sample.add_thread_infos();
-          ti->set_timestamp(event->timestamp());
-          ti->set_thread_id(thread_result.first->second);
-          ti->set_thread_name(thread_result.first->first);
-        }
         // Switch to storing the thread id in the allocation event.
-        alloc_data->set_thread_id(thread_result.first->second);
+        auto thread_id =
+            ObtainThreadId(alloc_data->thread_name(), event->timestamp(),
+                           sample.mutable_thread_infos());
+        alloc_data->set_thread_id(thread_id);
         alloc_data->clear_thread_name();
 
         // Store and encode the stack into trie.
@@ -784,12 +821,25 @@ void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch) {
         // memory map, no need to go any further.
         continue;
       }
-      const MemoryMap::MemoryRegion* region = memory_map_.LookupRegion(addr);
-      if (region == nullptr) {
+
+      // Lookup address in the memory map under shared read lock.
+      MemoryMap::MemoryRegion region{"", 0, 0, 0};
+      {
+        shared_lock<shared_mutex> read_lock(mem_map_mutex_);
+        const MemoryMap::MemoryRegion* region_ptr =
+            memory_map_.LookupRegion(addr);
+        if (region_ptr != nullptr) {
+          region = *region_ptr;
+        }
+      }
+
+      if (region.name.empty()) {
         // If the address is not found in the memory map, try to refresh it,
         // because new module might be loaded, but don't do it more than
         // once per batch.
         if (!memory_map_is_updated) {
+          // Take an exclusive lock and update the map.
+          std::lock_guard<shared_mutex> write_lock(mem_map_mutex_);
           if (!memory_map_.Update()) {
             // Reading memory map has failed. Report it and keep going,
             // because the old map is still intact and can still be used.
@@ -797,19 +847,25 @@ void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch) {
           }
           memory_map_is_updated = true;
         }
-        region = memory_map_.LookupRegion(addr);
+        shared_lock<shared_mutex> read_lock(mem_map_mutex_);
+        const MemoryMap::MemoryRegion* region_ptr =
+            memory_map_.LookupRegion(addr);
+        if (region_ptr != nullptr) {
+          region = *region_ptr;
+        }
       }
-      if (region != nullptr) {
-        if (reported_regions.insert(region->start_address).second) {
+
+      if (!region.name.empty()) {
+        if (reported_regions.insert(region.start_address).second) {
           // This region hasn't been reported before, we need to add it
           // to the region map in the batch.
           auto proto_region = batch->mutable_memory_map()->add_regions();
-          proto_region->set_name(region->name);
-          proto_region->set_start_address(region->start_address);
-          proto_region->set_end_address(region->end_address);
-          proto_region->set_file_offset(region->file_offset);
+          proto_region->set_name(region.name);
+          proto_region->set_start_address(region.start_address);
+          proto_region->set_end_address(region.end_address);
+          proto_region->set_file_offset(region.file_offset);
         }
-        last_seen_region = *region;
+        last_seen_region = region;
       }
     }
   }
@@ -830,7 +886,11 @@ void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
     event->CopyFrom(queued_data.front());
     queued_data.pop_front();
 
-    // TODO: populate thread ID here.
+    // Switch to storing the thread id in the JNI event.
+    auto thread_id = ObtainThreadId(event->thread_name(), event->timestamp(),
+                                    batch.mutable_thread_infos());
+    event->set_thread_id(thread_id);
+    event->clear_thread_name();
 
     if (batch.events_size() >= kDataBatchSize) {
       FillJniEventsModuleMap(&batch);

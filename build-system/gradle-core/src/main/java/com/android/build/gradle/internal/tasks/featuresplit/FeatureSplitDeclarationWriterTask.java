@@ -77,7 +77,7 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
                             .getOriginalApplicationId();
             task.outputDirectory =
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.METADATA_FEATURE_DECLARATION, task, "out");
         }

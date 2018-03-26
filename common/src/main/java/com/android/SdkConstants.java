@@ -1011,6 +1011,7 @@ public final class SdkConstants {
     public static final String ANDROID_PKG = "android"; //$NON-NLS-1$
     public static final String ANDROID_SUPPORT_PKG = "android.support";
     public static final String ANDROIDX_PKG = "androidx";
+    public static final String MATERIAL2_PKG = "com.google.android.material";
 
     public static final String SHERPA_PREFIX = "app"; //$NON-NLS-1$
     public static final String SHERPA_URI = "http://schemas.android.com/apk/res-auto"; //$NON-NLS-1$
@@ -2262,7 +2263,7 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_NAME =
             "com.android.tools.build:gradle-experimental:";
-    public static final String GRADLE_MINIMUM_VERSION = "4.5";
+    public static final String GRADLE_MINIMUM_VERSION = "4.6";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.1.0";

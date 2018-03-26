@@ -49,6 +49,8 @@ message AgentConfig {
     int32 max_stack_depth = 2;
     // Enable tracking of creation and deletion of globla JNI references.
     bool track_global_jni_refs = 3;
+    // Path to the app dir: usually /data/app/
+    string app_dir = 4;
   }
 
   // equivalent to profiler.jvmti flag in Studio
@@ -65,8 +67,6 @@ message AgentConfig {
   string service_socket_name = 5;
   // equivalent to StudioFlags.PROFILER_NETWORK_REQUEST_PAYLOAD.
   bool profiler_network_request_payload = 6;
-  // equivalent to android.profiler.io.enabled flag in Studio.
-  bool profiler_io_enabled = 7;
   // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
   bool energy_profiler_enabled = 8;
   // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.

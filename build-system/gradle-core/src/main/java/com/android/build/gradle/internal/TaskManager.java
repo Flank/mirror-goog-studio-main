@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_RES;
-import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
@@ -29,8 +28,10 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
@@ -43,11 +44,8 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PLATFORM_R_TXT;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -491,13 +489,7 @@ public abstract class TaskManager {
     public void configureCustomLintChecks() {
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        File lintJar = FileUtils.join(globalScope.getIntermediatesDir(), "lint", FN_LINT_JAR);
-
-        PrepareLintJar copyLintTask =
-                taskFactory.create(new PrepareLintJar.ConfigAction(globalScope, lintJar));
-
-        // publish the lint intermediate file to the global tasks
-        globalScope.addTaskOutput(LINT_JAR, lintJar, copyLintTask.getName());
+        taskFactory.create(new PrepareLintJar.ConfigAction(globalScope));
     }
 
     public void createGlobalLintTask() {
@@ -521,15 +513,9 @@ public abstract class TaskManager {
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        FileCollection lintJarCollection = globalScope.getOutput(LINT_JAR);
-
-        // FIXME we don't to do this during config, but there's no way right now as we want to publish it.
-        // A work around would be to keep hold of the file in the global scope as well as the
-        // file collection in TaskOutput but then this is dangerous as one could use it without
-        // the task dependency.
-        File lintJar = lintJarCollection.getSingleFile();
+        BuildableArtifact lintJar = globalScope.getArtifacts().getFinalArtifactFiles(LINT_JAR);
         for (VariantScope scope : variants) {
-            scope.addTaskOutput(LINT_JAR, lintJar, PrepareLintJar.NAME);
+            scope.getArtifacts().appendArtifact(InternalArtifactType.LINT_JAR, lintJar);
         }
     }
 
@@ -565,25 +551,6 @@ public abstract class TaskManager {
                 }
             }
         }
-    }
-
-    public void createMockableJarTask() {
-        File mockableJar = globalScope.getMockableAndroidJarFile();
-        createMockableJar =
-                taskFactory.create(
-                        new MockableAndroidJarTask.ConfigAction(globalScope, mockableJar));
-
-        globalScope.addTaskOutput(MOCKABLE_JAR, mockableJar, createMockableJar.getName());
-    }
-
-    public void createAttrFromAndroidJarTask() {
-        File platformRtxt = FileUtils.join(globalScope.getIntermediatesDir(), "attr", "R.txt");
-
-        PlatformAttrExtractorTask task =
-                taskFactory.create(
-                        new PlatformAttrExtractorTask.ConfigAction(globalScope, platformRtxt));
-
-        globalScope.addTaskOutput(PLATFORM_R_TXT, platformRtxt, task.getName());
     }
 
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
@@ -671,6 +638,18 @@ public abstract class TaskManager {
                                 variantScope.getArtifactCollection(
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
+
+        // if base module, add stream of classes from features or dynamic-features for Proguard/R8
+        if (variantScope.getVariantData().getType().isBaseModule()) {
+            transformManager.addStream(
+                    OriginalStream.builder(project, "feature-classes")
+                            .addContentTypes(TransformManager.CONTENT_JARS)
+                            .addScope(InternalScope.FEATURES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            METADATA_VALUES, MODULE, METADATA_CLASSES))
+                            .build());
+        }
 
         // same for the resources which can be java-res or jni
         transformManager.addStream(
@@ -775,37 +754,18 @@ public abstract class TaskManager {
         return Splitter.on(',').splitToList(string);
     }
 
-    @NonNull
-    private static File computeManifestReportFile(@NonNull VariantScope variantScope) {
-        return FileUtils.join(
-                variantScope.getGlobalScope().getOutputsDir(),
-                "logs",
-                "manifest-merger-"
-                        + variantScope.getVariantConfiguration().getBaseName()
-                        + "-report.txt");
-    }
-
     /** Creates the merge manifests task. */
     @NonNull
     protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
-
-        final File reportFile = computeManifestReportFile(variantScope);
         return taskFactory.create(
                 new MergeManifests.ConfigAction(
-                        variantScope,
-                        !getAdvancedProfilingTransforms(projectOptions).isEmpty(),
-                        reportFile));
+                        variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
     public ProcessManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
 
-        final File reportFile = computeManifestReportFile(scope);
         ProcessManifest processManifest =
-                taskFactory.create(new ProcessManifest.ConfigAction(scope, reportFile));
-
-        final String taskName = processManifest.getName();
-
-        scope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, taskName);
+                taskFactory.create(new ProcessManifest.ConfigAction(scope));
 
         processManifest.dependsOn(scope.getCheckManifestTask());
 
@@ -823,7 +783,7 @@ public abstract class TaskManager {
                         new ProcessTestManifest.ConfigAction(
                                 scope,
                                 testedScope
-                                        .getBuildArtifactsHolder()
+                                        .getArtifacts()
                                         .getFinalArtifactFiles(MERGED_MANIFESTS)));
 
         if (scope.getCheckManifestTask() != null) {
@@ -1523,7 +1483,7 @@ public abstract class TaskManager {
      */
     public void addJavacClassesStream(VariantScope scope) {
         FileCollection javaOutputs =
-                ((BuildableArtifactImpl) scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC))
+                ((BuildableArtifactImpl) scope.getArtifacts().getArtifactFiles(JAVAC))
                         .getFileCollection();
         Preconditions.checkNotNull(javaOutputs);
         // create separate streams for the output of JAVAC and for the pre/post javac
@@ -1979,8 +1939,9 @@ public abstract class TaskManager {
     }
 
     public void createTopLevelTestTasks(boolean hasFlavors) {
-        createMockableJarTask();
-        createAttrFromAndroidJarTask();
+        createMockableJar =
+                taskFactory.create(new MockableAndroidJarTask.ConfigAction(globalScope));
+        taskFactory.create(new PlatformAttrExtractorTask.ConfigAction(globalScope));
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
 
@@ -2240,10 +2201,13 @@ public abstract class TaskManager {
         if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()) {
+            boolean addDependencies = !type.isFeatureSplit();
             for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
                 if (jar != null) {
                     transformManager.addTransform(
-                            taskFactory, variantScope, new CustomClassTransform(jar));
+                            taskFactory,
+                            variantScope,
+                            new CustomClassTransform(jar, addDependencies));
                 }
             }
         }
@@ -2645,9 +2609,7 @@ public abstract class TaskManager {
                         recorder);
 
         BuildableArtifact instantRunMergedManifests =
-                variantScope
-                        .getBuildArtifactsHolder()
-                        .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS);
+                variantScope.getArtifacts().getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
@@ -2900,7 +2862,7 @@ public abstract class TaskManager {
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
             File baseFeatureInfoFolder = null;
-            BuildArtifactsHolder buildArtifactsHolder = scope.getBuildArtifactsHolder();
+            BuildArtifactsHolder buildArtifactsHolder = scope.getArtifacts();
             if (buildArtifactsHolder.hasArtifact(
                     InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
                 baseFeatureInfoFolder =
@@ -2986,7 +2948,7 @@ public abstract class TaskManager {
                 variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
         BuildableArtifact manifests =
-                variantScope.getBuildArtifactsHolder().getFinalArtifactFiles(manifestType);
+                variantScope.getArtifacts().getFinalArtifactFiles(manifestType);
         // this is where the final APKs will be located.
         File finalApkLocation = variantScope.getApkLocation();
         // if we are not dealing with possible splits, we can generate in the final folder
@@ -3767,14 +3729,14 @@ public abstract class TaskManager {
             if (variantType.isBaseModule()) {
                 kaptTask.getInputs()
                         .file(
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
             } else {
                 kaptTask.getInputs()
                         .file(
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO));

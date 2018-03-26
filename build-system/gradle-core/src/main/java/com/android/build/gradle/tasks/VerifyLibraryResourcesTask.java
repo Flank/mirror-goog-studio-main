@@ -373,7 +373,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
             verifyLibraryResources.mergeBlameLogFolder = scope.getResourceBlameLogDir();
 
             boolean aaptFriendlyManifestsFilePresent =
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             verifyLibraryResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
@@ -382,7 +382,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                                     ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                                     : InternalArtifactType.MERGED_MANIFESTS;
             verifyLibraryResources.manifestFiles =
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .getFinalArtifactFiles(verifyLibraryResources.taskInputType);
         }
     }

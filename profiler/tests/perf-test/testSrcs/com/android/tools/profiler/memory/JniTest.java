@@ -22,6 +22,7 @@ import com.android.tools.profiler.*;
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler.*;
 import com.android.tools.profiler.proto.Profiler.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import org.junit.After;
@@ -115,6 +116,7 @@ public class JniTest {
         final int refCount = 10;
         HashSet<Integer> tags = new HashSet<Integer>();
         HashSet<Long> refs = new HashSet<Long>();
+        HashMap<Integer, String> idToThreadName = new HashMap<Integer, String>();
         int refsReported = 0;
 
         androidDriver.setProperty("jni.refcount", Integer.toString(refCount));
@@ -142,6 +144,10 @@ public class JniTest {
 
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
                 assertThat(sample.getTimestamp()).isGreaterThan(startTime);
+                for (ThreadInfo ti : sample.getThreadInfosList()) {
+                    assertThat(ti.getThreadId()).isGreaterThan(0);
+                    idToThreadName.put(ti.getThreadId(), ti.getThreadName());
+                }
                 for (AllocationEvent event : sample.getEventsList()) {
                     if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
                         AllocationEvent.Allocation alloc = event.getAllocData();
@@ -155,8 +161,14 @@ public class JniTest {
 
             for (BatchJNIGlobalRefEvent batch : jvmtiData.getJniReferenceEventBatchesList()) {
                 assertThat(batch.getTimestamp()).isGreaterThan(startTime);
+                for (ThreadInfo ti : batch.getThreadInfosList()) {
+                    assertThat(ti.getThreadId()).isGreaterThan(0);
+                    idToThreadName.put(ti.getThreadId(), ti.getThreadName());
+                }
                 for (JNIGlobalReferenceEvent event : batch.getEventsList()) {
                     long refValue = event.getRefValue();
+                    assertThat(event.getThreadId()).isGreaterThan(0);
+                    assertThat(idToThreadName.containsKey(event.getThreadId())).isTrue();
                     if (event.getEventType() == JNIGlobalReferenceEvent.Type.CREATE_GLOBAL_REF) {
                         if (tags.contains(event.getObjectTag())) {
                             System.out.printf(

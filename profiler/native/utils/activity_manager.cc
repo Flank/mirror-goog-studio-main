@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 #include "utils/clock.h"
 #include "utils/current_process.h"
@@ -84,8 +85,8 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
 
   // Start monitoring trace events (to catch close) so this method only returns
   // when the generation of the trace file is finished.
-  FileSystemNotifier notifier(GetProfiledAppTracePath(app_package_name),
-                              FileSystemNotifier::CLOSE);
+  const std::string &trace_path = GetProfiledAppTracePath(app_package_name);
+  FileSystemNotifier notifier(trace_path, FileSystemNotifier::CLOSE);
 
   RemoveProfiledApp(app_package_name);
 
@@ -106,13 +107,38 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   }
 
   if (need_result) {
-    // Art takes more than 5 Seconds to stop profiling started with "am start
-    // --start-profiler". We should investigate why 5 Seconds is not enough
-    // (http://b/73891014), for now 30 Seconds is a temporary fix.
-    int64_t timed_out_ms = is_startup_profiling ? 30000 : 5000;
+    const int64_t timeout_ms = 5000;
+    // Because of an issue in the android platform, it is unreliable to
+    // monitor the file close event for a trace which started by "am start
+    // --start-profiler" (http://b/73891014). So working around the issue by
+    // monitoring the file size change instead.
+    // TODO(b/75298275): once the fix (http://b/73891014) merged into android P
+    // and it's avaible, we should do this workaround only for android O.
+    if (is_startup_profiling) {
+      SteadyClock clock;
+      int64_t start_time = clock.GetCurrentTime();
+      off_t last_file_size = -1;
+      while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        struct stat stat_res;
+        if (stat(trace_path.c_str(), &stat_res) == 0) {
+          if (stat_res.st_size == last_file_size) {
+            error_string->clear();
+            return true;
+          }
+          last_file_size = stat_res.st_size;
+        }
+        if (clock.GetCurrentTime() - start_time > Clock::ms_to_ns(timeout_ms)) {
+          break;
+        }
+      }
+      *error_string = "Wait for ART trace file failed.";
+      return false;
+    }
+
     // Wait until ART has finished writing the trace to the file and closed the
     // file.
-    if (!notifier.WaitUntilEventOccurs(timed_out_ms)) {
+    if (!notifier.WaitUntilEventOccurs(timeout_ms)) {
       *error_string = "Wait for ART trace file failed.";
       return false;
     }

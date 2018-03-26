@@ -103,29 +103,50 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
   return response;
 }
 
-void CpuCache::AddProfilingStart(int32_t pid, const ProfilingApp& record) {
-  profiling_apps_[pid] = record;
+int32_t CpuCache::AddProfilingStart(int32_t pid, const ProfilingApp& record) {
+  auto* found = FindAppCache(pid);
+  if (found == nullptr) return -1;
+  found->ongoing_capture = found->capture_cache.Add(record);
+  int32_t id = GenerateTraceId();
+  found->ongoing_capture->trace_id = id;
+  return id;
 }
 
-void CpuCache::AddProfilingStop(int32_t pid) { profiling_apps_.erase(pid); }
+bool CpuCache::AddProfilingStop(int32_t pid) {
+  auto* found = FindAppCache(pid);
+  if (found == nullptr) return false;
+  if (found->ongoing_capture == nullptr) return false;
+  found->ongoing_capture->end_timestamp = clock_->GetCurrentTime();
+  found->ongoing_capture = nullptr;
+  return true;
+}
 
-void CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
-                                        const ProfilingApp& record) {
+int32_t CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
+                                           const ProfilingApp& record) {
   startup_profiling_apps_[apk_pkg_name] = record;
+  int32_t id = GenerateTraceId();
+  startup_profiling_apps_[apk_pkg_name].trace_id = id;
+  return id;
 }
 
 void CpuCache::AddStartupProfilingStop(const string& apk_pkg_name) {
   startup_profiling_apps_.erase(apk_pkg_name);
 }
 
-// Looks from |profiling_apps_|, if not found then from
-// |startup_profiling_apps_|, otherwise returns null.
-ProfilingApp* CpuCache::GetProfilingApp(int32_t pid) {
-  const auto& app_iterator = profiling_apps_.find(pid);
-  if (app_iterator != profiling_apps_.end()) {
-    return &app_iterator->second;
+ProfilingApp* CpuCache::GetOngoingCapture(int32_t pid) {
+  // First, look into pid-associated |app_caches_|.
+  auto* found = FindAppCache(pid);
+  if (found == nullptr) return nullptr;
+  if (found->ongoing_capture != nullptr) return found->ongoing_capture;
+
+  // If there is no apps under startup profiling, there is no point in trying to
+  // find a package name corresponding to |pid|, so we return early to prevent a
+  // call to |ProcessManager::GetCmdlineForPid|, which can be quite expensive.
+  if (startup_profiling_apps_.empty()) {
+    return nullptr;
   }
-  // Try to find in |startup_profiling_apps_|
+
+  // Not in |app_caches_|, try to find in |startup_profiling_apps_|.
   string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
   if (app_pkg_name.empty()) {
     return nullptr;
@@ -134,8 +155,47 @@ ProfilingApp* CpuCache::GetProfilingApp(int32_t pid) {
   if (startup_app_iterator != startup_profiling_apps_.end()) {
     return &startup_app_iterator->second;
   }
-
   return nullptr;
+}
+
+vector<ProfilingApp> CpuCache::GetCaptures(int32_t pid, int64_t from,
+                                           int64_t to) {
+  auto* found = FindAppCache(pid);
+  if (found == nullptr) {
+    vector<ProfilingApp> empty;
+    return empty;
+  }
+  auto& cache = found->capture_cache;
+  vector<ProfilingApp> captures;
+  for (size_t i = 0; i < cache.size(); i++) {
+    const auto& candidate = cache.Get(i);
+    // Skip completed captures that ends earlier than |from| and those
+    // (completed or not) that starts after |to|.
+    if ((candidate.end_timestamp != -1 && candidate.end_timestamp < from) ||
+        candidate.start_timestamp > to)
+      continue;
+    captures.push_back(candidate);
+  }
+  return captures;
+}
+
+bool CpuCache::AddTraceContent(int32_t pid, int32_t trace_id,
+                               const std::string& trace_content) {
+  const string& file_name = GetCachedFileName(pid, trace_id);
+  file_cache_->AddChunk(file_name, trace_content);
+  file_cache_->Complete(file_name);
+  return true;
+}
+
+bool CpuCache::RetrieveTraceContent(int32_t pid, int32_t trace_id,
+                                    string* output) {
+  std::shared_ptr<File> file =
+      file_cache_->GetFile(GetCachedFileName(pid, trace_id));
+  if (file.get() != nullptr) {
+    *output = file->Contents();
+    return true;
+  }
+  return false;
 }
 
 CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
@@ -145,6 +205,17 @@ CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
     }
   }
   return nullptr;
+}
+
+int32_t CpuCache::GenerateTraceId() {
+  static int32_t trace_id = 0;
+  return trace_id++;
+}
+
+string CpuCache::GetCachedFileName(int32_t pid, int32_t trace_id) {
+  std::ostringstream oss;
+  oss << "CpuTraceContent-" << pid << "-" << trace_id << ".trace";
+  return oss.str();
 }
 
 }  // namespace profiler

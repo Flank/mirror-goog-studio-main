@@ -389,8 +389,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
-    public static TestFile propertyFile(@NonNull String to,
-            @NonNull @Language("Properties") String source) {
+    public static TestFile propertyFile(
+            @NonNull String to, @NonNull @Language("Properties") String source) {
         return TestFiles.source(to, source);
     }
 
@@ -1292,6 +1292,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public TestFile() {}
 
         // This source file is indented: dedent the contents before creating the file
+        @Override
         public TestFile indented() {
             contents = kotlin.text.StringsKt.trimIndent(contents);
             return this;

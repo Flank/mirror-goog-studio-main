@@ -21,14 +21,12 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.utils.FileUtils
 import com.google.common.base.Splitter
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
@@ -112,7 +110,7 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
         override fun execute(task: FeatureSetMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName
 
-            task.outputFile = variantScope.buildArtifactsHolder.appendArtifact(
+            task.outputFile = variantScope.artifacts.appendArtifact(
                     InternalArtifactType.FEATURE_SET_METADATA,
                     task,
                     FeatureSetMetadata.OUTPUT_FILE_NAME)

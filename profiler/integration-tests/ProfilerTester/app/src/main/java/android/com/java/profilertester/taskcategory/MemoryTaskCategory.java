@@ -7,25 +7,32 @@ import java.util.concurrent.TimeUnit;
 
 
 public class MemoryTaskCategory extends TaskCategory {
-    private static final int PERIOD_TIME = 2;
-    private static final int ITERATION_COUNT = 5;
-    private static final int DELTA_SIZE = (1 << 22);
-    private static final int DELTA_OBJECT_COUNT = 10000;
+    private final int PERIOD_TIME = 2;
+    private final int ITERATION_COUNT = 5;
+    private final int DELTA_SIZE = (1 << 22);
+    private final int DELTA_OBJECT_COUNT = 10000;
 
-    private final List<? extends Task> mTasks = Arrays.asList(
-            new AllocateJavaMemoryTask(),
-            new AllocateNativeMemoryTask(),
-            new AllocateObjectsTask());
+    private final List<? extends Task> mTasks =
+            Arrays.asList(
+                    new AllocateJavaMemoryTask(),
+                    new AllocateNativeMemoryTask(),
+                    new AllocateObjectsTask(),
+                    new JniRefsTask());
 
     static {
         System.loadLibrary("native_memory");
     }
+    public native void allocateNativeMemory();
+
+    public native long allocateJniRef(Object o);
+
+    public native void freeJniRef(long refValue);
 
     public int getValue() {
         return ITERATION_COUNT;
     }
 
-    private static class AllocateJavaMemoryTask extends MemoryTask {
+    private class AllocateJavaMemoryTask extends MemoryTask {
         @Override
         protected String memoryExecute() throws Exception {
             char[][] table = new char[ITERATION_COUNT][];
@@ -45,12 +52,11 @@ public class MemoryTaskCategory extends TaskCategory {
         }
     }
 
-    private static class AllocateNativeMemoryTask extends MemoryTask {
-        public native void allocateNativeMemory();
+    private class AllocateNativeMemoryTask extends MemoryTask {
 
         @Override
         protected String memoryExecute() throws Exception {
-            allocateNativeMemory();
+            MemoryTaskCategory.this.allocateNativeMemory();
             return null;
         }
 
@@ -61,18 +67,28 @@ public class MemoryTaskCategory extends TaskCategory {
         }
     }
 
-    private static class AllocateObjectsTask extends MemoryTask {
+    private class AllocationTestObject {
+        int value = 0;
+
+        AllocationTestObject(int v) {
+            value = v;
+        }
+    }
+
+    private class AllocateObjectsTask extends MemoryTask {
         @Override
         protected String memoryExecute() throws Exception {
-            Integer[][] objects = new Integer[ITERATION_COUNT][];
+            Object[][] objects = new Object[ITERATION_COUNT][];
             for (int k = 0; k < ITERATION_COUNT; ++k) {
                 long start = System.currentTimeMillis();
-                objects[k] = new Integer[DELTA_OBJECT_COUNT];
+                objects[k] = new Object[DELTA_OBJECT_COUNT];
                 for (int i = 0; i < objects[k].length; ++i) {
-                    objects[k][i] = k * DELTA_OBJECT_COUNT + i;
+                    objects[k][i] = new AllocationTestObject(k * DELTA_OBJECT_COUNT + i);
                 }
+
                 TimeUnit.MILLISECONDS.sleep(PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
             }
+
             return null;
         }
 
@@ -80,6 +96,33 @@ public class MemoryTaskCategory extends TaskCategory {
         @Override
         protected String getTaskDescription() {
             return "Object Allocation";
+        }
+    }
+
+    private class JniRefsTask extends MemoryTask {
+        @Override
+        protected String memoryExecute() throws Exception {
+            long[] refs = new long[DELTA_OBJECT_COUNT / 10];
+            for (int k = 0; k < ITERATION_COUNT; ++k) {
+                long start = System.currentTimeMillis();
+                for (int i = 0; i < refs.length; ++i) {
+                    refs[i] = allocateJniRef(new AllocationTestObject(k * DELTA_OBJECT_COUNT + i));
+                }
+                Runtime.getRuntime().gc();
+                for (long ref : refs) {
+                    freeJniRef(ref);
+                }
+                TimeUnit.MILLISECONDS.sleep(
+                        PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
+            }
+
+            return null;
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "JNI References Allocation";
         }
     }
 

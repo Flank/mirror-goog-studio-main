@@ -127,7 +127,7 @@ open class ZipMergingTask : AndroidVariantTask() {
         override fun getType(): Class<ZipMergingTask> = ZipMergingTask::class.java
 
         override fun execute(task: ZipMergingTask) {
-            val buildArtifacts = scope.buildArtifactsHolder
+            val buildArtifacts = scope.artifacts
             val mainFullJar = buildArtifacts.appendArtifact(InternalArtifactType.FULL_JAR,
                     task, FN_INTERMEDIATE_FULL_JAR)
             task.init(

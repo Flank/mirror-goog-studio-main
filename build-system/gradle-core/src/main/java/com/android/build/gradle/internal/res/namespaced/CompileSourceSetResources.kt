@@ -16,8 +16,8 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -50,12 +50,11 @@ open class CompileSourceSetResources
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
 
-    @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectories: FileCollection private set
+    @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectories: BuildableArtifact private set
     @get:Input var isPngCrunching: Boolean = false; private set
     @get:Input var isPseudoLocalize: Boolean = false; private set
     @get:OutputDirectory lateinit var outputDirectory: File private set
     @get:OutputDirectory lateinit var partialRDirectory: File private set
-    @get:OutputDirectory lateinit var aaptIntermediateDirectory: File private set
 
     override fun isIncremental() = true
 
@@ -161,27 +160,22 @@ open class CompileSourceSetResources
     class ConfigAction(
             private val name: String,
             private val inputDirectories: BuildableArtifact,
-            private val outputDirectory: File,
-            private val partialRDirectory: File,
-            private val variantScope: VariantScope,
-            private val aaptIntermediateDirectory: File)
+            private val variantScope: VariantScope)
+
             : TaskConfigAction<CompileSourceSetResources> {
         override fun getName() = name
         override fun getType() = CompileSourceSetResources::class.java
         override fun execute(task: CompileSourceSetResources) {
-            // TODO: use BuildableArtifact directly in Gradle 4.5.
-            task.inputDirectories =
-                    (inputDirectories as BuildableArtifactImpl).fileCollection
-                            ?: variantScope.globalScope.project.files()
-            task.outputDirectory = outputDirectory
-            task.partialRDirectory = partialRDirectory
+            task.inputDirectories = inputDirectories
+            task.outputDirectory = variantScope.artifacts
+                .appendArtifact(InternalArtifactType.RES_COMPILED_FLAT_FILES, task)
+            task.partialRDirectory = variantScope.artifacts
+                .appendArtifact(InternalArtifactType.PARTIAL_R_FILES, task)
             task.variantName = variantScope.fullVariantName
             task.isPngCrunching = variantScope.isCrunchPngs
-            task.isPseudoLocalize = variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
-            task.aaptIntermediateDirectory = aaptIntermediateDirectory
+            task.isPseudoLocalize =
+                    variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }
     }
-
-
 }
