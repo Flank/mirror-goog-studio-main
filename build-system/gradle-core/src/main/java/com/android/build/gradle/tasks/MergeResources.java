@@ -871,11 +871,10 @@ public class MergeResources extends IncrementalTask {
 
             mergeResourcesTask.resources = variantData.getAndroidResources();
             mergeResourcesTask.sourceFolderInputs =
-                    TaskInputHelper.bypassFileSupplier(
-                            () ->
-                                    variantData
-                                            .getVariantConfiguration()
-                                            .getSourceFiles(SourceProvider::getResDirectories));
+                    () ->
+                            variantData
+                                    .getVariantConfiguration()
+                                    .getSourceFiles(SourceProvider::getResDirectories);
             mergeResourcesTask.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
             mergeResourcesTask.renderscriptResOutputDir =
                     project.files(scope.getRenderscriptResOutputDir());

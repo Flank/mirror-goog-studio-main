@@ -80,7 +80,6 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -1162,18 +1161,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return getGlobalScope()
                 .getProject()
                 .files(
-                        TaskInputHelper.bypassFileCallable(
-                                () -> {
-                                    try {
-                                        return dependencies
+                        (Callable<Collection<File>>)
+                                () ->
+                                        dependencies
                                                 .call()
                                                 .stream()
                                                 .flatMap((it) -> it.resolve().stream())
-                                                .collect(Collectors.toList());
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }))
+                                                .collect(Collectors.toList()))
                 .builtBy(dependencies);
     }
 

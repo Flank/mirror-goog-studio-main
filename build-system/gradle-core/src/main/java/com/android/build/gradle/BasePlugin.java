@@ -278,7 +278,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         BuildableArtifactImpl.Companion.disableResolution();
         if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
-            TaskInputHelper.enableBypass();
 
             threadRecorder.record(
                     ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
@@ -400,7 +399,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 new BuildListener() {
                     @Override
                     public void buildStarted(@NonNull Gradle gradle) {
-                        TaskInputHelper.enableBypass();
                         BuildableArtifactImpl.Companion.disableResolution();
                     }
 
@@ -444,7 +442,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         gradle.getTaskGraph()
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
-                            TaskInputHelper.disableBypass();
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task instanceof TransformTask) {
                                     Transform transform = ((TransformTask) task).getTransform();

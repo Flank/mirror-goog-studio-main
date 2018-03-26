@@ -159,6 +159,10 @@ public class IntermediateFolderUtils {
         return files;
     }
 
+    public void reload() {
+        updateLists(makeRestrictedCopies(SubStream.loadSubStreams(rootFolder)));
+    }
+
     class IntermediateTransformInput extends IncrementalTransformInput {
 
         @NonNull

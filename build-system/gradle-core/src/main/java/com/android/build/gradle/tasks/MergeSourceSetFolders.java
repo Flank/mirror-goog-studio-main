@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SourceProvider;
@@ -392,8 +391,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             mergeAssetsTask.assetSetSupplier =
                     () -> variantConfig.getSourceFilesAsAssetSets(assetDirFunction);
             mergeAssetsTask.sourceFolderInputs =
-                    TaskInputHelper.bypassFileSupplier(
-                            () -> variantConfig.getSourceFiles(assetDirFunction));
+                    () -> variantConfig.getSourceFiles(assetDirFunction);
 
             mergeAssetsTask.shadersOutputDir = scope.getArtifacts()
                     .getFinalArtifactFiles(InternalArtifactType.SHADER_ASSETS);
@@ -461,8 +459,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             mergeAssetsTask.assetSetSupplier =
                     () -> variantConfig.getSourceFilesAsAssetSets(assetDirFunction);
             mergeAssetsTask.sourceFolderInputs =
-                    TaskInputHelper.bypassFileSupplier(
-                            () -> variantConfig.getSourceFiles(assetDirFunction));
+                    () -> variantConfig.getSourceFiles(assetDirFunction);
 
             mergeAssetsTask.setOutputDir(scope.getMergeNativeLibsOutputDir());
         }
@@ -491,8 +488,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             mergeAssetsTask.assetSetSupplier =
                     () -> variantConfig.getSourceFilesAsAssetSets(assetDirFunction);
             mergeAssetsTask.sourceFolderInputs =
-                    TaskInputHelper.bypassFileSupplier(
-                            () -> variantConfig.getSourceFiles(assetDirFunction));
+                    () -> variantConfig.getSourceFiles(assetDirFunction);
 
             mergeAssetsTask.setOutputDir(scope.getMergeShadersOutputDir());
         }

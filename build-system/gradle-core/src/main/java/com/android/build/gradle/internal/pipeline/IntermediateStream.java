@@ -17,23 +17,23 @@
 package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
@@ -118,6 +118,7 @@ class IntermediateStream extends TransformStream {
     }
 
     private IntermediateFolderUtils folderUtils = null;
+    private List<IntermediateStream> copies = null;
 
     /**
      * Returns the files that make up the streams. The callable allows for resolving this lazily.
@@ -138,6 +139,7 @@ class IntermediateStream extends TransformStream {
 
     void save() throws IOException {
         folderUtils.save();
+        reloadCopies();
     }
 
     @NonNull
@@ -159,8 +161,18 @@ class IntermediateStream extends TransformStream {
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
             @NonNull Set<? super Scope> scopes) {
-        return new IntermediateStream(
-                getName() + "-restricted-copy", types, scopes, getFileCollection());
+        final IntermediateStream copy =
+                new IntermediateStream(
+                        getName() + "-restricted-copy", types, scopes, getFileCollection());
+
+        // record the copies. This is so that when the original stream gets content from the
+        // transform that write into it, we can notify the copies to reload the json files so that
+        // their sub-stream list is up to date for consumption by the downstream transforms.
+        if (copies == null) {
+            copies = Lists.newArrayList();
+        }
+        copies.add(copy);
+        return copy;
     }
 
     @Override
@@ -175,20 +187,36 @@ class IntermediateStream extends TransformStream {
         // inputs.
         // However the content of the intermediate root folder isn't known at configuration
         // time so we need to pass a callable that will compute the files dynamically.
-        Supplier<Collection<File>> supplier =
+        Callable<Collection<File>> supplier =
                 () -> {
                     init();
                     return folderUtils.getFiles(streamFilter);
                 };
 
-        return project.files(TaskInputHelper.bypassFileCallable(supplier))
-                .builtBy(getFileCollection().getBuildDependencies());
+        return project.files(supplier).builtBy(getFileCollection().getBuildDependencies());
     }
 
     private void init() {
         if (folderUtils == null) {
             folderUtils =
                     new IntermediateFolderUtils(getRootLocation(), getContentTypes(), getScopes());
+        }
+    }
+
+    private void reload() {
+        if (folderUtils != null) {
+            folderUtils.reload();
+        }
+        reloadCopies();
+    }
+
+    private void reloadCopies() {
+        // need to notify the restricted copies to reload their substreams from the newly
+        // generated content json file.
+        if (copies != null) {
+            for (IntermediateStream copy : copies) {
+                copy.reload();
+            }
         }
     }
 

@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
@@ -276,9 +277,7 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.sourceDirs =
                     scope.getGlobalScope()
                             .getProject()
-                            .files(
-                                    TaskInputHelper.bypassFileCallable(
-                                            config::getRenderscriptSourceList));
+                            .files((Callable<Collection<File>>) config::getRenderscriptSourceList);
             renderscriptTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, RENDERSCRIPT);
 

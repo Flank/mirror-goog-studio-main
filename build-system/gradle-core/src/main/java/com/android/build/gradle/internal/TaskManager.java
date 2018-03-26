@@ -107,7 +107,6 @@ import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
@@ -224,6 +223,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -3118,15 +3118,16 @@ public abstract class TaskManager {
             @Nullable File outputProguardMapping,
             BaseVariantData testedVariantData,
             ProguardConfigurable transform) {
+
         if (testedVariantData != null) {
+            final VariantScope testedScope = testedVariantData.getScope();
             // This is an androidTest variant inside an app/library.
             applyProguardDefaultsForTest(transform);
 
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
-                            TaskInputHelper.bypassFileCallable(
-                                    testedVariantData.getScope()::getTestProguardFiles),
+                            (Callable<Collection<File>>) testedScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
         } else if (isTestedAppObfuscated(variantScope)) {
@@ -3136,7 +3137,7 @@ public abstract class TaskManager {
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
-                            TaskInputHelper.bypassFileCallable(variantScope::getTestProguardFiles),
+                            (Callable<Collection<File>>) variantScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
@@ -3193,7 +3194,7 @@ public abstract class TaskManager {
             transform.setActions(postprocessingFeatures);
         }
 
-        Supplier<Collection<File>> proguardConfigFiles =
+        Callable<Collection<File>> proguardConfigFiles =
                 () -> {
                     List<File> proguardFiles = new ArrayList<>(scope.getProguardFiles());
 
@@ -3206,7 +3207,7 @@ public abstract class TaskManager {
 
         transform.setConfigurationFiles(
                 project.files(
-                        TaskInputHelper.bypassFileCallable(proguardConfigFiles),
+                        proguardConfigFiles,
                         scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
         if (scope.getVariantData().getType().isAar()) {
