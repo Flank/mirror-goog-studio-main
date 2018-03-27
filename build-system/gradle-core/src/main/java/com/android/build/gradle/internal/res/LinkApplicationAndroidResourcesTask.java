@@ -495,6 +495,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setPackageId(getResOffset())
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setImports(imports)
+                                .setIntermediateDir(getIncrementalFolder())
                                 .setAndroidTarget(getBuilder().getTarget());
 
                 if (isNamespaced) {

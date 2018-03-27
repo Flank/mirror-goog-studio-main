@@ -250,5 +250,10 @@ data class AaptPackageConfig(
             this.staticLibraryDependencies = libraries
             return this
         }
+
+        fun setIntermediateDir(intermediateDir: File): Builder {
+            this.intermediateDir = intermediateDir
+            return this
+        }
     }
 }
