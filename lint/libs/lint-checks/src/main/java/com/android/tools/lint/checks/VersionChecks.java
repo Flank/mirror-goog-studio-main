@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jetbrains.uast.UAnonymousClass;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBlockExpression;
 import org.jetbrains.uast.UCallExpression;
@@ -412,7 +413,12 @@ public class VersionChecks {
                         }
                     }
                 }
-            } else if (current instanceof UMethod || current instanceof PsiFile) {
+            } else if (current instanceof UMethod) {
+                UElement parent = current.getUastParent();
+                if (!(parent instanceof UAnonymousClass)) {
+                    return false;
+                }
+            } else if (current instanceof PsiFile) {
                 return false;
             }
             prev = current;
