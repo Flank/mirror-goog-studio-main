@@ -19,5 +19,7 @@ android {
 
 dependencies {
 	feature project(':feature1')
+	feature project(':feature2')
+
 	implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 }

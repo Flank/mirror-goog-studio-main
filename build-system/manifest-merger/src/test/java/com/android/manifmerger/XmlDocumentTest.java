@@ -118,7 +118,7 @@ public class XmlDocumentTest extends TestCase {
         assertEquals(3, mergeableElements.size());
         assertEquals(ManifestModel.NodeTypes.APPLICATION, mergeableElements.get(0).getType());
         assertEquals(ManifestModel.NodeTypes.CUSTOM, mergeableElements.get(1).getType());
-        assertEquals(ManifestModel.NodeTypes.CUSTOM, mergeableElements.get(2).getType());
+        assertEquals(ManifestModel.NodeTypes.APPLICATION, mergeableElements.get(2).getType());
 
     }
 

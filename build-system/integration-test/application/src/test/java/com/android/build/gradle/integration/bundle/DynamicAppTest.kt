@@ -55,7 +55,11 @@ class DynamicAppTest {
         "/feature1/dex/classes.dex",
         "/feature1/manifest/AndroidManifest.xml",
         "/feature1/res/layout/feature_layout.xml",
-        "/feature1/resources.pb")
+        "/feature1/resources.pb",
+        "/feature2/dex/classes.dex",
+        "/feature2/manifest/AndroidManifest.xml",
+        "/feature2/res/layout/feature2_layout.xml",
+        "/feature2/resources.pb")
 
     @Test
     @Throws(IOException::class)
@@ -69,7 +73,7 @@ class DynamicAppTest {
         Truth.assertThat(appModel).named("app model").isNotNull()
         Truth.assertThat(appModel!!.dynamicFeatures)
             .named("feature list in app model")
-            .containsExactly(":feature1")
+            .containsExactly(":feature1", ":feature2")
 
         val featureModel = rootBuildModelMap[":feature1"]
         Truth.assertThat(featureModel).named("feature model").isNotNull()
@@ -174,7 +178,7 @@ class DynamicAppTest {
 
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 27")
-            .containsExactly("base-master.apk", "feature1-master.apk")
+            .containsExactly("base-master.apk", "feature1-master.apk", "feature2-master.apk")
 
         // -------------
         // build apks for API 18
