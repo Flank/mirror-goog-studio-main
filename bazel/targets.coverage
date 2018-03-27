@@ -35,7 +35,10 @@
 //tools/base/bazel/test/kotlin:only_kotlin_tests.test
 //tools/base/build-system/builder-model:tests
 //tools/base/build-system/builder-test-api:tools.builder-test-api_tests
+//tools/base/build-system/builder:tests
 //tools/base/build-system/gradle-api:tests
+//tools/base/build-system/gradle-core:tests
+//tools/base/build-system/gradle:tests
 //tools/base/build-system/java-lib-plugin/java-lib-model-builder:builder_tests
 //tools/base/build-system/profile:tests
 //tools/base/build-system:tools.manifest-merger_tests
