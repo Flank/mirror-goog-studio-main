@@ -565,7 +565,6 @@ def _iml_project_impl(ctx):
     content = artifacts
   )
 
-  return  # the following action is broken after the IDEA 181.2784.17 merge
   outs = [ctx.outputs.win, ctx.outputs.win32, ctx.outputs.mac, ctx.outputs.linux, ctx.outputs.output]
 
   args = ["--win", ctx.outputs.win.path,
@@ -612,6 +611,13 @@ _iml_project = rule(
           allow_files = True,
           single_file = True,
         ),
+    },
+    outputs = {
+        "win": "%{name}.win.zip",
+        "win32": "%{name}.win32.zip",
+        "mac": "%{name}.mac.zip",
+        "linux": "%{name}.tar.gz",
+        "output": "%{name}.log",
     },
     implementation = _iml_project_impl,
 )
