@@ -56,8 +56,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
+import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -150,7 +152,7 @@ public class MergedResourceWriter
      * @param crunchPng should we crunch PNG files
      */
     public MergedResourceWriter(
-            @NonNull WorkerExecutorFacade<FileGenerationParameters> workerExecutor,
+            @NonNull WorkerExecutorFacade workerExecutor,
             @NonNull File rootFolder,
             @Nullable File publicFile,
             @Nullable MergingLog blameLog,
@@ -198,10 +200,21 @@ public class MergedResourceWriter
             @NonNull ResourcePreprocessor preprocessor,
             @NonNull File temporaryDirectory) {
         return new MergedResourceWriter(
-                new WorkerExecutorFacade<FileGenerationParameters>() {
+                new WorkerExecutorFacade() {
                     @Override
-                    public void submit(FileGenerationParameters parameter) {
-                        new FileGenerationWorkAction(parameter).run();
+                    public void submit(
+                            @NotNull Class<? extends Runnable> actionClass,
+                            @NotNull Serializable parameter) {
+                        Runnable action;
+                        try {
+                            action =
+                                    actionClass
+                                            .getConstructor(parameter.getClass())
+                                            .newInstance(parameter);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        action.run();
                     }
 
                     @Override
@@ -363,7 +376,7 @@ public class MergedResourceWriter
                         FileGenerationParameters workItem =
                                 new FileGenerationParameters(item, mPreprocessor);
                         if (workItem.resourceItem.getSource() != null) {
-                            getExecutor().submit(workItem);
+                            getExecutor().submit(FileGenerationWorkAction.class, workItem);
                         }
                     } catch (Exception e) {
                         throw new ConsumerException(e, item.getSource().getFile());
@@ -392,6 +405,7 @@ public class MergedResourceWriter
 
         private final FileGenerationParameters workItem;
 
+        @Inject
         public FileGenerationWorkAction(FileGenerationParameters workItem) {
             this.workItem = workItem;
         }

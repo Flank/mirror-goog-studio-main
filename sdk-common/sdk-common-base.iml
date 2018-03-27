@@ -36,5 +36,6 @@
     <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" exported="" name="protobuf" level="project" />
+    <orderEntry type="library" name="javax.inject:javax.inject:1" level="project" />
   </component>
 </module>

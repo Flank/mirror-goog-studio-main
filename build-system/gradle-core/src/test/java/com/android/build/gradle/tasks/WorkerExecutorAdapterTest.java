@@ -48,10 +48,9 @@ public class WorkerExecutorAdapterTest {
     @Test
     public void testSingleDelegation() {
 
-        WorkerExecutorFacade<Parameter> adapter =
-                new WorkerExecutorAdapter<>(workerExecutor, WorkAction.class);
+        WorkerExecutorFacade adapter = new WorkerExecutorAdapter(workerExecutor);
         Parameter params = new Parameter("one", "two");
-        adapter.submit(params);
+        adapter.submit(WorkAction.class, params);
         adapter.await();
         ArgumentCaptor<Action<? super WorkerConfiguration>> workItemCaptor =
                 ArgumentCaptor.forClass(Action.class);
@@ -72,12 +71,11 @@ public class WorkerExecutorAdapterTest {
     @Test
     public void testMultipleDelegation() {
 
-        WorkerExecutorFacade<Parameter> adapter =
-                new WorkerExecutorAdapter<>(workerExecutor, WorkAction.class);
+        WorkerExecutorFacade adapter = new WorkerExecutorAdapter(workerExecutor);
         List<Parameter> parametersList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Parameter params = new Parameter("+" + i, "-" + i);
-            adapter.submit(params);
+            adapter.submit(WorkAction.class, params);
             parametersList.add(params);
         }
         adapter.await();

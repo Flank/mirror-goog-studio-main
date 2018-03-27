@@ -33,6 +33,7 @@ import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -47,12 +48,21 @@ public class AssetMergerTest extends BaseTestCase {
 
     private static AssetMerger sAssetMerger = null;
 
-    private static WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters> facade =
-            new WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters>() {
+    private static WorkerExecutorFacade facade =
+            new WorkerExecutorFacade() {
 
                 @Override
-                public void submit(MergedAssetWriter.AssetWorkParameters parameter) {
-                    new MergedAssetWriter.AssetWorkAction(parameter).run();
+                public void submit(Class<? extends Runnable> actionClass, Serializable parameter) {
+                    Runnable action;
+                    try {
+                        action =
+                                actionClass
+                                        .getConstructor(parameter.getClass())
+                                        .newInstance(parameter);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    action.run();
                 }
 
                 @Override

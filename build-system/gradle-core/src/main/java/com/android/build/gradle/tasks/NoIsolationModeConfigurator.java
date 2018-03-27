@@ -16,20 +16,17 @@
 
 package com.android.build.gradle.tasks;
 
+import java.io.Serializable;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerConfiguration;
 import org.gradle.workers.WorkerExecutor;
 
-/**
- * Simple object configuring a work item submitted to the Gradle's {@link WorkerExecutor}.
- *
- * @param <T> is the parameter type encapsulating all data to configure a single task.
- */
-public class NoIsolationModeConfigurator<T> {
+/** Simple object configuring a work item submitted to the Gradle's {@link WorkerExecutor}. */
+public class NoIsolationModeConfigurator {
 
-    private final T parameters;
+    private final Serializable parameters;
 
-    public NoIsolationModeConfigurator(T parameters) {
+    public NoIsolationModeConfigurator(Serializable parameters) {
         this.parameters = parameters;
     }
 

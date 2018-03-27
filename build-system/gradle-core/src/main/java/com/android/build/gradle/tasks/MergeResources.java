@@ -252,14 +252,12 @@ public class MergeResources extends IncrementalTask {
     }
 
     private final WorkerExecutor workerExecutor;
-    private final WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>
-            workerExecutorFacade;
+    private final WorkerExecutorFacade workerExecutorFacade;
 
     @Inject
     public MergeResources(WorkerExecutor workerExecutor) {
         this.workerExecutor = workerExecutor;
-        this.workerExecutorFacade =
-                new WorkerExecutorAdapter<>(workerExecutor, FileGenerationWorkAction.class);
+        this.workerExecutorFacade = new WorkerExecutorAdapter(workerExecutor);
     }
 
     @Override
@@ -425,20 +423,6 @@ public class MergeResources extends IncrementalTask {
             throw new ResourceException(e.getMessage(), e);
         } finally {
             cleanup();
-        }
-    }
-
-    public static class FileGenerationWorkAction implements Runnable {
-        private final MergedResourceWriter.FileGenerationWorkAction workAction;
-
-        @Inject
-        public FileGenerationWorkAction(MergedResourceWriter.FileGenerationParameters workItem) {
-            this.workAction = new MergedResourceWriter.FileGenerationWorkAction(workItem);
-        }
-
-        @Override
-        public void run() {
-            workAction.run();
         }
     }
 

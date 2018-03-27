@@ -214,7 +214,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/io/reactivex/rxjava/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.2:jar",
         "//prebuilts/tools/common/m2/repository/javax/annotation/jsr250-api/1.0:jar",
-        "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
         "//prebuilts/tools/common/m2/repository/me/tatarka/gradle-retrolambda/3.2.4:jar",
         "//prebuilts/tools/common/m2/repository/me/tatarka/retrolambda/projectlombok/lombok.ast/0.2.3.a2:jar",
         "//prebuilts/tools/common/m2/repository/me/zhanghai/android/materialprogressbar/library/1.1.4:aar",

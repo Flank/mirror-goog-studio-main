@@ -67,9 +67,10 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
 
     @TaskAction
     fun bundleModules() {
-        val adapter = WorkerExecutorAdapter<Params>(workerExecutor, BundleToolRunnable::class.java)
+        val adapter = WorkerExecutorAdapter(workerExecutor)
 
         adapter.submit(
+            BundleToolRunnable::class.java,
             Params(
                 baseModuleZip.singleFile(),
                 featureZips.files,

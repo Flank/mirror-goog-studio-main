@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.zip.GZIPInputStream;
+import javax.inject.Inject;
 
 /** A {@link MergeWriter} for assets, using {@link AssetItem}. */
 public class MergedAssetWriter
@@ -41,7 +42,8 @@ public class MergedAssetWriter
     public void addItem(@NonNull final AssetItem item) throws ConsumerException {
         // Only write it if the state is TOUCHED.
         if (item.isTouched()) {
-            getExecutor().submit(new AssetWorkParameters(item, getRootFolder()));
+            getExecutor()
+                    .submit(AssetWorkAction.class, new AssetWorkParameters(item, getRootFolder()));
         }
     }
 
@@ -60,6 +62,7 @@ public class MergedAssetWriter
         private final AssetItem item;
         private final File rootFolder;
 
+        @Inject
         public AssetWorkAction(AssetWorkParameters parameters) {
             this.item = parameters.assetItem;
             this.rootFolder = parameters.rootFolder;

@@ -28,10 +28,10 @@ public abstract class MergeWriter<I extends DataItem, U extends Serializable>
 
     @NonNull
     private final File mRootFolder;
-    @NonNull private final WorkerExecutorFacade<U> mExecutor;
+    @NonNull private final WorkerExecutorFacade mExecutor;
 
     public MergeWriter(
-            @NonNull File rootFolder, @NonNull WorkerExecutorFacade<U> workerExecutorFacade) {
+            @NonNull File rootFolder, @NonNull WorkerExecutorFacade workerExecutorFacade) {
         mRootFolder = rootFolder;
         mExecutor = workerExecutorFacade;
     }
@@ -61,7 +61,7 @@ public abstract class MergeWriter<I extends DataItem, U extends Serializable>
     protected void postWriteAction() throws ConsumerException {}
 
     @NonNull
-    protected WorkerExecutorFacade<U> getExecutor() {
+    protected WorkerExecutorFacade getExecutor() {
         return mExecutor;
     }
 

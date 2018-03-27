@@ -98,11 +98,11 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     private final FileValidity<AssetSet> fileValidity = new FileValidity<>();
 
-    private final WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters> workerExecutor;
+    private final WorkerExecutorFacade workerExecutor;
 
     @Inject
     public MergeSourceSetFolders(WorkerExecutor workerExecutor) {
-        this.workerExecutor = new WorkerExecutorAdapter<>(workerExecutor, AssetWorkAction.class);
+        this.workerExecutor = new WorkerExecutorAdapter(workerExecutor);
     }
 
     @Override
@@ -208,21 +208,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
         } finally {
             // some clean up after the task to help multi variant/module builds.
             fileValidity.clear();
-        }
-    }
-
-    public static class AssetWorkAction implements Runnable {
-
-        private final MergedAssetWriter.AssetWorkAction workAction;
-
-        @Inject
-        public AssetWorkAction(MergedAssetWriter.AssetWorkParameters workItem) {
-            workAction = new MergedAssetWriter.AssetWorkAction(workItem);
-        }
-
-        @Override
-        public void run() {
-            workAction.run();
         }
     }
 

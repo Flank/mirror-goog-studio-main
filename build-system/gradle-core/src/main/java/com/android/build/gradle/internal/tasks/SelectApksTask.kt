@@ -68,9 +68,10 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
 
     @TaskAction
     fun generateApk() {
-        val adapter = WorkerExecutorAdapter<Params>(workerExecutor, BundleToolRunnable::class.java)
+        val adapter = WorkerExecutorAdapter(workerExecutor)
 
         adapter.submit(
+            BundleToolRunnable::class.java,
             Params(
                 apkSetArchive.singleFile(),
                 deviceConfig ?: throw RuntimeException("Calling ApkSelect with no device config"),

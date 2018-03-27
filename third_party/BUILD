@@ -595,6 +595,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "javax_inject_javax_inject",
+    export_artifact = "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "javax.xml.bind_jaxb-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/javax/xml/bind/jaxb-api/2.2.12-b140109.1041:jar",
     visibility = ["//visibility:public"],

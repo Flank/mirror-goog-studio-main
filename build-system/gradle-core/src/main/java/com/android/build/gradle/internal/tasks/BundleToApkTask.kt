@@ -61,9 +61,10 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
 
     @TaskAction
     fun generateApk() {
-        val adapter = WorkerExecutorAdapter<Params>(workerExecutor, BundleToolRunnable::class.java)
+        val adapter = WorkerExecutorAdapter(workerExecutor)
 
         adapter.submit(
+            BundleToolRunnable::class.java,
             Params(
                 bundle.singleFile(),
                 File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),

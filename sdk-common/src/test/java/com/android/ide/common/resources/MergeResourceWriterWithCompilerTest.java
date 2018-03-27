@@ -26,6 +26,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -127,12 +128,21 @@ public class MergeResourceWriterWithCompilerTest {
         addAndDeleteFile("f2.xml");
     }
 
-    private WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters> facade =
-            new WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>() {
+    private WorkerExecutorFacade facade =
+            new WorkerExecutorFacade() {
 
                 @Override
-                public void submit(MergedResourceWriter.FileGenerationParameters parameter) {
-                    new MergedResourceWriter.FileGenerationWorkAction(parameter).run();
+                public void submit(Class<? extends Runnable> actionClass, Serializable parameter) {
+                    Runnable action;
+                    try {
+                        action =
+                                actionClass
+                                        .getConstructor(parameter.getClass())
+                                        .newInstance(parameter);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    action.run();
                 }
 
                 @Override
