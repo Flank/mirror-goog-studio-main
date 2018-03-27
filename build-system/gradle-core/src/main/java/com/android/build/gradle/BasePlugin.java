@@ -633,7 +633,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
-                new ModelBuilder(
+                new ModelBuilder<>(
                         globalScope,
                         androidBuilder,
                         variantManager,

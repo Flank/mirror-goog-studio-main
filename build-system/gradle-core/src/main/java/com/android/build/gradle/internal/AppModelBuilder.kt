@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal
 
-import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.internal.api.artifact.singleFile
-import com.android.build.gradle.internal.ide.BaseModuleModelBuilder
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
 import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
 import com.android.build.gradle.internal.ide.ModelBuilder
@@ -32,6 +32,7 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 
 /**
  * [ModelBuilder] class created by [AppPlugin]. It needs to be put in a separate file to work around
@@ -42,13 +43,13 @@ class AppModelBuilder(
     androidBuilder: AndroidBuilder,
     private val variantManager: VariantManager,
     taskManager: TaskManager,
-    config: AndroidConfig,
+    config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
     ndkHandler: NdkHandler,
     nativeLibraryFactory: NativeLibraryFactory,
     projectType: Int,
     generation: Int
-) : BaseModuleModelBuilder(
+) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
     androidBuilder,
     variantManager,
@@ -72,6 +73,22 @@ class AppModelBuilder(
         return if (modelName == AppBundleProjectBuildOutput::class.java.name) {
             buildMinimalisticModel()
         } else super.buildAll(modelName, project)
+    }
+
+    override fun getDynamicFeatures(): MutableCollection<String> {
+        if (!extension.dynamicFeatures.isEmpty()) {
+            return extension.dynamicFeatures
+        }
+
+        @Suppress("DEPRECATION")
+        val featureConfig = globalScope.project.configurations.getByName(VariantDependencies.CONFIG_NAME_FEATURE)
+        val dependencies = featureConfig.dependencies
+
+        return dependencies
+            .asSequence()
+            .filter { it is ProjectDependency }
+            .map { (it as ProjectDependency).dependencyProject.path }
+            .toMutableList()
     }
 
     private fun buildMinimalisticModel(): Any {

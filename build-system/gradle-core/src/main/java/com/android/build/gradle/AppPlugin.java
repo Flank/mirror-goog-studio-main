@@ -22,11 +22,15 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
@@ -41,10 +45,22 @@ public class AppPlugin extends AbstractAppPlugin {
         super.apply(project);
 
         // create the configuration used to declare the feature split in the base split.
+        //noinspection deprecation
         Configuration featureSplit =
                 project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE);
         featureSplit.setCanBeConsumed(false);
         featureSplit.setCanBeResolved(false);
+
+        //noinspection deprecation
+        featureSplit
+                .getAllDependencies()
+                .whenObjectAdded(
+                        new DeprecatedConfigurationAction(
+                                "android.dynamicFeatures",
+                                VariantDependencies.CONFIG_NAME_FEATURE,
+                                extraModelInfo.getDeprecationReporter(),
+                                DeprecationReporter.DeprecationTarget.FEATURE_CONFIG));
+
     }
 
     @Override
@@ -60,11 +76,45 @@ public class AppPlugin extends AbstractAppPlugin {
                         androidBuilder,
                         variantManager,
                         taskManager,
-                        config,
+                        (BaseAppModuleExtension) config,
                         extraModelInfo,
                         ndkHandler,
                         new NativeLibraryFactoryImpl(ndkHandler),
                         getProjectType(),
                         AndroidProject.GENERATION_ORIGINAL));
+    }
+
+    @Override
+    @NonNull
+    protected Class<? extends AppExtension> getExtensionClass() {
+        return BaseAppModuleExtension.class;
+    }
+
+    private static class DeprecatedConfigurationAction implements Action<Dependency> {
+        @NonNull private final String newDslElement;
+        @NonNull private final String configName;
+        @NonNull private final DeprecationReporter deprecationReporter;
+        @NonNull private final DeprecationReporter.DeprecationTarget target;
+        private boolean warningPrintedAlready = false;
+
+        public DeprecatedConfigurationAction(
+                @NonNull String newDslElement,
+                @NonNull String configName,
+                @NonNull DeprecationReporter deprecationReporter,
+                @NonNull DeprecationReporter.DeprecationTarget target) {
+            this.newDslElement = newDslElement;
+            this.configName = configName;
+            this.deprecationReporter = deprecationReporter;
+            this.target = target;
+        }
+
+        @Override
+        public void execute(@NonNull Dependency dependency) {
+            if (!warningPrintedAlready) {
+                warningPrintedAlready = true;
+                deprecationReporter.reportDeprecatedConfiguration(
+                        newDslElement, configName, target);
+            }
+        }
     }
 }

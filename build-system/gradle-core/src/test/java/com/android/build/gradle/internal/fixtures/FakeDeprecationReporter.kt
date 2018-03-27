@@ -47,11 +47,19 @@ class FakeDeprecationReporter: DeprecationReporter {
         deprecationWarnings.add(oldDslElement)
     }
 
-    override fun reportDeprecatedConfiguration(
+    override fun reportRenamedConfiguration(
         newConfiguration: String,
         oldConfiguration: String,
         deprecationTarget: DeprecationReporter.DeprecationTarget,
         url: String?
+    ) {
+        deprecationWarnings.add(oldConfiguration)
+    }
+
+    override fun reportDeprecatedConfiguration(
+        newDslElement: String,
+        oldConfiguration: String,
+        deprecationTarget: DeprecationReporter.DeprecationTarget
     ) {
         deprecationWarnings.add(oldConfiguration)
     }

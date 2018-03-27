@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTra
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -999,6 +1000,10 @@ public class VariantManager implements VariantModel {
         final String publishType = variantType.getPublishType();
         if (publishType != null) {
             builder.setPublishType(instantiateAndroidTypeAttr(publishType));
+        }
+
+        if (extension instanceof BaseAppModuleExtension) {
+            builder.setFeatureList(((BaseAppModuleExtension) extension).getDynamicFeatures());
         }
 
         final VariantDependencies variantDep = builder.build();

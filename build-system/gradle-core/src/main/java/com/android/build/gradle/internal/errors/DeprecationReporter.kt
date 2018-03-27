@@ -47,6 +47,8 @@ interface DeprecationReporter {
         DESUGAR_TOOL("in AGP version 3.3."),
         // Deprecation of disabling incremental desugaring
         INCREMENTAL_DESUGARING("in AGP version 3.3."),
+        // deprecation of the feature dependency in favor of the DSL
+        FEATURE_CONFIG("before final 3.2."),
     }
 
     /**
@@ -123,7 +125,7 @@ interface DeprecationReporter {
             deprecationTarget: DeprecationTarget)
 
     /**
-     * Reports a deprecation usage in the DSL/API.
+     * Reports a renamed Configuration.
      *
      * @param newConfiguration the name of the [org.gradle.api.artifacts.Configuration] to use
      * instead
@@ -132,11 +134,24 @@ interface DeprecationReporter {
      * @param url optional url for more context.
      * timing is added to the message.
      */
-    fun reportDeprecatedConfiguration(
+    fun reportRenamedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
             deprecationTarget: DeprecationTarget,
             url: String? = null)
+
+    /**
+     * Reports a deprecated Configuration, that gets replaced by an optional DSL element
+     *
+     * @param newDslElement the name of the DSL element that replaces the configuration
+     * @param oldConfiguration the name of the deprecated [org.gradle.api.artifacts.Configuration]
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedConfiguration(
+        newDslElement: String,
+        oldConfiguration: String,
+        deprecationTarget: DeprecationTarget)
 
     /**
      * Reports a deprecated option usage.

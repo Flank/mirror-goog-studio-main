@@ -125,10 +125,9 @@ import org.gradle.api.initialization.IncludedBuild;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
-/**
- * Builder for the custom Android model.
- */
-public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
+/** Builder for the custom Android model. */
+public class ModelBuilder<Extension extends AndroidConfig>
+        implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
     public static final String CURRENT_BUILD_NAME = "__current_build__";
 
     @NonNull
@@ -138,7 +137,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
     @NonNull static final DependencyGraphs EMPTY_DEPENDENCY_GRAPH = new EmptyDependencyGraphs();
     @NonNull protected final GlobalScope globalScope;
     @NonNull private final AndroidBuilder androidBuilder;
-    @NonNull protected final AndroidConfig config;
+    @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
     @NonNull private final TaskManager taskManager;
@@ -162,7 +161,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantManager variantManager,
             @NonNull TaskManager taskManager,
-            @NonNull AndroidConfig config,
+            @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull NdkHandler ndkHandler,
             @NonNull NativeLibraryFactory nativeLibraryFactory,
@@ -170,7 +169,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             int generation) {
         this.globalScope = globalScope;
         this.androidBuilder = androidBuilder;
-        this.config = config;
+        this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
         this.taskManager = taskManager;
@@ -342,15 +341,18 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                     variantType.getArtifactType()));
         }
 
-        LintOptions lintOptions = com.android.build.gradle.internal.dsl.LintOptions.create(
-                config.getLintOptions());
+        LintOptions lintOptions =
+                com.android.build.gradle.internal.dsl.LintOptions.create(
+                        extension.getLintOptions());
 
-        AaptOptions aaptOptions = AaptOptionsImpl.create(config.getAaptOptions());
+        AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
 
         syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
 
-        List<String> flavorDimensionList = config.getFlavorDimensionList() != null ?
-                config.getFlavorDimensionList() : Lists.newArrayList();
+        List<String> flavorDimensionList =
+                extension.getFlavorDimensionList() != null
+                        ? extension.getFlavorDimensionList()
+                        : Lists.newArrayList();
 
         toolchains = createNativeToolchainModelMap(ndkHandler);
 
@@ -398,16 +400,16 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                         : "",
                 bootClasspath,
                 frameworkSource,
-                cloneSigningConfigs(config.getSigningConfigs()),
+                cloneSigningConfigs(extension.getSigningConfigs()),
                 aaptOptions,
                 artifactMetaDataList,
                 syncIssues,
-                config.getCompileOptions(),
+                extension.getCompileOptions(),
                 lintOptions,
                 project.getBuildDir(),
-                config.getResourcePrefix(),
+                extension.getResourcePrefix(),
                 ImmutableList.copyOf(toolchains.values()),
-                config.getBuildToolsVersion(),
+                extension.getBuildToolsVersion(),
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation,
@@ -528,8 +530,8 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
 
     @NonNull
     private Collection<TestedTargetVariant> getTestTargetVariants(BaseVariantData variantData) {
-        if (config instanceof TestAndroidConfig) {
-            TestAndroidConfig testConfig = (TestAndroidConfig) config;
+        if (extension instanceof TestAndroidConfig) {
+            TestAndroidConfig testConfig = (TestAndroidConfig) extension;
 
             // to get the target variant we need to get the result of the dependency resolution
             ArtifactCollection apkArtifacts =
@@ -717,12 +719,13 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
         Collection<NativeLibrary> nativeLibraries = ImmutableList.of();
         if (ndkHandler.isConfigured()) {
-            if (config.getSplits().getAbi().isEnable()) {
-                nativeLibraries = createNativeLibraries(
-                        config.getSplits().getAbi().isUniversalApk()
-                                ? ndkHandler.getSupportedAbis()
-                                : createAbiList(config.getSplits().getAbiFilters()),
-                        scope);
+            if (extension.getSplits().getAbi().isEnable()) {
+                nativeLibraries =
+                        createNativeLibraries(
+                                extension.getSplits().getAbi().isUniversalApk()
+                                        ? ndkHandler.getSupportedAbis()
+                                        : createAbiList(extension.getSplits().getAbiFilters()),
+                                scope);
             } else {
                 if (ndkConfig.getAbiFilters() == null || ndkConfig.getAbiFilters().isEmpty()) {
                     nativeLibraries = createNativeLibraries(

@@ -53,6 +53,7 @@ public class FeaturePlugin extends LibraryPlugin {
         super.apply(project);
 
         // create the configuration used to declare the feature split in the base split.
+        //noinspection deprecation
         Configuration featureSplit =
                 project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE);
         featureSplit.setCanBeConsumed(false);
@@ -131,7 +132,7 @@ public class FeaturePlugin extends LibraryPlugin {
                         androidBuilder,
                         variantManager,
                         taskManager,
-                        config,
+                        (FeatureExtension) config,
                         extraModelInfo,
                         ndkHandler,
                         new NativeLibraryFactoryImpl(ndkHandler),

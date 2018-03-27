@@ -40,4 +40,9 @@ public class OptionalApkPlugin extends AbstractAppPlugin {
         return GradleBuildProject.PluginType.DYNAMIC_FEATURE;
     }
 
+    @NonNull
+    @Override
+    protected Class<? extends AppExtension> getExtensionClass() {
+        return AppExtension.class;
+    }
 }

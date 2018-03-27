@@ -16,14 +16,15 @@
 
 package com.android.build.gradle.internal
 
-import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.FeaturePlugin
-import com.android.build.gradle.internal.ide.BaseModuleModelBuilder
+import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.model.NativeLibraryFactory
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.builder.core.AndroidBuilder
+import org.gradle.api.artifacts.ProjectDependency
 
 /**
  * [ModelBuilder] class created by [FeaturePlugin]. It needs to be put in a separate file to work
@@ -34,13 +35,13 @@ class FeatureModelBuilder(
     androidBuilder: AndroidBuilder,
     variantManager: VariantManager,
     taskManager: TaskManager,
-    config: AndroidConfig,
+    config: FeatureExtension,
     extraModelInfo: ExtraModelInfo,
     ndkHandler: NdkHandler,
     nativeLibraryFactory: NativeLibraryFactory,
     projectType: Int,
     generation: Int
-) : BaseModuleModelBuilder(
+) : ModelBuilder<FeatureExtension>(
     globalScope,
     androidBuilder,
     variantManager,
@@ -53,6 +54,19 @@ class FeatureModelBuilder(
     generation
 ) {
     override fun isBaseSplit(): Boolean {
-        return config.baseFeature!!
+        return extension.baseFeature!!
+    }
+
+    override fun getDynamicFeatures(): MutableCollection<String> {
+
+        @Suppress("DEPRECATION")
+        val featureConfig = globalScope.project.configurations.getByName(VariantDependencies.CONFIG_NAME_FEATURE)
+        val dependencies = featureConfig.dependencies
+
+        return dependencies
+            .asSequence()
+            .filter { it is ProjectDependency }
+            .map { (it as ProjectDependency).dependencyProject.path }
+            .toMutableList()
     }
 }

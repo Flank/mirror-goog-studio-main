@@ -338,7 +338,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 "compile" == compileName || "testCompile" == compileName /*canBeResolved*/)
         compile.allDependencies
                 .whenObjectAdded(
-                        DeprecatedConfigurationAction(implementationName, compileName, dslScope.deprecationReporter))
+                        RenamedConfigurationAction(implementationName, compileName, dslScope.deprecationReporter))
 
         val packageConfigDescription = if (mainVariantType.isAar) {
             getConfigDescriptionOld("publish", sourceSet.name, runtimeOnlyName)
@@ -351,7 +351,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 configurationContainer, apkName, packageConfigDescription)
         apk.allDependencies
                 .whenObjectAdded(
-                        DeprecatedConfigurationAction(
+                        RenamedConfigurationAction(
                                 runtimeOnlyName, apkName, dslScope.deprecationReporter))
 
         val providedName = sourceSet._providedConfigurationName
@@ -361,7 +361,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 getConfigDescriptionOld("provided", sourceSet.name, compileOnlyName))
         provided.allDependencies
                 .whenObjectAdded(
-                        DeprecatedConfigurationAction(
+                        RenamedConfigurationAction(
                                 compileOnlyName, providedName, dslScope.deprecationReporter))
 
         // then the new configurations.
@@ -500,7 +500,7 @@ private fun computeSourceSetName(
     return newName
 }
 
-class DeprecatedConfigurationAction(
+class RenamedConfigurationAction(
         private val replacement: String,
         private val oldName: String,
         private val deprecationReporter: DeprecationReporter,
@@ -511,7 +511,7 @@ class DeprecatedConfigurationAction(
     override fun execute(dependency: Dependency) {
         if (!warningPrintedAlready) {
             warningPrintedAlready = true
-            deprecationReporter.reportDeprecatedConfiguration(
+            deprecationReporter.reportRenamedConfiguration(
                     replacement, oldName, deprecationTarget, url)
         }
     }

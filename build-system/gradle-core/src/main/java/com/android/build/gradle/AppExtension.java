@@ -17,7 +17,14 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 
-/** The {@code android} extension for {@code com.android.application} projects. */
+/**
+ * The {@code android} extension for application plugins.
+ *
+ * <p>For the base module, see @{link {@link
+ * com.android.build.gradle.internal.dsl.BaseAppModuleExtension}
+ *
+ * <p>For optional apks, this class is used directly.
+ */
 public class AppExtension extends TestedExtension {
 
     private final DefaultDomainObjectSet<ApplicationVariant> applicationVariantList

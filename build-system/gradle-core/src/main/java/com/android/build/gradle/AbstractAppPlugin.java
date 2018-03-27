@@ -74,7 +74,7 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
         return project.getExtensions()
                 .create(
                         "android",
-                        AppExtension.class,
+                        getExtensionClass(),
                         project,
                         projectOptions,
                         androidBuilder,
@@ -87,6 +87,9 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                         extraModelInfo,
                         isBaseApplication);
     }
+
+    @NonNull
+    protected abstract Class<? extends AppExtension> getExtensionClass();
 
     @NonNull
     @Override
