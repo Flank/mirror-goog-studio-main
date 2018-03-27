@@ -23,6 +23,8 @@
 //tools/adt/idea/uitest-framework-bazel:uitest-framework-bazel_tests
 //tools/adt/idea/uitest-framework-gradle:uitest-framework-gradle_tests
 //tools/adt/idea/wizard-model:wizard-model_tests
+//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests
+//tools/adt/idea/whats-new-assistant:whats-new-assistant-test_tests
 //tools/analytics-library/shared:tools.analytics-shared_tests
 //tools/analytics-library/testing:tools.analytics-testing_tests
 //tools/analytics-library/tracker:tools.analytics-tracker_tests
