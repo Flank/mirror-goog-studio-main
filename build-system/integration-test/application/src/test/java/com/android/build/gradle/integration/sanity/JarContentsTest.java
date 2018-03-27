@@ -427,31 +427,6 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "com/android/tools/build/gradle",
-                "com/",
-                "com/android/",
-                "com/android/build/",
-                "com/android/build/gradle/",
-                "com/android/build/gradle/internal/",
-                "com/android/build/gradle/internal/dsl/",
-                "com/android/build/gradle/internal/plugins/",
-                "com/android/build/gradle/internal/tasks/",
-                "NOTICE",
-                "META-INF/MANIFEST.MF",
-                "META-INF/",
-                "META-INF/gradle-plugins/",
-                "META-INF/gradle-plugins/android-library.properties",
-                "META-INF/gradle-plugins/android.properties",
-                "META-INF/gradle-plugins/android-reporting.properties",
-                "META-INF/gradle-plugins/com.android.application.properties",
-                "META-INF/gradle-plugins/com.android.debug.structure.properties",
-                "META-INF/gradle-plugins/com.android.feature.properties",
-                "META-INF/gradle-plugins/com.android.instantapp.properties",
-                "META-INF/gradle-plugins/com.android.library.properties",
-                "META-INF/gradle-plugins/com.android.lint.properties",
-                "META-INF/gradle-plugins/com.android.test.properties",
-                "META-INF/gradle-plugins/com.android.dynamic-feature.properties");
-        expected.putAll(
                 "com/android/tools/build/apksig",
                 "com/",
                 "com/android/",
@@ -473,7 +448,7 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "com/android/tools/build/gradle-core",
+                "com/android/tools/build/gradle",
                 "com/",
                 "com/android/",
                 "com/android/build/",
@@ -515,6 +490,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/packaging/",
                 "com/android/build/gradle/internal/pipeline/",
                 "com/android/build/gradle/internal/plugin/",
+                "com/android/build/gradle/internal/plugins/",
                 "com/android/build/gradle/internal/process/",
                 "com/android/build/gradle/internal/profile/",
                 "com/android/build/gradle/internal/publishing/",
@@ -561,7 +537,18 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/gradle-plugins/",
-                "META-INF/gradle-plugins/com.android.base.properties");
+                "META-INF/gradle-plugins/com.android.base.properties",
+                "META-INF/gradle-plugins/android-library.properties",
+                "META-INF/gradle-plugins/android.properties",
+                "META-INF/gradle-plugins/android-reporting.properties",
+                "META-INF/gradle-plugins/com.android.application.properties",
+                "META-INF/gradle-plugins/com.android.debug.structure.properties",
+                "META-INF/gradle-plugins/com.android.feature.properties",
+                "META-INF/gradle-plugins/com.android.instantapp.properties",
+                "META-INF/gradle-plugins/com.android.library.properties",
+                "META-INF/gradle-plugins/com.android.lint.properties",
+                "META-INF/gradle-plugins/com.android.test.properties",
+                "META-INF/gradle-plugins/com.android.dynamic-feature.properties");
         expected.putAll(
                 "com/android/tools/sdk-common",
                 "com/",

@@ -3,12 +3,15 @@ apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
 apply plugin: 'antlr'
-
-//apply plugin: 'java-gradle-plugin'
+apply plugin: 'license-report'
 
 configurations {
     provided
     includeInJar
+}
+
+licenseReport {
+    whiteList = ['org.jetbrains.trove4j:trove4j:20160824']
 }
 
 // Incremental update test support
@@ -96,11 +99,11 @@ jar {
 }
 
 group = 'com.android.tools.build'
-archivesBaseName = 'gradle-core'
+archivesBaseName = 'gradle'
 version = rootProject.ext.buildVersion
 
-project.ext.pomName = 'Core Library for Android Gradle Plug-in'
-project.ext.pomDesc = 'Core library to build Android Gradle plugin.'
+project.ext.pomName = 'Gradle Plug-in for Android'
+project.ext.pomDesc = 'Gradle plug-in to build Android applications.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"

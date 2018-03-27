@@ -23,7 +23,6 @@ import org.gradle.build.docs.dsl.source.ExtractDslMetaDataTask
 import org.gradle.build.docs.releasenotes.*
 import org.gradle.build.docs.releasenotes.checks.*
 
-evaluationDependsOn(':base:gradle')
 evaluationDependsOn(':base:gradle-api')
 evaluationDependsOn(':base:gradle-core')
 evaluationDependsOn(':base:builder')
@@ -199,7 +198,6 @@ task dslHtmlZip(type: Zip) {
 def javaApiUrl = "http://docs.oracle.com/javase/8/docs/api/"
 def groovyApiUrl = "http://groovy.codehaus.org/gapi/"
 def publicGroovyProjects = [
-        project(":base:gradle"),
         project(":base:gradle-api"),
         project(":base:gradle-core"),
         project(":base:builder-model"),

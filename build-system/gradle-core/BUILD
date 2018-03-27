@@ -96,7 +96,7 @@ maven_java_library(
 
 maven_pom(
     name = "pom",
-    artifact = "gradle-core",
+    artifact = "gradle",
     group = "com.android.tools.build",
     source = "//tools/buildSrc/base:build_version",
 )
@@ -105,11 +105,18 @@ kotlin_test(
     name = "tests",
     srcs = ["src/test/java"],
     data = [
+        "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
         "//prebuilts/studio/sdk:build-tools/latest",
+        "//prebuilts/studio/sdk:platform-tools",
+        "//prebuilts/studio/sdk:platforms/android-24",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
     friends = [":gradle-core"],
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
+    jvm_flags = [
+        "-Dtest.suite.jar=tests.jar",
+        # TODO: Make it easier to configure AndroidLocation per project.
+        "-DANDROID_SDK_HOME=/tmp/android_sdk_home",
+    ],
     resources = glob(["src/test/resources/**"]),
     tags = [
         "no_test_mac",
@@ -117,6 +124,10 @@ kotlin_test(
     ],
     # TODO: Remove the blacklist, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
+    # Make sure we're running against JUnit 4.12. See https://github.com/bazelbuild/bazel/issues/2146.
+    runtime_deps = [
+        "//tools/base/third_party:junit_junit",
+    ],
     deps = [
         ":gradle-core",
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
@@ -132,6 +143,7 @@ kotlin_test(
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/lint:tools.lint-gradle-api",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
