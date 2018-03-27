@@ -78,9 +78,11 @@ class AppModelBuilder(
         val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
 
         for (variantScope in variantManager.variantScopes) {
-            if (variantScope.hasOutput(InternalArtifactType.BUNDLE)) {
-                val bundleFile = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE).singleFile()
-                val apkFolder = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.SELECTED_APKS).singleFile()
+            val artifacts = variantScope.artifacts
+
+            if (artifacts.hasArtifact(InternalArtifactType.BUNDLE)) {
+                val bundleFile = artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE).singleFile()
+                val apkFolder = artifacts.getFinalArtifactFiles(InternalArtifactType.SELECTED_APKS).singleFile()
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
                             variantScope.fullVariantName, bundleFile, apkFolder))
