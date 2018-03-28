@@ -17,6 +17,7 @@
 package com.android.ide.common.symbols
 
 
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth
 import org.junit.Test
@@ -279,6 +280,42 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]",
                         "{ 0x7f040001, 0x7f040002, 0x7f040003, 0x7f040004 }",
                         listOf("a1", "a2", "b1", "b2")))
+                .build()
+
+        Truth.assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun testEmptyStyleables() {
+        val androidSymbols = SymbolTable.builder()
+                .tablePackage("android")
+                .build()
+
+        val table1 = SymbolTable.builder()
+                .tablePackage("table1")
+                .add(symbol("styleable", "empty_style", "int[]", "{ }", ImmutableList.of()))
+                .build()
+
+        val table2 = SymbolTable.builder()
+                .tablePackage("table2")
+                .add(symbol("attr", "a1", "int", 12))
+                .add(symbol("styleable", "style1", "int[]", "{ 12 }", listOf("a1")))
+                .build()
+
+        val table3 = SymbolTable.builder()
+                .tablePackage("table3")
+                .add(symbol("attr", "b1", "int", 33))
+                .add(symbol("styleable", "style1", "int[]", "{ 33 }", listOf("b1")))
+                .build()
+
+        val result = mergeAndRenumberSymbols("",
+                table1, ImmutableSet.of(table2, table3), androidSymbols)
+
+        val expected = SymbolTable.builder()
+                .add(symbol("attr", "a1", "int", 0x7f_04_0001))
+                .add(symbol("attr", "b1", "int", 0x7f_04_0002))
+                .add(symbol("styleable", "style1", "int[]", "{ 0x7f040001, 0x7f040002 }", listOf("a1", "b1")))
+                .add(symbol("styleable", "empty_style", "int[]", "{  }", ImmutableList.of()))
                 .build()
 
         Truth.assertThat(result).isEqualTo(expected)

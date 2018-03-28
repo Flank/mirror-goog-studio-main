@@ -80,7 +80,14 @@ fun mergeAndRenumberSymbols(
         table.symbols.values().forEach { symbol ->
             when (symbol) {
                 is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.name)
-                is Symbol.StyleableSymbol -> arrayToAttrs.putAll(symbol.name, symbol.children)
+                is Symbol.StyleableSymbol -> {
+                    arrayToAttrs.putAll(symbol.name, symbol.children)
+                    if (symbol.children.isEmpty()) {
+                        // In the unlikely case there is a styleable with no children, remember it
+                        // as well.
+                        newSymbolMap.put(symbol.resourceType, symbol.name)
+                    }
+                }
                 else -> throw IOException("Unexpected symbol $symbol")
             }
         }
@@ -99,18 +106,29 @@ fun mergeAndRenumberSymbols(
         symbolNames.sort()
 
         for (symbolName in symbolNames) {
-            val value = idProvider.next(resourceType)
-            val newSymbol =
-                Symbol.NormalSymbol(
-                    resourceType = resourceType,
-                    name = symbolName,
-                    intValue = value
+            // Handle empty styleables, don't writes ones that were also declared with children.
+            if (resourceType == ResourceType.STYLEABLE && !attrToValue.containsKey(symbolName)) {
+                tableBuilder.add(
+                        Symbol.StyleableSymbol(
+                                symbolName,
+                                ImmutableList.of<Int>(),
+                                Symbol.NO_CHILDREN
+                        )
                 )
-            tableBuilder.add(newSymbol)
+            } else {
+                val value = idProvider.next(resourceType)
+                val newSymbol =
+                        Symbol.NormalSymbol(
+                                resourceType = resourceType,
+                                name = symbolName,
+                                intValue = value
+                        )
+                tableBuilder.add(newSymbol)
 
-            if (resourceType == ResourceType.ATTR) {
-                // store the new ATTR value in the map
-                attrToValue[symbolName] = newSymbol
+                if (resourceType == ResourceType.ATTR) {
+                    // store the new ATTR value in the map
+                    attrToValue[symbolName] = newSymbol
+                }
             }
         }
     }
