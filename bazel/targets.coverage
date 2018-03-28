@@ -6,7 +6,6 @@
 //tools/adt/idea/android-lang:android-lang-tests_tests
 //tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests
 //tools/adt/idea/android-test-framework:android-test-framework_tests
-//tools/adt/idea/android-uitests:BazelStartupSyncTest
 //tools/adt/idea/apkanalyzer:apkanalyzer_tests
 //tools/adt/idea/assistant:assistant-test_tests
 //tools/adt/idea/build-common:build-common_tests
