@@ -111,29 +111,12 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
     // Because of an issue in the android platform, it is unreliable to
     // monitor the file close event for a trace which started by "am start
     // --start-profiler" (http://b/73891014). So working around the issue by
-    // monitoring the file size change instead.
+    // just waiting for 5 Seconds.
     // TODO(b/75298275): once the fix (http://b/73891014) merged into android P
-    // and it's avaible, we should do this workaround only for android O.
+    // and it's available, we should do this workaround only for android O.
     if (is_startup_profiling) {
-      SteadyClock clock;
-      int64_t start_time = clock.GetCurrentTime();
-      off_t last_file_size = -1;
-      while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        struct stat stat_res;
-        if (stat(trace_path.c_str(), &stat_res) == 0) {
-          if (stat_res.st_size == last_file_size) {
-            error_string->clear();
-            return true;
-          }
-          last_file_size = stat_res.st_size;
-        }
-        if (clock.GetCurrentTime() - start_time > Clock::ms_to_ns(timeout_ms)) {
-          break;
-        }
-      }
-      *error_string = "Wait for ART trace file failed.";
-      return false;
+      std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
+      return true;
     }
 
     // Wait until ART has finished writing the trace to the file and closed the
