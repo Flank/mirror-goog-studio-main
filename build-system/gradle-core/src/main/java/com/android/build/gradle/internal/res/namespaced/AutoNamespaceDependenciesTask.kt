@@ -20,11 +20,15 @@ import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.tools.build.apkzlib.zip.StoredEntryType
+import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -33,22 +37,26 @@ import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.nio.file.Files
 
 /**
  * Rewrites the classes.jar files of the module's dependencies to be fully resource namespaced. It
  * does not rewrite the references inside the resources in the libraries, only in the bytecode.
  */
+@CacheableTask
 open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
 
     lateinit var rFiles: ArtifactCollection private set
     lateinit var jarFiles: ArtifactCollection private set
     lateinit var dependencies: ResolvableDependencies private set
 
-    @InputFiles fun getRFiles(): FileCollection = rFiles.artifactFiles
+    @InputFiles fun getRDefFiles(): FileCollection = rFiles.artifactFiles
     @InputFiles fun getClassesJarFiles(): FileCollection = jarFiles.artifactFiles
     @InputFiles fun getDependenciesFiles(): FileCollection = dependencies.files
 
@@ -56,6 +64,9 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     private var symbolTablesCache: HashMap<File, SymbolTable> = HashMap()
 
     @get:OutputDirectory lateinit var outputRewrittenClasses: File private set
+    @get:OutputDirectory lateinit var outputRClasses: File private set
+    @get:OutputFile lateinit var outputClassesJar: File private set
+    @get:OutputFile lateinit var outputRClassesJar: File private set
 
     @TaskAction
     fun taskAction() = namespaceDependencies()
@@ -65,8 +76,22 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         dependencies: ResolvableDependencies = this.dependencies,
         rFiles: ArtifactCollection = this.rFiles,
         jarFiles: ArtifactCollection = this.jarFiles,
-        outputDirectory: File = this.outputRewrittenClasses
+        outputDirectory: File = this.outputRewrittenClasses,
+        outputRClasses: File = this.outputRClasses,
+        outputClassesJar: File = this.outputClassesJar,
+        outputRClassesJar: File = this.outputRClassesJar
     ) {
+        if (outputDirectory.exists()) {
+            outputDirectory.deleteRecursively()
+            FileUtils.mkdirs(outputDirectory)
+        }
+        if (outputRClasses.exists()) {
+            outputRClasses.deleteRecursively()
+            FileUtils.mkdirs(outputRClasses)
+        }
+        outputClassesJar.delete()
+        outputRClassesJar.delete()
+
         // First, create a graph based on the ResolvableDependencies and the Artifact Collections.
         // Each node in the DependenciesGraph is an external dependency and is either a full AAR or
         // a JAR dependency.
@@ -86,23 +111,47 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         // [LibraryDefinedSymbolTableTransform].
         // TODO: do this in parallel
         for (dependency in graph.allNodes) {
-            namespaceDependency(dependency, outputDirectory)
+            namespaceDependency(dependency, outputDirectory, outputRClasses)
         }
+
         symbolTablesCache.clear()
+
+        // Jar all the classes into two JAR files - one for namespaced classes, one for R classes.
+        jarOutputs(outputClassesJar, outputDirectory)
+        jarOutputs(outputRClassesJar, outputRClasses)
+    }
+
+    private fun jarOutputs(outputJar: File, inputDirectory: File) {
+        ZFile(outputJar).use { jar ->
+            Files.walk(inputDirectory.toPath()).use { paths ->
+                paths.filter { p -> p.toFile().isFile}.forEach { it ->
+                    ZFile(it.toFile()).use { classesJar ->
+                        classesJar.entries().forEach { entry ->
+                            val name = entry.centralDirectoryHeader.name
+                            if (entry.type == StoredEntryType.FILE && name.endsWith(".class")) {
+                                jar.add(name, entry.open())
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun namespaceDependency(
         dependency: DependenciesGraph.Node,
-        outputDirectory: File
+        outputDirectory: File,
+        outputRClassesDirectory: File
     ) {
         val input = dependency.getFile(ArtifactType.NON_NAMESPACED_CLASSES)
         // Only convert external nodes and non-namespaced libraries. Already namespaced libraries
         // and JAR files can be present in the graph, but they will not contain the
         // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
         if (dependency.id !is ProjectComponentIdentifier && input != null) {
+            val dependencyName = dependency.id.displayName
             val out = File(
                     outputDirectory,
-                    "namespaced-${dependency.id.displayName}-${input.name}"
+                    "namespaced-$dependencyName-${input.name}"
             )
 
             // The rewriting algorithm uses ordered symbol tables, with this library's table at the
@@ -110,7 +159,18 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             // find where the references resource was defined (or overridden), closest to the root
             // (this node) in the dependency graph.
             val symbolTables = getSymbolTables(dependency)
+            logger.info("Started rewriting $dependencyName")
             NamespaceRewriter(symbolTables, log ?: logger).rewriteJar(input, out)
+            logger.info("Finished rewriting $dependencyName")
+
+            // Also generate fake R classes for compilation.
+            exportToCompiledJava(
+                    ImmutableList.of(symbolTables[0]),
+                    File(
+                            outputRClassesDirectory,
+                            "namespaced-${dependency.id.displayName}-R.jar"
+                    ).toPath()
+            )
         }
     }
 
@@ -138,15 +198,17 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             }
         }.build()
 
-    class ConfigAction(private val variantScope: VariantScope) :
-            TaskConfigAction<AutoNamespaceDependenciesTask> {
+    class ConfigAction(private val variantScope: VariantScope)
+        : TaskConfigAction<AutoNamespaceDependenciesTask> {
 
-        override fun getName(): String = variantScope.getTaskName("AutoNamespace", "Dependencies")
+        override fun getName(): String = variantScope.getTaskName("autoNamespace", "Dependencies")
 
         override fun getType(): Class<AutoNamespaceDependenciesTask>
                 = AutoNamespaceDependenciesTask::class.java
 
         override fun execute(task: AutoNamespaceDependenciesTask) {
+            task.variantName = variantScope.fullVariantName
+            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
 
             task.rFiles = variantScope.getArtifactCollection(
                     ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -160,10 +222,19 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ArtifactType.NON_NAMESPACED_CLASSES
             )
 
-            task.outputRewrittenClasses = FileUtils.join(
-                    variantScope.globalScope.intermediatesDir, "namespaced-classes-jars",
-                    variantScope.variantConfiguration.dirName
-            )
+            task.outputRewrittenClasses = variantScope.artifacts.appendArtifact(
+                    InternalArtifactType.NAMESPACED_CLASSES, task)
+
+            task.outputRClasses = variantScope.artifacts.appendArtifact(
+                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JARS, task)
+
+            task.outputClassesJar = variantScope.artifacts.appendArtifact(
+                    InternalArtifactType.NAMESPACED_CLASSES_JAR, task, "namespaced-classes.jar")
+
+            task.outputRClassesJar = variantScope.artifacts.appendArtifact(
+                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR,
+                    task,
+                    "namespaced-R.jar")
 
             task.dependencies =
                     variantScope.variantData.variantDependency.runtimeClasspath.incoming

@@ -190,8 +190,8 @@
  * <p>The resource IDs will be skipped as this is only for compilation, proper IDs will be generated
  * at linking phase.
  *
- * <p>More information about resource accessibility can be found in the javadoc for {@link
- * com.android.resources.ResourceAccessibility}.
+ * <p>More information about resource visibility can be found in the javadoc for {@link
+ * com.android.resources.ResourceVisibility}.
  *
  * <h1>Partial R files merging</h1>
  *

@@ -922,6 +922,23 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     configType, ALL, COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(getArtifactFileCollection(configType, ALL, SHARED_CLASSES));
+
+            if (buildArtifactsHolder.hasArtifact(InternalArtifactType.NAMESPACED_CLASSES)) {
+                FileCollection namespacedClasses =
+                        buildArtifactsHolder
+                                .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_CLASSES_JAR)
+                                .get();
+                mainCollection = mainCollection.plus(namespacedClasses);
+
+                FileCollection namespacedRClasses =
+                        buildArtifactsHolder
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType
+                                                .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR)
+                                .get();
+                mainCollection = mainCollection.plus(namespacedRClasses);
+            }
+
             BaseVariantData tested = getTestedVariantData();
             if (tested != null) {
                 mainCollection =

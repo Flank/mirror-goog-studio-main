@@ -82,18 +82,31 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             artifacts: ArtifactFiles
         ): Node {
             dependencyResult as ResolvedDependencyResult
-            // Visit all children of the node and collect them. If a child has already been visited,
-            // it will be stored in the 'foundNodes' map.
-            val dependencies = ImmutableSet.copyOf(
-                    dependencyResult.selected.dependencies.mapNotNull { dependency ->
-                        dependency as ResolvedDependencyResult
-                        foundNodes.computeIfAbsent(
+            try {
+                // Visit all children of the node and collect them. If a child has already been
+                // visited, it will be stored in the 'foundNodes' map.
+                val dependencies = ArrayList<DependenciesGraph.Node>()
+                for (dependency in dependencyResult.selected.dependencies) {
+                    dependency as ResolvedDependencyResult
+                    if (!foundNodes.contains(dependency.selected.id.displayName)) {
+                        foundNodes.put(
                                 dependency.selected.id.displayName,
-                                { collect(dependency, foundNodes, artifacts) }
+                                collect(dependency, foundNodes, artifacts)
                         )
                     }
-            )
-            return Node(dependencyResult.selected.id, dependencies, artifacts)
+                    dependencies.add(foundNodes[dependency.selected.id.displayName]!!)
+                }
+                return Node(
+                        dependencyResult.selected.id,
+                        ImmutableSet.copyOf(dependencies),
+                        artifacts
+                )
+            } catch (e: Exception) {
+                throw RuntimeException(
+                        "Failed rewriting node ${dependencyResult.selected.id.displayName}.",
+                        e
+                )
+            }
         }
     }
 
@@ -146,6 +159,10 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             }
             transitiveArtifactCache.put(type, ImmutableList.copyOf(builder))
             return transitiveArtifactCache[type]!!
+        }
+
+        override fun toString(): String {
+            return id.displayName
         }
     }
 }

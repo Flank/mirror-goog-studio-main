@@ -16,9 +16,11 @@
 
 package com.android.ide.common.symbols
 
+import com.android.SdkConstants
 import com.android.annotations.concurrency.Immutable
-import com.android.resources.ResourceAccessibility
+import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
+import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Lists
@@ -43,6 +45,8 @@ import javax.lang.model.SourceVersion
  */
 @Immutable
 abstract class SymbolTable protected constructor() {
+
+    private val ANDROID_ATTR_PREFIX = "android_"
 
     abstract val tablePackage: String
     abstract val symbols: ImmutableTable<ResourceType, String, Symbol>
@@ -115,16 +119,67 @@ abstract class SymbolTable protected constructor() {
     }
 
     /**
-     * Collect all the symbols for a particular resource accessibility to a sorted list of symbols.
+     * Collect all the symbols for a particular resource visibility to a sorted list of symbols.
      *
      * The symbols are sorted by name to make the output predicable.
      */
-    fun getSymbolByAccessibility(accessibility: ResourceAccessibility): List<Symbol> {
+    fun getSymbolByVisibility(visibility: ResourceVisibility): List<Symbol> {
         val symbols =
                 Lists.newArrayList(
-                        symbols.values().filter { it.resourceAccessibility == accessibility })
+                        symbols.values().filter { it.resourceVisibility == visibility })
         symbols.sortWith(compareBy { it.name })
         return Collections.unmodifiableList(symbols)
+    }
+
+    /**
+     * Checks if the table contains a resource with matching type and name.
+     */
+    fun containsSymbol(type: ResourceType, name: String): Boolean {
+        var found = symbols.contains(type, name)
+        if (!found && type == ResourceType.STYLEABLE && name.contains('_')) {
+            // If the symbol is a styleable and contains the underscore character, it is very likely
+            // that we're looking for a styleable child. These are stored under the parent's symbol,
+            // so try finding the parent first and then the child under it.
+            found = containsStyleableSymbol(name)
+        }
+        return found
+    }
+
+    /**
+     * Checks if the table contains a declare-styleable's child with the given name. For example:
+     * <pre>
+     *     <declare-styleable name="s1">
+     *         <item name="foo"/>
+     *     </declare-styleable>
+     * </pre>
+     * Calling {@code containsStyleableSymbol("s1_foo")} would return {@code true}, but calling
+     * {@code containsStyleableSymbol("foo")} or {@code containsSymbol(STYLEABLE, "foo")} would
+     * both return {@code false}.
+     */
+    private fun containsStyleableSymbol(name: String, start: Int = 0): Boolean {
+        var found = false
+        val index = name.indexOf('_', start)
+        if (index > -1) {
+            val parentName = name.substring(0, index)
+            if (symbols.contains(ResourceType.STYLEABLE, parentName)) {
+                var childName = name.substring(index + 1, name.length)
+                val parent = symbols.get(ResourceType.STYLEABLE, parentName)
+                found = parent.children.any { it == childName }
+                // styleable children of the format <parent>_android_<child> could have been either
+                // declared as <item name="android_foo"/> or <item name="android:foo>.
+                // If we didn't find the "android_" child, look for one in the "android:" namespace.
+                if (!found && childName.startsWith(ANDROID_ATTR_PREFIX)) {
+                    childName =
+                            SdkConstants.ANDROID_NS_NAME_PREFIX +
+                                    childName.substring(ANDROID_ATTR_PREFIX.length)
+                    found = parent.children.any { it == childName }
+                }
+            }
+            if (!found) {
+                found = containsStyleableSymbol(name, index + 1)
+            }
+        }
+        return found
     }
 
     /** Builder that creates a symbol table.  */
@@ -172,6 +227,10 @@ abstract class SymbolTable protected constructor() {
          */
         internal fun addFromPartial(table: SymbolTable): Builder {
             table.symbols.values().forEach {
+                Preconditions.checkArgument(
+                        it.resourceVisibility != ResourceVisibility.UNDEFINED,
+                        "Resource visibility needs to be defined for partial files.")
+
                 if (!this.symbols.contains(it.resourceType, it.name)) {
                     // If this symbol hasn't been encountered yet, simply add it as is.
                     this.symbols.put(it.resourceType, it.name, it)
@@ -180,18 +239,18 @@ abstract class SymbolTable protected constructor() {
                     // If we already encountered it, check the qualifiers.
                     // - if they're the same, leave the existing one (the existing one overrode the
                     //   new one)
-                    // - if the existing one is DEFAULT, use the new one (overriding resource was
-                    //   defined as PRIVATE or PUBLIC)
-                    // - if the new one is DEFAULT, leave the existing one (overridden resource was
-                    //   defined as PRIVATE or PUBLIC)
-                    // - if neither of them is DEFAULT and they differ, that's an error
-                    if (existing.resourceAccessibility != it.resourceAccessibility) {
-                        if (existing.resourceAccessibility == ResourceAccessibility.DEFAULT) {
+                    // - if the existing one is PRIVATE_XML_ONLY, use the new one (overriding
+                    //   resource was defined as PRIVATE or PUBLIC)
+                    // - if the new one is PRIVATE_XML_ONLY, leave the existing one (overridden
+                    //   resource was defined as PRIVATE or PUBLIC)
+                    // - if neither of them is PRIVATE_XML_ONLY and they differ, that's an error
+                    if (existing.resourceVisibility != it.resourceVisibility) {
+                        if (existing.resourceVisibility == ResourceVisibility.PRIVATE_XML_ONLY) {
                             this.symbols.remove(existing.resourceType, existing.name)
                             this.symbols.put(it.resourceType, it.name, it)
-                        } else if (it.resourceAccessibility != ResourceAccessibility.DEFAULT) {
-                            // they differ and neither is DEFAULT
-                            throw IllegalResourceAccessibilityException(
+                        } else if (it.resourceVisibility != ResourceVisibility.PRIVATE_XML_ONLY) {
+                            // they differ and neither is PRIVATE_XML_ONLY
+                            throw IllegalResourceVisibilityException(
                                     "Symbol with resource type ${it.resourceType} and name " +
                                             "${it.name} defined both as private and public.")
                         }
@@ -367,5 +426,5 @@ abstract class SymbolTable protected constructor() {
         }
     }
 
-    class IllegalResourceAccessibilityException(description: String) : Exception(description)
+    class IllegalResourceVisibilityException(description: String) : Exception(description)
 }

@@ -83,4 +83,12 @@ public class UnitTest {
             assertEquals(name, constraintId, idInMainClass);
         }
     }
+
+    @Test
+    public void stylablesArePresent() throws Exception {
+        int[] stylable = com.android.tests.R.styleable.AppCompatTheme;
+        int child = com.android.tests.R.styleable.AppCompatTheme_listPreferredItemPaddingRight;
+        assertTrue(stylable.length > 0);
+        assertTrue(child >= 0);
+    }
 }

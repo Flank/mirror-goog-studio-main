@@ -20,36 +20,20 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
 import java.nio.file.Files
 import kotlin.test.assertTrue
 
+
+@Ignore("Disabled currently until we have handling of private and public resources, b/72735798")
 class PrivateResourcesTest {
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestProject("projectWithModules")
         .create()
-
-    @Test
-    fun noPrivateJavaForNonNamespacedCase() {
-        // Private resources are only supported in the namespaced case for now until we stop using
-        // the resource merger in the non-namespaced case as well.
-
-        TestFileUtils.appendToFile(
-                project.getSubproject("app").buildFile,
-                "android.aaptOptions.privateRDotJavaPackage \"com.foo.bar.symbols\"\n"
-                        + "android.aaptOptions.namespaced = false\n")
-
-
-        val result = project.executor().expectFailure().run(":app:assembleDebug")
-
-        assertTrue(
-                result.failureMessage!!.contains(
-                        "Private R.java generation is currently only allowed with resource" +
-                                " namespacing enabled."))
-    }
 
     @Test
     @Throws(IOException::class, InterruptedException::class)

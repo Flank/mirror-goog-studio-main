@@ -21,5 +21,4 @@ import java.io.Serializable
 data class AaptOptions @JvmOverloads constructor(
         val noCompress: Collection<String>? = null,
         val failOnMissingConfigEntry: Boolean = true,
-        val additionalParameters: List<String>? = null,
-        val privateRDotJavaPackage: String? = null) : Serializable
+        val additionalParameters: List<String>? = null) : Serializable

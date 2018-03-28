@@ -30,7 +30,6 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
     private final boolean failOnMissingConfigEntry;
     @NonNull private final List<String> additionalParameters;
     @NonNull private final Namespacing namespacing;
-    @Nullable private final String privateRDotJavaPackage;
 
     // copyNewProperty won't return null for a non-null getter with a non-null default value.
     @SuppressWarnings("ConstantConditions")
@@ -43,7 +42,6 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
         additionalParameters =
                 copyNewProperty(original::getAdditionalParameters, Collections.emptyList());
         failOnMissingConfigEntry = copyNewProperty(original::getFailOnMissingConfigEntry, false);
-        privateRDotJavaPackage = copyNewProperty(original::getPrivateRDotJavaPackage, null);
     }
 
     @Override
@@ -75,12 +73,6 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
         return namespacing;
     }
 
-    @Nullable
-    @Override
-    public String getPrivateRDotJavaPackage() {
-        return privateRDotJavaPackage;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -94,8 +86,7 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
                 && Objects.equals(ignoreAssets, that.ignoreAssets)
                 && Objects.equals(noCompress, that.noCompress)
                 && Objects.equals(additionalParameters, that.additionalParameters)
-                && namespacing == that.namespacing
-                && Objects.equals(privateRDotJavaPackage, that.privateRDotJavaPackage);
+                && namespacing == that.namespacing;
     }
 
     @Override
@@ -106,7 +97,6 @@ public class IdeAaptOptions extends IdeModel implements AaptOptions {
                 noCompress,
                 failOnMissingConfigEntry,
                 additionalParameters,
-                namespacing,
-                privateRDotJavaPackage);
+                namespacing);
     }
 }

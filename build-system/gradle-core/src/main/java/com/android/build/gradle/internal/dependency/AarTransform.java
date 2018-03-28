@@ -53,17 +53,23 @@ import org.gradle.api.artifacts.transform.ArtifactTransform;
 public class AarTransform extends ArtifactTransform {
     @NonNull private final ArtifactType targetType;
     private final boolean sharedLibSupport;
+    private final boolean autoNamespaceDependencies;
 
     @Inject
-    public AarTransform(@NonNull ArtifactType targetType, boolean sharedLibSupport) {
+    public AarTransform(
+            @NonNull ArtifactType targetType,
+            boolean sharedLibSupport,
+            boolean autoNamespaceDependencies) {
         this.targetType = targetType;
         this.sharedLibSupport = sharedLibSupport;
+        this.autoNamespaceDependencies = autoNamespaceDependencies;
     }
 
     @NonNull
     public static ArtifactType[] getTransformTargets() {
         return new ArtifactType[] {
             ArtifactType.CLASSES,
+            ArtifactType.NON_NAMESPACED_CLASSES,
             ArtifactType.SHARED_CLASSES,
             ArtifactType.JAVA_RES,
             ArtifactType.SHARED_JAVA_RES,
@@ -94,6 +100,11 @@ public class AarTransform extends ArtifactTransform {
     public List<File> transform(@NonNull File input) {
         switch (targetType) {
             case CLASSES:
+                return (shouldBeAutoNamespaced(input) || isShared(input))
+                        ? Collections.emptyList()
+                        : getJars(input);
+            case NON_NAMESPACED_CLASSES:
+                return shouldBeAutoNamespaced(input) ? getJars(input) : Collections.emptyList();
             case JAVA_RES:
             case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
@@ -175,13 +186,18 @@ public class AarTransform extends ArtifactTransform {
             files.addAll((Arrays.asList(jars)));
         }
 
-        //System.out.println("\tJars: " + files);
         return files;
     }
 
     private boolean isShared(@NonNull File explodedAar) {
         return sharedLibSupport
                 && new File(explodedAar, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML).exists();
+    }
+
+    private boolean shouldBeAutoNamespaced(@NonNull File explodedAar) {
+        // Only rewrite dependencies if the flag is set and the library is not already namespaced.
+        return autoNamespaceDependencies
+                && !(new File(explodedAar, FN_RESOURCE_STATIC_LIBRARY).exists());
     }
 
     @NonNull

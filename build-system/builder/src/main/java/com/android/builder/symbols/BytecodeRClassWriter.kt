@@ -142,8 +142,6 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
                         null,
                         i)
             }
-
-
         }
     }
 
@@ -194,4 +192,3 @@ private fun internalName(table: SymbolTable, type: ResourceType?): String {
         "${table.tablePackage.replace(".", "/")}/$className"
     }
 }
-

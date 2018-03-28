@@ -63,8 +63,4 @@ public interface AaptOptions {
     /** Returns the resource namespacing strategy for this sub-project */
     @NonNull
     Namespacing getNamespacing();
-
-    /** Returns the package name to use when generating the R.java file for private symbols. */
-    @Nullable
-    String getPrivateRDotJavaPackage();
 }
