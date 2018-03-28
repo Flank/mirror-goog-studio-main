@@ -775,6 +775,66 @@ public class SymbolIoTest {
     }
 
     @Test
+    public void testRealMisorderedAar() throws Exception {
+        File misordered =
+                TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt");
+        try {
+            SymbolIo.readFromAapt(misordered, null);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e).hasMessageThat().contains("File format error");
+            assertThat(e).hasCauseThat().hasMessageThat().contains("Unexpected styleable child");
+        }
+    }
+
+    @Test
+    public void testMisorderedAarNoChildren() throws Exception {
+        File misordered = new File(mTemporaryFolder.newFolder(), "other R.txt");
+        Files.asCharSink(misordered, Charsets.UTF_8).write("int[] styleable myStyleable {732,733}");
+        try {
+            SymbolIo.readFromAapt(misordered, null);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e).hasMessageThat().contains("File format error");
+            assertThat(e).hasCauseThat().hasMessageThat().contains("should have 0 item(s).");
+        }
+    }
+
+    @Test
+    public void testMisorderedAarMissingChildren() throws Exception {
+        File misordered = new File(mTemporaryFolder.newFolder(), "other R.txt");
+        Files.asCharSink(misordered, Charsets.UTF_8)
+                .write(
+                        "int[] styleable myStyleable {732,733}\n"
+                                + "int styleable myStylable_one 1\n");
+        try {
+            SymbolIo.readFromAapt(misordered, null);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e).hasMessageThat().contains("File format error");
+            assertThat(e).hasCauseThat().hasMessageThat().contains("should have 1 item(s).");
+        }
+    }
+
+    @Test
+    public void testMisorderedAarExtraChildren() throws Exception {
+        File misordered = new File(mTemporaryFolder.newFolder(), "other R.txt");
+        Files.asCharSink(misordered, Charsets.UTF_8)
+                .write(
+                        "int[] styleable myStyleable {732, 733}\n"
+                                + "int styleable myStylable_one 1\n"
+                                + "int styleable myStylable_two 2\n"
+                                + "int styleable myStylable_three 3\n");
+        try {
+            SymbolIo.readFromAapt(misordered, null);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e).hasMessageThat().contains("File format error");
+            assertThat(e).hasCauseThat().hasMessageThat().contains("should have 3 item(s).");
+        }
+    }
+
+    @Test
     public void testPartialRFileRead() throws Exception {
         File partialR = mTemporaryFolder.newFile();
         java.nio.file.Files.write(

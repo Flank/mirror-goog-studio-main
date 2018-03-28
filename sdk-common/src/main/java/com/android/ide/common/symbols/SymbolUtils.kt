@@ -81,7 +81,7 @@ fun mergeAndRenumberSymbols(
             when (symbol) {
                 is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.name)
                 is Symbol.StyleableSymbol -> arrayToAttrs.putAll(symbol.name, symbol.children)
-                else -> throw IllegalStateException("Unexpected symbol $symbol")
+                else -> throw IOException("Unexpected symbol $symbol")
             }
         }
     }
@@ -362,6 +362,9 @@ fun valueStringToInt(valueString: String) =
 
 fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
     if (size == 0) {
+        if (!valuesString.subSequence(1, valuesString.length-1).isBlank()) {
+            failParseArrayLiteral(size, valuesString)
+        }
         return ImmutableList.of()
     }
     val ints = ImmutableList.builder<Int>()
@@ -370,13 +373,17 @@ fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
         valuesString.length - 1)).iterator()
     for (i in 0 until size) {
         if (!values.hasNext()) {
-            throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
+            failParseArrayLiteral(size, valuesString)
         }
         ints.add(valueStringToInt(values.next()))
     }
     if (values.hasNext()) {
-        throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
+        failParseArrayLiteral(size, valuesString)
     }
 
     return ints.build()
+}
+
+fun failParseArrayLiteral(size: Int, valuesString: String): Nothing {
+    throw IOException("""Values string $valuesString should have $size item(s).""")
 }
