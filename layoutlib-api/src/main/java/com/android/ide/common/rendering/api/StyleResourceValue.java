@@ -122,7 +122,7 @@ public final class StyleResourceValue extends ResourceValue {
     }
 
     @Override
-    public void replaceWith(ResourceValue style) {
+    public void replaceWith(@NonNull ResourceValue style) {
         assert style instanceof StyleResourceValue
                 : style.getClass() + " is not StyleResourceValue";
         super.replaceWith(style);

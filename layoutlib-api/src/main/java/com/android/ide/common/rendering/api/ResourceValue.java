@@ -187,9 +187,10 @@ public class ResourceValue {
 
     /**
      * Sets the value from another resource.
+     *
      * @param value the resource value
      */
-    public void replaceWith(ResourceValue value) {
+    public void replaceWith(@NonNull ResourceValue value) {
         this.value = value.value;
     }
 
