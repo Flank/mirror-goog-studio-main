@@ -38,7 +38,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:multidex",
     "//prebuilts/studio/sdk:platform-tools",
     "//prebuilts/studio/sdk:platforms/latest",
-    "//prebuilts/studio/sdk:support_latest",
     "//prebuilts/studio/sdk:uiautomator_latest",
     "//prebuilts/studio/sdk:test-runner_latest",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
@@ -55,6 +54,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:antennapod_prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     tags = ["no_test_windows"],  # b/73306170
     deps = TEST_DEPS,
@@ -70,6 +70,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:antennapod_prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     tags = ["no_test_windows"],  # b/73306170
     deps = TEST_DEPS,
@@ -84,6 +85,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:uber_skeleton_prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     tags = ["no_test_windows"],  # b/73306170
     deps = TEST_DEPS,
@@ -99,6 +101,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:wordpress_prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     tags = [
         "no_test_linux",  # b/73994346
@@ -118,6 +121,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:wordpress_prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     tags = ["no_test_windows"],  # b/73306170
     deps = TEST_DEPS,

@@ -25,7 +25,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    defaultConfig.minSdkVersion 9
+    defaultConfig.minSdkVersion rootProject.supportLibMinSdk
 
     testOptions {
         unitTests.includeAndroidResources true

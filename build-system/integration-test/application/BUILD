@@ -56,7 +56,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platforms/android-24",
     "//prebuilts/studio/sdk:platforms/latest-preview",
     "//prebuilts/studio/sdk:platforms/latest",
-    "//prebuilts/studio/sdk:support_latest",
     "//prebuilts/studio/sdk:uiautomator_latest",
     "//prebuilts/studio/sdk:test-runner_latest",
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
@@ -80,6 +79,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
@@ -98,6 +98,7 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
@@ -140,15 +141,10 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/24.0.0:jar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/25.4.0:jar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/26.0.2:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/27.0.2:jar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-compat/26.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/support-compat/27.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-core-ui/26.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/support-core-ui/27.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-core-utils/26.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/support-core-utils/27.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-fragment/26.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/support-fragment/27.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-media-compat/26.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-v4/24.0.0:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-v4/26.0.2:aar",

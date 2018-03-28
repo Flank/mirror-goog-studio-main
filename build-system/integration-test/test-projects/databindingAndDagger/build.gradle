@@ -30,7 +30,7 @@ android {
     dataBinding {
         enabled = true
     }
-    defaultConfig.minSdkVersion 14
+    defaultConfig.minSdkVersion rootProject.supportLibMinSdk
 }
 
 dependencies {

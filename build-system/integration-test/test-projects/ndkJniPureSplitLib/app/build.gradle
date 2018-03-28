@@ -12,7 +12,7 @@ android {
     defaultConfig {
         // This actual the app version code. Giving ourselves 100,000 values [0, 99999]
         versionCode 123
-        minSdkVersion 3
+        minSdkVersion rootProject.supportLibMinSdk
     }
 
     flavorDimensions 'foo'

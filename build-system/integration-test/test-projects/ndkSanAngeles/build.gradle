@@ -10,7 +10,7 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 8
+        minSdkVersion rootProject.supportLibMinSdk
         ndk {
             moduleName "sanangeles"
             cFlags "-DANDROID_NDK -DDISABLE_IMPORTGL"

@@ -32,6 +32,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -92,7 +93,15 @@ public class FlatJavaLibTest {
         Dependencies deps = variant.getMainArtifact().getDependencies();
 
         // check we only have one version of support-annotations.
-        Collection<JavaLibrary> javaLibraries = deps.getJavaLibraries();
+        Collection<JavaLibrary> javaLibraries =
+                deps.getJavaLibraries()
+                        .stream()
+                        .filter(
+                                it ->
+                                        it.getResolvedCoordinates()
+                                                .getArtifactId()
+                                                .equals("support-annotations"))
+                        .collect(Collectors.toList());
         assertThat(javaLibraries).hasSize(1);
         assertThat(Iterables.getOnlyElement(javaLibraries).getResolvedCoordinates())
                 .isEqualTo("com.android.support", "support-annotations", SUPPORT_LIB_VERSION);

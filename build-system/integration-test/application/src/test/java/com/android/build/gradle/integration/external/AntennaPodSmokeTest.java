@@ -40,7 +40,7 @@ public class AntennaPodSmokeTest {
 
     @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
 
-    @Parameterized.Parameters(name = "{1}")
+    @Parameterized.Parameters(name = "{0}")
     public static List<VariantScope.Java8LangSupport> getJava8LangSupport() {
         return ImmutableList.of(
                 //VariantScope.Java8LangSupport.RETROLAMBDA, // issuetracker.google.com/63940887

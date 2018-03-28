@@ -19,6 +19,7 @@
 package com.android.build.gradle.integration.common.fixture.app;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 
 /**
  * Simple test application that prints "hello world!".
@@ -150,7 +151,7 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
     }
 
     protected HelloWorldApp(String plugin) {
-        this(plugin, 3);
+        this(plugin, TestVersions.SUPPORT_LIB_MIN_SDK);
     }
 
     protected HelloWorldApp(String plugin, int minSdkVersion) {

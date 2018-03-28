@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -30,10 +29,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Test to ensure that "auto" resConfig setting only package application's languages. */
+@Ignore("b/77674062")
 public class AutoPureSplitsTest {
 
     @Rule

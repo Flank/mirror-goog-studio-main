@@ -19,12 +19,14 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.MoreTruth
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
 /**
  * Integration test for the Jetifier feature.
  */
+@Ignore("b/77634021")
 class JetifierTest {
 
     @get:Rule
