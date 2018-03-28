@@ -146,7 +146,7 @@ public class StringHelper {
         StringBuilder sb = new StringBuilder(length);
         sb.append(prefix);
         for (String word : words) {
-            sb.append(word);
+            appendCapitalized(sb, word);
         }
         return sb.toString();
     }
