@@ -788,6 +788,19 @@ public class ModelBuilder<Extension extends AndroidConfig>
                             testOptionsDsl.getExecutionEnum());
         }
 
+
+        String applicationId;
+        try {
+            // This can throw an exception if no package name can be found.
+            // Normally, this is fine to throw an exception, but we don't want to crash in sync.
+            applicationId = variantConfiguration.getApplicationId();
+        } catch (RuntimeException e) {
+            // don't crash. just throw a sync error.
+            applicationId = "";
+            syncIssues.add(
+                    new SyncIssueImpl(
+                            Type.GENERIC, EvalIssueReporter.Severity.ERROR, null, e.getMessage()));
+        }
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName()
@@ -798,7 +811,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         : variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE).getName(),
                 variantConfiguration.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
-                variantConfiguration.getApplicationId(),
+                applicationId,
                 // TODO: Need to determine the tasks' name when the tasks may not be created
                 // in component plugin.
                 scope.getSourceGenTask() == null

@@ -146,7 +146,7 @@ public class VariantManager implements VariantModel {
     @Nullable private final CoreSigningConfig signingOverride;
     // We cannot use gradle's state of executed as that returns true while inside afterEvalute.
     // Wew want this to only be true after all tasks have been create.
-    @NonNull private Boolean hasCreatedTasks = Boolean.FALSE;
+    private boolean hasCreatedTasks = false;
 
     public VariantManager(
             @NonNull GlobalScope globalScope,
@@ -1370,12 +1370,11 @@ public class VariantManager implements VariantModel {
                 file, f -> new DefaultManifestParser(f, this::getHasCreatedTasks));
     }
 
-    @NonNull
-    private Boolean getHasCreatedTasks() {
+    private boolean getHasCreatedTasks() {
         return hasCreatedTasks;
     }
 
-    public void setHasCreatedTasks(@NonNull Boolean hasCreatedTasks) {
+    public void setHasCreatedTasks(boolean hasCreatedTasks) {
         this.hasCreatedTasks = hasCreatedTasks;
     }
 }

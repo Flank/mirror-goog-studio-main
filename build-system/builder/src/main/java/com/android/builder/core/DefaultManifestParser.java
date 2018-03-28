@@ -270,9 +270,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     private void init() {
         synchronized (lock) {
             if (!canParseManifest.getAsBoolean()) {
-                // TODO: enable manifest parsing only in execution phase after tasks have been
-                // moved over. There are still a few legitimate  use cases where we need to grab the
-                // min so we can't throw an exception yet. For now, print a warning.
+                // TODO: add a deprecation warning for any DSL APIs that access values directly vs
+                // using a supplier.
                 LOGGER.warning("Warning: manifest is being parsed while tasks are generated.");
             }
             if (!initialized && manifestFile.isFile()) {

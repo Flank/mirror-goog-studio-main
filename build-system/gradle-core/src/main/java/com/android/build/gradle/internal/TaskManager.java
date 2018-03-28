@@ -2784,6 +2784,8 @@ public abstract class TaskManager {
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)
                                         .get());
             }
+            // TODO: find a way to not pass the packageName if possible, as this may force us to
+            // parse the manifest for data binding during configuration.
             String packageName = variantConfiguration.getOriginalApplicationId();
             // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
