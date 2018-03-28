@@ -36,6 +36,19 @@ class StartDestinationDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testNoChildren() {
+        lint().files(
+                xml(
+                        "res/navigation/navigation.xml",
+                        """<?xml version="1.0" encoding="utf-8"?>
+                           <navigation
+                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                             xmlns:android="http://schemas.android.com/apk/res/android">
+                           </navigation>"""
+                ).indented()
+        ).run().expectClean()
+    }
+
     fun testStartDestinationAbsent() {
         lint().files(
             xml(

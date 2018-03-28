@@ -64,9 +64,13 @@ that `<navigation>`
     override fun getApplicableElements() = listOf(TAG_NAVIGATION)
 
     override fun visitElement(context: XmlContext, navigation: Element) {
+        val children = navigation.childNodes
+        // If there are no children, don't show the warning yet.
+        if ((0 until children.length).none { children.item(it) is Element }) return
+
         val destinationAttr = navigation.getAttributeNodeNS(AUTO_URI, ATTR_START_DESTINATION)
         val destinationAttrValue = destinationAttr?.value
-        // smart cast to non-null doesn't seem to work with isNullOrBlank?
+        // smart cast to non-null doesn't seem to work with isNullOrBlank
         if (destinationAttrValue == null || destinationAttrValue.isBlank()) {
             context.report(
                 ISSUE,
@@ -86,7 +90,6 @@ that `<navigation>`
                 )
                 return
             }
-            val children = navigation.childNodes
             for (i in 0 until children.length) {
                 val child = children.item(i) as? Element ?: continue
                 val childId = child.getAttributeNS(ANDROID_URI, ATTR_ID)
