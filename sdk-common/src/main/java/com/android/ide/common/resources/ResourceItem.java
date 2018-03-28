@@ -48,10 +48,8 @@ public interface ResourceItem extends Configurable {
      * identify a resource in a "correct" {@link AbstractResourceRepository}.
      *
      * <p>The returned string is not unique if the same resource is declared twice for the same
-     * {@link FolderConfiguration} (by mistake most likely) and the underlying {@link
-     * ResourceMerger} is configured to not merge such items, for IDE purposes.
-     *
-     * @see ResourceMerger#setPreserveOriginalItems(boolean)
+     * {@link FolderConfiguration} (by mistake most likely) and the resource items were not
+     * merged together during creation.
      */
     @NonNull
     String getKey();
