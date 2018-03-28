@@ -16,20 +16,38 @@
 
 package android.app;
 
-public class PendingIntent {
-    private final String mCreatorPackage;
-    private final int mCreatorUid;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 
-    public PendingIntent(String creatorPackage, int creatorUid) {
-        mCreatorPackage = creatorPackage;
-        mCreatorUid = creatorUid;
-    }
+public class PendingIntent {
+    private String myCreatorPackage;
+    private int myCreatorUid;
+    private Activity myActivity;
+    private Intent myIntent;
 
     public String getCreatorPackage() {
-        return mCreatorPackage;
+        return myCreatorPackage;
     }
 
     public int getCreatorUid() {
-        return mCreatorUid;
+        return myCreatorUid;
+    }
+
+    public static PendingIntent getActivity(
+            Context context, int requestCode, Intent intent, int flags, Bundle options) {
+        PendingIntent pendingIntent = new PendingIntent();
+        pendingIntent.myCreatorPackage = context.getPackageName();
+        pendingIntent.myCreatorUid = context.getUserId();
+        pendingIntent.myActivity = new Activity("MyActivity", intent);
+        pendingIntent.myIntent = intent;
+        return pendingIntent;
+    }
+
+    public void sendAlarm() {
+        if (myActivity != null) {
+            myIntent.getExtras().put("android.intent.extra.ALARM_COUNT", 1);
+            myActivity.performCreate(null, null);
+        }
     }
 }

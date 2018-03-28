@@ -47,8 +47,19 @@ public final class AlarmManagerWrapper {
         }
     }
 
-    private static final Map<PendingIntent, Integer> operationIdMap =
-            new HashMap<PendingIntent, Integer>();
+    /** Data structure for PendingIntent Alarm parameters. */
+    private static final class PendingIntentParams {
+        final int id;
+        final boolean isRepeating;
+
+        PendingIntentParams(int id, boolean isRepeating) {
+            this.id = id;
+            this.isRepeating = isRepeating;
+        }
+    }
+
+    private static final Map<PendingIntent, PendingIntentParams> operationIdMap =
+            new HashMap<PendingIntent, PendingIntentParams>();
     private static final Map<OnAlarmListener, ListenerParams> listenerMap =
             new HashMap<OnAlarmListener, ListenerParams>();
 
@@ -83,10 +94,12 @@ public final class AlarmManagerWrapper {
             AlarmClockInfo alarmClock) {
         if (operation != null) {
             if (!operationIdMap.containsKey(operation)) {
-                operationIdMap.put(operation, EventIdGenerator.nextId());
+                operationIdMap.put(
+                        operation,
+                        new PendingIntentParams(EventIdGenerator.nextId(), intervalMillis != 0L));
             }
             sendIntentAlarmScheduled(
-                    operationIdMap.get(operation),
+                    operationIdMap.get(operation).id,
                     type,
                     triggerAtMillis,
                     windowMillis,
@@ -122,7 +135,7 @@ public final class AlarmManagerWrapper {
      */
     public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
         sendIntentAlarmCancelled(
-                operationIdMap.containsKey(operation) ? operationIdMap.get(operation) : 0,
+                operationIdMap.containsKey(operation) ? operationIdMap.get(operation).id : 0,
                 operation.getCreatorPackage(),
                 operation.getCreatorUid(),
                 // API cancel is one level down of user code.
@@ -157,6 +170,25 @@ public final class AlarmManagerWrapper {
         listener.onAlarm();
     }
 
+    /**
+     * Sends the alarm-fired event if the given {@link PendingIntent} exists in the map.
+     *
+     * <p>Intent alarms are fired from other components of the system (e.g. Activity) so this is
+     * called by {@link PendingIntentWrapper} when there is potential match.
+     *
+     * @param pendingIntent the PendingIntent that was used in scheduling the alarm.
+     */
+    public static void sendIntentAlarmFiredIfExists(PendingIntent pendingIntent) {
+        if (operationIdMap.containsKey(pendingIntent)) {
+            AlarmManagerWrapper.PendingIntentParams params = operationIdMap.get(pendingIntent);
+            sendIntentAlarmFired(
+                    params.id,
+                    pendingIntent.getCreatorPackage(),
+                    pendingIntent.getCreatorUid(),
+                    params.isRepeating);
+        }
+    }
+
     // Native functions to send alarm events to perfd.
     private static native void sendIntentAlarmScheduled(
             int eventId,
@@ -184,4 +216,7 @@ public final class AlarmManagerWrapper {
             int eventId, String listenerTag, String stack);
 
     private static native void sendListenerAlarmFired(int eventId, String listenerTag);
+
+    private static native void sendIntentAlarmFired(
+            int eventId, String creatorPackage, int creatorUid, boolean isRepeating);
 }

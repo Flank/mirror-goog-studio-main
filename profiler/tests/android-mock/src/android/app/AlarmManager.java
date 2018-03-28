@@ -74,6 +74,22 @@ public class AlarmManager {
         setImpl(type, triggerAtMillis, -1, 0, 0, null, listener, tag, targetHandler, null, null);
     }
 
+    public void setRepeating(
+            int type, long triggerAtMillis, long intervalMillis, PendingIntent operation) {
+        setImpl(
+                type,
+                triggerAtMillis,
+                -1,
+                intervalMillis,
+                0,
+                operation,
+                null,
+                null,
+                null,
+                null,
+                null);
+    }
+
     public void cancel(PendingIntent operation) {}
 
     public void cancel(OnAlarmListener listener) {}
@@ -81,7 +97,7 @@ public class AlarmManager {
     /** This is not really how an alarm is fired but we'll pretend for testing purposes. */
     public void fire() {
         if (mOperation != null) {
-            // TODO: Send intent.
+            mOperation.sendAlarm();
         } else if (mListenerWrapper != null) {
             new Thread(mListenerWrapper).start();
         }

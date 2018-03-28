@@ -17,6 +17,8 @@
 package com.activity.energy;
 
 import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -50,7 +52,9 @@ public class LocationActivity extends PerfdTestActivity {
 
     public void intentRequestAndRemoveLocationUpdates() {
         LocationManager locationManager = new LocationManager();
-        PendingIntent intent = new PendingIntent("com.example", 123);
+        PendingIntent intent =
+                PendingIntent.getActivity(
+                        new Context("com.example", 123), 0, new Intent(), 0, null);
         Criteria criteria = new Criteria();
         criteria.setAccuracy(2); // ACCURACY_CORASE
         locationManager.requestLocationUpdates(2000, 50.0f, criteria, intent);
@@ -74,7 +78,8 @@ public class LocationActivity extends PerfdTestActivity {
 
     public void intentRequestPassiveProvider() {
         LocationManager locationManager = new LocationManager();
-        PendingIntent intent = new PendingIntent("foo.bar", 321);
+        PendingIntent intent =
+                PendingIntent.getActivity(new Context("foo.bar", 321), 0, new Intent(), 0, null);
         locationManager.requestLocationUpdates("passive", 500, 10.0f, intent);
     }
 
@@ -83,6 +88,7 @@ public class LocationActivity extends PerfdTestActivity {
         Criteria criteria = new Criteria();
         criteria.setAccuracy(0);
         criteria.setPowerRequirement(1); // POWER_LOW
-        locationManager.requestSingleUpdate(criteria, new PendingIntent("p", 0));
+        locationManager.requestSingleUpdate(
+                criteria, PendingIntent.getActivity(new Context("p", 0), 0, new Intent(), 0, null));
     }
 }

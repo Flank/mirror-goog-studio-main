@@ -16,7 +16,10 @@
 package android.app;
 
 import android.app.job.JobScheduler;
+import android.content.Intent;
 import android.mock.MockWindowManager;
+import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.os.PowerManager;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,9 +28,15 @@ import android.view.WindowManager;
 public class Activity {
 
     private String myName;
+    private Intent myIntent;
 
     public Activity(String name) {
+        this(name, null);
+    }
+
+    public Activity(String name, Intent intent) {
         myName = name;
+        myIntent = intent;
     }
 
     public String getLocalClassName() {
@@ -50,7 +59,13 @@ public class Activity {
         return new AlarmManager();
     }
 
-    public JobScheduler getJobSchedler() {
+    public JobScheduler getJobScheduler() {
         return new JobSchedulerImpl();
     }
+
+    public Intent getIntent() {
+        return myIntent;
+    }
+
+    public void performCreate(Bundle savedInstance, PersistableBundle persistentState) {}
 }

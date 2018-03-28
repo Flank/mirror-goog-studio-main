@@ -72,13 +72,17 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
          (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
           cpu_api_tracing_enabled) ||
          (energy_profiler_enabled &&
-          (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
+          (strcmp(sig_mutf8, "Landroid/app/Activity;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/ActivityThread;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
                0 ||
+           strcmp(sig_mutf8, "Landroid/app/IntentService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
                0 ||
+           strcmp(sig_mutf8, "Landroid/app/PendingIntent;") == 0 ||
            strcmp(sig_mutf8, "Landroid/location/LocationManager;") == 0 ||
            strcmp(sig_mutf8,
                   "Landroid/location/LocationManager$ListenerTransport;") ==
@@ -426,6 +430,80 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "(Landroid/os/Message;)V"))) {
       Log::E("Error instrumenting LocationListener.onLocationChanged");
     }
+  } else if (strcmp(name, "android/app/PendingIntent") == 0) {
+    slicer::MethodInstrumenter mi_activity(dex_ir);
+    mi_activity.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetActivityEntry"));
+    mi_activity.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetActivityExit"));
+    if (!mi_activity.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "getActivity",
+                         "(Landroid/content/Context;ILandroid/content/Intent;I"
+                         "Landroid/os/Bundle;)Landroid/app/PendingIntent;"))) {
+      Log::E("Error instrumenting PendingIntent.getActivity");
+    }
+
+    slicer::MethodInstrumenter mi_service(dex_ir);
+    mi_service.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetServiceEntry"));
+    mi_service.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetServiceExit"));
+    if (!mi_service.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "getService",
+                         "(Landroid/content/Context;ILandroid/content/Intent;I)"
+                         "Landroid/app/PendingIntent;"))) {
+      Log::E("Error instrumenting PendingIntent.getService");
+    }
+
+    slicer::MethodInstrumenter mi_broadcast(dex_ir);
+    mi_broadcast.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetBroadcastEntry"));
+    mi_broadcast.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetBroadcastExit"));
+    if (!mi_broadcast.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "getBroadcast",
+                         "(Landroid/content/Context;ILandroid/content/Intent;I)"
+                         "Landroid/app/PendingIntent;"))) {
+      Log::E("Error instrumenting PendingIntent.getBroadcast");
+    }
+  } else if (strcmp(name, "android/app/Activity") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "wrapActivityCreate"));
+    if (!mi.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "performCreate",
+            "(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V"))) {
+      Log::E("Error instrumenting Activity.performCreate");
+    }
+  } else if (strcmp(name, "android/app/IntentService") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "wrapServiceStart"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "onStartCommand",
+                                          "(Landroid/content/Intent;II)I"))) {
+      Log::E("Error instrumenting IntentService.onStartCommand");
+    }
+  } else if (strcmp(name, "android/app/ActivityThread") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::DetourVirtualInvoke>(
+        ir::MethodId("Landroid/content/BroadcastReceiver;", "onReceive",
+                     "(Landroid/content/Context;Landroid/content/Intent;)V"),
+        ir::MethodId(
+            "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+            "wrapBroadcastReceive"));
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "handleReceiver",
+                         "(Landroid/app/ActivityThread$ReceiverData;)V"))) {
+      Log::E("Error instrumenting BroadcastReceiver.onReceive");
+    }
   } else {
     Log::V("No transformation applied for class: %s", name);
     return;
@@ -490,6 +568,9 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmCancelled",
         "(ILjava/lang/String;Ljava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
+        "sendIntentAlarmFired", "(ILjava/lang/String;IZ)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmFired", "(ILjava/lang/String;)V");

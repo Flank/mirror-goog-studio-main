@@ -150,6 +150,34 @@ public class AlarmTest {
     }
 
     @Test
+    public void testSetAndFireIntentAlarm() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "fireIntentAlarm");
+        assertThat(myAndroidDriver.waitForInput("INTENT ALARM FIRED")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 2);
+        assertThat(response.getEventsCount()).isEqualTo(2);
+
+        EnergyEvent setEvent = response.getEvents(0);
+        assertThat(setEvent.getEventId()).isGreaterThan(0);
+        assertThat(setEvent.getIsTerminal()).isFalse();
+        assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
+        assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.OPERATION);
+
+        EnergyEvent fireEvent = response.getEvents(1);
+        assertThat(fireEvent.getEventId()).isEqualTo(setEvent.getEventId());
+        assertThat(fireEvent.getIsTerminal()).isFalse();
+        assertThat(fireEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_FIRED);
+        assertThat(fireEvent.getAlarmFired().getFireActionCase())
+                .isEqualTo(FireActionCase.OPERATION);
+        assertThat(fireEvent.getAlarmFired().getOperation().getCreatorPackage())
+                .isEqualTo("foo.bar");
+        assertThat(fireEvent.getAlarmFired().getOperation().getCreatorUid()).isEqualTo(2);
+    }
+
+    @Test
     public void testSetAndFireListenerAlarm() throws Exception {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "fireListenerAlarm");
         assertThat(myAndroidDriver.waitForInput("LISTENER ALARM FIRED")).isTrue();

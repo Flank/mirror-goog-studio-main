@@ -50,7 +50,7 @@ public class JobActivity extends PerfdTestActivity {
                         .setRequiresStorageNotLow(true)
                         .setExtras(new PersistableBundle("extras"))
                         .setTransientExtras(new Bundle("transient extras"));
-        getJobSchedler().schedule(jobBuilder.build());
+        getJobScheduler().schedule(jobBuilder.build());
         JobService jobService = new MyJobService();
         JobServiceEngine engine = new JobServiceEngine(jobService);
         JobParameters jobParams = createJobParams(1);
@@ -60,7 +60,7 @@ public class JobActivity extends PerfdTestActivity {
     }
 
     public void scheduleStartAndStopJob() {
-        getJobSchedler().schedule(new Builder(2, new ComponentName("com.example")).build());
+        getJobScheduler().schedule(new Builder(2, new ComponentName("com.example")).build());
         JobServiceEngine engine = new JobServiceEngine(new MyJobService());
         JobParameters jobParams = createJobParams(2);
         engine.startJob(jobParams);

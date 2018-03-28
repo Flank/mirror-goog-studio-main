@@ -16,8 +16,12 @@
 
 package android.os;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Bundle {
     private final String mStr;
+    private final Map<String, Object> myMap = new HashMap<String, Object>();
 
     public Bundle() {
         this("");
@@ -30,5 +34,16 @@ public class Bundle {
     @Override
     public String toString() {
         return mStr;
+    }
+
+    public void put(String key, Object value) {
+        myMap.put(key, value);
+    }
+
+    public int getInt(String key) {
+        if (myMap.containsKey(key) && myMap.get(key) instanceof Integer) {
+            return (Integer) myMap.get(key);
+        }
+        return 0;
     }
 }
