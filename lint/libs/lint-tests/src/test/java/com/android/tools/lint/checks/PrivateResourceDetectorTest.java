@@ -58,7 +58,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                     + "int style Theme_AppCompat_DayNight 0x7f070004";
 
                     File rFile = new File(tempDir, FN_RESOURCE_TEXT);
-                    Files.write(allResources, rFile, Charsets.UTF_8);
+                    Files.asCharSink(rFile, Charsets.UTF_8).write(allResources);
 
                     String publicResources =
                             ""
@@ -67,7 +67,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                     + "style Theme.AppCompat.DayNight\n";
 
                     File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
-                    Files.write(publicResources, publicTxtFile, Charsets.UTF_8);
+                    Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
                     when(library.getPublicResources()).thenReturn(publicTxtFile);
                     when(library.getSymbolFile()).thenReturn(rFile);
                 } catch (IOException ioe) {

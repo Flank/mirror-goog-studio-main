@@ -21,8 +21,10 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_GRADLE
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
+import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_PNG
 import com.android.SdkConstants.DOT_PROPERTIES
+import com.android.SdkConstants.DOT_WEBP
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE
 import com.android.SdkConstants.OLD_PROGUARD_FILE
@@ -202,13 +204,13 @@ enum class Scope {
                             scope.add(JAVA_FILE)
                         } else if (name.endsWith(DOT_CLASS)) {
                             scope.add(CLASS_FILE)
-                        } else if (name.endsWith(DOT_GRADLE)) {
+                        } else if (name.endsWith(DOT_GRADLE) || name.endsWith(DOT_KTS)) {
                             scope.add(GRADLE_FILE)
                         } else if (name == OLD_PROGUARD_FILE || name == FN_PROJECT_PROGUARD_FILE) {
                             scope.add(PROGUARD_FILE)
                         } else if (name.endsWith(DOT_PROPERTIES)) {
                             scope.add(PROPERTY_FILE)
-                        } else if (name.endsWith(DOT_PNG)) {
+                        } else if (name.endsWith(DOT_PNG) || name.endsWith(DOT_WEBP)) {
                             scope.add(BINARY_RESOURCE_FILE)
                         } else if (name == RES_FOLDER || file.parent == RES_FOLDER) {
                             scope.add(ALL_RESOURCE_FILES)

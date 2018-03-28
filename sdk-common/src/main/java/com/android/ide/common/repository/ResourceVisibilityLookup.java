@@ -120,6 +120,45 @@ public abstract class ResourceVisibilityLookup {
     }
 
     /**
+     * Creates a {@link ResourceVisibilityLookup} for a given library identified by a unique
+     * identifier as well as public and all resource files (and the public resource file may not
+     * exist.)
+     *
+     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
+     * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
+     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
+     * shared.
+     *
+     * @param publicResources the file listing the public resources
+     * @param allResources the file listing all resources
+     * @param mapKey a unique identifier for this library
+     * @return a corresponding {@link ResourceVisibilityLookup}
+     */
+    @NonNull
+    public static ResourceVisibilityLookup create(
+            @NonNull File publicResources, @NonNull File allResources, @NonNull String mapKey) {
+        return new LibraryResourceVisibility(publicResources, allResources, mapKey);
+    }
+
+    /**
+     * Creates a {@link ResourceVisibilityLookup} for the set of libraries.
+     *
+     * <p>
+     *
+     * @param libraries the list of libraries
+     * @return a corresponding {@link ResourceVisibilityLookup}
+     */
+    @NonNull
+    public static ResourceVisibilityLookup create(
+            @NonNull List<ResourceVisibilityLookup> libraries) {
+        if (libraries.size() == 1) {
+            return libraries.get(0);
+        } else {
+            return new MultipleLibraryResourceVisibility(libraries);
+        }
+    }
+
+    /**
      * Creates a {@link ResourceVisibilityLookup} for the set of libraries.
      * <p>
      * NOTE: The {@link Provider} class can be used to share/cache {@link ResourceVisibilityLookup}
@@ -430,7 +469,8 @@ public abstract class ResourceVisibilityLookup {
 
     /** Visibility data for a single library */
     private static class LibraryResourceVisibility extends ResourceVisibilityLookup {
-        private final AndroidLibrary mLibrary;
+        @Nullable private final AndroidLibrary mLibrary;
+        private final String mMapKey;
 
         /**
          * A map from name to resource types for all resources known to this library. This
@@ -446,22 +486,39 @@ public abstract class ResourceVisibilityLookup {
          */
         private final Multimap<String, ResourceType> mPublic;
 
-        private LibraryResourceVisibility(@NonNull AndroidLibrary library,
-              @NonNull SymbolProvider symbols) {
+        private LibraryResourceVisibility(
+                @NonNull AndroidLibrary library, @NonNull SymbolProvider symbols) {
             mLibrary = library;
 
-            mPublic = computeVisibilityMap();
+            mPublic = computeVisibilityMap(mLibrary.getPublicResources());
             //noinspection VariableNotUsedInsideIf
             if (mPublic != null) {
                 mAll = symbols.getSymbols(library);
             } else {
                 mAll = null;
             }
+            mMapKey = null;
+        }
+
+        private LibraryResourceVisibility(
+                @NonNull File publicResources, @NonNull File allResources, @NonNull String mapKey) {
+            mLibrary = null;
+            mPublic = computeVisibilityMap(publicResources);
+            Multimap<String, ResourceType> all = null;
+            //noinspection VariableNotUsedInsideIf
+            if (mPublic != null) {
+                try {
+                    all = readSymbolFile(allResources);
+                } catch (IOException ignore) {
+                }
+            }
+            mAll = all;
+            mMapKey = mapKey;
         }
 
         @Override
         public String toString() {
-            return getMapKey(mLibrary);
+            return mLibrary != null ? getMapKey(mLibrary) : mMapKey;
         }
 
         @Override
@@ -472,7 +529,7 @@ public abstract class ResourceVisibilityLookup {
         @Nullable
         @Override
         public AndroidLibrary getPrivateIn(@NonNull ResourceType type, @NonNull String name) {
-            if (isPrivate(type, name)) {
+            if (mLibrary != null && isPrivate(type, name)) {
                 return mLibrary;
             }
 
@@ -483,14 +540,14 @@ public abstract class ResourceVisibilityLookup {
          * Returns a map from name to applicable resource types where the presence of the type+name
          * combination means that the corresponding resource is explicitly public.
          *
-         * If the result is null, there is no {@code public.txt} definition for this library, so all
-         * resources should be taken to be public.
+         * <p>If the result is null, there is no {@code public.txt} definition for this library, so
+         * all resources should be taken to be public.
          *
          * @return a map from name to resource type for public resources in this library
          */
         @Nullable
-        private Multimap<String, ResourceType> computeVisibilityMap() {
-            File publicResources = mLibrary.getPublicResources();
+        private static Multimap<String, ResourceType> computeVisibilityMap(
+                @NonNull File publicResources) {
             if (!publicResources.exists()) {
                 return null;
             }
@@ -588,9 +645,11 @@ public abstract class ResourceVisibilityLookup {
                 return map;
             }
 
-            // getSymbolFile() is not defined in AndroidLibrary, only in the subclass LibraryBundle
-            File symbolFile = new File(library.getPublicResources().getParentFile(),
-              FN_RESOURCE_TEXT);
+            // getSymbolFile() is not implemented in IdeAndroidLibrary so using this
+            // for now, but this should be replaced by library.getSymbolFile() (not
+            // bothering with it now since resource lookup is about to be rewritten)
+            File symbolFile =
+                    new File(library.getPublicResources().getParentFile(), FN_RESOURCE_TEXT);
             if (!symbolFile.exists()) {
                 Multimap<String, ResourceType> empty = ImmutableListMultimap.of();
                 mCache.put(mapKey, empty);
@@ -598,43 +657,7 @@ public abstract class ResourceVisibilityLookup {
             }
 
             try {
-                List<String> lines = Files.readLines(symbolFile, Charsets.UTF_8);
-                Multimap<String, ResourceType> result = ArrayListMultimap.create(lines.size(), 2);
-
-                ResourceType previousType = null;
-                String previousTypeString = "";
-                int lineIndex = 1;
-                final int count = lines.size();
-                for (; lineIndex <= count; lineIndex++) {
-                    String line = lines.get(lineIndex - 1);
-
-                    if (line.startsWith("int ")) { // not int[] definitions for styleables
-                        // format is "int <type> <class> <name> <value>"
-                        int typeStart = 4;
-                        int typeEnd = line.indexOf(' ', typeStart);
-
-                        // Items are sorted by type, so we can avoid looping over types in
-                        // ResourceType.getEnum() for each line by sharing type in each section
-                        String typeString = line.substring(typeStart, typeEnd);
-                        ResourceType type;
-                        if (typeString.equals(previousTypeString)) {
-                            type = previousType;
-                        } else {
-                            type = ResourceType.getEnum(typeString);
-                            previousTypeString = typeString;
-                            previousType = type;
-                        }
-                        if (type == null) { // some newly introduced type
-                            continue;
-                        }
-
-                        int nameStart = typeEnd + 1;
-                        int nameEnd = line.indexOf(' ', nameStart);
-                        String name = line.substring(nameStart, nameEnd);
-                        result.put(name, type);
-                    }
-                }
-
+                Multimap<String, ResourceType> result = readSymbolFile(symbolFile);
                 if (!result.isEmpty()) {
                     // Subtract out symbols from any dependencies; we don't want to double
                     // count those
@@ -656,5 +679,47 @@ public abstract class ResourceVisibilityLookup {
                 return empty;
             }
         }
+    }
+
+    @NonNull
+    private static Multimap<String, ResourceType> readSymbolFile(File symbolFile)
+            throws IOException {
+        List<String> lines = Files.readLines(symbolFile, Charsets.UTF_8);
+        Multimap<String, ResourceType> result = ArrayListMultimap.create(lines.size(), 2);
+
+        ResourceType previousType = null;
+        String previousTypeString = "";
+        int lineIndex = 1;
+        final int count = lines.size();
+        for (; lineIndex <= count; lineIndex++) {
+            String line = lines.get(lineIndex - 1);
+
+            if (line.startsWith("int ")) { // not int[] definitions for styleables
+                // format is "int <type> <class> <name> <value>"
+                int typeStart = 4;
+                int typeEnd = line.indexOf(' ', typeStart);
+
+                // Items are sorted by type, so we can avoid looping over types in
+                // ResourceType.getEnum() for each line by sharing type in each section
+                String typeString = line.substring(typeStart, typeEnd);
+                ResourceType type;
+                if (typeString.equals(previousTypeString)) {
+                    type = previousType;
+                } else {
+                    type = ResourceType.getEnum(typeString);
+                    previousTypeString = typeString;
+                    previousType = type;
+                }
+                if (type == null) { // some newly introduced type
+                    continue;
+                }
+
+                int nameStart = typeEnd + 1;
+                int nameEnd = line.indexOf(' ', nameStart);
+                String name = line.substring(nameStart, nameEnd);
+                result.put(name, type);
+            }
+        }
+        return result;
     }
 }

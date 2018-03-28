@@ -18,6 +18,8 @@ package com.android.tools.lint
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.FN_PUBLIC_TXT
+import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.checks.AbstractCheckTest.base64gzip
@@ -419,10 +421,10 @@ public class C {
 
         @Language("XML")
         val descriptor = """
-            <project>
+            <project incomplete="true">
             <sdk dir='${TestUtils.getSdk()}'/>
             <root dir="$projectDir" />
-                <module name="M" android="true" library="true">
+            <module name="M" android="true" library="true">
                 <manifest file="AndroidManifest.xml" />
                 <src file="C.java" />
                 <src file="src/test/pkg/InterfaceMethodTest.java" />
@@ -484,6 +486,18 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                         <string name="string2">String 2</string>
                     </resources>
                     """
+            ),
+            java(
+                "src/main/java/test/pkg/Private.java",
+                """package test.pkg;
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public class Private {
+                        void test() {
+                            int x = R.string.my_private_string; // ERROR
+                            int y = R.string.my_public_string; // OK
+                        }
+                    }
+                    """
             )
         ).createProjects(root)
         val projectDir = projects[0]
@@ -504,6 +518,24 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                     </manifest>"""
         Files.asCharSink(File(aar, "AndroidManifest.xml"), Charsets.UTF_8).write(aarManifest)
 
+        val allResources = ("" +
+                "int string my_private_string 0x7f040000\n" +
+                "int string my_public_string 0x7f040001\n" +
+                "int layout my_private_layout 0x7f040002\n" +
+                "int id title 0x7f040003\n" +
+                "int style Theme_AppCompat_DayNight 0x7f070004")
+
+        val rFile = File(aar, FN_RESOURCE_TEXT)
+        Files.asCharSink(rFile, Charsets.UTF_8).write(allResources)
+
+        val publicResources = ("" +
+                "" +
+                "string my_public_string\n" +
+                "style Theme.AppCompat.DayNight\n")
+
+        val publicTxtFile = File(aar, FN_PUBLIC_TXT)
+        Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources)
+
         @Language("XML")
         val descriptor = """
             <project>
@@ -511,6 +543,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
             <root dir="$projectDir" />
                 <module name="M" android="true" library="false">
                 <manifest file="AndroidManifest.xml" />
+                <src file="src/main/java/test/pkg/Private.java" />
                 <aar file="$aarFile" extracted="$aar" />
             </module>
             </project>""".trimIndent()
@@ -518,7 +551,11 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
         MainTest.checkDriver(
-            "No issues found.", "",
+            "" +
+                    "src/main/java/test/pkg/Private.java:5: Warning: The resource @string/my_private_string is marked as private in the library [PrivateResource]\n" +
+                    "                            int x = R.string.my_private_string; // ERROR\n" +
+                    "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "0 errors, 1 warnings\n", "",
 
             // Expected exit code
             ERRNO_SUCCESS,
@@ -527,7 +564,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
             arrayOf(
                 "--quiet",
                 "--check",
-                "MissingApplicationIcon",
+                "MissingApplicationIcon,PrivateResource",
                 "--project",
                 descriptorFile.path
             ),

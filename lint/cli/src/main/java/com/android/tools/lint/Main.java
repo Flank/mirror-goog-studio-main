@@ -43,6 +43,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.SdkUtils;
@@ -280,6 +281,12 @@ public class Main {
 
                                 if (metadata.getBaseline() != null) {
                                     flags.setBaselineFile(metadata.getBaseline());
+                                }
+
+                                if (metadata.getIncomplete()) {
+                                    request.setScope(null);
+                                } else {
+                                    request.setScope(Scope.ALL);
                                 }
                             }
                         }
