@@ -61,21 +61,17 @@ import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android library project. */
 public class LibraryTaskManager extends TaskManager {
-
-    private Task assembleDefault;
 
     public LibraryTaskManager(
             @NonNull GlobalScope globalScope,
@@ -105,9 +101,6 @@ public class LibraryTaskManager extends TaskManager {
 
         GlobalScope globalScope = variantScope.getGlobalScope();
 
-        final String projectPath = project.getPath();
-        final String variantName = variantScope.getFullVariantName();
-
         createAnchorTasks(variantScope);
 
         // Create all current streams (dependencies mostly at this point)
@@ -118,135 +111,75 @@ public class LibraryTaskManager extends TaskManager {
         taskFactory.create(
                 new BuildArtifactReportTask.BuildArtifactReportConfigAction(variantScope));
 
-        // Add a task to create the res values
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
-                projectPath,
-                variantName,
-                () -> createGenerateResValuesTask(variantScope));
+        createGenerateResValuesTask(variantScope);
 
-        // Add a task to process the manifest(s)
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                projectPath,
-                variantName,
-                () -> createMergeLibManifestsTask(variantScope));
+        createMergeLibManifestsTask(variantScope);
 
-        // Add a task to compile renderscript files.
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
-                projectPath,
-                variantName,
-                () -> createRenderscriptTask(variantScope));
+        createRenderscriptTask(variantScope);
 
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                projectPath,
-                variantName,
-                () -> createMergeResourcesTask(variantScope));
+        createMergeResourcesTask(variantScope);
 
-        // Add tasks to compile shader
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_SHADER_TASK,
-                projectPath,
-                variantName,
-                () -> createShaderTask(variantScope));
+        createShaderTask(variantScope);
 
-        // Add a task to merge the assets folders
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    createMergeAssetsTask(variantScope);
-                    createLibraryAssetsTask(variantScope);
-                });
+        // Add tasks to merge the assets folders
+        createMergeAssetsTask(variantScope);
+        createLibraryAssetsTask(variantScope);
 
         // Add a task to create the BuildConfig class
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
-                projectPath,
-                variantName,
-                () -> createBuildConfigTask(variantScope));
+        createBuildConfigTask(variantScope);
 
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    // Add a task to generate resource source files, directing the location
-                    // of the r.txt file to be directly in the bundle.
-                    createProcessResTask(
-                            variantScope,
-                            new File(
-                                    globalScope.getIntermediatesDir(),
-                                    "symbols/"
-                                            + variantScope
-                                                    .getVariantData()
-                                                    .getVariantConfiguration()
-                                                    .getDirName()),
-                            null,
-                            // Switch to package where possible so we stop merging resources in
-                            // libraries
-                            MergeType.PACKAGE,
-                            globalScope.getProjectBaseName());
+        // Add a task to generate resource source files, directing the location
+        // of the r.txt file to be directly in the bundle.
+        createProcessResTask(
+                variantScope,
+                new File(
+                        globalScope.getIntermediatesDir(),
+                        "symbols/"
+                                + variantScope
+                                        .getVariantData()
+                                        .getVariantConfiguration()
+                                        .getDirName()),
+                null,
+                // Switch to package where possible so we stop merging resources in
+                // libraries
+                MergeType.PACKAGE,
+                globalScope.getProjectBaseName());
 
-                    // Only verify resources if in Release and not namespaced.
-                    if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()
-                            && !Boolean.TRUE.equals(
-                                    variantScope
-                                            .getGlobalScope()
-                                            .getExtension()
-                                            .getAaptOptions()
-                                            .getNamespaced())) {
-                        createVerifyLibraryResTask(variantScope, MergeType.MERGE);
-                    }
+        // Only verify resources if in Release and not namespaced.
+        if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()
+                && !Boolean.TRUE.equals(
+                        variantScope
+                                .getGlobalScope()
+                                .getExtension()
+                                .getAaptOptions()
+                                .getNamespaced())) {
+            createVerifyLibraryResTask(variantScope, MergeType.MERGE);
+        }
 
-                    // process java resources only, the merge is setup after
-                    // the task to generate intermediate jars for project to project publishing.
-                    createProcessJavaResTask(variantScope);
-                });
+        // process java resources only, the merge is setup after
+        // the task to generate intermediate jars for project to project publishing.
+        createProcessJavaResTask(variantScope);
 
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_AIDL_TASK,
-                projectPath,
-                variantName,
-                () -> createAidlTask(variantScope));
+        createAidlTask(variantScope);
+
+        // Add data binding tasks if enabled
+        createDataBindingTasksIfNecessary(variantScope, MergeType.PACKAGE);
 
         // Add a compile task
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_COMPILE_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    // Add data binding tasks if enabled
-                    createDataBindingTasksIfNecessary(variantScope, MergeType.PACKAGE);
-
-                    JavaCompile javacTask = createJavacTask(variantScope);
-                    addJavacClassesStream(variantScope);
-                    TaskManager.setJavaCompilerTask(javacTask, variantScope);
-                });
+        JavaCompile javacTask = createJavacTask(variantScope);
+        addJavacClassesStream(variantScope);
+        TaskManager.setJavaCompilerTask(javacTask, variantScope);
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (!isComponentModelPlugin()) {
             // Add NDK tasks
-            recorder.record(
-                    ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK,
-                    projectPath,
-                    variantName,
-                    () -> createNdkTasks(variantScope));
+            createNdkTasks(variantScope);
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantScope.getVariantData()));
 
         // External native build
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    createExternalNativeBuildJsonGenerators(variantScope);
-                    createExternalNativeBuildTasks(variantScope);
-                });
+        createExternalNativeBuildJsonGenerators(variantScope);
+        createExternalNativeBuildTasks(variantScope);
 
         // TODO not sure what to do about this...
         createMergeJniLibFoldersTasks(variantScope);
@@ -255,11 +188,7 @@ public class LibraryTaskManager extends TaskManager {
         taskFactory.create(new PackageRenderscriptConfigAction(variantScope));
 
         // merge consumer proguard files from different build types and flavors
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK,
-                projectPath,
-                variantName,
-                () -> taskFactory.create(new MergeConsumerProguardFilesConfigAction(variantScope)));
+        taskFactory.create(new MergeConsumerProguardFilesConfigAction(variantScope));
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
@@ -272,214 +201,188 @@ public class LibraryTaskManager extends TaskManager {
                 variantConfig.getBuildType().isTestCoverageEnabled()
                         && !variantScope.getInstantRunBuildContext().isInInstantRunMode();
 
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK,
-                projectPath,
-                variantName,
-                new Recorder.Block<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        TransformManager transformManager = variantScope.getTransformManager();
+        TransformManager transformManager = variantScope.getTransformManager();
 
-                        // ----- Code Coverage first -----
-                        if (instrumented) {
-                            createJacocoTransform(variantScope);
-                        }
+        // ----- Code Coverage first -----
+        if (instrumented) {
+            createJacocoTransform(variantScope);
+        }
 
-                        // ----- External Transforms -----
-                        // apply all the external transforms.
-                        List<Transform> customTransforms = extension.getTransforms();
-                        List<List<Object>> customTransformsDependencies =
-                                extension.getTransformsDependencies();
+        // ----- External Transforms -----
+        // apply all the external transforms.
+        List<Transform> customTransforms = extension.getTransforms();
+        List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
 
-                        for (int i = 0, count = customTransforms.size(); i < count; i++) {
-                            Transform transform = customTransforms.get(i);
+        for (int i = 0, count = customTransforms.size(); i < count; i++) {
+            Transform transform = customTransforms.get(i);
 
-                            // Check the transform only applies to supported scopes for libraries:
-                            // We cannot transform scopes that are not packaged in the library
-                            // itself.
-                            Sets.SetView<? super Scope> difference =
-                                    Sets.difference(
-                                            transform.getScopes(), TransformManager.PROJECT_ONLY);
-                            if (!difference.isEmpty()) {
-                                String scopes = difference.toString();
-                                androidBuilder
-                                        .getIssueReporter()
-                                        .reportError(
-                                                Type.GENERIC,
-                                                new EvalIssueException(
-                                                        String.format(
-                                                                "Transforms with scopes '%s' cannot be applied to library projects.",
-                                                                scopes)));
-                            }
+            // Check the transform only applies to supported scopes for libraries:
+            // We cannot transform scopes that are not packaged in the library
+            // itself.
+            Sets.SetView<? super Scope> difference =
+                    Sets.difference(transform.getScopes(), TransformManager.PROJECT_ONLY);
+            if (!difference.isEmpty()) {
+                String scopes = difference.toString();
+                androidBuilder
+                        .getIssueReporter()
+                        .reportError(
+                                Type.GENERIC,
+                                new EvalIssueException(
+                                        String.format(
+                                                "Transforms with scopes '%s' cannot be applied to library projects.",
+                                                scopes)));
+            }
 
-                            List<Object> deps = customTransformsDependencies.get(i);
-                            transformManager
-                                    .addTransform(taskFactory, variantScope, transform)
-                                    .ifPresent(
-                                            t -> {
-                                                if (!deps.isEmpty()) {
-                                                    t.dependsOn(deps);
-                                                }
+            List<Object> deps = customTransformsDependencies.get(i);
+            transformManager
+                    .addTransform(taskFactory, variantScope, transform)
+                    .ifPresent(
+                            t -> {
+                                if (!deps.isEmpty()) {
+                                    t.dependsOn(deps);
+                                }
 
-                                                // if the task is a no-op then we make assemble task
-                                                // depend on it.
-                                                if (transform.getScopes().isEmpty()) {
-                                                    variantScope.getAssembleTask().dependsOn(t);
-                                                }
-                                            });
-                        }
+                                // if the task is a no-op then we make assemble task
+                                // depend on it.
+                                if (transform.getScopes().isEmpty()) {
+                                    variantScope.getAssembleTask().dependsOn(t);
+                                }
+                            });
+        }
 
-                        String packageName = variantConfig.getPackageFromManifest();
+        String packageName = variantConfig.getPackageFromManifest();
 
-                        // Now add transforms for intermediate publishing (projects to projects).
-                        File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
-                        File mainClassJar = new File(jarOutputFolder, FN_CLASSES_JAR);
-                        File mainResJar = new File(jarOutputFolder, FN_INTERMEDIATE_RES_JAR);
-                        LibraryIntermediateJarsTransform intermediateTransform =
-                                new LibraryIntermediateJarsTransform(
-                                        mainClassJar,
-                                        mainResJar,
-                                        null,
-                                        packageName,
-                                        extension.getPackageBuildConfig());
-                        excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
+        // Now add transforms for intermediate publishing (projects to projects).
+        File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
+        File mainClassJar = new File(jarOutputFolder, FN_CLASSES_JAR);
+        File mainResJar = new File(jarOutputFolder, FN_INTERMEDIATE_RES_JAR);
+        LibraryIntermediateJarsTransform intermediateTransform =
+                new LibraryIntermediateJarsTransform(
+                        mainClassJar,
+                        mainResJar,
+                        null,
+                        packageName,
+                        extension.getPackageBuildConfig());
+        excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
 
-                        Optional<TransformTask> intermediateTransformTask =
-                                transformManager.addTransform(
-                                        taskFactory, variantScope, intermediateTransform);
+        Optional<TransformTask> intermediateTransformTask =
+                transformManager.addTransform(taskFactory, variantScope, intermediateTransform);
 
-                        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-                        intermediateTransformTask.ifPresent(
-                                t -> {
-                                    // publish the intermediate classes.jar
-                                    artifacts.appendArtifact(
-                                            InternalArtifactType.LIBRARY_CLASSES,
-                                            ImmutableList.of(mainClassJar),
-                                            t);
-                                    // publish the res jar
-                                    artifacts.appendArtifact(
-                                            InternalArtifactType.LIBRARY_JAVA_RES,
-                                            ImmutableList.of(mainResJar),
-                                            t);
-                                });
-
-                        // Create a jar with both classes and java resources.  This artifact is not
-                        // used by the Android application plugin and the task usually don't need to
-                        // be executed.  The artifact is useful for other Gradle users who needs the
-                        // 'jar' artifact as API dependency.
-                        taskFactory.create(new ZipMergingTask.ConfigAction(variantScope));
-
-                        // now add a transform that will take all the native libs and package
-                        // them into an intermediary folder. This processes only the PROJECT
-                        // scope.
-                        final File intermediateJniLibsFolder = new File(jarOutputFolder, FD_JNI);
-
-                        LibraryJniLibsTransform intermediateJniTransform =
-                                new LibraryJniLibsTransform(
-                                        "intermediateJniLibs",
-                                        intermediateJniLibsFolder,
-                                        TransformManager.PROJECT_ONLY);
-                        Optional<TransformTask> task =
-                                transformManager.addTransform(
-                                        taskFactory, variantScope, intermediateJniTransform);
-                        task.ifPresent(
-                                t -> {
-                                    // publish the jni folder as intermediate
-                                    variantScope
-                                            .getArtifacts()
-                                            .appendArtifact(
-                                                    InternalArtifactType.LIBRARY_JNI,
-                                                    ImmutableList.of(intermediateJniLibsFolder),
-                                                    t);
-                                });
-
-                        // Now go back to fill the pipeline with transforms used when
-                        // publishing the AAR
-
-                        // first merge the resources. This takes the PROJECT and LOCAL_DEPS
-                        // and merges them together.
-                        createMergeJavaResTransform(variantScope);
-
-                        // ----- Minify next -----
-                        maybeCreateJavaCodeShrinkerTransform(variantScope);
-                        maybeCreateResourcesShrinkerTransform(variantScope);
-
-                        // now add a transform that will take all the class/res and package them
-                        // into the main and secondary jar files that goes in the AAR.
-                        // This transform technically does not use its transform output, but that's
-                        // ok. We use the transform mechanism to get incremental data from
-                        // the streams.
-                        // This is used for building the AAR.
-
-                        File classesJar = variantScope.getAarClassesJar();
-                        File libsDirectory = variantScope.getAarLibsDirectory();
-
-                        LibraryAarJarsTransform transform =
-                                new LibraryAarJarsTransform(
-                                        classesJar,
-                                        libsDirectory,
-                                        artifacts.hasArtifact(
-                                                        InternalArtifactType
-                                                                .ANNOTATIONS_TYPEDEF_FILE)
-                                                ? artifacts.getFinalArtifactFiles(
-                                                        InternalArtifactType
-                                                                .ANNOTATIONS_TYPEDEF_FILE)
-                                                : null,
-                                        packageName,
-                                        extension.getPackageBuildConfig());
-
-                        excludeDataBindingClassesIfNecessary(variantScope, transform);
-
-                        Optional<TransformTask> libraryJarTransformTask =
-                                transformManager.addTransform(taskFactory, variantScope, transform);
-                        libraryJarTransformTask.ifPresent(
-                                t -> {
-                                    variantScope
-                                            .getArtifacts()
-                                            .appendArtifact(
-                                                    InternalArtifactType.AAR_MAIN_JAR,
-                                                    ImmutableList.of(classesJar),
-                                                    t);
-                                    variantScope
-                                            .getArtifacts()
-                                            .appendArtifact(
-                                                    InternalArtifactType.AAR_LIBS_DIRECTORY,
-                                                    ImmutableList.of(libsDirectory),
-                                                    t);
-                                });
-
-                        // now add a transform that will take all the native libs and package
-                        // them into the libs folder of the bundle. This processes both the PROJECT
-                        // and the LOCAL_PROJECT scopes
-                        final File jniLibsFolder =
-                                variantScope.getIntermediateDir(
-                                        InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI);
-                        LibraryJniLibsTransform jniTransform =
-                                new LibraryJniLibsTransform(
-                                        "syncJniLibs",
-                                        jniLibsFolder,
-                                        TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
-                        Optional<TransformTask> jniPackagingTask =
-                                transformManager.addTransform(
-                                        taskFactory, variantScope, jniTransform);
-                        jniPackagingTask.ifPresent(
-                                t ->
-                                        variantScope
-                                                .getArtifacts()
-                                                .appendArtifact(
-                                                        InternalArtifactType
-                                                                .LIBRARY_AND_LOCAL_JARS_JNI,
-                                                        ImmutableList.of(jniLibsFolder),
-                                                        t));
-                        return null;
-                    }
+        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+        intermediateTransformTask.ifPresent(
+                t -> {
+                    // publish the intermediate classes.jar
+                    artifacts.appendArtifact(
+                            InternalArtifactType.LIBRARY_CLASSES,
+                            ImmutableList.of(mainClassJar),
+                            t);
+                    // publish the res jar
+                    artifacts.appendArtifact(
+                            InternalArtifactType.LIBRARY_JAVA_RES, ImmutableList.of(mainResJar), t);
                 });
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
-                projectPath,
-                variantName,
-                () -> createLintTasks(variantScope));
+
+        // Create a jar with both classes and java resources.  This artifact is not
+        // used by the Android application plugin and the task usually don't need to
+        // be executed.  The artifact is useful for other Gradle users who needs the
+        // 'jar' artifact as API dependency.
+        taskFactory.create(new ZipMergingTask.ConfigAction(variantScope));
+
+        // now add a transform that will take all the native libs and package
+        // them into an intermediary folder. This processes only the PROJECT
+        // scope.
+        final File intermediateJniLibsFolder = new File(jarOutputFolder, FD_JNI);
+
+        LibraryJniLibsTransform intermediateJniTransform =
+                new LibraryJniLibsTransform(
+                        "intermediateJniLibs",
+                        intermediateJniLibsFolder,
+                        TransformManager.PROJECT_ONLY);
+        Optional<TransformTask> task =
+                transformManager.addTransform(taskFactory, variantScope, intermediateJniTransform);
+        task.ifPresent(
+                t -> {
+                    // publish the jni folder as intermediate
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.LIBRARY_JNI,
+                                    ImmutableList.of(intermediateJniLibsFolder),
+                                    t);
+                });
+
+        // Now go back to fill the pipeline with transforms used when
+        // publishing the AAR
+
+        // first merge the resources. This takes the PROJECT and LOCAL_DEPS
+        // and merges them together.
+        createMergeJavaResTransform(variantScope);
+
+        // ----- Minify next -----
+        maybeCreateJavaCodeShrinkerTransform(variantScope);
+        maybeCreateResourcesShrinkerTransform(variantScope);
+
+        // now add a transform that will take all the class/res and package them
+        // into the main and secondary jar files that goes in the AAR.
+        // This transform technically does not use its transform output, but that's
+        // ok. We use the transform mechanism to get incremental data from
+        // the streams.
+        // This is used for building the AAR.
+
+        File classesJar = variantScope.getAarClassesJar();
+        File libsDirectory = variantScope.getAarLibsDirectory();
+
+        LibraryAarJarsTransform transform =
+                new LibraryAarJarsTransform(
+                        classesJar,
+                        libsDirectory,
+                        artifacts.hasArtifact(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
+                                ? artifacts.getFinalArtifactFiles(
+                                        InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
+                                : null,
+                        packageName,
+                        extension.getPackageBuildConfig());
+
+        excludeDataBindingClassesIfNecessary(variantScope, transform);
+
+        Optional<TransformTask> libraryJarTransformTask =
+                transformManager.addTransform(taskFactory, variantScope, transform);
+        libraryJarTransformTask.ifPresent(
+                t -> {
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.AAR_MAIN_JAR,
+                                    ImmutableList.of(classesJar),
+                                    t);
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.AAR_LIBS_DIRECTORY,
+                                    ImmutableList.of(libsDirectory),
+                                    t);
+                });
+
+        // now add a transform that will take all the native libs and package
+        // them into the libs folder of the bundle. This processes both the PROJECT
+        // and the LOCAL_PROJECT scopes
+        final File jniLibsFolder =
+                variantScope.getIntermediateDir(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI);
+        LibraryJniLibsTransform jniTransform =
+                new LibraryJniLibsTransform(
+                        "syncJniLibs",
+                        jniLibsFolder,
+                        TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
+        Optional<TransformTask> jniPackagingTask =
+                transformManager.addTransform(taskFactory, variantScope, jniTransform);
+        jniPackagingTask.ifPresent(
+                t ->
+                        variantScope
+                                .getArtifacts()
+                                .appendArtifact(
+                                        InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI,
+                                        ImmutableList.of(jniLibsFolder),
+                                        t));
+        createLintTasks(variantScope);
         createBundleTask(variantScope);
     }
 
@@ -619,13 +522,6 @@ public class LibraryTaskManager extends TaskManager {
     @Override
     protected boolean isLibrary() {
         return true;
-    }
-
-    private Task getAssembleDefault() {
-        if (assembleDefault == null) {
-            assembleDefault = project.getTasks().findByName("assembleDefault");
-        }
-        return assembleDefault;
     }
 
     public void createVerifyLibraryResTask(

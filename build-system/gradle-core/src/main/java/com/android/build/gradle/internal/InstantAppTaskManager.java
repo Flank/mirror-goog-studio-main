@@ -32,7 +32,6 @@ import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
@@ -67,30 +66,22 @@ public class InstantAppTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         // Create the bundling task.
-        recorder.record(
-                GradleBuildProfileSpan.ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> {
-                    CheckInstantAppLibrariesTask checkInstantAppLibrariesTask =
-                            taskFactory.create(
-                                    new CheckInstantAppLibrariesTask.ConfigAction(variantScope));
+        CheckInstantAppLibrariesTask checkInstantAppLibrariesTask =
+                taskFactory.create(new CheckInstantAppLibrariesTask.ConfigAction(variantScope));
 
-                    File bundleDir = variantScope.getApkLocation();
-                    BundleInstantApp bundleTask =
-                            taskFactory.create(
-                                    new BundleInstantApp.ConfigAction(variantScope, bundleDir));
-                    variantScope.getAssembleTask().dependsOn(bundleTask);
-                    bundleTask.dependsOn(checkInstantAppLibrariesTask);
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.INSTANTAPP_BUNDLE,
-                                    ImmutableList.of(variantScope.getApkLocation()),
-                                    bundleTask);
+        File bundleDir = variantScope.getApkLocation();
+        BundleInstantApp bundleTask =
+                taskFactory.create(new BundleInstantApp.ConfigAction(variantScope, bundleDir));
+        variantScope.getAssembleTask().dependsOn(bundleTask);
+        bundleTask.dependsOn(checkInstantAppLibrariesTask);
+        variantScope
+                .getArtifacts()
+                .appendArtifact(
+                        InternalArtifactType.INSTANTAPP_BUNDLE,
+                        ImmutableList.of(variantScope.getApkLocation()),
+                        bundleTask);
 
-                    taskFactory.create(new InstantAppSideLoadTask.ConfigAction(variantScope));
-                });
+        taskFactory.create(new InstantAppSideLoadTask.ConfigAction(variantScope));
 
         // FIXME: Stop creating a dummy task just to make the IDE sync shut up.
         taskFactory.create(variantScope.getTaskName("dummy"));

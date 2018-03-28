@@ -61,7 +61,6 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
@@ -121,82 +120,37 @@ public class ApplicationTaskManager extends TaskManager {
         createBuildArtifactReportTask(variantScope);
 
         // Add a task to process the manifest(s)
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createMergeApkManifestsTask(variantScope));
+        createMergeApkManifestsTask(variantScope);
 
         // Add a task to create the res values
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createGenerateResValuesTask(variantScope));
+        createGenerateResValuesTask(variantScope);
 
         // Add a task to compile renderscript files.
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createRenderscriptTask(variantScope));
+        createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                (Recorder.VoidBlock) () -> createMergeResourcesTask(variantScope, true));
+        createMergeResourcesTask(variantScope, true);
 
         // Add tasks to compile shader
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_SHADER_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createShaderTask(variantScope));
-
+        createShaderTask(variantScope);
 
         // Add a task to merge the asset folders
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> {
-                    createMergeAssetsTask(variantScope);
-                });
+        createMergeAssetsTask(variantScope);
 
         // Add a task to create the BuildConfig class
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createBuildConfigTask(variantScope));
+        createBuildConfigTask(variantScope);
 
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> {
-                    // Add a task to process the Android Resources and generate source files
-                    createApkProcessResTask(variantScope);
+        // Add a task to process the Android Resources and generate source files
+        createApkProcessResTask(variantScope);
 
-                    // Add a task to process the java resources
-                    createProcessJavaResTask(variantScope);
-                });
+        // Add a task to process the java resources
+        createProcessJavaResTask(variantScope);
 
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_AIDL_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createAidlTask(variantScope));
+        createAidlTask(variantScope);
 
         // Add NDK tasks
         if (!isComponentModelPlugin()) {
-            recorder.record(
-                    ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK,
-                    project.getPath(),
-                    variantScope.getFullVariantName(),
-                    () -> createNdkTasks(variantScope));
+            createNdkTasks(variantScope);
         } else {
             if (variantData.compileTask != null) {
                 variantData.compileTask.dependsOn(getNdkBuildable(variantData));
@@ -207,21 +161,11 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> {
-                    createExternalNativeBuildJsonGenerators(variantScope);
-                    createExternalNativeBuildTasks(variantScope);
-                });
+        createExternalNativeBuildJsonGenerators(variantScope);
+        createExternalNativeBuildTasks(variantScope);
 
         // Add a task to merge the jni libs folders
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createMergeJniLibFoldersTasks(variantScope));
+        createMergeJniLibFoldersTasks(variantScope);
 
         // Add feature related tasks if necessary
         if (variantScope.getType().isBaseModule()) {
@@ -253,17 +197,9 @@ public class ApplicationTaskManager extends TaskManager {
         createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
 
         // Add a compile task
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createCompileTask(variantScope));
+        createCompileTask(variantScope);
 
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_STRIP_NATIVE_LIBRARY_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createStripNativeLibraryTask(taskFactory, variantScope));
+        createStripNativeLibraryTask(taskFactory, variantScope);
 
 
         if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
@@ -272,29 +208,15 @@ public class ApplicationTaskManager extends TaskManager {
                         "Pure splits can only be used with buildtools 21 and later");
             }
 
-            recorder.record(
-                    ExecutionType.APP_TASK_MANAGER_CREATE_SPLIT_TASK,
-                    project.getPath(),
-                    variantScope.getFullVariantName(),
-                    () -> createSplitTasks(variantScope));
+            createSplitTasks(variantScope);
         }
 
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> {
-                    BuildInfoWriterTask buildInfoWriterTask =
-                            createInstantRunPackagingTasks(variantScope);
-                    createPackagingTask(variantScope, buildInfoWriterTask);
-                });
+
+        BuildInfoWriterTask buildInfoWriterTask = createInstantRunPackagingTasks(variantScope);
+        createPackagingTask(variantScope, buildInfoWriterTask);
 
         // Create the lint tasks, if enabled
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_LINT_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createLintTasks(variantScope));
+        createLintTasks(variantScope);
 
         taskFactory.create(new FeatureSplitTransitiveDepsWriterTask.ConfigAction(variantScope));
 
