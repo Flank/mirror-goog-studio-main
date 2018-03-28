@@ -18,7 +18,6 @@ package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -27,10 +26,12 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
 import com.android.testutils.TestResources;
 import com.android.testutils.truth.FileSubject;
+import com.android.testutils.truth.PathSubject;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -39,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -637,11 +639,80 @@ public class SymbolIoTest {
     }
 
     @Test
+    public void testWriteSymbolListWithPackageName() throws Exception {
+        assertThat(
+                        writeSymbolTableToPackage(
+                                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } ",
+                                "int styleable LimitedSizeLinearLayout_android_max_width 0 ",
+                                "int styleable LimitedSizeLinearLayout_android_max_height 1 ",
+                                "int string app_name 0x7f030000"))
+                .containsExactly(
+                        "somePackage",
+                        "styleable LimitedSizeLinearLayout android_max_width android_max_height",
+                        "string app_name")
+                .inOrder();
+    }
+
+    @Test
+    public void testWriteSymbolListWithPackageNameMisordered() throws Exception {
+        assertThat(
+                        writeSymbolTableToPackage(
+                                // Ignored out-of-order styleable child
+                                "int styleable LimitedSizeLinearLayout_bad 2 ",
+                                // Ignores incomplete lines
+                                "ignored",
+                                "int ignored",
+                                "int string ignored",
+                                // Valid stylable
+                                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } ",
+                                // Valid child
+                                "int styleable LimitedSizeLinearLayout_android_max_width 0 ",
+                                // Child ignored as no value
+                                "int styleable LimitedSizeLinearLayout_ignored_as_no_value",
+                                // Child ignored as not for the same stylable
+                                "int styleable OtherBroken_child 2 ",
+                                // Valid child
+                                "int styleable LimitedSizeLinearLayout_android_max_height 1 ",
+                                // Valid string
+                                "int string other_string 0x7f030001",
+                                // Ignored out-of-order styleable child
+                                "int styleable LimitedSizeLinearLayout_android_will_be_ignored 3 ",
+                                // valid string
+                                "int string app_name 0x7f030000"))
+                .containsExactly(
+                        "somePackage",
+                        "styleable LimitedSizeLinearLayout android_max_width android_max_height",
+                        "string other_string",
+                        "string app_name")
+                .inOrder();
+    }
+
+    private static List<String> writeSymbolTableToPackage(String... lines) throws IOException {
+        Path tmp = Jimfs.newFileSystem(Configuration.unix()).getPath("/tmp");
+        java.nio.file.Files.createDirectories(tmp);
+        Path aarRTxt = tmp.resolve("R.txt");
+        java.nio.file.Files.write(aarRTxt, Arrays.asList(lines), StandardCharsets.UTF_8);
+        Path out = tmp.resolve("with_package.txt");
+        SymbolIo.writeSymbolListWithPackageName(aarRTxt, "somePackage", out);
+        return java.nio.file.Files.readAllLines(out, StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void writeSymbolTableToPackageNoTable() throws IOException {
+        Path tmp = Jimfs.newFileSystem(Configuration.unix()).getPath("/tmp");
+        java.nio.file.Files.createDirectories(tmp);
+        Path aarRTxt = tmp.resolve("R.txt");
+        Path out = tmp.resolve("with_package.txt");
+        SymbolIo.writeSymbolListWithPackageName(aarRTxt, "somePackage", out);
+        PathSubject.assertThat(out).hasContents("somePackage");
+    }
+
+    @Test
     public void testPackageNameRead() throws Exception {
         String content =
                 "com.example.lib\n"
                         + "drawable foobar\n"
-                        + "styleable LimitedSizeLinearLayout\n"
+                        + "styleable LimitedSizeLinearLayout child_1 child_2\n"
                         + "styleable S2";
         File file = mTemporaryFolder.newFile();
         Files.asCharSink(file, Charsets.UTF_8).write(content);
@@ -653,7 +724,9 @@ public class SymbolIoTest {
                 .containsExactly(
                         new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0),
                         new Symbol.StyleableSymbol(
-                                "LimitedSizeLinearLayout", ImmutableList.of(), ImmutableList.of()),
+                                "LimitedSizeLinearLayout",
+                                ImmutableList.of(),
+                                ImmutableList.of("child_1", "child_2")),
                         new Symbol.StyleableSymbol("S2", ImmutableList.of(), ImmutableList.of()));
     }
 
@@ -686,7 +759,9 @@ public class SymbolIoTest {
         List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
         assertThat(outputLines)
                 .containsExactly(
-                        "com.example.lib", "drawable foobar", "styleable LimitedSizeLinearLayout")
+                        "com.example.lib",
+                        "drawable foobar",
+                        "styleable LimitedSizeLinearLayout max_width max_height")
                 .inOrder();
 
         SymbolTable result = SymbolIo.readSymbolListWithPackageName(output);
@@ -771,7 +846,14 @@ public class SymbolIoTest {
 
         SymbolTable symbolTable = SymbolIo.readSymbolListWithPackageName(output);
         Symbol symbol = symbolTable.getSymbols().get(ResourceType.STYLEABLE, "AlertDialog");
-        assertNotNull(symbol);
+
+        assertThat(symbol)
+                .isEqualTo(
+                        new Symbol.StyleableSymbol(
+                                "AlertDialog",
+                                ImmutableList.of(),
+                                ImmutableList.of(),
+                                ResourceVisibility.UNDEFINED));
     }
 
     @Test

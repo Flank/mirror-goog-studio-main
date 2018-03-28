@@ -74,7 +74,7 @@ import org.xml.sax.SAXException;
  * Internal intermediates:
  *  - Symbol list with package name. Used to filter down the generated R
  *    class for this library in the non-namespaced case.
- *     - Format is <type> <name>, with the first line as the package name.
+ *     - Format is <type> <name> [<child> [<child>, [...]]], with the first line as the package name.
  *     - Contains resources from this sub-project and all its transitive dependencies.
  *     - Read by readSymbolListWithPackageName()
  *     - Generated from AARs and AAPT2 symbol tables by writeSymbolListWithPackageName()
@@ -263,6 +263,12 @@ public final class SymbolIo {
 
         private void handleStyleable(@NonNull SymbolTable.Builder table, @NonNull SymbolData data)
                 throws IOException {
+            if (readConfiguration.singleLineStyleable) {
+                table.add(
+                        new Symbol.StyleableSymbol(
+                                data.name, ImmutableList.of(), data.children, data.accessibility));
+                return;
+            }
             // Keep the current location to report if there is an error
             String styleableLineContent = currentLineContent;
             int styleableLineIndex = currentLineNumber;
@@ -319,12 +325,13 @@ public final class SymbolIo {
                 Comparator.comparingInt(o -> Integer.parseInt(o.value));
     }
 
-    private static class SymbolData {
+    private static final class SymbolData {
         @NonNull final ResourceVisibility accessibility;
         @NonNull final ResourceType resourceType;
         @NonNull final String name;
         @NonNull final SymbolJavaType javaType;
         @NonNull final String value;
+        @NonNull final ImmutableList<String> children;
 
         public SymbolData(
                 @NonNull ResourceType resourceType,
@@ -336,6 +343,7 @@ public final class SymbolIo {
             this.name = name;
             this.javaType = javaType;
             this.value = value;
+            this.children = ImmutableList.of();
         }
 
         public SymbolData(
@@ -349,6 +357,28 @@ public final class SymbolIo {
             this.name = name;
             this.javaType = javaType;
             this.value = value;
+            this.children = ImmutableList.of();
+        }
+
+        public SymbolData(@NonNull String name, @NonNull ImmutableList<String> children) {
+            this.accessibility = ResourceVisibility.UNDEFINED;
+            this.resourceType = ResourceType.STYLEABLE;
+            this.name = name;
+            this.javaType = SymbolJavaType.INT_LIST;
+            this.value = "";
+            this.children = children;
+        }
+
+        public SymbolData(@NonNull ResourceType resourceType, @NonNull String name) {
+            this.accessibility = ResourceVisibility.UNDEFINED;
+            this.resourceType = resourceType;
+            this.name = name;
+            this.javaType =
+                    resourceType == ResourceType.STYLEABLE
+                            ? SymbolJavaType.INT_LIST
+                            : SymbolJavaType.INT;
+            this.value = "";
+            this.children = ImmutableList.of();
         }
     }
 
@@ -411,21 +441,33 @@ public final class SymbolIo {
     @NonNull
     private static SymbolData readSymbolListWithPackageLine(@NonNull String line)
             throws IOException {
-        // format is "<type> <name>"
-        int pos = line.indexOf(' ');
-        String typeName = line.substring(0, pos);
+        // format is "<type> <name>[ <child>[ <child>[ ...]]]"
+        int startPos = line.indexOf(' ');
+        String typeName = line.substring(0, startPos);
         ResourceType resourceType = ResourceType.getEnum(typeName);
         if (resourceType == null) {
             throw new IOException("Invalid symbol type " + typeName);
         }
-        String name = line.substring(pos + 1);
-        // There are no styleable children in the symbol list with package, so
-        // the java type is determined by the symbol type.
-        SymbolJavaType javaType =
-                resourceType == ResourceType.STYLEABLE
-                        ? SymbolJavaType.INT_LIST
-                        : SymbolJavaType.INT;
-        return new SymbolData(resourceType, name, javaType, "");
+        int endPos = line.indexOf(' ', startPos + 1);
+        // If styleable with children
+        if (resourceType == ResourceType.STYLEABLE && endPos > 0) {
+            String name = line.substring(startPos + 1, endPos);
+            startPos = endPos + 1;
+            ImmutableList.Builder<String> children = ImmutableList.builder();
+            while (true) {
+                endPos = line.indexOf(' ', startPos);
+                if (endPos == -1) {
+                    children.add(line.substring(startPos));
+                    break;
+                }
+                children.add(line.substring(startPos, endPos));
+                startPos = endPos + 1;
+            }
+            return new SymbolData(name, children.build());
+        } else {
+            String name = line.substring(startPos + 1);
+            return new SymbolData(resourceType, name);
+        }
     }
 
     private static String computeItemName(@NonNull String prefix, @NonNull String name) {
@@ -443,21 +485,21 @@ public final class SymbolIo {
     }
 
     private enum ReadConfiguration {
-        AAPT(true) {
+        AAPT(true, false) {
             @NonNull
             @Override
             public SymbolData parseLine(@NonNull String line) throws IOException {
                 return readAaptLine(line);
             }
         },
-        SYMBOL_LIST_WITH_PACKAGE(false) {
+        SYMBOL_LIST_WITH_PACKAGE(false, true) {
             @NonNull
             @Override
             public SymbolData parseLine(@NonNull String line) throws IOException {
                 return readSymbolListWithPackageLine(line);
             }
         },
-        PARTIAL_FILE(false) {
+        PARTIAL_FILE(false, false) {
             @NonNull
             @Override
             public SymbolData parseLine(@NonNull String line) throws IOException {
@@ -466,11 +508,13 @@ public final class SymbolIo {
         },
         ;
 
-        ReadConfiguration(boolean readValues) {
+        ReadConfiguration(boolean readValues, boolean singleLineStyleable) {
             this.readValues = readValues;
+            this.singleLineStyleable = singleLineStyleable;
         }
 
         final boolean readValues;
+        final boolean singleLineStyleable;
 
         @NonNull
         abstract SymbolData parseLine(@NonNull String line) throws IOException;
@@ -613,7 +657,8 @@ public final class SymbolIo {
     /**
      * Writes the abridged symbol table with the package name as the first line.
      *
-     * <p>The subsequent lines have the format "<type> <name>"
+     * <p>This collapses the styleable children so the subsequent lines have the format {@code
+     * "<type> <name>[ <child>[ <child>[ ...]]]"}
      *
      * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
      *     only the package name
@@ -636,8 +681,8 @@ public final class SymbolIo {
     /**
      * Writes the symbol table with the package name as the first line.
      *
-     * <p>This also removes styleable children and values so the subsequent lines have the format
-     * "<type> <name>"
+     * <p>This collapses the styleable children so the subsequent lines have the format {@code
+     * "<type> <name>[ <child>[ <child>[ ...]]]" }
      *
      * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
      *     only the package name
@@ -653,21 +698,35 @@ public final class SymbolIo {
             if (packageName != null) {
                 writer.write(packageName);
             }
-            writer.write('\n');
             if (!Files.exists(symbolTable)) {
+                writer.write('\n');
                 return;
             }
+            // When a styleable parent is encountered,
+            // consume any children if the line starts with
+            String styleableChildPrefix = null;
             try (Stream<String> lines = Files.lines(symbolTable)) {
                 Iterator<String> iterator = lines.iterator();
                 while (iterator.hasNext()) {
                     String line = iterator.next();
-                    // Ignore styleable children
+                    if (styleableChildPrefix != null && line.startsWith(styleableChildPrefix)) {
+                        // Extract the child name and write it to the same line.
+                        int start = styleableChildPrefix.length() + 1;
+                        int end = line.indexOf(' ', styleableChildPrefix.length());
+                        if (end != -1) {
+                            writer.write(' ');
+                            writer.write(line, start, end - start);
+                        }
+                        continue;
+                    }
+
+                    // Ignore out-of-order styleable children
                     if (line.startsWith("int styleable ")) {
                         continue;
                     }
                     // Only keep the type and the name.
                     // e.g. "int[] styleable AppCompatTheme {750,75..."
-                    // becomes "styleable AppCompatTheme"
+                    // becomes "styleable AppCompatTheme <child> <child>"
                     int start = line.indexOf(' ') + 1;
                     if (start == 0) {
                         continue;
@@ -680,10 +739,17 @@ public final class SymbolIo {
                     if (end == 0) {
                         continue;
                     }
-                    writer.write(line, start, end - start - 1);
                     writer.write('\n');
+                    writer.write(line, start, end - start - 1);
+                    if (line.startsWith("int[] ")) {
+                        styleableChildPrefix = "int styleable " + line.substring(middle, end - 1);
+                    } else {
+                        styleableChildPrefix = null;
+                    }
+
                 }
             }
+            writer.write('\n');
         }
     }
 
