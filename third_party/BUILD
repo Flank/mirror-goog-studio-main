@@ -110,7 +110,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.code.gson_gson",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.7:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
