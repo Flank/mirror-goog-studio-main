@@ -97,9 +97,6 @@ public final class GradleTestProject implements TestRule {
 
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
-    public static final int LATEST_NDK_PLATFORM_VERSION = 21;
-    /** Latest published Google APIs version. Update this once new version is out. */
-    public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
     public static final boolean APPLY_DEVICEPOOL_PLUGIN =
@@ -177,12 +174,6 @@ public final class GradleTestProject implements TestRule {
             throw Throwables.propagate(t);
         }
     }
-
-    public static final String PLAY_SERVICES_VERSION = "9.6.1";
-    public static final String SUPPORT_LIB_VERSION = "25.3.1";
-    public static final String TEST_SUPPORT_LIB_VERSION = "0.5";
-    public static final String TEST_CONSTRAINT_LAYOUT_VERSION = "1.0.2";
-    public static final int SUPPORT_LIB_MIN_SDK = 14;
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
@@ -866,10 +857,10 @@ public final class GradleTestProject implements TestRule {
                         + "constraintLayoutVersion = '%s'%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 Version.ANDROID_TOOLS_BASE_VERSION,
-                SUPPORT_LIB_VERSION,
-                TEST_SUPPORT_LIB_VERSION,
-                PLAY_SERVICES_VERSION,
-                SUPPORT_LIB_MIN_SDK,
+                TestVersions.SUPPORT_LIB_VERSION,
+                TestVersions.TEST_SUPPORT_LIB_VERSION,
+                TestVersions.PLAY_SERVICES_VERSION,
+                TestVersions.SUPPORT_LIB_MIN_SDK,
                 SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
     }
 

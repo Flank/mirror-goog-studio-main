@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.testing;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
 import org.junit.Before;
@@ -44,7 +45,7 @@ public class SeparateTestModuleConnectedTest {
                         + "  }\n"
                         + "  dependencies {\n"
                         + "    implementation ('com.android.support.test:runner:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "', {\n"
                         + "      exclude group: 'com.android.support', module: 'support-annotations'\n"
                         + "    })\n"

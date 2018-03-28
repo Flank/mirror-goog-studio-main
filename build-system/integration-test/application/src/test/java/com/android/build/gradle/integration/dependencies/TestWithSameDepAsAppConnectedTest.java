@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -78,9 +79,9 @@ public class TestWithSameDepAsAppConnectedTest {
                     Lists.newArrayList(
                                     plugin,
                                     "com.android.support:support-v4:"
-                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                            + TestVersions.SUPPORT_LIB_VERSION,
                                     "com.android.support:support-v4:"
-                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                            + TestVersions.SUPPORT_LIB_VERSION,
                                     "Landroid/support/v4/widget/Space;",
                                     "new android.support.v4.widget.Space(this);",
                                     "new android.support.v4.widget.Space(getActivity());")
@@ -91,9 +92,9 @@ public class TestWithSameDepAsAppConnectedTest {
                     Lists.newArrayList(
                                     plugin,
                                     "com.android.support:support-v4:"
-                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                            + TestVersions.SUPPORT_LIB_VERSION,
                                     "com.android.support:recyclerview-v7:"
-                                            + GradleTestProject.SUPPORT_LIB_VERSION,
+                                            + TestVersions.SUPPORT_LIB_VERSION,
                                     "Landroid/support/v4/widget/Space;",
                                     "new android.support.v4.widget.Space(this);",
                                     "new android.support.v4.widget.Space(getActivity());")

@@ -4,6 +4,7 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
@@ -48,13 +49,13 @@ public class SeparateTestWithAarDependencyTest {
                         + "\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion "
-                        + GradleTestProject.SUPPORT_LIB_MIN_SDK
+                        + TestVersions.SUPPORT_LIB_MIN_SDK
                         + "\n"
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"
                         + "    api 'com.android.support:appcompat-v7:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
 
@@ -113,34 +114,34 @@ public class SeparateTestWithAarDependencyTest {
                 .containsAllOf(
                         project.getTestDir().getAbsolutePath() + "@@:app::debug",
                         "com.android.support:support-core-ui:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-core-utils:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:appcompat-v7:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-fragment:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-compat:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-v4:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-annotations:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@jar",
                         "com.android.support:animated-vector-drawable:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-media-compat:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-vector-drawable:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar");
     }
 
@@ -163,34 +164,34 @@ public class SeparateTestWithAarDependencyTest {
                 .containsNoneOf(
                         project.getTestDir().getAbsolutePath() + "@@:app::debug",
                         "com.android.support:support-core-ui:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-core-utils:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:appcompat-v7:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-fragment:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-compat:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-v4:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-annotations:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@jar",
                         "com.android.support:animated-vector-drawable:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-media-compat:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
                         "com.android.support:support-vector-drawable:"
-                                + GradleTestProject.SUPPORT_LIB_VERSION
+                                + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar");
     }
 }

@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
@@ -345,7 +346,7 @@ public class SdkAutoDownloadTest {
                         + "\""
                         + System.lineSeparator()
                         + "dependencies { compile 'com.android.support:support-v4:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "' }");
 
         getExecutor().run("assembleDebug");
@@ -373,7 +374,7 @@ public class SdkAutoDownloadTest {
                         + "android.defaultConfig.multiDexEnabled true"
                         + System.lineSeparator()
                         + "dependencies { compile 'com.google.android.gms:play-services:"
-                        + GradleTestProject.PLAY_SERVICES_VERSION
+                        + TestVersions.PLAY_SERVICES_VERSION
                         + "' }");
 
         getExecutor().run("assembleDebug");
@@ -382,7 +383,7 @@ public class SdkAutoDownloadTest {
                 SdkMavenRepository.GOOGLE,
                 "com.google.android.gms",
                 "play-services",
-                GradleTestProject.PLAY_SERVICES_VERSION);
+                TestVersions.PLAY_SERVICES_VERSION);
     }
 
     @Test

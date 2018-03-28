@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.PLAY_SERVICES_VERSION;
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
+import static com.android.build.gradle.integration.common.fixture.TestVersions.PLAY_SERVICES_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
@@ -28,6 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
@@ -75,8 +75,8 @@ public class BasicTest2 {
     private static final Set<String> coordinates =
             ImmutableSet.of(
                     "com.google.android.gms:play-services-base:" + PLAY_SERVICES_VERSION + "@aar",
-                    "com.android.support:support-v13:" + SUPPORT_LIB_VERSION + "@aar",
-                    "com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-v13:" + TestVersions.SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:support-v4:" + TestVersions.SUPPORT_LIB_VERSION + "@aar",
                     "com.google.android.gms:play-services-tasks:" + PLAY_SERVICES_VERSION + "@aar",
                     "com.google.android.gms:play-services-basement:"
                             + PLAY_SERVICES_VERSION
@@ -84,11 +84,21 @@ public class BasicTest2 {
                     "com.google.android.gms:play-services-basement:"
                             + PLAY_SERVICES_VERSION
                             + "@aar",
-                    "com.android.support:support-fragment:" + SUPPORT_LIB_VERSION + "@aar",
-                    "com.android.support:support-media-compat:" + SUPPORT_LIB_VERSION + "@aar",
-                    "com.android.support:support-core-ui:" + SUPPORT_LIB_VERSION + "@aar",
-                    "com.android.support:support-core-utils:" + SUPPORT_LIB_VERSION + "@aar",
-                    "com.android.support:support-compat:" + SUPPORT_LIB_VERSION + "@aar");
+                    "com.android.support:support-fragment:"
+                            + TestVersions.SUPPORT_LIB_VERSION
+                            + "@aar",
+                    "com.android.support:support-media-compat:"
+                            + TestVersions.SUPPORT_LIB_VERSION
+                            + "@aar",
+                    "com.android.support:support-core-ui:"
+                            + TestVersions.SUPPORT_LIB_VERSION
+                            + "@aar",
+                    "com.android.support:support-core-utils:"
+                            + TestVersions.SUPPORT_LIB_VERSION
+                            + "@aar",
+                    "com.android.support:support-compat:"
+                            + TestVersions.SUPPORT_LIB_VERSION
+                            + "@aar");
 
     public static ModelContainer<AndroidProject> modelContainer;
     public static ProjectBuildOutput outputModel;
@@ -180,7 +190,9 @@ public class BasicTest2 {
         assertThat(helper.on(compileGraph).withType(JAVA).mapTo(COORDINATES))
                 .named("debug compile java libs")
                 .containsExactly(
-                        "com.android.support:support-annotations:" + SUPPORT_LIB_VERSION + "@jar");
+                        "com.android.support:support-annotations:"
+                                + TestVersions.SUPPORT_LIB_VERSION
+                                + "@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(compileGraph).withType(ANDROID);
 
@@ -335,7 +347,9 @@ public class BasicTest2 {
         assertThat(helper.on(releaseGraph).withType(JAVA).mapTo(COORDINATES))
                 .named("release compile java libs")
                 .containsExactly(
-                        "com.android.support:support-annotations:" + SUPPORT_LIB_VERSION + "@jar");
+                        "com.android.support:support-annotations:"
+                                + TestVersions.SUPPORT_LIB_VERSION
+                                + "@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(releaseGraph).withType(ANDROID);
         Set<String> coordinateCopies = Sets.newHashSet(coordinates);

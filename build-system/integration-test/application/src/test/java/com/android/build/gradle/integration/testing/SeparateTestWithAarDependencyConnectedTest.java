@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
 import org.junit.Before;
@@ -47,13 +48,13 @@ public class SeparateTestWithAarDependencyConnectedTest {
                         + "\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion "
-                        + GradleTestProject.SUPPORT_LIB_MIN_SDK
+                        + TestVersions.SUPPORT_LIB_MIN_SDK
                         + "\n"
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"
                         + "    compile 'com.android.support:appcompat-v7:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
 

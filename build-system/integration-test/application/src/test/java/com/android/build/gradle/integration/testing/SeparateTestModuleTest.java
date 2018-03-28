@@ -4,6 +4,7 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
@@ -40,7 +41,7 @@ public class SeparateTestModuleTest {
                         + "  }\n"
                         + "  dependencies {\n"
                         + "    implementation ('com.android.support.test:runner:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "', {\n"
                         + "      exclude group: 'com.android.support', module: 'support-annotations'\n"
                         + "    })\n"
