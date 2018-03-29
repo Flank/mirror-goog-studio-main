@@ -53,7 +53,7 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var apkFolders: BuildableArtifact
+    lateinit var apkSetArchive: BuildableArtifact
         private set
 
     @get:InputFile
@@ -72,7 +72,7 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
 
         adapter.submit(
             Params(
-                apkFolders.singleFile(),
+                apkSetArchive.singleFile(),
                 deviceConfig ?: throw RuntimeException("Calling ApkSelect with no device config"),
                 outputDir
             )
@@ -82,7 +82,7 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
     }
 
     private data class Params(
-        val apkFolder: File,
+        val apkSetArchive: File,
         val deviceConfig: File,
         val outputDir: File
     ) : Serializable
@@ -101,7 +101,7 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
 
             val command = SelectApksCommand
                 .builder()
-                .setApksArchivePath(File(params.apkFolder, "bundle.apks").toPath())
+                .setApksArchivePath(params.apkSetArchive.toPath())
                 .setDeviceSpec(builder.build())
                 .setOutputDirectory(params.outputDir.toPath())
 
@@ -117,7 +117,7 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
         override fun execute(task: SelectApksTask) {
             task.variantName = scope.fullVariantName
             task.outputDir = scope.artifacts.appendArtifact(InternalArtifactType.SELECTED_APKS, task)
-            task.apkFolders = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
+            task.apkSetArchive = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
 
             val devicePath = scope.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
             if (devicePath != null) {
