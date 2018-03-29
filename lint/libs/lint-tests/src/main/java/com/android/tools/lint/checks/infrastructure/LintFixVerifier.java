@@ -117,10 +117,40 @@ public class LintFixVerifier {
     public LintFixVerifier expectFixDiffs(@NonNull String expected) {
         StringBuilder diff = new StringBuilder(100);
         checkFixes(null, null, diff);
-        assertEquals(
-                StringsKt.trimIndent(expected),
-                StringsKt.trimIndent(diff.toString().replace("\r\n", "\n")));
+        String actual = StringsKt.trimIndent(diff.toString().replace("\r\n", "\n"));
+        expected = StringsKt.trimIndent(expected);
+        if (!expected.equals(actual)) {
+            // Until 3.2 canary 10 the line numbers were off by one; try adjusting
+            if (!bumpFixLineNumbers(expected).trim().equals(actual.trim())) {
+                assertEquals(expected, actual);
+            }
+        }
         return this;
+    }
+
+    /**
+     * Given fix-delta output, increases the line numbers by one (needed to gracefully handle older
+     * fix diffs where the line numbers were 0-based instead of 1-based like the error output.)
+     */
+    @NonNull
+    private static String bumpFixLineNumbers(@NonNull String output) {
+        StringBuilder sb = new StringBuilder(output.length());
+        Pattern pattern = Pattern.compile("((Fix|Data) for .* line )(\\d+)(: .+)");
+        for (String line : output.split("\n")) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.matches()) {
+                String prefix = matcher.group(1);
+                String lineNumber = matcher.group(3);
+                String suffix = matcher.group(4);
+                sb.append(prefix);
+                sb.append(Integer.toString(Integer.parseInt(lineNumber) + 1));
+                sb.append(suffix);
+            } else {
+                sb.append(line);
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
     }
 
     @Nullable
@@ -282,8 +312,10 @@ public class LintFixVerifier {
                                 + start.getOffset()
                                 + " (line "
                                 + start.getLine()
+                                + 1
                                 + ", column "
                                 + start.getColumn()
+                                + 1
                                 + ") in "
                                 + warning.path
                                 + ":\n"
@@ -486,7 +518,7 @@ public class LintFixVerifier {
             diffs.append("Fix for ")
                     .append(targetPath)
                     .append(" line ")
-                    .append(warning.line)
+                    .append(warning.line + 1)
                     .append(": ");
             if (fixDescription != null) {
                 diffs.append(fixDescription).append(":\n");
@@ -501,7 +533,7 @@ public class LintFixVerifier {
         diffs.append("Data for ")
                 .append(targetPath.replace(File.separatorChar, '/'))
                 .append(" line ")
-                .append(warning.line)
+                .append(warning.line + 1)
                 .append(": ");
         String fixDescription = map.getDisplayName();
         if (fixDescription != null) {
