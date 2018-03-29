@@ -82,4 +82,21 @@ public class EventProfilerTest {
         myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "printConnection");
         assertThat(myAndroidDriver.waitForInput("WrapperConnection: null")).isTrue();
     }
+
+    @Test
+    public void testNoRecursionOnWeakReferenceApis() throws Exception {
+        // Accept input and wait for the input thread to loop around capturing required input.
+        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "acceptInput");
+        // Wait a little, we should have the same wrapped connection we initially had.
+        Thread.sleep(500);
+        myAndroidDriver.triggerMethod(
+                "com.activity.event.EventActivity", "printInputConnectionTreeDepth");
+        String depth =
+                myAndroidDriver
+                        .waitForInput(
+                                Pattern.compile("(.*)(InputConnectionTree Depth\\: )(?<result>.*)"))
+                        .trim();
+        // 1 Is the wrapper, 1 is the underlaying connection.
+        assertThat(Integer.parseInt(depth)).isEqualTo(2);
+    }
 }
