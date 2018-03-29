@@ -80,4 +80,11 @@ public class AndroidxNameTest {
                 AndroidxNameUtils.getNewName("unknown.package.FloatingActionButton"));
         assertEquals("FloatingActionButton", AndroidxNameUtils.getNewName("FloatingActionButton"));
     }
+
+    @Test
+    public void innerClassHandling() {
+        AndroidxName className =
+                AndroidxName.of("android.support.v7.widget.", "RecyclerView$Adapter");
+        assertEquals("androidx.recyclerview.widget.RecyclerView$Adapter", className.newName());
+    }
 }

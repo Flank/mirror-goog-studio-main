@@ -134,6 +134,13 @@ public class AndroidxNameUtils {
 
     @NonNull
     public static String getNewName(@NonNull String oldName) {
+        int innerClassSymbol = oldName.indexOf('$');
+        if (innerClassSymbol != -1) {
+            String outerClassName = oldName.substring(0, innerClassSymbol);
+            String innerClassName = oldName.substring(innerClassSymbol);
+            return getNewName(outerClassName) + innerClassName;
+        }
+
         String newName = ANDROIDX_FULL_CLASS_MAPPING.get(oldName);
         if (newName != null) {
             return newName;

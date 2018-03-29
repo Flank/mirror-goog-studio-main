@@ -43,14 +43,8 @@ public class AndroidxName {
         // We first check if there is a specific class name mapping. If there is not, we'll try to find a mapping
         // for the package name
         String fullOldName = oldPackage + simpleClassName;
-        String fullNewName =
-                AndroidxNameUtils.ANDROIDX_FULL_CLASS_MAPPING.get(oldPackage + simpleClassName);
 
-        return new AndroidxName(
-                fullOldName,
-                fullNewName != null
-                        ? fullNewName
-                        : AndroidxNameUtils.getPackageMapping(oldPackage, true) + simpleClassName);
+        return new AndroidxName(fullOldName, AndroidxNameUtils.getNewName(fullOldName));
     }
 
     /** Creates a new instance for the given package and class name */
