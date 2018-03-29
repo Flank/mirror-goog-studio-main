@@ -65,14 +65,6 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
     lateinit var bundleFile: File
         private set
 
-    private lateinit var _configFile: File
-
-    @get:Optional
-    @get:InputFile
-    @Suppress("MemberVisibilityCanPrivate")
-    val configFile: File?
-        get() = if (_configFile.exists()) _configFile else null
-
     @TaskAction
     fun bundleModules() {
         val adapter = WorkerExecutorAdapter<Params>(workerExecutor, BundleToolRunnable::class.java)
@@ -81,7 +73,6 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             Params(
                 baseModuleZip.singleFile(),
                 featureZips.files,
-                configFile,
                 bundleFile
             )
         )
@@ -92,7 +83,6 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
     private data class Params(
         val baseModuleFile: File,
         val featureFiles: Set<File>,
-        val configFile: File?,
         val bundleFile: File
     ) : Serializable
 
@@ -111,11 +101,9 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             builder.add(getBundlePath(params.baseModuleFile))
             params.featureFiles.forEach { builder.add(getBundlePath(it)) }
 
-            val command = BuildBundleCommand.builder().setOutputPath(bundleFile.toPath())
+            val command = BuildBundleCommand.builder()
+                .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
-            params.configFile?.let {
-                command.setBundleConfigPath(it.toPath())
-            }
 
             command.build().execute()
         }
@@ -128,7 +116,6 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             return children[0].toPath()
         }
     }
-
 
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
 
@@ -146,9 +133,8 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             task.featureZips = scope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.MODULE_BUNDLE)
-
-            task._configFile = scope.globalScope.project.file("BundleConfig.xml")
+                AndroidArtifacts.ArtifactType.MODULE_BUNDLE
+            )
         }
     }
 }

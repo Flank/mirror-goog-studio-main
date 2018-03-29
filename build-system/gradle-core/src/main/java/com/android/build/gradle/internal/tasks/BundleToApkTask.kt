@@ -30,7 +30,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -55,8 +55,8 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
     lateinit var aapt2FromMaven: FileCollection
         private set
 
-    @get:OutputDirectory
-    lateinit var outputDir: File
+    @get:OutputFile
+    lateinit var outputFile: File
         private set
 
     @TaskAction
@@ -67,7 +67,7 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
             Params(
                 bundle.singleFile(),
                 File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
-                outputDir
+                outputFile
             )
         )
 
@@ -77,17 +77,17 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
     private data class Params(
         val bundleFile: File,
         val aapt2File: File,
-        val outputDir: File
+        val outputFile: File
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
-            FileUtils.cleanOutputDir(params.outputDir)
+            FileUtils.deleteIfExists(params.outputFile)
 
             val command = BuildApksCommand
                 .builder()
                 .setBundlePath(params.bundleFile.toPath())
-                .setOutputDirectory(params.outputDir.toPath())
+                .setOutputFile(params.outputFile.toPath())
                 .setAapt2Command(Aapt2Command.createFromExecutablePath(params.aapt2File.toPath()))
 
             command.build().execute()
@@ -101,7 +101,11 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
 
         override fun execute(task: BundleToApkTask) {
             task.variantName = scope.fullVariantName
-            task.outputDir = scope.artifacts.appendArtifact(InternalArtifactType.APKS_FROM_BUNDLE, task)
+            task.outputFile = scope.artifacts.appendArtifact(
+                InternalArtifactType.APKS_FROM_BUNDLE,
+                task,
+                "bundle.apks"
+            )
             task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
 
