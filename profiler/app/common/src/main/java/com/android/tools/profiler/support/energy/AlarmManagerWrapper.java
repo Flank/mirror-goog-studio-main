@@ -93,8 +93,8 @@ public final class AlarmManagerWrapper {
                     intervalMillis,
                     operation.getCreatorPackage(),
                     operation.getCreatorUid(),
-                    // SetImpl is one level down of user code.
-                    StackTrace.getStackTrace(1));
+                    // SetImpl is one level down of public framework API and two levels down of user code.
+                    StackTrace.getStackTrace(2));
         } else if (listener != null) {
             if (!listenerMap.containsKey(listener)) {
                 listenerMap.put(
@@ -107,8 +107,8 @@ public final class AlarmManagerWrapper {
                     windowMillis,
                     intervalMillis,
                     listenerTag,
-                    // SetImpl is one level down of user code.
-                    StackTrace.getStackTrace(1));
+                    // SetImpl is one level down of public framework API and two levels down of user code.
+                    StackTrace.getStackTrace(2));
         } else {
             StudioLog.e("Invalid alarm: neither operation or listener is set.");
         }
@@ -125,7 +125,8 @@ public final class AlarmManagerWrapper {
                 operationIdMap.containsKey(operation) ? operationIdMap.get(operation) : 0,
                 operation.getCreatorPackage(),
                 operation.getCreatorUid(),
-                StackTrace.getStackTrace());
+                // API cancel is one level down of user code.
+                StackTrace.getStackTrace(1));
     }
 
     /**
@@ -139,7 +140,8 @@ public final class AlarmManagerWrapper {
                 listenerMap.containsKey(listener)
                         ? listenerMap.get(listener)
                         : new ListenerParams(0, "");
-        sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace());
+        // API cancel is one level down of user code.
+        sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace(1));
     }
 
     /**

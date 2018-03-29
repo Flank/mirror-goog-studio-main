@@ -89,7 +89,8 @@ public final class JobWrapper {
                 jobInfo.getExtras().toString(),
                 jobInfo.getTransientExtras().toString(),
                 scheduleResult,
-                StackTrace.getStackTrace());
+                // API schedule is one level down of user code.
+                StackTrace.getStackTrace(1));
         return scheduleResult;
     }
 
@@ -158,7 +159,8 @@ public final class JobWrapper {
                 params.getExtras().toString(),
                 params.getTransientExtras().toString(),
                 wantsReschedule,
-                StackTrace.getStackTrace());
+                // API finish is one level down of user code.
+                StackTrace.getStackTrace(1));
     }
 
     private static String[] triggerContentUrisToStrings(JobInfo.TriggerContentUri[] uris) {

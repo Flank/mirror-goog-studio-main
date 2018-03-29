@@ -123,7 +123,8 @@ public final class LocationManagerWrapper {
                     minDistance,
                     accuracy,
                     powerReq,
-                    StackTrace.getStackTrace());
+                    // API requestLocationUpdate is one level down of user code.
+                    StackTrace.getStackTrace(1));
         } else if (intent != null) {
             if (!intentIdMap.containsKey(intent)) {
                 intentIdMap.put(intent, EventIdGenerator.nextId());
@@ -137,7 +138,8 @@ public final class LocationManagerWrapper {
                     powerReq,
                     intent.getCreatorPackage(),
                     intent.getCreatorUid(),
-                    StackTrace.getStackTrace());
+                    // API requestLocationUpdate is one level down of user code.
+                    StackTrace.getStackTrace(1));
         }
     }
 
@@ -184,7 +186,8 @@ public final class LocationManagerWrapper {
             LocationManager locationManager, LocationListener listener) {
         if (listenerIdMap.containsKey(listener)) {
             sendListenerLocationUpdateRemoved(
-                    listenerIdMap.get(listener), StackTrace.getStackTrace());
+                    // API removeUpdates is one level down of user code.
+                    listenerIdMap.get(listener), StackTrace.getStackTrace(1));
         }
     }
 
@@ -194,7 +197,8 @@ public final class LocationManagerWrapper {
                     intentIdMap.get(intent),
                     intent.getCreatorPackage(),
                     intent.getCreatorUid(),
-                    StackTrace.getStackTrace());
+                    // API removeUpdates is one level down of user code.
+                    StackTrace.getStackTrace(1));
         }
     }
 

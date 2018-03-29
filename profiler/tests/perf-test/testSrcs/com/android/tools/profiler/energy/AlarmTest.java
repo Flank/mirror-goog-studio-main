@@ -67,7 +67,8 @@ public class AlarmTest {
 
     @Test
     public void testSetAndCancelIntentAlarm() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setAndCancelIntentAlarm");
+        String methodName = "setAndCancelIntentAlarm";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
         assertThat(myAndroidDriver.waitForInput("INTENT ALARM CANCELLED")).isTrue();
 
         EnergyEventsResponse response =
@@ -104,14 +105,15 @@ public class AlarmTest {
         assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorUid()).isEqualTo(1);
 
         String setStack = TestUtils.getBytes(myGrpc, setEvent.getTraceId());
-        assertThat(setStack).contains("set");
+        assertThat(setStack).contains(methodName);
         String cancelStack = TestUtils.getBytes(myGrpc, cancelEvent.getTraceId());
-        assertThat(cancelStack).contains("cancel");
+        assertThat(cancelStack).contains(methodName);
     }
 
     @Test
     public void testSetAndCancelListenerAlarm() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setAndCancelListenerAlarm");
+        String methodName = "setAndCancelListenerAlarm";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
         assertThat(myAndroidDriver.waitForInput("LISTENER ALARM CANCELLED")).isTrue();
 
         EnergyEventsResponse response =
@@ -142,9 +144,9 @@ public class AlarmTest {
         assertThat(cancelEvent.getAlarmCancelled().getListener().getTag()).isEqualTo("foo");
 
         String setStack = TestUtils.getBytes(myGrpc, setEvent.getTraceId());
-        assertThat(setStack).contains("set");
+        assertThat(setStack).contains(methodName);
         String cancelStack = TestUtils.getBytes(myGrpc, cancelEvent.getTraceId());
-        assertThat(cancelStack).contains("cancel");
+        assertThat(cancelStack).contains(methodName);
     }
 
     @Test

@@ -69,7 +69,8 @@ public class LocationTest {
 
     @Test
     public void testListenerLocationRequest() {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "listenerRequestAndRemoveLocationUpdates");
+        String methodName = "listenerRequestAndRemoveLocationUpdates";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
         assertThat(myAndroidDriver.waitForInput("LISTENER LOCATION UPDATES")).isTrue();
 
         EnergyEventsResponse response =
@@ -118,14 +119,15 @@ public class LocationTest {
                 .isEqualTo(LocationUpdateRemoved.ActionCase.LISTENER);
 
         String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
-        assertThat(requestStack).contains("request");
+        assertThat(requestStack).contains(methodName);
         String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
-        assertThat(removeStack).contains("remove");
+        assertThat(removeStack).contains(methodName);
     }
 
     @Test
     public void testIntentLocationRequest() {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "intentRequestAndRemoveLocationUpdates");
+        String methodName = "intentRequestAndRemoveLocationUpdates";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
         assertThat(myAndroidDriver.waitForInput("INTENT LOCATION UPDATES")).isTrue();
 
         EnergyEventsResponse response =
@@ -160,8 +162,8 @@ public class LocationTest {
                 .isEqualTo(LocationUpdateRemoved.ActionCase.INTENT);
 
         String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
-        assertThat(requestStack).contains("request");
+        assertThat(requestStack).contains(methodName);
         String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
-        assertThat(removeStack).contains("remove");
+        assertThat(removeStack).contains(methodName);
     }
 }

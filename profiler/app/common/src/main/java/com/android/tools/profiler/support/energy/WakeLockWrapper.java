@@ -130,7 +130,8 @@ public final class WakeLockWrapper {
                     creationParams.myLevelAndFlags,
                     creationParams.myTag,
                     timeout,
-                    StackTrace.getStackTrace());
+                    // API acquire is one level down of user code or 3rd party code.
+                    StackTrace.getStackTrace(1));
         }
     }
 
@@ -157,7 +158,8 @@ public final class WakeLockWrapper {
                     eventIdMap.get(releaseParams.myWakeLock),
                     releaseParams.myFlags,
                     releaseParams.myWakeLock.isHeld(),
-                    StackTrace.getStackTrace());
+                    // API release is one level down of user code or 3rd party code.
+                    StackTrace.getStackTrace(1));
         }
     }
 
