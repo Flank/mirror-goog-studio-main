@@ -50,6 +50,7 @@ kotlin_test(
         "-Dtest.suite.jar=/framework_tests.jar",
     ],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
     deps = [

@@ -4,7 +4,10 @@ iml_module(
     name = "studio.analyzer",
     srcs = ["src/main/java"],
     iml_files = ["analyzer.iml"],
-    tags = ["managed"],
+    tags = [
+        "managed",
+        "no_test_windows",  # b/77288863
+    ],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -52,6 +55,7 @@ java_test(
     srcs = glob(["src/test/java/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.analyzer",

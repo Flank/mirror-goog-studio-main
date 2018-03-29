@@ -79,5 +79,6 @@ gradle_integration_test(
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
+    tags = ["no_test_windows"],  # b/77288863
     deps = TEST_DEPS,
 )

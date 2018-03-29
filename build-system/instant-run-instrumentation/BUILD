@@ -89,6 +89,7 @@ kotlin_test(
         include = ["manifest-merger/src/test/java/**"],
         exclude = ["manifest-merger/src/test/java/**/*.java"],
     ),
+    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [

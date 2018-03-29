@@ -8,7 +8,10 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["sdk-common.iml"],
     resources = ["src/main/resources"],
-    tags = ["managed"],
+    tags = [
+        "managed",
+        "no_test_windows",
+    ],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -102,6 +105,7 @@ kotlin_test(
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     visibility = ["//visibility:public"],
     runtime_deps = [

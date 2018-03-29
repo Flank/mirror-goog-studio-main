@@ -13,7 +13,10 @@ iml_module(
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
-    tags = ["managed"],
+    tags = [
+        "managed",
+        "no_test_windows",  # b/77288863
+    ],
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.sdklib"],
@@ -37,6 +40,7 @@ kotlin_library(
     pom = ":manifest-merger.pom",
     resource_strip_prefix = "tools/base/build-system/manifest-merger",
     resources = ["manifest-merger/NOTICE"],
+    tags = ["no_test_windows"],  # b/77288863
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -69,6 +73,7 @@ kotlin_test(
             "manifest-merger/src/test/java/**/*.kt",
         ],
     ),
+    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
