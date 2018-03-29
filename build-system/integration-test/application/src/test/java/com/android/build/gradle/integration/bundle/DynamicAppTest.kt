@@ -119,6 +119,27 @@ class DynamicAppTest {
     }
 
     @Test
+    fun `test packagingOptions`() {
+        // add a new res file and exclude.
+        val appProject = project.getSubproject(":app")
+        TestFileUtils.appendToFile(appProject.buildFile, "\nandroid.packagingOptions {\n" +
+                "  exclude 'foo.txt'\n" +
+                "}")
+        val fooTxt = FileUtils.join(appProject.testDir, "src", "main", "resources", "foo.txt")
+        FileUtils.mkdirs(fooTxt.parentFile)
+        Files.write(fooTxt.toPath(), "foo".toByteArray(Charsets.UTF_8))
+
+        val bundleTaskName = getBundleTaskName("debug")
+        project.execute("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        val zipFile = Zip(bundleFile)
+        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
+    }
+
+    @Test
     fun `test abiFilter with Bundle task`() {
         val appProject = project.getSubproject(":app")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
