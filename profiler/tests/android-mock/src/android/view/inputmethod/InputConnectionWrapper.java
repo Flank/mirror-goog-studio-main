@@ -1,22 +1,25 @@
 package android.view.inputmethod;
 
 import android.mock.MockInputConnection;
+import java.lang.ref.WeakReference;
 
 public class InputConnectionWrapper implements InputConnection {
 
     private Object mLock = new Object();
-    private InputConnection mInputConnection;
+    private WeakReference<InputConnection> mInputConnection;
+    private MockInputConnection mMockConnection;
 
     public InputConnectionWrapper() {
-        mInputConnection = new MockInputConnection();
+        mMockConnection = new MockInputConnection();
+        mInputConnection = new WeakReference<>(mMockConnection);
     }
 
     public InputConnectionWrapper(InputConnection ic, boolean mutable) {
-        mInputConnection = ic;
+        mInputConnection = new WeakReference<>(ic);
     }
 
     public void setTarget(InputConnection connection) {
-        mInputConnection = connection;
+        mInputConnection = new WeakReference<>(connection);
     }
 
     public boolean setComposingText(CharSequence charSequence, int i) {
@@ -29,6 +32,6 @@ public class InputConnectionWrapper implements InputConnection {
 
     // Function to expose underlaying InputConnection used only by test
     public InputConnection getConnection() {
-        return mInputConnection;
+        return mInputConnection.get();
     }
 }

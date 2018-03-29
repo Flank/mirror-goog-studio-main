@@ -30,4 +30,21 @@ public class EventActivity extends Activity {
                     "WrapperConnection: " + ((InputConnectionWrapper) connection).getConnection());
         }
     }
+
+    /**
+     * This function is called by the EventProfilerTest via refelection to assert the
+     * InputConnectionWrapper is only wrapped a single time by the EventProfiler
+     */
+    public void printInputConnectionTreeDepth() {
+        InputConnection connection =
+                InputMethodManager.getInstance().getConnectionWrapper().getConnection();
+        int depth = 0;
+        while (connection instanceof InputConnectionWrapper && depth < 1000) {
+            InputConnectionWrapper wrapper = (InputConnectionWrapper) connection;
+            connection = wrapper.getConnection();
+            depth++;
+        }
+        depth++;
+        System.out.println("InputConnectionTree Depth: " + depth);
+    }
 }
