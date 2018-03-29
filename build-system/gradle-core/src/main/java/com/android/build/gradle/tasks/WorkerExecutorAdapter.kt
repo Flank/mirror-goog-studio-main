@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.ide.common.workers.WorkerExecutorFacade
+import org.gradle.workers.IsolationMode
 import java.io.Serializable
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
@@ -39,8 +40,10 @@ class WorkerExecutorAdapter
         actionClass: Class<out Runnable>,
         parameter: Serializable
     ) {
-        workerExecutor.submit(actionClass,
-            { NoIsolationModeConfigurator(parameter).configure(it) })
+        workerExecutor.submit(actionClass) {
+                it.isolationMode = IsolationMode.NONE
+                it.params(parameter)
+            }
     }
 
     override fun await() {
@@ -49,23 +52,5 @@ class WorkerExecutorAdapter
 
     override fun taskActionDone() {
         // do nothing.
-    }
-
-    class ParameterAdapter(val actionClass: String, val p: Serializable) : Serializable
-
-    class InjectorAdapter @Inject constructor(private val parameter: ParameterAdapter) : Runnable {
-
-        override fun run() {
-            val actionClass = Class.forName(parameter.actionClass)
-            val constructor = actionClass.getConstructor(parameter.p.javaClass)
-            val action = constructor.newInstance(parameter.p)
-            if (action is Runnable) {
-                action.run()
-            } else {
-                throw RuntimeException("${parameter.actionClass} does not implement Runnable")
-            }
-
-        }
-
     }
 }

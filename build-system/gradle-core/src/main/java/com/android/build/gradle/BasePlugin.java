@@ -66,6 +66,7 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -251,6 +252,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         this.project = project;
         this.projectOptions = new ProjectOptions(project);
+        checkGradleVersion(project, getLogger(), projectOptions);
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
 
@@ -260,6 +262,13 @@ public abstract class BasePlugin<E extends BaseExtension2>
         PluginInitializer.initialize(project);
         ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
+        
+        // initialize our workers using the project's options.
+        Workers.INSTANCE.initFromProject(
+                projectOptions,
+                // possibly, in the future, consider using a pool with a dedicated size
+                // using the gradle parallelism settings.
+                ForkJoinPool.commonPool());
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
@@ -335,7 +344,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         final Gradle gradle = project.getGradle();
 
         extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
-        checkGradleVersion(project, getLogger(), projectOptions);
 
         sdkHandler = new SdkHandler(project, getLogger());
         if (!gradle.getStartParameter().isOffline()

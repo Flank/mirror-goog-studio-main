@@ -21,13 +21,14 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.ResourceCompilationService
+import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
 class WorkerExecutorResourceCompilationService(
-        private val workerExecutor: WorkerExecutor,
+        private val workerExecutor: WorkerExecutorFacade,
         private val aapt2ServiceKey: Aapt2ServiceKey) : ResourceCompilationService {
 
     /** Temporary workaround for b/73804575 / https://github.com/gradle/gradle/issues/4502
@@ -57,15 +58,14 @@ class WorkerExecutorResourceCompilationService(
                 i.rem(buckets) == bucket
             }
             // b/73804575
-            workerExecutor.submit(Aapt2CompileWithBlameRunnable::class.java) {
-                it.isolationMode = IsolationMode.NONE
-                it.setParams(Aapt2CompileWithBlameRunnable.Params(aapt2ServiceKey, bucketRequests))
-            }
+            workerExecutor.submit(Aapt2CompileWithBlameRunnable::class.java,
+                Aapt2CompileWithBlameRunnable.Params(aapt2ServiceKey, bucketRequests))
         }
         requests.clear()
 
         // No need for workerExecutor.await() here as resource compilation is the last part of the
         // merge task. This means the MergeResources task action can return, allowing other tasks
         // in the same subproject to run while resources are still being compiled.
+        workerExecutor.taskActionDone()
     }
 }
