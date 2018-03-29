@@ -36,7 +36,9 @@ public class AndroidxName {
     @NonNull
     public static AndroidxName of(@NonNull String oldPackage, @NonNull String simpleClassName) {
         assert oldPackage.endsWith(".");
-        assert oldPackage.startsWith(AndroidxNameUtils.ANDROID_SUPPORT_PKG);
+        assert oldPackage.startsWith(AndroidxNameUtils.ANDROID_SUPPORT_PKG)
+                || oldPackage.startsWith(AndroidxNameUtils.ANDROID_ARCH_PKG)
+                || oldPackage.startsWith(AndroidxNameUtils.ANDROID_DATABINDING_PKG);
 
         // We first check if there is a specific class name mapping. If there is not, we'll try to find a mapping
         // for the package name
@@ -65,7 +67,9 @@ public class AndroidxName {
     @NonNull
     public static AndroidxName of(@NonNull String oldPackageName) {
         assert oldPackageName.endsWith(".");
-        assert oldPackageName.startsWith(AndroidxNameUtils.ANDROID_SUPPORT_PKG);
+        assert oldPackageName.startsWith(AndroidxNameUtils.ANDROID_SUPPORT_PKG)
+                || oldPackageName.startsWith(AndroidxNameUtils.ANDROID_ARCH_PKG)
+                || oldPackageName.startsWith(AndroidxNameUtils.ANDROID_DATABINDING_PKG);
 
         return new AndroidxName(
                 oldPackageName, AndroidxNameUtils.getPackageMapping(oldPackageName, true));

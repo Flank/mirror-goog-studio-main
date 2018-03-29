@@ -60,6 +60,10 @@ public class AndroidxNameTest {
         assertEquals("android.support.v4.app.", pkgName.oldName());
         assertEquals("androidx.core.app.", pkgName.newName());
 
+        pkgName = AndroidxName.of("android.arch.persistence.room.");
+        assertEquals("android.arch.persistence.room.", pkgName.oldName());
+        assertEquals("androidx.room.", pkgName.newName());
+
         // Test a non-existent name
         pkgName = AndroidxName.of("android.support.wear.test.");
         assertEquals("android.support.wear.test.", pkgName.oldName());
