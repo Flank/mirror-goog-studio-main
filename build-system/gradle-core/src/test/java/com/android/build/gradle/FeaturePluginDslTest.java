@@ -54,7 +54,7 @@ public class FeaturePluginDslTest {
 
     @Test
     public void testTasks() throws Exception {
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         SortedSet<String> taskNames = project.getTasks().getNames();
 

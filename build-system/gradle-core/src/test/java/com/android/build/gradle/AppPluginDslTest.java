@@ -113,7 +113,7 @@ public class AppPluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         checkGeneratedDensities(
                 "mergeF1DebugResources", "ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi");
@@ -125,7 +125,7 @@ public class AppPluginDslTest {
 
     @Test
     public void testUseSupportLibrary_default() throws Exception {
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(getTask("mergeDebugResources", MergeResources.class)
                         .isVectorSupportLibraryUsed())
@@ -159,7 +159,7 @@ public class AppPluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(
                         getTask("mergeF1DebugResources", MergeResources.class)
@@ -180,7 +180,7 @@ public class AppPluginDslTest {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("proguard");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_RELEASE);
     }
@@ -190,7 +190,7 @@ public class AppPluginDslTest {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_RELEASE);
     }
@@ -200,7 +200,7 @@ public class AppPluginDslTest {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setObfuscate(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_RELEASE);
     }
@@ -214,7 +214,7 @@ public class AppPluginDslTest {
 
         assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(SHRINKER_RELEASE);
     }
@@ -226,7 +226,7 @@ public class AppPluginDslTest {
         postprocessing.setCodeShrinker("android_gradle");
         assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_RELEASE);
     }
@@ -240,7 +240,7 @@ public class AppPluginDslTest {
         postprocessing.setObfuscate(true); // This is set to true, but won't happen.
 
         try {
-            plugin.createAndroidTasks(false);
+            plugin.createAndroidTasks();
             fail();
         } catch (EvalIssueException e) {
             assertThat(e.getMessage()).contains("obfuscating");
@@ -252,7 +252,7 @@ public class AppPluginDslTest {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("r8");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(R8_RELEASE);
     }
@@ -263,7 +263,7 @@ public class AppPluginDslTest {
         release.getPostprocessing().setCodeShrinker("r8");
         release.getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(R8_RELEASE);
     }
@@ -303,7 +303,7 @@ public class AppPluginDslTest {
         postprocessing.setObfuscate(true);
 
         try {
-            plugin.createAndroidTasks(false);
+            plugin.createAndroidTasks();
             fail();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("does not support obfuscating");
@@ -318,7 +318,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setRemoveUnusedResources(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames())
                 .containsAllOf(SHRINKER_RELEASE, "transformClassesAndDexWithShrinkResForRelease");
@@ -333,7 +333,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedResources(true);
 
         try {
-            plugin.createAndroidTasks(false);
+            plugin.createAndroidTasks();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("requires unused code shrinking");
         }
@@ -345,7 +345,7 @@ public class AppPluginDslTest {
         release.setShrinkResources(true);
 
         try {
-            plugin.createAndroidTasks(false);
+            plugin.createAndroidTasks();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("requires unused code shrinking");
         }
@@ -381,7 +381,7 @@ public class AppPluginDslTest {
 
         android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
@@ -405,7 +405,7 @@ public class AppPluginDslTest {
         debug.setMinifyEnabled(true);
         debug.setUseProguard(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
@@ -422,7 +422,7 @@ public class AppPluginDslTest {
         initFieldsFromProject();
         android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
 
@@ -441,7 +441,7 @@ public class AppPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.setMinifyEnabled(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
@@ -460,7 +460,7 @@ public class AppPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.setMinifyEnabled(false);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
@@ -481,7 +481,7 @@ public class AppPluginDslTest {
 
         android.getBuildTypes().getByName("debug").getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
@@ -506,7 +506,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setCodeShrinker("proguard");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
@@ -530,7 +530,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setCodeShrinker("proguard");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         // If the user insists on ProGuard, they get a warning a no shrinking at all.
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
@@ -543,7 +543,7 @@ public class AppPluginDslTest {
     public void testShrinkerChoice_newDsl_noInstantRun() throws Exception {
         android.getBuildTypes().getByName("debug").getPostprocessing().setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
 
@@ -560,7 +560,7 @@ public class AppPluginDslTest {
         initFieldsFromProject();
         android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
@@ -578,7 +578,7 @@ public class AppPluginDslTest {
         debug.setMinifyEnabled(true);
         debug.setUseProguard(false);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG_ANDROID_TEST);
@@ -591,7 +591,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setCodeShrinker("android_gradle");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG_ANDROID_TEST);
@@ -603,7 +603,7 @@ public class AppPluginDslTest {
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG_ANDROID_TEST);
@@ -616,7 +616,7 @@ public class AppPluginDslTest {
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setObfuscate(true);
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);

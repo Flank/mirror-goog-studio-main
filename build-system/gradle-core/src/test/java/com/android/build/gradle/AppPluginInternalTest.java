@@ -64,7 +64,7 @@ public class AppPluginInternalTest {
     @Test
     public void testBasic() {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         TestCase.assertEquals(2, plugin.getVariantManager().getBuildTypes().size());
         TestCase.assertNotNull(
@@ -108,7 +108,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         TestCase.assertEquals(
                 Integer.valueOf(1), plugin.getExtension().getDefaultConfig().getVersionCode());
@@ -148,7 +148,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         TestCase.assertEquals(3, plugin.getVariantManager().getBuildTypes().size());
 
@@ -189,7 +189,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         TestCase.assertEquals(2, plugin.getVariantManager().getProductFlavors().size());
 
@@ -245,7 +245,7 @@ public class AppPluginInternalTest {
                         + "\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         TestCase.assertEquals(5, plugin.getVariantManager().getProductFlavors().size());
 
@@ -340,7 +340,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
@@ -464,7 +464,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         Exception recordedException = null;
         try {
-            plugin.createAndroidTasks(true);
+            plugin.createAndroidTasks();
         } catch (Exception e) {
             recordedException = e;
         }
@@ -480,7 +480,7 @@ public class AppPluginInternalTest {
         android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
-        plugin.createAndroidTasks(true);
+        plugin.createAndroidTasks();
 
         AndroidJavaCompile compileDebugJavaWithJavac =
                 (AndroidJavaCompile) project.getTasks().getByName("compileDebugJavaWithJavac");

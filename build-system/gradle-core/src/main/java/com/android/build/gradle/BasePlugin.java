@@ -670,7 +670,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
                             project.getPath(),
                             null,
-                            () -> createAndroidTasks(false));
+                            () -> createAndroidTasks());
                 });
     }
 
@@ -704,7 +704,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
     }
 
     @VisibleForTesting
-    final void createAndroidTasks(boolean force) {
+    final void createAndroidTasks() {
         // Make sure unit tests set the required fields.
         checkState(extension.getBuildToolsRevision() != null,
                 "buildToolsVersion is not specified.");
@@ -747,8 +747,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
         // This is because project don't get evaluated in the unit test setup.
         // See AppPluginDslTest
-        if (!force
-                && (!project.getState().getExecuted() || project.getState().getFailure() != null)
+        if ((!project.getState().getExecuted() || project.getState().getFailure() != null)
                 && SdkHandler.sTestSdkFolder == null) {
             return;
         }

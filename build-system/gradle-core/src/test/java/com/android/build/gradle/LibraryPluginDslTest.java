@@ -59,7 +59,7 @@ public class LibraryPluginDslTest {
 
     @Test
     public void testBasic() {
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(2);
@@ -74,7 +74,7 @@ public class LibraryPluginDslTest {
     @Test
     public void testNewBuildType() {
         android.getBuildTypes().create("custom");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(3);
@@ -91,7 +91,7 @@ public class LibraryPluginDslTest {
     public void testNewBuildType_testBuildType() {
         android.getBuildTypes().create("custom");
         android.setTestBuildType("custom");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(3);
@@ -123,13 +123,13 @@ public class LibraryPluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.getPostprocessing().setRemoveUnusedResources(true);
         try {
-            plugin.createAndroidTasks(false);
+            plugin.createAndroidTasks();
             fail("Expected resource shrinker error");
         } catch (EvalIssueException e) {
             assertThat(e).hasMessage("Resource shrinker cannot be used for libraries.");
         }
 
         debug.getPostprocessing().setRemoveUnusedResources(false);
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
     }
 }

@@ -104,7 +104,7 @@ public class PluginDslTest {
 
     @Test
     public void testBasic() {
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
@@ -127,7 +127,7 @@ public class PluginDslTest {
                         + String.valueOf(TestConstants.COMPILE_SDK_VERSION)
                         + "'\n        }\n");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
@@ -177,7 +177,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTest", 3);
@@ -218,7 +218,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTest", 4);
@@ -278,7 +278,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         ImmutableMap<String, Integer> map =
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
         assertThat(VariantCheckers.countVariants(map))
@@ -353,7 +353,7 @@ public class PluginDslTest {
                         + "    }\n"
                         + "}\n");
 
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
@@ -409,7 +409,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         Map<String, List<String>> expected = new TreeMap<>();
         expected.put(
@@ -465,7 +465,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         String defaultFile =
                 new File(
@@ -506,7 +506,7 @@ public class PluginDslTest {
                         + "        targetCompatibility '1.6'\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         AndroidJavaCompile compileReleaseJavaWithJavac =
                 (AndroidJavaCompile)
@@ -524,7 +524,7 @@ public class PluginDslTest {
     public void testMockableJarName() {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         MockableAndroidJarTask mockableAndroidJar =
                 (MockableAndroidJarTask) project.getTasks().getByName("mockableAndroidJar");
@@ -553,7 +553,7 @@ public class PluginDslTest {
                         + "       encoding 'foo'\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         AndroidJavaCompile compileReleaseJavaWithJavac =
                 (AndroidJavaCompile)
@@ -595,7 +595,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
 
         Map<String, VariantScope> variantMap = getVariantMap();
 
@@ -663,7 +663,7 @@ public class PluginDslTest {
     @Test
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
-        plugin.createAndroidTasks(false);
+        plugin.createAndroidTasks();
         assertThat(plugin.getAndroidBuilder().getBuildToolInfo().getRevision())
                 .isEqualTo(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.

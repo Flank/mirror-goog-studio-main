@@ -23,5 +23,5 @@ import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
  * package visibility of createAndroidTasks for testing.
  */
 fun <E: BaseExtension2> BasePlugin<E>.runAfterEvaluate(force: Boolean = false) {
-    this.createAndroidTasks(force)
+    this.createAndroidTasks()
 }
