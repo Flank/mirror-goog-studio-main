@@ -142,7 +142,9 @@ class DynamicAppTest {
 
     @Test
     fun `test abiFilter with Bundle task`() {
+        // https://issuetracker.google.com/74401817
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
+
         val appProject = project.getSubproject(":app")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")

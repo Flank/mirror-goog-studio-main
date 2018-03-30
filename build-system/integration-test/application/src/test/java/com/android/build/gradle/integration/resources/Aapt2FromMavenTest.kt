@@ -76,7 +76,9 @@ class Aapt2FromMavenTest {
     /** Verify that the the artifact provided by the [getAapt2FromMaven] method is usable. */
     @Test
     fun sanityTest() {
+        // https://issuetracker.google.com/77321151
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
+
         val project = ProjectBuilder().withProjectDir(temporaryFolder.newFolder()).build()
         val artifact = getAapt2FromMavenForTest(project)
 
