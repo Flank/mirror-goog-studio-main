@@ -28,9 +28,10 @@
             </#if>
             <@manifestMacros.commonActivityBody />
             <#if isThingsLauncher>
+                <!-- Make this the first activity that is displayed when the device boots. -->
                 <intent-filter>
                     <action android:name="android.intent.action.MAIN" />
-                    <category android:name="android.intent.category.IOT_LAUNCHER" />
+                    <category android:name="android.intent.category.HOME" />
                     <category android:name="android.intent.category.DEFAULT" />
                 </intent-filter>
             </#if>
