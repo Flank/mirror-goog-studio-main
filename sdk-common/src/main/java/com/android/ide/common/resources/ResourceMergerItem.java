@@ -437,7 +437,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 value =
                         parseTextValue(
                                 new TextResourceValue(
-                                        getReferenceToSelf(), null, null, mLibraryName));
+                                        mNamespace, mType, getName(), null, null, mLibraryName));
                 break;
             case ANIMATOR:
             case DRAWABLE:

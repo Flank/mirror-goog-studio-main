@@ -15,13 +15,33 @@
  */
 package com.android.ide.common.rendering.api;
 
-/** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text */
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.resources.ResourceType;
+import com.android.utils.HashCodes;
+import java.util.Objects;
+
+/** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text. */
 public class TextResourceValue extends ResourceValue {
     private String mRawXmlValue;
 
     public TextResourceValue(
-            ResourceReference reference, String textValue, String rawXmlValue, String libraryName) {
+            @NonNull ResourceReference reference,
+            @Nullable String textValue,
+            @Nullable String rawXmlValue,
+            @Nullable String libraryName) {
         super(reference, textValue, libraryName);
+        mRawXmlValue = rawXmlValue;
+    }
+
+    public TextResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String textValue,
+            @Nullable String rawXmlValue,
+            @Nullable String libraryName) {
+        super(namespace, type, name, textValue, libraryName);
         mRawXmlValue = rawXmlValue;
     }
 
@@ -39,10 +59,7 @@ public class TextResourceValue extends ResourceValue {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((mRawXmlValue == null) ? 0 : mRawXmlValue.hashCode());
-        return result;
+        return HashCodes.mix(super.hashCode(), Objects.hashCode(mRawXmlValue));
     }
 
     @Override
@@ -51,16 +68,7 @@ public class TextResourceValue extends ResourceValue {
             return true;
         if (!super.equals(obj))
             return false;
-        if (getClass() != obj.getClass())
-            return false;
         TextResourceValue other = (TextResourceValue) obj;
-        if (mRawXmlValue == null) {
-            //noinspection VariableNotUsedInsideIf
-            if (other.mRawXmlValue != null)
-                return false;
-        } else if (!mRawXmlValue.equals(other.mRawXmlValue))
-            return false;
-        return true;
+        return Objects.equals(mRawXmlValue, other.mRawXmlValue);
     }
-
 }
