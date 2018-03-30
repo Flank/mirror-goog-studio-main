@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
@@ -28,6 +29,7 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.junit.Assume
@@ -211,6 +213,11 @@ class DynamicAppTest {
                 "feature1-xxhdpi.apk",
                 "feature2-master.apk",
                 "feature2-xxhdpi.apk")
+
+        val baseApk = File(apkFolder, "base-master.apk")
+        Truth.assertThat(Zip(baseApk).entries.map { it.toString() })
+            .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
+
 
         // -------------
         // build apks for API 18
