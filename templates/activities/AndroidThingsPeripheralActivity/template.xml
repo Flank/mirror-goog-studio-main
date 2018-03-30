@@ -19,6 +19,20 @@
         help="The name of the activity class to create" />
 
     <parameter
+        id="isLauncher"
+        name="Default Android launcher flag"
+        visibility="false"
+        type="boolean"
+        default="true"/>
+
+    <parameter
+        id="isThingsLauncher"
+        name="Android Things launcher Activity"
+        type="boolean"
+        default="false"
+        help="If true, the activity will have an IOT_LAUNCHER intent filter, making it the one activity launched when the Android Things device initiates. Only one activity on the device can have this intent filter." />
+
+    <parameter
             id="peripheralType"
             name="Show available peripherals"
             type="enum"
@@ -144,13 +158,6 @@
             default="false"
             visibility="peripheralType == 'peripheralOthers'"
             help="If true, dependencies and corresponding code to support a speaker/buzzer will be generated." />
-
-    <parameter
-        id="isLauncher"
-        name="Android Things launcher Activity"
-        type="boolean"
-        default="false"
-        help="If true, the activity will have an IOT_LAUNCHER intent filter, making it the one activity launched when the Android Things device initiates. Only one activity on the device can have this intent filter." />
 
     <parameter
         id="packageName"

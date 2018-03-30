@@ -27,7 +27,7 @@
                     android:value="${parentActivityClass}" />
             </#if>
             <@manifestMacros.commonActivityBody />
-            <#if isLauncher>
+            <#if isThingsLauncher>
                 <intent-filter>
                     <action android:name="android.intent.action.MAIN" />
                     <category android:name="android.intent.category.IOT_LAUNCHER" />

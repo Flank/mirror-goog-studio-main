@@ -20,6 +20,20 @@
         help="The name of the activity class to create" />
 
     <parameter
+        id="isLauncher"
+        name="Default Android launcher flag"
+        visibility="false"
+        type="boolean"
+        default="true"/>
+
+    <parameter
+        id="isThingsLauncher"
+        name="Android Things launcher Activity"
+        type="boolean"
+        default="false"
+        help="If true, the activity will have an IOT_LAUNCHER intent filter, making it the one activity launched when the Android Things device initiates. Only one activity on the device can have this intent filter." />
+
+    <parameter
         id="generateLayout"
         name="Generate a UI layout File"
         type="boolean"
@@ -35,13 +49,6 @@
         default="activity_main"
         visibility="generateLayout"
         help="The name of the UI layout to create for the activity" />
-
-    <parameter
-        id="isLauncher"
-        name="Android Things launcher Activity"
-        type="boolean"
-        default="true"
-        help="If true, the activity will have an IOT_LAUNCHER intent filter, making it the one activity launched when the Android Things device initiates. Only one activity on the device can have this intent filter." />
 
     <parameter
         id="packageName"
