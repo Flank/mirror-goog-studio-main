@@ -608,6 +608,10 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationChanged", "(ILjava/lang/String;FDD)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendIntentLocationChanged",
+        "(ILjava/lang/String;FDDLjava/lang/String;I)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {

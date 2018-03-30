@@ -22,6 +22,8 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 
@@ -156,11 +158,14 @@ public final class PendingIntentWrapper {
     }
 
     private static void handleIntent(Intent intent) {
-        // TODO: implement more cases, e.g. location update event.
-        if (intent.getExtras() != null
-                && intent.getExtras().getInt(Intent.EXTRA_ALARM_COUNT) != 0) {
+        PendingIntent pendingIntent = intentMap.getPendingIntent(intent);
+        if (intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, 0) != 0) {
             // Alarm-fired event.
-            AlarmManagerWrapper.sendIntentAlarmFiredIfExists(intentMap.getPendingIntent(intent));
+            AlarmManagerWrapper.sendIntentAlarmFiredIfExists(pendingIntent);
+        } else if (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED)) {
+            // Location-changed event.
+            Location location = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
+            LocationManagerWrapper.sendIntentLocationChangedIfExists(pendingIntent, location);
         }
     }
 }

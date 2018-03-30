@@ -31,12 +31,7 @@ public class Activity {
     private Intent myIntent;
 
     public Activity(String name) {
-        this(name, null);
-    }
-
-    public Activity(String name, Intent intent) {
         myName = name;
-        myIntent = intent;
     }
 
     public String getLocalClassName() {
@@ -61,6 +56,10 @@ public class Activity {
 
     public JobScheduler getJobScheduler() {
         return new JobSchedulerImpl();
+    }
+
+    public void setIntent(Intent intent) {
+        myIntent = intent;
     }
 
     public Intent getIntent() {

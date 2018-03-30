@@ -427,11 +427,13 @@ message LocationChanged {
     // A previously requested PendingIntent.
     PendingIntent intent = 2;
   }
+  // The location data from the callback or intent extras.
+  Location location = 3;
 }
 
+// Contains no metadata but we need the message to indicate a listener is passed
+// to the location request.
 message LocationListener {
-  // The location data from the callback.
-  Location location = 1;
 }
 
 message LocationRequest {

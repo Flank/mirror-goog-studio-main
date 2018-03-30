@@ -23,7 +23,6 @@ import android.os.Bundle;
 public class PendingIntent {
     private String myCreatorPackage;
     private int myCreatorUid;
-    private Activity myActivity;
     private Intent myIntent;
 
     public String getCreatorPackage() {
@@ -34,20 +33,31 @@ public class PendingIntent {
         return myCreatorUid;
     }
 
-    public static PendingIntent getActivity(
-            Context context, int requestCode, Intent intent, int flags, Bundle options) {
-        PendingIntent pendingIntent = new PendingIntent();
-        pendingIntent.myCreatorPackage = context.getPackageName();
-        pendingIntent.myCreatorUid = context.getUserId();
-        pendingIntent.myActivity = new Activity("MyActivity", intent);
-        pendingIntent.myIntent = intent;
-        return pendingIntent;
+    private PendingIntent(Context context, Intent intent) {
+        myCreatorPackage = context.getPackageName();
+        myCreatorUid = context.getUserId();
+        myIntent = intent;
     }
 
-    public void sendAlarm() {
-        if (myActivity != null) {
-            myIntent.getExtras().put("android.intent.extra.ALARM_COUNT", 1);
-            myActivity.performCreate(null, null);
+    public static PendingIntent getActivity(
+            Context context, int requestCode, Intent intent, int flags, Bundle options) {
+        return new PendingIntent(context, intent);
+    }
+
+    public static PendingIntent getService(
+            Context context, int requestCode, Intent intent, int flags) {
+        return new PendingIntent(context, intent);
+    }
+
+    public Intent getIntent() {
+        return myIntent;
+    }
+
+    public void send() {
+        if (myIntent.hasActivity()) {
+            myIntent.getActivity().performCreate(null, null);
+        } else if (myIntent.hasService()) {
+            myIntent.getService().onStartCommand(myIntent, 0, 0);
         }
     }
 }

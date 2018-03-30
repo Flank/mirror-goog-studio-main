@@ -16,7 +16,9 @@
 
 package android.location;
 
-public class Location {
+import android.os.Parcelable;
+
+public class Location implements Parcelable {
     private String myProvider;
     private float myAccuracy = 0.0f;
     private double myLatitude = 0.0;

@@ -32,7 +32,8 @@ public class AlarmActivity extends PerfdTestActivity {
     public void setAndCancelIntentAlarm() {
         AlarmManager alarmManager = getAlarmManager();
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(new Context("com.example", 1), 0, new Intent(), 0, null);
+                PendingIntent.getActivity(
+                        new Context("com.example", 1), 0, new Intent(AlarmActivity.class), 0, null);
         alarmManager.set(0x1, 1000, pendingIntent);
         alarmManager.cancel(pendingIntent);
         System.out.println("INTENT ALARM CANCELLED");
@@ -53,7 +54,8 @@ public class AlarmActivity extends PerfdTestActivity {
     public void fireIntentAlarm() {
         AlarmManager alarmManager = getAlarmManager();
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(new Context("foo.bar", 2), 0, new Intent(), 0, null);
+                PendingIntent.getActivity(
+                        new Context("foo.bar", 2), 0, new Intent(AlarmActivity.class), 0, null);
         alarmManager.setRepeating(0x0, 1000, 60000, pendingIntent);
         alarmManager.fire();
         System.out.println("INTENT ALARM FIRED");

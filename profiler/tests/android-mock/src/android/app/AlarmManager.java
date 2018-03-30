@@ -97,7 +97,8 @@ public class AlarmManager {
     /** This is not really how an alarm is fired but we'll pretend for testing purposes. */
     public void fire() {
         if (mOperation != null) {
-            mOperation.sendAlarm();
+            mOperation.getIntent().putExtra("android.intent.extra.ALARM_COUNT", 1);
+            mOperation.send();
         } else if (mListenerWrapper != null) {
             new Thread(mListenerWrapper).start();
         }

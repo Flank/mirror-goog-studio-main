@@ -220,6 +220,29 @@ public final class LocationManagerWrapper {
         }
     }
 
+    /**
+     * Sends the location-changed event if the given {@link PendingIntent} exists in the map.
+     *
+     * <p>Location change intents are sent from other components of the system (e.g. Activity) so
+     * this is called by {@link PendingIntentWrapper} when there is a potential match.
+     *
+     * @param pendingIntent the PendingIntent that was used in scheduling the alarm.
+     * @param location the location data stored in the intent extras.
+     */
+    public static void sendIntentLocationChangedIfExists(
+            PendingIntent pendingIntent, Location location) {
+        if (intentIdMap.containsKey(pendingIntent)) {
+            sendIntentLocationChanged(
+                    intentIdMap.get(pendingIntent),
+                    location.getProvider(),
+                    location.getAccuracy(),
+                    location.getLatitude(),
+                    location.getLongitude(),
+                    pendingIntent.getCreatorPackage(),
+                    pendingIntent.getCreatorUid());
+        }
+    }
+
     // Native functions to send location events to perfd.
     private static native void sendListenerLocationUpdateRequested(
             int eventId,
@@ -248,4 +271,13 @@ public final class LocationManagerWrapper {
 
     private static native void sendListenerLocationChanged(
             int eventId, String provider, float accuracy, double latitude, double longitude);
+
+    private static native void sendIntentLocationChanged(
+            int eventId,
+            String provider,
+            float accuracy,
+            double latitude,
+            double longitude,
+            String creatorPackage,
+            int creatorUid);
 }

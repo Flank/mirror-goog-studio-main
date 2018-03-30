@@ -36,14 +36,30 @@ public class Bundle {
         return mStr;
     }
 
+    public boolean containsKey(String key) {
+        return myMap.containsKey(key);
+    }
+
     public void put(String key, Object value) {
         myMap.put(key, value);
     }
 
-    public int getInt(String key) {
+    public int getInt(String key, int defaultValue) {
         if (myMap.containsKey(key) && myMap.get(key) instanceof Integer) {
             return (Integer) myMap.get(key);
         }
-        return 0;
+        return defaultValue;
+    }
+
+    public <T extends Parcelable> T getParcelable(String key) {
+        Object o = myMap.get(key);
+        if (o == null) {
+            return null;
+        }
+        try {
+            return (T) o;
+        } catch (ClassCastException ex) {
+            return null;
+        }
     }
 }

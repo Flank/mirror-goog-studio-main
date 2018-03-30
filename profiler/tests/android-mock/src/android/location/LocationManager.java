@@ -100,7 +100,8 @@ public class LocationManager {
             message.obj = location;
             mListenerTransport._handleMessage(message);
         } else if (mIntent != null) {
-            // TODO: trigger intent send.
+            mIntent.getIntent().putExtra("location", location);
+            mIntent.send();
         }
     }
 }

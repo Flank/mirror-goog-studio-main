@@ -605,9 +605,29 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
-  auto location = energy_event.mutable_location_changed()
-                      ->mutable_listener()
-                      ->mutable_location();
+  energy_event.mutable_location_changed()->mutable_listener();
+  auto location = energy_event.mutable_location_changed()->mutable_location();
+  JStringWrapper provider_str(env, provider);
+  location->set_provider(provider_str.get());
+  location->set_accuracy(accuracy);
+  location->set_latitude(latitude);
+  location->set_longitude(longitude);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationChanged(
+    JNIEnv* env, jclass clazz, jint event_id, jstring provider, jfloat accuracy,
+    jdouble latitude, jdouble longitude, jstring creator_package,
+    jint creator_uid) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  auto intent = energy_event.mutable_location_changed()->mutable_intent();
+  JStringWrapper creator_package_str(env, creator_package);
+  intent->set_creator_package(creator_package_str.get());
+  intent->set_creator_uid(creator_uid);
+  auto location = energy_event.mutable_location_changed()->mutable_location();
   JStringWrapper provider_str(env, provider);
   location->set_provider(provider_str.get());
   location->set_accuracy(accuracy);

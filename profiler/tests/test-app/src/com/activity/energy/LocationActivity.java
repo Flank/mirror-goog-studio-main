@@ -53,11 +53,16 @@ public class LocationActivity extends PerfdTestActivity {
     public void intentRequestAndRemoveLocationUpdates() {
         LocationManager locationManager = new LocationManager();
         PendingIntent intent =
-                PendingIntent.getActivity(
-                        new Context("com.example", 123), 0, new Intent(), 0, null);
+                PendingIntent.getService(
+                        new Context("com.example", 123), 0, new Intent(MyService.class), 0);
         Criteria criteria = new Criteria();
         criteria.setAccuracy(2); // ACCURACY_CORASE
         locationManager.requestLocationUpdates(2000, 50.0f, criteria, intent);
+        Location location = new Location("passive");
+        location.setAccuracy(50.0f);
+        location.setLatitude(60.0f);
+        location.setLongitude(30.0f);
+        locationManager.changeLocation(location);
         locationManager.removeUpdates(intent);
         System.out.println("INTENT LOCATION UPDATES");
     }
@@ -79,7 +84,8 @@ public class LocationActivity extends PerfdTestActivity {
     public void intentRequestPassiveProvider() {
         LocationManager locationManager = new LocationManager();
         PendingIntent intent =
-                PendingIntent.getActivity(new Context("foo.bar", 321), 0, new Intent(), 0, null);
+                PendingIntent.getService(
+                        new Context("foo.bar", 321), 0, new Intent(MyService.class), 0);
         locationManager.requestLocationUpdates("passive", 500, 10.0f, intent);
     }
 
@@ -89,6 +95,7 @@ public class LocationActivity extends PerfdTestActivity {
         criteria.setAccuracy(0);
         criteria.setPowerRequirement(1); // POWER_LOW
         locationManager.requestSingleUpdate(
-                criteria, PendingIntent.getActivity(new Context("p", 0), 0, new Intent(), 0, null));
+                criteria,
+                PendingIntent.getService(new Context("p", 0), 0, new Intent(MyService.class), 0));
     }
 }
