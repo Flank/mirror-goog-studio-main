@@ -30,6 +30,7 @@ import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -141,6 +142,7 @@ class DynamicAppTest {
 
     @Test
     fun `test abiFilter with Bundle task`() {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
         val appProject = project.getSubproject(":app")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")

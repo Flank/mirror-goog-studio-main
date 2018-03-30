@@ -35,6 +35,7 @@ import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -75,6 +76,7 @@ class Aapt2FromMavenTest {
     /** Verify that the the artifact provided by the [getAapt2FromMaven] method is usable. */
     @Test
     fun sanityTest() {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
         val project = ProjectBuilder().withProjectDir(temporaryFolder.newFolder()).build()
         val artifact = getAapt2FromMavenForTest(project)
 

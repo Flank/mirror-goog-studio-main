@@ -148,7 +148,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         // and JAR files can be present in the graph, but they will not contain the
         // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
         if (dependency.id !is ProjectComponentIdentifier && input != null) {
-            val dependencyName = dependency.id.displayName
+            val dependencyName = FileUtils.sanitizeFileName(dependency.id.displayName)
             val out = File(
                     outputDirectory,
                     "namespaced-$dependencyName-${input.name}"
@@ -168,7 +168,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ImmutableList.of(symbolTables[0]),
                     File(
                             outputRClassesDirectory,
-                            "namespaced-${dependency.id.displayName}-R.jar"
+                            "namespaced-${FileUtils.sanitizeFileName(dependency.id.displayName)}-R.jar"
                     ).toPath()
             )
         }
