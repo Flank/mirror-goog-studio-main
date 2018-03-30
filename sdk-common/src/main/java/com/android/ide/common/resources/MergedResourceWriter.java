@@ -30,6 +30,7 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.internal.ResourceCompilationException;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -43,6 +44,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -59,7 +61,6 @@ import java.util.concurrent.Future;
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -200,29 +201,8 @@ public class MergedResourceWriter
             @NonNull ResourcePreprocessor preprocessor,
             @NonNull File temporaryDirectory) {
         return new MergedResourceWriter(
-                new WorkerExecutorFacade() {
-                    @Override
-                    public void submit(
-                            @NotNull Class<? extends Runnable> actionClass,
-                            @NotNull Serializable parameter) {
-                        Runnable action;
-                        try {
-                            action =
-                                    actionClass
-                                            .getConstructor(parameter.getClass())
-                                            .newInstance(parameter);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                        action.run();
-                    }
-
-                    @Override
-                    public void await() {}
-
-                    @Override
-                    public void taskActionDone() {}
-                },
+                // no need for multi-threading in tests.
+                new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
                 rootFolder,
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,

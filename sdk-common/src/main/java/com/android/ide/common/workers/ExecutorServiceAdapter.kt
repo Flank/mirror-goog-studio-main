@@ -33,7 +33,8 @@ open class ExecutorServiceAdapter(
 
     override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
         val submission = executor.submit {
-            val constructor = actionClass.getConstructor(parameter.javaClass)
+            val constructor = actionClass.getDeclaredConstructor(parameter.javaClass)
+            constructor.isAccessible = true
             val action = constructor.newInstance(parameter)
             action.run()
         }
@@ -43,10 +44,10 @@ open class ExecutorServiceAdapter(
     }
 
     override fun await() {
-        taskActionDone()
+        close()
     }
 
-    override fun taskActionDone() {
+    override fun close() {
         val currentTasks = mutableListOf<Future<*>>()
         synchronized(this) {
             currentTasks.addAll(futures)

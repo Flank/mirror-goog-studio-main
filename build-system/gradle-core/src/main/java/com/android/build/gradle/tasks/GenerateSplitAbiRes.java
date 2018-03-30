@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ApplicationId;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -52,6 +53,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
@@ -73,17 +75,16 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerExecutor;
 
 /** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
 public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
-    @NonNull private final WorkerExecutor workerExecutor;
+    @NonNull private final WorkerExecutorFacade workers;
 
     @Inject
     public GenerateSplitAbiRes(@NonNull WorkerExecutor workerExecutor) {
-        this.workerExecutor = workerExecutor;
+        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
     }
 
     private Supplier<String> applicationId;
@@ -180,8 +181,9 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
-        for (String split : getSplits()) {
-            File resPackageFile = getOutputFileForSplit(split);
+        try (WorkerExecutorFacade workerExecutor = workers) {
+            for (String split : getSplits()) {
+                File resPackageFile = getOutputFileForSplit(split);
 
             ApkData abiApkData =
                     outputFactory.addConfigurationSplit(
@@ -191,48 +193,45 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             abiApkData.setVersionName(
                     variantScope.getVariantConfiguration().getVersionNameSerializableSupplier());
 
-            // call user's script for the newly discovered ABI pure split.
-            if (variantScope.getVariantData().variantOutputFactory != null) {
-                variantScope.getVariantData().variantOutputFactory.create(abiApkData);
-            }
-
-            File manifestFile = generateSplitManifest(split, abiApkData);
-
-            AndroidBuilder builder = getBuilder();
-            AaptPackageConfig aaptConfig =
-                    new AaptPackageConfig.Builder()
-                            .setManifestFile(manifestFile)
-                            .setOptions(DslAdaptersKt.convert(aaptOptions))
-                            .setDebuggable(debuggable)
-                            .setResourceOutputApk(resPackageFile)
-                            .setVariantType(variantType)
-                            .setAndroidTarget(builder.getTarget())
-                            .build();
-            if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-                Aapt2ServiceKey aapt2ServiceKey =
-                        Aapt2DaemonManagerService.registerAaptService(
-                                aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
-                Aapt2ProcessResourcesRunnable.Params params =
-                        new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
-                workerExecutor.submit(
-                        Aapt2ProcessResourcesRunnable.class,
-                        it -> {
-                            it.setIsolationMode(IsolationMode.NONE);
-                            it.setParams(params);
-                        });
-            } else {
-                try (Aapt aapt = makeAapt(builder)) {
-                    AndroidBuilder.processResources(aapt, aaptConfig, builder.getLogger());
+                // call user's script for the newly discovered ABI pure split.
+                if (variantScope.getVariantData().variantOutputFactory != null) {
+                    variantScope.getVariantData().variantOutputFactory.create(abiApkData);
                 }
+
+                File manifestFile = generateSplitManifest(split, abiApkData);
+
+                AndroidBuilder builder = getBuilder();
+                AaptPackageConfig aaptConfig =
+                        new AaptPackageConfig.Builder()
+                                .setManifestFile(manifestFile)
+                                .setOptions(DslAdaptersKt.convert(aaptOptions))
+                                .setDebuggable(debuggable)
+                                .setResourceOutputApk(resPackageFile)
+                                .setVariantType(variantType)
+                                .setAndroidTarget(builder.getTarget())
+                                .build();
+                if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                    Aapt2ServiceKey aapt2ServiceKey =
+                            Aapt2DaemonManagerService.registerAaptService(
+                                    aapt2FromMaven,
+                                    builder.getBuildToolInfo(),
+                                    builder.getLogger());
+                    Aapt2ProcessResourcesRunnable.Params params =
+                            new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
+                    workerExecutor.submit(Aapt2ProcessResourcesRunnable.class, params);
+                } else {
+                    try (Aapt aapt = makeAapt(builder)) {
+                        AndroidBuilder.processResources(aapt, aaptConfig, builder.getLogger());
+                    }
+                }
+
+                buildOutputs.add(
+                        new BuildOutput(
+                                InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                                abiApkData,
+                                resPackageFile));
             }
-
-            buildOutputs.add(
-                    new BuildOutput(
-                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
-                            abiApkData,
-                            resPackageFile));
         }
-
         new BuildElements(buildOutputs.build()).save(outputDirectory);
     }
 

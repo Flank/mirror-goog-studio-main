@@ -26,6 +26,8 @@ import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.Workers
+import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
@@ -42,7 +44,9 @@ import javax.inject.Inject
  * Task to jar all classes bundled in a feature so that dependent features can compile against those
  * classes without bundling them.
  */
-open class BundleFeatureClasses @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
+open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecutor) : DefaultTask() {
+
+    val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     @get:OutputFile lateinit var outputJar: File
 
@@ -68,13 +72,11 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
         postJavacClasses.asFileTree.visit(collector)
         thisRClassClasses?.get()?.asFileTree?.visit(collector)
 
-        workerExecutor.submit(JarWorkerRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(
-                    JarRequest(
-                            toFile = outputJar,
-                            fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
-                            fromFiles = files))
+        workers.use {
+            it.submit(JarWorkerRunnable::class.java,
+                JarRequest(toFile = outputJar,
+                    fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
+                    fromFiles = files))
         }
     }
 

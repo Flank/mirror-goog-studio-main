@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantTypeImpl;
@@ -58,6 +59,7 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.resources.CompileResourceRequest;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.resources.QueueableResourceCompiler;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +84,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerExecutor;
 
 public class VerifyLibraryResourcesTask extends IncrementalTask {
@@ -96,11 +97,11 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     private AaptGeneration aaptGeneration;
     @Nullable private FileCollection aapt2FromMaven;
 
-    private final WorkerExecutor workerExecutor;
+    private final WorkerExecutorFacade workers;
 
     @Inject
     public VerifyLibraryResourcesTask(WorkerExecutor workerExecutor) {
-        this.workerExecutor = workerExecutor;
+        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
     }
 
     @Override
@@ -159,22 +160,19 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                             aapt2FromMaven, getBuildTools(), getILogger());
             // If we're using AAPT2 we need to compile the resources into the compiled directory
             // first as we need the .flat files for linking.
-            compileResources(
-                    inputs,
-                    compiledDirectory,
-                    null,
-                    workerExecutor,
-                    aapt2ServiceKey,
-                    BuildableArtifactUtil.singleFile(inputDirectory));
-            AaptPackageConfig config = getAaptPackageConfig(compiledDirectory, manifestFile);
-            Aapt2ProcessResourcesRunnable.Params params =
-                    new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config);
-            workerExecutor.submit(
-                    Aapt2ProcessResourcesRunnable.class,
-                    it -> {
-                        it.setIsolationMode(IsolationMode.NONE);
-                        it.setParams(params);
-                    });
+            try (WorkerExecutorFacade facade = workers) {
+                compileResources(
+                        inputs,
+                        compiledDirectory,
+                        null,
+                        facade,
+                        aapt2ServiceKey,
+                        BuildableArtifactUtil.singleFile(inputDirectory));
+                AaptPackageConfig config = getAaptPackageConfig(compiledDirectory, manifestFile);
+                Aapt2ProcessResourcesRunnable.Params params =
+                        new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config);
+                facade.submit(Aapt2ProcessResourcesRunnable.class, params);
+            }
             return;
         }
 
@@ -222,7 +220,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
             @NonNull Map<File, FileStatus> inputs,
             @NonNull File outDirectory,
             @Nullable QueueableResourceCompiler aapt,
-            @Nullable WorkerExecutor workerExecutor,
+            @Nullable WorkerExecutorFacade workerExecutor,
             @Nullable Aapt2ServiceKey aapt2ServiceKey,
             @NonNull File mergedResDirectory)
             throws AaptException, ExecutionException, InterruptedException, IOException {
@@ -259,13 +257,8 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                         } else {
                             workerExecutor.submit(
                                     Aapt2CompileRunnable.class,
-                                    config -> {
-                                        config.setIsolationMode(IsolationMode.NONE);
-                                        config.params(
-                                                new Aapt2CompileRunnable.Params(
-                                                        aapt2ServiceKey,
-                                                        Collections.singletonList(request)));
-                                    });
+                                    new Aapt2CompileRunnable.Params(
+                                            aapt2ServiceKey, Collections.singletonList(request)));
                         }
                     } catch (Exception e) {
                         throw new AaptException(

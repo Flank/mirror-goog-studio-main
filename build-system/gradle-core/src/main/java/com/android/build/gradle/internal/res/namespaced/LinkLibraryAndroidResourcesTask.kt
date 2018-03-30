@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -40,7 +41,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Supplier
@@ -50,7 +50,7 @@ import javax.inject.Inject
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-open class LinkLibraryAndroidResourcesTask @Inject constructor(private val workerExecutor: WorkerExecutor) :
+open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
         AndroidBuilderTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
@@ -68,6 +68,8 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputFile lateinit var staticLibApk: File private set
+
+    private val workers = Workers.getWorker(workerExecutor)
 
     @TaskAction
     fun taskAction() {
@@ -93,9 +95,9 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
             aapt2FromMaven = aapt2FromMaven,
             logger = iLogger
         )
-        workerExecutor.submit(Aapt2LinkRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(Aapt2LinkRunnable.Params(aapt2ServiceKey, request))
+        workers.use {
+            it.submit(Aapt2LinkRunnable::class.java,
+                Aapt2LinkRunnable.Params(aapt2ServiceKey, request))
         }
     }
 

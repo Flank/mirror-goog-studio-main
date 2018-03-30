@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
@@ -30,7 +31,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -52,9 +52,8 @@ import javax.inject.Inject
  * dependency is already a dependency of another feature, its BR class will already have been
  * generated)
  */
-open class DataBindingExportFeatureInfoTask @Inject constructor(
-    private val workerExecutor: WorkerExecutor
-) : DefaultTask() {
+open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: WorkerExecutor)
+    : DefaultTask() {
     @get:OutputDirectory lateinit var outFolder: File
         private set
 
@@ -64,6 +63,8 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
     @get:Input
     val resOffset: Int
         get() = resOffsetSupplier.get()
+
+    private val workers = Workers.getWorker(workerExecutor)
 
     /**
      * In a feature, we only need to generate code for its Runtime dependencies as compile
@@ -75,14 +76,13 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
     @TaskAction
     @Throws(IOException::class)
     fun fullTaskAction() {
-        workerExecutor.submit(ExportFeatureInfoRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(
-                    ExportFeatureInfoParams(
-                            outFolder = outFolder,
-                            resOffset = resOffset,
-                            directDependencies = directDependencies.asFileTree.files
-                    )
+        workers.use {
+            it.submit(ExportFeatureInfoRunnable::class.java,
+                ExportFeatureInfoParams(
+                    outFolder = outFolder,
+                    resOffset = resOffset,
+                    directDependencies = directDependencies.asFileTree.files
+                )
             )
         }
     }

@@ -22,13 +22,14 @@ import org.junit.Test
 import java.io.Serializable
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 class ExecutorServiceAdapterTest {
 
     companion object {
-        val executorService = Executors.newSingleThreadExecutor()
+        val executorService : ExecutorService = Executors.newSingleThreadExecutor()
     }
 
     @Before
@@ -38,32 +39,29 @@ class ExecutorServiceAdapterTest {
 
     @Test
     fun singleActionTest() {
-        with(ExecutorServiceAdapter(executorService)) {
-            submit(Action::class.java, Parameters("foo", "foo"))
-            taskActionDone()
+        ExecutorServiceAdapter(executorService).use {
+            it.submit(Action::class.java, Parameters("foo", "foo"))
         }
         assertThat(Action.invocationCount.get()).isEqualTo(1)
     }
 
     @Test
     fun multipleActionTest() {
-        with(ExecutorServiceAdapter(executorService)) {
+        ExecutorServiceAdapter(executorService).use {
             for (i in 1..5) {
-                submit(Action::class.java, Parameters("foo", "foo"))
+                it.submit(Action::class.java, Parameters("foo", "foo"))
             }
-            taskActionDone()
         }
         assertThat(Action.invocationCount.get()).isEqualTo(5)
     }
 
     @Test
     fun multipleInvocationTest() {
-        with(ExecutorServiceAdapter(executorService)) {
+        ExecutorServiceAdapter(executorService).use {
             for (i in 1..5) {
                 for (j in 1..3) {
-                    submit(Action::class.java, Parameters("foo", "foo"))
+                    it.submit(Action::class.java, Parameters("foo", "foo"))
                 }
-                taskActionDone()
             }
         }
         assertThat(Action.invocationCount.get()).isEqualTo(15)
@@ -82,25 +80,30 @@ class ExecutorServiceAdapterTest {
 
     @Test(expected = NoSuchMethodException::class)
     fun notSuitableConstructor() {
-        with(ExecutorServiceAdapter(executorService)) {
-            try {
-                submit(WrongAction::class.java, Parameters("foo", "foo"))
-                taskActionDone()
-            } catch (e : ExecutionException) {
-                throw e.cause!!
+        try {
+            ExecutorServiceAdapter(executorService).use {
+                it.submit(WrongAction::class.java, Parameters("foo", "foo"))
             }
+        } catch (e : ExecutionException) {
+            throw e.cause!!
         }
     }
 
     @Test(expected = InvocationTargetException::class)
     fun badConstructorException() {
-        with(ExecutorServiceAdapter(executorService)) {
-            try {
-                submit(BadConstructorAction::class.java, Parameters("foo", "foo"))
-                taskActionDone()
-            } catch (e : ExecutionException) {
-                throw e.cause!!
+        try {
+            ExecutorServiceAdapter(executorService).use {
+                it.submit(BadConstructorAction::class.java, Parameters("foo", "foo"))
             }
+        } catch (e: ExecutionException) {
+            throw e.cause!!
+        }
+    }
+
+    @Test
+    fun notAccessibleConstructor() {
+        ExecutorServiceAdapter(executorService).use {
+            it.submit(PrivateConstructorClass::class.java, "Foo")
         }
     }
 
@@ -126,9 +129,9 @@ class ExecutorServiceAdapterTest {
         override fun run() {}
     }
 
-    private class BadConstructorAction(val parameters: Parameters) : Runnable {
+    private class BadConstructorAction(parameters: Parameters) : Runnable {
         init {
-            throw RuntimeException("Exception in constructor test")
+            throw RuntimeException("Exception in constructor test : " + parameters.param0)
         }
 
         override fun run() {
@@ -136,4 +139,8 @@ class ExecutorServiceAdapterTest {
     }
 
     private data class Parameters(val param0: String, val param1: String) : Serializable
+
+    private class PrivateConstructorClass private constructor(val parameters: String) : Runnable {
+        override fun run() {}
+    }
 }

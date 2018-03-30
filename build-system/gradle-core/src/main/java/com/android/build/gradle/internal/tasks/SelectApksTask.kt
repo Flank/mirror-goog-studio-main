@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.SelectApksCommand
 import com.android.utils.FileUtils
@@ -38,18 +37,19 @@ import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
-import java.nio.file.Path
 import javax.inject.Inject
 
 /**
  * Task that extract APKs from the apk zip (created with [BundleToApkTask] into a folder. a Device
  * info file indicate which APKs to extract. Only APKs for that particular device are extracted.
  */
-open class SelectApksTask @Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class SelectApksTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     companion object {
         fun getTaskName(scope: VariantScope) = scope.getTaskName("selectApksFor")
     }
+
+    private val workers = Workers.getWorker(workerExecutor)
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -68,18 +68,18 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
 
     @TaskAction
     fun generateApk() {
-        val adapter = WorkerExecutorAdapter(workerExecutor)
 
-        adapter.submit(
-            BundleToolRunnable::class.java,
-            Params(
-                apkSetArchive.singleFile(),
-                deviceConfig ?: throw RuntimeException("Calling ApkSelect with no device config"),
-                outputDir
+        workers.use {
+            it.submit(
+                BundleToolRunnable::class.java,
+                Params(
+                    apkSetArchive.singleFile(),
+                    deviceConfig
+                            ?: throw RuntimeException("Calling ApkSelect with no device config"),
+                    outputDir
+                )
             )
-        )
-
-        adapter.taskActionDone()
+        }
     }
 
     private data class Params(
@@ -91,8 +91,6 @@ open class SelectApksTask @Inject constructor(private val workerExecutor: Worker
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
             FileUtils.cleanOutputDir(params.outputDir)
-
-            val path: Path = Files.createTempFile(null, "spec.proto")
 
             val builder: DeviceSpec.Builder = DeviceSpec.newBuilder()
 

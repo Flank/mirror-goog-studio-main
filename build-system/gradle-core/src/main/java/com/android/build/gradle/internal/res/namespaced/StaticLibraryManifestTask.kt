@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.Workers
 import com.google.common.base.Suppliers
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.CacheableTask
@@ -37,21 +38,20 @@ import javax.inject.Inject
  * Task to write an android manifest for the res.apk static library
  */
 @CacheableTask
-open class StaticLibraryManifestTask @Inject constructor(
-        private val workerExecutor: WorkerExecutor) : DefaultTask() {
+open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
+    : DefaultTask() {
 
     @get:Internal lateinit var packageNameSupplier: Supplier<String> private set
     @get:Input val packageName get() = packageNameSupplier.get()
     @get:OutputFile lateinit var manifestFile: File private set
 
+    private val workers = Workers.getWorker(workerExecutor)
+
     @TaskAction
     fun createManifest() {
-        workerExecutor.submit(StaticLibraryManifestRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(
-                    StaticLibraryManifestRequest(
-                            manifestFile = manifestFile,
-                            packageName = packageName))
+        workers.use {
+            it.submit(StaticLibraryManifestRunnable::class.java,
+                StaticLibraryManifestRequest(manifestFile, packageName))
         }
     }
 

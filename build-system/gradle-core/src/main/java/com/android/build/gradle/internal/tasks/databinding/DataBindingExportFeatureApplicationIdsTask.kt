@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
@@ -31,7 +32,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.FileNotFoundException
@@ -44,7 +44,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
-    private val workerExecutor: WorkerExecutor
+    workerExecutor: WorkerExecutor
 ) : DefaultTask() {
     // where to keep the log of the task
     @get:OutputDirectory lateinit var packageListOutFolder: File
@@ -52,15 +52,16 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
     @get:InputFiles lateinit var featureDeclarations: FileCollection
         private set
 
+    val workers = Workers.getWorker(workerExecutor)
+
     @TaskAction
     fun fullTaskAction() {
-        workerExecutor.submit(ExportApplicationIdsRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(
-                    ExportApplicationIdsParams(
-                            featureDeclarations = featureDeclarations.asFileTree.files,
-                            packageListOutFolder = packageListOutFolder
-                    )
+        workers.use {
+            it.submit(ExportApplicationIdsRunnable::class.java,
+                ExportApplicationIdsParams(
+                    featureDeclarations = featureDeclarations.asFileTree.files,
+                    packageListOutFolder = packageListOutFolder
+                )
             )
         }
     }

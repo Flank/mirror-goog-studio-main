@@ -149,7 +149,7 @@ public class MergeResourceWriterWithCompilerTest {
                 public void await() {}
 
                 @Override
-                public void taskActionDone() {}
+                public void close() {}
             };
 
     public void addAndDeleteFile(@NonNull String name) throws Exception {

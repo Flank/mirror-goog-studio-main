@@ -46,7 +46,7 @@ import javax.inject.Inject
 /**
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
-open class BundleToApkTask @Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -83,24 +83,25 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
     var keyPassword: String? = null
         private set
 
+    private val workers = Workers.getWorker(workerExecutor)
+
     @TaskAction
     fun generateApk() {
-        val adapter = WorkerExecutorAdapter(workerExecutor)
 
-        adapter.submit(
-            BundleToolRunnable::class.java,
-            Params(
-                bundle.singleFile(),
-                File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
-                outputFile,
-                keystoreFile,
-                keystorePassword,
-                keyAlias,
-                keyPassword
+        workers.use {
+            it.submit(
+                BundleToolRunnable::class.java,
+                Params(
+                    bundle.singleFile(),
+                    File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
+                    outputFile,
+                    keystoreFile,
+                    keystorePassword,
+                    keyAlias,
+                    keyPassword
+                )
             )
-        )
-
-        adapter.taskActionDone()
+        }
     }
 
     private data class Params(

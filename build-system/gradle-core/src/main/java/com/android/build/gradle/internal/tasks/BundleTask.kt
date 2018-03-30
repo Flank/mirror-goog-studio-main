@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
@@ -45,7 +44,9 @@ import javax.inject.Inject
 /**
  * Task that generates the final bundle (.aab) with all the modules.
  */
-open class BundleTask @Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+
+    private val workers = Workers.getWorker(workerExecutor)
 
     companion object {
         fun getTaskName(scope: VariantScope) = scope.getTaskName("bundle")
@@ -72,19 +73,18 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
 
     @TaskAction
     fun bundleModules() {
-        val adapter = WorkerExecutorAdapter(workerExecutor)
 
-        adapter.submit(
-            BundleToolRunnable::class.java,
-            Params(
-                baseModuleZip.singleFile(),
-                featureZips.files,
-                aaptOptionsNoCompress,
-                bundleFile
+        workers.use {
+            it.submit(
+                BundleToolRunnable::class.java,
+                Params(
+                    baseModuleZip.singleFile(),
+                    featureZips.files,
+                    aaptOptionsNoCompress,
+                    bundleFile
+                )
             )
-        )
-
-        adapter.taskActionDone()
+        }
     }
 
     private data class Params(

@@ -22,8 +22,6 @@ import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.ResourceCompilationService
 import com.android.ide.common.workers.WorkerExecutorFacade
-import org.gradle.workers.IsolationMode
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
@@ -66,6 +64,6 @@ class WorkerExecutorResourceCompilationService(
         // No need for workerExecutor.await() here as resource compilation is the last part of the
         // merge task. This means the MergeResources task action can return, allowing other tasks
         // in the same subproject to run while resources are still being compiled.
-        workerExecutor.taskActionDone()
+        workerExecutor.close()
     }
 }

@@ -50,7 +50,7 @@ class WorkerExecutorAdapter
         workerExecutor.await()
     }
 
-    override fun taskActionDone() {
+    override fun close() {
         // do nothing.
     }
 }
