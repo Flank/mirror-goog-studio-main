@@ -1097,4 +1097,39 @@ class TypedefDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun test75993782() {
+        // Regression test for https://issuetracker.google.com/75993782
+        // Ensure that we handle finding typedef constants defined in Kotlin
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.support.annotation.IntDef
+
+                interface Foo {
+                    fun bar(@DetailInfoTab tab: Int = CONST_1)
+
+                    @IntDef(CONST_1, CONST_2, CONST_3)
+                    @Retention(AnnotationRetention.SOURCE)
+                    annotation class DetailInfoTab
+
+                    companion object {
+                        const val CONST_1 = -1
+                        const val CONST_2 = 2
+                        const val CONST_3 = 0
+
+                        fun foobar(foo: Foo) {
+                            foo.bar(CONST_1)
+                        }
+                    }
+                }
+                """
+            ).indented(),
+
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

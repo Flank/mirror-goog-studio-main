@@ -31,6 +31,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -101,24 +102,39 @@ public class ShrinkResourcesTest {
                         intermediates,
                         "res_stripped/release" + separator + "resources-release-stripped.ap_");
         File uncompressed =
-                new File(intermediates, "res/release" + separator + "resources-release.ap_");
+                FileUtils.join(
+                        intermediates,
+                        "processed_res",
+                        "release",
+                        "processReleaseResources",
+                        "out",
+                        "resources-release.ap_");
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
 
         // Check that there is no shrinking in the other two targets:
         assertTrue(
-                new File(intermediates, "res/debug" + separator + "resources-debug.ap_").exists());
+                FileUtils.join(
+                                intermediates,
+                                "processed_res",
+                                "debug",
+                                "processDebugResources",
+                                "out",
+                                "resources-debug.ap_")
+                        .exists());
         assertFalse(
-                new File(
+                FileUtils.join(
                                 intermediates,
                                 "res_stripped/debug" + separator + "resources-debug-stripped.ap_")
                         .exists());
         assertTrue(
-                new File(
+                FileUtils.join(
                                 intermediates,
-                                "res/minifyDontShrink"
-                                        + separator
-                                        + "resources-minifyDontShrink.ap_")
+                                "processed_res",
+                                "minifyDontShrink",
+                                "processMinifyDontShrinkResources",
+                                "out",
+                                "resources-minifyDontShrink.ap_")
                         .exists());
         assertFalse(
                 new File(
@@ -309,7 +325,7 @@ public class ShrinkResourcesTest {
         //noinspection SpellCheckingInspection
         uncompressed =
                 project.file(
-                        "abisplits/build/intermediates/res/release/resources-arm64-v8aRelease.ap_");
+                        "abisplits/build/intermediates/processed_res/release/processReleaseResources/out/resources-arm64-v8aRelease.ap_");
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
         //noinspection SpellCheckingInspection
@@ -333,7 +349,8 @@ public class ShrinkResourcesTest {
 
         //noinspection SpellCheckingInspection
         uncompressed =
-                project.file("webview/build/intermediates/res/release/resources-release.ap_");
+                project.file(
+                        "webview/build/intermediates/processed_res/release/processReleaseResources/out/resources-release.ap_");
         //noinspection SpellCheckingInspection
         compressed =
                 project.file(
@@ -491,7 +508,9 @@ public class ShrinkResourcesTest {
         zis2.close();
 
         //noinspection SpellCheckingInspection
-        uncompressed = project.file("keep/build/intermediates/res/release/resources-release.ap_");
+        uncompressed =
+                project.file(
+                        "keep/build/intermediates/processed_res/release/processReleaseResources/out/resources-release.ap_");
         //noinspection SpellCheckingInspection
         compressed =
                 project.file(

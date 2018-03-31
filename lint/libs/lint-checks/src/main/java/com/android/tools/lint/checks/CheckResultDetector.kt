@@ -95,8 +95,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (isExpressionValueUnused(element)) {
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
-            if (containsAnnotation(allMemberAnnotations, ERRORPRONE_CAN_IGNORE_RETURN_VALUE)
-                || containsAnnotation(
+            if (containsAnnotation(allMemberAnnotations, ERRORPRONE_CAN_IGNORE_RETURN_VALUE) ||
+                containsAnnotation(
                     allClassAnnotations,
                     ERRORPRONE_CAN_IGNORE_RETURN_VALUE
                 )
@@ -115,8 +115,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // custom severity in their LintOptions etc) so continue to use that issue
             // (which also has category Security rather than Correctness) for these:
             var issue = CHECK_RESULT
-            if (methodName != null && methodName.startsWith("check")
-                && methodName.contains("Permission")
+            if (methodName != null && methodName.startsWith("check") &&
+                methodName.contains("Permission")
             ) {
                 issue = PermissionDetector.CHECK_PERMISSION
             }

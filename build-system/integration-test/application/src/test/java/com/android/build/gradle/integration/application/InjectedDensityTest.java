@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
@@ -60,7 +60,8 @@ public class InjectedDensityTest {
                         + "        minSdkVersion 15"
                         + "    }\n"
                         + "    dependencies {\n"
-                        + "        compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "        compile 'com.android.support:appcompat-v7:"
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "    }"
                         + "}";

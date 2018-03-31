@@ -33,10 +33,10 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptConfigAction;
@@ -185,7 +185,6 @@ public class LibraryTaskManager extends TaskManager {
                                                     .getVariantData()
                                                     .getVariantConfiguration()
                                                     .getDirName()),
-                            variantScope.getProcessResourcePackageOutputDirectory(),
                             null,
                             // Switch to package where possible so we stop merging resources in
                             // libraries
@@ -570,11 +569,14 @@ public class LibraryTaskManager extends TaskManager {
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
         // create an anchor collection for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(scope.getArtifacts().getArtifactFiles(JAVAC));
-        fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
-        fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        ConfigurableFileCollection files =
+                scope.getGlobalScope()
+                        .getProject()
+                        .files(
+                                scope.getArtifacts().getArtifactFiles(JAVAC),
+                                scope.getVariantData().getAllPreJavacGeneratedBytecode(),
+                                scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
     }
 
     private void excludeDataBindingClassesIfNecessary(

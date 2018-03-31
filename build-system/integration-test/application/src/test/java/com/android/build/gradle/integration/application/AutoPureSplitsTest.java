@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -65,7 +66,7 @@ public class AutoPureSplitsTest {
                         + "}\n"
                         + "dependencies {\n"
                         + "  api \'com.android.support:support-v4:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "\'\n"
                         + "}\n");
     }

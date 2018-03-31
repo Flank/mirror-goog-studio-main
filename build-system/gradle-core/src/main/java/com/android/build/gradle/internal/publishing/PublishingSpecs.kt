@@ -56,7 +56,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
-import com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES
+import com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType

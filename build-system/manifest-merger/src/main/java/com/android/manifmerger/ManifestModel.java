@@ -563,11 +563,13 @@ class ManifestModel {
                         .setMergingPolicy(AttributeModel.NO_MERGING_POLICY)
         ),
 
+        /** Module node for bundle */
+        MODULE(MergeType.IGNORE, DEFAULT_NO_KEY_NODE_RESOLVER),
+
         /**
          * Custom tag for any application specific element
          */
         CUSTOM(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER);
-
 
         private final MergeType mMergeType;
         private final NodeKeyResolver mNodeKeyResolver;

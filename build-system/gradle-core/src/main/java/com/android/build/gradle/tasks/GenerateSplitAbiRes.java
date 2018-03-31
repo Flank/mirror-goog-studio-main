@@ -331,20 +331,17 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     public static class ConfigAction implements TaskConfigAction<GenerateSplitAbiRes> {
 
         @NonNull private final VariantScope scope;
-        @NonNull private final File outputDirectory;
         @NonNull private final FeatureSetMetadata.SupplierProvider provider;
 
-        public ConfigAction(@NonNull VariantScope scope, @NonNull File outputDirectory) {
-            this(scope, outputDirectory, FeatureSetMetadata.getInstance());
+        public ConfigAction(@NonNull VariantScope scope) {
+            this(scope, FeatureSetMetadata.getInstance());
         }
 
         @VisibleForTesting
         ConfigAction(
                 @NonNull VariantScope scope,
-                @NonNull File outputDirectory,
                 @NonNull FeatureSetMetadata.SupplierProvider provider) {
             this.scope = scope;
-            this.outputDirectory = outputDirectory;
             this.provider = provider;
         }
 
@@ -381,7 +378,10 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
             generateSplitAbiRes.variantScope = scope;
             generateSplitAbiRes.variantType = variantType;
-            generateSplitAbiRes.outputDirectory = outputDirectory;
+            generateSplitAbiRes.outputDirectory = scope.getArtifacts().appendArtifact(
+                    InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                    generateSplitAbiRes,
+                    "out");
             generateSplitAbiRes.splits =
                     AbiSplitOptions.getAbiFilters(
                             scope.getGlobalScope().getExtension().getSplits().getAbiFilters());

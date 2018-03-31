@@ -223,9 +223,9 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             } else {
                 val operator = argument.operator
-                if (operator === UastBinaryOperator.BITWISE_AND
-                    || operator === UastBinaryOperator.BITWISE_OR
-                    || operator === UastBinaryOperator.BITWISE_XOR
+                if (operator === UastBinaryOperator.BITWISE_AND ||
+                    operator === UastBinaryOperator.BITWISE_OR ||
+                    operator === UastBinaryOperator.BITWISE_XOR
                 ) {
                     report(
                         context, TYPE_DEF, argument, context.getLocation(argument),
@@ -529,9 +529,9 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         val values = listAllowedValues(node, allowedValues)
         var message = if (flag) {
-            "Must be one or more of: " + values
+            "Must be one or more of: $values"
         } else {
-            "Must be one of: " + values
+            "Must be one of: $values"
         }
 
         val rangeAnnotation = RangeDetector.findIntRange(allAnnotations)

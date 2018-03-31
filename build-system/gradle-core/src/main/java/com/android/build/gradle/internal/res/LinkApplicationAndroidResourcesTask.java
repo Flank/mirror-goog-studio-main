@@ -30,9 +30,11 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -193,7 +195,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return applicationId.get();
     }
 
-    FileCollection splitListInput;
+    BuildableArtifact splitListInput;
 
 
     private OutputFactory outputFactory;
@@ -206,11 +208,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getApkList() {
+    public BuildableArtifact getApkList() {
         return apkList;
     }
 
-    private FileCollection apkList;
+    private BuildableArtifact apkList;
 
     // FIX-ME : make me incremental !
     @Override
@@ -493,6 +495,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setPackageId(getResOffset())
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setImports(imports)
+                                .setIntermediateDir(getIncrementalFolder())
                                 .setAndroidTarget(getBuilder().getTarget());
 
                 if (isNamespaced) {
@@ -502,7 +505,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         configBuilder.setLibrarySymbolTableFiles(dependencies);
                     }
                     configBuilder.setResourceDir(
-                            checkNotNull(getInputResourcesDir()).getSingleFile());
+                            BuildableArtifactUtil.singleFile(checkNotNull(getInputResourcesDir())));
                 }
                 AaptPackageConfig config = configBuilder.build();
 
@@ -648,7 +651,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
         private final File symbolsWithPackageNameOutputFile;
-        @NonNull private final File resPackageOutputFolder;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         private final TaskManager.MergeType sourceArtifactType;
         private final String baseName;
@@ -658,7 +660,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
                 @NonNull File symbolsWithPackageNameOutputFile,
-                @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @NonNull TaskManager.MergeType sourceArtifactType,
                 @NonNull String baseName,
@@ -666,7 +667,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             this.variantScope = scope;
             this.symbolLocation = symbolLocation;
             this.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
-            this.resPackageOutputFolder = resPackageOutputFolder;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
@@ -698,7 +698,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
-            processResources.resPackageOutputFolder = resPackageOutputFolder;
+            processResources.resPackageOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.PROCESSED_RES, processResources, "out");
             processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             processResources.aapt2FromMaven =
                     Aapt2MavenUtils.getAapt2FromMavenIfEnabled(variantScope.getGlobalScope());
@@ -721,10 +725,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             if (variantData.getType().getCanHaveSplits()) {
                 processResources.splitListInput =
-                        variantScope.getOutput(InternalArtifactType.SPLIT_LIST);
+                        variantScope.getArtifacts().getFinalArtifactFiles(
+                                InternalArtifactType.SPLIT_LIST);
             }
 
-            processResources.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            processResources.apkList =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             processResources.multiOutputPolicy = variantData.getMultiOutputPolicy();
 
@@ -778,7 +786,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             .getFinalArtifactFiles(processResources.taskInputType));
 
             processResources.inputResourcesDir =
-                    variantScope.getOutput(sourceArtifactType.getOutputType());
+                    variantScope.getArtifacts()
+                            .getFinalArtifactFiles(sourceArtifactType.getOutputType());
 
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -823,20 +832,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     public static final class NamespacedConfigAction
             implements TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
-        @NonNull private final File resPackageOutputDir;
-        @NonNull private final File sourceOutputDir;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
 
         public NamespacedConfigAction(
                 @NonNull VariantScope scope,
-                @NonNull File sourceOutputDir,
-                @NonNull File resPackageOutputDir,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName) {
             this.variantScope = scope;
-            this.resPackageOutputDir = resPackageOutputDir;
-            this.sourceOutputDir = sourceOutputDir;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
@@ -862,7 +865,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             task.setVariantName(config.getFullName());
-            task.resPackageOutputFolder = resPackageOutputDir;
+            task.resPackageOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(InternalArtifactType.PROCESSED_RES, task, "out");
             task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
             task.setEnableAapt2(true);
@@ -872,12 +878,20 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             if (variantData.getType().getCanHaveSplits()) {
-                task.splitListInput = variantScope.getOutput(InternalArtifactType.SPLIT_LIST);
+                task.splitListInput = variantScope.getArtifacts()
+                        .getFinalArtifactFiles(InternalArtifactType.SPLIT_LIST);
             }
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
-            task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            task.apkList =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
-            task.sourceOutputDir = sourceOutputDir;
+            task.sourceOutputDir =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, task, "out");
 
             if (variantScope.getCodeShrinker() != null) {
                 task.setProguardOutputFile(
@@ -908,7 +922,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     variantScope.getArtifacts().getFinalArtifactFiles(task.taskInputType));
 
             List<FileCollection> dependencies = new ArrayList<>(2);
-            dependencies.add(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY));
+            dependencies.add(
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY)
+                            .get());
             dependencies.add(
                     variantScope.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
@@ -976,13 +994,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return this.buildContext.isInInstantRunMode();
     }
 
-    @Nullable private FileCollection inputResourcesDir;
+    @Nullable private BuildableArtifact inputResourcesDir;
 
     @Nullable
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getInputResourcesDir() {
+    public BuildableArtifact getInputResourcesDir() {
         return inputResourcesDir;
     }
 
@@ -1143,7 +1161,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
-    FileCollection getSplitListInput() {
+    BuildableArtifact getSplitListInput() {
         return splitListInput;
     }
 

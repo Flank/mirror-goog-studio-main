@@ -26,9 +26,9 @@ import com.android.annotations.Nullable;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.MergedFlavor;
+import com.android.builder.core.VariantAttributesProvider;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter;
@@ -46,7 +46,6 @@ import com.android.ide.common.resources.ResourceMerger;
 import com.android.ide.common.resources.ResourceSet;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -151,11 +150,15 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     private final SigningConfig mSigningConfigOverride;
 
-    /** For reading the attributes from the main manifest file in the default source set. */
-    @NonNull private final ManifestAttributeSupplier mManifestAttributeSupplier;
+    /**
+     * For reading the attributes from the main manifest file in the default source set, combining
+     * the results with the current flavor.
+     */
+    @NonNull private final VariantAttributesProvider mVariantAttributesProvider;
 
     /** For recording sync issues. */
     @NonNull private final EvalIssueReporter mIssueReporter;
+
 
     /**
      * Creates the configuration with the base source sets for a given {@link VariantType}. Meant
@@ -227,11 +230,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         mDefaultConfig = checkNotNull(defaultConfig);
         mDefaultSourceProvider = checkNotNull(defaultSourceProvider);
-        mManifestAttributeSupplier =
-                mainManifestAttributeSupplier != null
-                        ? mainManifestAttributeSupplier
-                        : new DefaultManifestParser(
-                                mDefaultSourceProvider.getManifestFile(), canParseManifest);
         mBuildType = checkNotNull(buildType);
         mBuildTypeSourceProvider = buildTypeSourceProvider;
         mType = checkNotNull(type);
@@ -239,6 +237,19 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mSigningConfigOverride = signingConfigOverride;
         mIssueReporter = issueReporter;
         mMergedFlavor = MergedFlavor.clone(mDefaultConfig, mIssueReporter);
+        ManifestAttributeSupplier manifestParser =
+                mainManifestAttributeSupplier != null
+                        ? mainManifestAttributeSupplier
+                        : new DefaultManifestParser(
+                                mDefaultSourceProvider.getManifestFile(), canParseManifest);
+        mVariantAttributesProvider =
+                new VariantAttributesProvider(
+                        mMergedFlavor,
+                        mBuildType,
+                        mType.isTestComponent(),
+                        manifestParser,
+                        mDefaultSourceProvider.getManifestFile(),
+                        getFullName());
     }
 
     /**
@@ -571,6 +582,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
         mMergedFlavor = MergedFlavor.mergeFlavors(mDefaultConfig, mFlavors, mIssueReporter);
+        mVariantAttributesProvider.setMergedFlavor(mMergedFlavor);
+        // reset computed names to null so it will be recomputed.
+        mFlavorName = null;
+        mFullName = null;
+        mVariantAttributesProvider.setFullName(getFullName());
 
         return this;
     }
@@ -673,6 +689,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return mTestedConfig;
     }
 
+    private String getTestedPackage() {
+        return mTestedConfig != null ? mTestedConfig.getApplicationId() : "";
+    }
 
     /**
      * Returns the original application ID before any overrides from flavors. If the variant is a
@@ -683,11 +702,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public String getOriginalApplicationId() {
-        if (mType.isTestComponent()) {
-            return getApplicationId();
-        }
-
-        return getPackageFromManifest();
+        return mVariantAttributesProvider.getOriginalApplicationId(getTestedPackage());
     }
 
     /**
@@ -697,48 +712,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public String getApplicationId() {
-        String id;
-
-        if (mType.isTestComponent()) {
-            checkState(mTestedConfig != null);
-
-            id = mMergedFlavor.getTestApplicationId();
-            String testedPackage = mTestedConfig.getApplicationId();
-            if (id == null) {
-                id = testedPackage + ".test";
-            } else {
-                if (id.equals(testedPackage)) {
-                    throw new RuntimeException(String.format("Application and test application id "
-                                    + "cannot be the same: both are '%s' for %s",
-                            id, getFullName()));
-                }
-            }
-
-        } else {
-            // first get package override.
-            id = getIdOverride();
-            // if it's null, this means we just need the default package
-            // from the manifest since both flavor and build type do nothing.
-            if (id == null) {
-                id = getPackageFromManifest();
-            }
-        }
-
-        return id;
+        return mVariantAttributesProvider.getApplicationId(getTestedPackage());
     }
 
     @NonNull
     public String getTestApplicationId(){
-        checkState(mType.isTestComponent());
-
-        if (!Strings.isNullOrEmpty(mMergedFlavor.getTestApplicationId())) {
-            // if it's specified through build file read from there
-            return mMergedFlavor.getTestApplicationId();
-        } else {
-            // otherwise getApplicationId() contains rules for getting the
-            // applicationId for the test app from the tested application
-            return getApplicationId();
-        }
+        return mVariantAttributesProvider.getTestApplicationId(getTestedPackage());
     }
 
     @Nullable
@@ -763,24 +742,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @Nullable
     public String getIdOverride() {
-        String idName = mMergedFlavor.getApplicationId();
-
-        String idSuffix = DefaultProductFlavor.mergeApplicationIdSuffix(
-                mBuildType.getApplicationIdSuffix(), mMergedFlavor.getApplicationIdSuffix());
-
-        if (!idSuffix.isEmpty()) {
-            if (idName == null) {
-                idName = getPackageFromManifest();
-            }
-
-            if (idSuffix.charAt(0) == '.') {
-                idName = idName + idSuffix;
-            } else {
-                idName = idName + '.' + idSuffix;
-            }
-        }
-
-        return idName;
+        return mVariantAttributesProvider.getIdOverride();
     }
 
     /**
@@ -792,21 +754,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @Nullable
     public String getVersionName() {
-        String versionName = mMergedFlavor.getVersionName();
-        String versionSuffix = mMergedFlavor.getVersionNameSuffix();
-
-        if (versionName == null && !mType.isTestComponent()) {
-            versionName = getVersionNameFromManifest();
-        }
-
-        versionSuffix = DefaultProductFlavor.mergeVersionNameSuffix(
-                mBuildType.getVersionNameSuffix(), versionSuffix);
-
-        if (versionSuffix != null && !versionSuffix.isEmpty()) {
-            versionName = Strings.nullToEmpty(versionName) + versionSuffix;
-        }
-
-        return versionName;
+        return mVariantAttributesProvider.getVersionName();
     }
 
     /**
@@ -817,14 +765,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @return the version code or -1 if there was non defined.
      */
     public int getVersionCode() {
-        int versionCode = mMergedFlavor.getVersionCode() != null ?
-                mMergedFlavor.getVersionCode() : -1;
-
-        if (versionCode == -1 && !mType.isTestComponent()) {
-            versionCode = getVersionCodeFromManifest();
-        }
-
-        return versionCode;
+        return mVariantAttributesProvider.getVersionCode();
     }
 
     private static final String DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner";
@@ -844,13 +785,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             config = getTestedConfig();
             checkState(config != null);
         }
-        String runner = config.mMergedFlavor.getTestInstrumentationRunner();
+        String runner = config.mVariantAttributesProvider.getInstrumentationRunner();
         if (runner != null) {
-            return runner;
-        }
-
-        runner = getInstrumentationRunnerFromManifest();
-        if (runner != null){
             return runner;
         }
 
@@ -888,10 +824,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             config = getTestedConfig();
             checkState(config != null);
         }
-        Boolean handleProfiling = config.mMergedFlavor.getTestHandleProfiling();
-        if (handleProfiling == null){
-            handleProfiling = getHandleProfilingFromManifest();
-        }
+        Boolean handleProfiling = config.mVariantAttributesProvider.getHandleProfiling();
         return handleProfiling != null ? handleProfiling : DEFAULT_HANDLE_PROFILING;
     }
 
@@ -908,10 +841,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             config = getTestedConfig();
             checkState(config != null);
         }
-        Boolean functionalTest = config.mMergedFlavor.getTestFunctionalTest();
-        if (functionalTest == null){
-            functionalTest = getFunctionalTestFromManifest();
-        }
+        Boolean functionalTest = config.mVariantAttributesProvider.getFunctionalTest();
 
         return functionalTest != null ? functionalTest : DEFAULT_FUNCTIONAL_TEST;
     }
@@ -919,62 +849,13 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /** Gets the test label for this variant */
     @Nullable
     public String getTestLabel(){
-        return getTestLabelFromManifest();
+        return mVariantAttributesProvider.getTestLabel();
     }
 
     /** Reads the package name from the manifest. This is unmodified by the build type. */
     @NonNull
     public String getPackageFromManifest() {
-        checkState(!mType.isTestComponent());
-
-        String packageName = getManifestAttributeSupplier().getPackage();
-        if (packageName == null) {
-            throw new RuntimeException(String.format("Cannot read packageName from %1$s",
-                    mDefaultSourceProvider.getManifestFile().getAbsolutePath()));
-        }
-        return packageName;
-    }
-
-    /**
-     * Reads the split name from the manifest.
-     */
-    @Nullable
-    public String getSplitFromManifest() {
-        return getManifestAttributeSupplier().getSplit();
-    }
-
-    @Nullable
-    public String getVersionNameFromManifest() {
-        return getManifestAttributeSupplier().getVersionName();
-    }
-
-    public int getVersionCodeFromManifest() {
-        return getManifestAttributeSupplier().getVersionCode();
-    }
-
-    @Nullable
-    public String getTestedApplicationIdFromManifest(){
-        return getManifestAttributeSupplier().getTargetPackage();
-    }
-
-    @Nullable
-    public String getInstrumentationRunnerFromManifest(){
-        return getManifestAttributeSupplier().getInstrumentationRunner();
-    }
-
-    @Nullable
-    public Boolean getFunctionalTestFromManifest(){
-        return getManifestAttributeSupplier().getFunctionalTest();
-    }
-
-    @Nullable
-    public Boolean getHandleProfilingFromManifest(){
-        return getManifestAttributeSupplier().getHandleProfiling();
-    }
-
-    @Nullable
-    public String getTestLabelFromManifest(){
-        return getManifestAttributeSupplier().getTestLabel();
+        return mVariantAttributesProvider.getPackageName();
     }
 
     /**
@@ -1653,11 +1534,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     public boolean isBundled() {
         return mType.isAar();
-    }
-
-    @NonNull
-    private ManifestAttributeSupplier getManifestAttributeSupplier(){
-        return mManifestAttributeSupplier;
     }
 
     @NonNull

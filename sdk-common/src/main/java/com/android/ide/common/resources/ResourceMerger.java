@@ -35,6 +35,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,10 +48,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Implementation of {@link DataMerger} for {@link ResourceSet}, {@link ResourceItem}, and
+ * Implementation of {@link DataMerger} for {@link ResourceSet}, {@link ResourceMergerItem}, and
  * {@link ResourceFile}.
  */
-public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, ResourceSet> {
+public class ResourceMerger extends DataMerger<ResourceMergerItem, ResourceFile, ResourceSet> {
     private static final String NODE_MERGED_ITEMS = "mergedItems";
 
     /**
@@ -74,11 +75,11 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
     }
 
     /**
-     * Map of items that are purely results of merges (ie item that made up of several
-     * original items). The first map key is the associated qualifier for the items,
-     * the second map key is the item name.
+     * Map of items that are purely results of merges (ie item that made up of several original
+     * items). The first map key is the associated qualifier for the items, the second map key is
+     * the item name.
      */
-    protected final Map<String, Map<String, ResourceItem>> mMergedItems = Maps.newHashMap();
+    protected final Map<String, Map<String, ResourceMergerItem>> mMergedItems = new HashMap<>();
 
     /**
      * Reads the {@link ResourceSet} from the blob XML. {@link ResourceMerger} deals with two kinds
@@ -134,27 +135,28 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
     @Override
     protected void mergeItems(
             @NonNull String dataItemKey,
-            @NonNull List<ResourceItem> items,
-            @NonNull MergeConsumer<ResourceItem> consumer) throws MergingException {
+            @NonNull List<ResourceMergerItem> items,
+            @NonNull MergeConsumer<ResourceMergerItem> consumer)
+            throws MergingException {
         boolean touched = false; // touched becomes true if one is touched.
         boolean removed = true; // removed stays true if all items are removed.
-        for (ResourceItem item : items) {
+        for (ResourceMergerItem item : items) {
             touched |= item.isTouched();
             removed &= item.isRemoved();
         }
 
         // get the name of the item (the key is the full key not just the same).
-        ResourceItem sourceItem = items.get(0);
+        ResourceMergerItem sourceItem = items.get(0);
         String itemName = sourceItem.getName();
         String qualifier = sourceItem.getQualifiers();
         String libraryName = sourceItem.getLibraryName();
         ResourceNamespace namespace = sourceItem.getNamespace();
         // get the matching mergedItem
-        ResourceItem previouslyWrittenItem = getMergedItem(qualifier, itemName);
+        ResourceMergerItem previouslyWrittenItem = getMergedItem(qualifier, itemName);
 
         try {
             if (touched || (previouslyWrittenItem == null && !removed)) {
-                ResourceItem newItem = sourceItem;
+                ResourceMergerItem newItem = sourceItem;
                 if (items.size() > 1) {
                     DocumentBuilder builder = mFactory.newDocumentBuilder();
                     Document document = builder.newDocument();
@@ -172,7 +174,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
                     // while the redundant attr (with no format) will be ignored.
                     Set<String> attrs = Sets.newHashSet();
 
-                    for (ResourceItem item : items) {
+                    for (ResourceMergerItem item : items) {
                         if (!item.isRemoved()) {
                             Node oldDeclareStyleable = item.getValue();
                             if (oldDeclareStyleable != null) {
@@ -211,7 +213,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
 
                     // always write it for now.
                     newItem =
-                            new MergedResourceItem(
+                            new MergedResourceMergerItem(
                                     itemName,
                                     namespace,
                                     sourceItem.getType(),
@@ -251,8 +253,8 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
     }
 
     @Nullable
-    private ResourceItem getMergedItem(@NonNull String qualifiers, @NonNull String name) {
-        Map<String, ResourceItem> map = mMergedItems.get(qualifiers);
+    private ResourceMergerItem getMergedItem(@NonNull String qualifiers, @NonNull String name) {
+        Map<String, ResourceMergerItem> map = mMergedItems.get(qualifiers);
         if (map != null) {
             return map.get(name);
         }
@@ -305,7 +307,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
                     continue;
                 }
 
-                ResourceItem item = getMergedResourceItem(itemNode, qualifier);
+                ResourceMergerItem item = getMergedResourceMergerItem(itemNode, qualifier);
                 if (item != null) {
                     addMergedItem(qualifier, item);
                 }
@@ -319,7 +321,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         rootNode.appendChild(mergedItemsNode);
 
         for (String qualifier : mMergedItems.keySet()) {
-            Map<String, ResourceItem> itemMap = mMergedItems.get(qualifier);
+            Map<String, ResourceMergerItem> itemMap = mMergedItems.get(qualifier);
 
             Node qualifierNode = document.createElement(NODE_CONFIGURATION);
             NodeUtils.addAttribute(document, qualifierNode, null, ATTR_QUALIFIER,
@@ -327,7 +329,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
 
             mergedItemsNode.appendChild(qualifierNode);
 
-            for (ResourceItem item : itemMap.values()) {
+            for (ResourceMergerItem item : itemMap.values()) {
                 Node adoptedNode = item.getDetailsXml(document);
                 if (adoptedNode != null) {
                     qualifierNode.appendChild(adoptedNode);
@@ -336,8 +338,8 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         }
     }
 
-    private void addMergedItem(@NonNull String qualifier, @NonNull ResourceItem item) {
-        Map<String, ResourceItem> map = mMergedItems.get(qualifier);
+    private void addMergedItem(@NonNull String qualifier, @NonNull ResourceMergerItem item) {
+        Map<String, ResourceMergerItem> map = mMergedItems.get(qualifier);
         if (map == null) {
             map = Maps.newHashMap();
             mMergedItems.put(qualifier, map);
@@ -347,17 +349,18 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
     }
 
     /**
-     * Returns a new ResourceItem object for a given node.
+     * Returns a new {@link MergedResourceMergerItem} object for a given node.
+     *
      * @param node the node representing the resource.
-     * @return a ResourceItem object or null.
+     * @return a ResourceMergerItem object or null.
      */
-    static MergedResourceItem getMergedResourceItem(@NonNull Node node, @NonNull String qualifiers)
-            throws MergingException {
+    static MergedResourceMergerItem getMergedResourceMergerItem(
+            @NonNull Node node, @NonNull String qualifiers) throws MergingException {
         ResourceType type = ValueResourceParser2.getType(node, null);
         String name = ValueResourceParser2.getName(node);
 
         if (name != null && type != null) {
-            return new MergedResourceItem(
+            return new MergedResourceMergerItem(
                     name, ResourceNamespace.TODO, type, qualifiers, node, null);
         }
 
@@ -375,7 +378,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
      * and we're safer not reusing it between runs of mergeData.
      */
     @Override
-    public void mergeData(@NonNull MergeConsumer<ResourceItem> consumer, boolean doCleanUp)
+    public void mergeData(@NonNull MergeConsumer<ResourceMergerItem> consumer, boolean doCleanUp)
             throws MergingException {
         clearFilterCache();
         super.mergeData(consumer, doCleanUp);
@@ -383,7 +386,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
 
 
     @Override
-    protected boolean filterAccept(@NonNull ResourceItem dataItem) {
+    protected boolean filterAccept(@NonNull ResourceMergerItem dataItem) {
         if (mRejectCache == null) {
             buildCache();
         }
@@ -415,7 +418,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
          * Only resource items whose min SDK is less
          * than or equal to minSdk will be included here as all others will be accepted.
          */
-        Table<String, FolderConfiguration, Pair<Integer, ResourceItem>> itemCache =
+        Table<String, FolderConfiguration, Pair<Integer, ResourceMergerItem>> itemCache =
                 HashBasedTable.create();
 
         /*
@@ -425,8 +428,8 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         Set<String> acceptCache = Sets.newHashSet();
 
         for (ResourceSet resourceSet : getDataSets()) {
-            ListMultimap<String, ResourceItem> map = resourceSet.getDataMap();
-            for (ResourceItem resourceItem : map.values()) {
+            ListMultimap<String, ResourceMergerItem> map = resourceSet.getDataMap();
+            for (ResourceMergerItem resourceItem : map.values()) {
                 /*
                  * Resources in different libraries may end up with the same key.
                  */
@@ -482,8 +485,8 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
                  */
                 String resourceCacheId = resourceItem.getType().getName()
                         + SdkConstants.RES_QUALIFIER_SEP + resourceItem.getName();
-                Pair<Integer, ResourceItem> selectedResource = itemCache.get(resourceCacheId,
-                        qualifierWithoutSdk);
+                Pair<Integer, ResourceMergerItem> selectedResource =
+                        itemCache.get(resourceCacheId, qualifierWithoutSdk);
 
                 if (selectedResource == null) {
                     /*

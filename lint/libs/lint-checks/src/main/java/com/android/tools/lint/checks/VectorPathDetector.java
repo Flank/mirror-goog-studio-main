@@ -21,20 +21,11 @@ import static com.android.SdkConstants.TAG_VECTOR;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceUrl;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Collection;
@@ -107,7 +98,11 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (item == null || item.isEmpty()) {
                 return;
             }
-            value = item.get(0).getValueText();
+            ResourceValue resourceValue = item.get(0).getResourceValue();
+            if (resourceValue == null) {
+                return;
+            }
+            value = resourceValue.getValue();
             if (value == null) {
                 return;
             }

@@ -20,10 +20,11 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
+import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -34,7 +35,6 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.Input;
@@ -50,12 +50,12 @@ public class AndroidUnitTest extends Test {
 
     private String sdkPlatformDirPath;
     private BuildableArtifact mergedManifest;
-    private FileCollection resCollection;
+    private BuildableArtifact resCollection;
     private BuildableArtifact assetsCollection;
 
     @InputFiles
     @Optional
-    public FileCollection getResCollection() {
+    public BuildableArtifact getResCollection() {
         return resCollection;
     }
 
@@ -113,7 +113,8 @@ public class AndroidUnitTest extends Test {
                             + testedVariantData.getVariantConfiguration().getFullName()
                             + " build.");
 
-            runTestsTask.setTestClassesDirs(scope.getOutput(ALL_CLASSES));
+            runTestsTask.setTestClassesDirs(
+                    scope.getArtifacts().getFinalArtifactFiles(ALL_CLASSES).get());
 
             boolean includeAndroidResources =
                     scope.getGlobalScope()
@@ -135,7 +136,9 @@ public class AndroidUnitTest extends Test {
                                 .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS);
                 runTestsTask.resCollection =
-                        testedScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
+                        testedScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.MERGED_NOT_COMPILED_RES);
             }
             runTestsTask.mergedManifest =
                     testedScope
@@ -170,15 +173,18 @@ public class AndroidUnitTest extends Test {
         private ConfigurableFileCollection computeClasspath(boolean includeAndroidResources) {
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
 
+            BuildArtifactsHolder artifacts = scope.getArtifacts();
             // the test classpath is made up of:
             // - the config file
             if (includeAndroidResources) {
-                collection.from(scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
+                collection.from(
+                        artifacts.getFinalArtifactFiles(
+                                InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
             }
             // - the test component classes and java_res
-            collection.from(scope.getOutput(ALL_CLASSES));
+            collection.from(artifacts.getFinalArtifactFiles(ALL_CLASSES).get());
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
-            collection.from(scope.getOutput(InternalArtifactType.JAVA_RES));
+            collection.from(artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES));
 
             // - the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(

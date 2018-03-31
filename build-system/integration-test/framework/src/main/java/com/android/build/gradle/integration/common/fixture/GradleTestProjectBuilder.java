@@ -45,6 +45,7 @@ public final class GradleTestProjectBuilder {
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
+    @Nullable private String compileSdkVersion;
     @Nullable private String buildToolsVersion;
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
@@ -115,6 +116,7 @@ public final class GradleTestProjectBuilder {
                 withDependencyChecker,
                 gradleProperties,
                 heapSize,
+                compileSdkVersion,
                 buildToolsVersion,
                 profileDirectory,
                 cmakeVersion,
@@ -288,6 +290,11 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder withDependencyChecker(
             boolean dependencyChecker) {
         this.withDependencyChecker = dependencyChecker;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withCompileSdkVersion(@Nullable String compileSdkVersion) {
+        this.compileSdkVersion = compileSdkVersion;
         return this;
     }
 

@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -40,7 +41,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
@@ -54,7 +54,7 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class GenerateTestConfig extends DefaultTask {
 
-    FileCollection resourcesDirectory;
+    BuildableArtifact resourcesDirectory;
     BuildableArtifact assets;
     Path sdkHome;
     File generatedJavaResourcesDirectory;
@@ -83,7 +83,7 @@ public class GenerateTestConfig extends DefaultTask {
                         .element(mainApkInfo);
         generateTestConfigForOutput(
                 Iterables.getOnlyElement(assets).toPath().toAbsolutePath(),
-                resourcesDirectory.getSingleFile().toPath().toAbsolutePath(),
+                BuildableArtifactUtil.singleFile(resourcesDirectory).toPath().toAbsolutePath(),
                 sdkHome,
                 packageForR,
                 checkNotNull(output, "Unable to find manifest output").getOutputFile().toPath(),
@@ -122,7 +122,7 @@ public class GenerateTestConfig extends DefaultTask {
 
     @Input // No need for @InputDirectory, we only care about the path.
     public String getResourcesDirectory() {
-        return resourcesDirectory.getSingleFile().getPath();
+        return BuildableArtifactUtil.singleFile(resourcesDirectory).getPath();
     }
 
     @Input // No need for @InputDirectory, we only care about the path.
@@ -149,15 +149,13 @@ public class GenerateTestConfig extends DefaultTask {
 
         @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;
-        @NonNull private final File outputDirectory;
 
-        public ConfigAction(@NonNull VariantScope scope, @NonNull File outputDirectory) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
             this.testedScope =
                     Preconditions.checkNotNull(
                                     scope.getTestedVariantData(), "Not a unit test variant.")
                             .getScope();
-            this.outputDirectory = outputDirectory;
         }
 
         @NonNull
@@ -177,7 +175,8 @@ public class GenerateTestConfig extends DefaultTask {
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
 
-            task.resourcesDirectory = testedScope.getOutput(MERGED_NOT_COMPILED_RES);
+            task.resourcesDirectory =
+                    testedScope.getArtifacts().getFinalArtifactFiles(MERGED_NOT_COMPILED_RES);
             task.dependsOn(task.resourcesDirectory);
             task.manifests =
                     testedScope
@@ -188,7 +187,10 @@ public class GenerateTestConfig extends DefaultTask {
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
-            task.generatedJavaResourcesDirectory = outputDirectory;
+            task.generatedJavaResourcesDirectory =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY, task, "out");
             task.packageForR = testedScope.getVariantConfiguration().getOriginalApplicationId();
         }
     }

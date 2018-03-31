@@ -27,6 +27,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -34,6 +35,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
@@ -45,10 +47,13 @@ import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.SelectApksTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -188,6 +193,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                 || modelName.equals(Variant.class.getName());
     }
 
+    @NonNull
     @Override
     public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         // build a map from included build name to rootDir (as rootDir is the only thing
@@ -206,6 +212,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
 
     // Build parameterized model. This method is invoked if model is obtained by
     // BuildController::findModel(Model var1, Class<T> var2, Class<P> var3, Action<? super P> var4).
+    @NonNull
     @Override
     public Object buildAll(
             @NonNull String modelName,
@@ -578,10 +585,12 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
-        if (scope.hasOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
+        if (scope.getArtifacts().hasArtifact(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
             additionalTestClasses.add(
-                    scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
-                            .getSingleFile());
+                    BuildableArtifactUtil.singleFile(
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(
+                                            InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)));
         }
         // The separately compile R class, if applicable.
         VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
@@ -813,7 +822,9 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                 splitOutputsProxy,
                 manifestsProxy,
                 testOptions,
-                scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName());
+                scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName(),
+                BundleTask.Companion.getTaskName(scope),
+                SelectApksTask.Companion.getTaskName(scope));
     }
 
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
@@ -872,9 +883,11 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
-                                        variantScope
-                                                .getOutput(InternalArtifactType.AAR)
-                                                .getSingleFile())));
+                                        BuildableArtifactUtil.singleFile(
+                                                variantScope
+                                                        .getArtifacts()
+                                                        .getFinalArtifactFiles(
+                                                                InternalArtifactType.AAR)))));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(InternalArtifactType.APK),
@@ -908,7 +921,8 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                                             ImmutableList.of(),
                                             variantData.getVariantConfiguration().getVersionCode(),
                                             variantScope
-                                                    .getOutput(testedOutputType)
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(testedOutputType)
                                                     // We used to call .getSingleFile() but Kotlin projects
                                                     // currently have 2 output dirs specified for test classes.
                                                     // This supplier is going away in beta3, so this is obsolete
@@ -1008,13 +1022,14 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             return Collections.emptyList();
         }
         VariantScope scope = variantData.getScope();
+        BuildArtifactsHolder artifacts = scope.getArtifacts();
         GlobalScope globalScope = variantData.getScope().getGlobalScope();
 
         boolean useDataBindingV2 = globalScope.getProjectOptions().get(ENABLE_DATA_BINDING_V2);
         boolean addDataBindingSources =
                 globalScope.getExtension().getDataBinding().isEnabled()
                         && useDataBindingV2
-                        && scope.hasOutput(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                        && artifacts.hasArtifact(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
         // Set this to the number of folders you expect to add explicitly in the code below.
@@ -1027,10 +1042,10 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         folders.addAll(extraFolders);
 
         // The R class is only generated by the first output.
-        if (scope.getArtifacts().hasArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
+        if (artifacts.hasArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
             folders.add(
                     Iterables.get(
-                            scope.getArtifacts()
+                            artifacts
                                     .getFinalArtifactFiles(
                                             InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)
                                     .getFiles(),
@@ -1044,8 +1059,9 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             folders.add(scope.getRenderscriptSourceOutputDir());
         }
         if (addDataBindingSources) {
-            FileCollection output = scope.getOutput(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
-            folders.add(output.getSingleFile());
+            BuildableArtifact output =
+                    scope.getArtifacts().getFinalArtifactFiles(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+            folders.add(BuildableArtifactUtil.singleFile(output));
         }
         return folders;
     }

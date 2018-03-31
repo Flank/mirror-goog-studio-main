@@ -27,6 +27,8 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
@@ -123,7 +125,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
         // populate the TestData from the tested variant build output.
         if (!testTargetManifests.isEmpty()) {
-            testData.loadFromMetadataFile(testTargetManifests.getSingleFile());
+            testData.loadFromMetadataFile(ExistingBuildElements.getMetadataFile(
+                    testTargetManifests.getSingleFile()));
         }
 
         boolean success;
@@ -318,13 +321,13 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @InputFiles
-    FileCollection getTestApkDir() {
+    BuildableArtifact getTestApkDir() {
         return testData.getTestApkDir();
     }
 
     @InputFiles
     @Optional
-    FileCollection getTestedApksDir() {
+    BuildableArtifact getTestedApksDir() {
         return testData.getTestedApksDir();
     }
 

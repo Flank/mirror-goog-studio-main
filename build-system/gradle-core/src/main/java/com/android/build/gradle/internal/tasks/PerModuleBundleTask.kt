@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -26,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
-import com.android.builder.packaging.ZipEntryFilter
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -37,6 +37,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.function.Predicate
 import java.util.function.Supplier
 
 /**
@@ -58,7 +59,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var resFiles: FileCollection
+    lateinit var resFiles: BuildableArtifact
         private set
 
     @get:InputFiles
@@ -68,7 +69,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var assetsFiles: FileCollection
+    lateinit var assetsFiles: BuildableArtifact
         private set
 
     @get:InputFiles
@@ -93,25 +94,25 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         val jarMerger = JarMerger(File(outputDir, fileName).toPath())
 
         val filters = abiFilters
-        val abiFilter: AbiFilter? = if (filters != null) AbiFilter(filters) else null
+        val abiFilter: Predicate<String>? = if (filters != null) NativeLibraryAbiPredicate(filters, false) else null
 
         jarMerger.use { it ->
 
             it.addDirectory(
-                assetsFiles.singleFile.toPath(),
+                assetsFiles.single().toPath(),
                 null,
                 null,
                 Relocator(FD_ASSETS)
             )
 
-            it.addJar(resFiles.singleFile.toPath(), null, ResRelocator())
+            it.addJar(resFiles.single().toPath(), null, ResRelocator())
 
             // dex files
             addHybridFolder(it, dexFiles.files, Relocator(FD_DEX))
 
             addHybridFolder(it, javaResFiles.files,
                 Relocator("root"),
-                ZipEntryFilter.EXCLUDE_CLASSES)
+                JarMerger.EXCLUDE_CLASSES)
 
             addHybridFolder(it, nativeLibsFiles.files, fileFilter = abiFilter)
         }
@@ -121,7 +122,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         jarMerger: JarMerger,
         files: Set<File>,
         relocator: Relocator? = null,
-        fileFilter: ZipEntryFilter? = null ) {
+        fileFilter: Predicate<String>? = null ) {
         // in this case the artifact is a folder containing things to add
         // to the zip. These can be file to put directly, jars to copy the content
         // of, or folders
@@ -129,7 +130,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             if (file.isFile) {
                 if (file.name.endsWith(SdkConstants.DOT_JAR)) {
                     jarMerger.addJar(file.toPath(), fileFilter, relocator)
-                } else if (fileFilter == null || fileFilter.checkEntry(file.name)) {
+                } else if (fileFilter == null || fileFilter.test(file.name)) {
                     if (relocator != null) {
                         jarMerger.addFile(relocator.relocate(file.name), file.toPath())
                     } else {
@@ -156,6 +157,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         override fun execute(task: PerModuleBundleTask) {
             task.variantName = variantScope.fullVariantName
 
+            val artifacts = variantScope.artifacts
             task.fileNameSupplier = if (variantScope.type.isBaseModule)
                 Supplier { "base.zip"}
             else {
@@ -164,11 +166,12 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 Supplier { "${featureName.get()}.zip"}
             }
 
-            task.outputDir = variantScope.artifacts.appendArtifact(
+            task.outputDir = artifacts.appendArtifact(
                 InternalArtifactType.MODULE_BUNDLE, task)
 
-            task.assetsFiles = variantScope.getOutput(InternalArtifactType.MERGED_ASSETS)
-            task.resFiles = variantScope.getOutput(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
+            task.assetsFiles = artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS)
+            task.resFiles = artifacts.getFinalArtifactFiles(
+                InternalArtifactType.LINKED_RES_FOR_BUNDLE)
             task.dexFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.DEX)
             task.javaResFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
@@ -191,10 +194,3 @@ private class ResRelocator : JarMerger.Relocator {
         else -> entryPath
     }
 }
-
-private class AbiFilter(abiFilters: Set<String>): ZipEntryFilter {
-    private val predicate = NativeLibraryAbiPredicate(abiFilters, false)
-
-    override fun checkEntry(archivePath: String) = predicate.test(archivePath)
-}
-

@@ -158,7 +158,7 @@ public class LocationTest extends TestCase {
 
         //noinspection UnnecessaryBoxing
         Integer source = Integer.valueOf(42);
-        location.setSource(source);
+        location.withSource(source);
         assertThat(location.getSource()).isEqualTo(source);
         assertThat(location.getSource(Integer.class)).isEqualTo(source);
         assertThat(location.getSource(Number.class)).isEqualTo(source);

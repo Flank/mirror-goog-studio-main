@@ -17,12 +17,13 @@
 package com.android.ide.common.resources.configuration;
 
 
+import com.android.annotations.NonNull;
+
 /**
  * An object that is associated with a {@link FolderConfiguration}.
  */
 public interface Configurable {
-    /**
-     * Returns the {@link FolderConfiguration} for this object.
-     */
+    /** Returns the {@link FolderConfiguration} for this object. */
+    @NonNull
     FolderConfiguration getConfiguration();
 }

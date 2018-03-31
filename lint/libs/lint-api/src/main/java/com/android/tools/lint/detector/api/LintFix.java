@@ -314,7 +314,7 @@ public class LintFix {
 
         /** Replaces the given literal text */
         public ReplaceStringBuilder text(String oldText) {
-            assert this.oldText == null;
+            assert this.oldText == null : "Should not call text, beginning or end more than once";
             assert this.oldPattern == null;
             this.oldText = oldText;
             return this;
@@ -331,6 +331,18 @@ public class LintFix {
 
         /** Replaces this entire range */
         public ReplaceStringBuilder all() {
+            return this;
+        }
+
+        /** Inserts into the beginning of the range */
+        public ReplaceStringBuilder beginning() {
+            oldText = ReplaceString.INSERT_BEGINNING;
+            return this;
+        }
+
+        /** Inserts after the end of the range */
+        public ReplaceStringBuilder end() {
+            oldText = ReplaceString.INSERT_END;
             return this;
         }
 
@@ -785,7 +797,20 @@ public class LintFix {
      * builder class instead - {@link #create()}.
      */
     public static class ReplaceString extends LintFix {
-        /** The string literal to replace. */
+        /**
+         * Special marker signifying that we don't want to actually replace any text in the element,
+         * just insert the "replacement" at the beginning of the range
+         */
+        public static final String INSERT_BEGINNING = "_lint_insert_begin_";
+        /**
+         * Special marker signifying that we don't want to actually replace any text in the element,
+         * just insert the "replacement" at the end of the range
+         */
+        public static final String INSERT_END = "_lint_insert_end_";
+        /**
+         * The string literal to replace, or {@link #INSERT_BEGINNING} or {@link #INSERT_END} to
+         * leave the old text alone and insert the "replacement" text at the beginning or the end
+         */
         @Nullable public final String oldString;
         /**
          * The regex to replace. Will always have at least one group, which should be the

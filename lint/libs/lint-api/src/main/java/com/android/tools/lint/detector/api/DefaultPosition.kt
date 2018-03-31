@@ -25,7 +25,7 @@ import com.google.common.annotations.Beta
  * to adjust your code for the next tools release.**
  */
 @Beta
-class DefaultPosition(
+data class DefaultPosition(
     /** The line number (0-based where the first line is line 0)  */
     override val line: Int,
     /**

@@ -161,4 +161,24 @@ public interface AndroidArtifact extends BaseArtifact {
      */
     @Nullable
     String getInstrumentedTestTaskName();
+
+    /**
+     * Returns the name of the task used to generate the bundle file (.aab), or null if the task is
+     * not supported.
+     *
+     * @since 3.2
+     * @return name of the task used to generate the bundle file (.aab)
+     */
+    @Nullable
+    String getBundleTaskName();
+
+    /**
+     * Returns the name of the task used to generate APKs via the bundle file (.aab), or null if the
+     * task is not supported.
+     *
+     * @since 3.2
+     * @return name of the task used to generate the APKs via the bundle
+     */
+    @Nullable
+    String getApkFromBundleTaskName();
 }

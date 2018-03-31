@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.SdkConstants.FN_SPLIT_LIST;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SplitList;
@@ -61,7 +64,7 @@ import org.gradle.api.tasks.TaskAction;
 @CacheableTask
 public class SplitsDiscovery extends AndroidBuilderTask {
 
-    @Nullable FileCollection mergedResourcesFolders;
+    @Nullable BuildableArtifact mergedResourcesFolders;
     Set<String> densityFilters;
     boolean densityAuto;
     Set<String> languageFilters;
@@ -76,7 +79,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
     @Optional
     @Nullable
     @PathSensitive(PathSensitivity.RELATIVE)
-    FileCollection getMergedResourcesFolders() {
+    BuildableArtifact getMergedResourcesFolders() {
         return mergedResourcesFolders;
     }
 
@@ -330,11 +333,9 @@ public class SplitsDiscovery extends AndroidBuilderTask {
     public static final class ConfigAction implements TaskConfigAction<SplitsDiscovery> {
 
         private final VariantScope variantScope;
-        private final File persistedList;
 
-        public ConfigAction(VariantScope variantScope, File persistedList) {
+        public ConfigAction(VariantScope variantScope) {
             this.variantScope = variantScope;
-            this.persistedList = persistedList;
         }
 
         @NonNull
@@ -353,7 +354,10 @@ public class SplitsDiscovery extends AndroidBuilderTask {
         public void execute(@NonNull SplitsDiscovery task) {
             task.setVariantName(variantScope.getFullVariantName());
             Splits splits = variantScope.getGlobalScope().getExtension().getSplits();
-            task.persistedList = persistedList;
+            task.persistedList = variantScope.getArtifacts().appendArtifact(
+                    InternalArtifactType.SPLIT_LIST,
+                    task,
+                    FN_SPLIT_LIST);
             if (splits.getDensity().isEnable()) {
                 task.densityFilters = splits.getDensityFilters();
                 task.densityAuto = splits.getDensity().isAuto();
@@ -379,7 +383,8 @@ public class SplitsDiscovery extends AndroidBuilderTask {
             // Only consume the merged resources if auto is being used.
             if (task.densityAuto || task.languageAuto || task.resConfigAuto) {
                 task.mergedResourcesFolders =
-                        variantScope.getOutput(InternalArtifactType.MERGED_RES);
+                        variantScope.getArtifacts().getFinalArtifactFiles(
+                                InternalArtifactType.MERGED_RES);
             }
 
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
@@ -63,9 +64,9 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
-            @NonNull FileCollection resources,
-            @NonNull FileCollection resourcesWithMainManifest,
-            @NonNull FileCollection apkList,
+            @NonNull BuildableArtifact resources,
+            @NonNull BuildableArtifact resourcesWithMainManifest,
+            @NonNull BuildableArtifact apkList,
             @NonNull ApkInfo mainApk) {
         super(
                 logger,

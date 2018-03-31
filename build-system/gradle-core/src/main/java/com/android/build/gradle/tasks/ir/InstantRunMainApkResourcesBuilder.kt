@@ -58,7 +58,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var resourceFiles: FileCollection private set
+    lateinit var resourceFiles: BuildableArtifact private set
 
     private lateinit var aaptGeneration: AaptGeneration
     @Input
@@ -134,16 +134,17 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.variantName = variantScope.fullVariantName
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
 
-            task.resourceFiles = variantScope.getOutput(taskInputType)
-            task.manifestFiles = variantScope.artifacts
+            val artifacts = variantScope.artifacts
+            task.resourceFiles = artifacts.getFinalArtifactFiles(taskInputType)
+            task.manifestFiles = artifacts
                 .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS)
-            task.outputDirectory = variantScope.instantRunMainApkResourcesDir
+            task.outputDirectory =
+                    artifacts.appendArtifact(INSTANT_RUN_MAIN_APK_RESOURCES, task, "out")
             task.aaptGeneration = AaptGeneration.fromProjectOptions(
                     variantScope.globalScope.projectOptions)
             task.fileCache = variantScope.globalScope.buildCache!!
             task.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
 
-            variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)
         }
 
     }

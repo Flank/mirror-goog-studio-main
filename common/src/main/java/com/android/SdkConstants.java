@@ -781,8 +781,13 @@ public final class SdkConstants {
             AndroidxName.of("android.support.v7.widget.", "Toolbar");
     public static final AndroidxName CLASS_RECYCLER_VIEW_V7 =
             AndroidxName.of("android.support.v7.widget.", "RecyclerView");
+    public static final AndroidxName CLASS_RECYCLER_VIEW_ADAPTER =
+            AndroidxName.of("android.support.v7.widget.", "RecyclerView$Adapter");
     public static final AndroidxName CLASS_RECYCLER_VIEW_LAYOUT_MANAGER =
-            AndroidxName.of("android.support.v7.widget.", "RecyclerView.LayoutManager");
+            AndroidxName.of("android.support.v7.widget.", "RecyclerView$LayoutManager");
+    public static final AndroidxName CLASS_RECYCLER_VIEW_VIEW_HOLDER =
+            AndroidxName.of("android.support.v7.widget.", "RecyclerView$ViewHolder");
+
     public static final AndroidxName CLASS_CARD_VIEW =
             AndroidxName.of("android.support.v7.widget.", "CardView");
     public static final AndroidxName CLASS_ACTION_MENU_VIEW =

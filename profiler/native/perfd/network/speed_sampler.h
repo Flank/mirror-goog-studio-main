@@ -20,6 +20,7 @@
 #include "perfd/network/network_sampler.h"
 #include "perfd/network/speed_converter.h"
 #include "proto/network.pb.h"
+#include "utils/clock.h"
 
 #include <string>
 #include <unordered_map>
@@ -30,7 +31,8 @@ namespace profiler {
 // and received network speeds of an app.
 class SpeedSampler final : public NetworkSampler {
  public:
-  SpeedSampler(const std::string &file) : stats_reader_(file) {}
+  SpeedSampler(Clock* clock, const std::string& file)
+      : stats_reader_(file), clock_(clock) {}
 
   // Read every app's traffic bytes sent and received, and save data internally.
   void Refresh() override;
@@ -39,6 +41,8 @@ class SpeedSampler final : public NetworkSampler {
 
  private:
   NetStatsFileReader stats_reader_;
+  // The clock to calculate speed;
+  Clock* clock_;
   // Mapping of app uid to the app's bytes sent speed converter.
   std::unordered_map<uint32_t, SpeedConverter> tx_speed_converters_;
   // Mapping of app uid to the app's bytes received speed converter.

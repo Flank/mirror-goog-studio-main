@@ -18,6 +18,7 @@
 
 #include "perfd/network/network_sampler.h"
 #include "proto/network.pb.h"
+#include "utils/clock.h"
 #include "utils/time_value_buffer.h"
 
 #include <atomic>
@@ -34,12 +35,12 @@ typedef TimeValueBuffer<profiler::proto::NetworkProfilerData>
 // Class that runs in the background, continuously collecting network data
 class NetworkCollector final {
  public:
-  NetworkCollector(int sample_ms);
+  NetworkCollector(Clock* clock, int sample_ms);
   ~NetworkCollector();
 
   // Allocates the given app's buffer and add it for all samplers to start.
   // If this is the first app, starts the collector's thread.
-  void Start(int32_t pid, NetworkProfilerBuffer *buffer);
+  void Start(int32_t pid, NetworkProfilerBuffer* buffer);
 
   // Remove the given app from all samplers and deallocate buffer to stop.
   // If this is the last app, stops the collector's thread.
@@ -52,6 +53,8 @@ class NetworkCollector final {
   // all samplers refreshed the data.
   void StoreDataToBuffer();
 
+  // The clock
+  Clock* clock_;
   // Sample frequency.
   int sample_us_;
   // Thread that network profile operations run on.
@@ -66,7 +69,7 @@ class NetworkCollector final {
   // when profiling for an app starts, and the buffer is removed when
   // its profiling stops. A buffer holds all of data including traffic bytes,
   // open connections, and device-wide radio power status.
-  std::unordered_map<uint32_t, NetworkProfilerBuffer *> uid_to_buffers_;
+  std::unordered_map<uint32_t, NetworkProfilerBuffer*> uid_to_buffers_;
   mutable std::mutex buffer_mutex_;
 };
 

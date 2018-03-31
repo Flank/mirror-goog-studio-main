@@ -20,10 +20,10 @@ import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.ide.common.build.ApkInfo
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
@@ -181,7 +181,7 @@ data class EarlySyncBuildOutput(
                 val outputType: ArtifactType = try {
                     InternalArtifactType.valueOf(nextString)
                 } catch (e: IllegalArgumentException) {
-                    TaskOutputHolder.AnchorOutputType.valueOf(nextString)
+                    AnchorOutputType.valueOf(nextString)
                 }
                 `in`.endObject()
                 return outputType

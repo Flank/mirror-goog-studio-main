@@ -193,18 +193,18 @@ enum class TextFormat {
                 val tag = html.substring(begin, end).trim { it <= ' ' }
                 if (tag.equals("br", ignoreCase = true)) {
                     sb.append('\n')
-                } else if (tag.equals("p", ignoreCase = true) // Most common block tags
-                    || tag.equals("div", ignoreCase = true)
-                    || tag.equals("pre", ignoreCase = true)
-                    || tag.equals("blockquote", ignoreCase = true)
-                    || tag.equals("dl", ignoreCase = true)
-                    || tag.equals("dd", ignoreCase = true)
-                    || tag.equals("dt", ignoreCase = true)
-                    || tag.equals("ol", ignoreCase = true)
-                    || tag.equals("ul", ignoreCase = true)
-                    || tag.equals("li", ignoreCase = true)
-                    || (tag.length == 2 && tag.startsWith("h")
-                            && Character.isDigit(tag[1]))
+                } else if (tag.equals("p", ignoreCase = true) || // Most common block tags
+                    tag.equals("div", ignoreCase = true) ||
+                    tag.equals("pre", ignoreCase = true) ||
+                    tag.equals("blockquote", ignoreCase = true) ||
+                    tag.equals("dl", ignoreCase = true) ||
+                    tag.equals("dd", ignoreCase = true) ||
+                    tag.equals("dt", ignoreCase = true) ||
+                    tag.equals("ol", ignoreCase = true) ||
+                    tag.equals("ul", ignoreCase = true) ||
+                    tag.equals("li", ignoreCase = true) ||
+                    (tag.length == 2 && tag.startsWith("h") &&
+                            Character.isDigit(tag[1]))
                 ) {
                     // Block tag: ensure new line
                     if (sb.isNotEmpty() && sb[sb.length - 1] != '\n') {
@@ -342,10 +342,10 @@ enum class TextFormat {
                         i = flushIndex - 1 // -1: account for the i++ in the loop
                     }
                 }
-            } else if (html
-                && c == 'h' && i < n - 1 && text[i + 1] == 't' &&
-                (text.startsWith(HTTP_PREFIX, i) || text.startsWith(HTTPS_PREFIX, i))
-                && !Character.isLetterOrDigit(prev)
+            } else if (html &&
+                c == 'h' && i < n - 1 && text[i + 1] == 't' &&
+                (text.startsWith(HTTP_PREFIX, i) || text.startsWith(HTTPS_PREFIX, i)) &&
+                !Character.isLetterOrDigit(prev)
             ) {
                 // Find url end
                 val length = if (text.startsWith(HTTP_PREFIX, i))

@@ -116,7 +116,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                 .maxLineLength(100)
                 .expect(
                         ""
-                                + "res/drawable/my_vector.xml:16: Warning: Very long vector path (1626 characters), which is bad for p…\n"
+                                + "res/drawable/my_vector.xml:16: Warning: Very long vector path (1622 characters), which is bad for p…\n"
                                 + "      android:pathData=\"@string/airplane_mask_clip_path_enabled\"/>\n"
                                 + "                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "res/drawable/my_vector.xml:37: Warning: Very long vector path (1623 characters), which is bad for p…\n"

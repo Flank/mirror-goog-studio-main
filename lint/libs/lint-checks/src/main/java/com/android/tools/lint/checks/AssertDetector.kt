@@ -75,7 +75,7 @@ are typically more intended for tools usage than runtime checks.)""",
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-        listOf<Class<out UElement>>(UCallExpression::class.java)
+        listOf(UCallExpression::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
         if (!context.mainProject.isAndroidProject) {
@@ -142,8 +142,8 @@ are typically more intended for tools usage than runtime checks.)""",
             is UBinaryExpression -> {
                 val lOperand = expression.leftOperand
                 val rOperand = expression.rightOperand
-                lOperand.isNullLiteral() || rOperand.isNullLiteral()
-                        || isNullCheck(lOperand) && isNullCheck(rOperand)
+                lOperand.isNullLiteral() || rOperand.isNullLiteral() ||
+                        isNullCheck(lOperand) && isNullCheck(rOperand)
             }
             is UPolyadicExpression -> {
                 for (operand in expression.operands) {

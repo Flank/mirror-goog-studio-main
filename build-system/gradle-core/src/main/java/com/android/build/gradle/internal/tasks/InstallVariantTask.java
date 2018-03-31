@@ -20,8 +20,10 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -52,7 +54,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
@@ -77,7 +78,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
     private Collection<String> installOptions;
 
-    private FileCollection apkDirectory;
+    private BuildableArtifact apkDirectory;
 
     private BaseVariantData variantData;
 
@@ -239,10 +240,10 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
     @InputDirectory
     public File getApkDirectory() {
-        return apkDirectory.getSingleFile();
+        return BuildableArtifactUtil.singleFile(apkDirectory);
     }
 
-    public void setApkDirectory(FileCollection apkDirectory) {
+    public void setApkDirectory(BuildableArtifact apkDirectory) {
         this.apkDirectory = apkDirectory;
     }
 
@@ -282,7 +283,8 @@ public class InstallVariantTask extends AndroidBuilderTask {
             installTask.setGroup(TaskManager.INSTALL_GROUP);
             installTask.setProjectName(scope.getGlobalScope().getProject().getName());
             installTask.setVariantData(scope.getVariantData());
-            installTask.setApkDirectory(scope.getOutput(InternalArtifactType.APK));
+            installTask.setApkDirectory(
+                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
             installTask.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             installTask.setInstallOptions(

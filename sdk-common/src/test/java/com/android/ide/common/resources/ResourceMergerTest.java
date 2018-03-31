@@ -140,13 +140,13 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testReplacedLayout() throws Exception {
         ResourceMerger merger = getResourceMerger();
-        ListMultimap<String, ResourceItem> mergedMap = merger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = merger.getDataMap();
 
-        List<ResourceItem> values = mergedMap.get("layout/main");
+        List<ResourceMergerItem> values = mergedMap.get("layout/main");
 
         // the overlay means there's 2 versions of this resource.
         assertEquals(2, values.size());
-        ResourceItem mainLayout = values.get(1);
+        ResourceMergerItem mainLayout = values.get(1);
 
         ResourceFile sourceFile = mainLayout.getSource();
         assertTrue(sourceFile.getFile().getAbsolutePath()
@@ -156,13 +156,13 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testReplacedAlias() throws Exception {
         ResourceMerger merger = getResourceMerger();
-        ListMultimap<String, ResourceItem> mergedMap = merger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = merger.getDataMap();
 
-        List<ResourceItem> values = mergedMap.get("layout/alias_replaced_by_file");
+        List<ResourceMergerItem> values = mergedMap.get("layout/alias_replaced_by_file");
 
         // the overlay means there's 2 versions of this resource.
         assertEquals(2, values.size());
-        ResourceItem layout = values.get(1);
+        ResourceMergerItem layout = values.get(1);
 
         // since it's replaced by a file, there's no node.
         assertNull(layout.getValue());
@@ -171,13 +171,13 @@ public class ResourceMergerTest extends BaseTestCase {
     @Test
     public void testReplacedFile() throws Exception {
         ResourceMerger merger = getResourceMerger();
-        ListMultimap<String, ResourceItem> mergedMap = merger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = merger.getDataMap();
 
-        List<ResourceItem> values = mergedMap.get("layout/file_replaced_by_alias");
+        List<ResourceMergerItem> values = mergedMap.get("layout/file_replaced_by_alias");
 
         // the overlay means there's 2 versions of this resource.
         assertEquals(2, values.size());
-        ResourceItem layout = values.get(1);
+        ResourceMergerItem layout = values.get(1);
 
         // since it's replaced by an alias, there's a node
         assertNotNull(layout.getValue());
@@ -195,7 +195,7 @@ public class ResourceMergerTest extends BaseTestCase {
         writtenSet.loadFromFiles(logger);
 
         // compare the two maps, but not using the full map as the set loaded from the output
-        // won't contains all versions of each ResourceItem item.
+        // won't contains all versions of each ResourceMergerItem item.
         compareResourceMaps(merger, writtenSet, false /*full compare*/);
         checkLogger(logger);
     }
@@ -215,10 +215,10 @@ public class ResourceMergerTest extends BaseTestCase {
         ResourceMerger merger = getResourceMerger();
 
         // check the result of the load
-        List<ResourceItem> values = merger.getDataMap().get("string/xliff_string");
+        List<ResourceMergerItem> values = merger.getDataMap().get("string/xliff_string");
 
         assertEquals(1, values.size());
-        ResourceItem string = values.get(0);
+        ResourceMergerItem string = values.get(0);
 
         // Even though the content is
         //     <xliff:g id="firstName">%1$s</xliff:g> <xliff:g id="lastName">%2$s</xliff:g>
@@ -254,10 +254,11 @@ public class ResourceMergerTest extends BaseTestCase {
         ResourceMerger merger = getResourceMerger();
 
         // check the result of the load
-        List<ResourceItem> values = merger.getDataMap().get("string/xliff_with_carriage_return");
+        List<ResourceMergerItem> values =
+                merger.getDataMap().get("string/xliff_with_carriage_return");
 
         assertEquals(1, values.size());
-        ResourceItem string = values.get(0);
+        ResourceMergerItem string = values.get(0);
 
         // Even though the content has xliff nodes
         // The valueText is going to skip the <g> node so we skip them from the comparison.
@@ -292,11 +293,11 @@ public class ResourceMergerTest extends BaseTestCase {
     public void testResourcesInOrder() throws Exception {
         ResourceMerger merger = getResourceMerger();
 
-        Collection<Map.Entry<String, ResourceItem>> entries =
+        Collection<Map.Entry<String, ResourceMergerItem>> entries =
                 merger.getDataSets().get(0).getDataMap().entries();
         ArrayList<String> strings = new ArrayList<>();
 
-        for (Map.Entry<String, ResourceItem> entry : entries) {
+        for (Map.Entry<String, ResourceMergerItem> entry : entries) {
             if (entry.getValue().getType() == ResourceType.STRING) {
                 strings.add(entry.getValue().getName());
             }
@@ -323,7 +324,7 @@ public class ResourceMergerTest extends BaseTestCase {
         writtenSet.addSource(folder);
         writtenSet.loadFromFiles(logger);
 
-        List<ResourceItem> items = writtenSet.getDataMap().get("attr/blah");
+        List<ResourceMergerItem> items = writtenSet.getDataMap().get("attr/blah");
         assertEquals(1, items.size());
         assertTrue(items.get(0).getIgnoredFromDiskMerge());
 
@@ -340,7 +341,7 @@ public class ResourceMergerTest extends BaseTestCase {
         writtenSet.addSource(folder);
         writtenSet.loadFromFiles(logger);
 
-        List<ResourceItem> items = writtenSet.getDataMap().get("attr/blah2");
+        List<ResourceMergerItem> items = writtenSet.getDataMap().get("attr/blah2");
         assertEquals(1, items.size());
         assertFalse(items.get(0).getIgnoredFromDiskMerge());
 
@@ -358,7 +359,8 @@ public class ResourceMergerTest extends BaseTestCase {
         assertTrue(loadedMerger.loadFromBlob(folder, true /*incrementalState*/));
 
         // check that attr/blah is ignoredFromDiskMerge.
-        List<ResourceItem> items = loadedMerger.getDataSets().get(0).getDataMap().get("attr/blah");
+        List<ResourceMergerItem> items =
+                loadedMerger.getDataSets().get(0).getDataMap().get("attr/blah");
         assertEquals(1, items.size());
         assertTrue(items.get(0).getIgnoredFromDiskMerge());
     }
@@ -367,7 +369,8 @@ public class ResourceMergerTest extends BaseTestCase {
     public void testNotMergedSingleFileItem() throws Exception {
         ResourceMerger merger = getResourceMerger();
 
-        List<ResourceItem> items = merger.getDataSets().get(0).getDataMap().get("drawable/patch");
+        List<ResourceMergerItem> items =
+                merger.getDataSets().get(0).getDataMap().get("drawable/patch");
         assertEquals(1, items.size());
         assertFalse(items.get(0).getIgnoredFromDiskMerge());
 
@@ -378,7 +381,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertTrue(loadedMerger.loadFromBlob(folder, true /*incrementalState*/));
 
         // drawable/patch should survive blob writing / loading
-        List<ResourceItem> loadedItems =
+        List<ResourceMergerItem> loadedItems =
                 loadedMerger.getDataSets().get(0).getDataMap().get("drawable/patch");
         assertEquals(1, loadedItems.size());
 
@@ -390,7 +393,7 @@ public class ResourceMergerTest extends BaseTestCase {
         ResourceMerger loadedMerger2 = new ResourceMerger(0);
         assertTrue(loadedMerger2.loadFromBlob(folder, true /*incrementalState*/));
 
-        List<ResourceItem> loadedItems2 =
+        List<ResourceMergerItem> loadedItems2 =
                 loadedMerger2.getDataSets().get(0).getDataMap().get("drawable/patch");
         assertEquals(0, loadedItems2.size());
     }
@@ -405,7 +408,7 @@ public class ResourceMergerTest extends BaseTestCase {
         writtenSet.addSource(folder);
         writtenSet.loadFromFiles(logger);
 
-        List<ResourceItem> items =
+        List<ResourceMergerItem> items =
                 writtenSet.getDataMap().get("declare-styleable/declare_styleable");
         assertEquals(1, items.size());
 
@@ -464,18 +467,18 @@ public class ResourceMergerTest extends BaseTestCase {
         compareResourceMaps(merger, loadedMerger, true /*full compare*/);
 
         // Also check that some of the node values are preserved.
-        List<ResourceItem> fromOrigValue =
+        List<ResourceMergerItem> fromOrigValue =
                 merger.getDataMap().get("string/xliff_with_carriage_return");
         assertEquals(1, fromOrigValue.size());
-        ResourceItem fromOrigString = fromOrigValue.get(0);
+        ResourceMergerItem fromOrigString = fromOrigValue.get(0);
         assertEquals("Original String in merger",
                      "This is should be followed by whitespace:\n        %1$s",
                      fromOrigString.getValueText());
 
-        List<ResourceItem> fromLoadedValues =
+        List<ResourceMergerItem> fromLoadedValues =
                 loadedMerger.getDataMap().get("string/xliff_with_carriage_return");
         assertEquals(1, fromLoadedValues.size());
-        ResourceItem fromLoadedString = fromLoadedValues.get(0);
+        ResourceMergerItem fromLoadedString = fromLoadedValues.get(0);
         assertEquals("Loaded String in merger",
                      "This is should be followed by whitespace:\n        %1$s",
                      fromLoadedString.getValueText());
@@ -521,7 +524,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertTrue(parsedFile.getFile().equals(layoutFile));
         assertEquals("", parsedFile.getQualifiers());
         assertEquals(12, parsedFile.getItems().size());
-        Collection<ResourceItem> layoutItems =
+        Collection<ResourceMergerItem> layoutItems =
                 Collections2.filter(
                         parsedFile.getItems(),
                         input ->
@@ -532,12 +535,12 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals(1, layoutItems.size());
 
         // Also check that the layout item's ResourceValue makes sense.
-        ResourceItem layoutItem = Iterables.getFirst(layoutItems, null);
+        ResourceMergerItem layoutItem = Iterables.getFirst(layoutItems, null);
         assertNotNull(layoutItem);
         ResourceValue layoutValue = layoutItem.getResourceValue();
         assertNotNull(layoutValue);
         assertEquals(layoutFile.getAbsolutePath(), layoutValue.getValue());
-        Collection<ResourceItem> idItems =
+        Collection<ResourceMergerItem> idItems =
                 Collections2.filter(
                         parsedFile.getItems(),
                         input ->
@@ -556,7 +559,7 @@ public class ResourceMergerTest extends BaseTestCase {
 
         compareResourceMaps(merger, loadedMerger, true /*full compare*/);
         // Also check that the layout item's ResourceValue makes sense after reload.
-        List<ResourceItem> loadedLayoutItems =
+        List<ResourceMergerItem> loadedLayoutItems =
                 loadedMerger.getDataMap().get("layout/layout_for_id_scan");
         assertEquals(1, loadedLayoutItems.size());
         layoutItem = Iterables.getFirst(loadedLayoutItems, null);
@@ -566,10 +569,10 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals(layoutFile.getAbsolutePath(), layoutValue.getValue());
 
         // Check that the ID item's ResourceValue is nothing of consequence.
-        List<ResourceItem> loadedIdItems =
+        List<ResourceMergerItem> loadedIdItems =
                 loadedMerger.getDataMap().get("id/title_refresh_progress");
         assertEquals(1, loadedIdItems.size());
-        ResourceItem idItem = Iterables.getFirst(loadedIdItems, null);
+        ResourceMergerItem idItem = Iterables.getFirst(loadedIdItems, null);
         assertNotNull(idItem);
         ResourceValue idValue = idItem.getResourceValue();
         assertNotNull(idValue);
@@ -602,12 +605,12 @@ public class ResourceMergerTest extends BaseTestCase {
 
         RecordingLogger logger = new RecordingLogger();
         resourceSet.loadFromFiles(logger);
-        List<ResourceItem> iconRes = resourceSet.getDataMap().get("drawable-v21/icon");
+        List<ResourceMergerItem> iconRes = resourceSet.getDataMap().get("drawable-v21/icon");
         assertEquals(1, iconRes.size());
-        List<ResourceItem> drawableRes =
+        List<ResourceMergerItem> drawableRes =
                 resourceSet.getDataMap().get("drawable-v21/drawable_for_id_scan");
         assertEquals(1, drawableRes.size());
-        List<ResourceItem> focusedId= resourceSet.getDataMap().get("id-v21/focused");
+        List<ResourceMergerItem> focusedId = resourceSet.getDataMap().get("id-v21/focused");
         assertEquals(1, focusedId.size());
 
         checkLogger(logger);
@@ -819,41 +822,41 @@ public class ResourceMergerTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the content.
-        ListMultimap<String, ResourceItem> mergedMap = resourceMerger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = resourceMerger.getDataMap();
 
         // check unchanged file is WRITTEN
-        List<ResourceItem> drawableUntouched = mergedMap.get("drawable/untouched");
+        List<ResourceMergerItem> drawableUntouched = mergedMap.get("drawable/untouched");
         assertEquals(1, drawableUntouched.size());
         assertTrue(drawableUntouched.get(0).isWritten());
         assertFalse(drawableUntouched.get(0).isTouched());
         assertFalse(drawableUntouched.get(0).isRemoved());
 
         // check replaced file is TOUCHED
-        List<ResourceItem> drawableTouched = mergedMap.get("drawable/touched");
+        List<ResourceMergerItem> drawableTouched = mergedMap.get("drawable/touched");
         assertEquals(1, drawableTouched.size());
         assertTrue(drawableTouched.get(0).isWritten());
         assertTrue(drawableTouched.get(0).isTouched());
         assertFalse(drawableTouched.get(0).isRemoved());
 
         // check removed file is REMOVED
-        List<ResourceItem> drawableRemoved = mergedMap.get("drawable/removed");
+        List<ResourceMergerItem> drawableRemoved = mergedMap.get("drawable/removed");
         assertEquals(1, drawableRemoved.size());
         assertTrue(drawableRemoved.get(0).isWritten());
         assertTrue(drawableRemoved.get(0).isRemoved());
 
         // check new overlay: two objects, last one is TOUCHED
-        List<ResourceItem> drawableNewOverlay = mergedMap.get("drawable/new_overlay");
+        List<ResourceMergerItem> drawableNewOverlay = mergedMap.get("drawable/new_overlay");
         assertEquals(2, drawableNewOverlay.size());
-        ResourceItem newOverlay = drawableNewOverlay.get(1);
+        ResourceMergerItem newOverlay = drawableNewOverlay.get(1);
         assertEquals(overlayDrawableNewOverlay, newOverlay.getSource().getFile());
         assertFalse(newOverlay.isWritten());
         assertTrue(newOverlay.isTouched());
 
         // check new alternate: one objects, last one is TOUCHED
-        List<ResourceItem> drawableHdpiNewAlternate =
+        List<ResourceMergerItem> drawableHdpiNewAlternate =
                 mergedMap.get("drawable-hdpi-v4/new_alternate");
         assertEquals(1, drawableHdpiNewAlternate.size());
-        ResourceItem newAlternate = drawableHdpiNewAlternate.get(0);
+        ResourceMergerItem newAlternate = drawableHdpiNewAlternate.get(0);
         assertEquals(overlayDrawableHdpiNewAlternate, newAlternate.getSource().getFile());
         assertFalse(newAlternate.isWritten());
         assertTrue(newAlternate.isTouched());
@@ -952,24 +955,24 @@ public class ResourceMergerTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the content.
-        ListMultimap<String, ResourceItem> mergedMap = resourceMerger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = resourceMerger.getDataMap();
 
         // check unchanged string is WRITTEN
-        List<ResourceItem> valuesUntouched = mergedMap.get("string/untouched");
+        List<ResourceMergerItem> valuesUntouched = mergedMap.get("string/untouched");
         assertEquals(1, valuesUntouched.size());
         assertTrue(valuesUntouched.get(0).isWritten());
         assertFalse(valuesUntouched.get(0).isTouched());
         assertFalse(valuesUntouched.get(0).isRemoved());
 
         // check replaced file is TOUCHED
-        List<ResourceItem> valuesTouched = mergedMap.get("string/touched");
+        List<ResourceMergerItem> valuesTouched = mergedMap.get("string/touched");
         assertEquals(1, valuesTouched.size());
         assertTrue(valuesTouched.get(0).isWritten());
         assertTrue(valuesTouched.get(0).isTouched());
         assertFalse(valuesTouched.get(0).isRemoved());
 
         // check removed file is REMOVED
-        List<ResourceItem> valuesRemoved = mergedMap.get("string/removed");
+        List<ResourceMergerItem> valuesRemoved = mergedMap.get("string/removed");
         assertEquals(1, valuesRemoved.size());
         assertTrue(valuesRemoved.get(0).isWritten());
         assertTrue(valuesRemoved.get(0).isRemoved());
@@ -980,16 +983,16 @@ public class ResourceMergerTest extends BaseTestCase {
         assertTrue(valuesRemoved.get(0).isRemoved());
 
         // check new overlay: two objects, last one is TOUCHED
-        List<ResourceItem> valuesNewOverlay = mergedMap.get("string/new_overlay");
+        List<ResourceMergerItem> valuesNewOverlay = mergedMap.get("string/new_overlay");
         assertEquals(2, valuesNewOverlay.size());
-        ResourceItem newOverlay = valuesNewOverlay.get(1);
+        ResourceMergerItem newOverlay = valuesNewOverlay.get(1);
         assertFalse(newOverlay.isWritten());
         assertTrue(newOverlay.isTouched());
 
         // check new alternate: one objects, last one is TOUCHED
-        List<ResourceItem> valuesFrNewAlternate = mergedMap.get("string-fr/new_alternate");
+        List<ResourceMergerItem> valuesFrNewAlternate = mergedMap.get("string-fr/new_alternate");
         assertEquals(1, valuesFrNewAlternate.size());
-        ResourceItem newAlternate = valuesFrNewAlternate.get(0);
+        ResourceMergerItem newAlternate = valuesFrNewAlternate.get(0);
         assertFalse(newAlternate.isWritten());
         assertTrue(newAlternate.isTouched());
 
@@ -1079,17 +1082,17 @@ public class ResourceMergerTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the content.
-        ListMultimap<String, ResourceItem> mergedMap = resourceMerger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = resourceMerger.getDataMap();
 
         // check unchanged string is WRITTEN
-        List<ResourceItem> valuesUntouched = mergedMap.get("string/untouched");
+        List<ResourceMergerItem> valuesUntouched = mergedMap.get("string/untouched");
         assertEquals(1, valuesUntouched.size());
         assertTrue(valuesUntouched.get(0).isWritten());
         assertFalse(valuesUntouched.get(0).isTouched());
         assertFalse(valuesUntouched.get(0).isRemoved());
 
         // check removed_overlay is present twice.
-        List<ResourceItem> valuesRemovedOverlay = mergedMap.get("string/removed_overlay");
+        List<ResourceMergerItem> valuesRemovedOverlay = mergedMap.get("string/removed_overlay");
         assertEquals(2, valuesRemovedOverlay.size());
         // first is untouched
         assertFalse(valuesRemovedOverlay.get(0).isWritten());
@@ -1155,20 +1158,21 @@ public class ResourceMergerTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the content.
-        ListMultimap<String, ResourceItem> mergedMap = resourceMerger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = resourceMerger.getDataMap();
 
         // check layout/main is unchanged
-        List<ResourceItem> layoutMain = mergedMap.get("layout/main");
+        List<ResourceMergerItem> layoutMain = mergedMap.get("layout/main");
         assertEquals(1, layoutMain.size());
         assertTrue(layoutMain.get(0).isWritten());
         assertFalse(layoutMain.get(0).isTouched());
         assertFalse(layoutMain.get(0).isRemoved());
 
         // check file_replaced_by_alias has 2 version, 2nd is TOUCHED, and contains a Node
-        List<ResourceItem> layoutReplacedByAlias = mergedMap.get("layout/file_replaced_by_alias");
+        List<ResourceMergerItem> layoutReplacedByAlias =
+                mergedMap.get("layout/file_replaced_by_alias");
         assertEquals(2, layoutReplacedByAlias.size());
         // 1st one is removed version, as it already existed in the item multimap
-        ResourceItem replacedByAlias = layoutReplacedByAlias.get(0);
+        ResourceMergerItem replacedByAlias = layoutReplacedByAlias.get(0);
         assertTrue(replacedByAlias.isWritten());
         assertFalse(replacedByAlias.isTouched());
         assertTrue(replacedByAlias.isRemoved());
@@ -1183,10 +1187,11 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals("values.xml", replacedByAlias.getSource().getFile().getName());
 
         // check alias_replaced_by_file has 2 version, 2nd is TOUCHED, and contains a Node
-        List<ResourceItem> layoutReplacedByFile = mergedMap.get("layout/alias_replaced_by_file");
+        List<ResourceMergerItem> layoutReplacedByFile =
+                mergedMap.get("layout/alias_replaced_by_file");
         // 1st one is removed version, as it already existed in the item multimap
         assertEquals(2, layoutReplacedByFile.size());
-        ResourceItem replacedByFile = layoutReplacedByFile.get(0);
+        ResourceMergerItem replacedByFile = layoutReplacedByFile.get(0);
         assertTrue(replacedByFile.isWritten());
         assertFalse(replacedByFile.isTouched());
         assertTrue(replacedByFile.isRemoved());
@@ -1373,10 +1378,10 @@ public class ResourceMergerTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the content.
-        ListMultimap<String, ResourceItem> mergedMap = resourceMerger.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedMap = resourceMerger.getDataMap();
 
         // check layout/main is unchanged
-        List<ResourceItem> removedIcon = mergedMap.get("drawable/removed");
+        List<ResourceMergerItem> removedIcon = mergedMap.get("drawable/removed");
         assertEquals(1, removedIcon.size());
         assertTrue(removedIcon.get(0).isRemoved());
         assertTrue(removedIcon.get(0).isWritten());
@@ -1447,14 +1452,14 @@ public class ResourceMergerTest extends BaseTestCase {
         mergedSet.loadFromFiles(logger);
         checkLogger(logger);
 
-        ListMultimap<String, ResourceItem> map = mergedSet.getDataMap();
+        ListMultimap<String, ResourceMergerItem> map = mergedSet.getDataMap();
         assertEquals(4, map.size());
 
-        List<ResourceItem> items = map.get("declare-styleable/foo");
+        List<ResourceMergerItem> items = map.get("declare-styleable/foo");
         assertNotNull(items);
         assertEquals(1, items.size());
 
-        ResourceItem item = items.get(0);
+        ResourceMergerItem item = items.get(0);
         assertNotNull(item);
 
         // now we need to look at the item's value (which is the XML).
@@ -1731,19 +1736,20 @@ public class ResourceMergerTest extends BaseTestCase {
         mergedSet.loadFromFiles(logger);
         checkLogger(logger);
 
-        ListMultimap<String, ResourceItem> originalItems = baseSet.getDataMap();
-        ListMultimap<String, ResourceItem> mergedItems = mergedSet.getDataMap();
+        ListMultimap<String, ResourceMergerItem> originalItems = baseSet.getDataMap();
+        ListMultimap<String, ResourceMergerItem> mergedItems = mergedSet.getDataMap();
 
-        for (Map.Entry<String, Collection<ResourceItem>> entry : originalItems.asMap().entrySet()) {
-            Collection<ResourceItem> originalItemList = entry.getValue();
-            Collection<ResourceItem> mergedItemList = mergedItems.asMap().get(entry.getKey());
+        for (Map.Entry<String, Collection<ResourceMergerItem>> entry :
+                originalItems.asMap().entrySet()) {
+            Collection<ResourceMergerItem> originalItemList = entry.getValue();
+            Collection<ResourceMergerItem> mergedItemList = mergedItems.asMap().get(entry.getKey());
 
             // the collection should only have a single items
             assertEquals(1, originalItemList.size());
             assertEquals(1, mergedItemList.size());
 
-            ResourceItem originalItem = originalItemList.iterator().next();
-            ResourceItem mergedItem = mergedItemList.iterator().next();
+            ResourceMergerItem originalItem = originalItemList.iterator().next();
+            ResourceMergerItem mergedItem = mergedItemList.iterator().next();
 
             assertTrue(originalItem.compareValueWith(mergedItem));
         }
@@ -2056,10 +2062,10 @@ public class ResourceMergerTest extends BaseTestCase {
 
 
     // create a fake consumer
-    private static class FakeMergeConsumer implements MergeConsumer<ResourceItem> {
-        final List<ResourceItem> addedItems = Lists.newArrayList();
-        final List<ResourceItem> touchedItems = Lists.newArrayList();
-        final List<ResourceItem> removedItems = Lists.newArrayList();
+    private static class FakeMergeConsumer implements MergeConsumer<ResourceMergerItem> {
+        final List<ResourceMergerItem> addedItems = Lists.newArrayList();
+        final List<ResourceMergerItem> touchedItems = Lists.newArrayList();
+        final List<ResourceMergerItem> removedItems = Lists.newArrayList();
 
         @Override
         public void start(@NonNull DocumentBuilderFactory factory)
@@ -2073,7 +2079,7 @@ public class ResourceMergerTest extends BaseTestCase {
         }
 
         @Override
-        public void addItem(@NonNull ResourceItem item) throws ConsumerException {
+        public void addItem(@NonNull ResourceMergerItem item) throws ConsumerException {
             // the default res merge writer calls this, so we should too.
             // this is to test that the merged item are properly created
             @SuppressWarnings("UnusedDeclaration")
@@ -2087,14 +2093,14 @@ public class ResourceMergerTest extends BaseTestCase {
         }
 
         @Override
-        public void removeItem(@NonNull ResourceItem removedItem,
-                @Nullable ResourceItem replacedBy)
+        public void removeItem(
+                @NonNull ResourceMergerItem removedItem, @Nullable ResourceMergerItem replacedBy)
                 throws ConsumerException {
             removedItems.add(removedItem);
         }
 
         @Override
-        public boolean ignoreItemInMerge(ResourceItem item) {
+        public boolean ignoreItemInMerge(ResourceMergerItem item) {
             return item.getIgnoredFromDiskMerge();
         }
     }

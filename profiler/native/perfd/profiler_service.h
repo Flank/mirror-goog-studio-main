@@ -31,8 +31,7 @@ class ProfilerServiceImpl final
   explicit ProfilerServiceImpl(
       Daemon* daemon,
       std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
-      : daemon_(daemon),
-        heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
+      : daemon_(daemon), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
   grpc::Status GetCurrentTime(grpc::ServerContext* context,
                               const profiler::proto::TimeRequest* request,
@@ -57,8 +56,9 @@ class ProfilerServiceImpl final
       profiler::proto::GetDevicesResponse* response) override;
 
   grpc::Status ConfigureStartupAgent(
-    grpc::ServerContext* context, const profiler::proto::ConfigureStartupAgentRequest* request,
-    profiler::proto::ConfigureStartupAgentResponse* response) override;
+      grpc::ServerContext* context,
+      const profiler::proto::ConfigureStartupAgentRequest* request,
+      profiler::proto::ConfigureStartupAgentResponse* response) override;
 
   grpc::Status BeginSession(
       grpc::ServerContext* context,
@@ -79,11 +79,6 @@ class ProfilerServiceImpl final
       grpc::ServerContext* context,
       const profiler::proto::GetSessionsRequest* request,
       profiler::proto::GetSessionsResponse* response) override;
-
-  grpc::Status DeleteSession(
-      grpc::ServerContext* context,
-      const profiler::proto::DeleteSessionRequest* request,
-      profiler::proto::DeleteSessionResponse* response) override;
 
  private:
   // Attaches an JVMTI agent to an app. If |agent_lib_file_name| is attached

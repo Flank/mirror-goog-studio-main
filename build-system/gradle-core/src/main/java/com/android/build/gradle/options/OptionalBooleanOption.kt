@@ -16,16 +16,15 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
 enum class OptionalBooleanOption(
     override val propertyName: String,
-    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
-) : Option<Boolean> {
-    SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED),
-    SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED),
-    IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY),
+    override val status: Option.Status = Option.Status.EXPERIMENTAL) : Option<Boolean> {
+    SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, status = STABLE),
+    SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, status = STABLE),
+    IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, status = STABLE),
     SERIAL_AAPT2(AndroidProject.PROPERTY_INVOKE_JNI_AAPT2_LINK_SERIALLY),
     ;
 

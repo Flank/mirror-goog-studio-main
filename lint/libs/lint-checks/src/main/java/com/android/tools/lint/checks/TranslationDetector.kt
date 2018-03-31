@@ -51,7 +51,6 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
@@ -60,6 +59,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.getLocaleAndRegion
 import com.android.utils.SdkUtils.fileNameToResourceName
 import com.android.utils.SdkUtils.isServiceKey
 import com.android.utils.XmlUtils
@@ -313,7 +313,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
         val items: List<ResourceItem> =
             resources.getResourceItems(context.project.resourceNamespace, type, name)
-        val hasDefault = items.filter { isDefaultFolder(null, null, it.qualifiers) }.any()
+        val hasDefault = items.filter { isDefaultFolder(it.configuration, null) }.any()
         if (!hasDefault) {
             reportExtraResource(type, name, context, element)
         } else if (type == STRING &&
@@ -343,7 +343,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
             for (item in items) {
                 val qualifiers = run {
-                    val s = item.qualifiers
+                    val s = item.configuration.qualifierString
                     val index = s.indexOf('-')
                     if (index != -1) {
                         s.substring(0, index)
@@ -372,7 +372,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         defaultLocale: String?
     ) {
         // Batch mode
-        val isDefault = isDefaultFolder(context.getFolderConfiguration(), folderName, null)
+        val isDefault = isDefaultFolder(context.getFolderConfiguration(), folderName)
         if (isDefault) {
             // Base folder
             if (context.phase == 1) {
@@ -452,11 +452,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
      */
     private fun isDefaultFolder(
         configuration: FolderConfiguration?,
-        folderName: String?,
-        qualifiers: String?
+        folderName: String?
     ): Boolean {
-        val config: FolderConfiguration
-        when {
+        val config: FolderConfiguration = when {
+            configuration != null -> configuration
             folderName != null -> {
                 if (!folderName.contains('-')) {
                     return true
@@ -468,25 +467,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                     return false
                 }
 
-                config = configuration
-                        ?: FolderConfiguration.getConfigForFolder(folderName)
-                        ?: return false
-            }
-            qualifiers != null -> {
-                if (qualifiers.isBlank()) {
-                    return true
-                }
-
-                // Cheap underestimate:
-                if (!qualifiers.contains("dpi") &&
-                    !(qualifiers.startsWith("v") || qualifiers.contains("-v"))
-                ) {
-                    return false
-                }
-
-                config = configuration
-                        ?: FolderConfiguration.getConfigForQualifierString(qualifiers)
-                        ?: return false
+                FolderConfiguration.getConfigForFolder(folderName) ?: return false
             }
             else -> {
                 assert(false)
@@ -494,19 +475,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             }
         }
 
-        if (config.any { it !is DensityQualifier && it !is VersionQualifier }) {
-            return false
-        }
-//        })
-//        for (qualifier in config.qualifiers) {
-//            if (qualifier.isValid) {
-//                if (qualifier !is DensityQualifier && qualifier !is VersionQualifier) {
-//                    return false
-//                }
-//            }
-//        }
-
-        return true
+        return !config.any { it !is DensityQualifier && it !is VersionQualifier }
     }
 
     private fun recordTranslation(name: String, language: String) {
@@ -535,16 +504,16 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             if (!isDefaultFolder &&
                 // Ensure that we're really in a locale folder, not just some non-default
                 // folder (for example, values-en is a locale folder, values-v19 is not)
-                LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null
+                getLocaleAndRegion(context.file.parentFile.name) != null
             ) {
                 reportTranslatedUntranslatable(context, name, element, translatable, true)
             }
             recordTranslatable(context, name)
             return true
-        } else if ((isServiceKey(name)
+        } else if ((isServiceKey(name) ||
                     // Older versions of the templates shipped with these not marked as
                     // non-translatable; don't flag them
-                    || name == "google_maps_key" ||
+                    name == "google_maps_key" ||
                     name == "google_maps_key_instructions")
         ) {
             // Mark translatable, but don't flag it as an error do have these translatable
@@ -552,7 +521,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             recordTranslatable(context, name)
             return true
         } else if (!isDefaultFolder && nonTranslatable?.contains(name) == true &&
-            LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null
+            getLocaleAndRegion(context.file.parentFile.name) != null
         ) {
             reportTranslatedUntranslatable(
                 context,

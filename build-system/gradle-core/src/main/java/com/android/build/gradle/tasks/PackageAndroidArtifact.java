@@ -117,7 +117,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public FileCollection getResourceFiles() {
+    public BuildableArtifact getResourceFiles() {
         return resourceFiles;
     }
 
@@ -154,7 +154,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return jniFolders;
     }
 
-    protected FileCollection resourceFiles;
+    protected BuildableArtifact resourceFiles;
 
     protected FileCollection dexFolders;
 
@@ -219,7 +219,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected FileCache fileCache;
 
-    protected FileCollection apkList;
+    protected BuildableArtifact apkList;
 
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
@@ -350,7 +350,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     @InputFiles
-    FileCollection getApkList() {
+    BuildableArtifact getApkList() {
         return apkList;
     }
 
@@ -903,7 +903,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             variantScope.getIncrementalDir(packageAndroidArtifact.getName()),
                             "aapt-temp");
 
-            packageAndroidArtifact.resourceFiles = variantScope.getOutput(inputResourceFilesType);
+            packageAndroidArtifact.resourceFiles =
+                    variantScope.getArtifacts().getFinalArtifactFiles(inputResourceFilesType);
             packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact.setIncrementalFolder(
                     new File(
@@ -973,7 +974,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 task.jniFolders = filters.isEmpty() ? getJniFolders() : project.files();
             }
 
-            task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            task.apkList =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             // Don't sign.
             task.setSigningConfig(variantConfiguration.getSigningConfig());

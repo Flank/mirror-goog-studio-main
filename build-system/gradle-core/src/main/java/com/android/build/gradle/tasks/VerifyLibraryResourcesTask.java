@@ -23,6 +23,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -87,7 +88,7 @@ import org.gradle.workers.WorkerExecutor;
 public class VerifyLibraryResourcesTask extends IncrementalTask {
 
     private File compiledDirectory;
-    private FileCollection inputDirectory;
+    private BuildableArtifact inputDirectory;
     private File mergeBlameLogFolder;
     private InternalArtifactType taskInputType;
     private BuildableArtifact manifestFiles;
@@ -111,7 +112,8 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     protected final void doFullTaskAction() throws Exception {
         // Mark all files as NEW and continue with the verification.
         Map<File, FileStatus> fileStatusMap;
-        try (Stream<Path> paths = Files.walk(inputDirectory.getSingleFile().toPath())) {
+        try (Stream<Path> paths = Files.walk(
+                BuildableArtifactUtil.singleFile(inputDirectory).toPath())) {
             fileStatusMap =
                     paths.filter(Files::isRegularFile)
                             .collect(Collectors.toMap(Path::toFile, file -> FileStatus.NEW));
@@ -163,7 +165,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                     null,
                     workerExecutor,
                     aapt2ServiceKey,
-                    inputDirectory.getSingleFile());
+                    BuildableArtifactUtil.singleFile(inputDirectory));
             AaptPackageConfig config = getAaptPackageConfig(compiledDirectory, manifestFile);
             Aapt2ProcessResourcesRunnable.Params params =
                     new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config);
@@ -186,7 +188,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
 
             if (aapt instanceof AaptV1) {
                 // If we're using AAPT1 we only need to link the resources.
-                linkResources(inputDirectory.getSingleFile(), aapt, manifestFile);
+                linkResources(BuildableArtifactUtil.singleFile(inputDirectory), aapt, manifestFile);
             } else {
                 // If we're using AAPT2 we need to compile the resources into the compiled directory
                 // first as we need the .flat files for linking.
@@ -196,7 +198,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                         aapt,
                         null,
                         null,
-                        inputDirectory.getSingleFile());
+                        BuildableArtifactUtil.singleFile(inputDirectory));
                 linkResources(compiledDirectory, aapt, manifestFile);
             }
         }
@@ -367,7 +369,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                     sourceArtifactType == TaskManager.MergeType.MERGE,
                     "Support for not merging resources in libraries not implemented yet.");
             verifyLibraryResources.inputDirectory =
-                    scope.getOutput(sourceArtifactType.getOutputType());
+                    scope.getArtifacts().getFinalArtifactFiles(sourceArtifactType.getOutputType());
 
             verifyLibraryResources.compiledDirectory = scope.getCompiledResourcesOutputDir();
             verifyLibraryResources.mergeBlameLogFolder = scope.getResourceBlameLogDir();
@@ -415,7 +417,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     @NonNull
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getInputDirectory() {
+    public BuildableArtifact getInputDirectory() {
         // Merged resources directory.
         return inputDirectory;
     }

@@ -83,22 +83,28 @@ open class AndroidZip : Zip() {
             bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.CONSUMER_PROGUARD_FILE))
             if (extension.dataBinding.isEnabled) {
                 bundle.from(
-                    variantScope.getOutput(InternalArtifactType.DATA_BINDING_ARTIFACT),
+                    variantScope.globalScope.project.provider {
+                        variantScope.artifacts.getFinalArtifactFiles(
+                            InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
                 bundle.from(
-                    variantScope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                    variantScope.globalScope.project.provider {
+                        variantScope.artifacts.getFinalArtifactFiles(
+                            InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
+                        )
+                    },
                     prependToCopyPath(
                         DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
                     )
                 )
             }
-            bundle.from(variantScope.getOutput(InternalArtifactType.LIBRARY_MANIFEST))
+            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522
             if (java.lang.Boolean.TRUE != variantScope.globalScope.extension.aaptOptions.namespaced) {
-                bundle.from(variantScope.getOutput(InternalArtifactType.SYMBOL_LIST))
+                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
                 bundle.from(
-                    variantScope.getOutput(InternalArtifactType.PACKAGED_RES),
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
                 )
             }
@@ -107,11 +113,12 @@ open class AndroidZip : Zip() {
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
             bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
-            if (variantScope.hasOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
-                bundle.from(variantScope.getOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
+            if (artifacts.hasArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
+                bundle.from(artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
-            if (variantScope.hasOutput(InternalArtifactType.RES_STATIC_LIBRARY)) {
-                bundle.from(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY))
+            if (artifacts.hasArtifact(InternalArtifactType.RES_STATIC_LIBRARY)) {
+                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY))
             }
             bundle.from(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),

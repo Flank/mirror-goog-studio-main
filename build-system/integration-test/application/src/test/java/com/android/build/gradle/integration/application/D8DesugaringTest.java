@@ -21,6 +21,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
@@ -95,14 +96,14 @@ public class D8DesugaringTest {
                         + "        implementation project(':lib')\n"
                         + "        androidTestImplementation"
                         + " 'com.android.support:support-v4:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "        testImplementation 'junit:junit:4.12'\n"
                         + "        androidTestImplementation 'com.android.support.test:runner:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
                         + "        androidTestImplementation 'com.android.support.test:rules:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
                         + "    }\n"
                         + "}\n");

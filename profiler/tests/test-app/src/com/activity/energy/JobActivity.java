@@ -55,7 +55,7 @@ public class JobActivity extends PerfdTestActivity {
         JobServiceEngine engine = new JobServiceEngine(jobService);
         JobParameters jobParams = createJobParams(1);
         engine.startJob(jobParams);
-        jobService.jobFinished(jobParams, true);
+        jobService.jobFinished(jobParams, false);
         System.out.println("JOB FINISHED");
     }
 

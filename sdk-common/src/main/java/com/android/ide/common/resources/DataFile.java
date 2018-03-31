@@ -119,16 +119,9 @@ public abstract class DataFile<I extends DataItem> implements Serializable {
         }
     }
 
-    public void removeItems(@NonNull Iterable<I> items) {
-        for (I item : items) {
-            mItems.remove(item.getKey());
-            //noinspection unchecked
-            item.setSource(null);
-        }
-    }
-
-    public void removeItem(ResourceItem item) {
+    public void removeItem(I item) {
         mItems.remove(item.getKey());
+        //noinspection unchecked - I is a raw type, but calling setSource with null is safe anyway.
         item.setSource(null);
     }
 

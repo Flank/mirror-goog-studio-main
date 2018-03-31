@@ -92,7 +92,11 @@ class PartialRTest {
         assertThat(symbolsR).contains("private int string private_string")
 
         val resIds = FileUtils.join(
-                project.getSubproject("app").intermediatesDir, "res-ids", "debug", "res-ids.txt")
+                project.getSubproject("app").intermediatesDir,
+            "namespaced_symbol_list_with_package_name",
+            "debug",
+            "createDebugRFiles",
+            "res-ids.txt")
         assertThat(resIds).exists()
         assertThat(Files.readAllLines(resIds.toPath()))
             .containsExactly(
@@ -103,7 +107,11 @@ class PartialRTest {
             .inOrder()
 
         val rJar = FileUtils.join(
-                project.getSubproject("app").intermediatesDir, "res-rJar", "debug", "R.jar")
+                project.getSubproject("app").intermediatesDir,
+            "compile_only_namespaced_r_class_jar",
+            "debug",
+            "createDebugRFiles",
+            "R.jar")
         assertThat(rJar).exists()
 
         URLClassLoader(arrayOf(rJar.toURI().toURL()), null).use { classLoader ->

@@ -107,36 +107,6 @@ TEST(SessionsManager, CanBeginMultipleSessions_AllRemainActiveUntilEnded) {
   }
 }
 
-TEST(SessionsManager, CanDeleteSessions) {
-  FakeClock clock(1234);
-  SessionsManager sessions(&clock);
-  Session session1;
-  Session session2;
-  Session session3;
-  Session session4;
-
-  sessions.BeginSession(-1, 1, &session1);
-  clock.Elapse(10);
-  sessions.BeginSession(-2, 2, &session2);
-  clock.Elapse(10);
-  sessions.BeginSession(-3, 3, &session3);
-  clock.Elapse(10);
-  sessions.BeginSession(-4, 3, &session4);
-  clock.Elapse(10);
-
-  // Can delete most recent.
-  EXPECT_TRUE(sessions.GetSession(session4.session_id(), &session4));
-  EXPECT_TRUE(SessionUtils::IsActive(session4));
-  sessions.DeleteSession(session4.session_id());
-  EXPECT_FALSE(sessions.GetSession(session4.session_id(), &session4));
-
-  // Can delete in the middle.
-  EXPECT_TRUE(sessions.GetSession(session2.session_id(), &session2));
-  EXPECT_TRUE(SessionUtils::IsActive(session2));
-  sessions.DeleteSession(session2.session_id());
-  EXPECT_FALSE(sessions.GetSession(session2.session_id(), &session2));
-}
-
 TEST(SessionsManager, GetSessionWorks) {
   FakeClock clock(1000);
   SessionsManager sessions(&clock);
@@ -259,15 +229,6 @@ TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
     auto session_range = sessions.GetSessions(clock.GetCurrentTime() + 1000);
     EXPECT_EQ(1, session_range.size());
     EXPECT_EQ(50, session_range[0].pid());
-  }
-
-  {
-    // Delete most recent session, and check that it is excluded from a search
-    sessions.DeleteSession(session.session_id());
-
-    auto session_range = sessions.GetSessions();
-    EXPECT_EQ(4, session_range.size());
-    EXPECT_EQ(40, session_range[0].pid());
   }
 }
 

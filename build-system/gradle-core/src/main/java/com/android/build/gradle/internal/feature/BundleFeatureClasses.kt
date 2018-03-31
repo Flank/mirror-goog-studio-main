@@ -49,7 +49,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
     @get:InputFiles lateinit var javacClasses: BuildableArtifact
     @get:InputFiles lateinit var preJavacClasses: FileCollection
     @get:InputFiles lateinit var postJavacClasses: FileCollection
-    @get:InputFiles private var thisRClassClasses: FileCollection? = null
+    @get:InputFiles private var thisRClassClasses: BuildableArtifact? = null
     @get:InputFiles private var dependencyRClassClasses: FileCollection? = null
 
     @TaskAction
@@ -66,7 +66,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
         (javacClasses as BuildableArtifactImpl).asFileTree.visit(collector)
         preJavacClasses.asFileTree.visit(collector)
         postJavacClasses.asFileTree.visit(collector)
-        thisRClassClasses?.asFileTree?.visit(collector)
+        thisRClassClasses?.get()?.asFileTree?.visit(collector)
 
         workerExecutor.submit(JarWorkerRunnable::class.java) {
             it.isolationMode = IsolationMode.NONE
@@ -93,9 +93,8 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope
             if (java.lang.Boolean.TRUE == globalScope.extension.aaptOptions.namespaced) {
-                task.thisRClassClasses =
-                        scope.getOutput(
-                                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                task.thisRClassClasses = scope.artifacts
+                    .getFinalArtifactFiles(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 task.dependencyRClassClasses = scope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,

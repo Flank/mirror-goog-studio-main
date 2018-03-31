@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.errors
 
-import com.google.common.collect.ImmutableTable
+import com.android.build.gradle.options.Option
 
 /**
  * Reporter for issues during evaluation.
@@ -151,8 +151,20 @@ interface DeprecationReporter {
     /**
      * Reports deprecated options usage.
      *
-     * @param options a table containing the flag name, default value and the deprecation target of
-     * each deprecated option.
+     * @param options the set of deprecated options that were used.
      */
-    fun reportDeprecatedOptions(options: ImmutableTable<String, String, DeprecationTarget>)
+    fun reportDeprecatedOptions(options: Set<Option<*>>) {
+        for (option in options) {
+            reportDeprecatedOption(
+                option.propertyName,
+                option.defaultValue?.toString(),
+                (option.status as Option.Status.Deprecated).deprecationTarget)
+        }
+    }
+
+    /**
+     * Reports experimental options usage.
+     */
+    fun reportExperimentalOption(option: Option<*>, value: String)
+
 }

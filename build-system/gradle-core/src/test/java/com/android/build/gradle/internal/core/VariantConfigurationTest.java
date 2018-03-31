@@ -94,16 +94,6 @@ public class VariantConfigurationTest {
     }
 
     @Test
-    public void testPackageOverridePackageWithSuffixOnly() {
-
-        mBuildType.setApplicationIdSuffix("fortytwo");
-
-        VariantConfiguration variant = getVariantWithManifestPackage();
-
-        assertThat(variant.getIdOverride()).isEqualTo("fake.package.name.fortytwo");
-    }
-
-    @Test
     public void testVersionNameFromFlavorWithSuffix() {
         mFlavorConfig.setVersionName("1.0");
         mBuildType.setVersionNameSuffix("-DEBUG");
@@ -111,15 +101,6 @@ public class VariantConfigurationTest {
         VariantConfiguration variant = getVariant();
 
         assertThat(variant.getVersionName()).isEqualTo("1.0-DEBUG");
-    }
-
-    @Test
-    public void testVersionNameWithSuffixOnly() {
-        mBuildType.setVersionNameSuffix("-DEBUG");
-
-        VariantConfiguration variant = getVariantWithManifestVersion();
-
-        assertThat(variant.getVersionName()).isEqualTo("2.0b1-DEBUG");
     }
 
     @Test
@@ -234,56 +215,6 @@ public class VariantConfigurationTest {
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
 
-        return variant;
-    }
-
-    private VariantConfiguration getVariantWithManifestPackage() {
-        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
-                new VariantConfiguration<
-                        DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>(
-                        mDefaultConfig,
-                        new MockSourceProvider("main"),
-                        null,
-                        mBuildType,
-                        new MockSourceProvider("debug"),
-                        VariantTypeImpl.BASE_APK,
-                        null /*signingConfigOverride*/,
-                        mIssueReporter,
-                        () -> true) {
-
-                    @NonNull
-                    @Override
-                    public String getPackageFromManifest() {
-                        return "fake.package.name";
-                    }
-                };
-
-        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
-        return variant;
-    }
-
-    private VariantConfiguration getVariantWithManifestVersion() {
-        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
-                new VariantConfiguration<
-                        DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor>(
-                        mDefaultConfig,
-                        new MockSourceProvider("main"),
-                        null,
-                        mBuildType,
-                        new MockSourceProvider("debug"),
-                        VariantTypeImpl.BASE_APK,
-                        null /*signingConfigOverride*/,
-                        mIssueReporter,
-                        () -> true) {
-
-                    @Override
-                    public String getVersionNameFromManifest() {
-                        return "2.0b1";
-                    }
-                    // don't do validation.
-                };
-
-        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
         return variant;
     }
 

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.databinding;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -66,8 +67,7 @@ public class DataBindingDesugarAppTest {
                                 + "dependencies {\n"
                                 + "    compile 'com.android.support:support-v4:%s'\n"
                                 + "}",
-                        GradleTestProject.SUPPORT_LIB_MIN_SDK,
-                        GradleTestProject.SUPPORT_LIB_VERSION));
+                        TestVersions.SUPPORT_LIB_MIN_SDK, TestVersions.SUPPORT_LIB_VERSION));
 
         getProjectExecutor().run("assembleDebug");
     }

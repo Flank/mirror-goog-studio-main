@@ -134,7 +134,7 @@ public class JobTest {
         assertThat(finishEvent.getIsTerminal()).isTrue();
         assertThat(finishEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_FINISHED);
         JobFinished jobFinished = finishEvent.getJobFinished();
-        assertThat(jobFinished.getNeedsReschedule()).isTrue();
+        assertThat(jobFinished.getNeedsReschedule()).isFalse();
         params = jobFinished.getParams();
         assertThat(params.getJobId()).isEqualTo(1);
         assertThat(params.getExtras()).isEqualTo("extras");
@@ -181,10 +181,10 @@ public class JobTest {
         assertThat(stopEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(stopEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(stopEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
-        assertThat(stopEvent.getIsTerminal()).isFalse();
+        assertThat(stopEvent.getIsTerminal()).isTrue();
         assertThat(stopEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STOPPED);
         JobStopped jobStopped = stopEvent.getJobStopped();
-        assertThat(jobStopped.getReschedule()).isTrue();
+        assertThat(jobStopped.getReschedule()).isFalse();
         params = jobStopped.getParams();
         assertThat(params.getJobId()).isEqualTo(2);
         assertThat(params.getExtras()).isEqualTo("extras");

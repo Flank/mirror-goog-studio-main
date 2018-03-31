@@ -33,15 +33,18 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
+import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
+import com.android.build.gradle.internal.tasks.SelectApksTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
@@ -52,6 +55,7 @@ import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBui
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
@@ -317,6 +321,8 @@ public class ApplicationTaskManager extends TaskManager {
                         ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
                         : InternalArtifactType.PROCESSED_RES;
 
+        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+
         // create the transforms that will create the dependencies apk.
         InstantRunDependenciesApkBuilder dependenciesApkBuilder =
                 new InstantRunDependenciesApkBuilder(
@@ -333,9 +339,9 @@ public class ApplicationTaskManager extends TaskManager {
                         new File(
                                 variantScope.getIncrementalDir("ir_dep"),
                                 variantScope.getDirName()),
-                        variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
-                        variantScope.getOutput(resourcesWithMainManifest),
-                        variantScope.getOutput(InternalArtifactType.APK_LIST),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
+                        artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> dependenciesApkBuilderTask =
@@ -360,9 +366,9 @@ public class ApplicationTaskManager extends TaskManager {
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),
-                        variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
-                        variantScope.getOutput(resourcesWithMainManifest),
-                        variantScope.getOutput(InternalArtifactType.APK_LIST),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
+                        artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> transformTaskAndroidTask =
@@ -423,11 +429,11 @@ public class ApplicationTaskManager extends TaskManager {
                 });
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(javacOutput);
-        fileCollection.from(preJavacGeneratedBytecode);
-        fileCollection.from(postJavacGeneratedBytecode);
+        ConfigurableFileCollection files =
+                scope.getGlobalScope()
+                        .getProject()
+                        .files(javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
+        scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
     }
 
     @Override
@@ -501,11 +507,13 @@ public class ApplicationTaskManager extends TaskManager {
             return;
         }
 
-        if (!scope.getType().isHybrid()) {
+        if (!scope.getType().isHybrid() && projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS)) {
             taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
 
             if (scope.getType().isBaseModule()) {
                 taskFactory.create(new BundleTask.ConfigAction(scope));
+                taskFactory.create(new BundleToApkTask.ConfigAction(scope));
+                taskFactory.create(new SelectApksTask.ConfigAction(scope));
             }
         }
     }

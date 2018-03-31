@@ -48,7 +48,7 @@ import org.xml.sax.SAXException;
  *
  * <p>Parser for "values" files.
  *
- * <p>This parses the file and returns a list of {@link ResourceItem} object.
+ * <p>This parses the file and returns a list of {@link ResourceMergerItem} object.
  */
 @Deprecated
 class ValueResourceParser2 {
@@ -87,13 +87,13 @@ class ValueResourceParser2 {
     }
 
     /**
-     * Parses the file and returns a list of {@link ResourceItem} objects.
+     * Parses the file and returns a list of {@link ResourceMergerItem} objects.
      *
      * @return a list of resources.
      * @throws MergingException if a merging exception happens
      */
     @NonNull
-    List<ResourceItem> parseFile() throws MergingException {
+    List<ResourceMergerItem> parseFile() throws MergingException {
         Document document = parseDocument(mFile, mTrackSourcePositions);
 
         // get the root node
@@ -105,7 +105,7 @@ class ValueResourceParser2 {
 
         final int count = nodes.getLength();
         // list containing the result
-        List<ResourceItem> resources = new ArrayList<>(count);
+        List<ResourceMergerItem> resources = new ArrayList<>(count);
         // Multimap to detect duplicates.
         Map<ResourceType, Set<String>> map =
                 mCheckDuplicates ? new EnumMap<>(ResourceType.class) : null;
@@ -117,7 +117,7 @@ class ValueResourceParser2 {
                 continue;
             }
 
-            ResourceItem resource = getResource(node, mFile, mNamespace, mLibraryName);
+            ResourceMergerItem resource = getResource(node, mFile, mNamespace, mLibraryName);
             if (resource != null) {
                 // Check that this is not a duplicate.
                 checkDuplicate(resource, map, mFile);
@@ -141,7 +141,7 @@ class ValueResourceParser2 {
      * @return a ResourceItem object or null.
      */
     @Nullable
-    static ResourceItem getResource(
+    static ResourceMergerItem getResource(
             @NonNull Node node,
             @Nullable File from,
             @NonNull ResourceNamespace namespace,
@@ -153,11 +153,11 @@ class ValueResourceParser2 {
         if (name != null) {
             if (type != null) {
                 ValueResourceNameValidator.validate(name, type, from);
-                return new ResourceItem(name, namespace, type, node, libraryName);
+                return new ResourceMergerItem(name, namespace, type, node, libraryName);
             }
         } else if (type == ResourceType.PUBLIC) {
             // Allow a <public /> node with no name: this means all resources are private
-            return new ResourceItem("", namespace, type, node, libraryName);
+            return new ResourceMergerItem("", namespace, type, node, libraryName);
         }
 
         return null;
@@ -227,11 +227,7 @@ class ValueResourceParser2 {
             else {
                 return XmlUtils.parseUtfXmlFile(file, true);
             }
-        } catch (SAXException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        } catch (ParserConfigurationException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        } catch (IOException e) {
+        } catch (SAXException | ParserConfigurationException | IOException e) {
             throw MergingException.wrapException(e).withFile(file).build();
         }
     }
@@ -246,7 +242,7 @@ class ValueResourceParser2 {
      */
     static void addStyleableItems(
             @NonNull Node styleableNode,
-            @NonNull List<ResourceItem> list,
+            @NonNull List<ResourceMergerItem> list,
             @Nullable Map<ResourceType, Set<String>> map,
             @Nullable File from,
             @NonNull ResourceNamespace namespace,
@@ -262,7 +258,7 @@ class ValueResourceParser2 {
                 continue;
             }
 
-            ResourceItem resource = getResource(node, from, namespace, libraryName);
+            ResourceMergerItem resource = getResource(node, from, namespace, libraryName);
             if (resource != null) {
                 assert resource.getType() == ResourceType.ATTR;
 
@@ -278,9 +274,10 @@ class ValueResourceParser2 {
         }
     }
 
-    private static void checkDuplicate(@NonNull ResourceItem resource,
-                                       @Nullable Map<ResourceType, Set<String>> map,
-                                       @Nullable File from)
+    private static void checkDuplicate(
+            @NonNull ResourceMergerItem resource,
+            @Nullable Map<ResourceType, Set<String>> map,
+            @Nullable File from)
             throws MergingException {
         if (map == null) {
             return;

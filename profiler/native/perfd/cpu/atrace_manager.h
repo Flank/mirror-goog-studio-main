@@ -17,11 +17,12 @@
 #ifndef PERFD_CPU_ATRACE_MANAGER_H_
 #define PERFD_CPU_ATRACE_MANAGER_H_
 
+#include <condition_variable>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <thread>
-#include <set>
 
 #include "utils/clock.h"
 
@@ -36,7 +37,7 @@ struct AtraceProfilingMetadata {
 
 class AtraceManager {
  public:
-  explicit AtraceManager(Clock* clock, int dump_data_interval_ms);
+  explicit AtraceManager(Clock *clock, int dump_data_interval_ms);
   ~AtraceManager();
 
   // Returns true if profiling of app |app_name| was started successfully.
@@ -50,15 +51,21 @@ class AtraceManager {
                       std::string *trace_path, std::string *error);
   bool StopProfiling(const std::string &app_name, bool need_result,
                      std::string *error);
+  void Shutdown();
   bool IsProfiling() { return is_profiling_; }
   int GetDumpCount() { return dumps_created_; }
 
  private:
-  Clock* clock_;
+  Clock *clock_;
   static const char *kAtraceExecutable;
   static const char *kArguments;
   AtraceProfilingMetadata profiled_app_;
-  std::mutex start_stop_mutex_;  // Protects atrace start/stop
+  // Protects atrace start/stop
+  std::mutex start_stop_mutex_;
+  // Used in dump_data_condition.
+  std::mutex dump_data_mutex_;
+  // Used to block async_dump until timeout, or notifiy is triggered.
+  std::condition_variable dump_data_condition_;
   std::thread atrace_thread_;
   std::string categories_;
   int dump_data_interval_ms_;

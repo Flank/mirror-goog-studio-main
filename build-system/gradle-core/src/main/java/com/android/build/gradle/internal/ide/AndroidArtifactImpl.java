@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  */
 @Immutable
 final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtifact, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final boolean isSigned;
     @NonNull private final String baseName;
@@ -72,6 +72,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @Nullable private final Set<String> abiFilters;
     @Nullable private final TestOptions testOptions;
     @Nullable private final String instrumentedTestTaskName;
+    @Nullable private final String bundleTaskName;
+    @Nullable private final String apkFromBundleTaskName;
 
     AndroidArtifactImpl(
             @NonNull String name,
@@ -100,7 +102,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull BuildOutputSupplier<Collection<EarlySyncBuildOutput>> splitOutputsSupplier,
             @NonNull BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestSupplier,
             @Nullable TestOptions testOptions,
-            @Nullable String instrumentedTestTaskName) {
+            @Nullable String instrumentedTestTaskName,
+            @Nullable String bundleTaskName,
+            @Nullable String apkFromBundleTaskName) {
         super(
                 name,
                 assembleTaskName,
@@ -130,6 +134,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.manifestSupplier = manifestSupplier;
         this.testOptions = testOptions;
         this.instrumentedTestTaskName = instrumentedTestTaskName;
+        this.bundleTaskName = bundleTaskName;
+        this.apkFromBundleTaskName = apkFromBundleTaskName;
     }
 
     private EarlySyncBuildOutput getOutputFor(
@@ -348,7 +354,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(additionalRuntimeApks, that.additionalRuntimeApks)
                 && Objects.equals(baseName, that.baseName)
                 && Objects.equals(testOptions, that.testOptions)
-                && Objects.equals(instrumentedTestTaskName, that.instrumentedTestTaskName);
+                && Objects.equals(instrumentedTestTaskName, that.instrumentedTestTaskName)
+                && Objects.equals(bundleTaskName, that.bundleTaskName)
+                && Objects.equals(apkFromBundleTaskName, that.apkFromBundleTaskName);
     }
 
     @Override
@@ -370,7 +378,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 additionalRuntimeApks,
                 baseName,
                 testOptions,
-                instrumentedTestTaskName);
+                instrumentedTestTaskName,
+                bundleTaskName,
+                apkFromBundleTaskName);
     }
 
     @Override
@@ -390,6 +400,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("instantRun", instantRun)
                 .add("testOptions", testOptions)
                 .add("instrumentedTestTaskName", instrumentedTestTaskName)
+                .add("bundleTaskName", bundleTaskName)
+                .add("apkFromBundleTaskName", apkFromBundleTaskName)
                 .toString();
     }
 
@@ -405,4 +417,15 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         return instrumentedTestTaskName;
     }
 
+    @Nullable
+    @Override
+    public String getBundleTaskName() {
+        return bundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public String getApkFromBundleTaskName() {
+        return apkFromBundleTaskName;
+    }
 }

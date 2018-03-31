@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -39,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -64,7 +64,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     private CoreSigningConfig signingConf;
     private File supportDirectory;
 
-    private FileCollection resources;
+    private BuildableArtifact resources;
 
     private InternalArtifactType resInputType;
 
@@ -85,7 +85,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     }
 
     @InputFiles
-    public FileCollection getResourcesFile() {
+    public BuildableArtifact getResourcesFile() {
         return resources;
     }
 
@@ -175,15 +175,12 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     public static class ConfigAction implements TaskConfigAction<InstantRunResourcesApkBuilder> {
 
         protected final VariantScope variantScope;
-        private final FileCollection resources;
         private final InternalArtifactType resInputType;
 
         public ConfigAction(
                 @NonNull InternalArtifactType resInputType,
-                @NonNull FileCollection resources,
                 @NonNull VariantScope scope) {
             this.resInputType = resInputType;
-            this.resources = resources;
             this.variantScope = scope;
         }
 
@@ -208,7 +205,8 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
             resourcesApkBuilder.signingConf =
                     variantScope.getVariantConfiguration().getSigningConfig();
             resourcesApkBuilder.instantRunBuildContext = variantScope.getInstantRunBuildContext();
-            resourcesApkBuilder.resources = resources;
+            resourcesApkBuilder.resources =
+                    variantScope.getArtifacts().getFinalArtifactFiles(resInputType);
             resourcesApkBuilder.outputDirectory = variantScope.getInstantRunResourceApkFolder();
         }
     }

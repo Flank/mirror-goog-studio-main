@@ -66,10 +66,6 @@ public class IncrementalVisitor extends ClassVisitor {
             Type.getObjectType(RUNTIME_PACKAGE + "/AndroidInstantRuntime");
     public static final Type DISABLE_ANNOTATION_TYPE =
             Type.getObjectType("com/android/tools/ir/api/DisableInstantRun");
-    public static final Type TARGET_API_TYPE =
-            Type.getObjectType("android/annotation/TargetApi");
-    public static final Type REQUIRES_API_TYPE =
-            Type.getObjectType("android/support/annotation/RequiresApi");
 
     protected static final boolean TRACING_ENABLED = Boolean.getBoolean("FDR_TRACING");
 
@@ -331,27 +327,15 @@ public class IncrementalVisitor extends ClassVisitor {
         AsmUtils.DirectoryBasedClassReader directoryClassReader =
                 new AsmUtils.DirectoryBasedClassReader(getBinaryFolder(inputFile, classNode));
 
-        // if we are targeting a more recent version than the current device, disable instant run
-        // for that class.
-        boolean classTargetingNewerPlatform =
-                isClassTargetingNewerPlatform(
-                                targetApiLevel,
-                                TARGET_API_TYPE,
-                                directoryClassReader,
-                                classNode,
-                                logger)
-                        || isClassTargetingNewerPlatform(
-                                targetApiLevel,
-                                REQUIRES_API_TYPE,
-                                directoryClassReader,
-                                classNode,
-                                logger);
-
-        AsmClassNode parentedClassNode =
-                classTargetingNewerPlatform
-                        ? null
-                        : AsmUtils.loadClass(
-                                logger, directoryClassReader, classNode, targetApiLevel);
+        AsmClassNode parentedClassNode = null;
+        try {
+            parentedClassNode =
+                    AsmUtils.loadClass(logger, directoryClassReader, classNode, targetApiLevel);
+        } catch (AsmUtils.ByteCodeNotFoundException e) {
+            logger.verbose(
+                    "unable to load byte code for %s, skipping instrumentation of this class for instant run",
+                    classNode.name);
+        }
 
         // if we could not determine the parent hierarchy, disable instant run.
         if (parentedClassNode == null || isPackageInstantRunDisabled(inputFile)) {
@@ -410,52 +394,6 @@ public class IncrementalVisitor extends ClassVisitor {
     private static File getBinaryFolder(@NonNull File inputFile, @NonNull ClassNode classNode) {
         return new File(inputFile.getAbsolutePath().substring(0,
                 inputFile.getAbsolutePath().length() - (classNode.name.length() + ".class".length())));
-    }
-
-    /**
-     * If the passed class is annotated with an annotation type that denotes the target api level
-     * like {@link #TARGET_API_TYPE}, and will return true if the passed targetApiLevel is lower
-     * than the value of the annotation.
-     *
-     * @param targetApiLevel the target api level we are instrumenting against.
-     * @param targetApiAnnotationType the type of the annotation to look for
-     * @param locator a class locator implementation that can locate and load outclasses if any
-     * @param classNode the class of interest
-     * @param logger to log messages
-     * @return true if the class of interest is annotated with targetApiAnnotationType and the
-     *     annotation value is superior to the passed targetApiLevel.
-     * @throws IOException when outer classes cannot be loaded successfully.
-     */
-    @VisibleForTesting
-    static boolean isClassTargetingNewerPlatform(
-            int targetApiLevel,
-            @NonNull Type targetApiAnnotationType,
-            @NonNull AsmUtils.ClassNodeProvider locator,
-            @NonNull ClassNode classNode,
-            @NonNull ILogger logger)
-            throws IOException {
-
-        List<AnnotationNode> invisibleAnnotations =
-                AsmUtils.getInvisibleAnnotationsOnClassOrOuterClasses(locator, classNode, logger);
-        for (AnnotationNode classAnnotation : invisibleAnnotations) {
-            if (classAnnotation.desc.equals(targetApiAnnotationType.getDescriptor())) {
-                int valueIndex = 0;
-                List values = classAnnotation.values;
-                while (valueIndex < values.size()) {
-                    String name = (String) values.get(valueIndex);
-                    if (name.equals("value") || name.equals("api")) {
-                        int value = Integer.class.cast(values.get(valueIndex + 1));
-                        // the docs for RequiresApi and TargetApi state that the value will always
-                        // be 1 or greater.
-                        if (value >= 1) {
-                            return value > targetApiLevel;
-                        }
-                    }
-                    valueIndex = valueIndex + 2;
-                }
-            }
-        }
-        return false;
     }
 
     private static boolean isPackageInstantRunDisabled(@NonNull File inputFile) throws IOException {

@@ -43,20 +43,21 @@ import org.w3c.dom.Document;
  */
 public class ValueResourceParser2Test extends BaseTestCase {
 
-    private static List<ResourceItem> sResources = null;
+    private static List<ResourceMergerItem> sResources = null;
 
     @Test
     public void testParsedResourcesByCount() throws Exception {
-        List<ResourceItem> resources = getParsedResources();
+        List<ResourceMergerItem> resources = getParsedResources();
 
         assertEquals(28, resources.size());
     }
 
     @Test
     public void testParsedResourcesByName() throws Exception {
-        List<ResourceItem> resources = getParsedResources();
-        Map<String, ResourceItem> resourceMap = Maps.newHashMapWithExpectedSize(resources.size());
-        for (ResourceItem item : resources) {
+        List<ResourceMergerItem> resources = getParsedResources();
+        Map<String, ResourceMergerItem> resourceMap =
+                Maps.newHashMapWithExpectedSize(resources.size());
+        for (ResourceMergerItem item : resources) {
             resourceMap.put(item.getKey(), item);
         }
 
@@ -94,7 +95,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
         }
     }
 
-    private static class ResourceFinder implements Predicate<ResourceItem> {
+    private static class ResourceFinder implements Predicate<ResourceMergerItem> {
         private final String myKeyToFind;
 
         ResourceFinder(String keyToFind) {
@@ -102,38 +103,42 @@ public class ValueResourceParser2Test extends BaseTestCase {
         }
 
         @Override
-        public boolean apply(ResourceItem input) {
+        public boolean apply(ResourceMergerItem input) {
             return input.getKey().equals(myKeyToFind);
         }
     }
 
     @Test
     public void testParsedResourceByValues() throws Exception {
-        List<ResourceItem> resources = getParsedResources();
+        List<ResourceMergerItem> resources = getParsedResources();
         // Test tools:quantity parsing in plurals.
-        ResourceItem plurals = Iterables.find(resources, new ResourceFinder("plurals/plurals"));
+        ResourceMergerItem plurals =
+                Iterables.find(resources, new ResourceFinder("plurals/plurals"));
         ResourceValue pluralsValue = plurals.getResourceValue();
         assertNotNull(pluralsValue);
         assertEquals("@string/two", pluralsValue.getValue());
 
-        ResourceItem pluralsWithBadQuantity = Iterables.find(resources, new ResourceFinder("plurals/plurals_with_bad_quantity"));
+        ResourceMergerItem pluralsWithBadQuantity =
+                Iterables.find(resources, new ResourceFinder("plurals/plurals_with_bad_quantity"));
         ResourceValue pluralsValueBadQuantity = pluralsWithBadQuantity.getResourceValue();
         assertNotNull(pluralsValueBadQuantity);
         assertEquals("one", pluralsValueBadQuantity.getValue());
 
         // Test tools:index parsing in arrays.
-        ResourceItem stringArray = Iterables.find(resources, new ResourceFinder("array/string_array"));
+        ResourceMergerItem stringArray =
+                Iterables.find(resources, new ResourceFinder("array/string_array"));
         ResourceValue stringArrayValue = stringArray.getResourceValue();
         assertNotNull(stringArrayValue);
         assertEquals("GHI", stringArrayValue.getValue());
 
-        ResourceItem integerArray = Iterables.find(resources, new ResourceFinder("array/integer_array"));
+        ResourceMergerItem integerArray =
+                Iterables.find(resources, new ResourceFinder("array/integer_array"));
         ResourceValue integerArrayValue = integerArray.getResourceValue();
         assertNotNull(integerArrayValue);
         assertEquals("3", integerArrayValue.getValue());
     }
 
-    private static List<ResourceItem> getParsedResources() throws MergingException {
+    private static List<ResourceMergerItem> getParsedResources() throws MergingException {
         if (sResources == null) {
             File root = TestResources
                     .getDirectory(ValueResourceParser2Test.class, "/testData/resources/baseSet");
@@ -143,7 +148,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
             ValueResourceParser2 parser = new ValueResourceParser2(valuesXml, null, null);
             sResources = parser.parseFile();
 
-            // create a fake resource file to allow calling ResourceItem.getKey()
+            // create a fake resource file to allow calling ResourceMergerItem.getKey()
             //noinspection ResultOfObjectAllocationIgnored
             new ResourceFile(valuesXml, sResources, "", new FolderConfiguration());
         }
@@ -211,7 +216,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
         writer.close();
 
         ValueResourceParser2 parser = new ValueResourceParser2(file, null, null);
-        List<ResourceItem> items = parser.parseFile();
+        List<ResourceMergerItem> items = parser.parseFile();
         assertEquals(3, items.size());
         assertEquals(ResourceType.BOOL, items.get(0).getType());
         assertEquals("truthy", items.get(0).getName());
@@ -232,8 +237,8 @@ public class ValueResourceParser2Test extends BaseTestCase {
         Files.write(file.toPath(), xml.getBytes());
 
         ValueResourceParser2 parser = new ValueResourceParser2(file, null, null);
-        List<ResourceItem> items = parser.parseFile();
-        ResourceItem publicTag = Iterables.getOnlyElement(items);
+        List<ResourceMergerItem> items = parser.parseFile();
+        ResourceMergerItem publicTag = Iterables.getOnlyElement(items);
 
         // Make sure the name is invalid, so it cannot conflict with anything the user would type.
         assertNotNull(

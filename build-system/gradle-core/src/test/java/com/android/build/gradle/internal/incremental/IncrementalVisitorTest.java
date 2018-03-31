@@ -18,21 +18,16 @@ package com.android.build.gradle.internal.incremental;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.internal.incremental.annotated.AnnotatedWithApi21Field;
-import com.android.build.gradle.internal.incremental.annotated.NoInnerClassFor21;
-import com.android.build.gradle.internal.incremental.annotated.NotAnnotatedClass;
-import com.android.build.gradle.internal.incremental.annotated.OuterClassFor21;
-import com.android.build.gradle.internal.incremental.annotated.SingleLevelOuterClassFor21;
-import com.android.build.gradle.internal.incremental.annotated.TestTargetApi;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 import java.io.File;
 import java.io.IOException;
-import org.junit.Assert;
+import java.nio.file.Files;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -42,171 +37,8 @@ import org.objectweb.asm.tree.MethodNode;
  */
 public class IncrementalVisitorTest {
 
-    @Mock
-    ILogger logger;
-
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @Test
-    public void testIsClassTargetingNewerPlatform() throws IOException {
-
-        AsmUtils.ClassNodeProvider classReaderProvider = new ClassNodeProviderForTests();
-        {
-            ClassNode innerInnerClassNode = AsmUtils
-                    .readClass(OuterClassFor21.class.getClassLoader(),
-                            Type.getType(OuterClassFor21.InnerClass.InnerInnerClass.class)
-                                    .getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerInnerClassNode, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerInnerClassNode, logger));
-        }
-
-        {
-            ClassNode innerClassNode = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(OuterClassFor21.InnerClass.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class),
-                            classReaderProvider, innerClassNode, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class),
-                            classReaderProvider, innerClassNode, logger));
-        }
-        {
-            ClassNode outerFor21 = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(OuterClassFor21.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class),
-                            classReaderProvider, outerFor21, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class),
-                            classReaderProvider, outerFor21, logger));
-        }
-        {
-            ClassNode noInnerClassFor21 = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(NoInnerClassFor21.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            noInnerClassFor21, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            noInnerClassFor21, logger));
-        }
-        {
-            ClassNode singleLevelOuterClassFor21 = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(SingleLevelOuterClassFor21.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            singleLevelOuterClassFor21, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            singleLevelOuterClassFor21, logger));
-        }
-        {
-            ClassNode innerClass = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(SingleLevelOuterClassFor21.InnerClass.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerClass, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerClass, logger));
-        }
-        {
-            ClassNode innerClass = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(SingleLevelOuterClassFor21.InnerClass.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerClass, logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerClass, logger));
-        }
-        {
-            ClassNode innerInnerClass = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(NotAnnotatedClass.InnerClass.InnerInnerClass.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerInnerClass, logger));
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerInnerClass, logger));
-        }
-        {
-            ClassNode innerClass = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(NotAnnotatedClass.InnerClass.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerClass, logger));
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            innerClass, logger));
-        }
-        {
-            ClassNode outerClass = AsmUtils.readClass(OuterClassFor21.class.getClassLoader(),
-                    Type.getType(NotAnnotatedClass.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24, Type.getType(TestTargetApi.class), classReaderProvider,
-                            outerClass, logger));
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19, Type.getType(TestTargetApi.class), classReaderProvider,
-                            outerClass, logger));
-        }
-        {
-            ClassNode outerClass =
-                    AsmUtils.readClass(
-                            OuterClassFor21.class.getClassLoader(),
-                            Type.getType(AnnotatedWithApi21Field.class).getInternalName());
-
-            Assert.assertFalse(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            24,
-                            Type.getType(TestTargetApi.class),
-                            classReaderProvider,
-                            outerClass,
-                            logger));
-            Assert.assertTrue(
-                    IncrementalVisitor.isClassTargetingNewerPlatform(
-                            19,
-                            Type.getType(TestTargetApi.class),
-                            classReaderProvider,
-                            outerClass,
-                            logger));
-        }
-    }
 
     @Test
     public void testClassEligibility() throws IOException {
@@ -227,6 +59,74 @@ public class IncrementalVisitorTest {
 
         File RSomethingWithInner = temporaryFolder.newFile("Rsome$dimen.class");
         assertThat(IncrementalVisitor.isClassEligibleForInstantRun(RSomethingWithInner)).isTrue();
+    }
+
+    /**
+     * It's possible for us to be given a class to instument for instant run that inherits from a
+     * class that does not exist. The canonical use case is when a class inherits from a class that
+     * exists in some API level, but we're compiling against an API lower than that. In these
+     * situations we want to skip instrumenting these classes because they're not going to be used
+     * anyway (if they do get used the app will crash anyway).
+     *
+     * <p>Another use-case is when a library has a compileOnly dependency on something, and a class
+     * inherits from something in that compileOnly dependency.
+     *
+     * <p>See https://issuetracker.google.com/72811718 for discussions about this problem.
+     */
+    @Test
+    public void testClassWithNonExistentSuperClass() throws Exception {
+        ClassWriter cw;
+
+        // Class A: this class inherits from Object and is perfectly valid, and should be
+        // instrumented for instant run.
+        cw = new ClassWriter(0);
+        cw.visit(Opcodes.V1_6, Opcodes.ACC_SUPER, "A", null, "java/lang/Object", null);
+        cw.visitEnd();
+        File a = temporaryFolder.newFile("A.class");
+        Files.write(a.toPath(), cw.toByteArray());
+
+        // Class B: this class inherits from a non-existent class, and is not valid, and thus
+        // should not be instrumented for instant run.
+        cw = new ClassWriter(0);
+        cw.visit(Opcodes.V1_6, Opcodes.ACC_SUPER, "B", null, "NonExistentSuperClass", null);
+        cw.visitEnd();
+        File b = temporaryFolder.newFile("B.class");
+        Files.write(b.toPath(), cw.toByteArray());
+
+        int apiLevel = 24;
+        File root = temporaryFolder.getRoot();
+        File outDir = temporaryFolder.newFolder();
+        ILogger logger = new NullLogger();
+
+        // Instrument class A, producing a new file that should not contain the same bytecode as
+        // A originally did (because we have instrumented it).
+        File aOut =
+                IncrementalVisitor.instrumentClass(
+                        apiLevel,
+                        root,
+                        a,
+                        outDir,
+                        IncrementalSupportVisitor.VISITOR_BUILDER,
+                        logger);
+
+        // Instrument class B, producing a new file that should contain the same bytecode as B
+        // originally did (because we have not instrumented it).
+        File bOut =
+                IncrementalVisitor.instrumentClass(
+                        apiLevel,
+                        root,
+                        b,
+                        outDir,
+                        IncrementalSupportVisitor.VISITOR_BUILDER,
+                        logger);
+
+        // instrumentClass() _can_ return null, but we shouldn't hit any of the situations in which
+        // that happens. If we do, something has gone wrong.
+        assertThat(aOut).isNotNull();
+        assertThat(bOut).isNotNull();
+
+        assertThat(Files.readAllBytes(a.toPath())).isNotEqualTo(Files.readAllBytes(aOut.toPath()));
+        assertThat(Files.readAllBytes(b.toPath())).isEqualTo(Files.readAllBytes(bOut.toPath()));
     }
 
     interface NoDefault {

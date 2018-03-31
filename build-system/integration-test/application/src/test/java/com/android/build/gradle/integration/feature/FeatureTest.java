@@ -191,7 +191,11 @@ public class FeatureTest {
         try (ZipFileSubject baseFeatureResources =
                 assertThatZip(
                         baseProject.getIntermediateFile(
-                                "res", "feature", "debug", "resources-debugFeature.ap_"))) {
+                                "processed_res",
+                                "debugFeature",
+                                "processDebugFeatureResources",
+                                "out",
+                                "resources-debugFeature.ap_"))) {
             baseFeatureResources.exists();
             baseFeatureResources.contains("AndroidManifest.xml");
             baseFeatureResources.contains("resources.arsc");

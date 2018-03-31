@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,6 +71,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.internal.impldep.org.codehaus.plexus.util.StringUtils;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
@@ -95,9 +97,6 @@ public final class GradleTestProject implements TestRule {
 
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
-    public static final int LATEST_NDK_PLATFORM_VERSION = 21;
-    /** Latest published Google APIs version. Update this once new version is out. */
-    public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
     public static final boolean APPLY_DEVICEPOOL_PLUGIN =
@@ -176,12 +175,6 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
-    public static final String PLAY_SERVICES_VERSION = "9.6.1";
-    public static final String SUPPORT_LIB_VERSION = "25.3.1";
-    public static final String TEST_SUPPORT_LIB_VERSION = "0.5";
-    public static final String TEST_CONSTRAINT_LAYOUT_VERSION = "1.0.2";
-    public static final int SUPPORT_LIB_MIN_SDK = 14;
-
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
     private static final String COMMON_BUILD_SCRIPT = "commonBuildScript.gradle";
@@ -210,6 +203,7 @@ public final class GradleTestProject implements TestRule {
 
     private final String targetGradleVersion;
 
+    @NonNull private final String compileSdkVersion;
     @Nullable private final String buildToolsVersion;
 
     @Nullable private final Path profileDirectory;
@@ -238,6 +232,7 @@ public final class GradleTestProject implements TestRule {
             boolean withDependencyChecker,
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
+            @Nullable String compileSdkVersion,
             @Nullable String buildToolsVersion,
             @Nullable Path profileDirectory,
             @NonNull String cmakeVersion,
@@ -266,6 +261,8 @@ public final class GradleTestProject implements TestRule {
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
+        this.compileSdkVersion =
+                compileSdkVersion != null ? compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION;
         this.openConnections = Lists.newArrayList();
         this.rootProject = this;
         this.profileDirectory = profileDirectory;
@@ -300,7 +297,8 @@ public final class GradleTestProject implements TestRule {
         testProject = null;
         targetGradleVersion = rootProject.targetGradleVersion;
         openConnections = null;
-        buildToolsVersion = null;
+        this.compileSdkVersion = rootProject.compileSdkVersion;
+        this.buildToolsVersion = rootProject.buildToolsVersion;
         this.rootProject = rootProject;
         this.profileDirectory = rootProject.profileDirectory;
         this.cmakeVersion = rootProject.cmakeVersion;
@@ -494,7 +492,7 @@ public final class GradleTestProject implements TestRule {
         sourceDir = new File(testDir, "src");
 
         try {
-            FileUtils.deleteRecursivelyIfExists(testDir);
+            deleteRecursivelyIfExistsExperimental(testDir.toPath());
         } catch (DirectoryNotEmptyException e) {
             // https://issuetracker.google.com/69271554
             // This exception is unexpected, let's investigate further.
@@ -543,6 +541,56 @@ public final class GradleTestProject implements TestRule {
         createGradleProp();
     }
 
+    /**
+     * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
+     * be deleted recursively.
+     *
+     * <p>This method is experimental. It is used to debug the DirectoryNotEmptyException when
+     * deleting directories on Windows.
+     */
+    private static void deleteRecursivelyIfExistsExperimental(@NonNull Path path)
+            throws IOException {
+        if (java.nio.file.Files.isDirectory(path)) {
+            try (Stream<Path> pathsInDir = java.nio.file.Files.list(path)) {
+                Iterator<Path> iterator = pathsInDir.iterator();
+                while (iterator.hasNext()) {
+                    deleteRecursivelyIfExistsExperimental(iterator.next());
+                }
+            }
+        }
+
+        try {
+            java.nio.file.Files.deleteIfExists(path);
+        } catch (DirectoryNotEmptyException e) {
+            // Theory: There seems to be a timing/visibility issue on Windows filesystem, such that
+            // even if we delete the contents of the directory before deleting the directory itself
+            // (and no other thread/process is accessing the directory), the directory is still
+            // being seen as non-empty. Let's try again and hope that the directory will be seen as
+            // empty shortly.
+            System.err.println(
+                    "DirectoryNotEmptyException was thrown when deleting " + path.toAbsolutePath());
+            System.err.println(
+                    "Number of files in directory: " + checkNotNull(path.toFile().list()).length);
+            boolean directoryDeleted = false;
+            int attempts = 0;
+            while (!directoryDeleted && attempts < 10) {
+                System.err.println("Trying to delete directory again, attempt " + (++attempts));
+                try {
+                    java.nio.file.Files.deleteIfExists(path);
+                    directoryDeleted = true;
+                } catch (DirectoryNotEmptyException ignored) {
+                    System.err.println("Failed with DirectoryNotEmptyException again");
+                    System.err.println(
+                            "Number of files in directory: "
+                                    + checkNotNull(path.toFile().list()).length);
+                }
+            }
+            if (!directoryDeleted) {
+                throw e;
+            }
+        }
+    }
+
     /** Prints out the current thread dump for debugging. */
     private static void printThreadDump() {
         for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
@@ -562,7 +610,7 @@ public final class GradleTestProject implements TestRule {
         Preconditions.checkArgument(directory.isDirectory());
         String[] filesInDirBefore = checkNotNull(directory.list());
         try {
-            FileUtils.deleteRecursivelyIfExists(directory);
+            deleteRecursivelyIfExistsExperimental(directory.toPath());
         } catch (IOException e) {
             String[] filesInDirAfter = checkNotNull(directory.list());
             throw new IOException(
@@ -608,7 +656,7 @@ public final class GradleTestProject implements TestRule {
                                 + "}\n"
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
-                        DEFAULT_COMPILE_SDK_VERSION,
+                        compileSdkVersion,
                         false,
                         kotlinVersion);
 
@@ -809,10 +857,10 @@ public final class GradleTestProject implements TestRule {
                         + "constraintLayoutVersion = '%s'%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 Version.ANDROID_TOOLS_BASE_VERSION,
-                SUPPORT_LIB_VERSION,
-                TEST_SUPPORT_LIB_VERSION,
-                PLAY_SERVICES_VERSION,
-                SUPPORT_LIB_MIN_SDK,
+                TestVersions.SUPPORT_LIB_VERSION,
+                TestVersions.TEST_SUPPORT_LIB_VERSION,
+                TestVersions.PLAY_SERVICES_VERSION,
+                TestVersions.SUPPORT_LIB_MIN_SDK,
                 SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
     }
 

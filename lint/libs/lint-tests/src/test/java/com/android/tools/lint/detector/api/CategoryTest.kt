@@ -50,6 +50,9 @@ class CategoryTest : TestCase() {
                     "Usability\n" +
                     "Accessibility\n" +
                     "Internationalization\n" +
+                    "Interoperability\n" +
+                    "Interoperability:Kotlin Interoperability\n" +
+                    "Interoperability:Java Interoperability\n" +
                     "Internationalization:Bidirectional Text",
             Joiner.on("\n").join(categories)
         )

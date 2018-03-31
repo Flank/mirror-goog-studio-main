@@ -35,44 +35,16 @@ namespace profiler {
 // Studio) and 'internal' ones that talk to app processes.
 class Daemon {
  public:
-  class Utilities {
-   public:
-    // See |Daemon| constructor for parameter explanations.
-    explicit Utilities(const std::string& config_path,
-                       const std::string& cache_path)
-        : config_(config_path), file_cache_(cache_path) {}
-
-    // Returns a const reference to the daemon's clock, which is used to produce
-    // all timestamps in the deamon.
-    Clock* clock() { return &clock_; }
-
-    // Shared cache available to all profiler services. Useful for storing data
-    // which is
-    // 1) large and needs to be cleaned up automatically, or
-    // 2) repetitive, and you'd rather send a key to the client each time
-    //    instead of the full byte string.
-    FileCache* file_cache() { return &file_cache_; }
-
-    // Returns a const reference to the config object to access all
-    // configuration parameters.
-    const Config* config() { return &config_; }
-
-   private:
-    // Clock that timestamps profiling data.
-    SteadyClock clock_;
-    // Config object for profiling settings
-    Config config_;
-    // A shared cache for all profiler services
-    FileCache file_cache_;
-  };
-
   // |config_path| is a string that points to a file that can be parsed by
   // profiler::proto::AgentConfig. If the |config_path| is empty, the file
   // will fail to load and an empty config will be used.
   // |cache_path| is a path where a temporary file cache will live. This
   // cache will be cleared each time the daemon starts up.
-  Daemon(const std::string& config_path, const std::string& cache_path)
-      : utilities_(config_path, cache_path), sessions_(utilities_.clock()) {}
+  Daemon(Clock* clock, Config* config, FileCache* file_cache)
+      : clock_(clock),
+        config_(config),
+        file_cache_(file_cache),
+        sessions_(clock) {}
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
@@ -87,8 +59,18 @@ class Daemon {
   // be responsible for shutting down the server for this call to ever return.
   void RunServer(const std::string& server_address);
 
-  // Return daemon utilities that should be shared across all profilers.
-  Utilities* utilities() { return &utilities_; }
+  // Returns the clock to use across the profilers.
+  Clock* clock() { return clock_; }
+
+  // Shared cache available to all profiler services. Useful for storing data
+  // which is
+  // 1) large and needs to be cleaned up automatically, or
+  // 2) repetitive, and you'd rather send a key to the client each time
+  //    instead of the full byte string.
+  FileCache* file_cache() { return file_cache_; }
+
+  // Returns the configuration parameters.
+  const Config* config() { return config_; }
 
   // Return SessionsManager shared across all profilers.
   SessionsManager* sessions() { return &sessions_; }
@@ -98,8 +80,12 @@ class Daemon {
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
   std::vector<ProfilerComponent*> components_{};
-  // Utility classes that should be shared across all profiler services.
-  Utilities utilities_;
+  // Clock that timestamps profiling data
+  Clock* clock_;
+  // Config object for profiling settings
+  Config* config_;
+  // A shared cache for all profiler services
+  FileCache* file_cache_;
   // Session management across the profiling services in perfd.
   SessionsManager sessions_;
 };

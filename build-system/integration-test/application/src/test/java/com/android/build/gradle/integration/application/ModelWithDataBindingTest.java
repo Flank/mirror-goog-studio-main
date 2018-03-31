@@ -32,7 +32,8 @@ import org.junit.Test;
 /** Sanity test that makes sure we add data binding gen sources into the model if it is enabled */
 public class ModelWithDataBindingTest {
     private static final String DB_CLASS_PATH =
-            "build/generated/source/dataBinding/baseClasses/debug";
+            "build/generated/data_binding_base_class_source_out"
+                    + "/debug/dataBindingGenBaseClassesDebug/out";
     @Rule public GradleTestProject project;
 
     public ModelWithDataBindingTest() {

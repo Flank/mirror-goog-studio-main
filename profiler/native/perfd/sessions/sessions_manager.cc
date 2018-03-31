@@ -21,11 +21,11 @@
 
 namespace profiler {
 
+using proto::Session;
 using std::list;
 using std::lock_guard;
 using std::mutex;
 using std::vector;
-using proto::Session;
 
 bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
                                    Session* session) {
@@ -107,17 +107,6 @@ std::vector<Session> SessionsManager::GetSessions(int64_t start_timestamp,
     sessions_range.push_back(session);
   }
   return sessions_range;
-}
-
-void SessionsManager::DeleteSession(int64_t session_id) {
-  lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter({[session_id](const Session& s) {
-    return s.session_id() == session_id;
-  }});
-  if (it != sessions_.end()) {
-    DoEndSession(&(*it));
-    sessions_.erase(it);
-  }
 }
 
 // This method assumes |sessions_| has already been locked

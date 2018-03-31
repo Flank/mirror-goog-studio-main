@@ -1,6 +1,7 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -27,10 +28,10 @@ public class SeparateTestModuleWithAppDependenciesTest {
                         + "}\n"
                         + "dependencies {\n"
                         + "    api 'com.google.android.gms:play-services-base:"
-                        + GradleTestProject.PLAY_SERVICES_VERSION
+                        + TestVersions.PLAY_SERVICES_VERSION
                         + "'\n"
                         + "    api 'com.android.support:appcompat-v7:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
 
@@ -60,10 +61,10 @@ public class SeparateTestModuleWithAppDependenciesTest {
                 "\n"
                         + "dependencies {\n"
                         + "    implementation 'com.android.support.test:rules:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
                         + "    implementation 'com.android.support:support-annotations:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
 

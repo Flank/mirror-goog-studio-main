@@ -17,8 +17,6 @@
 @file:JvmName("ModelHelper")
 package com.android.build.gradle.integration.common.utils
 
-import com.android.annotations.VisibleForTesting
-import com.android.build.VariantOutput
 import java.util.Optional
 import java.util.function.BinaryOperator
 

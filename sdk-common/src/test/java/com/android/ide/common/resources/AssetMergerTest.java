@@ -57,6 +57,9 @@ public class AssetMergerTest extends BaseTestCase {
 
                 @Override
                 public void await() {}
+
+                @Override
+                public void taskActionDone() {}
             };
 
     @Test

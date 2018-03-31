@@ -44,11 +44,11 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         IdGeneratingResourceParser parser =
                 new IdGeneratingResourceParser(
                         layoutFile, "layout_for_id_scan", ResourceType.LAYOUT, null);
-        ResourceItem fileItem = parser.getFileResourceItem();
+        ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
         assertEquals(fileItem.getName(), "layout_for_id_scan");
         assertEquals(fileItem.getType(), ResourceType.LAYOUT);
 
-        List<ResourceItem> idItems = parser.getIdResourceItems();
+        List<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
         assertResourceItemsNames(idItems,
                                  "header", "image", "styledView", "imageView", "btn_title_refresh", "title_refresh_progress",
                                  "imageView2", "imageButton", "noteArea", "text2", "nonExistent");
@@ -63,11 +63,11 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         IdGeneratingResourceParser parser =
                 new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU, null);
 
-        ResourceItem fileItem = parser.getFileResourceItem();
+        ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
         assertEquals(fileItem.getName(), "menu");
         assertEquals(fileItem.getType(), ResourceType.MENU);
 
-        List<ResourceItem> idItems = parser.getIdResourceItems();
+        List<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
         assertResourceItemsNames(idItems, "item1", "group", "group_item1", "group_item2", "submenu", "submenu_item2");
     }
 
@@ -87,14 +87,16 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         }
     }
 
-    private static void assertResourceItemsNames(Collection<ResourceItem> idItems, String... expected) {
-        Collection<String> idNames = Collections2.transform(idItems, new Function<ResourceItem, String>() {
-            @Override
-            public String apply(ResourceItem input) {
-                assertEquals(input.getType(), ResourceType.ID);
-                return input.getName();
-            }
-        });
+    private static void assertResourceItemsNames(
+            Collection<ResourceMergerItem> idItems, String... expected) {
+        Collection<String> idNames =
+                Collections2.transform(
+                        idItems,
+                        (Function<ResourceItem, String>)
+                                input -> {
+                                    assertEquals(input.getType(), ResourceType.ID);
+                                    return input.getName();
+                                });
         assertSameElements(idNames, Arrays.asList(expected));
     }
 

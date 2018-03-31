@@ -207,7 +207,12 @@ public final class LocationManagerWrapper {
     public static void wrapOnLocationChanged(LocationListener listener, Location location) {
         listener.onLocationChanged(location);
         if (listenerIdMap.containsKey(listener)) {
-            sendListenerLocationChanged(listenerIdMap.get(listener));
+            sendListenerLocationChanged(
+                    listenerIdMap.get(listener),
+                    location.getProvider(),
+                    location.getAccuracy(),
+                    location.getLatitude(),
+                    location.getLongitude());
         }
     }
 
@@ -237,5 +242,6 @@ public final class LocationManagerWrapper {
     private static native void sendIntentLocationUpdateRemoved(
             int eventId, String creatorPackage, int creatorUid, String stack);
 
-    private static native void sendListenerLocationChanged(int eventId);
+    private static native void sendListenerLocationChanged(
+            int eventId, String provider, float accuracy, double latitude, double longitude);
 }

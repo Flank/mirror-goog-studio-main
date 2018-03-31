@@ -17,13 +17,16 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.VariantOutput
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.ide.FilterDataImpl
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -40,6 +43,7 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Ignore
@@ -49,6 +53,7 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.any
 import org.mockito.MockitoAnnotations
 import java.util.function.Supplier
 
@@ -60,6 +65,7 @@ class GenerateSplitAbiResTest {
     @get:Rule val temporaryFolder = TemporaryFolder()
     @Mock private lateinit var mockedGlobalScope: GlobalScope
     @Mock private lateinit var mockedVariantScope: VariantScope
+    @Mock private lateinit var mockedArtifacts: BuildArtifactsHolder
     @Mock private lateinit var mockedOutputScope: OutputScope
     @Mock private lateinit var mockedAndroidBuilder: AndroidBuilder
     @Mock private lateinit var mockedVariantConfiguration: GradleVariantConfiguration
@@ -220,13 +226,17 @@ class GenerateSplitAbiResTest {
     }
 
     private fun initTask(initializationLambda : (GenerateSplitAbiRes.ConfigAction) -> Unit = {}) : GenerateSplitAbiRes {
-        val configAction = GenerateSplitAbiRes.ConfigAction(
-            mockedVariantScope, temporaryFolder.newFolder(), provider)
+        val configAction = GenerateSplitAbiRes.ConfigAction(mockedVariantScope, provider)
 
         initCommonFields()
         initializationLambda(configAction)
 
         val task = project!!.tasks.create("test", GenerateSplitAbiRes::class.java)
+
+        `when`(mockedArtifacts.appendArtifact(
+            InternalArtifactType.ABI_PROCESSED_SPLIT_RES, task, "out"))
+            .thenReturn(temporaryFolder.newFolder())
+
         configAction.execute(task)
 
         return task
@@ -234,6 +244,8 @@ class GenerateSplitAbiResTest {
 
     private fun initCommonFields() {
         `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.LIBRARY)
+        `when`(mockedVariantScope.artifacts).thenReturn(mockedArtifacts)
+
         with(mockedVariantConfiguration) {
             `when`(type).thenReturn(VariantTypeImpl.LIBRARY)
             `when`(fullName).thenReturn("debug")

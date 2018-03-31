@@ -30,7 +30,6 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -419,96 +418,6 @@ public abstract class AbstractResourceRepository {
     }
 
     /**
-     * Returns the {@link ResourceFile} matching the given name, {@link ResourceType} and
-     * configuration.
-     *
-     * <p>This only works with files generating one resource named after the file
-     * (for instance, layouts, bitmap based drawable, xml, anims).
-     *
-     * @param name the resource name
-     * @param type the folder type search for
-     * @param config the folder configuration to match for
-     * @return the matching file or <code>null</code> if no match was found.
-     */
-    @Nullable
-    public ResourceFile getMatchingFile(
-            @NonNull String name,
-            @NonNull ResourceType type,
-            @NonNull FolderConfiguration config) {
-        List<ResourceFile> matchingFiles = getMatchingFiles(name, type, config);
-        return matchingFiles.isEmpty() ? null : matchingFiles.get(0);
-    }
-
-    /**
-     * Returns a list of {@link ResourceFile} matching the given name, {@link ResourceType} and
-     * configuration. This ignores the qualifiers which are missing from the configuration.
-     * <p>
-     * This only works with files generating one resource named after the file (for instance,
-     * layouts, bitmap based drawable, xml, anims).
-     *
-     * @param name the resource name
-     * @param type the folder type search for
-     * @param config the folder configuration to match for
-     *
-     * @see #getMatchingFile(String, ResourceType, FolderConfiguration)
-     */
-    @NonNull
-    public List<ResourceFile> getMatchingFiles(
-            @NonNull String name,
-            @NonNull ResourceType type,
-            @NonNull FolderConfiguration config) {
-        return getMatchingFiles(name, type, config, new HashSet<>(), 0);
-    }
-
-    // TODO: namespaces
-    @NonNull
-    private List<ResourceFile> getMatchingFiles(
-            @NonNull String name,
-            @NonNull ResourceType type,
-            @NonNull FolderConfiguration config,
-            @NonNull Set<String> seenNames,
-            int depth) {
-        assert !seenNames.contains(name);
-        if (depth >= MAX_RESOURCE_INDIRECTION) {
-            return Collections.emptyList();
-        }
-        List<ResourceFile> output;
-        synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> typeItems =
-                    getMap(ResourceNamespace.TODO, type, false);
-            if (typeItems == null) {
-                return Collections.emptyList();
-            }
-            seenNames.add(name);
-            output = new ArrayList<>();
-            List<ResourceItem> matchingItems = typeItems.get(name);
-            List<ResourceItem> matches = config.findMatchingConfigurables(matchingItems);
-            for (ResourceItem match : matches) {
-                // if match is an alias, check if the name is in seen names.
-                ResourceValue resourceValue = match.getResourceValue();
-                if (resourceValue != null) {
-                    String value = resourceValue.getValue();
-                    if (value != null && value.startsWith(PREFIX_RESOURCE_REF)) {
-                        ResourceUrl url = ResourceUrl.parse(value);
-                        // TODO: namespaces
-                        if (url != null && url.type == type && !url.isFramework()) {
-                            if (!seenNames.contains(url.name)) {
-                                // This resource alias needs to be resolved again.
-                                output.addAll(getMatchingFiles(
-                                        url.name, type, config, seenNames, depth + 1));
-                            }
-                            continue;
-                        }
-                    }
-                }
-                output.add(match.getSource());
-            }
-        }
-
-        return output;
-    }
-
-    /**
      * Returns the resources values matching a given {@link FolderConfiguration}.
      *
      * @param referenceConfig the configuration that each value must match.
@@ -618,98 +527,26 @@ public abstract class AbstractResourceRepository {
     /** Returns the sorted list of languages used in the resources. */
     @NonNull
     // TODO: namespaces
-    public SortedSet<String> getLanguages() {
-        SortedSet<String> set = new TreeSet<>();
-
-        // As an optimization we could just look for values since that's typically where
-        // the languages are defined -- not on layouts, menus, etc -- especially if there
-        // are no translations for it
-        Set<String> qualifiers = new HashSet<>();
-
-        synchronized (ITEM_MAP_LOCK) {
-            for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
-                for (ResourceItem item : map.values()) {
-                    qualifiers.add(item.getQualifiers());
-                }
-            }
-        }
-
-        for (String s : qualifiers) {
-            FolderConfiguration configuration = FolderConfiguration.getConfigForQualifierString(s);
-            if (configuration != null) {
-                LocaleQualifier locale = configuration.getLocaleQualifier();
-                if (locale != null) {
-                    set.add(locale.getLanguage());
-                }
-            }
-        }
-
-        return set;
-    }
-
-    /** Returns the sorted list of languages used in the resources. */
-    @NonNull
-    // TODO: namespaces
     public SortedSet<LocaleQualifier> getLocales() {
         SortedSet<LocaleQualifier> set = new TreeSet<>();
 
         // As an optimization we could just look for values since that's typically where
         // the languages are defined -- not on layouts, menus, etc -- especially if there
         // are no translations for it
-        Set<String> qualifiers = new HashSet<>();
+        Set<FolderConfiguration> folderConfigurations = new HashSet<>();
 
         synchronized (ITEM_MAP_LOCK) {
             for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
                 for (ResourceItem item : map.values()) {
-                    qualifiers.add(item.getQualifiers());
+                    folderConfigurations.add(item.getConfiguration());
                 }
             }
         }
 
-        for (String s : qualifiers) {
-            FolderConfiguration configuration = FolderConfiguration.getConfigForQualifierString(s);
-            if (configuration != null) {
-                LocaleQualifier locale = configuration.getLocaleQualifier();
-                if (locale != null) {
-                    set.add(locale);
-                }
-            }
-        }
-
-        return set;
-    }
-
-    /**
-     * Returns the sorted list of regions used in the resources with the given language.
-     *
-     * @param currentLanguage the current language the region must be associated with.
-     */
-    @NonNull
-    // TODO: This method is not used. Consider removing it.
-    public SortedSet<String> getRegions(@NonNull String currentLanguage) {
-        SortedSet<String> set = new TreeSet<>();
-
-        // As an optimization we could just look for values since that's typically where
-        // the languages are defined -- not on layouts, menus, etc -- especially if there
-        // are no translations for it
-        Set<String> qualifiers = new HashSet<>();
-        synchronized (ITEM_MAP_LOCK) {
-            for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
-                for (ResourceItem item : map.values()) {
-                    qualifiers.add(item.getQualifiers());
-                }
-            }
-        }
-
-        for (String s : qualifiers) {
-            FolderConfiguration configuration = FolderConfiguration.getConfigForQualifierString(s);
-            if (configuration != null) {
-                LocaleQualifier locale = configuration.getLocaleQualifier();
-                if (locale != null
-                        && locale.getRegion() != null
-                        && currentLanguage.equals(locale.getLanguage())) {
-                    set.add(locale.getRegion());
-                }
+        for (FolderConfiguration configuration : folderConfigurations) {
+            LocaleQualifier locale = configuration.getLocaleQualifier();
+            if (locale != null) {
+                set.add(locale);
             }
         }
 

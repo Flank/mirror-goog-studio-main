@@ -17,6 +17,8 @@
 package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
+import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
@@ -100,8 +102,8 @@ class AutoNamespaceTest {
         TestFileUtils.appendToFile(
                 project.buildFile,
                 """dependencies {
-    implementation 'com.android.support:appcompat-v7:${GradleTestProject.SUPPORT_LIB_VERSION}'
-    implementation 'com.android.support.constraint:constraint-layout:${GradleTestProject.TEST_CONSTRAINT_LAYOUT_VERSION}'
+    implementation 'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'
+    implementation 'com.android.support.constraint:constraint-layout:$TEST_CONSTRAINT_LAYOUT_VERSION'
 }"""
         )
 

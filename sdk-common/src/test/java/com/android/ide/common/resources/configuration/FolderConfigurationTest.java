@@ -18,7 +18,7 @@ package com.android.ide.common.resources.configuration;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.ide.common.resources.ResourceFile;
-import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceMergerItem;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -447,8 +447,8 @@ public class FolderConfigurationTest extends TestCase {
     }
 
     public void testFindMatchingConfigurables() {
-        ResourceItem itemBlank =
-                new ResourceItem("foo", null, ResourceType.STRING, null, null) {
+        ResourceMergerItem itemBlank =
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
                     @Override
                     public String toString() {
                         return "itemBlank";
@@ -458,8 +458,8 @@ public class FolderConfigurationTest extends TestCase {
         itemBlank.setSource(sourceBlank);
         FolderConfiguration configBlank = itemBlank.getConfiguration();
 
-        ResourceItem itemEn =
-                new ResourceItem("foo", null, ResourceType.STRING, null, null) {
+        ResourceMergerItem itemEn =
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
                     @Override
                     public String toString() {
                         return "itemEn";
@@ -469,8 +469,8 @@ public class FolderConfigurationTest extends TestCase {
         itemEn.setSource(sourceEn);
         FolderConfiguration configEn = itemEn.getConfiguration();
 
-        ResourceItem itemBcpEn =
-                new ResourceItem("foo", null, ResourceType.STRING, null, null) {
+        ResourceMergerItem itemBcpEn =
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
                     @Override
                     public String toString() {
                         return "itemBcpEn";
@@ -480,8 +480,8 @@ public class FolderConfigurationTest extends TestCase {
         itemBcpEn.setSource(sourceBcpEn);
         FolderConfiguration configBcpEn = itemBcpEn.getConfiguration();
 
-        ResourceItem itemDe =
-                new ResourceItem("foo", null, ResourceType.STRING, null, null) {
+        ResourceMergerItem itemDe =
+                new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
                     @Override
                     public String toString() {
                         return "itemDe";

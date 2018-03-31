@@ -30,9 +30,9 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
-import com.android.ide.common.symbols.ResourceDirectoryParser
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
@@ -91,7 +91,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var inputResourcesDir: FileCollection
+    lateinit var inputResourcesDir: BuildableArtifact
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
@@ -101,8 +101,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
         val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile())
 
-        val symbolTable = ResourceDirectoryParser.parseDirectory(
-                inputResourcesDir.singleFile,
+        val symbolTable = parseResourceSourceSetDirectory(
+                inputResourcesDir.single(),
                 IdProvider.sequential(),
                 androidAttrSymbol)
 
@@ -115,7 +115,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 rClassOutputJar = rClassOutputJar,
                 symbolFileOut = textSymbolOutputFile,
                 proguardOut = proguardOutputFile,
-                mergedResources = inputResourcesDir.singleFile,
+                mergedResources = inputResourcesDir.single(),
                 platformSymbols = androidAttrSymbol,
                 disableMergeInLib = true)
 
@@ -182,7 +182,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.manifestFiles = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.MERGED_MANIFESTS)
 
-            task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)
+            task.inputResourcesDir = variantScope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.PACKAGED_RES)
 
             task.outputScope = variantScope.outputScope
         }

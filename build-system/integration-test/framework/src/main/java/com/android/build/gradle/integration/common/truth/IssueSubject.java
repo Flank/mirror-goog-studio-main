@@ -80,6 +80,13 @@ public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
         }
     }
 
+    public void hasMessageThatContains(@NonNull String messageContent) {
+        if (!actual().getMessage().contains(messageContent)) {
+            failWithBadResults(
+                    "has message that contains", messageContent, "is", actual().getMessage());
+        }
+    }
+
     @Override
     protected String getDisplaySubject() {
         String name = (internalCustomName() == null) ? "" : "\"" + this.internalCustomName() + "\" ";

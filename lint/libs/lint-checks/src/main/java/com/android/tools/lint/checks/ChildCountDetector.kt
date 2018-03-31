@@ -25,10 +25,10 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LayoutDetector
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.getChildCount
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.Arrays
@@ -84,7 +84,7 @@ ListAdapter.""",
     )
 
     override fun visitElement(context: XmlContext, element: Element) {
-        val childCount = LintUtils.getChildCount(element)
+        val childCount = getChildCount(element)
         val tagName = element.tagName
         if (tagName == SCROLL_VIEW || tagName == HORIZONTAL_SCROLL_VIEW) {
             if (childCount > 1 && getAccurateChildCount(element) > 1) {

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
@@ -71,12 +72,13 @@ public class InstantRunSplitApkBuilderTest {
     @Mock AndroidBuilder androidBuilder;
     @Mock Aapt aapt;
     @Mock CoreSigningConfig coreSigningConfig;
-    @Mock FileCollection mainResources;
+    @Mock BuildableArtifact mainResources;
+    @Mock FileCollection mainResourcesFiles;
     @Mock FileTree mainResourcesApkFileTree;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
-    @Mock FileCollection apkList;
+    @Mock BuildableArtifact apkList;
     @Mock IAndroidTarget target;
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
@@ -96,12 +98,13 @@ public class InstantRunSplitApkBuilderTest {
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
         when(androidBuilder.getTarget()).thenReturn(target);
         when(target.getPath(IAndroidTarget.ANDROID_JAR)).thenReturn("fake android.jar");
-        when(mainResources.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
+        when(mainResources.get()).thenReturn(mainResourcesFiles);
+        when(mainResourcesFiles.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         FileUtils.write(
                 apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
-        when(apkList.getSingleFile()).thenReturn(apkListFile);
+        when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());
 
         instantRunFolder = supportDirectory.newFolder("instant-run");
         aaptTempFolder = supportDirectory.newFolder("aapt-temp");
@@ -231,7 +234,7 @@ public class InstantRunSplitApkBuilderTest {
         ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1);
 
         FileUtils.write(apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of()));
-        when(apkList.getSingleFile()).thenReturn(apkListFile);
+        when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());
 
         InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(

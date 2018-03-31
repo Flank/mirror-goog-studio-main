@@ -94,6 +94,8 @@ public interface AndroidProject {
 
     String PROPERTY_SIGNING_COLDSWAP_MODE = "android.injected.coldswap.mode";
 
+    String PROPERTY_APK_SELECT_CONFIG = "android.inject.apkselect.config";
+
     /** Version code to be used in the built APK. */
     String PROPERTY_VERSION_CODE = "android.injected.version.code";
 

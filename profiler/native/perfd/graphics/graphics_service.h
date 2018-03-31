@@ -29,8 +29,7 @@ namespace profiler {
 class GraphicsServiceImpl final
     : public profiler::proto::GraphicsService::Service {
  public:
-  GraphicsServiceImpl(Daemon::Utilities *utilities)
-      : clock_(utilities->clock()), collector_(clock_) {}
+  GraphicsServiceImpl(Clock *clock) : clock_(clock), collector_(clock) {}
 
   virtual ~GraphicsServiceImpl() = default;
 

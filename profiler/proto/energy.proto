@@ -429,9 +429,9 @@ message LocationChanged {
   }
 }
 
-// Currently contains no metadata but we still need the message to indicate a
-// listener is passed to the location request.
 message LocationListener {
+  // The location data from the callback.
+  Location location = 1;
 }
 
 message LocationRequest {
@@ -467,4 +467,15 @@ message LocationRequest {
   float smallest_displacement_meters = 4;
   // Prority of the location request.
   Priority priority = 5;
+}
+
+message Location {
+  // Name of the provider that generated this location.
+  string provider = 1;
+  // The estimated horizontal accuracy of this location, radial, in meters.
+  float accuracy = 2;
+  // The latitude of this location, in degrees.
+  double latitude = 3;
+  // The longitude of this location, in degrees.
+  double longitude = 4;
 }

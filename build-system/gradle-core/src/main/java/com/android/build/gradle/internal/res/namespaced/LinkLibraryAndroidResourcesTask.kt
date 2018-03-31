@@ -53,11 +53,11 @@ import javax.inject.Inject
 open class LinkLibraryAndroidResourcesTask @Inject constructor(private val workerExecutor: WorkerExecutor) :
         AndroidBuilderTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
-    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: BuildableArtifact? = null; private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
     @Input fun getPackageForR() = packageForRSupplier.get()
@@ -79,7 +79,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         val request = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = manifestFile.singleFile,
+                manifestFile = manifestFile.single(),
                 options = AaptOptions(null, false, null),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
                 staticLibrary = true,
@@ -100,8 +100,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
     }
 
     class ConfigAction(
-            private val scope: VariantScope,
-            private val staticLibApk: File
+            private val scope: VariantScope
     ) : TaskConfigAction<LinkLibraryAndroidResourcesTask> {
 
         override fun getName() = scope.getTaskName("link", "Resources")
@@ -110,7 +109,8 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
-            task.manifestFile = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
+            task.manifestFile = scope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.STATIC_LIBRARY_MANIFEST)
             task.inputResourcesDirectories = scope.artifacts
                 .getFinalArtifactFiles(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
@@ -126,13 +126,17 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
             val testedScope = scope.testedVariantData?.scope
             if (testedScope != null) {
-                task.tested = testedScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY)
+                task.tested = testedScope.artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.RES_STATIC_LIBRARY)
             }
 
             task.aaptIntermediateDir =
                     FileUtils.join(
                             scope.globalScope.intermediatesDir, "res-link-intermediate", scope.variantConfiguration.dirName)
-            task.staticLibApk = staticLibApk
+            task.staticLibApk = scope.artifacts.appendArtifact(
+                InternalArtifactType.RES_STATIC_LIBRARY,
+                task,
+                "res.apk")
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)

@@ -16,10 +16,7 @@
 
 package com.android.build.gradle.internal.incremental.annotated;
 
-/**
- * Sample classes to test IncrementalVisitor.isClassTargetingNewerPlatform
- */
-@TestTargetApi(21)
+/** Sample class for use in IncrementalVisitorTest. */
 public class OuterClassFor21 {
 
     public class InnerClass {

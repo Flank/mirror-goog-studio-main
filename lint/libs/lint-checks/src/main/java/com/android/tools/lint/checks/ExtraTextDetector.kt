@@ -63,13 +63,13 @@ developer believes the text to be functional)""",
     private var foundText: Boolean = false
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean =
-        folderType == ResourceFolderType.LAYOUT
-                || folderType == ResourceFolderType.MENU
-                || folderType == ResourceFolderType.ANIM
-                || folderType == ResourceFolderType.ANIMATOR
-                || folderType == ResourceFolderType.DRAWABLE
-                || folderType == ResourceFolderType.COLOR
-                || folderType == ResourceFolderType.NAVIGATION
+        folderType == ResourceFolderType.LAYOUT ||
+                folderType == ResourceFolderType.MENU ||
+                folderType == ResourceFolderType.ANIM ||
+                folderType == ResourceFolderType.ANIMATOR ||
+                folderType == ResourceFolderType.DRAWABLE ||
+                folderType == ResourceFolderType.COLOR ||
+                folderType == ResourceFolderType.NAVIGATION
 
     override fun visitDocument(context: XmlContext, document: Document) {
         foundText = false

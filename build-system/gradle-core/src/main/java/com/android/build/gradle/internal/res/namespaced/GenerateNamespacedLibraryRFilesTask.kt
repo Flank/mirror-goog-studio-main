@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.symbols.exportToCompiledJava
@@ -75,11 +76,9 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         SymbolIo.writeRDef(resources, resIdsFile.toPath())
     }
 
-    class ConfigAction(
-            private val scope: VariantScope,
-            private val partialRFiles: BuildableArtifact,
-            private val rJarFile: File,
-            private val resIdsFile: File) : TaskConfigAction<GenerateNamespacedLibraryRFilesTask> {
+
+    class ConfigAction(private val scope: VariantScope)
+        : TaskConfigAction<GenerateNamespacedLibraryRFilesTask> {
 
         override fun getType() = GenerateNamespacedLibraryRFilesTask::class.java
 
@@ -87,11 +86,16 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
         override fun execute(task: GenerateNamespacedLibraryRFilesTask) {
 
-            task.partialRFiles = partialRFiles
+            task.partialRFiles = scope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.PARTIAL_R_FILES)
             task.packageForRSupplier =
                     Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
-            task.rJarFile = rJarFile
-            task.resIdsFile = resIdsFile
+            task.rJarFile = scope.artifacts
+                .appendArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                    task, "R.jar")
+            task.resIdsFile = scope.artifacts
+                .appendArtifact(InternalArtifactType.NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
+                    task, "res-ids.txt")
         }
     }
 }

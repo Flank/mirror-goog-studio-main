@@ -26,7 +26,7 @@ import org.gradle.api.DefaultTask;
  * Partial implementation of the {@link InstantRunVariantScope} that contains generic implementation
  * of the interface for Gradle or an external build system.
  */
-public abstract class GenericVariantScopeImpl extends TaskOutputHolderImpl implements InstantRunVariantScope {
+public abstract class GenericVariantScopeImpl implements InstantRunVariantScope {
 
     private List<DefaultTask> coldSwapBuildTasks = Lists.newArrayList();
 

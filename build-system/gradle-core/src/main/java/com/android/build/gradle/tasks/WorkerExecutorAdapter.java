@@ -54,4 +54,9 @@ public class WorkerExecutorAdapter<T extends Serializable> implements WorkerExec
     public void await() {
         workerExecutor.await();
     }
+
+    @Override
+    public void taskActionDone() {
+        // do nothing.
+    }
 }

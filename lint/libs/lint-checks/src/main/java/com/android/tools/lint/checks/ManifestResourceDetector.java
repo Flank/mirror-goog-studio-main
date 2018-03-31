@@ -204,7 +204,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                 if (items != null && items.size() > 1) {
                     List<String> list = Lists.newArrayListWithExpectedSize(5);
                     for (ResourceItem item : items) {
-                        String qualifiers = item.getQualifiers();
+                        String qualifiers = item.getConfiguration().getQualifierString();
                         // Default folder is okay
                         if (qualifiers.isEmpty()) {
                             continue;

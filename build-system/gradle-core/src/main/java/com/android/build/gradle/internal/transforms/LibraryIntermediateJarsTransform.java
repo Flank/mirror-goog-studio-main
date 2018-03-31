@@ -30,7 +30,6 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.builder.packaging.TypedefRemover;
-import com.android.builder.packaging.ZipEntryFilter;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -170,7 +170,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         // compilation. For instance, META-INF pattern will include files like service loaders
         // for annotation processors, or kotlin modules. Both of them are needed by the consuming
         // compiler.
-        final ZipEntryFilter filter =
+        final Predicate<String> filter =
                 archivePath ->
                         (CLASS_PATTERN.matcher(archivePath).matches()
                                         || META_INF_PATTERN.matcher(archivePath).matches())
@@ -192,7 +192,8 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         // Only remove the classes files here. Because the main class jar (above) is only consumed
         // as a jar of classes, we need to include the META-INF files here as well so that
         // the file find their way in the APK.
-        final ZipEntryFilter filter = archivePath -> !CLASS_PATTERN.matcher(archivePath).matches();
+        final Predicate<String> filter =
+                archivePath -> !CLASS_PATTERN.matcher(archivePath).matches();
 
         handleJarOutput(resJarInputs, resJarLocation, filter, null);
     }
@@ -200,7 +201,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     private static void handleJarOutput(
             @NonNull List<QualifiedContent> inputs,
             @NonNull File toFile,
-            @Nullable ZipEntryFilter filter,
+            @Nullable Predicate<String> filter,
             @Nullable TypedefRemover typedefRemover)
             throws IOException {
         if (inputs.size() == 1) {

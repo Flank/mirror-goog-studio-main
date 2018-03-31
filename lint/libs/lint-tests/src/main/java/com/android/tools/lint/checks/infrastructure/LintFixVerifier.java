@@ -22,6 +22,8 @@ import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.XMLNS_PREFIX;
+import static com.android.tools.lint.detector.api.LintFix.ReplaceString.INSERT_BEGINNING;
+import static com.android.tools.lint.detector.api.LintFix.ReplaceString.INSERT_END;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -412,6 +414,12 @@ public class LintFixVerifier {
             if (index != -1) {
                 startOffset = start.getOffset() + index;
                 endOffset = start.getOffset() + index + oldString.length();
+            } else if (oldString.equals(INSERT_BEGINNING)) {
+                startOffset = start.getOffset();
+                endOffset = startOffset;
+            } else if (oldString.equals(INSERT_END)) {
+                startOffset = end.getOffset();
+                endOffset = startOffset;
             } else {
                 fail(
                         "Did not find \""

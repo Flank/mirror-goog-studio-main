@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.scope;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,7 +38,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.gradle.api.file.FileCollection;
 
 /**
  * Singleton object per variant that holds the list of splits declared by the DSL or discovered.
@@ -57,8 +58,9 @@ public class SplitList {
     }
 
     @NonNull
-    public static SplitList load(@NonNull FileCollection persistedList) throws IOException {
-        String persistedData = FileUtils.readFileToString(persistedList.getSingleFile());
+    public static SplitList load(@NonNull BuildableArtifact persistedList) throws IOException {
+        String persistedData = FileUtils.readFileToString(
+                BuildableArtifactUtil.singleFile(persistedList));
         Gson gson = new Gson();
         Type collectionType = new TypeToken<ArrayList<Record>>() {}.getType();
         return new SplitList(gson.fromJson(persistedData, collectionType));

@@ -157,10 +157,13 @@ public interface SyncIssue {
     /** Indicates that the project contains the target sdk in the android manifest file. */
     int TYPE_TARGET_SDK_VERSION_IN_MANIFEST = 31;
 
+    /** Indicated that an experimental gradle project option is used. */
+    int TYPE_UNSUPPORTED_PROJECT_OPTION_USE = 32;
+
     // WHEN ADDING NEW VALUES HERE, UPDATE EvalIssueReporter.Type
 
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 32; // increment when adding new types.
+    int TYPE_MAX = 33; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

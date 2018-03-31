@@ -17,6 +17,8 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.sdklib.AndroidTargetHash;
@@ -32,6 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import org.gradle.api.Buildable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
@@ -54,7 +57,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     File annotationProcessorOutputFolder;
 
-    FileCollection processorListFile;
+    BuildableArtifact processorListFile;
 
     String variantName;
 
@@ -62,19 +65,19 @@ public class AndroidJavaCompile extends JavaCompile {
      * Collection of artifacts that were produced by dependencies' data binding annotation
      * processors.
      */
-    FileCollection dataBindingDependencyArtifacts;
+    BuildableArtifact dataBindingDependencyArtifacts;
 
     /**
      * Log file created by GenBaseClassesTask which is used to generate implementations in the data
      * binding annotation processor.
      */
-    FileCollection dataBindingClassLogDir;
+    BuildableArtifact dataBindingClassLogDir;
 
     File dataBindingArtifactOutputDirectory;
 
     @PathSensitive(PathSensitivity.NONE)
     @InputFiles
-    public FileCollection getProcessorListFile() {
+    public BuildableArtifact getProcessorListFile() {
         return processorListFile;
     }
 
@@ -92,14 +95,14 @@ public class AndroidJavaCompile extends JavaCompile {
     @PathSensitive(PathSensitivity.RELATIVE)
     @InputFiles
     @Optional
-    public FileCollection getDataBindingDependencyArtifacts() {
+    public BuildableArtifact getDataBindingDependencyArtifacts() {
         return dataBindingDependencyArtifacts;
     }
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @InputFiles
     @Optional
-    public FileCollection getDataBindingClassLogDir() {
+    public BuildableArtifact getDataBindingClassLogDir() {
         return dataBindingClassLogDir;
     }
 
@@ -131,7 +134,8 @@ public class AndroidJavaCompile extends JavaCompile {
     void processAnalytics() {
         Gson gson = new GsonBuilder().create();
         List<String> classNames;
-        try (FileReader reader = new FileReader(processorListFile.getSingleFile())) {
+        try (FileReader reader =
+                new FileReader(BuildableArtifactUtil.singleFile(processorListFile))) {
             classNames = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
         } catch (IOException e) {
             throw new UncheckedIOException(e);

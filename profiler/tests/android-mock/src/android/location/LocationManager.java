@@ -33,7 +33,7 @@ public class LocationManager {
         }
 
         private void _handleMessage(Message message) {
-            mListener.onLocationChanged(new Location());
+            mListener.onLocationChanged((Location) message.obj);
         }
     }
 
@@ -94,9 +94,11 @@ public class LocationManager {
     public void removeUpdates(PendingIntent intent) {}
 
     /** Fake method to trigger location changed event. */
-    public void changeLocation() {
+    public void changeLocation(Location location) {
         if (mListenerTransport != null) {
-            mListenerTransport._handleMessage(new Message());
+            Message message = new Message();
+            message.obj = location;
+            mListenerTransport._handleMessage(message);
         } else if (mIntent != null) {
             // TODO: trigger intent send.
         }

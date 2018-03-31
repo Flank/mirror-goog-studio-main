@@ -44,6 +44,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.packaging.TypedefRemover;
 import com.android.support.AndroidxName;
+import com.android.tools.lint.client.api.AnnotationLookup;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.FileUtils;
@@ -742,7 +743,7 @@ public class Extractor {
                 for (PsiAnnotation pa : modifierList.getAnnotations()) {
                     String fqn = pa.getQualifiedName();
                     if (isNestedAnnotation(fqn)) {
-                        UAnnotation a = findRealAnnotation(pa, resolved);
+                        UAnnotation a = annotationLookup.findRealAnnotation(pa, resolved, null);
                         List<AnnotationData> list =
                                 types.computeIfAbsent(typeName, k -> new ArrayList<>(2));
                         addAnnotation(a, fqn, list);
@@ -761,28 +762,7 @@ public class Extractor {
         return false;
     }
 
-    private static UAnnotation findRealAnnotation(
-            @NonNull PsiAnnotation annotation, @NonNull PsiClass resolved) {
-        if (LintUtils.isKotlin(resolved.getLanguage())) {
-            // We sometimes get binaries out of Kotlin files after a resolve; find the
-            // original AST nodes
-            Project project = resolved.getProject();
-            UastContext uastContext = ServiceManager.getService(project, UastContext.class);
-
-            UElement uClass = uastContext.convertElement(resolved, null, UClass.class);
-            String annotationQualifiedName = annotation.getQualifiedName();
-            if (uClass != null && annotationQualifiedName != null) {
-                //noinspection RedundantCast
-                for (UAnnotation uAnnotation : ((UAnnotated) uClass).getAnnotations()) {
-                    if (annotationQualifiedName.equals(uAnnotation.getQualifiedName())) {
-                        return uAnnotation;
-                    }
-                }
-            }
-        }
-
-        return JavaUAnnotation.wrap(annotation);
-    }
+    private AnnotationLookup annotationLookup = new AnnotationLookup();
 
     static boolean isNestedAnnotation(@Nullable String fqn) {
         return (fqn != null

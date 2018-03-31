@@ -34,7 +34,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
-import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
@@ -50,6 +49,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -260,7 +260,7 @@ public class PxUsageDetector extends LayoutDetector {
                                     if (dimenValue != null
                                             && isDpUnit(dimenValue)
                                             && context.isEnabled(DP_ISSUE)) {
-                                        ResourceFile sourceFile = item.getSource();
+                                        File sourceFile = item.getFile();
                                         assert sourceFile != null;
                                         String message =
                                                 String.format(
@@ -268,7 +268,7 @@ public class PxUsageDetector extends LayoutDetector {
                                                         value,
                                                         dimenValue,
                                                         LintUtils.getFileNameWithParent(
-                                                                client, sourceFile.getFile()));
+                                                                client, sourceFile));
                                         context.report(
                                                 DP_ISSUE,
                                                 attribute,

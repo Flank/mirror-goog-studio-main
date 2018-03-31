@@ -201,6 +201,7 @@ maven_pom = rule(
 # )
 def maven_java_library(name,
                        deps=None,
+                       runtime_deps=None,
                        exclusions=None,
                        export_artifact=None,
                        srcs=None,
@@ -220,6 +221,7 @@ def maven_java_library(name,
   native.java_library(
     name = name,
     deps = deps,
+    runtime_deps = runtime_deps,
     srcs = srcs,
     resources = native.glob(["NOTICE", "LICENSE"]) + resources,
     exports = java_exports,
@@ -228,7 +230,7 @@ def maven_java_library(name,
   )
 
   # TODO: Properly exclude libraries from the pom instead of using _neverlink hacks.
-  maven_deps = (deps or []) + (exports or [])
+  maven_deps = (deps or []) + (exports or []) + (runtime_deps or [])
 
   maven_pom(
     name = name + "_maven",

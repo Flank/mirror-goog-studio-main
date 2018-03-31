@@ -1600,7 +1600,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
         // Regression for
         // 74388337: False "SharedPreferences.edit() without a corresponding commit() call"
         lint().files(
-            kotlin("""
+            kotlin(
+                """
                 package test.pkg
 
                 import android.content.SharedPreferences
@@ -1611,7 +1612,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
                         putBoolean(key, value)
                     }
                 }
-                """),
+                """
+            ).indented(),
             kotlin(
                 "src/androidx/core/content/SharedPreferences.kt",
                 """

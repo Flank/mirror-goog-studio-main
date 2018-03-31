@@ -265,7 +265,7 @@ public class ResourceSetTest extends BaseTestCase {
 
         checkLogger(logger);
         String stringKey = "string/basic_string";
-        List<ResourceItem> resources = resourceSet.getDataMap().get(stringKey);
+        List<ResourceMergerItem> resources = resourceSet.getDataMap().get(stringKey);
         assertNotNull(resources);
         assertFalse(resources.isEmpty());
 

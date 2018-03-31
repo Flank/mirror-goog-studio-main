@@ -103,7 +103,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private FileCollection microApkManifest;
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
-    private FileCollection apkList;
+    private BuildableArtifact apkList;
     private Supplier<EnumSet<Feature>> optionalFeatures;
     private OutputScope outputScope;
 
@@ -430,7 +430,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getApkList() {
+    public BuildableArtifact getApkList() {
         return apkList;
     }
 
@@ -488,9 +488,9 @@ public class MergeManifests extends ManifestProcessorTask {
                 processManifestTask.microApkManifest = project.files(
                         variantScope.getMicroApkManifestFile());
             }
-            BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
             processManifestTask.compatibleScreensManifest =
-                    buildArtifactsHolder.getFinalArtifactFiles(
+                    artifacts.getFinalArtifactFiles(
                             InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
 
             processManifestTask.minSdkVersion =
@@ -512,11 +512,13 @@ public class MergeManifests extends ManifestProcessorTask {
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
             processManifestTask.setManifestOutputDirectory(
-                    buildArtifactsHolder.appendArtifact(
-                            InternalArtifactType.MERGED_MANIFESTS, processManifestTask, "merged"));
+                    artifacts.appendArtifact(
+                            InternalArtifactType.MERGED_MANIFESTS,
+                            processManifestTask,
+                            "merged"));
 
             processManifestTask.setInstantRunManifestOutputDirectory(
-                    buildArtifactsHolder.appendArtifact(
+                    artifacts.appendArtifact(
                             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                             processManifestTask,
                             "instant-run"));
@@ -534,7 +536,8 @@ public class MergeManifests extends ManifestProcessorTask {
                     TaskInputHelper.memoize(
                             () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));
 
-            processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            processManifestTask.apkList =
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
@@ -566,18 +569,14 @@ public class MergeManifests extends ManifestProcessorTask {
 
             // when dealing with a non-base feature, output is under a different type.
             if (variantType.isFeatureSplit()) {
-                buildArtifactsHolder.appendArtifact(
+                artifacts.appendArtifact(
                         InternalArtifactType.METADATA_FEATURE_MANIFEST,
-                        ImmutableList.of(processManifestTask.getManifestOutputDirectory()),
-                        processManifestTask);
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
             }
 
-            buildArtifactsHolder.appendArtifact(
+            artifacts.appendArtifact(
                     InternalArtifactType.MANIFEST_METADATA,
-                    ImmutableList.of(
-                            ExistingBuildElements.getMetadataFile(
-                                    processManifestTask.getManifestOutputDirectory())),
-                    processManifestTask);
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
 
             variantScope
                     .getVariantData()

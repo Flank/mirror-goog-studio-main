@@ -81,6 +81,7 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
@@ -369,6 +370,12 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     .reportDeprecatedOptions(projectOptions.getDeprecatedOptions());
         }
 
+        if (!projectOptions.getExperimentalOptions().isEmpty()) {
+            projectOptions
+                    .getExperimentalOptions()
+                    .forEach(extraModelInfo.getDeprecationReporter()::reportExperimentalOption);
+        }
+
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
@@ -614,7 +621,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     }
 
     /** Registers a builder for the custom tooling model. */
-    @NonNull
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
@@ -710,6 +716,20 @@ public abstract class BasePlugin<E extends BaseExtension2>
         if (project.getPlugins().hasPlugin(JavaPlugin.class)) {
             throw new BadPluginException(
                     "The 'java' plugin has been applied, but it is not compatible with the Android plugins.");
+        }
+
+        if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
+            String warningMsg =
+                    "One of the plugins you are using supports Java 8 "
+                            + "language features. To try the support built into"
+                            + " the Android plugin, remove the following from "
+                            + "your build.gradle:\n"
+                            + "    apply plugin: 'me.tatarka.retrolambda'\n"
+                            + "To learn more, go to https://d.android.com/r/"
+                            + "tools/java-8-support-message.html\n";
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
         }
 
         boolean targetSetupSuccess = ensureTargetSetup();
@@ -1063,6 +1083,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
         try {
             // No null checks below because we're catching all exceptions.
+            @SuppressWarnings("JavaReflectionMemberAccess")
             Method method = plugin.getClass().getMethod("getKotlinPluginVersion");
             method.setAccessible(true);
             return method.invoke(plugin).toString();

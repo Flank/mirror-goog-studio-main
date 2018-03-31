@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class SplitListTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Mock ConfigurableFileCollection fileCollection;
+    @Mock BuildableArtifact buildableArtifact;
 
     @Before
     public void setUp() {
@@ -143,9 +143,9 @@ public class SplitListTest {
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
-        when(fileCollection.getSingleFile()).thenReturn(outputFile);
+        when(buildableArtifact.iterator()).thenReturn(ImmutableList.of(outputFile).iterator());
 
-        SplitList newSplitList = SplitList.load(fileCollection);
+        SplitList newSplitList = SplitList.load(buildableArtifact);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY))
                 .containsExactly("hdpi", "xxhdpi");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE)).isEmpty();
@@ -164,9 +164,9 @@ public class SplitListTest {
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
-        when(fileCollection.getSingleFile()).thenReturn(outputFile);
+        when(buildableArtifact.iterator()).thenReturn(ImmutableList.of(outputFile).iterator());
 
-        SplitList newSplitList = SplitList.load(fileCollection);
+        SplitList newSplitList = SplitList.load(buildableArtifact);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE))
                 .containsExactly("fr,fr_BE,fr_CA", "de");
         Map<String, String> expectedLanguageFilters =
@@ -197,9 +197,9 @@ public class SplitListTest {
                 filterListFromStrings(ImmutableSet.of("arm", "x86")),
                 ImmutableSet.of());
 
-        when(fileCollection.getSingleFile()).thenReturn(outputFile);
+        when(buildableArtifact.iterator()).thenReturn(ImmutableList.of(outputFile).iterator());
 
-        SplitList newSplitList = SplitList.load(fileCollection);
+        SplitList newSplitList = SplitList.load(buildableArtifact);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.ABI))
                 .containsExactly("arm", "x86");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY)).isEmpty();
@@ -216,9 +216,9 @@ public class SplitListTest {
                 filterListFromStrings(ImmutableSet.of("arm", "x86")),
                 ImmutableSet.of());
 
-        when(fileCollection.getSingleFile()).thenReturn(outputFile);
+        when(buildableArtifact.iterator()).thenReturn(ImmutableList.of(outputFile).iterator());
 
-        SplitList newSplitList = SplitList.load(fileCollection);
+        SplitList newSplitList = SplitList.load(buildableArtifact);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY))
                 .containsExactly("xhdpi", "xxxhdpi");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE))
@@ -226,7 +226,7 @@ public class SplitListTest {
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.ABI))
                 .containsExactly("arm", "x86");
         // check we only load the file once.
-        Mockito.verify(fileCollection, times(1)).getSingleFile();
+        Mockito.verify(buildableArtifact, times(1)).iterator();
     }
 
     private static List<SplitList.Filter> filterListFromStrings(Collection<String> values) {

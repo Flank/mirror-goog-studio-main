@@ -48,4 +48,10 @@ public class StringHelperTest {
         Truth.assertThat(StringHelper.appendCapitalized("assemble", "foo"))
                 .isEqualTo("assembleFoo");
     }
+
+    @Test
+    public void testAppendCapitalizedVarArgs() {
+        Truth.assertThat(StringHelper.appendCapitalized("assemble", "foo", "bar", "foo"))
+                .isEqualTo("assembleFooBarFoo");
+    }
 }

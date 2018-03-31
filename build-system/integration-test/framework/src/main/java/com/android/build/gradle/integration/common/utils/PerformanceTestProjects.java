@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.PLAY_SERVICES_VERSION;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -102,10 +102,7 @@ public class PerformanceTestProjects {
                     " 23",
                     " " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
 
-            TestFileUtils.searchAndReplace(
-                    buildFile,
-                    "23.1.1",
-                    GradleTestProject.SUPPORT_LIB_VERSION);
+            TestFileUtils.searchAndReplace(buildFile, "23.1.1", TestVersions.SUPPORT_LIB_VERSION);
         }
 
         TestFileUtils.searchAndReplace(
@@ -311,7 +308,7 @@ public class PerformanceTestProjects {
                         + project.getKotlinVersion()
                         + "'\n"
                         + "    compile 'com.android.support:support-v4:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n");
 
         TestFileUtils.searchAndReplace(
@@ -344,7 +341,9 @@ public class PerformanceTestProjects {
                 project.file("libs/editor/WordPressEditor/build.gradle"),
                 "\ndependencies \\{\n",
                 "dependencies {\n"
-                        + "    compile 'com.android.support:support-v13:" + GradleTestProject.SUPPORT_LIB_VERSION + "'\n");
+                        + "    compile 'com.android.support:support-v13:"
+                        + TestVersions.SUPPORT_LIB_VERSION
+                        + "'\n");
 
         TestFileUtils.searchAndReplace(
                 project.file("libs/networking/WordPressNetworking/build.gradle"),
@@ -379,14 +378,13 @@ public class PerformanceTestProjects {
 
         // Replace support lib version
         for (File buildFile : filesWithSupportLibVersion) {
-            TestFileUtils.searchAndReplace(
-                    buildFile,
-                    "24.2.1",
-                    GradleTestProject.SUPPORT_LIB_VERSION);
+            TestFileUtils.searchAndReplace(buildFile, "24.2.1", TestVersions.SUPPORT_LIB_VERSION);
         }
 
         TestFileUtils.searchAndReplace(
-                project.file("WordPress/build.gradle"), "9.0.2", PLAY_SERVICES_VERSION);
+                project.file("WordPress/build.gradle"),
+                "9.0.2",
+                TestVersions.PLAY_SERVICES_VERSION);
 
         TestFileUtils.searchAndReplace(
                 project.file("WordPress/build.gradle"),
@@ -449,12 +447,12 @@ public class PerformanceTestProjects {
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
                 "supportVersion *: '\\d+.\\d+.\\d+',",
-                "supportVersion: '" + GradleTestProject.SUPPORT_LIB_VERSION + "',");
+                "supportVersion: '" + TestVersions.SUPPORT_LIB_VERSION + "',");
 
         TestFileUtils.searchAndReplace(
                 project.file("build.gradle"),
                 "(force 'com.android.support:[^:]*):[^']*'",
-                "$1:" + GradleTestProject.SUPPORT_LIB_VERSION + "'");
+                "$1:" + TestVersions.SUPPORT_LIB_VERSION + "'");
 
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
@@ -494,7 +492,7 @@ public class PerformanceTestProjects {
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
                 "playServicesVersion: '\\d+.\\d+.\\d+'",
-                "playServicesVersion: '" + PLAY_SERVICES_VERSION + "'");
+                "playServicesVersion: '" + TestVersions.PLAY_SERVICES_VERSION + "'");
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
                 "leakCanaryVersion\\s*: '\\d+.\\d+'",

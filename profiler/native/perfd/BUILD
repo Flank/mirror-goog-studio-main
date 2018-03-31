@@ -6,6 +6,7 @@ cc_library(
         "daemon.h",
         "profiler_component.h",
         "profiler_service.h",
+        "termination_service.h",
         "//tools/base/profiler/native/perfd/sessions:sessions_manager.h",
     ],
     copts = [
@@ -31,6 +32,8 @@ cc_binary(
         "profiler_component.h",
         "profiler_service.cc",
         "profiler_service.h",
+        "termination_service.cc",
+        "termination_service.h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",

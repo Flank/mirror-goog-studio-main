@@ -16,20 +16,18 @@
 #ifndef PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 #define PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 
-#include "perfd/daemon.h"
 #include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "perfd/profiler_component.h"
 #include "proto/profiler.grpc.pb.h"
+#include "utils/clock.h"
 
 namespace profiler {
 
 class EventProfilerComponent final : public ProfilerComponent {
  public:
-  explicit EventProfilerComponent(Daemon::Utilities* utilities)
-      : cache_(utilities),
-        public_service_(&cache_),
-        internal_service_(&cache_) {}
+  explicit EventProfilerComponent(Clock* clock)
+      : cache_(clock), public_service_(&cache_), internal_service_(&cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }

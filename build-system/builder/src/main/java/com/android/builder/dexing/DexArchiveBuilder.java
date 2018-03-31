@@ -20,9 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.MessageReceiver;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 /**
  * An abstract dex archive builder that converts input class files to dex files that are written to
@@ -44,9 +42,8 @@ public abstract class DexArchiveBuilder {
     public static DexArchiveBuilder createD8DexBuilder(
             int minSdkVersion,
             boolean isDebug,
-            @NonNull List<Path> bootClasspath,
-            @NonNull List<Path> classpath,
-            @Nonnull ClassFileProviderFactory providerFactory,
+            @NonNull ClassFileProviderFactory bootClasspath,
+            @NonNull ClassFileProviderFactory classpath,
             boolean desugaring,
             @NonNull MessageReceiver messageReceiver) {
         return new D8DexArchiveBuilder(
@@ -54,7 +51,6 @@ public abstract class DexArchiveBuilder {
                 isDebug,
                 bootClasspath,
                 classpath,
-                providerFactory,
                 desugaring,
                 messageReceiver);
     }

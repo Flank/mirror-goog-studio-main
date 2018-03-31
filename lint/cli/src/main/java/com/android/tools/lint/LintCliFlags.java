@@ -19,6 +19,7 @@ package com.android.tools.lint;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintClient;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.annotations.Beta;
@@ -40,8 +41,11 @@ import java.util.Set;
 public class LintCliFlags {
     private final Set<String> suppress = new HashSet<>();
     private final Set<String> enabled = new HashSet<>();
-    private Map<String, Severity> severities;
     private Set<String> check = null;
+    private Set<Category> disabledCategories = null;
+    private Set<Category> enabledCategories = null;
+    private Set<Category> checkCategories = null;
+    private Map<String, Severity> severities;
     private boolean setExitCode;
     private boolean fullPath;
     private boolean showLines = true;
@@ -94,6 +98,24 @@ public class LintCliFlags {
         return enabled;
     }
 
+    /** Returns the set of categories to enable, if any. */
+    @Nullable
+    public Set<Category> getEnabledCategories() {
+        return enabledCategories;
+    }
+
+    /** Returns the set of categories to disable, if any. */
+    @Nullable
+    public Set<Category> getDisabledCategories() {
+        return disabledCategories;
+    }
+
+    /** Returns the set of exact categories to check, if any. */
+    @Nullable
+    public Set<Category> getExactCategories() {
+        return checkCategories;
+    }
+
     /**
      * Returns a map of manually configured severities to use
      *
@@ -121,6 +143,38 @@ public class LintCliFlags {
      */
     public void setExactCheckedIds(@Nullable Set<String> check) {
         this.check = check;
+    }
+
+    /** Adds an id to check (will disable everything else) */
+    public void addExactId(@NonNull String id) {
+        if (check == null) {
+            check = new HashSet<>();
+        }
+        check.add(id);
+    }
+
+    /** Adds a category to enable */
+    public void addEnabledCategory(@NonNull Category category) {
+        if (enabledCategories == null) {
+            enabledCategories = new HashSet<>();
+        }
+        enabledCategories.add(category);
+    }
+
+    /** Adds a category to disable */
+    public void addDisabledCategory(@NonNull Category category) {
+        if (disabledCategories == null) {
+            disabledCategories = new HashSet<>();
+        }
+        disabledCategories.add(category);
+    }
+
+    /** Adds a category to check exactly */
+    public void addExactCategory(@NonNull Category category) {
+        if (checkCategories == null) {
+            checkCategories = new HashSet<>();
+        }
+        checkCategories.add(category);
     }
 
     /** Whether lint should set the exit code of the process if errors are found */

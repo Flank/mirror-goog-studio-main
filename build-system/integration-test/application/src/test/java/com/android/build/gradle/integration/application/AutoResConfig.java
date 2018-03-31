@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static org.junit.Assert.assertEquals;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -70,9 +70,11 @@ public class AutoResConfig {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "    compile 'com.android.support:appcompat-v7:"
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "    compile 'com.android.support:support-v4:"
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
         model = project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");

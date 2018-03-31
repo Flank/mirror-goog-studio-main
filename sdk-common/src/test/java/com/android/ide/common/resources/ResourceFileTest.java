@@ -24,10 +24,11 @@ import junit.framework.TestCase;
 public class ResourceFileTest extends TestCase {
 
     public void testKeyWithQualifier() {
-        ResourceItem item = new ResourceItem("foo", null, ResourceType.LAYOUT, null, null);
+        ResourceMergerItem item =
+                new ResourceMergerItem("foo", null, ResourceType.LAYOUT, null, null);
         ResourceFile file = ResourceFile.createSingle(new File("res/layout-land/foo.xml"), item, "land");
 
-        Map<String, ResourceItem> itemMap = file.getItemMap();
+        Map<String, ResourceMergerItem> itemMap = file.getItemMap();
         assertNotNull(itemMap.get("layout-land/foo"));
     }
 }

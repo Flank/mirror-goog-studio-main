@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget
+import com.android.build.gradle.options.Option
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
-import com.google.common.collect.ImmutableTable
 
 class DeprecationReporterImpl(
         private val issueReporter: EvalIssueReporter,
@@ -107,17 +107,21 @@ class DeprecationReporterImpl(
             deprecationTarget: DeprecationTarget) {
 
         issueReporter.reportIssue(
-                Type.GENERIC,
+                Type.UNSUPPORTED_PROJECT_OPTION_USE,
                 Severity.WARNING,
                 "The option '$option' is deprecated and should not be used anymore.\n" +
                         (if (value !=null) "Use '$option=$value' to remove this warning.\n" else "") +
                         "It will be removed ${deprecationTarget.removalTime}.")
     }
 
-    override fun reportDeprecatedOptions(
-            options: ImmutableTable<String, String, DeprecationTarget>) {
-        for (cell in options.cellSet()) {
-            reportDeprecatedOption(cell.rowKey!!, cell.columnKey, cell.value!!)
-        }
+
+    override fun reportExperimentalOption(option: Option<*>, value: String) {
+        issueReporter.reportIssue(
+            Type.UNSUPPORTED_PROJECT_OPTION_USE,
+            Severity.WARNING,
+            "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
+                    (if (option.defaultValue != null)"The current default is '${option.defaultValue.toString()}'\n" else "") +
+                    "Consider removing '${option.propertyName}=$value' from your gradle.properties.",
+            option.propertyName)
     }
 }

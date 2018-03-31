@@ -270,8 +270,8 @@ abstract class DataItem<F extends DataFile> implements Serializable {
     protected void wasTouched() {}
 
     /**
-     * For non-values resources, this is the original source file.
-     * This method is here as {@link GeneratedResourceItem} overrides it.
+     * Returns the {@link File} from which this {@link DataItem} was created, if known. For some
+     * subclasses of {@link DataItem}, the file is known even if {@link #getSource()} returns null.
      */
     @Nullable
     public File getFile() {

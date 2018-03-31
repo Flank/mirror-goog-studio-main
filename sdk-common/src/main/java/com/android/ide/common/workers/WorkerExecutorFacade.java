@@ -53,6 +53,19 @@ public interface WorkerExecutorFacade<T extends Serializable> {
      */
     void submit(T parameter);
 
-    /** Wait for all submitted work actions completion. */
+    /**
+     * Wait for all submitted work actions completion.
+     *
+     * <p>This is to be used when more work needs to be done inside the TaskAction after the await.
+     * If nothing is done in the task action afterward, use {@link #taskActionDone()} instead.
+     */
     void await();
+
+    /**
+     * Indicate the task action is done.
+     *
+     * <p>This has a different behavior depending on the implementation. Worker based implementation
+     * does nothing, while regular thread-pool implementation wait on all the threads to be done.
+     */
+    void taskActionDone();
 }

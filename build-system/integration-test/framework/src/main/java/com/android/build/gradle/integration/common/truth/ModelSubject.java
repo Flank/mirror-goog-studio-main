@@ -22,10 +22,13 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.testutils.truth.IndirectSubject;
+import com.google.common.collect.Iterables;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * Truth support for AndroidProject.
@@ -88,6 +91,30 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
         check().that(issue).hasType(type);
 
         return issue;
+    }
+
+    /**
+     * Asserts that the issue collection has only a single error with the given type.
+     *
+     * <p>Warnings are ignored.
+     *
+     * @param type the expected type
+     * @return the indirect issue subject for further testing
+     */
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public IndirectSubject<IssueSubject> hasSingleError(int type) {
+        Collection<SyncIssue> syncIssues =
+                actual().getSyncIssues()
+                        .stream()
+                        .filter(issue -> issue.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                        .collect(Collectors.toList());
+        check().that(syncIssues).hasSize(1);
+
+        SyncIssue issue = Iterables.getOnlyElement(syncIssues);
+        check().that(issue).isNotNull();
+        check().that(issue).hasType(type);
+
+        return () -> new IssueSubject(failureStrategy, issue);
     }
 
     /**

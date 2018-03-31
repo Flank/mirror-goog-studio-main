@@ -711,6 +711,16 @@ public class LintCliClient extends LintClient {
                 return Severity.IGNORE;
             }
 
+            Set<Category> disabledCategories = flags.getDisabledCategories();
+            if (disabledCategories != null) {
+                Category category = issue.getCategory();
+                if (disabledCategories.contains(category)
+                        || category.getParent() != null
+                                && disabledCategories.contains(category.getParent())) {
+                    return Severity.IGNORE;
+                }
+            }
+
             Severity manual = flags.getSeverityOverrides().get(id);
             if (manual != null) {
                 if (this.severity != null
@@ -736,24 +746,52 @@ public class LintCliClient extends LintClient {
             }
 
             Set<String> enabled = flags.getEnabledIds();
-            Set<String> check = flags.getExactCheckedIds();
-            if (enabled.contains(id) || (check != null && check.contains(id))) {
-                // Overriding default
-                // Detectors shouldn't be returning ignore as a default severity,
-                // but in case they do, force it up to warning here to ensure that
-                // it's run
-                if (severity == Severity.IGNORE) {
-                    severity = issue.getDefaultSeverity();
-                    if (severity == Severity.IGNORE) {
-                        severity = Severity.WARNING;
-                    }
-                }
+            Set<String> exact = flags.getExactCheckedIds();
+            Set<Category> enabledCategories = flags.getEnabledCategories();
+            Set<Category> exactCategories = flags.getExactCategories();
+            Category category = issue.getCategory();
 
-                return severity;
+            if (exact != null) {
+                if (exact.contains(id)) {
+                    return getVisibleSeverity(issue, severity);
+                } else if (category != Category.LINT) {
+                    return Severity.IGNORE;
+                }
             }
 
-            if (check != null && issue.getCategory() != Category.LINT) {
-                return Severity.IGNORE;
+            if (exactCategories != null) {
+                if (exactCategories.contains(category)
+                        || category.getParent() != null
+                                && exactCategories.contains(category.getParent())) {
+                    return getVisibleSeverity(issue, severity);
+                } else if (category != Category.LINT
+                        || flags.getDisabledCategories() != null
+                                && flags.getDisabledCategories().contains(Category.LINT)) {
+                    return Severity.IGNORE;
+                }
+            }
+            if (enabled.contains(id)
+                    || enabledCategories != null
+                            && (enabledCategories.contains(category)
+                                    || category.getParent() != null
+                                            && enabledCategories.contains(category.getParent()))) {
+                return getVisibleSeverity(issue, severity);
+            }
+
+            return severity;
+        }
+
+        /** Returns the given severity, but if not visible, use the default */
+        private Severity getVisibleSeverity(@NonNull Issue issue, Severity severity) {
+            // Overriding default
+            // Detectors shouldn't be returning ignore as a default severity,
+            // but in case they do, force it up to warning here to ensure that
+            // it's run
+            if (severity == Severity.IGNORE) {
+                severity = issue.getDefaultSeverity();
+                if (severity == Severity.IGNORE) {
+                    severity = Severity.WARNING;
+                }
             }
 
             return severity;
@@ -1018,6 +1056,15 @@ public class LintCliClient extends LintClient {
 
     /** Returns true if the given issue has been explicitly disabled */
     boolean isSuppressed(Issue issue) {
+        Set<Category> disabledCategories = flags.getDisabledCategories();
+        if (disabledCategories != null) {
+            Category category = issue.getCategory();
+            if (disabledCategories.contains(category)
+                    || category.getParent() != null
+                            && disabledCategories.contains(category.getParent())) {
+                return true;
+            }
+        }
         return flags.getSuppressedIds().contains(issue.getId());
     }
 

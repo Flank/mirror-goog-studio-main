@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
@@ -121,13 +122,13 @@ public class TestingSupportLibraryTest {
                         + "    }\n"
                         + "    dependencies {\n"
                         + "        androidTestCompile 'com.android.support:support-annotations:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "        androidTestCompile 'com.android.support.test:runner:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
                         + "        androidTestCompile 'com.android.support.test:rules:"
-                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
                         + "    }\n"
                         + "}\n");

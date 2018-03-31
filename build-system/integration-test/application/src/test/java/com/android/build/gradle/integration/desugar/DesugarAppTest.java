@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -211,8 +212,7 @@ public class DesugarAppTest {
                                 + "dependencies {\n"
                                 + "    compile 'com.android.support:support-v4:%s'\n"
                                 + "}",
-                        GradleTestProject.SUPPORT_LIB_MIN_SDK,
-                        GradleTestProject.SUPPORT_LIB_VERSION));
+                        TestVersions.SUPPORT_LIB_MIN_SDK, TestVersions.SUPPORT_LIB_VERSION));
 
         getProjectExecutor().run("assembleDebug");
         getProjectExecutor().run("clean", "assembleDebug");

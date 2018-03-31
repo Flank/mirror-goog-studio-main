@@ -23,10 +23,12 @@ import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class ProjectOptionsBuilder {
 
@@ -54,6 +56,14 @@ public class ProjectOptionsBuilder {
         addArgs(args, integers);
         addArgs(args, strings);
         return args.build();
+    }
+
+    Stream<Option<?>> getOptions() {
+        return Streams.concat(
+                booleans.keySet().stream(),
+                optionalBooleans.keySet().stream(),
+                integers.keySet().stream(),
+                strings.keySet().stream());
     }
 
     private static <OptionT extends Option<ValueT>, ValueT> void addArgs(

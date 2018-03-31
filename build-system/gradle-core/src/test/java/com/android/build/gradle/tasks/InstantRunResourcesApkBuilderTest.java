@@ -26,11 +26,13 @@ import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElementActionScheduler;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -53,7 +55,6 @@ import java.util.List;
 import kotlin.jvm.functions.Function2;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -75,9 +76,10 @@ public class InstantRunResourcesApkBuilderTest {
     File outputFolder;
     File testDir;
 
+    @Mock BuildableArtifact buildableArtifact;
     @Mock FileCollection fileCollection;
-    @Mock FileTree fileTree;
     @Mock VariantScope variantScope;
+    @Mock BuildArtifactsHolder artifacts;
     @Mock GradleVariantConfiguration variantConfiguration;
     @Mock GlobalScope globalScope;
     @Mock AndroidBuilder androidBuilder;
@@ -119,7 +121,10 @@ public class InstantRunResourcesApkBuilderTest {
         when(variantScope.getIncrementalDir(eq(task.getName()))).thenReturn(incrementalDir);
         outputFolder = temporaryFolder.newFolder("test-output-folder");
         when(variantScope.getInstantRunResourceApkFolder()).thenReturn(outputFolder);
-        when(fileCollection.getAsFileTree()).thenReturn(fileTree);
+        when(variantScope.getArtifacts()).thenReturn(artifacts);
+        when(artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
+                .thenReturn(buildableArtifact);
+        when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.of());
     }
 
     @After
@@ -133,12 +138,12 @@ public class InstantRunResourcesApkBuilderTest {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
+                        InternalArtifactType.PROCESSED_RES, variantScope);
 
         configAction.execute(task);
 
         assertThat(task.getResInputType()).isEqualTo(InternalArtifactType.PROCESSED_RES.name());
-        assertThat(task.getResourcesFile()).isEqualTo(fileCollection);
+        assertThat(task.getResourcesFile()).isEqualTo(buildableArtifact);
         assertThat(task.getOutputDirectory()).isEqualTo(outputFolder);
         assertThat(task.getSigningConf()).isEqualTo(signingConfig);
         assertThat(task.getVariantName()).isEqualTo("testVariant");
@@ -149,13 +154,9 @@ public class InstantRunResourcesApkBuilderTest {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
+                        InternalArtifactType.PROCESSED_RES, variantScope);
 
         configAction.execute(task);
-
-        FileTree fileTree = Mockito.mock(FileTree.class);
-        when(fileTree.getFiles()).thenReturn(ImmutableSet.of());
-        when(fileCollection.getAsFileTree()).thenReturn(fileTree);
 
         task.doFullTaskAction();
         verify(buildContext).getPatchingPolicy();
@@ -167,7 +168,7 @@ public class InstantRunResourcesApkBuilderTest {
     public void testOtherPatchingPolicy() throws IOException {
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
+                        InternalArtifactType.PROCESSED_RES, variantScope);
 
         when(buildContext.getPatchingPolicy()).thenReturn(InstantRunPatchingPolicy.MULTI_APK);
 
@@ -181,7 +182,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         File[] inputFiles = temporaryFolder.getRoot().listFiles();
         assertThat(inputFiles).isNotNull();
-        when(fileTree.getFiles()).thenReturn(ImmutableSet.copyOf(inputFiles));
+        when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.copyOf(inputFiles));
 
         // create dummy output files
         List<File> expectedOutputFiles = new ArrayList<>();
@@ -225,7 +226,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
+                        InternalArtifactType.PROCESSED_RES, variantScope);
 
         configAction.execute(task);
 
@@ -237,7 +238,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         File[] inputFiles = temporaryFolder.getRoot().listFiles();
         assertThat(inputFiles).isNotNull();
-        when(fileTree.getFiles()).thenReturn(ImmutableSet.copyOf(inputFiles));
+        when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.copyOf(inputFiles));
 
         task.doFullTaskAction();
 

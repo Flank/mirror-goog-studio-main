@@ -19,7 +19,8 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.google.common.collect.ImmutableTable;
+import com.android.build.gradle.options.Option;
+import java.util.Set;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
 
@@ -81,8 +82,12 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
     }
 
     @Override
-    public void reportDeprecatedOptions(
-            @NonNull ImmutableTable<String, String, DeprecationTarget> options) {
+    public void reportDeprecatedOptions(@NonNull Set<? extends Option<?>> options) {
+        // do nothing
+    }
+
+    @Override
+    public void reportExperimentalOption(@NonNull Option<?> option, @NonNull String value) {
         // do nothing
     }
 }

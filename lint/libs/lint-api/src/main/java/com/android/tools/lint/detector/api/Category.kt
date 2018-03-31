@@ -47,6 +47,9 @@ constructor(
     val name: String,
     private val priority: Int
 ) : Comparable<Category> {
+    init {
+        categoryMap[name] = this
+    }
 
     /**
      * Returns a full name for this category. For a top level category, this is just
@@ -83,6 +86,8 @@ constructor(
     }
 
     companion object {
+        private val categoryMap = mutableMapOf<String, Category>()
+
         /**
          * Creates a new top level [Category] with the given sorting priority.
          *
@@ -95,6 +100,12 @@ constructor(
         @JvmStatic
         fun create(name: String, priority: Int): Category =
             Category(null, name, priority)
+
+        /** Returns the category associated with the given name, if any */
+        @JvmStatic
+        fun getCategory(name: String): Category? {
+            return categoryMap[name]
+        }
 
         /**
          * Creates a new top level [Category] with the given sorting priority.
@@ -152,6 +163,18 @@ constructor(
         /** Issues related to messages/strings  */
         @JvmField
         val MESSAGES = create(CORRECTNESS, "Messages", 95)
+
+        /** Issues around interoperability between Java, Kotlin, etc */
+        @JvmField
+        val INTEROPERABILITY = create("Interoperability", 48)
+
+        /** Issues around interoperability calling Java from Kotlin */
+        @JvmField
+        val INTEROPERABILITY_KOTLIN = create(INTEROPERABILITY, "Kotlin Interoperability", 46)
+
+        /** Issues around interoperability calling Kotlin from Java */
+        @JvmField
+        val INTEROPERABILITY_JAVA = create(INTEROPERABILITY, "Java Interoperability", 44)
 
         /** Issues related to Chrome OS devices  */
         @JvmField

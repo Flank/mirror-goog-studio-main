@@ -183,7 +183,10 @@ public class PackageApplication extends PackageAndroidArtifact {
             packageApplication.dexFolders = emptyCollection;
             packageApplication.jniFolders = emptyCollection;
             packageApplication.javaResourceFiles = emptyCollection;
-            packageApplication.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+            packageApplication.apkList =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             // Don't sign.
             packageApplication.setSigningConfig(null);

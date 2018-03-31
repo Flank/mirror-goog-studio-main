@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
-
 enum class LongOption(
     override val propertyName: String,
-    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+    override val status: Option.Status
 ) : Option<Long> {
-    DEPRECATED_NDK_COMPILE_LEASE("android.deprecatedNdkCompileLease"),
+    // Don't report deprecation twice, hence marked as stable
+    DEPRECATED_NDK_COMPILE_LEASE(
+        "android.deprecatedNdkCompileLease",
+        status = Option.Status.STABLE),
     ;
 
     override fun parse(value: Any): Long {

@@ -29,34 +29,38 @@ import org.w3c.dom.Node;
 /**
  * Represents a file in a resource folders.
  *
- * It contains a link to the {@link File}, the qualifier string (which is the name of the folder
- * after the first '-' character), a list of {@link ResourceItem}s and a type.
+ * <p>It contains a link to the {@link File}, the qualifier string (which is the name of the folder
+ * after the first '-' character), a list of {@link ResourceMergerItem}s and a type.
  *
- * The type of the file is based on whether the file is located in a values folder
- * ({@link FileType#XML_VALUES}) or in another folder ({@link FileType#SINGLE_FILE} or
- * {@link FileType#GENERATED_FILES}).
+ * <p>The type of the file is based on whether the file is located in a values folder ({@link
+ * FileType#XML_VALUES}) or in another folder ({@link FileType#SINGLE_FILE} or {@link
+ * FileType#GENERATED_FILES}).
  */
-public class ResourceFile extends DataFile<ResourceItem> {
+public class ResourceFile extends DataFile<ResourceMergerItem> {
 
     static final String ATTR_QUALIFIER = "qualifiers";
 
+    // TODO(b/76144726): Stop storing both the string and configuration.
     private String mQualifiers;
     private FolderConfiguration mFolderConfiguration;
 
     /**
      * Creates a resource file with a single resource item.
      *
-     * The source file is set on the item with {@link ResourceItem#setSource(DataFile)}
+     * <p>The source file is set on the item with {@link ResourceMergerItem#setSource(DataFile)}
      *
-     * The type of the ResourceFile will be {@link FileType#SINGLE_FILE}.
+     * <p>The type of the ResourceFile will be {@link FileType#SINGLE_FILE}.
      *
      * @param file the File
      * @param item the resource item
      * @param qualifiers the qualifiers.
      * @param folderConfiguration the folder configuration
      */
-    public ResourceFile(@NonNull File file, @NonNull ResourceItem item,
-            @NonNull String qualifiers, @NonNull FolderConfiguration folderConfiguration) {
+    public ResourceFile(
+            @NonNull File file,
+            @NonNull ResourceMergerItem item,
+            @NonNull String qualifiers,
+            @NonNull FolderConfiguration folderConfiguration) {
         super(file, FileType.SINGLE_FILE);
         mQualifiers = qualifiers;
         mFolderConfiguration = folderConfiguration;
@@ -66,23 +70,29 @@ public class ResourceFile extends DataFile<ResourceItem> {
     /**
      * Creates a resource file with a list of resource items.
      *
-     * The source file is set on the items with {@link ResourceItem#setSource(DataFile)}
+     * <p>The source file is set on the items with {@link ResourceMergerItem#setSource(DataFile)}
      *
-     * The type of the ResourceFile will be {@link FileType#XML_VALUES}.
+     * <p>The type of the ResourceFile will be {@link FileType#XML_VALUES}.
      *
      * @param file the File
      * @param items the resource items
      * @param qualifiers the qualifiers.
      * @param folderConfiguration the folder configuration
      */
-    public ResourceFile(@NonNull File file, @NonNull List<ResourceItem> items,
-            @NonNull String qualifiers, @NonNull FolderConfiguration folderConfiguration) {
+    public ResourceFile(
+            @NonNull File file,
+            @NonNull List<ResourceMergerItem> items,
+            @NonNull String qualifiers,
+            @NonNull FolderConfiguration folderConfiguration) {
         this(file, items, qualifiers, folderConfiguration, FileType.XML_VALUES);
     }
 
-    private ResourceFile(@NonNull File file, @NonNull List<ResourceItem> items,
-                         @NonNull String qualifiers, @NonNull FolderConfiguration folderConfiguration,
-                         @NonNull FileType fileType) {
+    private ResourceFile(
+            @NonNull File file,
+            @NonNull List<ResourceMergerItem> items,
+            @NonNull String qualifiers,
+            @NonNull FolderConfiguration folderConfiguration,
+            @NonNull FileType fileType) {
         super(file, fileType);
         mQualifiers = qualifiers;
         mFolderConfiguration = folderConfiguration;
@@ -91,7 +101,7 @@ public class ResourceFile extends DataFile<ResourceItem> {
 
     public static ResourceFile generatedFiles(
             @NonNull File file,
-            @NonNull List<ResourceItem> items,
+            @NonNull List<ResourceMergerItem> items,
             @NonNull String qualifiers,
             @NonNull FolderConfiguration folderConfiguration) {
         // TODO: Replace other constructors with named methods.
@@ -101,11 +111,13 @@ public class ResourceFile extends DataFile<ResourceItem> {
     /**
      * Creates a resource file with a single resource item.
      *
-     * This parses the folder configuration from qualifiers for each file independently (which may be less performant
-     * than parsing it once for all files in a folder and supplying the parsed configuration).
+     * <p>This method parses the folder configuration from qualifiers for each file independently
+     * (which may be less performant than parsing it once for all files in a folder and supplying
+     * the parsed configuration).
      */
     @VisibleForTesting
-    public static ResourceFile createSingle(@NonNull File file, @NonNull ResourceItem item, @NonNull String qualifiers) {
+    public static ResourceFile createSingle(
+            @NonNull File file, @NonNull ResourceMergerItem item, @NonNull String qualifiers) {
         FolderConfiguration folderConfiguration = FolderConfiguration.getConfigForQualifierString(qualifiers);
         assert folderConfiguration != null;
         return new ResourceFile(file, item, qualifiers, folderConfiguration);

@@ -30,6 +30,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -61,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.xml.sax.SAXException;
@@ -95,10 +95,10 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final Logger logger;
 
     @NonNull private final BuildableArtifact sourceDir;
-    @NonNull private final FileCollection resourceDir;
-    @Nullable private final FileCollection mappingFileSrc;
+    @NonNull private final BuildableArtifact resourceDir;
+    @Nullable private final BuildableArtifact mappingFileSrc;
     @NonNull private final BuildableArtifact mergedManifests;
-    @NonNull private final FileCollection uncompressedResources;
+    @NonNull private final BuildableArtifact uncompressedResources;
 
     @NonNull private final AaptGeneration aaptGeneration;
     @NonNull private final AaptOptions aaptOptions;
@@ -110,7 +110,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     public ShrinkResourcesTransform(
             @NonNull BaseVariantData variantData,
-            @NonNull FileCollection uncompressedResources,
+            @NonNull BuildableArtifact uncompressedResources,
             @NonNull File compressedResources,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull Logger logger) {
@@ -125,10 +125,13 @@ public class ShrinkResourcesTransform extends Transform {
         this.sourceDir =
                 artifacts.getFinalArtifactFiles(
                         InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
-        this.resourceDir = variantScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
+        this.resourceDir = variantScope.getArtifacts().getFinalArtifactFiles(
+                InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
-                variantScope.hasOutput(InternalArtifactType.APK_MAPPING)
-                        ? variantScope.getOutput(InternalArtifactType.APK_MAPPING)
+                variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
+                        ? variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                         : null;
         this.mergedManifests =
                 artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
@@ -188,7 +191,7 @@ public class ShrinkResourcesTransform extends Transform {
             secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
         }
 
-        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests::get));
+        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests));
         secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
 
         return secondaryFiles;
@@ -276,7 +279,8 @@ public class ShrinkResourcesTransform extends Transform {
         }
 
         File reportFile = null;
-        File mappingFile = mappingFileSrc != null ? mappingFileSrc.getSingleFile() : null;
+        File mappingFile =
+                mappingFileSrc != null ? BuildableArtifactUtil.singleFile(mappingFileSrc) : null;
         if (mappingFile != null) {
             File logDir = mappingFile.getParentFile();
             if (logDir != null) {
@@ -308,7 +312,7 @@ public class ShrinkResourcesTransform extends Transform {
                         classes,
                         mergedManifest.getOutputFile(),
                         mappingFile,
-                        resourceDir.getSingleFile(),
+                        BuildableArtifactUtil.singleFile(resourceDir),
                         reportFile);
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));

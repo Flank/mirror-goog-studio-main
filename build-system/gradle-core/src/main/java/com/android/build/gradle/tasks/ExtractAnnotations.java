@@ -28,11 +28,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
@@ -94,7 +95,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     private String encoding;
 
-    private FileCollection classDir;
+    private BuildableArtifact classDir;
 
     private ArtifactCollection libraries;
 
@@ -172,11 +173,11 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     @Optional
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getClassDir() {
+    public BuildableArtifact getClassDir() {
         return classDir;
     }
 
-    public void setClassDir(FileCollection classDir) {
+    public void setClassDir(BuildableArtifact classDir) {
         this.classDir = classDir;
     }
 
@@ -203,9 +204,14 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             roots.add(new File(path));
         }
 
-        ExtractAnnotationRequest request = new ExtractAnnotationRequest(
-                getTypedefFile(), getLogger(), getClassDir(), getOutput(),
-                sourceFiles, roots);
+        ExtractAnnotationRequest request =
+                new ExtractAnnotationRequest(
+                        getTypedefFile(),
+                        getLogger(),
+                        getClassDir().get(),
+                        getOutput(),
+                        sourceFiles,
+                        roots);
         FileCollection lintClassPath = getLintClassPath();
         if (lintClassPath != null) {
             new ReflectiveLintRunner().extractAnnotations(getProject().getGradle(),
@@ -336,7 +342,10 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                                     task,
                                     "typedefs.txt");
 
-            task.setClassDir(variantScope.getOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES));
+            task.setClassDir(
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES));
 
             task.setSource(variantScope.getVariantData().getJavaSources());
             task.setEncoding(extension.getCompileOptions().getEncoding());

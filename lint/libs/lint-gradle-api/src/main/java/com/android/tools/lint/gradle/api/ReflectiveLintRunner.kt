@@ -185,11 +185,11 @@ class ReflectiveLintRunner {
                     name.startsWith("groovy-all-") ||
 
                     // All the lint jars, except lint-gradle-api jar (self)
-                    name.startsWith("lint-")
+                    name.startsWith("lint-") &&
                     // Do *not* load this class in a new class loader; we need to
                     // share the same class as the one already loaded by the Gradle
                     // plugin
-                    && !name.startsWith("lint-gradle-api-")
+                    !name.startsWith("lint-gradle-api-")
                 ) {
                     urls.add(file.toURI().toURL())
                 }

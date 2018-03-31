@@ -52,7 +52,6 @@ import com.android.tools.lint.detector.api.GradleScanner
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.LintUtils.isAnonymousClass
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.OtherFileScanner
@@ -65,6 +64,10 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.assertionsEnabled
+import com.android.tools.lint.detector.api.getCommonParent
+import com.android.tools.lint.detector.api.getNextInstruction
+import com.android.tools.lint.detector.api.isXmlFile
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.annotations.Beta
@@ -549,7 +552,7 @@ class LintDriver
     /** Development diagnostics only, run with assertions on  */
     private // Turn off warnings for the intentional assertion side effect below
     fun validateScopeList() {
-        if (LintUtils.assertionsEnabled()) {
+        if (assertionsEnabled()) {
             val resourceFileDetectors = scopeDetectors[Scope.RESOURCE_FILE]
             if (resourceFileDetectors != null) {
                 for (detector in resourceFileDetectors) {
@@ -649,7 +652,7 @@ class LintDriver
         val files = absolute
 
         if (files.size > 1) {
-            sharedRoot = LintUtils.getCommonParent(files)
+            sharedRoot = getCommonParent(files)
             if (sharedRoot != null && sharedRoot.parentFile == null) { // "/" ?
                 sharedRoot = null
             }
@@ -750,7 +753,7 @@ class LintDriver
             project.reportIssues = true
         }
 
-        if (LintUtils.assertionsEnabled()) {
+        if (assertionsEnabled()) {
             // Make sure that all the project directories are unique. This ensures
             // that we didn't accidentally end up with different project instances
             // for a library project discovered as a directory as well as one
@@ -907,10 +910,10 @@ class LintDriver
 
             // Process both Scope.RESOURCE_FILE and Scope.ALL_RESOURCE_FILES detectors together
             // in a single pass through the resource directories.
-            if (scope.contains(Scope.ALL_RESOURCE_FILES)
-                || scope.contains(Scope.RESOURCE_FILE)
-                || scope.contains(Scope.RESOURCE_FOLDER)
-                || scope.contains(Scope.BINARY_RESOURCE_FILE)
+            if (scope.contains(Scope.ALL_RESOURCE_FILES) ||
+                scope.contains(Scope.RESOURCE_FILE) ||
+                scope.contains(Scope.RESOURCE_FOLDER) ||
+                scope.contains(Scope.BINARY_RESOURCE_FILE)
             ) {
                 val dirChecks = scopeDetectors[Scope.RESOURCE_FOLDER]
                 val binaryChecks = scopeDetectors[Scope.BINARY_RESOURCE_FILE]
@@ -931,9 +934,9 @@ class LintDriver
                 } else {
                     xmlDetectors = mutableListOf()
                 }
-                if (haveXmlChecks
-                    || dirChecks != null && !dirChecks.isEmpty()
-                    || binaryChecks != null && !binaryChecks.isEmpty()
+                if (haveXmlChecks ||
+                    dirChecks != null && !dirChecks.isEmpty() ||
+                    binaryChecks != null && !binaryChecks.isEmpty()
                 ) {
                     val files = project.subset
                     if (files != null) {
@@ -998,9 +1001,9 @@ class LintDriver
             return
         }
 
-        if (scope.contains(Scope.CLASS_FILE)
-            || scope.contains(Scope.ALL_CLASS_FILES)
-            || scope.contains(Scope.JAVA_LIBRARIES)
+        if (scope.contains(Scope.CLASS_FILE) ||
+            scope.contains(Scope.ALL_CLASS_FILES) ||
+            scope.contains(Scope.JAVA_LIBRARIES)
         ) {
             checkClasses(project, main)
         }
@@ -1647,8 +1650,8 @@ class LintDriver
             }
 
             // If the list of detectors hasn't changed, then just use the current visitor!
-            if (currentXmlDetectors != null && currentXmlDetectors == applicableXmlChecks
-                && Objects.equal(currentBinaryDetectors, applicableBinaryChecks)
+            if (currentXmlDetectors != null && currentXmlDetectors == applicableXmlChecks &&
+                Objects.equal(currentBinaryDetectors, applicableBinaryChecks)
             ) {
                 return currentVisitor
             }
@@ -1742,7 +1745,7 @@ class LintDriver
             // (for example for the duplicate resource detector)
             Arrays.sort(files)
             for (file in files) {
-                if (LintUtils.isXmlFile(file)) {
+                if (isXmlFile(file)) {
                     val context = createXmlContext(project, main, file, type, parser) ?: continue
                     try {
                         fireEvent(EventType.SCANNING_FILE, context)
@@ -1778,7 +1781,7 @@ class LintDriver
         type: ResourceFolderType?,
         parser: XmlParser
     ): XmlContext? {
-        assert(LintUtils.isXmlFile(file))
+        assert(isXmlFile(file))
         val contents = client.readFile(file)
         if (contents.isEmpty()) {
             return null
@@ -1815,7 +1818,7 @@ class LintDriver
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
                 }
-            } else if (file.isFile && LintUtils.isXmlFile(file)) {
+            } else if (file.isFile && isXmlFile(file)) {
                 // Yes, find out its resource type
                 val folderName = file.parentFile.name
                 val type = ResourceFolderType.getFolderType(folderName)
@@ -2200,7 +2203,7 @@ class LintDriver
         // Initializations of fields end up placed in generated methods (<init>
         // for members and <clinit> for static fields).
         if (instruction != null && method.name[0] == '<') {
-            val next = LintUtils.getNextInstruction(instruction)
+            val next = getNextInstruction(instruction)
             if (next != null && next.type == AbstractInsnNode.FIELD_INSN) {
                 val fieldRef = next as FieldInsnNode?
                 val field = findField(classNode, fieldRef!!.owner, fieldRef.name)
@@ -2447,8 +2450,8 @@ class LintDriver
         if (currentNode is Attr) {
             currentNode = currentNode.ownerElement
         }
-        val checkComments = client.checkForSuppressComments()
-                && context != null && context.containsCommentSuppress()
+        val checkComments = client.checkForSuppressComments() &&
+                context != null && context.containsCommentSuppress()
         while (currentNode != null) {
             if (currentNode.nodeType == org.w3c.dom.Node.ELEMENT_NODE) {
                 val element = currentNode as Element
@@ -2737,15 +2740,15 @@ class LintDriver
                 if (id.equals(issueId, ignoreCase = true)) {
                     return true
                 }
-                if (id.startsWith(STUDIO_ID_PREFIX)
-                    && id.regionMatches(
+                if (id.startsWith(STUDIO_ID_PREFIX) &&
+                    id.regionMatches(
                         STUDIO_ID_PREFIX.length,
                         issueId,
                         0,
                         issueId.length,
                         ignoreCase = true
-                    )
-                    && id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
+                    ) &&
+                    id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
                 ) {
                     return true
                 }
@@ -2810,10 +2813,10 @@ class LintDriver
 
             for (annotation in modifierList.annotations) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
-                            || fqcn == SUPPRESS_WARNINGS_FQCN
-                            || fqcn == KOTLIN_SUPPRESS
-                            || fqcn == SUPPRESS_LINT)
+                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
+                            fqcn == SUPPRESS_WARNINGS_FQCN ||
+                            fqcn == KOTLIN_SUPPRESS ||
+                            fqcn == SUPPRESS_LINT)
                 ) { // when missing imports
                     val parameterList = annotation.parameterList
                     for (pair in parameterList.attributes) {
@@ -2847,10 +2850,10 @@ class LintDriver
 
             for (annotation in annotations) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
-                            || fqcn == SUPPRESS_WARNINGS_FQCN
-                            || fqcn == KOTLIN_SUPPRESS
-                            || fqcn == SUPPRESS_LINT)
+                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
+                            fqcn == SUPPRESS_WARNINGS_FQCN ||
+                            fqcn == KOTLIN_SUPPRESS ||
+                            fqcn == SUPPRESS_LINT)
                 ) { // when missing imports
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {

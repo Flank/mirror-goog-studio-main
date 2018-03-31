@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.fixtures
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.google.common.collect.ImmutableTable
+import com.android.build.gradle.options.Option
 
 class FakeDeprecationReporter: DeprecationReporter {
 
@@ -67,10 +67,7 @@ class FakeDeprecationReporter: DeprecationReporter {
         deprecationWarnings.add(option)
     }
 
-    override fun reportDeprecatedOptions(
-            options: ImmutableTable<String, String, DeprecationReporter.DeprecationTarget>) {
-        for (cell in options.cellSet()) {
-            reportDeprecatedOption(cell.columnKey!!, cell.rowKey, cell.value!!)
-        }
+    override fun reportExperimentalOption(option: Option<*>, value: String) {
+        deprecationWarnings.add(option.propertyName)
     }
 }

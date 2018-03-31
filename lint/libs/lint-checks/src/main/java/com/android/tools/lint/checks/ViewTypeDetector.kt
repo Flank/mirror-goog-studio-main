@@ -41,7 +41,6 @@ import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceEvaluator
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -49,6 +48,9 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.getLanguageLevel
+import com.android.tools.lint.detector.api.skipParentheses
+import com.android.tools.lint.detector.api.stripIdPrefix
 import com.android.utils.CharSequences
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -178,7 +180,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         method: PsiMethod
     ) {
         val client = context.client
-        val current = LintUtils.skipParentheses(node) ?: return
+        val current = skipParentheses(node) ?: return
         var parent = current.uastParent
 
         val errorNode: UElement
@@ -227,8 +229,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         }
 
         val castTypeClass = castType.canonicalText
-        if (castTypeClass == CLASS_VIEW
-            || castTypeClass == "kotlin.Unit" ||
+        if (castTypeClass == CLASS_VIEW ||
+            castTypeClass == "kotlin.Unit" ||
             castTypeClass == "android.app.Fragment" ||
             castTypeClass == "android.support.v4.app.Fragment" ||
             castTypeClass == "androidx.fragment.app.Fragment"
@@ -251,8 +253,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             } else {
                 val resourceUrl = ResourceEvaluator.getResource(context.evaluator, first)
                 if (resourceUrl != null &&
-                    resourceUrl.type == ResourceType.ID
-                    && !resourceUrl.isFramework
+                    resourceUrl.type == ResourceType.ID &&
+                    !resourceUrl.isFramework
                 ) {
                     id = resourceUrl.name
                 }
@@ -327,7 +329,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         surroundingCall: UCallExpression
     ) {
         // This issue only applies in Java, not Kotlin etc - and for language level 1.8
-        val languageLevel = LintUtils.getLanguageLevel(surroundingCall, JDK_1_7)
+        val languageLevel = getLanguageLevel(surroundingCall, JDK_1_7)
         if (languageLevel.isLessThan(JDK_1_8)) {
             return
         }
@@ -381,10 +383,9 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
     protected open fun getViewTags(context: Context, item: ResourceItem): Collection<String>? {
         // Check view tag in this file.
-        val source = item.source
+        val source = item.file
         if (source != null) {
-            val file = source.file
-            val map = getIdToTagsIn(context, file) // This is cached
+            val map = getIdToTagsIn(context, source) // This is cached
             if (map != null) {
                 return map.get(item.name)
             }
@@ -429,7 +430,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             if (event == XmlPullParser.START_TAG) {
                 var id: String? = parser.getAttributeValue(ANDROID_URI, ATTR_ID)
                 if (id != null && !id.isEmpty()) {
-                    id = LintUtils.stripIdPrefix(id)
+                    id = stripIdPrefix(id)
                     var tag = parser.name ?: continue
                     if (tag == VIEW_TAG || tag == VIEW_FRAGMENT) {
                         tag = parser.getAttributeValue(null, ATTR_CLASS)
@@ -518,13 +519,12 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             for (item in items) {
                 val t = getViewTags(context, item)
                 if (t != null && t.contains(displayTag)) {
-                    val source = item.source
+                    val source = item.file
                     if (source != null) {
-                        val file = source.file
-                        sampleLayout = if (source.folderConfiguration.isDefault) {
-                            file.name
+                        sampleLayout = if (item.configuration.isDefault) {
+                            source.name
                         } else {
-                            file.parentFile.name + "/" + file.name
+                            source.parentFile.name + "/" + source.name
                         }
                         break
                     }

@@ -28,7 +28,7 @@ import java.util.*;
 public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         implements IdeAndroidArtifact {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final Collection<AndroidArtifactOutput> myOutputs;
     @NonNull private final String myApplicationId;
@@ -43,6 +43,8 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
     @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final IdeTestOptions myTestOptions;
     @Nullable private final String myInstrumentedTestTaskName;
+    @Nullable private final String myBundleTaskName;
+    @Nullable private final String myApkFromBundleTaskName;
 
     private final boolean mySigned;
     private final int myHashCode;
@@ -91,6 +93,12 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                         artifact::getInstrumentedTestTaskName,
                         taskName -> taskName,
                         null);
+        myBundleTaskName =
+                copyNewProperty(
+                        modelCache, artifact::getBundleTaskName, taskName -> taskName, null);
+        myApkFromBundleTaskName =
+                copyNewProperty(
+                        modelCache, artifact::getApkFromBundleTaskName, taskName -> taskName, null);
         myHashCode = calculateHashCode();
     }
 
@@ -182,6 +190,18 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         return myInstrumentedTestTaskName;
     }
 
+    @Nullable
+    @Override
+    public String getBundleTaskName() {
+        return myBundleTaskName;
+    }
+
+    @Nullable
+    @Override
+    public String getApkFromBundleTaskName() {
+        return myApkFromBundleTaskName;
+    }
+
     @Override
     @Nullable
     public String getSigningConfigName() {
@@ -231,7 +251,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 && Objects.equals(myAdditionalRuntimeApks, artifact.myAdditionalRuntimeApks)
                 && Objects.equals(myNativeLibraries, artifact.myNativeLibraries)
                 && Objects.equals(myTestOptions, artifact.myTestOptions)
-                && Objects.equals(myInstrumentedTestTaskName, artifact.myInstrumentedTestTaskName);
+                && Objects.equals(myInstrumentedTestTaskName, artifact.myInstrumentedTestTaskName)
+                && Objects.equals(myBundleTaskName, artifact.myBundleTaskName)
+                && Objects.equals(myApkFromBundleTaskName, artifact.myApkFromBundleTaskName);
     }
 
     @Override
@@ -261,7 +283,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 mySigned,
                 myAdditionalRuntimeApks,
                 myTestOptions,
-                myInstrumentedTestTaskName);
+                myInstrumentedTestTaskName,
+                myBundleTaskName,
+                myApkFromBundleTaskName);
     }
 
     @Override
@@ -297,6 +321,11 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
                 + myTestOptions
                 + ", myInstrumentedTestTaskName="
                 + myInstrumentedTestTaskName
+                + ", myBundleTaskName="
+                + myBundleTaskName
+                + "}"
+                + ", myApkFromBundleTaskName="
+                + myApkFromBundleTaskName
                 + "}";
     }
 }

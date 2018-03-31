@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -46,17 +47,16 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     private Map<String, String> extraInstrumentationTestRunnerArgs;
 
-    @NonNull
     private boolean animationsDisabled;
 
-    @NonNull protected final FileCollection testApkDir;
+    @NonNull protected final BuildableArtifact testApkDir;
 
-    @Nullable protected final FileCollection testedApksDir;
+    @Nullable protected final BuildableArtifact testedApksDir;
 
     public AbstractTestDataImpl(
             @NonNull VariantConfiguration<?, ?, ?> testVariantConfig,
-            @NonNull FileCollection testApkDir,
-            @Nullable FileCollection testedApksDir) {
+            @NonNull BuildableArtifact testApkDir,
+            @Nullable BuildableArtifact testedApksDir) {
         this.testVariantConfig = checkNotNull(testVariantConfig);
         this.extraInstrumentationTestRunnerArgs = Maps.newHashMap();
         this.testApkDir = testApkDir;
@@ -84,7 +84,6 @@ public abstract class AbstractTestDataImpl implements TestData {
                 ImmutableMap.copyOf(extraInstrumentationTestRunnerArgs);
     }
 
-    @NonNull
     @Override
     public boolean getAnimationsDisabled() {
         return animationsDisabled;
@@ -112,12 +111,12 @@ public abstract class AbstractTestDataImpl implements TestData {
     }
 
     /**
-     * Returns the directory containing the test APK as a {@link FileCollection}.
+     * Returns the directory containing the test APK as a {@link BuildableArtifact}.
      *
      * @return the directory containing the test APK
      */
     @NonNull
-    public FileCollection getTestApkDir() {
+    public BuildableArtifact getTestApkDir() {
         return testApkDir;
     }
 
@@ -129,7 +128,7 @@ public abstract class AbstractTestDataImpl implements TestData {
      *     library
      */
     @Nullable
-    public FileCollection getTestedApksDir() {
+    public BuildableArtifact getTestedApksDir() {
         return testedApksDir;
     }
 

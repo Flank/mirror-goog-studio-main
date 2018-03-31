@@ -5286,6 +5286,39 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testCheckThroughAnonymousClass() {
+        // Regression test for 76458979: NewApi false positive: anonymous class contents inside an SDK_INT check
+
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(4),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Build;\n"
+                                        + "import android.view.View;\n"
+                                        + "import android.view.View.OnApplyWindowInsetsListener;\n"
+                                        + "import android.view.WindowInsets;\n"
+                                        + "\n"
+                                        + "public class NewApiTest {\n"
+                                        + "    public static void test(View v, final OnApplyWindowInsetsListener listener) {\n"
+                                        + "        if (Build.VERSION.SDK_INT >= 21) {\n"
+                                        + "            v.setOnApplyWindowInsetsListener(new OnApplyWindowInsetsListener() {\n"
+                                        + "                @Override\n"
+                                        + "                public WindowInsets onApplyWindowInsets(View view, WindowInsets insets) {\n"
+                                        + "                    listener.onApplyWindowInsets(view, null);\n"
+                                        + "                    return null;\n"
+                                        + "                }\n"
+                                        + "            });\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public void testCastTypeCheck() {
         // Regression test for 35381581:  Check Class API target
         //noinspection all // Sample code

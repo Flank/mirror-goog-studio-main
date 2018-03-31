@@ -196,12 +196,12 @@ class CallGraphVisitor(
     /** Returns whether this method is statically dispatched. */
     private fun UMethod.isStaticallyDispatched(): Boolean {
         val parentClass = containingClass ?: return true
-        return isConstructor
-                || isStatic
-                || isFinal
-                || visibility == UastVisibility.PRIVATE
-                || parentClass is PsiAnonymousClass
-                || parentClass.hasModifierProperty(PsiModifier.FINAL)
+        return isConstructor ||
+                isStatic ||
+                isFinal ||
+                visibility == UastVisibility.PRIVATE ||
+                parentClass is PsiAnonymousClass ||
+                parentClass.hasModifierProperty(PsiModifier.FINAL)
     }
 
     /**

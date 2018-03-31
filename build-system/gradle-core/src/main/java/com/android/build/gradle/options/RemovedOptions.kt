@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
-
 /**
  * The list of options that have been removed.
  *
@@ -62,10 +60,8 @@ enum class RemovedOptions(
             "android.aaptNamespacing",
             "This property has been replaced by android.aaptOptions.namespaced");
 
-    /** The option is already removed, so it shouldn't be counted as deprecated (but not yet removed).*/
-    override
-    val deprecationTarget: DeprecationReporter.DeprecationTarget?
-        get() = null
+    override val status: Option.Status
+        get() = Option.Status.REMOVED
 
     override fun parse(value: Any): String {
         return errorMessage

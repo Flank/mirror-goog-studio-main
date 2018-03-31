@@ -134,16 +134,16 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         val constraint = FloatRangeConstraint.create(annotation)
 
-        val `object` = ConstantEvaluator.evaluate(context, argument)
-        if (`object` !is Number) {
+        val constant = ConstantEvaluator.evaluate(context, argument)
+        if (constant !is Number) {
             // Number arrays
-            if (`object` is FloatArray
-                || `object` is DoubleArray
-                || `object` is IntArray
-                || `object` is LongArray
+            if (constant is FloatArray ||
+                constant is DoubleArray ||
+                constant is IntArray ||
+                constant is LongArray
             ) {
-                if (`object` is FloatArray) {
-                    for (value in (`object` as FloatArray?)!!) {
+                if (constant is FloatArray) {
+                    for (value in (constant as FloatArray?)!!) {
                         if (!constraint.isValid(value.toDouble())) {
                             val message = constraint.describe(value.toDouble())
                             report(
@@ -155,8 +155,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     }
                 }
                 // Kinda repetitive but primitive arrays are not related by subtyping
-                if (`object` is DoubleArray) {
-                    for (value in (`object` as DoubleArray?)!!) {
+                if (constant is DoubleArray) {
+                    for (value in (constant as DoubleArray?)!!) {
                         if (!constraint.isValid(value)) {
                             val message = constraint.describe(value)
                             report(
@@ -167,8 +167,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         }
                     }
                 }
-                if (`object` is IntArray) {
-                    for (value in (`object` as IntArray?)!!) {
+                if (constant is IntArray) {
+                    for (value in (constant as IntArray?)!!) {
                         if (!constraint.isValid(value.toDouble())) {
                             val message = constraint.describe(value.toDouble())
                             report(
@@ -179,8 +179,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         }
                     }
                 }
-                if (`object` is LongArray) {
-                    for (value in (`object` as LongArray?)!!) {
+                if (constant is LongArray) {
+                    for (value in (constant as LongArray?)!!) {
                         if (!constraint.isValid(value.toDouble())) {
                             val message = constraint.describe(value.toDouble())
                             report(
@@ -216,7 +216,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         }
 
-        val value = `object`.toDouble()
+        val value = constant.toDouble()
         if (!constraint.isValid(value)) {
             val message = constraint.describe(
                 argument as? UExpression, value

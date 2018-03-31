@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
@@ -28,7 +27,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import java.io.File
-import java.util.LinkedList
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -54,7 +52,6 @@ class NamespacedResourcesTaskManager(
      * TODO: Test support, Synthesize non-namespaced output.
      */
     fun createNamespacedResourceTasks(
-            resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
@@ -65,144 +62,64 @@ class NamespacedResourcesTaskManager(
         // Process dependencies making sure everything we consume will be fully namespaced.
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
             // TODO: also rewrite the resources
-            createAutoNamespaceDependenciesTask()
+            taskFactory.create(AutoNamespaceDependenciesTask.ConfigAction(variantScope))
         }
 
         // Compile
         createCompileResourcesTask()
-        createStaticLibraryManifestTask()
-        createLinkResourcesTask()
-        createNamespacedLibraryRFiles()
+        taskFactory.create(StaticLibraryManifestTask.ConfigAction(variantScope))
+        taskFactory.create(LinkLibraryAndroidResourcesTask.ConfigAction(variantScope))
+        // TODO: also generate a private R.jar holding private resources.
+        taskFactory.create(GenerateNamespacedLibraryRFilesTask.ConfigAction(variantScope))
 
         if (variantScope.type.isTestComponent) {
             if (variantScope.testedVariantData!!.type.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
-                    resPackageOutputFolder = resPackageOutputFolder,
                     packageOutputType = packageOutputType
                 )
             } else {
                 createNamespacedAppProcessTask(
-                    resPackageOutputFolder = resPackageOutputFolder,
                     packageOutputType = packageOutputType,
                     baseName = baseName,
                     useAaptToGenerateLegacyMultidexMainDexProguardRules = false
                 )
             }
-            createCompileRuntimeRClassTask()
         } else if (variantScope.type.isApk) {
             createNamespacedAppProcessTask(
-                resPackageOutputFolder = resPackageOutputFolder,
                 packageOutputType = packageOutputType,
                 baseName = baseName,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
             )
-            createCompileRuntimeRClassTask()
         }
-    }
-
-    private fun createNamespacedLibraryRFiles() {
-        // TODO: also generate a private R.jar holding private resources.
-        val rClassJarFile = File(
-                variantScope.globalScope.intermediatesDir,
-                "res-rJar/" + variantScope.variantConfiguration.dirName + "/R.jar")
-        val resIdsFile = File(
-                variantScope.globalScope.intermediatesDir,
-                "res-ids/" + variantScope.variantConfiguration.dirName + "/res-ids.txt")
-
-        val task = taskFactory.create(
-                GenerateNamespacedLibraryRFilesTask.ConfigAction(
-                        variantScope,
-                        variantScope.artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.PARTIAL_R_FILES),
-                        rClassJarFile,
-                        resIdsFile))
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                rClassJarFile,
-                task.name)
-        variantScope.addTaskOutput(
-                InternalArtifactType.NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
-                resIdsFile,
-                task.name)
-
-    }
-
-    private fun createCompileRuntimeRClassTask() {
-        val rClassCompiledOutputDir = File(
-                variantScope.globalScope.intermediatesDir,
-                "res-final-r-classes/" + variantScope.variantConfiguration.dirName)
-        val task = taskFactory.create(
-                CompileRClassTask.ConfigAction(
-                        variantScope.getTaskName("compile", "FinalRClass"),
-                        variantScope.getOutput(InternalArtifactType.RUNTIME_R_CLASS_SOURCES),
-                        rClassCompiledOutputDir
-                ))
-        variantScope.addTaskOutput(
-                InternalArtifactType.RUNTIME_R_CLASS_CLASSES,
-                rClassCompiledOutputDir,
-                task.name)
+        taskFactory.create(CompileRClassTask.ConfigAction(variantScope))
     }
 
     private fun createNamespacedAppProcessTask(
-            resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
-        val runtimeRClassSources = File(globalScope.generatedDir,
-                "source/final-r/" + variantScope.variantConfiguration.dirName)
-        val process = taskFactory.create(
-                LinkApplicationAndroidResourcesTask.NamespacedConfigAction(
-                        variantScope,
-                        runtimeRClassSources,
-                        resPackageOutputFolder,
-                        useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                        baseName))
-        variantScope.addTaskOutput(
-                InternalArtifactType.PROCESSED_RES,
-                resPackageOutputFolder,
-                process.name)
-        variantScope.addTaskOutput(
-                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
-                runtimeRClassSources,
-                process.name)
+       taskFactory.create(LinkApplicationAndroidResourcesTask.NamespacedConfigAction(
+           variantScope,
+           useAaptToGenerateLegacyMultidexMainDexProguardRules,
+           baseName))
         if (packageOutputType != null) {
-            variantScope.addTaskOutput(
-                    packageOutputType,
-                    variantScope.processResourcePackageOutputDirectory,
-                    process.name)
+            variantScope.artifacts.appendArtifact(
+                packageOutputType,
+                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
         }
     }
 
     private fun createNamespacedLibraryTestProcessResourcesTask(
-            resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?) {
-        val runtimeRClassSources = File(globalScope.generatedDir,
-                "source/final-r/" + variantScope.variantConfiguration.dirName)
-        val process = taskFactory.create(
-                ProcessAndroidAppResourcesTask.ConfigAction(
-                        variantScope,
-                        runtimeRClassSources,
-                    File(resPackageOutputFolder, "res.apk"))
-        )
-        variantScope.addTaskOutput(
-                InternalArtifactType.PROCESSED_RES,
-                resPackageOutputFolder,
-                process.name)
-        variantScope.addTaskOutput(
-                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
-                runtimeRClassSources,
-                process.name)
+        taskFactory.create(ProcessAndroidAppResourcesTask.ConfigAction(variantScope))
         if (packageOutputType != null) {
-            variantScope.addTaskOutput(
-                    packageOutputType,
-                    variantScope.processResourcePackageOutputDirectory,
-                    process.name)
+            variantScope.artifacts.appendArtifact(
+                packageOutputType,
+                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
         }
     }
 
     private fun createCompileResourcesTask() {
-        
         for((sourceSetName, artifacts) in variantScope.variantData.androidResources) {
             val name = "compile${sourceSetName.capitalize()}" +
                     "ResourcesFor${variantScope.fullVariantName.capitalize()}"
@@ -213,35 +130,5 @@ class NamespacedResourcesTaskManager(
                     variantScope = variantScope))
                 .dependsOn(variantScope.resourceGenTask)
         }
-    }
-
-    private fun createLinkResourcesTask() {
-        val resourceStaticLibrary =
-                FileUtils.join(globalScope.intermediatesDir,
-                        "res-linked",
-                        variantScope.variantConfiguration.dirName,
-                        "res.apk")
-        val link = taskFactory.create(
-                LinkLibraryAndroidResourcesTask.ConfigAction(variantScope, resourceStaticLibrary))
-        variantScope.addTaskOutput(
-                InternalArtifactType.RES_STATIC_LIBRARY,
-                resourceStaticLibrary,
-                link.name)
-    }
-
-    private fun createStaticLibraryManifestTask() {
-        val staticLibraryManifest = File(globalScope.intermediatesDir,
-                "/manifests/static_lib/" + variantScope.variantConfiguration.dirName +
-                        "/" + SdkConstants.ANDROID_MANIFEST_XML)
-        val task = taskFactory.create(
-                StaticLibraryManifestTask.ConfigAction(variantScope, staticLibraryManifest))
-        variantScope.addTaskOutput(
-                InternalArtifactType.STATIC_LIBRARY_MANIFEST,
-                staticLibraryManifest,
-                task.name)
-    }
-
-    private fun createAutoNamespaceDependenciesTask() {
-        taskFactory.create(AutoNamespaceDependenciesTask.ConfigAction(variantScope))
     }
 }
