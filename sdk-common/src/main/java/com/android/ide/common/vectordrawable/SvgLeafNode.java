@@ -217,7 +217,7 @@ class SvgLeafNode extends SvgNode {
         String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
         logger.log(Level.FINE, "fill color " + fillColor);
         boolean emptyFill =
-                fillColor != null && ("none".equals(fillColor) || "#000000".equals(fillColor));
+                fillColor != null && ("none".equals(fillColor) || "#00000000".equals(fillColor));
         boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);
         boolean emptyPath = mPathData == null;
         if (emptyPath || emptyFill && emptyStroke) {
