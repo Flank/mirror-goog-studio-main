@@ -96,7 +96,8 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
                     fix().name("Replace with singleLine=\"true\"")
                             .composite(
                                     fix().set(ANDROID_URI, ATTR_SINGLE_LINE, VALUE_TRUE).build(),
-                                    fix().unset(ANDROID_URI, other.getLocalName()).build());
+                                    fix().unset(ANDROID_URI, other.getLocalName()).build())
+                            .autoFix();
 
             context.report(
                     ISSUE,

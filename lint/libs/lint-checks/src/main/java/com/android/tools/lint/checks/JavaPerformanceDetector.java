@@ -233,10 +233,11 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                     String replacedType = typeName.substring(typeName.lastIndexOf('.') + 1);
                     LintFix fix =
                             LintFix.create()
-                                    .name("Replace with valueOf()")
+                                    .name("Replace with valueOf()", true)
                                     .replace()
                                     .pattern("(new\\s+" + replacedType + ")")
                                     .with(replacedType + ".valueOf")
+                                    .autoFix()
                                     .build();
                     mContext.report(
                             USE_VALUE_OF,

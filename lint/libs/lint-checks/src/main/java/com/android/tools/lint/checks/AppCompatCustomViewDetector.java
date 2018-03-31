@@ -95,11 +95,14 @@ public class AppCompatCustomViewDetector extends Detector implements SourceCodeS
         Location location = context.getNameLocation(locationNode);
         String suggested = getAppCompatDelegate(superClass);
         String message = String.format("This custom view should extend `%1$s` instead", suggested);
+        String actionLabel = "Extend AppCompat widget instead";
         LintFix fix =
-                fix().name("Extend AppCompat widget instead")
+                fix().name(actionLabel)
+                        .sharedName(actionLabel)
                         .replace()
                         .all()
                         .with(suggested)
+                        .autoFix()
                         .build();
         context.report(ISSUE, declaration, location, message, fix);
     }

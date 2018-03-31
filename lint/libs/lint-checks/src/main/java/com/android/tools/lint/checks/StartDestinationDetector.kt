@@ -41,17 +41,17 @@ class StartDestinationDetector : ResourceXmlDetector() {
 
         @JvmField
         val ISSUE = Issue.create(
-            "InvalidNavigation",
-            "No start destination specified",
+            id = "InvalidNavigation",
+            briefDescription = "No start destination specified",
 
-            """
-All `<navigation>` elements must have a start destination specified, and it must be a direct child of
-that `<navigation>`
-""",
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            Implementation(
+            explanation = """
+            All `<navigation>` elements must have a start destination specified, and it must \
+            be a direct child of that `<navigation>`.
+            """,
+            category = Category.CORRECTNESS,
+            priority = 3,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 StartDestinationDetector::class.java,
                 Scope.RESOURCE_FILE_SCOPE
             )

@@ -40,6 +40,7 @@ import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -79,6 +80,7 @@ public class Main {
     private static final String ARG_ENABLE = "--enable";
     private static final String ARG_DISABLE = "--disable";
     private static final String ARG_CHECK = "--check";
+    private static final String ARG_AUTO_FIX = "--apply-suggestions";
     private static final String ARG_IGNORE = "--ignore";
     private static final String ARG_LIST_IDS = "--list";
     private static final String ARG_SHOW = "--show";
@@ -679,13 +681,15 @@ public class Main {
                 flags.setCheckAllWarnings(true);
             } else if (arg.equals(ARG_ALL_ERROR)) {
                 flags.setWarningsAsErrors(true);
+            } else if (arg.equals(ARG_AUTO_FIX)) {
+                flags.setAutoFix(true);
             } else if (arg.equals(ARG_CLASSES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing class folder name");
                     exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
-                for (String path : LintUtils.splitPath(paths)) {
+                for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Class path entry " + input + " does not exist.");
@@ -704,7 +708,7 @@ public class Main {
                     exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
-                for (String path : LintUtils.splitPath(paths)) {
+                for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Source folder " + input + " does not exist.");
@@ -723,7 +727,7 @@ public class Main {
                     exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
-                for (String path : LintUtils.splitPath(paths)) {
+                for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Resource folder " + input + " does not exist.");
@@ -742,7 +746,7 @@ public class Main {
                     exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
-                for (String path : LintUtils.splitPath(paths)) {
+                for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Library " + input + " does not exist.");
@@ -768,7 +772,7 @@ public class Main {
                     exit(ERRNO_INVALID_ARGS);
                 }
                 String paths = args[++index];
-                for (String path : LintUtils.splitPath(paths)) {
+                for (String path : Lint.splitPath(paths)) {
                     File input = getInArgumentPath(path);
                     if (!input.exists()) {
                         System.err.println("Project descriptor " + input + " does not exist.");
@@ -1223,6 +1227,8 @@ public class Main {
                     "Show full explanations for the given list of issue id's.",
                     ARG_FATAL,
                     "Only check for fatal severity issues",
+                    ARG_AUTO_FIX,
+                    "Apply suggestions to the source code (for safe fixes)",
                     "",
                     "\nEnabled Checks:",
                     ARG_DISABLE + " <list>",

@@ -635,6 +635,7 @@ fun getCommonParent(file1: File, file2: File): File? {
  * @param createString If true, create a [String] instead of a general [     ]
  * @return the string
  */
+@Throws(IOException::class)
 fun getEncodedString(
     client: LintClient,
     file: File,

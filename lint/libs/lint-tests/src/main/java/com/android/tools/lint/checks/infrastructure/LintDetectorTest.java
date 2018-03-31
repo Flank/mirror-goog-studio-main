@@ -41,8 +41,8 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCoreApplicationEnvironment;
 import com.android.tools.lint.LintExternalAnnotationsManager;
+import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
-import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.ApiLookup;
@@ -1186,7 +1186,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 prev = warning;
             }
 
-            Stats stats = new Stats(errorCount, warningCount);
+            LintStats stats = LintStats.Companion.create(errorCount, warningCount);
             for (Reporter reporter : flags.getReporters()) {
                 reporter.write(stats, warnings);
             }

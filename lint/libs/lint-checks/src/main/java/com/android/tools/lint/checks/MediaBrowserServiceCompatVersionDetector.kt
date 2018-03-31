@@ -23,16 +23,16 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
 
         @JvmField
         val ISSUE = Issue.create(
-            "IncompatibleMediaBrowserServiceCompatVersion",
-            "Obsolete version of MediaBrowserServiceCompat",
-            """
-`MediaBrowserServiceCompat` from version 23.2.0 to 23.4.0 of the Support v4 Library \
-used private APIs and will not be compatible with future versions of Android beyond Android N.\
-Please upgrade to version 24.0.0 or higher of the Support Library.""",
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            Implementation(
+            id = "IncompatibleMediaBrowserServiceCompatVersion",
+            briefDescription = "Obsolete version of MediaBrowserServiceCompat",
+            explanation = """
+            `MediaBrowserServiceCompat` from version 23.2.0 to 23.4.0 of the Support v4 Library \
+            used private APIs and will not be compatible with future versions of Android beyond Android N. \
+            Please upgrade to version 24.0.0 or higher of the Support Library.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 MediaBrowserServiceCompatVersionDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

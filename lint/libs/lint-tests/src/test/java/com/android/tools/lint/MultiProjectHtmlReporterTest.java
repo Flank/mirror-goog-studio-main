@@ -107,7 +107,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.asCharSource(new File(dir, "index.html"), Charsets.UTF_8).read();
 

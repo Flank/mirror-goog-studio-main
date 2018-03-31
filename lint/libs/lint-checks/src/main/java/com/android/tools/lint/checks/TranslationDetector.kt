@@ -789,97 +789,99 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         /** Are all translations complete? */
         @JvmField
         val MISSING = Issue.create(
-            "MissingTranslation",
-            "Incomplete translation",
-            "If an application has more than one locale, then all the strings declared in " +
-                    "one language should also be translated in all other languages.\n" +
-                    "\n" +
-                    "If the string should **not** be translated, you can add the attribute " +
-                    "`translatable=\"false\"` on the `<string>` element, or you can define all " +
-                    "your non-translatable strings in a resource file called `donottranslate.xml`. " +
-                    "Or, you can ignore the issue with a `tools:ignore=\"MissingTranslation\"` " +
-                    "attribute.\n" +
-                    "\n" +
-                    "You can tell lint (and other tools) which language is the default language " +
-                    "in your `res/values/` folder by specifying `tools:locale=\"languageCode\"` for " +
-                    "the root `<resources>` element in your resource file. (The `tools` prefix refers " +
-                    "to the namespace declaration `http://schemas.android.com/tools`.)",
-            Category.MESSAGES,
-            8,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "MissingTranslation",
+            briefDescription = "Incomplete translation",
+            explanation = """
+                If an application has more than one locale, then all the strings declared \
+                in one language should also be translated in all other languages.
+
+                If the string should **not** be translated, you can add the attribute \
+                `translatable="false"` on the `<string>` element, or you can define all \
+                your non-translatable strings in a resource file called \
+                `donottranslate.xml`. Or, you can ignore the issue with a \
+                `tools:ignore="MissingTranslation"` attribute.
+
+                You can tell lint (and other tools) which language is the default language \
+                in your `res/values/` folder by specifying `tools:locale="languageCode"` \
+                for the root `<resources>` element in your resource file. \
+                (The `tools` prefix refers to the namespace declaration \
+                `http://schemas.android.com/tools`.)""",
+            category = Category.MESSAGES,
+            priority = 8,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         /** Are there extra translations that are "unused" (appear only in specific languages) ? */
         @JvmField
         val EXTRA = Issue.create(
-            "ExtraTranslation",
-            "Extra translation",
-            "If a string appears in a specific language translation file, but there is " +
-                    "no corresponding string in the default locale, then this string is probably " +
-                    "unused. (It's technically possible that your application is only intended to " +
-                    "run in a specific locale, but it's still a good idea to provide a fallback.).\n" +
-                    "\n" +
-                    "Note that these strings can lead to crashes if the string is looked up on any " +
-                    "locale not providing a translation, so it's important to clean them up.",
-            Category.MESSAGES,
-            6,
-            Severity.FATAL,
-            IMPLEMENTATION
+            id = "ExtraTranslation",
+            briefDescription = "Extra translation",
+            explanation = """
+                If a string appears in a specific language translation file, but there is \
+                no corresponding string in the default locale, then this string is probably \
+                unused. (It's technically possible that your application is only intended \
+                to run in a specific locale, but it's still a good idea to provide a fallback.)
+
+                Note that these strings can lead to crashes if the string is looked up on \
+                any locale not providing a translation, so it's important to clean them up.""",
+            category = Category.MESSAGES,
+            priority = 6,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
         )
 
         /** Are there extra resources that are "unused" (appear only in non-default folders) ? */
         @JvmField
         val MISSING_BASE = Issue.create(
-            "MissingDefaultResource",
-            "Missing Default",
-            "If a resource is only defined in folders with qualifiers like " +
-                    "`-land` or `-en`, and there is no default declaration in the " +
-                    "base folder (`layout` or `values` etc), then the app will crash if that " +
-                    "resource is accessed on a device where the device is in a configuration " +
-                    "missing the given qualifier.\n" +
-                    "\n" +
-                    "As a special case, drawables do not have to be specified in the base folder; " +
-                    "if there is a match in a density folder (such as `drawable-mdpi`) that image " +
-                    "will be used and scaled. Note however that if you  only specify a drawable in " +
-                    "a folder like `drawable-en-hdpi`, the app will crash in non-English " +
-                    "locales.\n" +
-                    "\n" +
-                    "There may be scenarios where you have a resource, such as a `-fr` " +
-                    "drawable, which is only referenced from some other resource with the " +
-                    "same qualifiers (such as a `-fr` style), which itself has safe fallbacks. " +
-                    "However, this still makes it possible for somebody to " +
-                    "accidentally reference the drawable and crash, so it is safer to create " +
-                    "a default dummy fallback in the base folder. Alternatively, you can " +
-                    "suppress the issue by adding `tools:ignore=\"MissingDefaultResource\"` on " +
-                    "the element.\n" +
-                    "\n" +
-                    "(This scenario frequently happens with string translations, where you might " +
-                    "delete code and the corresponding resources, but forget to delete a " +
-                    "translation. There is a dedicated issue id for that scenario, with the id " +
-                    "`ExtraTranslation`.)",
-            Category.CORRECTNESS,
-            6,
-            Severity.FATAL,
-            IMPLEMENTATION
+            id = "MissingDefaultResource",
+            briefDescription = "Missing Default",
+            explanation = """
+                If a resource is only defined in folders with qualifiers like `-land` or \
+                `-en`, and there is no default declaration in the base folder (`layout` or \
+                `values` etc), then the app will crash if that resource is accessed on a \
+                device where the device is in a configuration missing the given qualifier.
+
+                As a special case, drawables do not have to be specified in the base folder; \
+                if there is a match in a density folder (such as `drawable-mdpi`) that image \
+                will be used and scaled. Note however that if you  only specify a drawable in \
+                a folder like `drawable-en-hdpi`, the app will crash in non-English locales.
+
+                There may be scenarios where you have a resource, such as a `-fr` drawable, \
+                which is only referenced from some other resource with the same qualifiers \
+                (such as a `-fr` style), which itself has safe fallbacks. However, this still \
+                makes it possible for somebody to accidentally reference the drawable and \
+                crash, so it is safer to create a default dummy fallback in the base folder. \
+                Alternatively, you can suppress the issue by adding \
+                `tools:ignore="MissingDefaultResource"` on the element.
+
+                (This scenario frequently happens with string translations, where you might \
+                delete code and the corresponding resources, but forget to delete a \
+                translation. There is a dedicated issue id for that scenario, with the id \
+                `ExtraTranslation`.)""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
         )
 
         /** Are there extra translations that are "unused" (appear only in specific languages) ? */
         @JvmField
         val TRANSLATED_UNTRANSLATABLE = Issue.create(
-            "Untranslatable",
-            "Translated Untranslatable",
-            "Strings can be marked with `translatable=false` to indicate that they " +
-                    "are not intended to be translated, but are present in the resource file " +
-                    "for other purposes (for example for non-display strings that should vary " +
-                    "by some other configuration qualifier such as screen size or API level.).\n" +
-                    "\n" +
-                    "There are cases where translators accidentally translate these strings " +
-                    "anyway, and lint will flag these occurrences with this lint check.",
-            Category.MESSAGES,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "Untranslatable",
+            briefDescription = "Translated Untranslatable",
+            explanation = """
+                Strings can be marked with `translatable=false` to indicate that they are not \
+                intended to be translated, but are present in the resource file for other \
+                purposes (for example for non-display strings that should vary by some other \
+                configuration qualifier such as screen size or API level).
+
+                There are cases where translators accidentally translate these strings anyway, \
+                and lint will flag these occurrences with this lint check.""",
+            category = Category.MESSAGES,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
 
         @JvmStatic

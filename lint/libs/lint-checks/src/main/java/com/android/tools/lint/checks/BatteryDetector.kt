@@ -50,22 +50,24 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
         /** Issues that negatively affect battery life  */
         @JvmField
         val ISSUE = Issue.create(
-            "BatteryLife",
-            "Battery Life Issues",
+            id = "BatteryLife",
+            briefDescription = "Battery Life Issues",
+            explanation = """
+            This issue flags code that either
+            * negatively affects battery life, or
+            * uses APIs that have recently changed behavior to prevent background tasks from \
+            consuming memory and battery excessively.
 
-            """This issue flags code that either
-* negatively affects battery life, or
-* uses APIs that have recently changed behavior to prevent background tasks from consuming memory and battery excessively.
+            Generally, you should be using `JobScheduler` or `GcmNetworkManager` instead.
 
-Generally, you should be using `JobScheduler` or `GcmNetworkManager` instead.
-
-For more details on how to update your code, please seehttp://developer.android.com/preview/features/background-optimization.html""",
-            "http://developer.android.com/preview/features/background-optimization.html",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION
+            For more details on how to update your code, please see \
+            http://developer.android.com/preview/features/background-optimization.html
+            """,
+            moreInfo = "http://developer.android.com/preview/features/background-optimization.html",
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
     }
 

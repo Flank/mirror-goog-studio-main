@@ -57,6 +57,7 @@ public class Warning implements Comparable<Warning> {
     public CharSequence fileContents;
     public Set<Variant> variants;
     public LintFix quickfixData;
+    public boolean wasAutoFixed;
 
     public Warning(Issue issue, String message, Severity severity, Project project) {
         this.issue = issue;
@@ -216,6 +217,10 @@ public class Warning implements Comparable<Warning> {
         int result = message.hashCode();
         result = 31 * result + (file != null ? file.hashCode() : 0);
         return result;
+    }
+
+    public boolean hasAutoFix() {
+        return quickfixData != null && LintFixPerformer.Companion.canAutoFix(quickfixData);
     }
 
     public boolean isVariantSpecific() {

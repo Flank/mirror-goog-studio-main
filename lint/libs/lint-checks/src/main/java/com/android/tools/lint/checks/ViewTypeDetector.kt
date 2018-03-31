@@ -612,14 +612,15 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         /** Mismatched view types */
         @JvmField
         val WRONG_VIEW_CAST = Issue.create(
-            "WrongViewCast",
-            "Mismatched view type",
-            "Keeps track of the view types associated with ids and if it finds a usage of " +
-                    "the id in the Java code it ensures that it is treated as the same type.",
-            Category.CORRECTNESS,
-            9,
-            Severity.FATAL,
-            Implementation(
+            id = "WrongViewCast",
+            briefDescription = "Mismatched view type",
+            explanation = """
+                Keeps track of the view types associated with ids and if it finds a usage \
+                of the id in the Java code it ensures that it is treated as the same type.""",
+            category = Category.CORRECTNESS,
+            priority = 9,
+            severity = Severity.FATAL,
+            implementation = Implementation(
                 ViewTypeDetector::class.java,
                 EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES),
                 Scope.JAVA_FILE_SCOPE
@@ -629,20 +630,21 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         /** Mismatched view types */
         @JvmField
         val ADD_CAST = Issue.create(
-            "FindViewByIdCast",
-            "Add Explicit Cast",
-            "In Android O, the `findViewById` signature switched to using generics, which means " +
-                    "that most of the time you can leave out explicit casts and just assign the result " +
-                    "of the `findViewById` call to variables of specific view classes.\n" +
-                    "\n" +
-                    "However, due to language changes between Java 7 and 8, this change may cause code " +
-                    "to not compile without explicit casts. This lint check looks for these scenarios " +
-                    "and suggests casts to be added now such that the code will continue to compile " +
-                    "if the language level is updated to 1.8.",
-            Category.CORRECTNESS,
-            9,
-            Severity.WARNING,
-            Implementation(ViewTypeDetector::class.java, Scope.JAVA_FILE_SCOPE)
+            id = "FindViewByIdCast",
+            briefDescription = "Add Explicit Cast",
+            explanation = """
+                In Android O, the `findViewById` signature switched to using generics, which \
+                means that most of the time you can leave out explicit casts and just assign \
+                the result of the `findViewById` call to variables of specific view classes.
+
+                However, due to language changes between Java 7 and 8, this change may cause \
+                code to not compile without explicit casts. This lint check looks for these \
+                scenarios and suggests casts to be added now such that the code will \
+                continue to compile if the language level is updated to 1.8.""",
+            category = Category.CORRECTNESS,
+            priority = 9,
+            severity = Severity.WARNING,
+            implementation = Implementation(ViewTypeDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
 
         const val FIND_VIEW_BY_ID = "findViewById"

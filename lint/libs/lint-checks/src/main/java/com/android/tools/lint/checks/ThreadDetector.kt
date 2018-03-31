@@ -323,18 +323,19 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Calling methods on the wrong thread  */
         @JvmField
         val THREAD = Issue.create(
-            "WrongThread",
-            "Wrong Thread",
+            id = "WrongThread",
+            briefDescription = "Wrong Thread",
 
-            "Ensures that a method which expects to be called on a specific thread, is actually " +
-                    "called from that thread. For example, calls on methods in widgets should always " +
-                    "be made on the UI thread.",
-            "http://developer.android.com/guide/components/processes-and-threads.html#Threads",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION
+            explanation = """
+                Ensures that a method which expects to be called on a specific thread, is \
+                actually called from that thread. For example, calls on methods in widgets \
+                should always be made on the UI thread.
+                """,
+            moreInfo = "http://developer.android.com/guide/components/processes-and-threads.html#Threads",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
     }
 }

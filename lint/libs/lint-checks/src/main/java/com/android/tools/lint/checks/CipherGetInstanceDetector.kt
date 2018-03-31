@@ -137,15 +137,16 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
     companion object {
         @JvmField
         val ISSUE = Issue.create(
-            "GetInstance",
-            "Cipher.getInstance with ECB",
-            "`Cipher#getInstance` should not be called with ECB as the cipher mode or without " +
-                    "setting the cipher mode because the default mode on android is ECB, which " +
-                    "is insecure.",
-            Category.SECURITY,
-            9,
-            Severity.WARNING,
-            Implementation(
+            id = "GetInstance",
+            briefDescription = "Cipher.getInstance with ECB",
+            explanation = """
+                `Cipher#getInstance` should not be called with ECB as the cipher mode or \
+                without setting the cipher mode because the default mode on android is \
+                ECB, which is insecure.""",
+            category = Category.SECURITY,
+            priority = 9,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 CipherGetInstanceDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )
@@ -153,15 +154,16 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
 
         @JvmField
         val DEPRECATED_PROVIDER = Issue.create(
-            "DeprecatedProvider",
-            "Using BC Provider",
-            "The `BC` provider has been deprecated and will not be provided when " +
-                    "`targetSdkVersion` is P or higher.",
-            "https://android-developers.googleblog.com/2018/03/cryptography-changes-in-android-p.html",
-            Category.SECURITY,
-            9,
-            Severity.WARNING,
-            Implementation(
+            id = "DeprecatedProvider",
+            briefDescription = "Using BC Provider",
+            explanation = """
+            The `BC` provider has been deprecated and will not be provided when `targetSdkVersion` is P or higher.
+            """,
+            moreInfo = "https://android-developers.googleblog.com/2018/03/cryptography-changes-in-android-p.html",
+            category = Category.SECURITY,
+            priority = 9,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 CipherGetInstanceDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

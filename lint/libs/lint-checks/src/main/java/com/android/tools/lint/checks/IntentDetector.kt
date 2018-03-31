@@ -45,17 +45,16 @@ class IntentDetector : Detector(), SourceCodeScanner {
         /** The main issue discovered by this detector  */
         @JvmField
         val ISSUE = Issue.create(
-            "IntentReset",
-            "Suspicious mix of `setType` and `setData`",
-
-            "Intent provides the following APIs: `setData(Uri)` and `setType(String)`. " +
-                    "Unfortunately, setting one clears the other. If you want to set both, you " +
-                    "should call `setDataAndType(Uri, String)` instead.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            Implementation(
+            id = "IntentReset",
+            briefDescription = "Suspicious mix of `setType` and `setData`",
+            explanation = """
+                Intent provides the following APIs: `setData(Uri)` and `setType(String)`. \
+                Unfortunately, setting one clears the other. If you want to set both, you \
+                should call `setDataAndType(Uri, String)` instead.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 IntentDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

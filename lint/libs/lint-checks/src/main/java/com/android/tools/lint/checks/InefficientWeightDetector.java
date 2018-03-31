@@ -284,7 +284,10 @@ public class InefficientWeightDetector extends LayoutDetector {
                 }
             }
             if (allChildrenAreLayouts) {
-                LintFix fix = fix().set(ANDROID_URI, ATTR_BASELINE_ALIGNED, VALUE_FALSE).build();
+                LintFix fix =
+                        fix().set(ANDROID_URI, ATTR_BASELINE_ALIGNED, VALUE_FALSE)
+                                .autoFix()
+                                .build();
                 context.report(
                         BASELINE_WEIGHTS,
                         element,
@@ -352,7 +355,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                 fix().name("Set orientation=\"vertical\" (changes layout)")
                         .set(ANDROID_URI, ATTR_ORIENTATION, VALUE_VERTICAL)
                         .build();
-        return fix().group(horizontal, vertical);
+        return fix().alternatives(horizontal, vertical);
     }
 
     private static void checkWrong0Dp(XmlContext context, Element element, List<Element> children) {

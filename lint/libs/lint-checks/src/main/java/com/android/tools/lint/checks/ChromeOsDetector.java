@@ -196,7 +196,10 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             attrRequired == null
                                     ? xmlContext.getNameLocation(element)
                                     : xmlContext.getLocation(attrRequired);
-                    LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE).build();
+                    LintFix fix =
+                            fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE)
+                                    .autoFix()
+                                    .build();
                     xmlContext.report(
                             UNSUPPORTED_CHROME_OS_HARDWARE,
                             element,

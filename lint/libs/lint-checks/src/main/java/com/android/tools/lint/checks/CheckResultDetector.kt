@@ -218,16 +218,15 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Method result should be used  */
         @JvmField
         val CHECK_RESULT = Issue.create(
-            "CheckResult",
-            "Ignoring results",
-
-            "Some methods have no side effects, an calling them without doing something " +
-                    "without the result is suspicious. ",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "CheckResult",
+            briefDescription = "Ignoring results",
+            explanation = """
+                Some methods have no side effects, an calling them without doing something \
+                without the result is suspicious.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
     }
 }

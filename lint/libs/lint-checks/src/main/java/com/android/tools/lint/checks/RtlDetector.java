@@ -429,7 +429,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                         LintFix fix2 =
                                 fix().set(ANDROID_URI, ATTR_LAYOUT_GRAVITY, expectedGravity)
                                         .build();
-                        LintFix fix = fix().group(fix1, fix2);
+                        LintFix fix = fix().alternatives(fix1, fix2);
                         context.report(
                                 COMPAT,
                                 attribute,

@@ -131,7 +131,11 @@ class Issue private constructor(
      * @return an explanation of the issue, never null, never empty
      */
     fun getExplanation(format: TextFormat): String {
-        return RAW.convertTo(explanation.trim { it <= ' ' }, format)
+        val trimmed = explanation.trimIndent()
+        // For convenience allow line wrapping in explanation raw strings
+        // by "escaping" the newline, e.g. ending the line with \
+        val message = trimmed.replace("\\\n", "")
+        return RAW.convertTo(message, format)
     }
 
     /**
@@ -261,24 +265,24 @@ class Issue private constructor(
          * describing the **problem** rather than the **fix**
          * (e.g. "Missing minSdkVersion")
          * @param explanation a full explanation of the issue, with suggestions for
+         * @param implementation the default implementation for this issue
          * @param moreInfo additional information URL
          * how to fix it
          * @param category the associated category, if any
          * @param priority the priority, a number from 1 to 10 with 10 being most
          * important/severe
          * @param severity the default severity of the issue
-         * @param implementation the default implementation for this issue
          * @return a new [Issue]
          */
         fun create(
             id: String,
             briefDescription: String,
             explanation: String,
+            implementation: Implementation,
             moreInfo: String? = null,
             category: Category = Category.CORRECTNESS,
             priority: Int = 5,
             severity: Severity = Severity.WARNING,
-            implementation: Implementation,
             enabledByDefault: Boolean = true
         ): Issue {
             val issue = Issue(

@@ -590,16 +590,15 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Passing the wrong constant to an int or String method  */
         @JvmField
         val TYPE_DEF = Issue.create(
-            "WrongConstant",
-            "Incorrect constant",
-
-            "Ensures that when parameter in a method only allows a specific set " +
-                    "of constants, calls obey those rules.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "WrongConstant",
+            briefDescription = "Incorrect constant",
+            explanation = """
+                Ensures that when parameter in a method only allows a specific set of \
+                constants, calls obey those rules.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         fun findIntDef(annotations: List<UAnnotation>): UAnnotation? {

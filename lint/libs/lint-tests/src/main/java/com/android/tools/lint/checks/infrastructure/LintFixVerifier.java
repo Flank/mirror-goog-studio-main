@@ -288,7 +288,7 @@ public class LintFixVerifier {
 
     private static String checkSetAttribute(
             @NonNull SetAttribute setFix, @NonNull String contents, @NonNull Warning warning) {
-        Location location = warning.location;
+        Location location = setFix.range != null ? setFix.range : warning.location;
         Position start = location.getStart();
         Position end = location.getEnd();
         assert start != null;

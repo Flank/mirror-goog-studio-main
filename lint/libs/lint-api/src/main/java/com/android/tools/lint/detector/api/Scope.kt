@@ -147,13 +147,13 @@ enum class Scope {
                 // and the associated class files
                 scopes.contains(JAVA_FILE) && scopes.contains(CLASS_FILE)
             } else {
-                size == 1 && (scopes.contains(JAVA_FILE)
-                        || scopes.contains(CLASS_FILE)
-                        || scopes.contains(RESOURCE_FILE)
-                        || scopes.contains(PROGUARD_FILE)
-                        || scopes.contains(PROPERTY_FILE)
-                        || scopes.contains(GRADLE_FILE)
-                        || scopes.contains(MANIFEST))
+                size == 1 && (scopes.contains(JAVA_FILE) ||
+                        scopes.contains(CLASS_FILE) ||
+                        scopes.contains(RESOURCE_FILE) ||
+                        scopes.contains(PROGUARD_FILE) ||
+                        scopes.contains(PROPERTY_FILE) ||
+                        scopes.contains(GRADLE_FILE) ||
+                        scopes.contains(MANIFEST))
             }
         }
 

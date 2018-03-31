@@ -363,7 +363,7 @@ public class TypoDetector extends ResourceXmlDetector {
         String first = null;
         String message;
 
-        LintFix.GroupBuilder fixBuilder = fix().group();
+        LintFix.GroupBuilder fixBuilder = fix().alternatives();
         boolean isCapitalized = Character.isUpperCase(word.charAt(0));
         StringBuilder sb = new StringBuilder(40);
         for (int i = 1, n = replacements.size(); i < n; i++) {

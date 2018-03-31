@@ -46,19 +46,17 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         /** Using hidden/private APIs  */
         @JvmField
         val ISSUE = Issue.create(
-            "PrivateApi",
-            "Using Private APIs",
-
-            """
-Using reflection to access hidden/private Android APIs is not safe; it will often not work on \
-devices from other vendors, and it may suddenly stop working (if the API is removed) or crash \
-spectacularly (if the API behavior changes, since there are no guarantees for compatibility).
-""",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            Implementation(
+            id = "PrivateApi",
+            briefDescription = "Using Private APIs",
+            explanation = """
+            Using reflection to access hidden/private Android APIs is not safe; it will often not work on \
+            devices from other vendors, and it may suddenly stop working (if the API is removed) or crash \
+            spectacularly (if the API behavior changes, since there are no guarantees for compatibility).
+            """,
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 PrivateApiDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

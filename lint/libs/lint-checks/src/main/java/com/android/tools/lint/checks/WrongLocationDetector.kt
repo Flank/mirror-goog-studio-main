@@ -32,17 +32,17 @@ class WrongLocationDetector : LayoutDetector() {
         /** Main issue investigated by this detector  */
         @JvmField
         val ISSUE = Issue.create(
-            "WrongFolder",
-            "Resource file in the wrong `res` folder",
+            id = "WrongFolder",
+            briefDescription = "Resource file in the wrong `res` folder",
 
-            """
-Resource files are sometimes placed in the wrong folder, and it can lead to subtle bugs that are \
-hard to understand. This check looks for problems in this area, such as attempting to place a \
-layout "alias" file in a `layout/` folder rather than the `values/` folder where it belongs.""",
-            Category.CORRECTNESS,
-            8,
-            Severity.FATAL,
-            Implementation(
+            explanation = """
+            Resource files are sometimes placed in the wrong folder, and it can lead to subtle bugs that are \
+            hard to understand. This check looks for problems in this area, such as attempting to place a \
+            layout "alias" file in a `layout/` folder rather than the `values/` folder where it belongs.""",
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.FATAL,
+            implementation = Implementation(
                 WrongLocationDetector::class.java,
                 Scope.RESOURCE_FILE_SCOPE
             )

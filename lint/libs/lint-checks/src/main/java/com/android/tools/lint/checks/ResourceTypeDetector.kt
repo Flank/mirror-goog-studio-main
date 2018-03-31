@@ -563,51 +563,48 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
          */
         @JvmField
         val RESOURCE_TYPE = Issue.create(
-            "ResourceType",
-            "Wrong Resource Type",
-
-            "Ensures that resource id's passed to APIs are of the right type; for example, " +
-                    "calling `Resources.getColor(R.string.name)` is wrong.",
-
-            Category.CORRECTNESS,
-            7,
-            Severity.FATAL,
-            IMPLEMENTATION
+            id = "ResourceType",
+            briefDescription = "Wrong Resource Type",
+            explanation = """
+                Ensures that resource id's passed to APIs are of the right type; for \
+                example, calling `Resources.getColor(R.string.name)` is wrong.""",
+            category = Category.CORRECTNESS,
+            priority = 7,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
         )
 
         /** Attempting to set a resource id as a color */
         @JvmField
         val COLOR_USAGE = Issue.create(
-            "ResourceAsColor",
-            "Should pass resolved color instead of resource id",
+            id = "ResourceAsColor",
+            briefDescription = "Should pass resolved color instead of resource id",
+            explanation = """
+                Methods that take a color in the form of an integer should be passed an \
+                RGB triple, not the actual color resource id. You must call \
+                `getResources().getColor(resource)` to resolve the actual color value first.
 
-            "Methods that take a color in the form of an integer should be passed " +
-                    "an RGB triple, not the actual color resource id. You must call " +
-                    "`getResources().getColor(resource)` to resolve the actual color value first.\n" +
-                    "\n" +
-                    "Similarly, methods that take a dimension integer should be passed " +
-                    "an actual dimension (call `getResources().getDimension(resource)`",
-
-            Category.CORRECTNESS,
-            7,
-            Severity.ERROR,
-            IMPLEMENTATION
+                Similarly, methods that take a dimension integer should be passed an \
+                actual dimension (call `getResources().getDimension(resource)`""",
+            category = Category.CORRECTNESS,
+            priority = 7,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         /** Incorrect usage of half floats */
         @JvmField
         val HALF_FLOAT = Issue.create(
-            "HalfFloat",
-            "Incorrect Half Float",
-
-            "Half-precision floating point are stored in a short data type, and should be " +
-                    "manipulated using the `android.util.Half` class. This check flags " +
-                    "usages where it appears that these values are used incorrectly.",
-
-            Category.CORRECTNESS,
-            7,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "HalfFloat",
+            briefDescription = "Incorrect Half Float",
+            explanation = """
+                Half-precision floating point are stored in a short data type, and should be \
+                manipulated using the `android.util.Half` class. This check flags usages \
+                where it appears that these values are used incorrectly.""",
+            category = Category.CORRECTNESS,
+            priority = 7,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
     }
 }

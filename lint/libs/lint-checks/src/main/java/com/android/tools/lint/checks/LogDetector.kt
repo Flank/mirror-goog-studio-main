@@ -60,53 +60,50 @@ class LogDetector : Detector(), SourceCodeScanner {
         /** Log call missing surrounding if  */
         @JvmField
         val CONDITIONAL = Issue.create(
-            "LogConditional",
-            "Unconditional Logging Calls",
-            """
-The BuildConfig class (available in Tools 17) provides a constant, "DEBUG", which indicates \
-whether the code is being built in release mode or in debug mode. In release mode, you typically \
-want to strip out all the logging calls. Since the compiler will automatically remove all code \
-which is inside a "if (false)" check, surrounding your logging calls with a check for \
-BuildConfig.DEBUG is a good idea.
+            id = "LogConditional",
+            briefDescription = "Unconditional Logging Calls",
+            explanation = """
+            The BuildConfig class (available in Tools 17) provides a constant, "DEBUG", which indicates \
+            whether the code is being built in release mode or in debug mode. In release mode, you typically \
+            want to strip out all the logging calls. Since the compiler will automatically remove all code \
+            which is inside a "if (false)" check, surrounding your logging calls with a check for \
+            BuildConfig.DEBUG is a good idea.
 
-If you **really** intend for the logging to be present in release mode, you can suppress this \
-warning with a @SuppressLint annotation for the intentional logging calls.""",
-
-            Category.PERFORMANCE,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION
+            If you **really** intend for the logging to be present in release mode, you can suppress this \
+            warning with a @SuppressLint annotation for the intentional logging calls.""",
+            category = Category.PERFORMANCE,
+            priority = 5,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         ).setEnabledByDefault(false)
 
         /** Mismatched tags between isLogging and log calls within it  */
         @JvmField
         val WRONG_TAG = Issue.create(
-            "LogTagMismatch",
-            "Mismatched Log Tags",
-            """
-When guarding a `Log.v(tag, ...)` call with `Log.isLoggable(tag)`, the tag passed to both calls \
-should be the same. Similarly, the level passed in to `Log.isLoggable` should typically match \
-the type of `Log` call, e.g. if checking level `Log.DEBUG`, the corresponding `Log` call should \
-be `Log.d`, not `Log.i`.""",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "LogTagMismatch",
+            briefDescription = "Mismatched Log Tags",
+            explanation = """
+            When guarding a `Log.v(tag, ...)` call with `Log.isLoggable(tag)`, the tag passed to both calls \
+            should be the same. Similarly, the level passed in to `Log.isLoggable` should typically match \
+            the type of `Log` call, e.g. if checking level `Log.DEBUG`, the corresponding `Log` call should \
+            be `Log.d`, not `Log.i`.""",
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         /** Log tag is too long  */
         @JvmField
         val LONG_TAG = Issue.create(
-            "LongLogTag",
-            "Too Long Log Tags",
-            """
-Log tags are only allowed to be at most 23 tag characters long.""",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "LongLogTag",
+            briefDescription = "Too Long Log Tags",
+            explanation = """
+            Log tags are only allowed to be at most 23 tag characters long.""",
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         private const val IS_LOGGABLE = "isLoggable"

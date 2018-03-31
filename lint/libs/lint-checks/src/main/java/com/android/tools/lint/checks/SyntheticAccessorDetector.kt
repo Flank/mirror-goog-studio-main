@@ -54,23 +54,23 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
         /** The main issue discovered by this detector  */
         @JvmField
         val ISSUE = Issue.create(
-            "SyntheticAccessor",
-            "Synthetic Accessor",
-
-            "A private inner class which is accessed from the outer class will " +
-                    "force the compiler to insert a synthetic accessor; this means that you " +
-                    "are causing extra overhead. This is not important in small projects, but " +
-                    "is important for large apps running up against the 64K method handle " +
-                    "limit, and especially for **libraries** where you want to make sure your " +
-                    "library is as small as possible for the cases where your library is used " +
-                    "in an app running up against the 64K limit.",
-
-            null,
-            Category.PERFORMANCE,
-            2,
-            Severity.WARNING,
-            IMPLEMENTATION,
-            enabledByDefault = false
+            id = "SyntheticAccessor",
+            briefDescription = "Synthetic Accessor",
+            explanation = """
+                A private inner class which is accessed from the outer class will force \
+                the compiler to insert a synthetic accessor; this means that you are \
+                causing extra overhead. This is not important in small projects, but is \
+                important for large apps running up against the 64K method handle limit, \
+                and especially for **libraries** where you want to make sure your library \
+                is as small as possible for the cases where your library is used in an \
+                app running up against the 64K limit.
+                """,
+            moreInfo = null,
+            category = Category.PERFORMANCE,
+            priority = 2,
+            severity = Severity.WARNING,
+            enabledByDefault = false,
+            implementation = IMPLEMENTATION
         )
 
         // A similar inspection is available in IntelliJ, using several different id's.
@@ -179,11 +179,14 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                 context.getLocation(node)
 
         val isKotlin = isKotlin(member)
+        val name = if (isKotlin) "Make internal" else "Make package protected"
         val fix = fix().replace()
-            .name(if (isKotlin) "Make internal" else "Make package protected")
+            .name(name)
+            .sharedName(name)
             .range(context.getLocation(member))
             .text("private ")
             .with(if (isKotlin) "internal " else "")
+            .autoFix()
             .build()
 
         val memberType = if (member is PsiField) {

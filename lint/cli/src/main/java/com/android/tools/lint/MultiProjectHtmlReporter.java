@@ -49,7 +49,7 @@ public class MultiProjectHtmlReporter extends Reporter {
     }
 
     @Override
-    public void write(@NonNull Stats stats, List<Warning> allIssues) throws IOException {
+    public void write(@NonNull LintStats stats, List<Warning> allIssues) throws IOException {
         Map<Project, List<Warning>> projectToWarnings = new HashMap<>();
         for (Warning warning : allIssues) {
             List<Warning> list =
@@ -133,7 +133,8 @@ public class MultiProjectHtmlReporter extends Reporter {
         Reporter reporter = Reporter.createHtmlReporter(client, output, flags);
         reporter.writeProjectList(stats, projects);
 
-        if (!client.getFlags().isQuiet() && (stats.errorCount > 0 || stats.warningCount > 0)) {
+        if (!client.getFlags().isQuiet()
+                && (stats.getErrorCount() > 0 || stats.getWarningCount() > 0)) {
             File index = new File(dir, INDEX_NAME);
             String url = SdkUtils.fileToUrlString(index.getAbsoluteFile());
             System.out.println(String.format("Wrote overview index to %1$s", url));

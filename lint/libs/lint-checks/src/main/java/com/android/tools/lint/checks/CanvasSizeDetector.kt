@@ -116,29 +116,29 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
         /** Wrong canvas size lookup  */
         @JvmField
         val ISSUE = Issue.create(
-            "CanvasSize",
-            "Wrong Canvas Size",
-            "In a custom view's draw implementation, you should normally call " +
-                    "`getWidth` and `getHeight` on the custom view itself, not on the " +
-                    "`canvas` instance.\n" +
-                    "\n" +
-                    "Canvas width and height are the width and height of the `Canvas`, which " +
-                    "is not always the same as size of the view.\n" +
-                    "\n" +
-                    "In the hardware accelerated path the width and height of the canvas " +
-                    "typically always match that of the `View` because every view goes " +
-                    "to its own recorded `DisplayList`. But in software rendering there's " +
-                    "just one canvas that is clipped and transformed as it makes its way " +
-                    "through the `View` tree, and otherwise remains the same `Canvas` object " +
-                    "for every View's draw method.\n" +
-                    "\n" +
-                    "You should only use Canvas state to adjust how much you draw, such as a " +
-                    "quickReject for early work avoidance if it's going to be clipped away, " +
-                    "but not what you draw.",
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "CanvasSize",
+            briefDescription = "Wrong Canvas Size",
+            explanation = """
+                In a custom view's draw implementation, you should normally call `getWidth` \
+                and `getHeight` on the custom view itself, not on the `canvas` instance.
+
+                Canvas width and height are the width and height of the `Canvas`, which is \
+                not always the same as size of the view.
+
+                In the hardware accelerated path the width and height of the canvas \
+                typically always match that of the `View` because every view goes to its own \
+                recorded `DisplayList`. But in software rendering there's just one canvas \
+                that is clipped and transformed as it makes its way through the `View` tree, \
+                and otherwise remains the same `Canvas` object for every View's draw method.
+
+                You should only use Canvas state to adjust how much you draw, such as a \
+                quickReject for early work avoidance if it's going to be clipped away, but \
+                not what you draw.
+                """,
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
 
         private const val CLASS_CANVAS = "android.graphics.Canvas"

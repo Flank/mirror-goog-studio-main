@@ -43,11 +43,7 @@ import java.io.File
  * to adjust your code for the next tools release.**
  */
 @Beta
-class ClassContext
-/**
- * Construct a new [ClassContext]
- */
-    (
+class ClassContext(
     /** the driver running through the checks */
     driver: LintDriver,
 

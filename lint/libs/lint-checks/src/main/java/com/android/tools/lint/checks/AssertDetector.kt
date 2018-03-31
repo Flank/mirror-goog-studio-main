@@ -46,28 +46,26 @@ class AssertDetector : Detector(), SourceCodeScanner {
         /** Using assertions  */
         @JvmField
         val ISSUE = Issue.create(
-            "Assert",
-            "Assertions",
+            id = "Assert",
+            briefDescription = "Assertions",
+            explanation = """
+            Assertions are not checked at runtime. There are ways to request that they be used by Dalvik \
+            (`adb shell setprop debug.assert 1`), but note that this is not implemented in ART (the newer \
+            runtime), and even in Dalvik the property is ignored in many places and can not be relied upon. \
+            Instead, perform conditional checking inside `if (BuildConfig.DEBUG) { }` blocks. That constant \
+            is a static final boolean which is true in debug builds and false in release builds, and the \
+            Java compiler completely removes all code inside the if-body from the app.
 
-            """
-Assertions are not checked at runtime. There are ways to request that they be used by Dalvik \
-(`adb shell setprop debug.assert 1`), but note that this is not implemented in ART (the newer \
-runtime), and even in Dalvik the property is ignored in many places and can not be relied upon. \
-Instead, perform conditional checking inside `if (BuildConfig.DEBUG) { }` blocks. That constant \
-is a static final boolean which is true in debug builds and false in release builds, and the \
-Java compiler completely removes all code inside the if-body from the app.
+            For example, you can replace `assert speed > 0` with `if (BuildConfig.DEBUG && !(speed > 0)) { \
+            throw new AssertionError() }`.
 
-For example, you can replace `assert speed > 0` with `if (BuildConfig.DEBUG && !(speed > 0)) { \
-throw new AssertionError() }`.
-
-(Note: This lint check does not flag assertions purely asserting nullness or non-nullness; these \
-are typically more intended for tools usage than runtime checks.)""",
-            "https://code.google.com/p/android/issues/detail?id=65183",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            Implementation(
+            (Note: This lint check does not flag assertions purely asserting nullness or non-nullness; these \
+            are typically more intended for tools usage than runtime checks.)""",
+            moreInfo = "https://code.google.com/p/android/issues/detail?id=65183",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 AssertDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

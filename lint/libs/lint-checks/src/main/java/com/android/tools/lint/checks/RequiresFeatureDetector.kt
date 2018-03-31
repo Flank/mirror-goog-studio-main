@@ -588,17 +588,15 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
         /** Method result should be used  */
         @JvmField
         val REQUIRES_FEATURE = Issue.create(
-            "RequiresFeature",
-            "Requires Feature",
-
-            "Some APIs require optional features to be present. This check " +
-                    "makes sure that calls to these APIs are surrounded by a check which " +
-                    "enforces this.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "RequiresFeature",
+            briefDescription = "Requires Feature",
+            explanation = """
+                Some APIs require optional features to be present. This check makes sure that \
+                calls to these APIs are surrounded by a check which enforces this.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
     }
 }
