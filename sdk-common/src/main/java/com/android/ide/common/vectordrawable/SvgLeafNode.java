@@ -219,7 +219,7 @@ class SvgLeafNode extends SvgNode {
             return; // No path to draw.
         }
         boolean emptyFill =
-                fillColor != null && ("none".equals(fillColor) || "#000000".equals(fillColor));
+                fillColor != null && ("none".equals(fillColor) || "#00000000".equals(fillColor));
         boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);
         if (emptyFill && emptyStroke) {
             return; // Nothing to draw.

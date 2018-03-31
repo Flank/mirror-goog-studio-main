@@ -451,6 +451,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_fill_type_no_rule");
     }
 
+    public void testSvgBlackFill() throws Exception {
+        checkSvgConversion("test_black_fill");
+    }
+
     public void testSvgDefsUseTransform() throws Exception {
         checkSvgConversion("test_defs_use_shape2");
     }
