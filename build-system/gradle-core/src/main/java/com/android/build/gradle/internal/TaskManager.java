@@ -3599,11 +3599,11 @@ public abstract class TaskManager {
                                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
                 .withPathSensitivity(PathSensitivity.RELATIVE)
                 .withPropertyName("dataBindingClassLogDir");
-        
+
         // the data binding artifact is created by the annotation processor, so we register this
         // task output (which also publishes it) with javac as the generating task.
         kaptTask.getOutputs()
-                .file(scope.getBundleArtifactFolderForDataBinding())
+                .files(scope.getBundleArtifactFolderForDataBinding())
                 .withPropertyName("dataBindingArtifactOutputDir");
         if (!artifacts.hasArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
             artifacts.appendArtifact(
