@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.resources.ResourceType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +29,18 @@ import java.util.Map;
  *
  */
 public class AttrResourceValue extends ResourceValue {
-
     @Nullable private Map<String, Integer> mValueMap;
 
     public AttrResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {
         super(reference, null, libraryName);
+    }
+
+    public AttrResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String libraryName) {
+        super(namespace, type, name, null, libraryName);
     }
 
     /**

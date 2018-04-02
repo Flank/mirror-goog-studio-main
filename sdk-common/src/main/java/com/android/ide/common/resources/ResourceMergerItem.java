@@ -271,14 +271,18 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 if (density != null) {
                     mResourceValue =
                             new DensityBasedResourceValue(
-                                    getReferenceToSelf(),
+                                    mNamespace,
+                                    mType,
+                                    getName(),
                                     source.getFile().getAbsolutePath(),
                                     density,
                                     mLibraryName);
                 } else {
                     mResourceValue =
                             new ResourceValue(
-                                    getReferenceToSelf(),
+                                    mNamespace,
+                                    mType,
+                                    getName(),
                                     source.getFile().getAbsolutePath(),
                                     mLibraryName);
                 }
@@ -383,17 +387,18 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 String parent = getAttributeValue(attributes, ATTR_PARENT);
                 value =
                         parseStyleValue(
-                                new StyleResourceValue(getReferenceToSelf(), parent, mLibraryName));
+                                new StyleResourceValue(
+                                        mNamespace, mType, getName(), parent, mLibraryName));
                 break;
             case DECLARE_STYLEABLE:
                 value =
                         parseDeclareStyleable(
                                 new DeclareStyleableResourceValue(
-                                        getReferenceToSelf(), null, mLibraryName));
+                                        mNamespace, mType, getName(), null, mLibraryName));
                 break;
             case ARRAY:
                 ArrayResourceValue arrayValue =
-                        new ArrayResourceValue(getReferenceToSelf(), mLibraryName) {
+                        new ArrayResourceValue(mNamespace, mType, getName(), mLibraryName) {
                             @Override
                             protected int getDefaultIndex() {
                                 // Allow the user to specify a specific element to use via tools:index
@@ -413,7 +418,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 break;
             case PLURALS:
                 PluralsResourceValue pluralsResourceValue =
-                        new PluralsResourceValue(getReferenceToSelf(), null, mLibraryName) {
+                        new PluralsResourceValue(mNamespace, mType, getName(), null, mLibraryName) {
                             @Override
                             public String getValue() {
                                 // Allow the user to specify tools:quantity.
@@ -431,7 +436,9 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 value = parsePluralsValue(pluralsResourceValue);
                 break;
             case ATTR:
-                value = parseAttrValue(new AttrResourceValue(getReferenceToSelf(), mLibraryName));
+                value =
+                        parseAttrValue(
+                                new AttrResourceValue(mNamespace, mType, getName(), mLibraryName));
                 break;
             case STRING:
                 value =
@@ -446,10 +453,15 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             case MENU:
             case MIPMAP:
             case TRANSITION:
-                value = parseFileName(new ResourceValue(getReferenceToSelf(), mLibraryName));
+                value =
+                        parseFileName(
+                                new ResourceValue(mNamespace, mType, getName(), mLibraryName));
                 break;
             default:
-                value = parseValue(new ResourceValue(getReferenceToSelf(), null, mLibraryName));
+                value =
+                        parseValue(
+                                new ResourceValue(
+                                        mNamespace, mType, getName(), null, mLibraryName));
                 break;
         }
 
@@ -458,7 +470,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private static ResourceNamespace.Resolver getNamespaceResolver(Node node) {
+    private static ResourceNamespace.Resolver getNamespaceResolver(@NonNull Node node) {
         // TODO(namespaces): precompute this?
         return new ResourceNamespace.Resolver() {
             @Nullable
@@ -543,7 +555,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                         try {
                             // Integer.decode/parseInt can't deal with hex value > 0x7FFFFFFF so we
                             // use Long.decode instead.
-                            attrValue.addValue(name, (int) (long) Long.decode(value));
+                            attrValue.addValue(name, Long.decode(value).intValue());
                         } catch (NumberFormatException e) {
                             // pass, we'll just ignore this value
                         }
@@ -611,9 +623,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                             parseAttrValue(
                                     child,
                                     new AttrResourceValue(
-                                            new ResourceReference(
-                                                    namespace, ResourceType.ATTR, name),
-                                            mLibraryName));
+                                            namespace, ResourceType.ATTR, name, mLibraryName));
                     attr.setNamespaceResolver(getNamespaceResolver(child));
                     declareStyleable.addValue(attr);
                 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
@@ -28,7 +27,6 @@ import java.util.Collection;
  * Represents an android style resource with a name and a list of children {@link ResourceValue}.
  */
 public final class StyleResourceValue extends ResourceValue {
-
     /**
      * Contents of the {@code parent} XML attribute. May be empty or null.
      *
@@ -45,11 +43,7 @@ public final class StyleResourceValue extends ResourceValue {
     /**
      * Creates a new {@link StyleResourceValue}.
      *
-     * <p>Note that names of styles have more meaning than other resources: if the parent attribute
-     * is not set, aapt looks for a dot in the style name and treats the string up to the last dot
-     * as the name of a parent style. So {@code <style name="Foo.Bar.Baz">} has an implicit parent
-     * called {@code Foo.Bar}. Setting the {@code parent} XML attribute disables this feature, even
-     * if it's set to an empty string. See {@code ResourceParser::ParseStyle} in aapt for details.
+     * @see #StyleResourceValue(ResourceNamespace, ResourceType, String, String, String)
      */
     public StyleResourceValue(
             @NonNull ResourceReference reference,
@@ -57,6 +51,26 @@ public final class StyleResourceValue extends ResourceValue {
             @Nullable String libraryName) {
         super(reference, null, libraryName);
         assert reference.getResourceType() == ResourceType.STYLE;
+        mParentStyle = parentStyle;
+    }
+
+    /**
+     * Creates a new {@link StyleResourceValue}.
+     *
+     * <p>Note that names of styles have more meaning than other resources: if the parent attribute
+     * is not set, aapt looks for a dot in the style name and treats the string up to the last dot
+     * as the name of a parent style. So {@code <style name="Foo.Bar.Baz">} has an implicit parent
+     * called {@code Foo.Bar}. Setting the {@code parent} XML attribute disables this feature, even
+     * if it's set to an empty string. See {@code ResourceParser::ParseStyle} in aapt for details.
+     */
+    public StyleResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String parentStyle,
+            @Nullable String libraryName) {
+        super(namespace, type, name, null, libraryName);
+        assert type == ResourceType.STYLE;
         mParentStyle = parentStyle;
     }
 
