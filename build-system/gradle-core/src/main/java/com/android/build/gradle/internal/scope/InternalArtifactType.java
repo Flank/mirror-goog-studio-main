@@ -87,6 +87,7 @@ public enum InternalArtifactType implements ArtifactType {
     DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
     INSTANT_RUN_MAIN_APK_RESOURCES,
     INSTANT_RUN_PACKAGED_RESOURCES,
+    INSTANT_RUN_SPLIT_APK_RESOURCES,
     // linked res for the unified bundle
     LINKED_RES_FOR_BUNDLE,
 

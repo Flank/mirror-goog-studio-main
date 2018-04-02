@@ -16,30 +16,40 @@
 
 package com.android.build.gradle.internal.transforms;
 
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
+import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +67,8 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
 
     private final WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
+    private final BuildableArtifact splitApkResources;
+
     public InstantRunSliceSplitApkBuilder(
             @NonNull Logger logger,
             @NonNull Project project,
@@ -72,6 +84,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull BuildableArtifact resources,
             @NonNull BuildableArtifact resourcesWithMainManifest,
             @NonNull BuildableArtifact apkList,
+            @NonNull BuildableArtifact splitApkResourceFiles,
             @NonNull ApkInfo mainApk) {
         super(
                 logger,
@@ -89,6 +102,16 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 resourcesWithMainManifest,
                 apkList,
                 mainApk);
+        this.splitApkResources = splitApkResourceFiles;
+    }
+
+    @NonNull
+    @Override
+    public Collection<SecondaryFile> getSecondaryFiles() {
+        ImmutableList.Builder<SecondaryFile> list = ImmutableList.builder();
+        list.addAll(super.getSecondaryFiles());
+        list.add(SecondaryFile.incremental(splitApkResources.get()));
+        return list.build();
     }
 
     @NonNull
@@ -193,11 +216,53 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
         splitsToBuild.forEach(
                 split -> {
                     try {
-                        executor.execute(() -> generateSplitApk(mainApk, split));
+                        executor.execute(
+                                () -> {
+                                    String uniqueName = split.encodeName();
+                                    final File alignedOutput =
+                                            new File(outputDirectory, uniqueName + ".apk");
+                                    Files.createParentDirs(alignedOutput);
+
+                                    File splitApkResources =
+                                            Iterators.getOnlyElement(
+                                                    this.splitApkResources.getFiles().iterator());
+                                    File splitApkResource = new File(splitApkResources, uniqueName);
+
+                                    File resPackageFile =
+                                            new File(splitApkResource, "resources_ap");
+
+                                    generateSplitApk(
+                                            uniqueName, resPackageFile, split, alignedOutput);
+
+                                    buildContext.addChangedFile(FileType.SPLIT, alignedOutput);
+
+                                    return alignedOutput;
+                                });
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
         executor.waitForTasksWithQuickFail(true /* cancelRemaining */);
+    }
+
+    void generateSplitApk(String uniqueName, File resPackageFile, DexFiles split, File outputFile)
+            throws TransformException, KeytoolException, IOException, PackagerException {
+
+        // packageCodeSplitApk uses a temporary directory for incremental runs. Since we don't
+        // do incremental builds here, make sure it gets an empty directory.
+        File tempDir = new File(supportDirectory, "package_" + uniqueName);
+        if (!tempDir.exists() && !tempDir.mkdirs()) {
+            throw new TransformException(
+                    "Cannot create temporary folder " + tempDir.getAbsolutePath());
+        }
+        FileUtils.cleanOutputDir(tempDir);
+
+        androidBuilder.packageCodeSplitApk(
+                resPackageFile,
+                split.getDexFiles(),
+                signingConf,
+                outputFile,
+                tempDir,
+                ApkCreatorFactories.fromProjectProperties(project, true));
     }
 }

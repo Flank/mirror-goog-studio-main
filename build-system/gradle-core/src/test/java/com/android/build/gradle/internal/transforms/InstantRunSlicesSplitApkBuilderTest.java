@@ -31,6 +31,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -43,6 +44,7 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -70,10 +72,12 @@ public class InstantRunSlicesSplitApkBuilderTest {
     @Mock AndroidBuilder androidBuilder;
     @Mock CoreSigningConfig coreSigningConfig;
     @Mock BuildableArtifact mainResources;
+    @Mock BuildableArtifact splitApkResources;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
     @Mock BuildableArtifact apkList;
+    @Mock DslScope dslScope;
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
@@ -92,6 +96,8 @@ public class InstantRunSlicesSplitApkBuilderTest {
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
         when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn("/path/to/zip-align");
+        when(splitApkResources.getFiles()).thenReturn(ImmutableSet.of(new File("resources")));
+
     }
 
     @Before
@@ -118,13 +124,16 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         mainResources,
                         mainResources,
                         apkList,
+                        splitApkResources,
                         apkInfo) {
+
                     @Override
-                    @NonNull
-                    protected File generateSplitApk(
-                            @NonNull ApkInfo apkInfo, @NonNull DexFiles dexFiles) {
-                        dexFilesList.add(dexFiles);
-                        return new File("/dev/null");
+                    void generateSplitApk(
+                            String uniqueName,
+                            File resPackageFile,
+                            DexFiles split,
+                            File outputFile) {
+                        dexFilesList.add(split);
                     }
                 };
     }
@@ -315,6 +324,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         .setTransformOutputProvider(transformOutputProvider)
                         .setIncremental(true)
                         .build();
+
 
         instantRunSliceSplitApkBuilder.transform(transformInvocation);
         assertThat(

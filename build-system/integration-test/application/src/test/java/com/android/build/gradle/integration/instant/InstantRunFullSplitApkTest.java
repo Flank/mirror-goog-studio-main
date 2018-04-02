@@ -92,8 +92,9 @@ public class InstantRunFullSplitApkTest {
         assertThat(main.file).hasName("project-armeabi-v7a-debug.apk");
         assertThat(
                         mProject.file(
-                                "build/intermediates/incremental/ir_slices/debug/slice_0"
-                                        + "/AndroidManifest.xml"))
+                                "build/intermediates/instant_run_split_apk_resources/debug/"
+                                        + "instantRunSplitApkResourcesDebug/out/"
+                                        + "slice_0/AndroidManifest.xml"))
                 .contains("android:versionCode=\"2001\"");
 
         // Run the second time as regression test for bug 62100695

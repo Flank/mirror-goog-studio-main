@@ -967,7 +967,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 && Sets.difference(
                                 directoryInput.getScopes(), TransformManager.SCOPE_IR_FOR_SLICING)
                         .isEmpty()) {
-            name = "slice_" + bucketId;
+            name = getSliceName(bucketId);
         } else {
             name = directoryInput.getName();
         }
@@ -976,6 +976,10 @@ public class DexArchiveBuilderTransform extends Transform {
                 ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
                 directoryInput.getScopes(),
                 Format.DIRECTORY);
+    }
+
+    public static String getSliceName(int bucketId) {
+        return "slice_" + bucketId;
     }
 
     /**

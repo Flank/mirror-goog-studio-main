@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
+import com.android.build.gradle.internal.tasks.InstantRunSplitApkResourcesBuilder;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -321,6 +322,8 @@ public class ApplicationTaskManager extends TaskManager {
         dependenciesApkBuilderTask.ifPresent(
                 task -> task.dependsOn(getValidateSigningTask(variantScope)));
 
+        taskFactory.create(new InstantRunSplitApkResourcesBuilder.ConfigAction(variantScope));
+
         // and now the transform that will create a split FULL_APK for each slice.
         InstantRunSliceSplitApkBuilder slicesApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
@@ -338,6 +341,8 @@ public class ApplicationTaskManager extends TaskManager {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
                         artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
                         artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
+                        artifacts.getFinalArtifactFiles(
+                                InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> transformTaskAndroidTask =

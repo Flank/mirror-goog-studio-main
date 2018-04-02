@@ -219,6 +219,11 @@ data class AaptPackageConfig(
             return this
         }
 
+        fun setAndroidJarPath(androidJarPath: String): Builder {
+            this.androidJarPath = androidJarPath
+            return this
+        }
+
         fun setResourceConfigs(resourceConfigs: Collection<String>): Builder {
             this.resourceConfigs = ImmutableSet.copyOf(resourceConfigs)
             return this
