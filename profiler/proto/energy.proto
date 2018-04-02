@@ -437,7 +437,7 @@ message LocationListener {
 }
 
 message LocationRequest {
-  // Piority of the location request. This is an abstraction of the accuracy and
+  // Priority of the location request. This is an abstraction of the accuracy and
   // power useage defined by two location APIs (criteria in LocationManager and
   // priority in FusedLocationProviderClient).
   enum Priority {
@@ -458,7 +458,7 @@ message LocationRequest {
   // Name of the location provider.
   // If set through LocationManager, it can be "gps", "network", "passive" or
   // empty.
-  // If set through FusedLocaitonProviderClient, it will be "fused".
+  // If set through FusedLocationProviderClient, it will be "fused".
   string provider = 1;
   // The desired interval of this request, in milliseconds.
   int64 interval_ms = 2;
