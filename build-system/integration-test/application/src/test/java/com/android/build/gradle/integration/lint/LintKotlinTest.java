@@ -16,18 +16,18 @@
 
 package com.android.build.gradle.integration.lint;
 
-
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Integration test for lint analyzing Kotlin code from Gradle.
+ * Integration test for lint analyzing Kotlin code from Gradle. Also verifies the lintFix target on
+ * the synthetic accessor warnings found in the Kotlin project.
  */
 public class LintKotlinTest {
 
@@ -37,13 +37,38 @@ public class LintKotlinTest {
 
     @Before
     public void setUp() throws Exception {
-        project.execute("clean", ":app:lintDebug");
+        @SuppressWarnings("ThrowableNotThrown")
+        Throwable exception =
+                project.executeExpectingFailure("clean", ":app:lintDebug", ":app:lintFix");
+        while (exception.getCause() != null && exception.getCause() != exception) {
+            exception = exception.getCause();
+        }
+        assertThat(exception.getMessage())
+                .contains(
+                        "Aborting build since sources were modified to apply quickfixes after compilation");
     }
 
     @Test
     public void checkFindNestedResult() {
         File lintReport = project.file("app/lint-report.xml");
-        assertThat(lintReport).contains("errorLine1=\"    public SampleFragment(String foo) { // Deliberate lint error\"");
+        assertThat(lintReport)
+                .contains(
+                        "errorLine1=\"    public SampleFragment(String foo) { // Deliberate lint error\"");
         assertThat(lintReport).contains("id=\"ValidFragment\"");
+
+        // Make sure quickfixes worked too
+        File source = project.file("app/src/main/kotlin/test/pkg/AccessTest2.kt");
+        // The original source has this:
+        //    private val field5 = arrayOfNulls<Inner>(100)
+        //    ...
+        //    private constructor()
+        //    ...
+        // After applying quickfixes, it contains this:
+        //    internal val field5 = arrayOfNulls<Inner>(100)
+        //    ...
+        //    internal constructor()
+        //    ...
+        assertThat(source).contains("internal val field5");
+        assertThat(source).contains("internal constructor()");
     }
 }

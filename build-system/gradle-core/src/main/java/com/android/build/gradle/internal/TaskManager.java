@@ -167,6 +167,7 @@ import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
+import com.android.build.gradle.tasks.LintFixTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
 import com.android.build.gradle.tasks.LintPerVariantTask;
 import com.android.build.gradle.tasks.MainApkListPersistence;
@@ -274,6 +275,7 @@ public abstract class TaskManager {
     public static final String CONNECTED_ANDROID_TEST = CONNECTED + VariantType.ANDROID_TEST_SUFFIX;
     public static final String ASSEMBLE_ANDROID_TEST = "assembleAndroidTest";
     public static final String LINT = "lint";
+    public static final String LINT_FIX = "lintFix";
     public static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
 
     @NonNull protected final Project project;
@@ -492,6 +494,7 @@ public abstract class TaskManager {
     public void createGlobalLintTask() {
         taskFactory.create(LINT, LintGlobalTask.class, task -> {});
         taskFactory.configure(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
+        taskFactory.create(LINT_FIX, LintFixTask.class, task -> {});
     }
 
     // this is run after all the variants are created.
@@ -504,9 +507,11 @@ public abstract class TaskManager {
             return;
         }
 
-        // configure the global lint task.
+        // configure the global lint tasks.
         new LintGlobalTask.GlobalConfigAction(globalScope, filteredVariants)
                 .execute((LintGlobalTask) taskFactory.findByName(LINT));
+        new LintFixTask.GlobalConfigAction(globalScope, filteredVariants)
+                .execute((LintFixTask) taskFactory.findByName(LINT_FIX));
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.

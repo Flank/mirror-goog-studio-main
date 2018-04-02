@@ -279,6 +279,11 @@ public class LintGradleExecution {
         flags.setWriteBaselineIfMissing(report && !fatalOnly);
 
         Pair<List<Warning>, LintBaseline> warnings;
+
+        if (allowFix & descriptor.getAutoFix()) { // Explicit fix Gradle target
+            flags.setAutoFix(true);
+        }
+
         try {
             warnings = client.run(registry);
         } catch (IOException e) {

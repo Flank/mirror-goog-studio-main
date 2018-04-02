@@ -64,7 +64,6 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     private boolean xmlReport = true;
     @Nullable
     private File xmlOutput;
-    private boolean applySuggestions;
 
     private Map<String,Integer> severities = Maps.newHashMap();
     private File baselineFile;
@@ -482,16 +481,6 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     @OutputFile
     public File getXmlOutput() {
         return xmlOutput;
-    }
-
-    @Override
-    @Input
-    public boolean getApplySuggestions() {
-        return applySuggestions;
-    }
-
-    public void setApplySuggestions(boolean applySuggestions) {
-        this.applySuggestions = applySuggestions;
     }
 
     /**
