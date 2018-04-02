@@ -83,7 +83,7 @@ public class AlarmTest {
         assertThat(setEvent.getEventId()).isGreaterThan(0);
         assertThat(setEvent.getIsTerminal()).isFalse();
         assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
-        assertThat(setEvent.getAlarmSet().getType()).isEqualTo(Type.RTC);
+        assertThat(setEvent.getAlarmSet().getType()).isEqualTo(Type.ELAPSED_REALTIME_WAKEUP);
         assertThat(setEvent.getAlarmSet().getTriggerMs()).isEqualTo(1000);
         assertThat(setEvent.getAlarmSet().getWindowMs()).isEqualTo(-1);
         assertThat(setEvent.getAlarmSet().getIntervalMs()).isEqualTo(0);
@@ -202,5 +202,14 @@ public class AlarmTest {
         assertThat(fireEvent.getAlarmFired().getFireActionCase())
                 .isEqualTo(FireActionCase.LISTENER);
         assertThat(fireEvent.getAlarmFired().getListener().getTag()).isEqualTo(tag);
+    }
+
+    @Test
+    public void testSetAndCancelNonWakeupAlarm() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setAndCancelNonWakeupAlarm");
+        assertThat(myAndroidDriver.waitForInput("NON-WAKEUP ALARM")).isTrue();
+
+        EnergyEventsResponse response = myStubWrapper.getAllEnergyEvents(mySession);
+        assertThat(response.getEventsCount()).isEqualTo(0);
     }
 }

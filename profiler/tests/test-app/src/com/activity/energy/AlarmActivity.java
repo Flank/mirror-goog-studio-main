@@ -34,7 +34,7 @@ public class AlarmActivity extends PerfdTestActivity {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
                         new Context("com.example", 1), 0, new Intent(AlarmActivity.class), 0, null);
-        alarmManager.set(0x1, 1000, pendingIntent);
+        alarmManager.set(0x2, 1000, pendingIntent);
         alarmManager.cancel(pendingIntent);
         System.out.println("INTENT ALARM CANCELLED");
     }
@@ -72,5 +72,17 @@ public class AlarmActivity extends PerfdTestActivity {
                 };
         alarmManager.set(0x0, 1000, "bar", listener, new Handler());
         alarmManager.fire();
+    }
+
+    public void setAndCancelNonWakeupAlarm() {
+        AlarmManager alarmManager = getAlarmManager();
+        OnAlarmListener listener =
+                new OnAlarmListener() {
+                    @Override
+                    public void onAlarm() {}
+                };
+        alarmManager.set(0x1, 1000, "foo", listener, null);
+        alarmManager.cancel(listener);
+        System.out.println("NON-WAKEUP ALARM");
     }
 }

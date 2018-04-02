@@ -92,6 +92,10 @@ public final class AlarmManagerWrapper {
             Handler targetHandler,
             WorkSource workSource,
             AlarmClockInfo alarmClock) {
+        if (type != AlarmManager.RTC_WAKEUP && type != AlarmManager.ELAPSED_REALTIME_WAKEUP) {
+            // Only instrument wakeup alarms.
+            return;
+        }
         if (operation != null) {
             if (!operationIdMap.containsKey(operation)) {
                 operationIdMap.put(
@@ -134,12 +138,14 @@ public final class AlarmManagerWrapper {
      * @param operation the operation parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
-        sendIntentAlarmCancelled(
-                operationIdMap.containsKey(operation) ? operationIdMap.get(operation).id : 0,
-                operation.getCreatorPackage(),
-                operation.getCreatorUid(),
-                // API cancel is one level down of user code.
-                StackTrace.getStackTrace(1));
+        if (operationIdMap.containsKey(operation)) {
+            sendIntentAlarmCancelled(
+                    operationIdMap.get(operation).id,
+                    operation.getCreatorPackage(),
+                    operation.getCreatorUid(),
+                    // API cancel is one level down of user code.
+                    StackTrace.getStackTrace(1));
+        }
     }
 
     /**
@@ -149,12 +155,11 @@ public final class AlarmManagerWrapper {
      * @param listener the listener parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, OnAlarmListener listener) {
-        ListenerParams params =
-                listenerMap.containsKey(listener)
-                        ? listenerMap.get(listener)
-                        : new ListenerParams(0, "");
-        // API cancel is one level down of user code.
-        sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace(1));
+        if (listenerMap.containsKey(listener)) {
+            ListenerParams params = listenerMap.get(listener);
+            // API cancel is one level down of user code.
+            sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace(1));
+        }
     }
 
     /**
