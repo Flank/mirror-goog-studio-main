@@ -183,6 +183,32 @@ public class InstrumentationResultParserTest extends TestCase {
         injectAndVerifyTestString(output.toString());
     }
 
+    /**
+     * Tests parsing the fatal error output of an instrumentation invoked with "-e log true". Since
+     * it is log only, it will not report directly the failure, but the stream should still be
+     * populated.
+     */
+    public void testParse_directFailure() {
+        mParser.setEnforceTimeStamp(false);
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_RESULT: stream=");
+        addLine(output, "Time: 0");
+        addLine(output, "There was 1 failure:");
+        addLine(output, "1) Fatal exception when running tests");
+        addLine(output, "java.lang.RuntimeException: it failed super fast.");
+        addLine(output, "at stackstack");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        Capture<String> capture = new Capture<>();
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunFailed(EasyMock.capture(capture));
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+        String error = capture.getValue();
+        assertTrue(error.contains("java.lang.RuntimeException: it failed super fast."));
+    }
+
     /** Tests parsing output for a single successful test execution. */
     public void testParse_singleTest() {
         StringBuilder output = createSuccessTest();

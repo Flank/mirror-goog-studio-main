@@ -673,8 +673,17 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                             listener.testRunFailed(
                                     String.format("%s: %s", INVALID_OUTPUT_ERR_MSG, mStreamError));
                         }
+                        mTestRunFailReported = true;
                     }
                     mTestTime = 0l;
+                }
+                // If we haven't reported a failure yet
+                if (!mTestRunFailReported
+                        && mStreamError != null
+                        && mStreamError.contains(FATAL_EXCEPTION_MSG)) {
+                    // If we reach here, this means the instrumentation fatally failed while being
+                    // in -e log true mode. Resulting in only the stream containing the exception.
+                    listener.testRunFailed(mStreamError.trim());
                 }
                 listener.testRunEnded(mTestTime, mInstrumentationResultBundle);
             }
