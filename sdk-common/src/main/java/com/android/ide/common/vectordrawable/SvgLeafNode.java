@@ -22,6 +22,7 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
 import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.XmlUtils;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
@@ -41,20 +42,21 @@ class SvgLeafNode extends SvgNode {
     private SvgGradientNode mFillGradientNode;
     private SvgGradientNode mStrokeGradientNode;
 
-    public SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @NonNull String nodeName) {
+    public SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
         super(svgTree, node, nodeName);
     }
 
     @Override
+    @NonNull
     public SvgLeafNode deepCopy() {
         SvgLeafNode newInstance = new SvgLeafNode(getTree(), getDocumentNode(), getName());
-        copyTo(newInstance);
+        newInstance.copyFrom(this);
         return newInstance;
     }
 
-    protected void copyTo(@NonNull SvgLeafNode newInstance) {
-        super.copyTo(newInstance);
-        newInstance.setPathData(getPathData());
+    protected void copyFrom(@NonNull SvgLeafNode from) {
+        super.copyFrom(from);
+        mPathData = from.mPathData;
     }
 
     /** Writes attributes of this node. */
@@ -149,7 +151,7 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public void dumpNode(String indent) {
+    public void dumpNode(@NonNull String indent) {
         logger.log(Level.FINE, indent + (mPathData != null ? mPathData : " null pathData ") +
                                (mName != null ? mName : " null name "));
     }
@@ -212,14 +214,13 @@ class SvgLeafNode extends SvgNode {
         }
 
         // First, decide whether or not we can skip this path, since it has no visible effect.
-        String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
-        String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
-        logger.log(Level.FINE, "fill color " + fillColor);
         if (mPathData == null || mPathData.isEmpty()) {
             return; // No path to draw.
         }
-        boolean emptyFill =
-                fillColor != null && ("none".equals(fillColor) || "#00000000".equals(fillColor));
+        String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
+        String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
+        logger.log(Level.FINE, "fill color " + fillColor);
+        boolean emptyFill = "none".equals(fillColor) || "#00000000".equals(fillColor);
         boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);
         if (emptyFill && emptyStroke) {
             return; // Nothing to draw.
@@ -229,8 +230,8 @@ class SvgLeafNode extends SvgNode {
         writer.write(indent);
         writer.write("<path");
         writer.write(System.lineSeparator());
-        if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR) && !mHasFillGradient) {
-            logger.log(Level.FINE, "ADDING FILL SVG_FILL_COLOR");
+        if (fillColor == null && !mHasFillGradient) {
+            logger.log(Level.FINE, "Adding default fill color");
             writer.write(indent);
             writer.write(CONTINUATION_INDENT);
             writer.write("android:fillColor=\"#FF000000\"");

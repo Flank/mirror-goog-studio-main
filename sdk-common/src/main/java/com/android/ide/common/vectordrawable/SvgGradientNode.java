@@ -20,6 +20,7 @@ import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.XmlUtils.formatFloatAttribute;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.vectordrawable.SvgTree.SvgLogLevel;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
@@ -84,14 +85,16 @@ public class SvgGradientNode extends SvgNode {
                     .put("y2", 3)
                     .build();
 
-    public SvgGradientNode(SvgTree svgTree, Node node, String nodeName) {
+    public SvgGradientNode(
+            @NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
         super(svgTree, node, nodeName);
     }
 
     @Override
+    @NonNull
     public SvgGradientNode deepCopy() {
         SvgGradientNode newInstance = new SvgGradientNode(getTree(), getDocumentNode(), getName());
-        copyTo(newInstance);
+        newInstance.copyFrom(this);
         return newInstance;
     }
 
@@ -107,27 +110,27 @@ public class SvgGradientNode extends SvgNode {
      * mGradientUsage based on the leaf node's attributes and reference to the gradient being
      * copied.
      */
-    protected void copyTo(SvgGradientNode newInstance) {
-        super.copyTo(newInstance);
-        for (GradientStop g : myGradientStops) {
-            newInstance.addGradientStop(g.getColor(), g.getOffset(), g.getOpacity());
+    protected void copyFrom(@NonNull SvgGradientNode from) {
+        super.copyFrom(from);
+        for (GradientStop g : from.myGradientStops) {
+            addGradientStop(g.getColor(), g.getOffset(), g.getOpacity());
         }
     }
 
     @Override
-    public void dumpNode(String indent) {
+    public void dumpNode(@NonNull String indent) {
         // Print the current node.
         logger.log(Level.FINE, indent + "current gradient is :" + getName());
     }
 
     @Override
-    public void transformIfNeeded(AffineTransform rootTransform) {
+    public void transformIfNeeded(@NonNull AffineTransform rootTransform) {
         AffineTransform finalTransform = new AffineTransform(rootTransform);
         finalTransform.concatenate(mStackedTransform);
     }
 
     @Override
-    public void flatten(AffineTransform transform) {
+    public void flatten(@NonNull AffineTransform transform) {
         mStackedTransform.setTransform(transform);
         mStackedTransform.concatenate(mLocalTransform);
     }
@@ -365,7 +368,8 @@ public class SvgGradientNode extends SvgNode {
         writer.write(System.lineSeparator());
     }
 
-    private void writeGradientStops(OutputStreamWriter writer, String indent) throws IOException {
+    private void writeGradientStops(@NonNull OutputStreamWriter writer, @NonNull String indent)
+            throws IOException {
         for (GradientStop g : myGradientStops) {
             String color = g.getColor();
             float opacity;
@@ -407,12 +411,12 @@ public class SvgGradientNode extends SvgNode {
         myGradientStops.add(stop);
     }
 
-    public void setGradientUsage(GradientUsage gradientUsage) {
+    public void setGradientUsage(@NonNull GradientUsage gradientUsage) {
         mGradientUsage = gradientUsage;
     }
 
-    public void setSvgLeafNode(SvgLeafNode mSvgLeafNode) {
-        this.mSvgLeafNode = mSvgLeafNode;
+    public void setSvgLeafNode(@NonNull SvgLeafNode svgLeafNode) {
+        mSvgLeafNode = svgLeafNode;
     }
 
     private void setBoundingBox() {

@@ -61,9 +61,9 @@ abstract class SvgNode {
     protected AffineTransform mStackedTransform = new AffineTransform();
 
     /**
-     * While parsing the translate() rotate() ..., update the <code>mLocalTransform</code>
+     * While parsing the translate() rotate() ..., update the {@code mLocalTransform}.
      */
-    public SvgNode(SvgTree svgTree, Node node, String name) {
+    public SvgNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String name) {
         mName = name;
         mSvgTree = svgTree;
         mDocumentNode = node;
@@ -77,7 +77,7 @@ abstract class SvgNode {
             String nodeValue = n.getNodeValue();
             // TODO: Handle style here. Refer to Svg2Vector::addStyleToPath().
             if (Svg2Vector.presentationMap.containsKey(nodeName)) {
-                fillPresentationAttributes(nodeName, nodeValue, logger);
+                fillPresentationAttributesInternal(nodeName, nodeValue);
             }
 
             if (TRANSFORM_TAG.equals(nodeName)) {
@@ -167,14 +167,17 @@ abstract class SvgNode {
         return results;
     }
 
+    @NonNull
     protected SvgTree getTree() {
         return mSvgTree;
     }
 
+    @Nullable
     public String getName() {
         return mName;
     }
 
+    @NonNull
     public Node getDocumentNode() {
         return mDocumentNode;
     }
@@ -182,7 +185,7 @@ abstract class SvgNode {
     /**
      * Dumps the current node's debug info.
      */
-    public abstract void dumpNode(String indent);
+    public abstract void dumpNode(@NonNull String indent);
 
      /**
      * Writes content of the node into the VectorDrawable's XML file.
@@ -202,9 +205,9 @@ abstract class SvgNode {
     /**
      * Transforms the current Node with the transformation matrix.
      */
-    public abstract void transformIfNeeded(AffineTransform finalTransform);
+    public abstract void transformIfNeeded(@NonNull AffineTransform finalTransform);
 
-    protected void fillPresentationAttributes(String name, String value, Logger logger) {
+    private void fillPresentationAttributesInternal(String name, String value) {
         if (name.equals("fill-rule")) {
             if (value.equals("nonzero")) {
                 value = "nonZero";
@@ -230,7 +233,7 @@ abstract class SvgNode {
     }
 
     protected void fillPresentationAttributes(String name, String value) {
-        fillPresentationAttributes(name, value, logger);
+        fillPresentationAttributesInternal(name, value);
     }
 
     public void fillEmptyAttributes(Map<String, String> parentAttributesMap) {
@@ -243,13 +246,13 @@ abstract class SvgNode {
         }
     }
 
-    public abstract void flatten(AffineTransform transform);
+    public abstract void flatten(@NonNull AffineTransform transform);
 
     /**
      * Returns a string containing the value of the given attribute. Returns an empty string if
      * the attribute does not exist.
      */
-    public String getAttributeValue(String attribute) {
+    public String getAttributeValue(@NonNull String attribute) {
         NamedNodeMap a = mDocumentNode.getAttributes();
         String value = "";
         int len = a.getLength();
@@ -264,10 +267,11 @@ abstract class SvgNode {
         return value;
     }
 
+    @NonNull
     public abstract SvgNode deepCopy();
 
-    protected void copyTo(SvgNode newInstance) {
-        newInstance.fillEmptyAttributes(mVdAttributesMap);
-        newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
+    protected void copyFrom(@NonNull SvgNode from) {
+        fillEmptyAttributes(from.mVdAttributesMap);
+        mLocalTransform = (AffineTransform) from.mLocalTransform.clone();
     }
 }

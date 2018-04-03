@@ -23,6 +23,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Node;
 
 /**
@@ -33,26 +34,26 @@ class SvgGroupNode extends SvgNode {
 
     protected final ArrayList<SvgNode> mChildren = new ArrayList<>();
 
-    public SvgGroupNode(SvgTree svgTree, Node docNode, String name) {
+    public SvgGroupNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
         super(svgTree, docNode, name);
     }
 
     @Override
+    @NonNull
     public SvgGroupNode deepCopy() {
         SvgGroupNode newInstance = new SvgGroupNode(getTree(), getDocumentNode(), getName());
-        copyTo(newInstance);
+        newInstance.copyFrom(this);
         return newInstance;
     }
 
-    protected void copyTo(SvgGroupNode newInstance) {
-        super.copyTo(newInstance);
-        for (SvgNode n : mChildren) {
-            SvgNode m = n.deepCopy();
-            newInstance.addChild(m);
+    protected void copyFrom(@NonNull SvgGroupNode from) {
+        super.copyFrom(from);
+        for (SvgNode child : from.mChildren) {
+            addChild(child.deepCopy());
         }
     }
 
-    public void addChild(SvgNode child) {
+    public void addChild(@NonNull SvgNode child) {
         // Pass the presentation map down to the children, who can override the attributes.
         mChildren.add(child);
         // The child has its own attributes map. But the parents can still fill some attributes
@@ -60,14 +61,12 @@ class SvgGroupNode extends SvgNode {
         child.fillEmptyAttributes(mVdAttributesMap);
     }
 
-    public void removeChild(SvgNode child) {
-        if (mChildren.contains(child)) {
-            mChildren.remove(child);
-        }
+    public void removeChild(@NonNull SvgNode child) {
+        mChildren.remove(child);
     }
 
     @Override
-    public void dumpNode(String indent) {
+    public void dumpNode(@NonNull String indent) {
         // Print the current group.
         logger.log(Level.FINE, indent + "current group is :" + getName());
 
@@ -103,14 +102,14 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void transformIfNeeded(AffineTransform rootTransform) {
+    public void transformIfNeeded(@NotNull AffineTransform rootTransform) {
         for (SvgNode p : mChildren) {
             p.transformIfNeeded(rootTransform);
         }
     }
 
     @Override
-    public void flatten(AffineTransform transform) {
+    public void flatten(@NotNull AffineTransform transform) {
         for (SvgNode n : mChildren) {
             mStackedTransform.setTransform(transform);
             mStackedTransform.concatenate(mLocalTransform);
@@ -127,7 +126,8 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void fillPresentationAttributes(String name, String value) {
+    public void fillPresentationAttributes(@NotNull String name, @NotNull String value) {
+        super.fillPresentationAttributes(name, value);
         for (SvgNode n : mChildren) {
             // Group presentation attribute should not override child.
             if (!n.mVdAttributesMap.containsKey(name)) {
