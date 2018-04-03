@@ -190,6 +190,17 @@ public class PackagingUtils {
     }
 
     @NonNull
+    public static List<String> getNoCompressGlobsForBundle(
+            @NonNull Collection<String> aaptOptionsNoCompress) {
+        return getAllNoCompressExtensions(
+                        aaptOptionsNoCompress, NativeLibrariesPackagingMode.COMPRESSED)
+                .stream()
+                .map(s -> "**" + s)
+                .sorted()
+                .collect(ImmutableList.toImmutableList());
+    }
+
+    @NonNull
     public static NativeLibrariesPackagingMode getNativeLibrariesLibrariesPackagingMode(
             @NonNull File manifest, @NonNull BooleanSupplier isInExecutionPhase) {
         checkState(manifest.exists());
