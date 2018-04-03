@@ -39,7 +39,9 @@ public final class MinimalSubProject extends AbstractAndroidTestApp implements A
                             "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                     + "    package=\""
                                     + packageName
-                                    + "\" />");
+                                    + "\">\n"
+                                    + "    <application />\n"
+                                    + "</manifest>");
             addFiles(manifest);
         }
         TestSourceFile build = new TestSourceFile("", "build.gradle", content);

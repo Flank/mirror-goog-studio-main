@@ -20,12 +20,16 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.apkzlib.zip.CompressionMethod
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.utils.FileUtils
 import com.google.common.truth.Expect
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.file.Files
 
 class NoCompressTest {
 
@@ -35,10 +39,14 @@ class NoCompressTest {
     var expect = Expect.create()
 
     @get:Rule
+    var temporaryFolder = TemporaryFolder()
+
+    @get:Rule
     var project = GradleTestProject.builder()
         .fromTestApp(
             MinimalSubProject.app("com.example.test")
                 .appendToBuild("android.aaptOptions.noCompress = ['.no']")
+                .appendToBuild("android.defaultConfig.versionCode 1")
                 .withFile(TestSourceFile("src/main/resources", "jres.yes", content))
                 .withFile(TestSourceFile("src/main/resources", "jres.no", content))
                 .withFile(TestSourceFile("src/main/assets", "a.yes", content))
@@ -53,6 +61,20 @@ class NoCompressTest {
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk).exists()
         verifyCompression(apk.file.toFile())
+    }
+
+    @Test
+    fun bundleNoCompressTest() {
+        project.executor().with(BooleanOption.ENABLE_DYNAMIC_APPS, true).run(":makeApkFromBundleForDebug")
+
+        val extracted = temporaryFolder.newFile("base-master.apk")
+
+        FileUtils.createZipFilesystem(project.getIntermediateFile("apks_from_bundle", "debug", "makeApkFromBundleForDebug", "bundle.apks").toPath()).use { apks ->
+            extracted.outputStream().buffered().use {
+                Files.copy(apks.getPath("base-master.apk"), it)
+            }
+        }
+        verifyCompression(extracted)
     }
 
     private fun verifyCompression(apk: File) {

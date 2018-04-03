@@ -23,14 +23,15 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.WorkerExecutorAdapter
+import com.android.builder.packaging.PackagingUtils
+import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -60,6 +61,10 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
     lateinit var featureZips: FileCollection
         private set
 
+    @get:Input
+    lateinit var aaptOptionsNoCompress: Collection<String>
+        private set
+
     @get:OutputFile
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var bundleFile: File
@@ -74,6 +79,7 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             Params(
                 baseModuleZip.singleFile(),
                 featureZips.files,
+                aaptOptionsNoCompress,
                 bundleFile
             )
         )
@@ -84,6 +90,7 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
     private data class Params(
         val baseModuleFile: File,
         val featureFiles: Set<File>,
+        val aaptOptionsNoCompress: Collection<String>,
         val bundleFile: File
     ) : Serializable
 
@@ -102,7 +109,17 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             builder.add(getBundlePath(params.baseModuleFile))
             params.featureFiles.forEach { builder.add(getBundlePath(it)) }
 
+            val noCompressGlobsForBundle =
+                PackagingUtils.getNoCompressGlobsForBundle(params.aaptOptionsNoCompress)
+            val bundleConfig =
+                Config.BundleConfig.newBuilder()
+                    .setCompression(
+                        Config.Compression.newBuilder()
+                            .addAllUncompressedGlob(noCompressGlobsForBundle))
+                    .build()
+
             val command = BuildBundleCommand.builder()
+                .setBundleConfig(bundleConfig)
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
 
@@ -136,6 +153,9 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
+
+            task.aaptOptionsNoCompress =
+                    scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
         }
     }
 }
