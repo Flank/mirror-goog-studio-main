@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import junit.framework.TestCase;
@@ -866,6 +867,16 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgGradientRadialCoordinatesNegativePercentage() throws Exception {
         checkSvgConversion("test_gradient_radial_coordinates_negative_percentage");
+    }
+
+    public void testLocaleWithDecimalComma() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.FRANCE);
+        try {
+            checkSvgConversion("test_locale_with_decimal_comma");
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     // XML files start here.

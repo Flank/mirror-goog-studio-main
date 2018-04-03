@@ -19,12 +19,13 @@ package com.android.ide.common.vectordrawable
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.NumberFormat
 
 /**
- * Returns a [DecimalFormat] of sufficient precision to use for formatting coordinate
+ * Returns a [NumberFormat] of sufficient precision to use for formatting coordinate
  * values given the maximum viewport dimension.
  */
-fun getCoordinateFormat(maxViewportSize: Float): DecimalFormat {
+fun getCoordinateFormat(maxViewportSize: Float): NumberFormat {
   val exponent = Math.floor(Math.log10(maxViewportSize.toDouble())).toInt()
   var fractionalDigits = 5 - exponent
   val formatBuilder = StringBuilder("#")

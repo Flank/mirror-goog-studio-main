@@ -22,10 +22,10 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
 import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 
 import com.android.annotations.NonNull;
+import com.android.utils.XmlUtils;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -118,7 +118,7 @@ class SvgLeafNode extends SvgNode {
      * @return the clamped opacity value, return 1 if not found.
      */
     private float getOpacityValueFromMap(String key) {
-        // Default opacity is 1
+        // Default opacity is 1.
         float result = 1;
         String opacity = mVdAttributesMap.get(key);
         if (opacity != null) {
@@ -135,14 +135,15 @@ class SvgLeafNode extends SvgNode {
      * Parses the SVG path's opacity attribute into fill and stroke.
      */
     private void parsePathOpacity() {
-        float opacityInFloat = getOpacityValueFromMap(SVG_OPACITY);
+        float opacity = getOpacityValueFromMap(SVG_OPACITY);
         // If opacity is 1, then nothing need to change.
-        if (opacityInFloat < 1) {
-            DecimalFormat df = new DecimalFormat("#.##");
+        if (opacity < 1) {
             float fillOpacity = getOpacityValueFromMap(SVG_FILL_OPACITY);
             float strokeOpacity = getOpacityValueFromMap(SVG_STROKE_OPACITY);
-            mVdAttributesMap.put(SVG_FILL_OPACITY, df.format(fillOpacity * opacityInFloat));
-            mVdAttributesMap.put(SVG_STROKE_OPACITY, df.format(strokeOpacity * opacityInFloat));
+            mVdAttributesMap.put(
+                    SVG_FILL_OPACITY, XmlUtils.formatFloatAttribute(fillOpacity * opacity));
+            mVdAttributesMap.put(
+                    SVG_STROKE_OPACITY, XmlUtils.formatFloatAttribute(strokeOpacity * opacity));
         }
         mVdAttributesMap.remove(SVG_OPACITY);
     }
@@ -183,8 +184,7 @@ class SvgLeafNode extends SvgNode {
         if (!finalTransform.isIdentity() || needsConvertRelativeMoveAfterClose) {
             VdPath.Node.transform(finalTransform, n);
         }
-        DecimalFormat decimalFormat = mSvgTree.getCoordinateFormat();
-        mPathData = VdPath.Node.nodeListToString(n, decimalFormat);
+        mPathData = VdPath.Node.nodeListToString(n, mSvgTree.getCoordinateFormat());
     }
 
     @Override

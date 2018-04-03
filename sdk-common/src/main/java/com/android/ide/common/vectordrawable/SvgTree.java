@@ -25,7 +25,7 @@ import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -346,11 +346,11 @@ class SvgTree {
     }
 
     /**
-     * Returns a {@link DecimalFormat] of sufficient precision to use for formatting coordinate
+     * Returns a {@link NumberFormat] of sufficient precision to use for formatting coordinate
      * values within the viewport.
      */
     @NonNull
-    public DecimalFormat getCoordinateFormat() {
+    public NumberFormat getCoordinateFormat() {
         float viewportWidth = getViewportWidth();
         float viewportHeight = getViewportHeight();
         return VdUtil.getCoordinateFormat(Math.max(viewportHeight, viewportWidth));
