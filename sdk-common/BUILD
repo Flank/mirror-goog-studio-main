@@ -46,7 +46,7 @@ iml_module(
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
         "//tools/idea/.idea/libraries:aia-manifest-proto-1.0-jarjar",
-        "//tools/idea/.idea/libraries:javax_inject_javax_inject",
+        "//tools/idea/.idea/libraries:javax-inject",
     ],
 )
 

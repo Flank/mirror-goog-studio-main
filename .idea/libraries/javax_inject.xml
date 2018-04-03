@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="javax.inject:javax.inject:1">
+  <library name="javax-inject">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar!/" />
     </CLASSES>
