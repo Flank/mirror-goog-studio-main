@@ -53,7 +53,7 @@ public class WrongCallDetector extends Detector implements SourceCodeScanner {
                             + "Ditto for onDraw, onLayout, etc.",
                     Category.CORRECTNESS,
                     6,
-                    Severity.FATAL,
+                    Severity.ERROR,
                     new Implementation(WrongCallDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link WrongCallDetector} */

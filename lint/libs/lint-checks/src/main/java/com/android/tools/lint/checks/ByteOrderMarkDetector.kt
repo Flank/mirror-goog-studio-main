@@ -53,7 +53,7 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
             moreInfo = "http://en.wikipedia.org/wiki/Byte_order_mark",
             category = Category.I18N,
             priority = 8,
-            severity = Severity.FATAL,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 ByteOrderMarkDetector::class.java,
                 // Applies to all text files
