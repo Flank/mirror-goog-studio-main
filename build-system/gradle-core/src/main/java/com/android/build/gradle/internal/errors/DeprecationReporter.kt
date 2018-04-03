@@ -30,15 +30,15 @@ interface DeprecationReporter {
     /** Enum for deprecated element removal target.  */
     enum class DeprecationTarget  constructor(val removalTime: String) {
         // deprecation of compile in favor of api/implementation
-        CONFIG_NAME("at the end of 2018"),
+        CONFIG_NAME("at the end of 2018."),
         // deprecation due to the move to the new DSL.
-        OLD_DSL("at the end of 2018"),
+        OLD_DSL("at the end of 2018."),
         // Obsolete Dex Options
-        DEX_OPTIONS("at the end of 2018"),
+        DEX_OPTIONS("at the end of 2018."),
         // "auto" in splits and resConfigs.
-        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018"),
+        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018."),
         // Deprecation of AAPT, replaced by AAPT2.
-        AAPT("at the end of 2018"),
+        AAPT("at the end of 2018."),
         // When legacy dexer will be removed and fully replaced by D8.
         LEGACY_DEXER("in AGP version 3.3")
     }
@@ -107,6 +107,7 @@ interface DeprecationReporter {
      *
      * @param oldDslElement the name of the deprecated element, with the name of the class
      * owning it.
+     * @param url optional url for more context.
      * @param deprecationTarget when the deprecated element is going to be removed. A line about the
      * timing is added to the message.
      */
@@ -122,12 +123,14 @@ interface DeprecationReporter {
      * instead
      * @param oldConfiguration the name of the deprecated [org.gradle.api.artifacts.Configuration]
      * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * @param url optional url for more context.
      * timing is added to the message.
      */
     fun reportDeprecatedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
-            deprecationTarget: DeprecationTarget)
+            deprecationTarget: DeprecationTarget,
+            url: String? = null)
 
     /**
      * Reports a deprecated option usage.
