@@ -53,6 +53,10 @@ class Daemon {
   // methods that return 'Service*'.
   void RegisterComponent(ProfilerComponent* component);
 
+  const std::vector<ProfilerComponent*>& GetComponents() const {
+    return components_;
+  }
+
   // Starts running server at |server_address| with the services that have been
   // registered.
   // Block waiting for the server to shutdown. Note that some other thread must

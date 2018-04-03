@@ -81,6 +81,11 @@ class CpuCache {
 
   // Returns the |ProfilingApp| of the app with the given |pid|.
   ProfilingApp* GetOngoingCapture(int32_t pid);
+
+  // Returns the |ProfilingApp| of the app with the given |app_pkg_name| and
+  // which was started by startup profiling.
+  ProfilingApp* GetOngoingStartupProfiling(const std::string& app_pkg_name);
+
   // Returns the captures from process of |pid| that overlap with the given
   // interval [|from|, |to|], both inclusive.
   std::vector<ProfilingApp> GetCaptures(int32_t pid, int64_t from, int64_t to);

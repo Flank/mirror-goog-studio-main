@@ -32,7 +32,7 @@ TEST(SessionsManager, CanBeginAndEndASession) {
   SessionsManager sessions(&clock);
 
   Session session;
-  bool result = sessions.BeginSession(-1, 1, &session);
+  bool result = sessions.BeginSession(-1, 1, &session, clock.GetCurrentTime());
   EXPECT_TRUE(result);
   clock.Elapse(10);
 
@@ -57,17 +57,17 @@ TEST(SessionsManager, CanBeginMultipleSessions_AllRemainActiveUntilEnded) {
   Session session2;
   Session session3;
 
-  sessions.BeginSession(-1, 1, &session1);
+  sessions.BeginSession(-1, 1, &session1, clock.GetCurrentTime());
   clock.Elapse(10);
   EXPECT_TRUE(SessionUtils::IsActive(session1));
   EXPECT_EQ(1, session1.pid());
 
-  sessions.BeginSession(-2, 2, &session2);
+  sessions.BeginSession(-2, 2, &session2, clock.GetCurrentTime());
   clock.Elapse(10);
   EXPECT_TRUE(SessionUtils::IsActive(session2));
   EXPECT_EQ(2, session2.pid());
 
-  sessions.BeginSession(-3, 3, &session3);
+  sessions.BeginSession(-3, 3, &session3, clock.GetCurrentTime());
   clock.Elapse(10);
   EXPECT_TRUE(SessionUtils::IsActive(session3));
   EXPECT_EQ(3, session3.pid());
@@ -112,7 +112,7 @@ TEST(SessionsManager, GetSessionWorks) {
   SessionsManager sessions(&clock);
 
   Session session;
-  sessions.BeginSession(-1, 1, &session);
+  sessions.BeginSession(-1, 1, &session, clock.GetCurrentTime());
   clock.Elapse(500);
   sessions.EndSession(session.session_id(), &session);
 
@@ -130,7 +130,7 @@ TEST(SessionsManager, GetActiveSessionByPid) {
   SessionsManager sessions(&clock);
 
   Session session;
-  sessions.BeginSession(-1, 1, &session);
+  sessions.BeginSession(-1, 1, &session, clock.GetCurrentTime());
   clock.Elapse(500);
 
   Session retrieved_session;
@@ -151,31 +151,31 @@ TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
   Session session;
 
   // Session from 1000 to 1500.
-  sessions.BeginSession(-10, 10, &session);
+  sessions.BeginSession(-10, 10, &session, clock.GetCurrentTime());
   clock.Elapse(500);
   sessions.EndSession(session.session_id(), &session);
 
   // Session from 2000 to 2500.
   clock.Elapse(500);
-  sessions.BeginSession(-20, 20, &session);
+  sessions.BeginSession(-20, 20, &session, clock.GetCurrentTime());
   clock.Elapse(500);
   sessions.EndSession(session.session_id(), &session);
 
   // Session from 3000 to 3500.
   clock.Elapse(500);
-  sessions.BeginSession(-30, 30, &session);
+  sessions.BeginSession(-30, 30, &session, clock.GetCurrentTime());
   clock.Elapse(500);
   sessions.EndSession(session.session_id(), &session);
 
   // Session from 4000 to 4500.
   clock.Elapse(500);
-  sessions.BeginSession(-40, 40, &session);
+  sessions.BeginSession(-40, 40, &session, clock.GetCurrentTime());
   clock.Elapse(500);
   sessions.EndSession(session.session_id(), &session);
 
   // Session from 5000 to present.
   clock.Elapse(500);
-  sessions.BeginSession(-50, 50, &session);
+  sessions.BeginSession(-50, 50, &session, clock.GetCurrentTime());
   EXPECT_TRUE(SessionUtils::IsActive(session));
 
   {
@@ -240,10 +240,10 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
   Session session3;
   Session session4;
 
-  sessions.BeginSession(-10, 10, &session1);
-  sessions.BeginSession(-20, 20, &session2);
-  sessions.BeginSession(-30, 30, &session3);
-  sessions.BeginSession(-40, 40, &session4);
+  sessions.BeginSession(-10, 10, &session1, clock.GetCurrentTime());
+  sessions.BeginSession(-20, 20, &session2, clock.GetCurrentTime());
+  sessions.BeginSession(-30, 30, &session3, clock.GetCurrentTime());
+  sessions.BeginSession(-40, 40, &session4, clock.GetCurrentTime());
 
   {
     // Sanity check
@@ -259,7 +259,7 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
 
   Session session2_copy;
   // Beginning an existent session returns false.
-  EXPECT_FALSE(sessions.BeginSession(-20, 20, &session2_copy));
+  EXPECT_FALSE(sessions.BeginSession(-20, 20, &session2_copy, clock.GetCurrentTime()));
   EXPECT_EQ(session2.pid(), session2_copy.pid());
 
   {
@@ -276,7 +276,7 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
 
   // Session #2 is already the most recent. Calling |BeginSession| again is a
   // no-op.
-  EXPECT_FALSE(sessions.BeginSession(-20, 20, &session2_copy));
+  EXPECT_FALSE(sessions.BeginSession(-20, 20, &session2_copy, clock.GetCurrentTime()));
   {
     auto session_range = sessions.GetSessions();
     EXPECT_EQ(20, session_range[0].pid());
@@ -290,12 +290,12 @@ TEST(SessionsManager,
   Session session;
 
   EXPECT_EQ(0, sessions.GetSessions().size());
-  sessions.BeginSession(-10, 10, &session);
+  sessions.BeginSession(-10, 10, &session, clock.GetCurrentTime());
   EXPECT_EQ(1, sessions.GetSessions().size());
-  sessions.BeginSession(-10, 10, &session);
+  sessions.BeginSession(-10, 10, &session, clock.GetCurrentTime());
   EXPECT_EQ(1, sessions.GetSessions().size());
   sessions.EndSession(session.session_id(), &session);
-  sessions.BeginSession(-10, 10, &session);
+  sessions.BeginSession(-10, 10, &session, clock.GetCurrentTime());
 
   {
     auto session_range = sessions.GetSessions();
@@ -317,7 +317,7 @@ TEST(SessionsManager, UniqueSessionIds) {
     for (int64_t start_time = 0; start_time < 10000; start_time += 100) {
       clock.SetCurrentTime(start_time);
       Session session;
-      bool result = sessions.BeginSession(device_id, start_time, &session);
+      bool result = sessions.BeginSession(device_id, start_time, &session, clock.GetCurrentTime());
       EXPECT_TRUE(result);
       EXPECT_EQ(session_ids.end(), session_ids.find(session.session_id()));
       session_ids.insert(session.session_id());

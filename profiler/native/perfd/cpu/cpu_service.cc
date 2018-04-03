@@ -365,6 +365,12 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
   return Status::OK;
 }
 
+int64_t CpuServiceImpl::GetEarliestDataTime(int32_t pid) {
+  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
+  ProfilingApp* app = cache_.GetOngoingStartupProfiling(app_pkg_name);
+  return app != nullptr ? app->start_timestamp : LLONG_MAX;
+}
+
 Status CpuServiceImpl::GetCpuCoreConfig(ServerContext* context,
                                         const CpuCoreConfigRequest* request,
                                         CpuCoreConfigResponse* response) {

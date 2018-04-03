@@ -102,6 +102,8 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::StartupProfilingRequest* request,
       profiler::proto::StartupProfilingResponse* response) override;
 
+  int64_t GetEarliestDataTime(int32_t pid);
+
   grpc::Status GetCpuCoreConfig(
       grpc::ServerContext* context,
       const profiler::proto::CpuCoreConfigRequest* request,

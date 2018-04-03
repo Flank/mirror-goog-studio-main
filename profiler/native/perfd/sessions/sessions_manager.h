@@ -38,7 +38,8 @@ class SessionsManager final {
   // Return true if a new session has been created, otherwise returns false
   // (session already exists). Note that in both cases, |session| is always
   // populated, either with the newly created or pre-existing session.
-  bool BeginSession(int64_t device_id, int32_t pid, proto::Session *session);
+  bool BeginSession(int64_t device_id, int32_t pid, proto::Session *session,
+                    int64_t start_timestamp);
   // Return true if a session has been ended, otherwise returns false (session
   // does not exist).
   bool EndSession(int64_t session_id, proto::Session *session);

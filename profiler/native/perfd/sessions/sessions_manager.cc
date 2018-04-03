@@ -28,7 +28,7 @@ using std::mutex;
 using std::vector;
 
 bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
-                                   Session* session) {
+                                   Session* session, int64_t start_timestamp) {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it =
       std::find_if(sessions_.begin(), sessions_.end(), [&](const Session& s) {
@@ -39,7 +39,7 @@ bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
   bool new_session = false;
   if (it == sessions_.end()) {
     sessions_.push_front(
-        SessionUtils::CreateSession(device_id, pid, clock_->GetCurrentTime()));
+        SessionUtils::CreateSession(device_id, pid, start_timestamp));
     new_session = true;
   } else {
     // If a matching session was already running, move it to the front of the
