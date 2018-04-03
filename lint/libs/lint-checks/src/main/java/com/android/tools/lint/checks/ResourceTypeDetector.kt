@@ -487,7 +487,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                 Category.CORRECTNESS,
                 7,
-                Severity.FATAL,
+                Severity.ERROR,
                 IMPLEMENTATION)
 
         /** Attempting to set a resource id as a color */

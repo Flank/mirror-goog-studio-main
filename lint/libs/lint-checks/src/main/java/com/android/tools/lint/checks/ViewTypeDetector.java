@@ -114,7 +114,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
             "the id in the Java code it ensures that it is treated as the same type.",
             Category.CORRECTNESS,
             9,
-            Severity.FATAL,
+            Severity.ERROR,
             new Implementation(
                     ViewTypeDetector.class,
                     EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES),
