@@ -51,6 +51,7 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -551,7 +552,13 @@ public final class GradleTestProject implements TestRule {
             throws IOException {
         try {
             if (java.nio.file.Files.exists(path)) {
-                MoreFiles.deleteRecursively(path);
+                // Allow insecure delete for Guava's recursive file deletion to work on Windows,
+                // otherwise this method will throw an exception on Windows. An insecure delete
+                // means that files outside the given directory can be deleted if an inside
+                // directory is replaced by a symbolic link to an outside directory while the
+                // deletion is taking place. However, that scenario is unlikely to occur in
+                // practice, so it's probably not a problem to allow it here.
+                MoreFiles.deleteRecursively(path, RecursiveDeleteOption.ALLOW_INSECURE);
             }
         } catch (IOException e) {
             // Theory: There seems to be a timing/visibility issue on Windows filesystem, such that
