@@ -17,7 +17,6 @@
 package com.android.support;
 
 import com.android.annotations.NonNull;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
@@ -40,7 +39,7 @@ public class AndroidxNameUtils {
     /** Mappings for class names that have been moved to a different package */
     static final ImmutableMap<String, String> ANDROIDX_FULL_CLASS_MAPPING;
 
-    private static final ImmutableBiMap<String, String> ANDROIDX_COORDINATES_MAPPING;
+    static final ImmutableMap<String, String> ANDROIDX_COORDINATES_MAPPING;
 
     /** Ordered list of old android support packages sorted by decreasing length */
     static final ImmutableList<String> ANDROIDX_OLD_PKGS;
@@ -48,7 +47,7 @@ public class AndroidxNameUtils {
     static {
         ImmutableMap.Builder<String, String> classTransformMap = ImmutableMap.builder();
         ImmutableMap.Builder<String, String> packageTransformMap = ImmutableMap.builder();
-        ImmutableBiMap.Builder<String, String> coordinatesTransformMap = ImmutableBiMap.builder();
+        ImmutableMap.Builder<String, String> coordinatesTransformMap = ImmutableMap.builder();
         try {
             AndroidxMigrationParserKt.parseMigrationFile(
                     new MigrationParserVisitor() {
@@ -120,16 +119,6 @@ public class AndroidxNameUtils {
     @NonNull
     public static String getCoordinateMapping(@NonNull String coordinate) {
         return ANDROIDX_COORDINATES_MAPPING.getOrDefault(coordinate, coordinate);
-    }
-
-    /**
-     * Returns the mapping of a given {@code androidx} coordinate into the old maven coordinates. If
-     * the coordinate does not belong to the support library, the method will just return the passed
-     * coordinate.
-     */
-    @NonNull
-    public static String getCoordinateReverseMapping(@NonNull String coordinate) {
-        return ANDROIDX_COORDINATES_MAPPING.inverse().getOrDefault(coordinate, coordinate);
     }
 
     @NonNull

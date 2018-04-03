@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.support;
+package com.android.support;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.support.AndroidxNameUtils;
-import java.util.Collection;
 import org.junit.Test;
 
 public class AndroidxNameUtilsTest {
@@ -35,11 +33,8 @@ public class AndroidxNameUtilsTest {
 
     @Test
     public void androidxMappings() {
-        Collection<String> androidxCoordinates = AndroidxNameUtils.getAllAndroidxCoordinates();
-
-        for (String androidxCoordinate : androidxCoordinates) {
-            String oldCoordinate =
-                    AndroidxNameUtils.getCoordinateReverseMapping(androidxCoordinate);
+        for (String oldCoordinate : AndroidxNameUtils.ANDROIDX_COORDINATES_MAPPING.keySet()) {
+            String androidxCoordinate = AndroidxNameUtils.getCoordinateMapping(oldCoordinate);
             assertNotEquals(oldCoordinate, androidxCoordinate);
             assertFalse(oldCoordinate.startsWith("androidx"));
             // It seems material won't be in the androidx package name
