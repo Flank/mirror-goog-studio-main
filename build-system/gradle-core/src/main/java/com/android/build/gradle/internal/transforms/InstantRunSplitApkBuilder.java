@@ -46,6 +46,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.utils.FileUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -270,6 +271,10 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         if (versionNameToUse == null) {
             versionNameToUse = String.valueOf(versionCode);
         }
+        StringBuilder escapedVersionNameToUse = new StringBuilder();
+        // We need to escape the version name in case the users want to use special characters, for
+        // example apostrophes.
+        XmlUtils.appendXmlAttributeValue(escapedVersionNameToUse, versionNameToUse);
 
         File androidManifest = new File(apkSupportDir, SdkConstants.ANDROID_MANIFEST_XML);
         try (BufferedWriter fileWriter =
@@ -284,9 +289,11 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                     .append("\"\n");
             if (versionCode != VersionQualifier.DEFAULT_VERSION) {
                 fileWriter
-                        .append("      android:versionCode=\"").append(String.valueOf(versionCode))
+                        .append("      android:versionCode=\"")
+                        .append(String.valueOf(versionCode))
                         .append("\"\n")
-                        .append("      android:versionName=\"").append(versionNameToUse)
+                        .append("      android:versionName=\"")
+                        .append(escapedVersionNameToUse)
                         .append("\"\n");
             }
             fileWriter.append("      split=\"lib_").append(splitName).append("_apk\">\n");
