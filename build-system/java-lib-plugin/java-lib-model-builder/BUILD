@@ -28,7 +28,7 @@ java_test(
     runtime_deps = [
         ":studio.java-lib-model-builder_testlib",
         "//tools/base/build-system:gradle-api",
-        "//tools/base/testutils:studio.testutils",
+        "//tools/base/testutils:studio.android.sdktools.testutils",
     ],
 )
 

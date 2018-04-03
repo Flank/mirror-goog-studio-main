@@ -8,8 +8,8 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />

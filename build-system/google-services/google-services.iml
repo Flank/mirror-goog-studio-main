@@ -11,6 +11,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" name="groovy" level="project" />
-    <orderEntry type="module" module-name="gradle" exported="" />
+    <orderEntry type="module" module-name="intellij.gradle" exported="" />
   </component>
 </module>

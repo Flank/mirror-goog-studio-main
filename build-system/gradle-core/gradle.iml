@@ -17,14 +17,14 @@
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="module" module-name="analytics-protos-base" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="module" module-name="gradle-api" />
     <orderEntry type="module" module-name="builder" />
-    <orderEntry type="module" module-name="repository" />
+    <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="module" module-name="db-compilerCommon" />
     <orderEntry type="module" module-name="sdklib-base" />
-    <orderEntry type="module" module-name="testutils" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="dx" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="lint-gradle-api" exported="" />

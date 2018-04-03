@@ -7,12 +7,16 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
     </content>
-    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="instant-run-common" />
-    <orderEntry type="module" module-name="ddmlib" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="module" module-name="android.sdktools.common" exported="" />
+    <orderEntry type="library" exported="" name="kxml2" level="project" />
+    <orderEntry type="library" scope="TEST" name="easymock-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.fakeadbserver" scope="TEST" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

@@ -8,14 +8,14 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" name="asm-tools" level="project" />
-    <orderEntry type="module" module-name="android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="module" module-name="sdklib-base" />
-    <orderEntry type="module" module-name="repository" />
+    <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="manifest-merger-base" />
     <orderEntry type="library" name="kxml2" level="project" />
     <orderEntry type="library" name="intellij-core" level="project" />

@@ -9,8 +9,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="module-library">
       <library>
@@ -41,11 +41,11 @@
     </orderEntry>
     <orderEntry type="library" name="dexlib2" level="project" />
     <orderEntry type="library" name="baksmali" level="project" />
-    <orderEntry type="module" module-name="testutils" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
-    <orderEntry type="module" module-name="binary-resources" />
-    <orderEntry type="module" module-name="sdk-common" />
+    <orderEntry type="module" module-name="android.sdktools.binary-resources" />
+    <orderEntry type="module" module-name="android.sdktools.sdk-common" />
   </component>
 </module>

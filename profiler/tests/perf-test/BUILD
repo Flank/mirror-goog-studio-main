@@ -35,7 +35,7 @@ java_binary(
     runtime_deps = ["//tools/base/profiler/transform"],
     deps = [
         "//tools/base/profiler/transform",
-        "//tools/base/testutils:studio.testutils_testlib",
+        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
     ],
 )
 
@@ -55,7 +55,7 @@ java_library(
         "//tools/base/profiler:netty-grpc-jar",
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
         "//tools/base/profiler/transform",
-        "//tools/base/testutils:studio.testutils_testlib",
+        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
         "//tools/idea/.idea/libraries:JUnit4",
         "//tools/idea/.idea/libraries:truth",
     ],

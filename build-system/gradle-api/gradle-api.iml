@@ -11,12 +11,12 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="module" module-name="builder-model" />
-    <orderEntry type="module" module-name="testutils" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
-    <orderEntry type="module" module-name="builder-test-api" />
+    <orderEntry type="module" module-name="android.sdktools.builder-test-api" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

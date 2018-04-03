@@ -14,22 +14,22 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-stdlib-jre8" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
-    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="library" name="JUnit4" level="project" />
-    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="module" module-name="builder-test-api" />
+    <orderEntry type="module" module-name="android.sdktools.builder-test-api" />
     <orderEntry type="module" module-name="builder" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
-    <orderEntry type="module" module-name="repository" />
+    <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="library" name="truth" level="project" />
-    <orderEntry type="module" module-name="testutils" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" />
     <orderEntry type="module" module-name="gradle-core" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="gradle" />
+    <orderEntry type="module" module-name="intellij.gradle" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="google-api-client" level="project" />
     <orderEntry type="library" name="dexlib2" level="project" />
@@ -37,7 +37,7 @@
     <orderEntry type="module" module-name="gradle-api" />
     <orderEntry type="module" module-name="apksig" />
     <orderEntry type="module" module-name="device-provider" />
-    <orderEntry type="module" module-name="instant-run-client" />
+    <orderEntry type="module" module-name="android.sdktools.instant-run-client" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
   </component>
 </module>
