@@ -504,6 +504,7 @@ class DeprecatedConfigurationAction(
         private val replacement: String,
         private val oldName: String,
         private val deprecationReporter: DeprecationReporter,
+        private val url: String? = null,
         private val deprecationTarget: DeprecationReporter.DeprecationTarget = DeprecationReporter.DeprecationTarget.CONFIG_NAME) : Action<Dependency> {
     private var warningPrintedAlready = false
 
@@ -511,7 +512,7 @@ class DeprecatedConfigurationAction(
         if (!warningPrintedAlready) {
             warningPrintedAlready = true
             deprecationReporter.reportDeprecatedConfiguration(
-                    replacement, oldName, deprecationTarget)
+                    replacement, oldName, deprecationTarget, url)
         }
     }
 }

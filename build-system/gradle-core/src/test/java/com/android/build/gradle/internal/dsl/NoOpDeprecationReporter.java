@@ -59,7 +59,8 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
     public void reportDeprecatedConfiguration(
             @NonNull String newConfiguration,
             @NonNull String oldConfiguration,
-            @NonNull DeprecationTarget deprecationTarget) {
+            @NonNull DeprecationTarget deprecationTarget,
+            @Nullable String url) {
         // do nothing
     }
 

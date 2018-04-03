@@ -76,12 +76,16 @@ class DeprecationReporterImpl(
     override fun reportDeprecatedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
-            deprecationTarget: DeprecationTarget) {
+            deprecationTarget: DeprecationTarget,
+            url: String?) {
+        val msg =
+            "Configuration '$oldConfiguration' is obsolete and has been replaced with '$newConfiguration'.\n" +
+                    "It will be removed ${deprecationTarget.removalTime}"
+
         issueReporter.reportIssue(
                 Type.DEPRECATED_CONFIGURATION,
                 Severity.WARNING,
-                "Configuration '$oldConfiguration' is obsolete and has been replaced with '$newConfiguration'.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}",
+                if (url != null) "$msg For more information see: $url" else msg,
                 "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")
     }
 
