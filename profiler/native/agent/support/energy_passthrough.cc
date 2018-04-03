@@ -96,6 +96,12 @@ constexpr char NETWORK_PROVIDER[] = "network";
 constexpr char PASSIVE_PROVIDER[] = "passive";
 constexpr char FUSED_PROVIDER[] = "fused";
 
+// Location priority
+constexpr int PRIORITY_HIGH_ACCURACY = 100;
+constexpr int PRIORITY_BALANCED_POWER_ACCURACY = 102;
+constexpr int PRIORITY_LOW_POWER = 104;
+constexpr int PRIORITY_NO_POWER = 105;
+
 const SteadyClock& GetClock() {
   static SteadyClock clock;
   return clock;
@@ -171,31 +177,47 @@ void PopulateJobParams(JNIEnv* env, JobParameters* params, jint job_id,
   params->set_transient_extras(transient_extras_str.get());
 }
 
-LocationRequest::Priority GetPriority(jint accuracy, jint power_req,
+LocationRequest::Priority GetPriority(jint priority, jint accuracy,
+                                      jint power_req,
                                       const std::string& provider) {
+  // First try to match priority
+  switch (priority) {
+    case PRIORITY_HIGH_ACCURACY:
+      return LocationRequest::HIGH_ACCURACY;
+    case PRIORITY_BALANCED_POWER_ACCURACY:
+      return LocationRequest::BALANCED;
+    case PRIORITY_LOW_POWER:
+      return LocationRequest::LOW_POWER;
+    case PRIORITY_NO_POWER:
+      return LocationRequest::NO_POWER;
+  }
+
+  // Then accuracy
   switch (accuracy) {
     case ACCURACY_FINE:
       return LocationRequest::HIGH_ACCURACY;
     case ACCURACY_COARSE:
       return LocationRequest::BALANCED;
-    default: {
-      switch (power_req) {
-        case POWER_LOW:
-          return LocationRequest::LOW_POWER;
-        case POWER_HIGH:
-          return LocationRequest::HIGH_ACCURACY;
-        default: {
-          if (strcmp(provider.c_str(), GPS_PROVIDER) == 0) {
-            return LocationRequest::HIGH_ACCURACY;
-          }
-          if (strcmp(provider.c_str(), PASSIVE_PROVIDER) == 0) {
-            return LocationRequest::NO_POWER;
-          }
-          return LocationRequest::LOW_POWER;
-        }
-      }
-    }
   }
+
+  // Then power requirement
+  switch (power_req) {
+    case POWER_LOW:
+      return LocationRequest::LOW_POWER;
+    case POWER_HIGH:
+      return LocationRequest::HIGH_ACCURACY;
+  }
+
+  // Lastly the location provider
+  if (strcmp(provider.c_str(), GPS_PROVIDER) == 0) {
+    return LocationRequest::HIGH_ACCURACY;
+  }
+  if (strcmp(provider.c_str(), PASSIVE_PROVIDER) == 0) {
+    return LocationRequest::NO_POWER;
+  }
+
+  // If nothing matches, use LOW_POWER (coarse accuracy).
+  return LocationRequest::LOW_POWER;
 }
 }  // namespace
 
@@ -527,7 +549,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationUpdateRequested(
     JNIEnv* env, jclass clazz, jint event_id, jstring provider, jlong interval,
-    jfloat min_distance, jint accuracy, jint power_req, jstring stack) {
+    jlong min_interval, jfloat min_distance, jint accuracy, jint power_req,
+    jint priority, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
@@ -537,9 +560,10 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   JStringWrapper provider_str(env, provider);
   request->set_provider(provider_str.get());
   request->set_interval_ms(interval);
-  request->set_fastest_interval_ms(interval);
+  request->set_fastest_interval_ms(min_interval);
   request->set_smallest_displacement_meters(min_distance);
-  request->set_priority(GetPriority(accuracy, power_req, provider_str.get()));
+  request->set_priority(
+      GetPriority(priority, accuracy, power_req, provider_str.get()));
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
 }
@@ -547,8 +571,8 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationUpdateRequested(
     JNIEnv* env, jclass clazz, jint event_id, jstring provider, jlong interval,
-    jfloat min_distance, jint accuracy, jint power_req, jstring creator_package,
-    jint creator_uid, jstring stack) {
+    jlong min_interval, jfloat min_distance, jint accuracy, jint power_req,
+    jint priority, jstring creator_package, jint creator_uid, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
@@ -564,7 +588,8 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   request->set_interval_ms(interval);
   request->set_fastest_interval_ms(interval);
   request->set_smallest_displacement_meters(min_distance);
-  request->set_priority(GetPriority(accuracy, power_req, provider_str.get()));
+  request->set_priority(
+      GetPriority(priority, accuracy, power_req, provider_str.get()));
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
 }

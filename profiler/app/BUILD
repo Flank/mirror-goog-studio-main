@@ -14,6 +14,8 @@ java_library(
     }),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        # TODO(b/77923182): Remove for pre-O instrumentation.
+        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
     ],
 )
 
@@ -25,6 +27,8 @@ java_library(
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        # TODO(b/77923456): Track version changes and revisit.
+        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
     ],
 )
 

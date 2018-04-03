@@ -120,9 +120,11 @@ public final class LocationManagerWrapper {
                     listenerIdMap.get(listener),
                     provider,
                     minTime,
+                    minTime,
                     minDistance,
                     accuracy,
                     powerReq,
+                    0,
                     // API requestLocationUpdate is one level down of user code.
                     StackTrace.getStackTrace(1));
         } else if (intent != null) {
@@ -133,9 +135,11 @@ public final class LocationManagerWrapper {
                     intentIdMap.get(intent),
                     provider,
                     minTime,
+                    minTime,
                     minDistance,
                     accuracy,
                     powerReq,
+                    0,
                     intent.getCreatorPackage(),
                     intent.getCreatorUid(),
                     // API requestLocationUpdate is one level down of user code.
@@ -244,29 +248,33 @@ public final class LocationManagerWrapper {
     }
 
     // Native functions to send location events to perfd.
-    private static native void sendListenerLocationUpdateRequested(
+    public static native void sendListenerLocationUpdateRequested(
             int eventId,
             String provider,
-            long minTime,
+            long interval,
+            long minInterval,
             float minDistance,
             int accuracy,
             int powerReq,
+            int priority,
             String stack);
 
-    private static native void sendIntentLocationUpdateRequested(
+    public static native void sendIntentLocationUpdateRequested(
             int eventId,
             String provider,
-            long minTime,
+            long interval,
+            long minInterval,
             float minDistance,
             int accuracy,
             int powerReq,
+            int priority,
             String creatorPackage,
             int creatorUid,
             String stack);
 
-    private static native void sendListenerLocationUpdateRemoved(int eventId, String stack);
+    public static native void sendListenerLocationUpdateRemoved(int eventId, String stack);
 
-    private static native void sendIntentLocationUpdateRemoved(
+    public static native void sendIntentLocationUpdateRemoved(
             int eventId, String creatorPackage, int creatorUid, String stack);
 
     private static native void sendListenerLocationChanged(

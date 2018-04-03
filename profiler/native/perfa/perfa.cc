@@ -89,7 +89,10 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
                   "Landroid/location/LocationManager$ListenerTransport;") ==
                0 ||
            strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0));
+           strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 ||
+           strcmp(sig_mutf8,
+                  "Lcom/google/android/gms/location/"
+                  "FusedLocationProviderClient;") == 0));
 }
 
 // ClassPrepare event callback to invoke transformation of selected
@@ -505,6 +508,57 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                          "(Landroid/app/ActivityThread$ReceiverData;)V"))) {
       Log::E("Error instrumenting BroadcastReceiver.onReceive");
     }
+  } else if (strcmp(name,
+                    "com/google/android/gms/location/"
+                    "FusedLocationProviderClient") == 0) {
+    slicer::MethodInstrumenter mi_req(dex_ir);
+    mi_req.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
+                     "FusedLocationProviderClientWrapper;",
+                     "wrapRequestLocationUpdates"),
+        true);
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(Lcom/google/android/gms/location/LocationRequest;"
+            "Lcom/google/android/gms/location/LocationCallback;"
+            "Landroid/os/Looper;)Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.requestLocationUpdates("
+          "LocationCallback)");
+    }
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(Lcom/google/android/gms/location/LocationRequest;Landroid/app/"
+            "PendingIntent;)Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.requestLocationUpdates(PendingIntent)");
+    }
+
+    slicer::MethodInstrumenter mi_rmv(dex_ir);
+    mi_rmv.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
+                     "FusedLocationProviderClientWrapper;",
+                     "wrapRemoveLocationUpdates"),
+        true);
+    if (!mi_rmv.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "removeLocationUpdates",
+                         "(Lcom/google/android/gms/location/LocationCallback;)"
+                         "Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.removeLocationUpdates("
+          "LocationCallback)");
+    }
+    if (!mi_rmv.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "removeLocationUpdates",
+                         "(Landroid/app/PendingIntent;)"
+                         "Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.removeLocationUpdates(PendingIntent)");
+    }
   } else {
     Log::V("No transformation applied for class: %s", name);
     return;
@@ -594,11 +648,11 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationUpdateRequested",
-        "(ILjava/lang/String;JFIILjava/lang/String;)V");
+        "(ILjava/lang/String;JJFIIILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendIntentLocationUpdateRequested",
-        "(ILjava/lang/String;JFIILjava/lang/String;ILjava/lang/String;)V");
+        "(ILjava/lang/String;JJFIIILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationUpdateRemoved", "(ILjava/lang/String;)V");
