@@ -102,7 +102,7 @@ public class MergeResourceWriterWithCompilerTest {
 
         ResourceMergerItem f1Item =
                 new ResourceMergerItem("f1.txt", null, ResourceType.RAW, null, null);
-        ResourceFile f1File = new ResourceFile(f1, f1Item, "", new FolderConfiguration());
+        ResourceFile f1File = new ResourceFile(f1, f1Item, new FolderConfiguration());
         f1Item.setSource(f1File);
 
         File f2 = new File(rawRes, "f2.xml");
@@ -110,7 +110,7 @@ public class MergeResourceWriterWithCompilerTest {
 
         ResourceMergerItem f2Item =
                 new ResourceMergerItem("f2.xml", null, ResourceType.RAW, null, null);
-        ResourceFile f2File = new ResourceFile(f2, f2Item, "", new FolderConfiguration());
+        ResourceFile f2File = new ResourceFile(f2, f2Item, new FolderConfiguration());
         f2Item.setSource(f2File);
 
         mResourceItems = new HashMap<>();

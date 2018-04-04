@@ -150,7 +150,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
 
             // create a fake resource file to allow calling ResourceMergerItem.getKey()
             //noinspection ResultOfObjectAllocationIgnored
-            new ResourceFile(valuesXml, sResources, "", new FolderConfiguration());
+            new ResourceFile(valuesXml, sResources, new FolderConfiguration());
         }
 
         return sResources;

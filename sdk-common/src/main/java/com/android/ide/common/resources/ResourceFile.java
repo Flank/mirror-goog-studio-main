@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
@@ -37,11 +36,8 @@ import org.w3c.dom.Node;
  * FileType#GENERATED_FILES}).
  */
 public class ResourceFile extends DataFile<ResourceMergerItem> {
-
     static final String ATTR_QUALIFIER = "qualifiers";
 
-    // TODO(b/76144726): Stop storing both the string and configuration.
-    private String mQualifiers;
     private FolderConfiguration mFolderConfiguration;
 
     /**
@@ -53,16 +49,13 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
      *
      * @param file the File
      * @param item the resource item
-     * @param qualifiers the qualifiers.
      * @param folderConfiguration the folder configuration
      */
     public ResourceFile(
             @NonNull File file,
             @NonNull ResourceMergerItem item,
-            @NonNull String qualifiers,
             @NonNull FolderConfiguration folderConfiguration) {
         super(file, FileType.SINGLE_FILE);
-        mQualifiers = qualifiers;
         mFolderConfiguration = folderConfiguration;
         init(item);
     }
@@ -76,25 +69,21 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
      *
      * @param file the File
      * @param items the resource items
-     * @param qualifiers the qualifiers.
      * @param folderConfiguration the folder configuration
      */
     public ResourceFile(
             @NonNull File file,
             @NonNull List<ResourceMergerItem> items,
-            @NonNull String qualifiers,
             @NonNull FolderConfiguration folderConfiguration) {
-        this(file, items, qualifiers, folderConfiguration, FileType.XML_VALUES);
+        this(file, items, folderConfiguration, FileType.XML_VALUES);
     }
 
     private ResourceFile(
             @NonNull File file,
             @NonNull List<ResourceMergerItem> items,
-            @NonNull String qualifiers,
             @NonNull FolderConfiguration folderConfiguration,
             @NonNull FileType fileType) {
         super(file, fileType);
-        mQualifiers = qualifiers;
         mFolderConfiguration = folderConfiguration;
         init(items);
     }
@@ -102,10 +91,9 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
     public static ResourceFile generatedFiles(
             @NonNull File file,
             @NonNull List<ResourceMergerItem> items,
-            @NonNull String qualifiers,
             @NonNull FolderConfiguration folderConfiguration) {
         // TODO: Replace other constructors with named methods.
-        return new ResourceFile(file, items, qualifiers, folderConfiguration, FileType.GENERATED_FILES);
+        return new ResourceFile(file, items, folderConfiguration, FileType.GENERATED_FILES);
     }
 
     /**
@@ -120,18 +108,16 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
             @NonNull File file, @NonNull ResourceMergerItem item, @NonNull String qualifiers) {
         FolderConfiguration folderConfiguration = FolderConfiguration.getConfigForQualifierString(qualifiers);
         assert folderConfiguration != null;
-        return new ResourceFile(file, item, qualifiers, folderConfiguration);
+        return new ResourceFile(file, item, folderConfiguration);
     }
-
 
     @NonNull
     public String getQualifiers() {
-        return mQualifiers;
+        return mFolderConfiguration.getQualifierString();
     }
 
     // Used in Studio
     public void setQualifiers(@NonNull String qualifiers) {
-        mQualifiers = qualifiers;
         mFolderConfiguration = FolderConfiguration.getConfigForQualifierString(qualifiers);
     }
 
@@ -142,8 +128,7 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
 
     @Override
     void addExtraAttributes(Document document, Node node, String namespaceUri) {
-        NodeUtils.addAttribute(document, node, namespaceUri, ATTR_QUALIFIER,
-                getQualifiers());
+        NodeUtils.addAttribute(document, node, namespaceUri, ATTR_QUALIFIER, getQualifiers());
 
         if (getType() == FileType.GENERATED_FILES) {
             NodeUtils.addAttribute(document, node, namespaceUri, SdkConstants.ATTR_PREPROCESSING, "true");
@@ -154,7 +139,6 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
     public String toString() {
         return MoreObjects.toStringHelper(getClass())
                 .add("mFile", mFile)
-                .add("mQualifiers", mQualifiers)
                 .toString();
     }
 }
