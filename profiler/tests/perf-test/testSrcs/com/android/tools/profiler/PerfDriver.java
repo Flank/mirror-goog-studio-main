@@ -48,10 +48,12 @@ public class PerfDriver {
     private DeviceProperties myPropertiesFile;
 
     public PerfDriver(boolean isOPlusDevice) {
-        buildAndSaveConfig();
         if (isOPlusDevice) {
-            myPropertiesFile = new DeviceProperties("O+", "26", "26");
+            // TODO(b/77586395): revert to 26 when fixed.
+            buildAndSaveConfig(27);
+            myPropertiesFile = new DeviceProperties("O+", "27", "27");
         } else {
+            buildAndSaveConfig(24);
             myPropertiesFile = new DeviceProperties("Pre-O", "24", "24");
         }
         myPropertiesFile.writeFile();
@@ -167,7 +169,7 @@ public class PerfDriver {
      * Helper function to create and serialize AgentConfig for test to use, this is specific to each
      * test.
      */
-    private void buildAndSaveConfig() {
+    private void buildAndSaveConfig(int sdkLevel) {
         try {
             myPort = getAvailablePort();
             myConfigFile = File.createTempFile("agent_config", ".data");
@@ -190,6 +192,7 @@ public class PerfDriver {
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
                             .setProfilerNetworkRequestPayload(true)
                             .setEnergyProfilerEnabled(true)
+                            .setAndroidFeatureLevel(sdkLevel)
                             .build();
             config.writeTo(outputStream);
             outputStream.flush();

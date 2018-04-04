@@ -54,8 +54,7 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_env_;
 };
 
-bool energy_profiler_enabled = false;
-bool cpu_api_tracing_enabled = false;
+proto::AgentConfig agent_config;
 
 // Retrieve the app's data directory path
 static std::string GetAppDataPath() {
@@ -70,9 +69,11 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
-          cpu_api_tracing_enabled) ||
-         (energy_profiler_enabled &&
-          (strcmp(sig_mutf8, "Landroid/app/Activity;") == 0 ||
+          agent_config.cpu_api_tracing_enabled()) ||
+         (agent_config.energy_profiler_enabled() &&
+          ((strcmp(sig_mutf8, "Landroid/app/Activity;") == 0 &&
+            // TODO(b/77586395): re-enable for API 26.
+            agent_config.android_feature_level() >= 27) ||
            strcmp(sig_mutf8, "Landroid/app/ActivityThread;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
@@ -745,11 +746,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   // TODO: Update options to support more than one argument if needed.
   profiler::Config config(options);
-  auto agent_config = config.GetAgentConfig();
+  agent_config = config.GetAgentConfig();
   Agent::Instance(&config);
-
-  energy_profiler_enabled = agent_config.energy_profiler_enabled();
-  cpu_api_tracing_enabled = agent_config.cpu_api_tracing_enabled();
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env, &agent_config);
@@ -799,7 +797,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  Agent::Instance().AddPerfdConnectedCallback([agent_config, vm] {
+  Agent::Instance().AddPerfdConnectedCallback([vm] {
     // MemoryTackingEnv needs a connection to perfd, which may not be always the
     // case. If we don't postpone until there is a connection, MemoryTackingEnv
     // is going to busy-wait, so not allowing the application to finish
