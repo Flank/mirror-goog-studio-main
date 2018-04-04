@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -228,18 +229,22 @@ public abstract class BaseVariantData implements TaskContainer {
         if (layoutXmlProcessor == null) {
             File resourceBlameLogDir = scope.getResourceBlameLogDir();
             final MergingLog mergingLog = new MergingLog(resourceBlameLogDir);
-            layoutXmlProcessor = new LayoutXmlProcessor(
-                    getVariantConfiguration().getOriginalApplicationId(),
-                    taskManager.getDataBindingBuilder()
-                            .createJavaFileWriter(scope.getClassOutputForDataBinding()),
-                    file -> {
-                        SourceFile input = new SourceFile(file);
-                        SourceFile original = mergingLog.find(input);
-                        // merged log api returns the file back if original cannot be found.
-                        // it is not what we want so we alter the response.
-                        return original == input ? null : original.getSourceFile();
-                    }
-            );
+            layoutXmlProcessor =
+                    new LayoutXmlProcessor(
+                            getVariantConfiguration().getOriginalApplicationId(),
+                            taskManager
+                                    .getDataBindingBuilder()
+                                    .createJavaFileWriter(scope.getClassOutputForDataBinding()),
+                            file -> {
+                                SourceFile input = new SourceFile(file);
+                                SourceFile original = mergingLog.find(input);
+                                // merged log api returns the file back if original cannot be found.
+                                // it is not what we want so we alter the response.
+                                return original == input ? null : original.getSourceFile();
+                            },
+                            scope.getGlobalScope()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.USE_ANDROID_X));
         }
         return layoutXmlProcessor;
     }

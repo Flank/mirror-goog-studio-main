@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.databinding;
+package com.android.build.gradle.integration.databinding
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -29,27 +29,39 @@ import org.junit.runners.Parameterized
 
 /** Assemble tests for kotlin. */
 @RunWith(FilterableParameterized::class)
-class DataBindingKotlinAppTest(private val useV2 : Boolean) {
-    @Rule @JvmField
+class DataBindingKotlinAppTest(private val useV2: Boolean, useAndroidX: Boolean) {
+    @Rule
+    @JvmField
     val project =
-            GradleTestProject.builder()
-                    .fromTestProject("databindingAndKotlin")
-                    .withDependencyChecker(false) // breaks w/ kapt
-                    .addGradleProperties(
-                            BooleanOption.ENABLE_DATA_BINDING_V2.propertyName
-                                    + "="
-                                    + useV2)
-                    .create()
+        GradleTestProject.builder()
+            .fromTestProject("databindingAndKotlin")
+            .withDependencyChecker(false) // breaks w/ kapt
+            .addGradleProperties(
+                BooleanOption.ENABLE_DATA_BINDING_V2.propertyName
+                        + "="
+                        + useV2
+            )
+            .addGradleProperties(
+                BooleanOption.USE_ANDROID_X.propertyName
+                        + "="
+                        + useAndroidX
+            )
+            .create()
 
     companion object {
-        @Parameterized.Parameters(name = "useV2_{0}")
+        @Parameterized.Parameters(name = "useV2_{0}_useAndroidX_{1}")
         @JvmStatic
-        fun params() = listOf(true, false)
+        fun params() = listOf(
+            arrayOf(true, false),
+            arrayOf(true, true),
+            arrayOf(false, false),
+            arrayOf(false, true)
+        )
     }
 
     @Test
     fun compile() {
-        project.executor().run("app:assembleDebug");
+        project.executor().run("app:assembleDebug")
         val appBindingClass = "Lcom/example/android/kotlin/databinding/ActivityLayoutBinding;"
         val libBindingClass = "Lcom/example/android/kotlin/lib/databinding/LibActivityLayoutBinding;"
         val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
@@ -58,10 +70,10 @@ class DataBindingKotlinAppTest(private val useV2 : Boolean) {
         if (useV2) {
             // implementations should be in as well.
             assertThat(apk).containsClass(
-                    appBindingClass.replace(";", "Impl;")
+                appBindingClass.replace(";", "Impl;")
             )
             assertThat(apk).containsClass(
-                    libBindingClass.replace(";", "Impl;")
+                libBindingClass.replace(";", "Impl;")
             )
         }
     }
@@ -76,6 +88,6 @@ class DataBindingKotlinAppTest(private val useV2 : Boolean) {
         TestFileUtils.appendToFile(project.getSubproject(":app").buildFile, kapt)
         val result = project.executor().expectFailure().run("app:assembleDebug")
         assertThat(result.stderr)
-                .contains("Data Binding annotation processor version needs to match the")
+            .contains("Data Binding annotation processor version needs to match the")
     }
 }

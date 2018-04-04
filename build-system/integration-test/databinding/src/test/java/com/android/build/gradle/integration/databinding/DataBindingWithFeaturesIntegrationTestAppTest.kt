@@ -17,31 +17,42 @@
 package com.android.build.gradle.integration.databinding
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.options.BooleanOption
+import com.android.sdklib.SdkVersionInfo
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.junit.runners.Parameterized
 import java.io.IOException
 
 /**
  * This is a smoke test that ensures that the integration tests of DataBinding with Features
  * compiles fine. The actual test is run as a post-submit step.
  */
-@RunWith(JUnit4::class)
-class DataBindingWithFeaturesIntegrationTestAppTest {
+@RunWith(FilterableParameterized::class)
+class DataBindingWithFeaturesIntegrationTestAppTest(useAndroidX: Boolean) {
     @Rule
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
-        .fromDataBindingIntegrationTest("InstantApp")
+        .fromDataBindingIntegrationTest("InstantApp", useAndroidX)
         .addGradleProperties(
-                BooleanOption.ENABLE_DATA_BINDING_V2.propertyName + "=true"
+            BooleanOption.ENABLE_DATA_BINDING_V2.propertyName + "=true"
         )
         .addGradleProperties(
-                BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.propertyName
-                        + "=true"
+            BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.propertyName
+                    + "=true"
         )
+        .addGradleProperties(
+            BooleanOption.USE_ANDROID_X.propertyName
+                    + "=" + useAndroidX
+        ).also {
+            if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
+                it.withCompileSdkVersion("\"android-P\"")
+            }
+        }
         .create()
 
     @Before
@@ -57,5 +68,11 @@ class DataBindingWithFeaturesIntegrationTestAppTest {
     @Test
     fun app() {
         project.execute(":app:assemble")
+    }
+
+    companion object {
+        @Parameterized.Parameters(name = "useAndroidX_{0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
     }
 }

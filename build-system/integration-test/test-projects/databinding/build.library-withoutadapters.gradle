@@ -30,5 +30,12 @@ android {
 }
 
 dependencies {
-    compile "com.android.databinding:library:${rootProject.buildVersion}"
+    def useAndroidX = project.findProperty("android.useAndroidX")
+    if (useAndroidX == null) {
+        throw new IllegalArgumentException("must provide androidX property")
+    } else if (useAndroidX == "true") {
+        implementation "androidx.databinding:library:${rootProject.buildVersion}"
+    } else {
+        implementation "com.android.databinding:library:${rootProject.buildVersion}"
+    }
 }

@@ -40,6 +40,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platforms/android-21",
     "//prebuilts/studio/sdk:platforms/android-23",
     "//prebuilts/studio/sdk:platforms/android-24",
+    "//prebuilts/studio/sdk:platforms/android-P",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
     "//prebuilts/studio/sdk:test-runner_latest",
@@ -51,6 +52,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects",
     "//tools/data-binding:data_binding_runtime.zip",
     "//tools/data-binding:integration-test-projects",
+    "//tools/data-binding:integration-test-projects-support",
 ]
 
 java_library(
@@ -145,6 +147,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/animated-vector-drawable/26.1.0:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/appcompat-v7/26.1.0:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/cardview-v7/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/25.4.0:jar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/26.1.0:jar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-compat/26.1.0:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/support-core-ui/26.1.0:aar",
