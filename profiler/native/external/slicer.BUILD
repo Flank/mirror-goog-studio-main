@@ -23,7 +23,6 @@ cc_library(
     ]),
     includes = ["export"],
     tags = [
-        "no_foundry",  # b/73948555
         "no_test_foundry",  # b/73948555
         "no_windows",
     ],
