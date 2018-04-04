@@ -75,7 +75,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     static {
         // get the default qualifiers.
-        FolderConfiguration defaultConfig = FolderConfiguration.createDefault();
+        FolderConfiguration defaultConfig = createDefault();
         DEFAULT_QUALIFIERS = defaultConfig.mQualifiers;
         for (int i = 0; i < DEFAULT_QUALIFIERS.length; i++) {
             NULL_QUALIFIERS[i] = DEFAULT_QUALIFIERS[i].getNullQualifier();
@@ -1081,31 +1081,31 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         }
 
         //
-        // 1: eliminate resources that contradict the reference configuration
-        // 2: pick next qualifier type
-        // 3: check if any resources use this qualifier, if no, back to 2, else move on to 4.
-        // 4: eliminate resources that don't use this qualifier.
-        // 5: if more than one resource left, go back to 2.
+        // 1: Eliminate resources that contradict the reference configuration.
+        // 2: Pick next qualifier type.
+        // 3: Check if any resources use this qualifier, if no, back to 2, else move on to 4.
+        // 4: Eliminate resources that don't use this qualifier.
+        // 5: If more than one resource left, go back to 2.
         //
         // The precedence of the qualifiers is more important than the number of qualifiers that
         // exactly match the device.
 
-        // 1: eliminate resources that contradict
+        // 1: Eliminate resources that contradict.
         ArrayList<T> matchingConfigurables = new ArrayList<>();
         for (T res : configurables) {
-            final FolderConfiguration configuration = res.getConfiguration();
-            if (configuration != null && configuration.isMatchFor(this)) {
+            FolderConfiguration configuration = res.getConfiguration();
+            if (configuration.isMatchFor(this)) {
                 matchingConfigurables.add(res);
             }
         }
 
-        // if there is at most one match, just take it
+        // If there is at most one match, just take it.
         if (matchingConfigurables.size() < 2) {
             return matchingConfigurables;
         }
 
-        // 2. Loop on the qualifiers, and eliminate matches
-        final int count = getQualifierCount();
+        // 2. Loop on the qualifiers, and eliminate matches.
+        int count = getQualifierCount();
         for (int q = 0; q < count; q++) {
             // Look to see if one configurable has this qualifier.
             // At the same time also record the best match value for the qualifier (if applicable).
@@ -1155,7 +1155,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
                         // this resource, so we reject it.
                         matchingConfigurables.remove(configurable);
                     } else {
-                        // looks like we keep this resource, move on to the next one.
+                        // Looks like we keep this resource, move on to the next one.
                         //noinspection AssignmentToForLoopParameter
                         i++;
                     }
