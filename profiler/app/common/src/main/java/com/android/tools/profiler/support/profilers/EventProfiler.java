@@ -259,6 +259,11 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                         wrapper.setAccessible(true);
                         Object connection = wrapper.get(imm);
 
+                        // This can happen in some cases with O/P devices
+                        if (connection == null) {
+                            continue;
+                        }
+
                         // Grab the lock and the input connection object
                         Class connectionWrapper = connection.getClass().getSuperclass();
                         Object lockObject = new Object();
@@ -273,16 +278,22 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                         synchronized (lockObject) {
                             Field ic = connectionWrapper.getDeclaredField("mInputConnection");
                             ic.setAccessible(true);
-                            //Replace the object with a wrapper
+                            // Replace the object with a wrapper
                             Object input = ic.get(connection);
-                            if (!InputConnectionWrapper.class.isInstance(input)) {
-                                if (input.getClass().isAssignableFrom(WeakReference.class)) {
-                                    InputConnection inputConnection =
-                                            ((WeakReference<InputConnection>) input).get();
-                                    // Store this instance of the wrapper on a thread local variable
-                                    // this prevents the wrapper from getting cleaned while still
-                                    // potentially in use. This thread does not get terminated until
-                                    // the application is terminated.
+                            InputConnection inputConnection;
+                            boolean isWeakReference =
+                                    input.getClass().isAssignableFrom(WeakReference.class);
+                            if (isWeakReference) {
+                                inputConnection = ((WeakReference<InputConnection>) input).get();
+                            } else {
+                                inputConnection = (InputConnection) input;
+                            }
+                            if (!InputConnectionWrapper.class.isInstance(inputConnection)) {
+                                if (isWeakReference) {
+                                    // Store this instance of the wrapper on a thread local
+                                    // variable this prevents the wrapper from getting cleaned
+                                    // while still potentially in use. This thread does not get
+                                    // terminated until the application is terminated.
                                     inputConnectionWrapper.setTarget(inputConnection);
                                     ic.set(
                                             connection,
@@ -346,7 +357,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                     }
                     // Only tick our latch once then null it out, as we only
                     // care if we attempted to get the current application
-                    // the first time. 
+                    // the first time.
                     if (myLatch != null) {
                         myLatch.countDown();
                         myLatch = null;

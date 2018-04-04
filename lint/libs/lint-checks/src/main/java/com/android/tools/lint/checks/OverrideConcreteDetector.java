@@ -56,7 +56,7 @@ public class OverrideConcreteDetector extends Detector implements SourceCodeScan
 
         Category.CORRECTNESS,
         6,
-        Severity.FATAL,
+        Severity.ERROR,
         new Implementation(
                 OverrideConcreteDetector.class,
                 Scope.JAVA_FILE_SCOPE)

@@ -79,7 +79,7 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
 
             Category.CORRECTNESS,
             6,
-            Severity.FATAL,
+            Severity.ERROR,
             IMPLEMENTATION);
 
     /** Using wifi manager from the wrong context */
@@ -94,7 +94,7 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
 
             Category.CORRECTNESS,
             6,
-            Severity.FATAL,
+            Severity.ERROR,
             IMPLEMENTATION);
 
     /** Using wifi manager from the wrong context: unknown Context origin */

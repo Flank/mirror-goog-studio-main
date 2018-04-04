@@ -56,7 +56,7 @@ public class WrongCallDetector extends Detector implements SourceCodeScanner {
 
             Category.CORRECTNESS,
             6,
-            Severity.FATAL,
+            Severity.ERROR,
             new Implementation(
                     WrongCallDetector.class,
                     Scope.JAVA_FILE_SCOPE));

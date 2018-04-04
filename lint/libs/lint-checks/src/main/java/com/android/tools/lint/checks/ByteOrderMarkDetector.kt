@@ -51,7 +51,7 @@ part of a resource name in one particular translation, that name will not be con
 to the base resource's name and the translation will not be used.""",
                 Category.I18N,
                 8,
-                Severity.FATAL,
+                Severity.ERROR,
                 Implementation(
                         ByteOrderMarkDetector::class.java,
                         // Applies to all text files

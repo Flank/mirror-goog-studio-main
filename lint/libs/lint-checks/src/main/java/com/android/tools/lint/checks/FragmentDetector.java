@@ -62,7 +62,7 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
 
         Category.CORRECTNESS,
         6,
-        Severity.FATAL,
+        Severity.ERROR,
         new Implementation(
                 FragmentDetector.class,
                 Scope.JAVA_FILE_SCOPE)
