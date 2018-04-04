@@ -107,7 +107,8 @@ public class DesugarWorkerItemTest {
                         "21",
                         "--nodesugar_try_with_resources_if_needed",
                         "--desugar_try_with_resources_omit_runtime_classes",
-                        "--legacy_jacoco_fix");
+                        "--legacy_jacoco_fix",
+                        "--copy_bridges_from_classpath");
         verify(workerConfiguration).setParams(params);
     }
 
@@ -156,7 +157,8 @@ public class DesugarWorkerItemTest {
                         "23",
                         "--nodesugar_try_with_resources_if_needed",
                         "--desugar_try_with_resources_omit_runtime_classes",
-                        "--legacy_jacoco_fix");
+                        "--legacy_jacoco_fix",
+                        "--copy_bridges_from_classpath");
         verify(workerConfiguration).setParams(params);
     }
 }

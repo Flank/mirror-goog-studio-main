@@ -47,7 +47,7 @@ class DesugarProcessArgs(
         }
         inputsToOutputs.forEach { input, out ->
             args.add("--input")
-            args.add(`input`)
+            args.add(input)
             args.add("--output")
             args.add(out)
         }
@@ -70,6 +70,7 @@ class DesugarProcessArgs(
         args.add("--desugar_try_with_resources_omit_runtime_classes")
         // fix for b/62623509
         args.add("--legacy_jacoco_fix")
+        args.add("--copy_bridges_from_classpath")
 
         return if (!isWindows || args.map { it.length }.sum() <= MAX_CMD_LENGTH_FOR_WINDOWS) {
             args
