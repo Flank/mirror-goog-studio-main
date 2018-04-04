@@ -185,7 +185,7 @@ public enum InternalArtifactType implements ArtifactType {
     MODULE_BUNDLE,
     // the full bundle, including feature module. This is only valid for the base module.
     BUNDLE(Kind.OUTPUTS),
-    // directory with APKs generated from a bundle.
+    // APK Set archive with APKs generated from a bundle.
     APKS_FROM_BUNDLE,
     // output of ApkSelect applied to APKS_FROM_BUNDLE and a device config.
     SELECTED_APKS,

@@ -23,14 +23,15 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.WorkerExecutorAdapter
+import com.android.builder.packaging.PackagingUtils
+import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -60,18 +61,14 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
     lateinit var featureZips: FileCollection
         private set
 
+    @get:Input
+    lateinit var aaptOptionsNoCompress: Collection<String>
+        private set
+
     @get:OutputFile
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var bundleFile: File
         private set
-
-    private lateinit var _configFile: File
-
-    @get:Optional
-    @get:InputFile
-    @Suppress("MemberVisibilityCanPrivate")
-    val configFile: File?
-        get() = if (_configFile.exists()) _configFile else null
 
     @TaskAction
     fun bundleModules() {
@@ -81,7 +78,7 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             Params(
                 baseModuleZip.singleFile(),
                 featureZips.files,
-                configFile,
+                aaptOptionsNoCompress,
                 bundleFile
             )
         )
@@ -92,7 +89,7 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
     private data class Params(
         val baseModuleFile: File,
         val featureFiles: Set<File>,
-        val configFile: File?,
+        val aaptOptionsNoCompress: Collection<String>,
         val bundleFile: File
     ) : Serializable
 
@@ -111,11 +108,19 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             builder.add(getBundlePath(params.baseModuleFile))
             params.featureFiles.forEach { builder.add(getBundlePath(it)) }
 
-            val command = BuildBundleCommand.builder().setOutputPath(bundleFile.toPath())
+            val noCompressGlobsForBundle =
+                PackagingUtils.getNoCompressGlobsForBundle(params.aaptOptionsNoCompress)
+            val bundleConfig =
+                Config.BundleConfig.newBuilder()
+                    .setCompression(
+                        Config.Compression.newBuilder()
+                            .addAllUncompressedGlob(noCompressGlobsForBundle))
+                    .build()
+
+            val command = BuildBundleCommand.builder()
+                .setBundleConfig(bundleConfig)
+                .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
-            params.configFile?.let {
-                command.setBundleConfigPath(it.toPath())
-            }
 
             command.build().execute()
         }
@@ -128,7 +133,6 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             return children[0].toPath()
         }
     }
-
 
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
 
@@ -146,9 +150,11 @@ open class BundleTask @Inject constructor(private val workerExecutor: WorkerExec
             task.featureZips = scope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.MODULE_BUNDLE)
+                AndroidArtifacts.ArtifactType.MODULE_BUNDLE
+            )
 
-            task._configFile = scope.globalScope.project.file("BundleConfig.xml")
+            task.aaptOptionsNoCompress =
+                    scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
         }
     }
 }
