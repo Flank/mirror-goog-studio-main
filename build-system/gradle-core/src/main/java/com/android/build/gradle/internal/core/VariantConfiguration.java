@@ -1454,7 +1454,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             return value;
         }
 
-        return false;
+        // Only require specific multidex opt-in for legacy multidex.
+        return getMinSdkVersion().getFeatureLevel() >= 21;
     }
 
     public File getMultiDexKeepFile() {
