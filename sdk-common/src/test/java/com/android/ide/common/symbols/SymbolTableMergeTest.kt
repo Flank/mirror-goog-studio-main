@@ -20,6 +20,7 @@ package com.android.ide.common.symbols
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import com.android.ide.common.symbols.SymbolTestUtils.createSymbol as symbol
 
@@ -61,7 +62,7 @@ class SymbolTableMergeTest {
         val androidSymbols = SymbolTable.builder()
                 .tablePackage("android")
                 .build()
-        
+
         val table1 = SymbolTable.builder()
                 .tablePackage("table1")
                 .add(symbol("dimen", "a", "int", 0))
@@ -319,5 +320,52 @@ class SymbolTableMergeTest {
                 .build()
 
         Truth.assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun testMissingChildStyleable() {
+        val androidSymbols = SymbolTable.builder()
+            .tablePackage("android")
+            .add(symbol("attr", "foo", "int", 42))
+            .build()
+
+        val dep = SymbolTable.builder()
+            .tablePackage("dep")
+            .add(symbol("styleable", "dep_style", "int[]", "{ }", ImmutableList.of()))
+            .build()
+
+        val thisLibrary = SymbolTable.builder()
+            .tablePackage("table3")
+            .add(
+                symbol(
+                    "styleable",
+                    "dep_style",
+                    "int[]",
+                    "{ 0x1, 0x2 }",
+                    ImmutableList.of("android:foo", "my_bar")
+                )
+            )
+            .add(symbol("attr", "my_bar", "int", 0))
+            .build()
+
+        val result = mergeAndRenumberSymbols(
+            "",
+            thisLibrary, ImmutableList.of(dep), androidSymbols
+        )
+
+        val expected = SymbolTable.builder()
+            .add(symbol("attr", "my_bar", "int", 0x7f040001))
+            .add(
+                symbol(
+                    "styleable",
+                    "dep_style",
+                    "int[]",
+                    "{ 42, 0x7f040001 }",
+                    ImmutableList.of("android:foo", "my_bar")
+                )
+            )
+            .build()
+
+        assertThat(result).isEqualTo(expected)
     }
 }
