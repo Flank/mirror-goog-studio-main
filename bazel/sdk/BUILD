@@ -4,7 +4,7 @@ java_binary(
     main_class = "com.android.tools.utils.DevSdkUpdater",
     deps = [
         "//tools/base/bazel:utils",
-        "//tools/base/sdklib:studio.sdklib",
+        "//tools/base/sdklib:studio.android.sdktools.sdklib",
     ],
 )
 

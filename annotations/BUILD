@@ -2,9 +2,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.android-annotations",
+    name = "studio.android.sdktools.android-annotations",
     srcs = ["src/main/java"],
-    iml_files = ["android-annotations.iml"],
+    iml_files = ["android.sdktools.android-annotations.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     deps = ["//tools/idea/.idea/libraries:KotlinJavaRuntime"],

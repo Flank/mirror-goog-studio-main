@@ -51,7 +51,7 @@ java_library(
     deps = [
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
-        "//tools/base/common:studio.common",
+        "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/profiler:netty-grpc-jar",
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
         "//tools/base/profiler/transform",

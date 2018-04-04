@@ -3,15 +3,15 @@ load("//tools/base/bazel:maven.bzl", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 iml_module(
-    name = "studio.testutils",
-    iml_files = ["testutils.iml"],
+    name = "studio.android.sdktools.testutils",
+    iml_files = ["android.sdktools.testutils.iml"],
     tags = ["managed"],
     test_srcs = ["src/main/java"],
     test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/common:studio.common[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
@@ -30,9 +30,9 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/testutils:studio.testutils[module, test]",
-        "//tools/base/annotations:studio.android-annotations[module, test]",
-        "//tools/base/common:studio.common[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:Guava[test]",
         "//tools/idea/.idea/libraries:truth[test]",

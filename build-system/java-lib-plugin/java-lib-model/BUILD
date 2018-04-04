@@ -2,14 +2,14 @@ load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.java-lib-model",
+    name = "studio.intellij.android.javaLibModel",
     srcs = ["src/main/java"],
-    iml_files = ["java-lib-model.iml"],
+    iml_files = ["intellij.android.javaLibModel.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

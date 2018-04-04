@@ -1,9 +1,9 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.analyzer",
+    name = "studio.intellij.android.analyzer",
     srcs = ["src/main/java"],
-    iml_files = ["analyzer.iml"],
+    iml_files = ["intellij.android.analyzer.iml"],
     tags = [
         "managed",
         "no_test_windows",  # b/77288863
@@ -13,20 +13,20 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/annotations:studio.android-annotations[module]",
-        "//tools/base/common:studio.common[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//prebuilts/tools/common/archive-patcher:explainer",
         "//prebuilts/tools/common/archive-patcher:generator",
         "//prebuilts/tools/common/archive-patcher:shared",
         "//tools/idea/.idea/libraries:dexlib2",
         "//tools/idea/.idea/libraries:baksmali",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
-        "//tools/base/apkparser:studio.binary-resources[module]",
-        "//tools/base/sdk-common:studio.sdk-common[module]",
+        "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
     ],
 )
 

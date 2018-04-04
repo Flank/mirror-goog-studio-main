@@ -2,17 +2,17 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.fakeadbserver",
+    name = "studio.android.sdktools.fakeadbserver",
     srcs = ["src/main/java"],
-    iml_files = ["fakeadbserver.iml"],
+    iml_files = ["android.sdktools.fakeadbserver.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/common:studio.common[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:Guava[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],

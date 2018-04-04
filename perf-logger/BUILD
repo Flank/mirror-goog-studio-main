@@ -14,9 +14,9 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/platform/annotations[module, test]",
-        "//tools/idea/platform/platform-api[module, test]",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/idea/platform/annotations:intellij.platform.annotations.java5[module, test]",
+        "//tools/idea/platform/platform-api:intellij.platform.ide[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:gson[test]",
         "//tools/idea/.idea/libraries:Guava[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",

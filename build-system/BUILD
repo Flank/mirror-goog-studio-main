@@ -9,9 +9,9 @@ load(
 )
 
 iml_module(
-    name = "studio.manifest-merger",
+    name = "studio.android.sdktools.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
-    iml_files = ["manifest-merger/manifest-merger.iml"],
+    iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = [
         "managed",
@@ -19,15 +19,15 @@ iml_module(
     ],
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
-    exports = ["//tools/base/sdklib:studio.sdklib"],
+    exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:gson",
-        "//tools/base/sdklib:studio.sdklib[module]",
+        "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
         "//tools/idea/.idea/libraries:mockito[test]",
-        "//tools/base/sdk-common:studio.sdk-common[module]",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],

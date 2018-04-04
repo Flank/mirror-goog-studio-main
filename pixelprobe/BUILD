@@ -1,14 +1,14 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.pixelprobe",
+    name = "studio.android.sdktools.pixelprobe",
     # do not sort: must match IML order
     srcs = [
         "src/main/generated",
         "src/main/java",
         "src/test/tools",
     ],
-    iml_files = ["pixelprobe.iml"],
+    iml_files = ["android.sdktools.pixelprobe.iml"],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
@@ -16,8 +16,8 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/chunkio:studio.chunkio[module]",
-        "//tools/base/chunkio-processor:studio.chunkio-processor[module]",
+        "//tools/base/chunkio:studio.android.sdktools.chunkio[module]",
+        "//tools/base/chunkio-processor:studio.android.sdktools.chunkio-processor[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],

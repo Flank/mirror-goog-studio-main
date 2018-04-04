@@ -4,35 +4,35 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.sdklib",
+    name = "studio.android.sdktools.sdklib",
     srcs = ["src/main/java"],
-    iml_files = ["sdklib.iml"],
+    iml_files = ["android.sdktools.sdklib.iml"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/base/common:studio.common",
-        "//tools/base/device_validator:studio.dvlib",
-        "//tools/base/layoutlib-api:studio.layoutlib-api",
+        "//tools/base/common:studio.android.sdktools.common",
+        "//tools/base/device_validator:studio.android.sdktools.dvlib",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
         "//tools/idea/.idea/libraries:http-client",
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:gson",
-        "//tools/base/repository:studio.repository",
+        "//tools/base/repository:studio.android.sdktools.repository",
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/common:studio.common[module]",
-        "//tools/base/device_validator:studio.dvlib[module]",
-        "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/device_validator:studio.android.sdktools.dvlib[module]",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
         "//tools/idea/.idea/libraries:http-client",
         "//tools/idea/.idea/libraries:commons-compress",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:gson",
-        "//tools/base/repository:studio.repository[module]",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/repository:studio.android.sdktools.repository[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
     ],
 )
