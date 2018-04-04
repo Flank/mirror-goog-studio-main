@@ -26,7 +26,9 @@ public class AndroidxNameTest {
         AndroidxName pkgName =
                 AndroidxName.of("android.support.design.widget.", "FloatingActionButton");
         assertEquals("android.support.design.widget.FloatingActionButton", pkgName.oldName());
-        assertEquals("com.google.android.material.widget.FloatingActionButton", pkgName.newName());
+        assertEquals(
+                "com.google.android.material.floatingactionbutton.FloatingActionButton",
+                pkgName.newName());
 
         // Test a non-existent class name
         pkgName = AndroidxName.of("android.support.wear.", "TestClassName");
@@ -73,7 +75,7 @@ public class AndroidxNameTest {
     @Test
     public void getNewName() {
         assertEquals(
-                "com.google.android.material.widget.FloatingActionButton",
+                "com.google.android.material.floatingactionbutton.FloatingActionButton",
                 AndroidxNameUtils.getNewName("android.support.design.widget.FloatingActionButton"));
         assertEquals(
                 "unknown.package.FloatingActionButton",
