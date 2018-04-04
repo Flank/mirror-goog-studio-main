@@ -44,7 +44,6 @@ public class StudioConfiguration implements Configuration {
     @Override
     public boolean shouldSuppress(BazelRule rule) {
         return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/")
-                || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
-                || rule.getName().endsWith("lldb-integration-tests"); // TODO
+                || rule.getLabel().startsWith("//tools/vendor/google3/blaze/");
     }
 }
