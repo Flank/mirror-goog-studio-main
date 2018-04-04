@@ -111,11 +111,13 @@ import com.android.builder.model.BaseConfig;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
+import com.android.utils.PathUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -217,6 +219,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
     private DataBindingExportBuildInfoTask dataBindingExportBuildInfoTask;
+
+    private FileCollection bootClasspath;
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
@@ -2124,5 +2128,42 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "r8",
                 getVariantConfiguration().getDirName(),
                 "mapping.txt");
+    }
+
+    @NonNull
+    @Override
+    public FileCollection getBootClasspath() {
+        if (bootClasspath != null) {
+            return bootClasspath;
+        }
+
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_CORE_LAMBDA_STUBS)) {
+            File coreLambdaStubsJar =
+                    new File(
+                            globalScope
+                                    .getAndroidBuilder()
+                                    .getBuildToolInfo()
+                                    .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS));
+            bootClasspath =
+                    getProject()
+                            .files(
+                                    globalScope.getAndroidBuilder().getBootClasspath(false),
+                                    coreLambdaStubsJar);
+        } else if (!keepDefaultBootstrap()) {
+            // Set boot classpath if we don't need to keep the default.  Otherwise, this is
+            // added as normal classpath.
+            bootClasspath =
+                    getProject().files(globalScope.getAndroidBuilder().getBootClasspath(false));
+        } else {
+            String currentBootclasspath = System.getProperty("sun.boot.class.path", "");
+            if (currentBootclasspath.isEmpty()) {
+                bootClasspath = getProject().files();
+            } else {
+                bootClasspath =
+                        getProject().files(PathUtils.getClassPathItems(currentBootclasspath));
+            }
+        }
+
+        return bootClasspath;
     }
 }
