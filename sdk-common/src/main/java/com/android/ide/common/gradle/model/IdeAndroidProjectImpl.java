@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 /** Creates a deep copy of an {@link AndroidProject}. */
 public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidProject {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
@@ -64,15 +64,18 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     private final int myHashCode;
 
     public IdeAndroidProjectImpl(
-            @NonNull AndroidProject project, @NonNull IdeDependenciesFactory dependenciesFactory) {
-        this(project, new ModelCache(), dependenciesFactory);
+            @NonNull AndroidProject project,
+            @NonNull IdeDependenciesFactory dependenciesFactory,
+            @Nullable Variant variant) {
+        this(project, new ModelCache(), dependenciesFactory, variant);
     }
 
     @VisibleForTesting
     IdeAndroidProjectImpl(
             @NonNull AndroidProject project,
             @NonNull ModelCache modelCache,
-            @NonNull IdeDependenciesFactory dependenciesFactory) {
+            @NonNull IdeDependenciesFactory dependenciesFactory,
+            @Nullable Variant selectedVariant) {
         super(project, modelCache);
         myModelVersion = project.getModelVersion();
         // Old plugin versions do not return model version.
@@ -99,16 +102,26 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                         project.getSyncIssues(),
                         modelCache,
                         issue -> new IdeSyncIssue(issue, modelCache));
-        myVariants =
-                copy(
-                        project.getVariants(),
-                        modelCache,
-                        variant ->
-                                new IdeVariantImpl(
-                                        variant,
-                                        modelCache,
-                                        dependenciesFactory,
-                                        myParsedModelVersion));
+        if (selectedVariant != null) {
+            IdeVariantImpl variant =
+                    new IdeVariantImpl(
+                            selectedVariant, modelCache, dependenciesFactory, myParsedModelVersion);
+            ImmutableList.Builder<Variant> variants = ImmutableList.builder();
+            variants.add(variant);
+            myVariants = variants.build();
+        } else {
+            myVariants =
+                    copy(
+                            project.getVariants(),
+                            modelCache,
+                            variant ->
+                                    new IdeVariantImpl(
+                                            variant,
+                                            modelCache,
+                                            dependenciesFactory,
+                                            myParsedModelVersion));
+        }
+
         myVariantNames =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(project.getVariantNames()),
