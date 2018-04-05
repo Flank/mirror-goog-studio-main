@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.model.Version
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor
@@ -72,10 +73,14 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
 
             // If the returned value is not null, it means that the dependency is an old support
             // library and should be replaced
-            if (newSupportLibrary != null) {
+            val targetDependency = newSupportLibrary ?: requestedDependency.displayName
+
+            val effectiveTargetDependency = getEffectiveTargetDependency(targetDependency)
+            if (effectiveTargetDependency != requestedDependency.displayName) {
                 dependencySubstitution
                     .useTarget(
-                        newSupportLibrary, BooleanOption.ENABLE_JETIFIER.name + " is enabled"
+                        effectiveTargetDependency,
+                        BooleanOption.ENABLE_JETIFIER.name + " is enabled"
                     )
             }
         }
@@ -98,39 +103,58 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
                                 + "They are $newSupportLibraries."
                     )
                 }
-                val newSupportLibrary = newSupportLibraries.single()
-
-                // TODO (AGP): Currently new support libraries are not available in remote
-                // repositories yet. Locally, we have a fake androidx.preference:preference:1.0.0
-                // aar that is used for testing. Therefore, here we return only that dependency.
-                // Eventually, when the new support libraries are all published, we should remove
-                // this hard code and simply return the newSupportLibrary variable here.
-                if (newSupportLibrary.contains("androidx.preference")) {
-                    return newSupportLibrary
-                } else {
-                    return null
-                }
+                return newSupportLibraries.single()
             } else {
                 return null
             }
         }
 
+        private fun getEffectiveTargetDependency(targetDependency: String): String {
+            val parts = targetDependency.split(':')
+            val group = parts[0]
+            val module = parts[1]
+            val version = parts[2]
+
+            // TODO (jetifier-core): Need to map databinding to Android Gradle plugin version. Right
+            // now jetifier-core is mapping it to 1.0.0, which is incorrect.
+            if (group == "androidx.databinding") {
+                return "$group:$module:${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+            }
+
+            // TODO (AGP): The stable versions of Android X are not available yet, only preview
+            // versions. Therefore, here we replace the dependencies with their preview versions.
+            // Eventually, when the stable versions are all published, we should remove this method.
+            if (group.startsWith("androidx")) {
+                if (version == "1.0.0") {
+                    return "$group:$module:1.0.0-alpha1"
+                } else if (version == "2.0.0-SNAPSHOT") {
+                    return "$group:$module:2.0.0-alpha1"
+                }
+            }
+            return targetDependency
+        }
+
         private fun isOldSupportLibrary(dependency: ModuleComponentSelector): Boolean {
             // TODO (jetifier-core): Need a method to tell whether the given dependency is an
             // old support library
-            return dependency.group == "com.android.support"
+            return dependency.group.startsWith("com.android.support")
+                    || dependency.group.startsWith("android.arch")
+                    || dependency.group == "com.android.databinding"
         }
 
         private fun isOldSupportLibrary(aarOrJarFile: File): Boolean {
             // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is an
             // old support library
             return aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.*"))
+                    || aarOrJarFile.absolutePath.matches(Regex(".*android.arch.*"))
+                    || aarOrJarFile.absolutePath.matches(Regex(".*com.android.databinding.*"))
         }
 
         private fun isNewSupportLibrary(aarOrJarFile: File): Boolean {
             // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is a
             // new support library
             return aarOrJarFile.absolutePath.contains("androidx")
+                    || aarOrJarFile.absolutePath.matches(Regex(".*com.google.android.material.*"))
         }
     }
 
@@ -155,12 +179,8 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         // Case 2: If this is an old support library, there was probably some bug because it should
         // have been replaced with a new support library earlier via dependency substitution.
         if (isOldSupportLibrary(aarOrJarFile)) {
-            // TODO (AGP): In the final code, we should probably throw an exception here. However,
-            // at this point, because new support libraries are not yet published, we did not
-            // actually replace old support libraries with new ones (see the note in
-            // getNewSupportLibrary() method). Therefore, we simply ignore (do not transform) old
-            // support libraries for now.
-            return listOf(aarOrJarFile)
+            throw IllegalStateException(
+                "Dependency was not replaced with AndroidX: ${aarOrJarFile.absolutePath}")
         }
 
         // Case 3: For the remaining, let's jetify them.
@@ -175,7 +195,7 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             throw RuntimeException(
                 "Failed to transform '$aarOrJarFile' using Jetifier. To disable Jetifier,"
                         + " set ${BooleanOption.ENABLE_JETIFIER.propertyName}=false in your"
-                        + " gradle.properties files.",
+                        + " gradle.properties file.",
                 exception
             )
         }

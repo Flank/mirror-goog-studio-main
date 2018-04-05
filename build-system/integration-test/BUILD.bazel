@@ -61,6 +61,56 @@ SUPPORT_LIBRARY_JARS = [
     "support-annotations",
 ]
 
+LATEST_ANDROID_X_SUPPORT = "1.0.0-alpha1"
+
+#keep sorted
+ANDROID_X_SUPPORT_AARS = [
+    "androidx/appcompat/appcompat",
+    "androidx/asynclayoutinflater/asynclayoutinflater",
+    "androidx/coordinatorlayout/coordinatorlayout",
+    "androidx/core/core",
+    "androidx/cursoradapter/cursoradapter",
+    "androidx/customview/customview",
+    "androidx/documentfile/documentfile",
+    "androidx/drawerlayout/drawerlayout",
+    "androidx/fragment/fragment",
+    "androidx/interpolator/interpolator",
+    "androidx/legacy/legacy-support-core-ui",
+    "androidx/legacy/legacy-support-core-utils",
+    "androidx/loader/loader",
+    "androidx/localbroadcastmanager/localbroadcastmanager",
+    "androidx/preference/preference",
+    "androidx/print/print",
+    "androidx/recyclerview/recyclerview",
+    "androidx/slidingpanelayout/slidingpanelayout",
+    "androidx/swiperefreshlayout/swiperefreshlayout",
+    "androidx/vectordrawable/vectordrawable",
+    "androidx/vectordrawable/vectordrawable-animated",
+    "androidx/viewpager/viewpager",
+]
+
+#keep sorted
+ANDROID_X_SUPPORT_JARS = [
+    "androidx/annotation/annotation",
+    "androidx/collection/collection",
+]
+
+LATEST_ANDROD_X_ARCH = "2.0.0-alpha1"
+
+#keep sorted
+ANDROID_X_ARCH_AARS = [
+    "androidx/arch/core/core-runtime",
+    "androidx/lifecycle/lifecycle-livedata-core",
+    "androidx/lifecycle/lifecycle-runtime",
+    "androidx/lifecycle/lifecycle-viewmodel",
+]
+
+#keep sorted
+ANDROID_X_ARCH_JARS = [
+    "androidx/arch/core/core-common",
+    "androidx/lifecycle/lifecycle-common",
+]
+
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 
 maven_repo(
@@ -70,5 +120,19 @@ maven_repo(
                  ":aar" for name in SUPPORT_LIBRARY_AARS] +
                 ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" + LATEST_SUPPORT +
                  ":jar" for name in SUPPORT_LIBRARY_JARS],
+    visibility = [":__subpackages__"],
+)
+
+maven_repo(
+    name = "androidx_latest",
+    # keep sorted
+    artifacts = ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_SUPPORT +
+                 ":aar" for name in ANDROID_X_SUPPORT_AARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_SUPPORT +
+                 ":jar" for name in ANDROID_X_SUPPORT_JARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROD_X_ARCH +
+                 ":aar" for name in ANDROID_X_ARCH_AARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROD_X_ARCH +
+                 ":jar" for name in ANDROID_X_ARCH_JARS],
     visibility = [":__subpackages__"],
 )

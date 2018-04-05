@@ -611,6 +611,19 @@ public class VariantManager implements VariantModel {
     public void configureDependencies() {
         final DependencyHandler dependencies = project.getDependencies();
 
+        // USE_ANDROID_X indicates that the developers want to be in the AndroidX world, whereas
+        // ENABLE_JETIFIER indicates that they want to have automatic tool support for converting
+        // not-yet-migrated dependencies. Developers may want to use AndroidX but disable Jetifier
+        // for purposes such as debugging. However, disabling AndroidX and enabling Jetifier is not
+        // allowed.
+        if (!globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                && globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            throw new IllegalStateException(
+                    "AndroidX must be enabled when Jetifier is enabled. To resolve, set "
+                            + BooleanOption.USE_ANDROID_X.getPropertyName()
+                            + "=true in your gradle.properties file.");
+        }
+
         // If Jetifier is enabled, replace old support libraries with new ones.
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
             JetifyTransform.replaceOldSupportLibraries(project);
