@@ -37,6 +37,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
 import java.util.function.Supplier
 
@@ -108,7 +109,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             it.addJar(resFiles.single().toPath(), null, ResRelocator())
 
             // dex files
-            addHybridFolder(it, dexFiles.files, Relocator(FD_DEX))
+            addHybridFolder(it, dexFiles.files, DexRelocator(FD_DEX), null)
 
             addHybridFolder(it, javaResFiles.files,
                 Relocator("root"),
@@ -121,7 +122,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     private fun addHybridFolder(
         jarMerger: JarMerger,
         files: Set<File>,
-        relocator: Relocator? = null,
+        relocator: JarMerger.Relocator? = null,
         fileFilter: Predicate<String>? = null ) {
         // in this case the artifact is a folder containing things to add
         // to the zip. These can be file to put directly, jars to copy the content
@@ -186,6 +187,21 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
 private class Relocator(private val prefix: String): JarMerger.Relocator {
     override fun relocate(entryPath: String) = "$prefix/$entryPath"
+}
+
+private class DexRelocator(private val prefix: String): JarMerger.Relocator {
+    val index = AtomicInteger()
+    override fun relocate(entryPath: String): String {
+        val entryIndex = index.getAndIncrement()
+        if (entryPath.startsWith("classes")) {
+            return if (entryIndex == 0) {
+                "$prefix/classes.dex"
+            } else {
+                "$prefix/classes$entryIndex.dex"
+            }
+        }
+        return "$prefix/$entryPath"
+    }
 }
 
 private class ResRelocator : JarMerger.Relocator {
