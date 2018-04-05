@@ -40,14 +40,19 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.builder.utils.FileCacheTestUtils;
+import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
+import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -55,6 +60,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 import org.gradle.api.Action;
 import org.gradle.workers.WorkerConfiguration;
 import org.gradle.workers.WorkerExecutionException;
@@ -609,6 +617,45 @@ public class DexArchiveBuilderTransformTest {
         DexArchiveBuilderTransform noCacheTransform = getTransform(null);
         noCacheTransform.transform(invocation);
         assertThat(nestedDirOutput).doesNotExist();
+    }
+
+    @Test
+    public void testMultiReleaseJar() throws Exception {
+        Path input = tmpDir.getRoot().toPath().resolve("classes.jar");
+        try (ZipOutputStream stream = new ZipOutputStream(Files.newOutputStream(input))) {
+            stream.putNextEntry(new ZipEntry("test/A.class"));
+            stream.write(TestClassesGenerator.emptyClass("test", "A"));
+            stream.closeEntry();
+            stream.putNextEntry(new ZipEntry("module-info.class"));
+            stream.write(new byte[] {0x1});
+            stream.closeEntry();
+            stream.putNextEntry(new ZipEntry("META-INF/9/test/B.class"));
+            stream.write(TestClassesGenerator.emptyClass("test", "B"));
+            stream.closeEntry();
+            stream.putNextEntry(new ZipEntry("/META-INF/9/test/C.class"));
+            stream.write(TestClassesGenerator.emptyClass("test", "C"));
+            stream.closeEntry();
+        }
+
+        TransformInput dirInput = TransformTestHelper.singleJarBuilder(input.toFile()).build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setIncremental(false)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+        getTransform(null, 21, true).transform(invocation);
+
+        // verify output contains only test/A
+        File jarWithDex = Iterables.getOnlyElement(FileUtils.getAllFiles(out.toFile()));
+        try (ZipFile zipFile = new ZipFile(jarWithDex)) {
+            assertThat(zipFile.size()).isEqualTo(1);
+            InputStream inputStream = zipFile.getInputStream(zipFile.entries().nextElement());
+
+            Dex dex = new Dex(ByteStreams.toByteArray(inputStream), "unknown");
+            assertThat(dex).containsExactlyClassesIn(ImmutableList.of("Ltest/A;"));
+        }
     }
 
     @NonNull
