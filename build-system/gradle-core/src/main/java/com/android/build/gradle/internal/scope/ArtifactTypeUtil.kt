@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+@file:JvmName("ArtifactTypeUtil")
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType

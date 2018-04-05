@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -32,6 +33,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.dexing.DexMergerTool;
@@ -65,7 +67,6 @@ import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
 
 /**
  * This transform processes dex archives, {@link ExtendedContentType#DEX_ARCHIVE}, and merges them
@@ -105,7 +106,7 @@ public class DexMergerTransform extends Transform {
     @VisibleForTesting public static final int EXTERNAL_DEPS_DEX_FILES = 50;
 
     @NonNull private final DexingType dexingType;
-    @Nullable private final FileCollection mainDexListFile;
+    @Nullable private final BuildableArtifact mainDexListFile;
     @NonNull private final DexMergerTool dexMerger;
     private final int minSdkVersion;
     private final boolean isDebuggable;
@@ -114,7 +115,7 @@ public class DexMergerTransform extends Transform {
 
     public DexMergerTransform(
             @NonNull DexingType dexingType,
-            @Nullable FileCollection mainDexListFile,
+            @Nullable BuildableArtifact mainDexListFile,
             @NonNull MessageReceiver messageReceiver,
             @NonNull DexMergerTool dexMerger,
             int minSdkVersion,
@@ -269,7 +270,7 @@ public class DexMergerTransform extends Transform {
         if (mainDexListFile == null) {
             mainDexClasses = null;
         } else {
-            mainDexClasses = mainDexListFile.getSingleFile().toPath();
+            mainDexClasses = BuildableArtifactUtil.singleFile(mainDexListFile).toPath();
         }
 
         return ImmutableList.of(submitForMerging(output, outputDir, dexesToMerge, mainDexClasses));

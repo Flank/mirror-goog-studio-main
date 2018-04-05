@@ -1226,20 +1226,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getManifestKeepListProguardFile() {
-        return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
-                + "/manifest_keep.txt");
-    }
-
-    @Override
-    @NonNull
-    public File getMainDexListFile() {
-        return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
-                + "/maindexlist.txt");
-    }
-
-    @Override
-    @NonNull
     public File getRenderscriptSourceOutputDir() {
         return new File(globalScope.getGeneratedDir(),
                 "source/rs/" + variantData.getVariantConfiguration().getDirName());

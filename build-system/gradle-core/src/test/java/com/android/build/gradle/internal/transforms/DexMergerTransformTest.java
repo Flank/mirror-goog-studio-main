@@ -26,6 +26,7 @@ import android.databinding.tool.util.Preconditions;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.Context;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
@@ -49,6 +50,7 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -63,7 +65,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -383,15 +384,15 @@ public class DexMergerTransformTest {
             @Nullable ImmutableSet<String> mainDex,
             boolean isDebuggable)
             throws IOException {
-        FileCollection collection;
+        BuildableArtifact collection;
         if (mainDex != null) {
             Preconditions.check(
                     dexingType == DexingType.LEGACY_MULTIDEX,
                     "Main dex list must only be used for legacy multidex");
             File tmpFile = tmpDir.newFile();
             Files.write(tmpFile.toPath(), mainDex, StandardOpenOption.TRUNCATE_EXISTING);
-            collection = Mockito.mock(FileCollection.class);
-            when(collection.getSingleFile()).thenReturn(tmpFile);
+            collection = Mockito.mock(BuildableArtifact.class);
+            when(collection.iterator()).thenReturn(Iterators.singletonIterator(tmpFile));
         } else {
             collection = null;
         }

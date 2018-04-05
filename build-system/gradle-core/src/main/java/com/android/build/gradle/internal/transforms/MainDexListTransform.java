@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -27,8 +28,10 @@ import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.dexing.RuntimeAnnotatedClassCollector;
 import com.android.builder.dexing.RuntimeAnnotatedClassDetector;
@@ -53,21 +56,20 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.LoggingManager;
+import org.jetbrains.annotations.NotNull;
 import proguard.ParseException;
 
 /**
  * Transform for multi-dex main dex list.
  *
- * This does not actually consume anything, rather it only reads streams and extract information
+ * <p>This does not actually consume anything, rather it only reads streams and extract information
  * from them.
  */
-public class MainDexListTransform extends BaseProguardAction {
+public class MainDexListTransform extends BaseProguardAction implements MainDexListWriter {
 
     enum ProguardInput {
         INPUT_JAR,
@@ -77,10 +79,8 @@ public class MainDexListTransform extends BaseProguardAction {
     private static final List<String> MAIN_DEX_LIST_FILTER = ImmutableList.of("**.class");
 
     // Inputs
-    @NonNull
-    private final File manifestKeepListProguardFile;
-    @Nullable
-    private final File userMainDexKeepProguard;
+    @NonNull private final BuildableArtifact manifestKeepListProguardFile;
+    @Nullable private final File userMainDexKeepProguard;
     @Nullable
     private final File userMainDexKeepFile;
     @NonNull
@@ -94,23 +94,30 @@ public class MainDexListTransform extends BaseProguardAction {
     // Outputs
     @NonNull
     private final File configFileOut;
-    @NonNull
-    private final File mainDexListFile;
+    private File mainDexListFile;
 
     public MainDexListTransform(
             @NonNull VariantScope variantScope,
             @NonNull DexOptions dexOptions) {
         super(variantScope);
-        this.manifestKeepListProguardFile = variantScope.getManifestKeepListProguardFile();
+        this.manifestKeepListProguardFile =
+                variantScope
+                        .getArtifacts()
+                        .getFinalArtifactFiles(
+                                InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES);
         this.userMainDexKeepProguard = variantScope.getVariantConfiguration().getMultiDexKeepProguard();
         this.userMainDexKeepFile = variantScope.getVariantConfiguration().getMultiDexKeepFile();
         this.variantScope = variantScope;
         configFileOut = new File(variantScope.getGlobalScope().getBuildDir() + "/" + FD_INTERMEDIATES
                 + "/multi-dex/" + variantScope.getVariantConfiguration().getDirName()
                 + "/components.flags");
-        mainDexListFile = variantScope.getMainDexListFile();
         keepRuntimeAnnotatedClasses = dexOptions.getKeepRuntimeAnnotatedClasses();
         proguardComponentsJarFile = variantScope.getProguardComponentsJarFile();
+    }
+
+    @Override
+    public void setMainDexListOutputFile(@NotNull File mainDexListFile) {
+        this.mainDexListFile = mainDexListFile;
     }
 
     @NonNull
@@ -151,10 +158,15 @@ public class MainDexListTransform extends BaseProguardAction {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        return Stream.of(manifestKeepListProguardFile, userMainDexKeepFile, userMainDexKeepProguard)
-                .filter(Objects::nonNull)
-                .map(SecondaryFile::nonIncremental)
-                .collect(Collectors.toList());
+        ImmutableList.Builder<SecondaryFile> builder = ImmutableList.builder();
+        builder.add(SecondaryFile.nonIncremental(manifestKeepListProguardFile));
+        if (userMainDexKeepFile != null) {
+            builder.add(SecondaryFile.nonIncremental(userMainDexKeepFile));
+        }
+        if (userMainDexKeepProguard != null) {
+            builder.add(SecondaryFile.nonIncremental(userMainDexKeepProguard));
+        }
+        return builder.build();
     }
 
     @NonNull
@@ -274,7 +286,7 @@ public class MainDexListTransform extends BaseProguardAction {
         dontnote();
         forceprocessing();
 
-        applyConfigurationFile(manifestKeepListProguardFile);
+        applyConfigurationFile(BuildableArtifactUtil.singleFile(manifestKeepListProguardFile));
         if (userMainDexKeepProguard != null) {
             applyConfigurationFile(userMainDexKeepProguard);
         }

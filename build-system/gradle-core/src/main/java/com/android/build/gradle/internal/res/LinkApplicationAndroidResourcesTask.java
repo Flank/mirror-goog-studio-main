@@ -761,7 +761,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             if (generateLegacyMultidexMainDexProguardRules) {
                 processResources.setAaptMainDexListProguardOutputFile(
-                        variantScope.getManifestKeepListProguardFile());
+                        variantScope
+                                .getArtifacts()
+                                .appendArtifact(
+                                        InternalArtifactType
+                                                .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                                        processResources,
+                                        "manifest_keep.txt"));
             }
 
             processResources.variantScope = variantScope;
@@ -900,7 +906,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             if (generateLegacyMultidexMainDexProguardRules) {
                 task.setAaptMainDexListProguardOutputFile(
-                        variantScope.getManifestKeepListProguardFile());
+                        variantScope
+                                .getArtifacts()
+                                .appendArtifact(
+                                        InternalArtifactType
+                                                .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                                        task,
+                                        "manifest_keep.txt"));
             }
 
             task.variantScope = variantScope;

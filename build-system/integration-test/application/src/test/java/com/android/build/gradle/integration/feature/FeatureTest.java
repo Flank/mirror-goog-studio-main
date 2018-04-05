@@ -27,7 +27,7 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.internal.scope.ArtifactTypeUtilKt;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
@@ -124,7 +124,7 @@ public class FeatureTest {
         // Check the R.java file builds with the right IDs.
         File featureResFile =
                 FileUtils.join(
-                        ArtifactTypeUtilKt.getOutputDir(
+                        ArtifactTypeUtil.getOutputDir(
                                 InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                                 featureProject.file("build")),
                         "debugFeature",
