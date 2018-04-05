@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.coverage;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.repository.GradleVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 
@@ -26,6 +27,9 @@ public final class JacocoConfigurations {
 
     /** Version of Jacoco to be used with DX, see https://issuetracker.google.com/37116789. */
     public static final String VERSION_FOR_DX = "0.7.4.201502262128";
+
+    // See http://b/62623509.
+    public static final GradleVersion MIN_WITHOUT_BROKEN_BYTECODE = GradleVersion.parse("0.7.8");
 
     @NonNull
     public static String getAgentRuntimeDependency(@NonNull String jacocoVersion) {

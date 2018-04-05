@@ -202,6 +202,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -2215,7 +2216,8 @@ public abstract class TaskManager {
                             projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                             variantScope.getGlobalScope().getTmpFolder().toPath(),
                             getProjectVariantId(variantScope),
-                            projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING));
+                            projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING),
+                            enableDesugarBugFixForJacoco(variantScope));
             transformManager.addTransform(taskFactory, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()
@@ -2565,6 +2567,20 @@ public abstract class TaskManager {
             return JacocoConfigurations.VERSION_FOR_DX;
         } else {
             return extension.getJacoco().getVersion();
+        }
+    }
+
+    /**
+     * If a fix in Desugar should be enabled to handle broken bytecode produced by older Jacoco, see
+     * http://b/62623509.
+     */
+    private boolean enableDesugarBugFixForJacoco(@NonNull VariantScope scope) {
+        try {
+            GradleVersion current = GradleVersion.parse(getJacocoVersion(scope));
+            return JacocoConfigurations.MIN_WITHOUT_BROKEN_BYTECODE.compareTo(current) > 0;
+        } catch (Throwable ignored) {
+            // Cannot determine using version comparison, avoid passing the flag.
+            return true;
         }
     }
 

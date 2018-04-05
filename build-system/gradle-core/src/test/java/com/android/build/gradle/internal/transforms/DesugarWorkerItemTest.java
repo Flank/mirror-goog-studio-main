@@ -70,7 +70,8 @@ public class DesugarWorkerItemTest {
                         ImmutableList.of(),
                         temporaryFolder.newFolder().toString(),
                         true,
-                        21);
+                        21,
+                        true);
         DesugarWorkerItem workerItem =
                 new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
 
@@ -121,7 +122,8 @@ public class DesugarWorkerItemTest {
                         ImmutableList.of(),
                         temporaryFolder.newFolder().toString(),
                         true,
-                        21);
+                        21,
+                        true);
 
         DesugarWorkerItem workerItem =
                 new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
@@ -141,7 +143,8 @@ public class DesugarWorkerItemTest {
                         ImmutableList.of(),
                         temporaryFolder.newFolder().toString(),
                         false,
-                        23);
+                        23,
+                        true);
 
         DesugarWorkerItem workerItem =
                 new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());

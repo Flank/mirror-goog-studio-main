@@ -159,6 +159,8 @@ public class DesugarTransform extends Transform {
     private final boolean enableGradleWorkers;
     @NonNull private final String projectVariant;
     private final boolean enableIncrementalDesugaring;
+    // If a flag should be passed to handle http://b/62623509, for JaCoCo older than 0.7.8
+    private final boolean enableBugFixForJacoco;
 
     @NonNull private Set<InputEntry> cacheMisses = Sets.newConcurrentHashSet();
 
@@ -171,7 +173,8 @@ public class DesugarTransform extends Transform {
             boolean enableGradleWorkers,
             @NonNull Path tmpDir,
             @NonNull String projectVariant,
-            boolean enableIncrementalDesugaring) {
+            boolean enableIncrementalDesugaring,
+            boolean enableBugFixForJacoco) {
         this(
                 bootClasspath,
                 userCache,
@@ -182,7 +185,8 @@ public class DesugarTransform extends Transform {
                 tmpDir,
                 projectVariant,
                 enableIncrementalDesugaring,
-                WaitableExecutor.useGlobalSharedThreadPool());
+                WaitableExecutor.useGlobalSharedThreadPool(),
+                enableBugFixForJacoco);
     }
 
     @VisibleForTesting
@@ -196,7 +200,8 @@ public class DesugarTransform extends Transform {
             @NonNull Path tmpDir,
             @NonNull String projectVariant,
             boolean enableIncrementalDesugaring,
-            @NonNull WaitableExecutor waitableExecutor) {
+            @NonNull WaitableExecutor waitableExecutor,
+            boolean enableBugFixForJacoco) {
         this.bootClasspath = bootClasspath;
         this.userCache = null;
         this.minSdk = minSdk;
@@ -207,6 +212,7 @@ public class DesugarTransform extends Transform {
         this.tmpDir = tmpDir;
         this.projectVariant = projectVariant;
         this.enableIncrementalDesugaring = enableIncrementalDesugaring;
+        this.enableBugFixForJacoco = enableBugFixForJacoco;
     }
 
     @NonNull
@@ -497,7 +503,13 @@ public class DesugarTransform extends Transform {
 
             DesugarProcessArgs processArgs =
                     new DesugarProcessArgs(
-                            inToOut, classpath, bootclasspath, tmpDir.toString(), verbose, minSdk);
+                            inToOut,
+                            classpath,
+                            bootclasspath,
+                            tmpDir.toString(),
+                            verbose,
+                            minSdk,
+                            enableBugFixForJacoco);
             args.add(processArgs);
         }
         return args;

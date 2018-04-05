@@ -620,6 +620,16 @@ public class GradleVersionTest {
         assertThat(compareAGPVersions("3.1.0-dev", "3.0.0-dev")).isGreaterThan(0);
     }
 
+    @Test
+    public void testJacocoVersions() {
+        GradleVersion fst = GradleVersion.parse("0.7.7.201606060606");
+        GradleVersion snd = GradleVersion.parse("0.7.8");
+        GradleVersion thrd = GradleVersion.parse("0.8.2-SNAPSHOT");
+        assertThat(fst).isLessThan(snd);
+        assertThat(fst).isLessThan(thrd);
+        assertThat(snd).isLessThan(thrd);
+    }
+
     @NonNull
     private static String convertAGPVersionToString(@NonNull GradleVersion version) {
         // Reimplement this method instead of using version.toString() directly to prevent the
