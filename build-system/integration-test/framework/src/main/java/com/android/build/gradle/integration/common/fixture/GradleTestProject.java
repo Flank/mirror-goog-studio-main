@@ -59,6 +59,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -493,7 +494,7 @@ public final class GradleTestProject implements TestRule {
 
         try {
             deleteRecursivelyIfExistsExperimental(testDir.toPath());
-        } catch (DirectoryNotEmptyException e) {
+        } catch (FileSystemException e) {
             // https://issuetracker.google.com/69271554
             // This exception is unexpected, let's investigate further.
             // This handling can be removed once the root cause has been found and fixed.
@@ -501,6 +502,10 @@ public final class GradleTestProject implements TestRule {
                     String.format(
                             "Failed to delete directory the first time: %s.",
                             testDir.getAbsolutePath()));
+            System.err.println("Exception : " + e);
+            for (Throwable suppressedException : e.getSuppressed()) {
+                System.err.println("\tSuppressed: " + suppressedException);
+            }
 
             System.err.println("Now printing thread dump for debugging:");
             printThreadDump();
@@ -571,7 +576,7 @@ public final class GradleTestProject implements TestRule {
                     "Number of files in directory: " + checkNotNull(path.toFile().list()).length);
             boolean directoryDeleted = false;
             int attempts = 0;
-            while (!directoryDeleted && attempts < 10) {
+            while (!directoryDeleted && attempts < 3) {
                 System.err.println("Trying to delete directory again, attempt " + (++attempts));
                 try {
                     java.nio.file.Files.deleteIfExists(path);
