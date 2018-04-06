@@ -25,36 +25,37 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.builder.core.DexByteCodeConverter;
-import com.android.builder.core.DexOptions;
+import com.android.builder.dexing.ClassFileInput;
+import com.android.builder.dexing.ClassFileInputs;
+import com.android.builder.dexing.DexArchiveBuilder;
+import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.utils.FileUtils;
-import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import org.gradle.api.logging.Logger;
+import java.util.stream.Collectors;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Transform that takes the hot (or warm) swap classes and dexes them.
@@ -69,30 +70,25 @@ import org.gradle.api.logging.Logger;
 public class InstantRunDex extends Transform {
 
     @NonNull
-    private final Supplier<DexByteCodeConverter> dexByteCodeConverter;
-
-    @NonNull
-    private final DexOptions dexOptions;
-
-    @NonNull
-    private final ILogger logger;
-
-    @NonNull
     private final InstantRunVariantScope variantScope;
     private final int minSdkForDx;
+    private final boolean enableDesugaring;
+    @NonNull private final FileCollection bootClasspath;
+    @NonNull private MessageReceiver messageReceiver;
 
     public InstantRunDex(
             @NonNull InstantRunVariantScope transformVariantScope,
-            @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
-            @NonNull DexOptions dexOptions,
-            @NonNull Logger logger,
-            int minSdkForDx) {
+            int minSdkForDx,
+            boolean enableDesugaring,
+            @NonNull FileCollection bootClasspath,
+            @NonNull MessageReceiver messageReceiver) {
         this.variantScope = transformVariantScope;
-        this.dexByteCodeConverter = dexByteCodeConverter;
-        this.dexOptions = dexOptions;
-        this.logger = new LoggerWrapper(logger);
         this.minSdkForDx = minSdkForDx;
+        this.enableDesugaring = enableDesugaring;
+        this.bootClasspath = bootClasspath;
+        this.messageReceiver = messageReceiver;
     }
+
 
     @Override
     public void transform(@NonNull TransformInvocation invocation)
@@ -121,8 +117,10 @@ public class InstantRunDex extends Transform {
         try {
             for (TransformInput input : invocation.getReferencedInputs()) {
                 for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                    if (!directoryInput.getContentTypes()
-                            .contains(ExtendedContentType.CLASSES_ENHANCED)) {
+                    Set<QualifiedContent.ContentType> types = directoryInput.getContentTypes();
+                    // we want to process only CLASSES_ENHANCED
+                    if (types.size() != 1
+                            || !types.contains(ExtendedContentType.CLASSES_ENHANCED)) {
                         continue;
                     }
                     final File folder = directoryInput.getFile();
@@ -153,19 +151,16 @@ public class InstantRunDex extends Transform {
             FileUtils.cleanOutputDir(outputFolder);
             return;
         }
-        final ImmutableList.Builder<File> inputFiles = ImmutableList.builder();
-        inputFiles.add(classesJar);
 
         try {
             variantScope
                     .getInstantRunBuildContext()
                     .startRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
-            convertByteCode(inputFiles.build(), outputFolder);
+            List<Path> classpath = getClasspath(invocation);
+            convertByteCode(classesJar, classpath, outputFolder);
             variantScope
                     .getInstantRunBuildContext()
                     .addChangedFile(FileType.RELOAD_DEX, new File(outputFolder, "classes.dex"));
-        } catch (ProcessException e) {
-            throw new TransformException(e);
         } finally {
             variantScope
                     .getInstantRunBuildContext()
@@ -174,7 +169,7 @@ public class InstantRunDex extends Transform {
     }
 
     @VisibleForTesting
-    static class JarClassesBuilder implements Closeable{
+    static class JarClassesBuilder implements Closeable {
         final File outputFile;
         private JarOutputStream jarOutputStream;
         boolean empty = true;
@@ -205,18 +200,23 @@ public class InstantRunDex extends Transform {
     }
 
     @VisibleForTesting
-    protected void convertByteCode(List<File> inputFiles, File outputFolder)
-            throws InterruptedException, ProcessException, IOException {
-        dexByteCodeConverter
-                .get()
-                .convertByteCode(
-                        inputFiles,
-                        outputFolder,
-                        false /* multiDexEnabled */,
-                        null /*getMainDexListFile */,
-                        dexOptions,
-                        new LoggedProcessOutputHandler(logger),
-                        minSdkForDx);
+    protected void convertByteCode(File inputJar, List<Path> classpath, File outputFolder)
+            throws IOException {
+        try (ClassFileProviderFactory bootClasspathProvider =
+                        new ClassFileProviderFactory(getBootClasspath());
+                ClassFileProviderFactory libraryClasspathProvider =
+                        new ClassFileProviderFactory(classpath);
+                ClassFileInput classInput = ClassFileInputs.fromPath(inputJar.toPath())) {
+            DexArchiveBuilder d8DexBuilder =
+                    DexArchiveBuilder.createD8DexBuilder(
+                            minSdkForDx,
+                            true,
+                            bootClasspathProvider,
+                            libraryClasspathProvider,
+                            enableDesugaring,
+                            messageReceiver);
+            d8DexBuilder.convert(classInput.entries(p -> true), outputFolder.toPath(), false);
+        }
     }
 
     @VisibleForTesting
@@ -224,8 +224,8 @@ public class InstantRunDex extends Transform {
         return new JarClassesBuilder(outputFile);
     }
 
-    private static void copyFileInJar(File inputDir, File inputFile, JarOutputStream jarOutputStream)
-            throws IOException {
+    private static void copyFileInJar(
+            File inputDir, File inputFile, JarOutputStream jarOutputStream) throws IOException {
 
         String entryName = inputFile.getPath().substring(inputDir.getPath().length() + 1);
         JarEntry jarEntry = new JarEntry(entryName);
@@ -243,7 +243,8 @@ public class InstantRunDex extends Transform {
     @NonNull
     @Override
     public Set<QualifiedContent.ContentType> getInputTypes() {
-        return ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED);
+        return ImmutableSet.of(
+                ExtendedContentType.CLASSES_ENHANCED, QualifiedContent.DefaultContentType.CLASSES);
     }
 
     @NonNull
@@ -254,8 +255,17 @@ public class InstantRunDex extends Transform {
 
     @NonNull
     @Override
-    public Set<QualifiedContent.Scope> getReferencedScopes() {
-        return Sets.immutableEnumSet(QualifiedContent.Scope.PROJECT);
+    public Set<? super QualifiedContent.Scope> getReferencedScopes() {
+        if (enableDesugaring) {
+            return ImmutableSet.of(
+                    QualifiedContent.Scope.PROJECT,
+                    QualifiedContent.Scope.SUB_PROJECTS,
+                    QualifiedContent.Scope.EXTERNAL_LIBRARIES,
+                    QualifiedContent.Scope.PROVIDED_ONLY,
+                    InternalScope.MAIN_SPLIT);
+        } else {
+            return ImmutableSet.of(QualifiedContent.Scope.PROJECT);
+        }
     }
 
     @NonNull
@@ -283,4 +293,23 @@ public class InstantRunDex extends Transform {
         return true;
     }
 
+    @NonNull
+    private List<Path> getClasspath(@NonNull TransformInvocation transformInvocation) {
+        if (!enableDesugaring) {
+            return Collections.emptyList();
+        }
+
+        Collection<File> allFiles =
+                TransformInputUtil.getAllFiles(transformInvocation.getReferencedInputs());
+        return allFiles.stream().map(File::toPath).collect(Collectors.toList());
+    }
+
+    @NonNull
+    private List<Path> getBootClasspath() {
+        if (!enableDesugaring) {
+            return Collections.emptyList();
+        }
+
+        return bootClasspath.getFiles().stream().map(File::toPath).collect(Collectors.toList());
+    }
 }

@@ -28,16 +28,14 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.dsl.DexOptions;
+import com.android.build.gradle.internal.fixtures.FakeFileCollection;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -45,10 +43,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,21 +67,12 @@ public class InstantRunDexTest {
     GlobalScope globalScope;
 
     @Mock
-    DexByteCodeConverter dexByteCodeConverter;
-
-    @Mock
     TransformOutputProvider transformOutputProvider;
 
     @Mock InstantRunBuildContext buildContext;
 
     @Mock
-    DexOptions dexOptions;
-
-    @Mock
     Context context;
-
-    @Mock
-    Logger logger;
 
     @Mock
     Project project;
@@ -95,7 +84,6 @@ public class InstantRunDexTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private File directoryInput;
-    private File changedFile;
 
 
     @Before
@@ -121,7 +109,7 @@ public class InstantRunDexTest {
 
         File tmp = new File(System.getProperty("java.io.tmpdir"));
         directoryInput = new File(tmp, "directory");
-        changedFile = new File(directoryInput, "path/to/some/file");
+        File changedFile = new File(directoryInput, "path/to/some/file");
         Files.createParentDirs(changedFile);
         Files.write("abcde", changedFile, Charsets.UTF_8);
     }
@@ -177,7 +165,14 @@ public class InstantRunDexTest {
                 invocation -> ImmutableMap.of("android.injected.build.api", "15"));
 
         InstantRunDex instantRunDex =
-                new InstantRunDex(variantScope, () -> dexByteCodeConverter, dexOptions, logger, 1);
+                new InstantRunDex(
+                        variantScope,
+                        1,
+                        false,
+                        new FakeFileCollection(),
+                        m -> {
+                            /* ignore */
+                        });
 
         instantRunDex.transform(new TransformInvocationBuilder(context)
                 .addReferencedInputs(ImmutableList.of(getTransformInput(directoryInput)))
@@ -194,7 +189,14 @@ public class InstantRunDexTest {
                 invocation -> ImmutableMap.of("android.injected.build.api", "15"));
 
         InstantRunDex instantRunDex =
-                new InstantRunDex(variantScope, () -> dexByteCodeConverter, dexOptions, logger, 1);
+                new InstantRunDex(
+                        variantScope,
+                        1,
+                        false,
+                        new FakeFileCollection(),
+                        m -> {
+                            /* ignore */
+                        });
 
         instantRunDex.transform(new TransformInvocationBuilder(context)
                 .addOutputProvider(transformOutputProvider)
@@ -205,7 +207,14 @@ public class InstantRunDexTest {
     }
 
     private InstantRunDex getTestedDex(final List<File> convertedFiles) {
-        return new InstantRunDex(variantScope, () -> dexByteCodeConverter, dexOptions, logger, 1) {
+        return new InstantRunDex(
+                variantScope,
+                1,
+                false,
+                new FakeFileCollection(),
+                m -> {
+                    /* ignore */
+                }) {
 
             @Override
             protected JarClassesBuilder getJarClassBuilder(File outputFile) {
@@ -213,9 +222,8 @@ public class InstantRunDexTest {
             }
 
             @Override
-            protected void convertByteCode(List<File> inputFiles, File outputFolder)
-                    throws InterruptedException, ProcessException, IOException {
-                convertedFiles.addAll(inputFiles);
+            protected void convertByteCode(File inputJar, List<Path> classpath, File outputFolder) {
+                convertedFiles.add(inputJar);
             }
         };
     }

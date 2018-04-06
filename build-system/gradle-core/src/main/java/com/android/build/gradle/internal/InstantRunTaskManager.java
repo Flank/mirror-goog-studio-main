@@ -42,20 +42,19 @@ import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.build.gradle.tasks.ir.FastDeployRuntimeExtractorTask;
 import com.android.build.gradle.tasks.ir.GenerateInstantRunAppInfoTask;
 import com.android.build.gradle.tasks.ir.InstantRunMainApkResourcesBuilder;
-import com.android.builder.core.DexByteCodeConverter;
-import com.android.builder.core.DexOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.profile.Recorder;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionAdapter;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskState;
 
@@ -93,14 +92,15 @@ public class InstantRunTaskManager {
     }
 
     public BuildInfoLoaderTask createInstantRunAllTasks(
-            DexOptions dexOptions,
-            @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
             @Nullable Task preTask,
             Task anchorTask,
             Set<? super QualifiedContent.Scope> resMergingScopes,
             BuildableArtifact instantRunMergedManifests,
             boolean addDependencyChangeChecker,
-            int minSdkForDx) {
+            int minSdkForDx,
+            boolean enableDesugaring,
+            FileCollection bootClasspath,
+            MessageReceiver messageReceiver) {
         final Project project = variantScope.getGlobalScope().getProject();
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
@@ -234,7 +234,11 @@ public class InstantRunTaskManager {
         // and if we are not in incremental mode, we need to still need to clean our output state.
         InstantRunDex reloadDexTransform =
                 new InstantRunDex(
-                        variantScope, dexByteCodeConverter, dexOptions, logger, minSdkForDx);
+                        variantScope,
+                        minSdkForDx,
+                        enableDesugaring,
+                        bootClasspath,
+                        messageReceiver);
 
         reloadDexTask =
                 transformManager

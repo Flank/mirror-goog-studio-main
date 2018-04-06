@@ -2501,14 +2501,15 @@ public abstract class TaskManager {
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
         BuildInfoLoaderTask buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(
-                        variantScope.getGlobalScope().getExtension().getDexOptions(),
-                        androidBuilder::getDexByteCodeConverter,
                         extractJarsTask.orElse(null),
                         allActionAnchorTask,
                         getResMergingScopes(variantScope),
                         instantRunMergedManifests,
                         true /* addResourceVerifier */,
-                        minSdkForDx.getFeatureLevel());
+                        minSdkForDx.getFeatureLevel(),
+                        variantScope.getJava8LangSupportType() == Java8LangSupport.D8,
+                        variantScope.getBootClasspath(),
+                        androidBuilder.getMessageReceiver());
 
         if (variantScope.getSourceGenTask() != null) {
             variantScope.getSourceGenTask().dependsOn(buildInfoLoaderTask);
