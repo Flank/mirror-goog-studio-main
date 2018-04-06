@@ -25,13 +25,14 @@ import com.android.java.model.impl.JavaProjectImpl;
 import com.android.java.model.impl.SourceSetImpl;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;
+import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.initialization.IncludedBuild;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Specs;
@@ -45,6 +46,13 @@ public class JavaModelBuilder implements ToolingModelBuilder {
 
     private static final String UNRESOLVED_DEPENDENCY_PREFIX = "unresolved dependency - ";
     private static final String LOCAL_JAR_DISPLAY_NAME = "local jar - ";
+    private static final String CURRENT_BUILD_NAME = "__current_build__";
+
+    /**
+     * a map that goes from build name ({@link BuildIdentifier#getName()} to the root dir of the
+     * build.
+     */
+    private Map<String, String> buildMapping = null;
 
     @Override
     public boolean canBuild(String modelName) {
@@ -56,20 +64,62 @@ public class JavaModelBuilder implements ToolingModelBuilder {
         if (!project.getPlugins().hasPlugin(JavaPlugin.class)) {
             return null;
         }
+
+        if (buildMapping == null && isCompositeBuildSupported(project)) {
+            buildMapping = computeBuildMapping(project.getGradle());
+        }
+
         JavaPluginConvention javaPlugin =
                 project.getConvention().findPlugin(JavaPluginConvention.class);
 
         Collection<SourceSet> sourceSets = new ArrayList<>();
         for (org.gradle.api.tasks.SourceSet sourceSet : javaPlugin.getSourceSets()) {
-            sourceSets.add(createSourceSets(project, sourceSet));
+            sourceSets.add(createSourceSets(project, sourceSet, buildMapping));
         }
 
         return new JavaProjectImpl(
                 project.getName(), sourceSets, javaPlugin.getSourceCompatibility().toString());
     }
 
+    private static Map<String, String> computeBuildMapping(Gradle gradle) {
+        Map<String, String> buildMapping = new HashMap<>();
+
+        // Get the root dir for current build.
+        // This is necessary to handle the case when dependency comes from the same build with consumer,
+        // i.e. when BuildIdentifier.isCurrentBuild returns true. In that case, BuildIdentifier.getName
+        // returns ":" instead of the actual build name.
+        String currentBuildPath = gradle.getRootProject().getProjectDir().getAbsolutePath();
+        buildMapping.put(CURRENT_BUILD_NAME, currentBuildPath);
+
+        Gradle rootGradleProject = gradle;
+        // first, ensure we are starting from the root Gradle object.
+        //noinspection ConstantConditions
+        while (rootGradleProject.getParent() != null) {
+            rootGradleProject = rootGradleProject.getParent();
+        }
+
+        // get the root dir for the top project if different from current project.
+        if (rootGradleProject != gradle) {
+            buildMapping.put(
+                    rootGradleProject.getRootProject().getName(),
+                    rootGradleProject.getRootProject().getProjectDir().getAbsolutePath());
+        }
+
+        for (IncludedBuild includedBuild : rootGradleProject.getIncludedBuilds()) {
+            String includedBuildPath = includedBuild.getProjectDir().getAbsolutePath();
+            // current build has been added with key CURRENT_BUIlD_NAME, avoid redundant entry.
+            if (!includedBuildPath.equals(currentBuildPath)) {
+                buildMapping.put(includedBuild.getName(), includedBuildPath);
+            }
+        }
+
+        return buildMapping;
+    }
+
     private static SourceSet createSourceSets(
-            Project project, org.gradle.api.tasks.SourceSet sourceSet) {
+            Project project,
+            org.gradle.api.tasks.SourceSet sourceSet,
+            Map<String, String> buildMapping) {
         String compileConfigurationName;
         if (isGradleAtLeast(project.getGradle().getGradleVersion(), "2.12")) {
             compileConfigurationName = sourceSet.getCompileClasspathConfigurationName();
@@ -82,7 +132,7 @@ public class JavaModelBuilder implements ToolingModelBuilder {
                 sourceSet.getResources().getSrcDirs(),
                 sourceSet.getOutput().getClassesDir(),
                 sourceSet.getOutput().getResourcesDir(),
-                getLibrariesForConfiguration(project, compileConfigurationName));
+                getLibrariesForConfiguration(project, compileConfigurationName, buildMapping));
     }
 
     @VisibleForTesting
@@ -93,7 +143,7 @@ public class JavaModelBuilder implements ToolingModelBuilder {
     }
 
     private static Collection<JavaLibrary> getLibrariesForConfiguration(
-            Project project, String configurationName) {
+            Project project, String configurationName, Map<String, String> buildMapping) {
         Configuration configuration = project.getConfigurations().getAt(configurationName);
         Collection<JavaLibrary> javaLibraries = new ArrayList<>();
 
@@ -106,8 +156,11 @@ public class JavaModelBuilder implements ToolingModelBuilder {
         for (ResolvedArtifact artifact : allArtifacts) {
             String projectPath = getProjectPath(project, artifact);
             File jarFile = artifact.getFile();
+            String buildId =
+                    projectPath == null ? null : getBuildId(project, artifact, buildMapping);
             javaLibraries.add(
-                    new JavaLibraryImpl(projectPath, artifact.getName().intern(), jarFile));
+                    new JavaLibraryImpl(
+                            projectPath, buildId, artifact.getName().intern(), jarFile));
         }
 
         // Add unresolved dependencies, mark by adding prefix UNRESOLVED_DEPENDENCY_PREFIX to name.
@@ -122,7 +175,8 @@ public class JavaModelBuilder implements ToolingModelBuilder {
                     UNRESOLVED_DEPENDENCY_PREFIX
                             + dependency.getSelector().toString().replaceAll(":", " ");
             javaLibraries.add(
-                    new JavaLibraryImpl(null, unresolvedName.intern(), new File(unresolvedName)));
+                    new JavaLibraryImpl(
+                            null, null, unresolvedName.intern(), new File(unresolvedName)));
         }
 
         // Collect jars from local directory
@@ -131,7 +185,7 @@ public class JavaModelBuilder implements ToolingModelBuilder {
                     && !(dependency instanceof ProjectDependency)) {
                 for (File file : ((SelfResolvingDependency) dependency).resolve()) {
                     String localJarName = LOCAL_JAR_DISPLAY_NAME + file.getName();
-                    javaLibraries.add(new JavaLibraryImpl(null, localJarName.intern(), file));
+                    javaLibraries.add(new JavaLibraryImpl(null, null, localJarName.intern(), file));
                 }
             }
         }
@@ -154,6 +208,29 @@ public class JavaModelBuilder implements ToolingModelBuilder {
             }
         }
         return null;
+    }
+
+    /** Returns {@code true} if current Gradle supports composite build. */
+    private static boolean isCompositeBuildSupported(Project project) {
+        return isGradleAtLeast(project.getGradle().getGradleVersion(), "3.1");
+    }
+
+    /**
+     * Returns build id if artifact is a module dependency and Gradle is at least 3.1, returns null
+     * otherwise.
+     */
+    private static String getBuildId(
+            Project project, ResolvedArtifact artifact, Map<String, String> buildMapping) {
+        if (isCompositeBuildSupported(project)) {
+            ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+            if (id instanceof ProjectComponentIdentifier) {
+                BuildIdentifier identifier = ((ProjectComponentIdentifier) id).getBuild();
+                return buildMapping.get(
+                        identifier.isCurrentBuild() ? CURRENT_BUILD_NAME : identifier.getName());
+            }
+        }
+        // Gradle doesn't support composite build, then build id must be current project root directory.
+        return project.getProjectDir().getAbsolutePath();
     }
 
     /** Returns true if file is inside of directory or any of its sub-directories. */
