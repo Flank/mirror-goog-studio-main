@@ -280,15 +280,19 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                             ic.setAccessible(true);
                             // Replace the object with a wrapper
                             Object input = ic.get(connection);
-                            InputConnection inputConnection;
+                            InputConnection inputConnection = null;
                             boolean isWeakReference =
                                     input.getClass().isAssignableFrom(WeakReference.class);
                             if (isWeakReference) {
                                 inputConnection = ((WeakReference<InputConnection>) input).get();
-                            } else {
+                            } else if (InputConnection.class.isInstance(input)) {
+                                // Only set the input connection object if it is of type input connection.
+                                // on HTC Honor devices they modified the WeakReference to be a SoftReference as such
+                                // we do not want to default to this case.
                                 inputConnection = (InputConnection) input;
                             }
-                            if (!InputConnectionWrapper.class.isInstance(inputConnection)) {
+                            if (inputConnection != null
+                                    && !InputConnectionWrapper.class.isInstance(inputConnection)) {
                                 if (isWeakReference) {
                                     // Store this instance of the wrapper on a thread local
                                     // variable this prevents the wrapper from getting cleaned
@@ -324,6 +328,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
             }
         }
     }
+
     private class ActivityInitialization implements Runnable {
         private boolean myInitialized = false;
         private CountDownLatch myLatch;
@@ -340,8 +345,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
             boolean logErrorOnce = false;
             while (!myInitialized) {
                 try {
-                    Class activityThreadClass =
-                            Class.forName("android.app.ActivityThread");
+                    Class activityThreadClass = Class.forName("android.app.ActivityThread");
                     Application app =
                             (Application)
                                     activityThreadClass
@@ -372,11 +376,9 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                 } catch (NoSuchMethodException ex) {
                     StudioLog.e("Failed to find currentApplication method");
                 } catch (IllegalAccessException ex) {
-                    StudioLog.e(
-                            "Insufficient privileges to get application handle");
+                    StudioLog.e("Insufficient privileges to get application handle");
                 } catch (InvocationTargetException ex) {
-                    StudioLog.e(
-                            "Failed to call static function currentApplication");
+                    StudioLog.e("Failed to call static function currentApplication");
                 }
 
                 try {
