@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -32,14 +33,18 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -47,6 +52,7 @@ import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -63,6 +69,8 @@ public class MultiDexTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("multiDex").withHeap("2048M").create();
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Parameterized.Parameters(name = "mainDexListTool = {0}")
     public static Object[] data() {
@@ -104,7 +112,9 @@ public class MultiDexTest {
                     "\nandroid.dexOptions.keepRuntimeAnnotatedClasses false");
         }
 
-        executor().run("assembleDebug", "assembleAndroidTest");
+        executor()
+                .with(BooleanOption.ENABLE_DYNAMIC_APPS, true)
+                .run("assembleDebug", "makeApkFromBundleForIcsDebug", "assembleAndroidTest");
 
         List<String> mandatoryClasses =
                 Lists.newArrayList("Lcom/android/tests/basic/MyAnnotation;");
@@ -113,6 +123,24 @@ public class MultiDexTest {
         }
 
         assertMainDexContains("debug", mandatoryClasses);
+
+        try (Zip bundle =
+                new Zip(
+                        project.getOutputFile(
+                                "bundle", "icsDebug", "bundleIcsDebug", "bundle.aab"))) {
+            String mainDexListPath =
+                    "BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt";
+            assertThat(bundle)
+                    .containsFileWithMatch(mainDexListPath, "com.android.tests.basic.MyAnnotation");
+            assertThat(bundle)
+                    .containsFileWithMatch(
+                            mainDexListPath, "android.support.multidex.MultiDexApplication");
+        }
+
+        //noinspection EmptyTryBlock TODO(b/74425653): Implement support in bundle tool.
+        try (Apk bundleBase = getBaseBundleApk()) {
+            // assertMainDexContains(bundleBase, mandatoryClasses);
+        }
 
         // manually inspect the apk to ensure that the classes.dex that was created is the same
         // one in the apk. This tests that the packaging didn't rename the multiple dex files
@@ -147,6 +175,24 @@ public class MultiDexTest {
                 .containsClass("Lcom/android/tests/basic/NotUsed;");
         assertThat(project.getApk("ics", "debug"))
                 .containsClass("Lcom/android/tests/basic/DeadCode;");
+    }
+
+    private Apk getBaseBundleApk() throws IOException {
+        Path extracted = temporaryFolder.newFile("base-master.apk").toPath();
+
+        try (FileSystem apks =
+                        FileUtils.createZipFilesystem(
+                                project.getIntermediateFile(
+                                                "apks_from_bundle",
+                                                "icsDebug",
+                                                "makeApkFromBundleForIcsDebug",
+                                                "bundle.apks")
+                                        .toPath());
+                BufferedOutputStream out =
+                        new BufferedOutputStream(Files.newOutputStream(extracted))) {
+            Files.copy(apks.getPath("base-master.apk"), out);
+        }
+        return new Apk(extracted);
     }
 
     @Test
@@ -260,7 +306,12 @@ public class MultiDexTest {
 
     private void assertMainDexContains(
             @NonNull String buildType, @NonNull List<String> mandatoryClasses) throws Exception {
-        Apk apk = project.getApk("ics", buildType);
+        Apk apk = project.getApk(ApkType.of(buildType, true), "ics");
+        assertMainDexContains(apk, mandatoryClasses);
+    }
+
+    private static void assertMainDexContains(
+            @NonNull Apk apk, @NonNull List<String> mandatoryClasses) throws IOException {
         Dex mainDex = apk.getMainDexFile().orElseThrow(AssertionError::new);
 
         ImmutableSet<String> mainDexClasses = mainDex.getClasses().keySet();

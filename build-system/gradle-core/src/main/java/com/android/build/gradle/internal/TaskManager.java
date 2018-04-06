@@ -1104,8 +1104,9 @@ public abstract class TaskManager {
 
         createSplitsDiscovery(scope);
 
-        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                scope.getDexingType() == DexingType.LEGACY_MULTIDEX;
+        // The manifest main dex list proguard rules are always needed for the bundle,
+        // even if legacy multidex is not explicitly enabled.
+        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
 
         if (Boolean.TRUE.equals(
                 scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
@@ -2162,6 +2163,9 @@ public abstract class TaskManager {
                         .addTransform(taskFactory, variantScope, jarMergingTransform)
                         .ifPresent(variantScope::addColdSwapBuildTask);
             }
+        }
+
+        if (variantScope.getNeedsMainDexList()) {
 
             // ---------
             // create the transform that's going to take the code and the proguard keep list
@@ -2176,7 +2180,14 @@ public abstract class TaskManager {
                             new MainDexListTransform(variantScope, extension.getDexOptions());
                 }
             } else {
-                multiDexTransform = new MultiDexTransform(variantScope, extension.getDexOptions());
+                // This legacy codepath cannot be used without merging all the
+                // classes first. We can't fail during configuration for the bundle tool, but we
+                // should fail with a clear error message during execution.
+                multiDexTransform =
+                        new MultiDexTransform(
+                                variantScope,
+                                extension.getDexOptions(),
+                                dexingType == DexingType.LEGACY_MULTIDEX);
             }
             transformManager
                     .addTransform(taskFactory, variantScope, multiDexTransform)
@@ -2190,7 +2201,7 @@ public abstract class TaskManager {
                                                         InternalArtifactType
                                                                 .LEGACY_MULTIDEX_MAIN_DEX_LIST,
                                                         task,
-                                                        "maindexlist.txt");
+                                                        "mainDexList.txt");
                                 ((MainDexListWriter) multiDexTransform)
                                         .setMainDexListOutputFile(mainDexListFile);
                             });

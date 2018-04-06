@@ -25,12 +25,14 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
+import com.android.tools.build.bundletool.model.AppBundle
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -62,6 +64,12 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     lateinit var featureZips: FileCollection
         private set
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    var mainDexList: BuildableArtifact? = null
+        private set
+
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
@@ -78,10 +86,11 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(
-                    baseModuleZip.singleFile(),
-                    featureZips.files,
-                    aaptOptionsNoCompress,
-                    bundleFile
+                    baseModuleFile = baseModuleZip.singleFile(),
+                    featureFiles = featureZips.files,
+                    mainDexList = mainDexList?.singleFile(),
+                    aaptOptionsNoCompress = aaptOptionsNoCompress,
+                    bundleFile = bundleFile
                 )
             )
         }
@@ -90,6 +99,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     private data class Params(
         val baseModuleFile: File,
         val featureFiles: Set<File>,
+        val mainDexList: File?,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleFile: File
     ) : Serializable
@@ -122,6 +132,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                 .setBundleConfig(bundleConfig)
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
+
+            params.mainDexList?.let { mainDexList ->
+                check(mainDexList.name == AppBundle.Metadata.MAIN_DEX_LIST_FILE_NAME) {
+                    """Main dex list must have name '${AppBundle.Metadata.MAIN_DEX_LIST_FILE_NAME}'.
+                        |File: ${mainDexList.absolutePath}""".trimMargin()
+                }
+                command.addMetadataFile(AppBundle.Metadata.BUNDLETOOL_NAMESPACE, mainDexList.toPath())
+            }
 
             command.build().execute()
         }
@@ -156,6 +174,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             task.aaptOptionsNoCompress =
                     scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
+
+            // The bundle uses the main dex list even if legacy multidex is not explicitly enabled.
+            if (scope.getNeedsMainDexList()) {
+                task.mainDexList =
+                        scope.artifacts.getFinalArtifactFiles(
+                            InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
+                        )
+            }
         }
     }
 }

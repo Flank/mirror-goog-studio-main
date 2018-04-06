@@ -11,6 +11,7 @@ android {
     defaultConfig {
         buildConfigField "String", "FOO", "\"foo\""
         multiDexEnabled = true
+        versionCode = '1'
     }
 
     flavorDimensions 'foo'

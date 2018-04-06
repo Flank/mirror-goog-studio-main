@@ -110,6 +110,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     DexingType getDexingType();
 
+    boolean getNeedsMainDexList();
+
     @NonNull
     AndroidVersion getMinSdkVersion();
 
