@@ -94,8 +94,9 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val zipFile = Zip(bundleFile)
-        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
+        Zip(bundleFile).use {
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+        }
 
         // also test that the feature manifest contains the feature name.
         val manifestFile = FileUtils.join(project.getSubproject("feature1").buildDir,
@@ -117,8 +118,9 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val zipFile = Zip(bundleFile)
-        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
+        Zip(bundleFile).use {
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+        }
     }
 
     @Test
@@ -138,15 +140,13 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val zipFile = Zip(bundleFile)
-        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
+        Zip(bundleFile).use {
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+        }
     }
 
     @Test
     fun `test abiFilter with Bundle task`() {
-        // https://issuetracker.google.com/74401817
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-
         val appProject = project.getSubproject(":app")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")
@@ -175,15 +175,15 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val zipFile = Zip(bundleFile)
-
         val bundleContentWithAbis = bundleContent.plus(listOf(
-            "/base/native.pb",
-            "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
-            "/feature1/native.pb",
-            "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"))
-
-        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContentWithAbis)
+                "/base/native.pb",
+                "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
+                "/feature1/native.pb",
+                "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"))
+        Zip(bundleFile).use {
+            Truth.assertThat(it.entries.map { it.toString() })
+                    .containsExactly(*bundleContentWithAbis)
+        }
     }
 
     @Test
@@ -215,9 +215,10 @@ class DynamicAppTest {
                 "feature2-xxhdpi.apk")
 
         val baseApk = File(apkFolder, "base-master.apk")
-        Truth.assertThat(Zip(baseApk).entries.map { it.toString() })
-            .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
-
+        Zip(baseApk).use {
+            Truth.assertThat(it.entries.map { it.toString() })
+                    .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
+        }
 
         // -------------
         // build apks for API 18
