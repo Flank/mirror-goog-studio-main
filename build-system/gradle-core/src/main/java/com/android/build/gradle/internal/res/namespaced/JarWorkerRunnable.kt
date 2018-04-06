@@ -27,6 +27,9 @@ class JarWorkerRunnable @Inject constructor(val params: JarRequest) : Runnable {
             params.fromDirectories.forEach { dir -> out.addDirectory(dir.toPath()) }
             params.fromJars.forEach { jar -> out.addJar(jar.toPath()) }
             params.fromFiles.forEach { (path, file) -> out.addFile(path, file.toPath()) }
+            if (params.manifestProperties.isNotEmpty()) {
+                out.setManifestProperties(params.manifestProperties)
+            }
         }
     }
 }
@@ -35,5 +38,6 @@ data class JarRequest(
         val toFile: File,
         val fromDirectories: List<File> = listOf(),
         val fromJars: List<File> = listOf(),
-        val fromFiles: Map<String, File> = mapOf()): Serializable
+        val fromFiles: Map<String, File> = mapOf(),
+        val manifestProperties: Map<String, String> = mapOf()): Serializable
 
