@@ -35,14 +35,14 @@ import java.util.stream.Stream;
  * <p>The set of keys of both maps needs to be disjoint. This class is meant to "join" two disjoint
  * maps in a single object, not to implement an overlay.
  */
-public class LazyUnionMap<K, V> implements Map<K, V> {
+public class DisjointUnionMap<K, V> implements Map<K, V> {
     private final Map<K, V> first;
     private final Map<K, V> second;
     private Set<K> keySet;
     private Set<Map.Entry<K, V>> entrySet;
     private Collection<V> values;
 
-    public LazyUnionMap(@NonNull Map<K, V> first, @NonNull Map<K, V> second) {
+    public DisjointUnionMap(@NonNull Map<K, V> first, @NonNull Map<K, V> second) {
         Preconditions.checkArgument(
                 Sets.intersection(first.keySet(), second.keySet()).isEmpty(),
                 "Key sets are not disjoint.");
