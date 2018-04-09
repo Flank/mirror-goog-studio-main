@@ -31,7 +31,8 @@ public class SampleDataResourceValue extends ResourceValue {
      * This splitter is used to split back the content into lines. The content is generated always
      * with \n as new line separator.
      */
-    private static final Splitter NEW_LINE_SPLITTER = Splitter.on(Pattern.compile("\r?\n"));
+    private static final Splitter NEW_LINE_SPLITTER =
+            Splitter.on(Pattern.compile("\r?\n")).omitEmptyStrings();
 
     private final ImmutableList<String> myLines;
 
