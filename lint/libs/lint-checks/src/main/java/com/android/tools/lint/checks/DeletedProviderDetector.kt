@@ -81,18 +81,20 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
     companion object {
         @JvmField
         val ISSUE = Issue.create(
-            "DeletedProvider",
-            "Using Deleted Provider",
-            "The `Crypto` provider has been completely removed in Android P (and " +
-                    "was deprecated in an earlier release). This means that the code will " +
-                    "throw a `NoSuchProviderException` and the app will crash. Even if the " +
-                    "code catches that exception at a higher level, this is not secure and " +
-                    "should not be used.",
-            "https://android-developers.googleblog.com/2018/03/cryptography-changes-in-android-p.html",
-            Category.SECURITY,
-            9,
-            Severity.ERROR,
-            Implementation(
+            id = "DeletedProvider",
+            briefDescription = "Using Deleted Provider",
+            explanation = """
+                The `Crypto` provider has been completely removed in Android P (and was \
+                deprecated in an earlier release). This means that the code will throw a \
+                `NoSuchProviderException` and the app will crash. Even if the code catches \
+                that exception at a higher level, this is not secure and should not be \
+                used.
+                """,
+            moreInfo = "https://android-developers.googleblog.com/2018/03/cryptography-changes-in-android-p.html",
+            category = Category.SECURITY,
+            priority = 9,
+            severity = Severity.ERROR,
+            implementation = Implementation(
                 DeletedProviderDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

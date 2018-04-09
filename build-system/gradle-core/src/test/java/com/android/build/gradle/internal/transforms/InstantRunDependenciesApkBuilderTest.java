@@ -108,7 +108,7 @@ public class InstantRunDependenciesApkBuilderTest {
                         buildContext,
                         androidBuilder,
                         null,
-                        "com.foo.test",
+                        () -> "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),

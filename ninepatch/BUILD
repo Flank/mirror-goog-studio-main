@@ -1,9 +1,9 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.ninepatch",
+    name = "studio.android.sdktools.ninepatch",
     srcs = ["src/main/java"],
-    iml_files = ["ninepatch.iml"],
+    iml_files = ["android.sdktools.ninepatch.iml"],
     tags = ["managed"],
     test_srcs = [
         "src/test/java",

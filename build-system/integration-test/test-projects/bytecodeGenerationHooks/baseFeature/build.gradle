@@ -7,7 +7,7 @@ android {
     baseFeature true
 
     defaultConfig {
-        minSdkVersion 8
+        minSdkVersion rootProject.supportLibMinSdk
     }
 }
 

@@ -173,7 +173,8 @@ public class GridLayoutDetector extends LayoutDetector {
                     fix().name("Update to " + prefix + ":" + name)
                             .composite(
                                     fix().set(AUTO_URI, name, attribute.getValue()).build(),
-                                    fix().unset(ANDROID_URI, name).build());
+                                    fix().unset(ANDROID_URI, name).build())
+                            .autoFix();
 
             context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
         }

@@ -26,6 +26,9 @@ import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.ide.common.build.ApkData;
 import com.google.common.base.MoreObjects;
 import java.io.File;
+import java.io.Serializable;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Task;
 
@@ -68,7 +71,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public void setVersionCodeOverride(int versionCodeOverride) {
-        apkData.setVersionCode(versionCodeOverride);
+        apkData.setVersionCode((IntSupplier & Serializable) () -> versionCodeOverride);
     }
 
     @Override
@@ -78,7 +81,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public void setVersionNameOverride(String versionNameOverride) {
-        apkData.setVersionName(versionNameOverride);
+        apkData.setVersionName((Supplier<String> & Serializable) () -> versionNameOverride);
     }
 
     @Override

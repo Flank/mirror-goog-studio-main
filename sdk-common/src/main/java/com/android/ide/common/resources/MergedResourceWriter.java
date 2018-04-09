@@ -30,6 +30,7 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.internal.ResourceCompilationException;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -43,6 +44,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -56,6 +58,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
+import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -150,7 +153,7 @@ public class MergedResourceWriter
      * @param crunchPng should we crunch PNG files
      */
     public MergedResourceWriter(
-            @NonNull WorkerExecutorFacade<FileGenerationParameters> workerExecutor,
+            @NonNull WorkerExecutorFacade workerExecutor,
             @NonNull File rootFolder,
             @Nullable File publicFile,
             @Nullable MergingLog blameLog,
@@ -198,18 +201,8 @@ public class MergedResourceWriter
             @NonNull ResourcePreprocessor preprocessor,
             @NonNull File temporaryDirectory) {
         return new MergedResourceWriter(
-                new WorkerExecutorFacade<FileGenerationParameters>() {
-                    @Override
-                    public void submit(FileGenerationParameters parameter) {
-                        new FileGenerationWorkAction(parameter).run();
-                    }
-
-                    @Override
-                    public void await() {}
-
-                    @Override
-                    public void taskActionDone() {}
-                },
+                // no need for multi-threading in tests.
+                new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
                 rootFolder,
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
@@ -363,7 +356,7 @@ public class MergedResourceWriter
                         FileGenerationParameters workItem =
                                 new FileGenerationParameters(item, mPreprocessor);
                         if (workItem.resourceItem.getSource() != null) {
-                            getExecutor().submit(workItem);
+                            getExecutor().submit(FileGenerationWorkAction.class, workItem);
                         }
                     } catch (Exception e) {
                         throw new ConsumerException(e, item.getSource().getFile());
@@ -392,6 +385,7 @@ public class MergedResourceWriter
 
         private final FileGenerationParameters workItem;
 
+        @Inject
         public FileGenerationWorkAction(FileGenerationParameters workItem) {
             this.workItem = workItem;
         }

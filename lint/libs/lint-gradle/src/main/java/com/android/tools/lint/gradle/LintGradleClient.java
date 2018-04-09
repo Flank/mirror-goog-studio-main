@@ -251,7 +251,10 @@ public class LintGradleClient extends LintCliClient {
         return VALUE_TRUE.equals(System.getProperty("lint.baselines.continue"));
     }
 
-    /** Run lint with the given registry and return the resulting warnings */
+    /**
+     * Run lint with the given registry, optionally fix any warnings found and return the resulting
+     * warnings
+     */
     @NonNull
     public Pair<List<Warning>, LintBaseline> run(@NonNull IssueRegistry registry)
             throws IOException {
@@ -262,6 +265,11 @@ public class LintGradleClient extends LintCliClient {
                 return Pair.of(Collections.emptyList(), driver.getBaseline());
             }
             throw new GradleException("Aborting build since new baseline file was created");
+        }
+
+        if (exitCode == LintCliFlags.ERRNO_APPLIED_SUGGESTIONS) {
+            throw new GradleException(
+                    "Aborting build since sources were modified to apply quickfixes after compilation");
         }
 
         return Pair.of(warnings, driver.getBaseline());

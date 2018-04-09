@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 332;
+    static final int INITIAL_CAPACITY = 333;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -312,6 +312,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(StringFormatDetector.ARG_TYPES);
         issues.add(StringFormatDetector.INVALID);
         issues.add(StringFormatDetector.POTENTIAL_PLURAL);
+        issues.add(SyntheticAccessorDetector.ISSUE);
         issues.add(SystemPermissionsDetector.ISSUE);
         issues.add(TextFieldDetector.ISSUE);
         issues.add(TextViewDetector.ISSUE);

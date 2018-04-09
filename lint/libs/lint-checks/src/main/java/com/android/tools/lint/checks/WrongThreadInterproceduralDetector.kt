@@ -173,20 +173,22 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
     companion object {
         @JvmField
         val ISSUE = Issue.create(
-            "WrongThreadInterprocedural",
-            "Wrong Thread (Interprocedural)",
-            "Searches for interprocedural call paths that violate thread annotations in the " +
-                    "program. Tracks the flow of instantiated types and lambda expressions " +
-                    "to increase accuracy across method boundaries.",
-            "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
-            Category.CORRECTNESS,
-            /*priority*/ 6,
-            Severity.ERROR,
-            Implementation(
+            id = "WrongThreadInterprocedural",
+            briefDescription = "Wrong Thread (Interprocedural)",
+            explanation = """
+                Searches for interprocedural call paths that violate thread annotations \
+                in the program. Tracks the flow of instantiated types and lambda \
+                expressions to increase accuracy across method boundaries.
+                """,
+            moreInfo = "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
+            /*priority*/ category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            enabledByDefault = false,
+            implementation = Implementation(
                 WrongThreadInterproceduralDetector::class.java,
                 EnumSet.of(Scope.ALL_JAVA_FILES)
-            ),
-            enabledByDefault = false
+            )
         )
     }
 }

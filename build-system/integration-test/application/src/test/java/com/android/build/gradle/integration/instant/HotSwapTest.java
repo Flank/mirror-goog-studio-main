@@ -22,6 +22,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -31,6 +32,7 @@ import com.android.tools.ir.client.InstantRunArtifact;
 import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -104,6 +106,29 @@ public class HotSwapTest {
 
         assertThat(context.getBuildInstantRunEligibility())
                 .isEqualTo(InstantRunVerifierStatus.COMPATIBLE.toString());
+    }
+
+    @Test
+    public void testJava8LangFeatures() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.compileOptions {\n"
+                        + "  sourceCompatibility 1.8\n"
+                        + "  targetCompatibility 1.8\n"
+                        + "}");
+        File source = project.file("src/main/java/com/example/helloworld/HelloWorld.java");
+        TestFileUtils.addMethod(
+                source,
+                "\n"
+                        + "public void foo() {\n"
+                        + "  new Thread(() -> {}).start();\n"
+                        + "  System.out.println(\"replaceThisMessage1234\");\n"
+                        + "}");
+        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(21, null));
+
+        TestFileUtils.searchAndReplace(source, "replaceThisMessage1234", "newMsg");
+        project.executor().withInstantRun(new AndroidVersion(21, null)).run("assembleDebug");
     }
 
     private void createActivityClass(String message) throws Exception {

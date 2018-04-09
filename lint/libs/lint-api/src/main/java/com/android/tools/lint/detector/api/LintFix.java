@@ -42,10 +42,16 @@ import org.jetbrains.annotations.Nls;
  * <p>The set of operations is quite limited at the moment; more will be added over time.
  */
 public class LintFix {
-    @Nls @Nullable public final String displayName;
+    @Nls @Nullable protected final String displayName;
+    @Nls @Nullable protected final String familyName;
 
     protected LintFix(@Nullable String displayName) {
+        this(displayName, null);
+    }
+
+    protected LintFix(@Nullable String displayName, @Nullable String familyName) {
         this.displayName = displayName;
+        this.familyName = familyName;
     }
 
     /** Creates a new Quickfix Builder */
@@ -62,6 +68,20 @@ public class LintFix {
     }
 
     /**
+     * Returns the "family" name; the shared name to use to apply *all* fixes of the same family
+     * name in a single go. For example, lint may have registered a quickfix to update library
+     * version from "1.3" to "1.4", and the display name for this quickfix is "Update version from
+     * 1.3 to 1.4". When lint is run on a file, there may be a handful of libraries that all are
+     * offered different version updates. If the lint fix provides a shared family name for all of
+     * these, such as "Update Dependencies", then the IDE will show this as a single action for the
+     * whole file and allow a single click to invoke all the actions in a single go.
+     */
+    @Nullable
+    public String getFamilyName() {
+        return familyName;
+    }
+
+    /**
      * Convenience wrapper which checks whether the given fix is a map, and if so returns the value
      * stored by its key
      */
@@ -74,9 +94,61 @@ public class LintFix {
         return null;
     }
 
+    /**
+     * Whether this fix can be applied by a robot, e.g. does not require human intervention. These
+     * kinds of fixes can be automatically applied when lint is run in fix-mode where it applies all
+     * the suggested (eligible) fixes.
+     *
+     * <p>Examples of fixes which are not auto-fixable:
+     *
+     * <p>(1) A fix which introduces a semantic change that may not be desirable. For example, lint
+     * may warn that the use of an API is discouraged and offer a similar but not identical
+     * replacement; in this case the developer needs to consider the implications of the suggestion.
+     *
+     * <p>(2) A fix for a problem where just a part of the solution is offered as a fix, and there
+     * are many other plausible paths a developer might take, such as lint telling you that you have
+     * too many actions in the toolbar, and a fix is offered to move each action into a menu.
+     */
+    public boolean robot = false; // unless explicitly marked as safe
+
+    /**
+     * Whether this fix is independent of other fixes getting applied.
+     *
+     * <p>Lint can automatically apply all fixes which are independent in a single pass. An example
+     * of an independent fix is removal of an unused import; removing one unused import does not
+     * invalidate a warning (and fix) for another unused import. (Of course, it's possible that
+     * another fix will introduce a new dependency on the formerly unused class, but this is rare.)
+     *
+     * <p>However, if we have a duplicate declaration warning, we might put a fix on each one of the
+     * duplicates to delete them; if we apply one, we wouldn't want to apply the other. In fix mode,
+     * lint will only apply the first fix in a compilation unit that is not independent; it will
+     * then need to re-analyze the compilation unit a second time, and if there are additional fixes
+     * found, apply just the first such dependent fix, and so on. This means that for N fixes that
+     * are not independent, it will reanalyze the file N times, which is obviously slower.
+     */
+    public boolean independent = false; // unless explicitly marked as safe
+
+    public LintFix autoFix(boolean robot, boolean independent) {
+        this.robot = robot;
+        this.independent = independent;
+        return this;
+    }
+
+    /**
+     * Convenience method for {@link #autoFix(boolean, boolean)}: indicates that this fix can safely
+     * be applied in auto-fix mode, in parallel with other fixes.
+     *
+     * @return this
+     */
+    public LintFix autoFix() {
+        autoFix(true, true);
+        return this;
+    }
+
     /** Builder for creating various types of fixes */
     public static class Builder {
         @Nls protected String displayName;
+        @Nls @Nullable protected String familyName;
 
         private Builder() {}
 
@@ -87,17 +159,82 @@ public class LintFix {
          * @param displayName the display name
          * @return this
          */
-        public Builder name(String displayName) {
+        public Builder name(@NonNull String displayName) {
             this.displayName = displayName;
+            return this;
+        }
+
+        /**
+         * Sets display name and family name. If not supplied a default will be created based on the
+         * the type of quickfix.
+         *
+         * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public Builder name(@NonNull String displayName, @NonNull String familyName) {
+            this.displayName = displayName;
+            this.familyName = familyName;
+            return this;
+        }
+
+        /**
+         * Sets display name and family name. If not supplied a default will be created based on the
+         * the type of quickfix.
+         *
+         * @param displayName the displayName
+         * @param useAsFamilyNameToo if true, use the display name as the family name too; this
+         *     means that the display name is general and does not refer to specifics for a given
+         *     listed issue
+         * @return this
+         */
+        public Builder name(@NonNull String displayName, boolean useAsFamilyNameToo) {
+            name(displayName, useAsFamilyNameToo ? displayName : null);
+            return this;
+        }
+
+        /**
+         * Sets the family name.
+         *
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public Builder sharedName(@NonNull String familyName) {
+            this.familyName = familyName;
+            return this;
+        }
+
+        /**
+         * Sets the "family" name; the shared name to use to apply *all* fixes of the same family
+         * name in a single go. For example, lint may have registered a quickfix to update library
+         * version from "1.3" to "1.4", and the display name for this quickfix is "Update version
+         * from 1.3 to 1.4". When lint is run on a file, there may be a handful of libraries that
+         * all are offered different version updates. If the lint fix provides a shared family name
+         * for all of these, such as "Update Dependencies", then the IDE will show this as a single
+         * action for the whole file and allow a single click to invoke all the actions in a single
+         * go.
+         *
+         * @param familyName the family name
+         * @return this
+         */
+        public Builder family(String familyName) {
+            this.familyName = familyName;
             return this;
         }
 
         /** Creates a group of fixes */
         @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder group() {
-            return new GroupBuilder(displayName).type(GroupType.ALTERNATIVES);
+            return new GroupBuilder(displayName, familyName).type(GroupType.ALTERNATIVES);
         }
 
+        /** Creates a number of alternatives fixes; alias for {@link #group()} */
+        @SuppressWarnings("MethodMayBeStatic")
+        public GroupBuilder alternatives() {
+            return group();
+        }
         /**
          * Creates a composite fix: multiple lint fixes which will all be applied as a single unit.
          *
@@ -109,7 +246,7 @@ public class LintFix {
          */
         @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder composite() {
-            return new GroupBuilder(displayName).type(GroupType.COMPOSITE);
+            return new GroupBuilder(displayName, familyName).type(GroupType.COMPOSITE);
         }
 
         /**
@@ -123,7 +260,10 @@ public class LintFix {
          */
         @SuppressWarnings("MethodMayBeStatic")
         public LintFix composite(LintFix... fixes) {
-            return new GroupBuilder(displayName).type(GroupType.COMPOSITE).join(fixes).build();
+            return new GroupBuilder(displayName, familyName)
+                    .type(GroupType.COMPOSITE)
+                    .join(fixes)
+                    .build();
         }
 
         /**
@@ -135,7 +275,20 @@ public class LintFix {
          */
         @SuppressWarnings("MethodMayBeStatic")
         public LintFix group(LintFix... fixes) {
-            return new GroupBuilder(displayName).join(fixes).build();
+            return new GroupBuilder(displayName, familyName).join(fixes).build();
+        }
+
+        /**
+         * Creates a fix list from a set of lint fixes. The IDE will show all of these as separate
+         * options.
+         *
+         * <p>Alias for {@link #group(LintFix...)}
+         *
+         * @param fixes fixes to combine
+         * @return a fix representing the list
+         */
+        public LintFix alternatives(LintFix... fixes) {
+            return group(fixes);
         }
 
         /**
@@ -144,7 +297,7 @@ public class LintFix {
          * @return a string replace builder
          */
         public ReplaceStringBuilder replace() {
-            return new ReplaceStringBuilder(displayName);
+            return new ReplaceStringBuilder(displayName, familyName);
         }
 
         /**
@@ -153,7 +306,7 @@ public class LintFix {
          * @return a set attribute builder
          */
         public SetAttributeBuilder set() {
-            return new SetAttributeBuilder(displayName);
+            return new SetAttributeBuilder(displayName, familyName);
         }
 
         /**
@@ -162,7 +315,7 @@ public class LintFix {
          * @return a set attribute builder
          */
         public SetAttributeBuilder unset() {
-            return new SetAttributeBuilder(displayName).value(null);
+            return new SetAttributeBuilder(displayName, familyName).value(null);
         }
 
         /**
@@ -172,7 +325,7 @@ public class LintFix {
          */
         public SetAttributeBuilder set(
                 @Nullable String namespace, @NonNull String attribute, @Nullable String value) {
-            return new SetAttributeBuilder(displayName)
+            return new SetAttributeBuilder(displayName, familyName)
                     .namespace(namespace)
                     .attribute(attribute)
                     .value(value);
@@ -184,7 +337,7 @@ public class LintFix {
          * @return a set attribute builder
          */
         public SetAttributeBuilder unset(@Nullable String namespace, @NonNull String attribute) {
-            return new SetAttributeBuilder(displayName)
+            return new SetAttributeBuilder(displayName, familyName)
                     .namespace(namespace)
                     .attribute(attribute)
                     .value(null);
@@ -192,7 +345,7 @@ public class LintFix {
 
         /** Provides a map with details for the quickfix implementation */
         public FixMapBuilder map() {
-            return new FixMapBuilder(displayName);
+            return new FixMapBuilder(displayName, familyName);
         }
 
         /**
@@ -225,12 +378,14 @@ public class LintFix {
     /** Builder for constructing a group of fixes */
     public static class GroupBuilder {
         @Nls private String displayName;
+        @Nls @Nullable protected String familyName;
         private GroupType type = GroupType.ALTERNATIVES;
         private final List<LintFix> list = Lists.newArrayListWithExpectedSize(4);
 
         /** Constructed from {@link Builder#set()} */
-        private GroupBuilder(String displayName) {
+        private GroupBuilder(String displayName, @Nullable String familyName) {
             this.displayName = displayName;
+            this.familyName = familyName;
         }
 
         /**
@@ -242,6 +397,33 @@ public class LintFix {
          */
         public GroupBuilder name(String displayName) {
             this.displayName = displayName;
+            return this;
+        }
+
+        /**
+         * Sets display name and family name. If not supplied a default will be created based on the
+         * the type of quickfix.
+         *
+         * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public GroupBuilder name(@NonNull String displayName, @NonNull String familyName) {
+            this.displayName = displayName;
+            this.familyName = familyName;
+            return this;
+        }
+
+        /**
+         * Sets the family name.
+         *
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public GroupBuilder sharedName(@NonNull String familyName) {
+            this.familyName = familyName;
             return this;
         }
 
@@ -266,17 +448,20 @@ public class LintFix {
         @NonNull
         public LintFix build() {
             assert !list.isEmpty();
-            return new LintFixGroup(displayName, type, list);
+            return new LintFixGroup(displayName, familyName, type, list);
         }
     }
 
     /** A builder for replacing strings */
     public static class ReplaceStringBuilder {
         @Nls protected String displayName;
+        @Nls @Nullable protected String familyName;
         private String newText;
         private String oldText;
         private boolean shortenNames;
         private boolean reformat;
+        private boolean robot;
+        private boolean independent;
 
         @Language("RegExp")
         private String oldPattern;
@@ -284,8 +469,9 @@ public class LintFix {
         private Location range;
 
         /** Constructed from {@link Builder#replace()} */
-        private ReplaceStringBuilder(String displayName) {
+        private ReplaceStringBuilder(String displayName, @Nullable String familyName) {
             this.displayName = displayName;
+            this.familyName = familyName;
         }
 
         /**
@@ -297,6 +483,33 @@ public class LintFix {
          */
         public ReplaceStringBuilder name(String displayName) {
             this.displayName = displayName;
+            return this;
+        }
+
+        /**
+         * Sets display name and family name. If not supplied a default will be created based on the
+         * the type of quickfix.
+         *
+         * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public ReplaceStringBuilder name(@NonNull String displayName, @NonNull String familyName) {
+            this.displayName = displayName;
+            this.familyName = familyName;
+            return this;
+        }
+
+        /**
+         * Sets the family name.
+         *
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public ReplaceStringBuilder sharedName(@NonNull String familyName) {
+            this.familyName = familyName;
             return this;
         }
 
@@ -372,31 +585,118 @@ public class LintFix {
             return this;
         }
 
+        /**
+         * Sets whether this fix can be applied by a robot, e.g. does not require human
+         * intervention. These kinds of fixes can be automatically applied when lint is run in
+         * fix-mode where it applies all the suggested (eligible) fixes.
+         *
+         * <p>Examples of fixes which are not auto-fixable:
+         *
+         * <p>(1) A fix which introduces a semantic change that may not be desirable. For example,
+         * lint may warn that the use of an API is discouraged and offer a similar but not identical
+         * replacement; in this case the developer needs to consider the implications of the
+         * suggestion.
+         *
+         * <p>(2) A fix for a problem where just a part of the solution is offered as a fix, and
+         * there are many other plausible paths a developer might take, such as lint telling you
+         * that you have too many actions in the toolbar, and a fix is offered to move each action
+         * into a menu.
+         *
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @return this
+         */
+        public ReplaceStringBuilder robot(boolean robot) {
+            this.robot = robot;
+            return this;
+        }
+
+        /**
+         * Whether this fix is independent of other fixes getting applied.
+         *
+         * <p>Lint can automatically apply all fixes which are independent in a single pass. An
+         * example of an independent fix is removal of an unused import; removing one unused import
+         * does not invalidate a warning (and fix) for another unused import. (Of course, it's
+         * possible that another fix will introduce a new dependency on the formerly unused class,
+         * but this is rare.)
+         *
+         * <p>However, if we have a duplicate declaration warning, we might put a fix on each one of
+         * the duplicates to delete them; if we apply one, we wouldn't want to apply the other. In
+         * fix mode, lint will only apply the first fix in a compilation unit that is not
+         * independent; it will then need to re-analyze the compilation unit a second time, and if
+         * there are additional fixes found, apply just the first such dependent fix, and so on.
+         * This means that for N fixes that are not independent, it will reanalyze the file N times,
+         * which is obviously slower.
+         *
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
+         * @return this
+         */
+        public ReplaceStringBuilder independent(boolean independent) {
+            this.independent = !independent;
+            return this;
+        }
+
+        /**
+         * Sets options related to auto-applying this fix. Convenience method for setting both
+         * {@link #robot(boolean)} and {@link #independent(boolean)}
+         *
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
+         * @return this
+         */
+        public ReplaceStringBuilder autoFix(boolean robot, boolean independent) {
+            robot(robot);
+            independent(independent);
+            return this;
+        }
+
+        /**
+         * Convenience method for {@link #autoFix(boolean, boolean)}: indicates that this fix can
+         * safely be applied in auto-fix mode, in parallel with other fixes.
+         *
+         * @return this
+         */
+        public ReplaceStringBuilder autoFix() {
+            autoFix(true, true);
+            return this;
+        }
+
         /** Constructs a {@link LintFix} for this string replacement */
         @NonNull
         public LintFix build() {
             return new ReplaceString(
                     displayName,
+                    familyName,
                     oldText,
                     oldPattern,
                     newText != null ? newText : "",
                     shortenNames,
                     reformat,
-                    range);
+                    range,
+                    robot,
+                    !independent);
         }
     }
 
     public static class SetAttributeBuilder {
         @Nls protected String displayName;
+        @Nls @Nullable protected String familyName;
         private String attribute;
         private String namespace;
         private String value = "";
         private int mark = Integer.MIN_VALUE;
         private int dot = Integer.MIN_VALUE;
+        private boolean robot = true;
+        private boolean independent = true;
+        private Location range;
 
         /** Constructed from {@link Builder#set()} */
-        private SetAttributeBuilder(String displayName) {
+        private SetAttributeBuilder(String displayName, @Nullable String familyName) {
             this.displayName = displayName;
+            this.familyName = familyName;
         }
 
         /**
@@ -408,6 +708,33 @@ public class LintFix {
          */
         public SetAttributeBuilder name(String displayName) {
             this.displayName = displayName;
+            return this;
+        }
+
+        /**
+         * Sets display name and family name. If not supplied a default will be created based on the
+         * the type of quickfix.
+         *
+         * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public SetAttributeBuilder name(@NonNull String displayName, @NonNull String familyName) {
+            this.displayName = displayName;
+            this.familyName = familyName;
+            return this;
+        }
+
+        /**
+         * Sets the family name.
+         *
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
+         * @return this
+         */
+        public SetAttributeBuilder sharedName(@NonNull String familyName) {
+            this.familyName = familyName;
             return this;
         }
 
@@ -495,6 +822,15 @@ public class LintFix {
             return this;
         }
 
+        /**
+         * Sets a location range to use for searching for the element. Useful if you want to work on
+         * elements outside the element marked as the problem range.
+         */
+        public SetAttributeBuilder range(@NonNull Location range) {
+            this.range = range;
+            return this;
+        }
+
         /** Sets the value to TＯDＯ meant for values that aren't optional. */
         public SetAttributeBuilder todo(@Nullable String namespace, @NonNull String attribute) {
             return todo(namespace, attribute, null, null);
@@ -528,19 +864,110 @@ public class LintFix {
             return caret(value.length());
         }
 
+        /**
+         * Sets whether this fix can be applied by a robot, e.g. does not require human
+         * intervention. These kinds of fixes can be automatically applied when lint is run in
+         * fix-mode where it applies all the suggested (eligible) fixes.
+         *
+         * <p>Examples of fixes which are not auto-fixable:
+         *
+         * <p>(1) A fix which introduces a semantic change that may not be desirable. For example,
+         * lint may warn that the use of an API is discouraged and offer a similar but not identical
+         * replacement; in this case the developer needs to consider the implications of the
+         * suggestion.
+         *
+         * <p>(2) A fix for a problem where just a part of the solution is offered as a fix, and
+         * there are many other plausible paths a developer might take, such as lint telling you
+         * that you have too many actions in the toolbar, and a fix is offered to move each action
+         * into a menu.
+         *
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @return this
+         */
+        public SetAttributeBuilder robot(boolean robot) {
+            this.robot = robot;
+            return this;
+        }
+
+        /**
+         * Whether this fix is independent of other fixes getting applied.
+         *
+         * <p>Lint can automatically apply all fixes which are independent in a single pass. An
+         * example of an independent fix is removal of an unused import; removing one unused import
+         * does not invalidate a warning (and fix) for another unused import. (Of course, it's
+         * possible that another fix will introduce a new dependency on the formerly unused class,
+         * but this is rare.)
+         *
+         * <p>However, if we have a duplicate declaration warning, we might put a fix on each one of
+         * the duplicates to delete them; if we apply one, we wouldn't want to apply the other. In
+         * fix mode, lint will only apply the first fix in a compilation unit that is not
+         * independent; it will then need to re-analyze the compilation unit a second time, and if
+         * there are additional fixes found, apply just the first such dependent fix, and so on.
+         * This means that for N fixes that are not independent, it will reanalyze the file N times,
+         * which is obviously slower.
+         *
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
+         * @return this
+         */
+        public SetAttributeBuilder independent(boolean independent) {
+            this.independent = independent;
+            return this;
+        }
+
+        /**
+         * Sets options related to auto-applying this fix. Convenience method for setting both
+         * {@link #robot(boolean)} and {@link #independent(boolean)}
+         *
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
+         * @return this
+         */
+        public SetAttributeBuilder autoFix(boolean robot, boolean independent) {
+            robot(robot);
+            independent(independent);
+            return this;
+        }
+
+        /**
+         * Convenience method for {@link #autoFix(boolean, boolean)}: indicates that this fix can
+         * safely be applied in auto-fix mode, in parallel with other fixes.
+         *
+         * @return this
+         */
+        public SetAttributeBuilder autoFix() {
+            autoFix(true, true);
+            return this;
+        }
+
         /** Constructs a {@link LintFix} for this attribute operation */
         @NonNull
         public LintFix build() {
-            return new SetAttribute(displayName, namespace, attribute, value, dot, mark);
+            return new SetAttribute(
+                    displayName,
+                    familyName,
+                    namespace,
+                    attribute,
+                    value,
+                    range,
+                    dot,
+                    mark,
+                    robot,
+                    independent);
         }
     }
 
     public static class FixMapBuilder {
         @Nls protected final String displayName;
+        @Nls protected final String familyName;
 
         /** Constructed from {@link Builder#map()} */
-        private FixMapBuilder(String displayName) {
+        private FixMapBuilder(String displayName, @Nullable String familyName) {
             this.displayName = displayName;
+            this.familyName = familyName;
         }
 
         private final Map<Object, Object> map = Maps.newHashMapWithExpectedSize(4);
@@ -578,7 +1005,7 @@ public class LintFix {
         /** Constructs a {@link LintFix} with this map data */
         @NonNull
         public LintFix build() {
-            return new DataMap(displayName, map);
+            return new DataMap(displayName, familyName, map);
         }
     }
 
@@ -591,8 +1018,11 @@ public class LintFix {
     public static class DataMap extends LintFix implements Iterable {
         private final Map<Object, Object> map;
 
-        private DataMap(@Nullable String displayName, Map<Object, Object> map) {
-            super(displayName);
+        private DataMap(
+                @Nullable String displayName,
+                @Nullable String familyName,
+                Map<Object, Object> map) {
+            super(displayName, familyName);
             this.map = map;
         }
 
@@ -695,9 +1125,10 @@ public class LintFix {
 
         public LintFixGroup(
                 @Nullable String displayName,
+                @Nullable String familyName,
                 @NonNull GroupType type,
                 @NonNull List<LintFix> fixes) {
-            super(displayName);
+            super(displayName, familyName);
             this.type = type;
             this.fixes = fixes;
         }
@@ -738,6 +1169,12 @@ public class LintFix {
         @Nullable public final String value;
 
         /**
+         * A location range for the source region where the fix will operate. Useful when the fix is
+         * applying in a wider range than the highlighted problem range.
+         */
+        @Nullable public final Location range;
+
+        /**
          * The caret location to show, OR {@link Integer#MIN_VALUE} if not set. If {@link #mark} is
          * set, the end of the selection too.
          */
@@ -750,25 +1187,40 @@ public class LintFix {
          * Set or reset the given attribute
          *
          * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
          * @param namespace optional name space
          * @param attribute attribute name
          * @param value value, or null to delete (if already set) or to edit (if already set)
+         * @param range a range to use for searching for the old text, if different/larger than the
+         *     warning highlight range
          * @param dot the caret position
          * @param mark the selection end point (dot is the other)
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
          */
         private SetAttribute(
                 @Nullable String displayName,
+                @Nullable String familyName,
                 @Nullable String namespace,
                 @NonNull String attribute,
                 @Nullable String value,
+                @Nullable Location range,
                 int dot,
-                int mark) {
+                int mark,
+                boolean robot,
+                boolean independent) {
             super(displayName);
             this.namespace = namespace;
             this.attribute = attribute;
             this.value = value;
+            this.range = range;
             this.dot = dot;
             this.mark = mark;
+            this.robot = robot;
+            this.independent = independent;
         }
 
         /** Return display name */
@@ -834,6 +1286,8 @@ public class LintFix {
          * Replace the given string within the range of the element this warning is marked on
          *
          * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use to apply *all* fixes of the
+         *     same family name in a single go.
          * @param oldString the literal string to replace
          * @param oldPattern the regular expression to replace (provided as a string such that it
          *     only needs to be compiled if actually referenced by the IDE. If there is a group in
@@ -845,22 +1299,31 @@ public class LintFix {
          * @param reformat whether to reformat the replaced range
          * @param range a range to use for searching for the old text, if different/larger than the
          *     warning highlight range
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
          */
         private ReplaceString(
                 @NonNull String displayName,
+                @Nullable String familyName,
                 @Nullable String oldString,
                 @Nullable String oldPattern,
                 @NonNull String replacement,
                 boolean shortenNames,
                 boolean reformat,
-                @Nullable Location range) {
-            super(displayName);
+                @Nullable Location range,
+                boolean robot,
+                boolean independent) {
+            super(displayName, familyName);
             this.oldString = oldString;
             this.oldPattern = oldPattern;
             this.replacement = replacement;
             this.shortenNames = shortenNames;
             this.reformat = reformat;
             this.range = range;
+            this.robot = robot;
+            this.independent = independent;
         }
 
         /** Return display name */
@@ -870,6 +1333,12 @@ public class LintFix {
             if (displayName != null) {
                 return displayName;
             } else {
+                if (replacement.isEmpty()) {
+                    if (oldString != null) {
+                        return "Delete \"" + oldString + "\"";
+                    }
+                    return "Delete";
+                }
                 return "Replace with " + replacement;
             }
         }
@@ -905,7 +1374,7 @@ public class LintFix {
                 } else {
                     int next = replacement.indexOf('>', end + 3);
                     if (next != -1 && Character.isDigit(replacement.charAt(end + 3))) {
-                        sb.append(replacement.substring(begin, end));
+                        sb.append(replacement, begin, end);
                         String groupString = replacement.substring(end + 3, next);
                         int group = Integer.parseInt(groupString);
                         if (group <= matcher.groupCount()) {
@@ -914,7 +1383,7 @@ public class LintFix {
                         begin = next + 1;
                     } else {
                         end += 3;
-                        sb.append(replacement.substring(begin, end));
+                        sb.append(replacement, begin, end);
                         begin = end;
                     }
                 }

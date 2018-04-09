@@ -57,6 +57,12 @@ public class SeparateTestWithAarDependencyTest {
                         + "    api 'com.android.support:appcompat-v7:"
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
+                        + "    api 'com.android.support:support-v4:"
+                        + TestVersions.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    api 'com.android.support:support-media-compat:"
+                        + TestVersions.SUPPORT_LIB_VERSION
+                        + "'\n"
                         + "}\n");
 
         project.execute("clean", "assemble");

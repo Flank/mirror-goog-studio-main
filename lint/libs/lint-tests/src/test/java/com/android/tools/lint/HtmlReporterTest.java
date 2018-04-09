@@ -172,7 +172,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
             warnings.add(warning3);
             warnings.add(warning4);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.asCharSource(reportFile, Charsets.UTF_8).read();
 
@@ -325,7 +325,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                             + "<div class=\"metadata\"><div class=\"explanation\" id=\"explanationHardcodedText\" style=\"display: none;\">\n"
                             + "Hardcoding text attributes directly in layout files is bad for several reasons:<br/>\n"
                             + "<br/>\n"
-                            + "* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)<br/>\n"
+                            + "* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)<br/>\n"
                             + "<br/>\n"
                             + "* The application cannot be translated to other languages by just adding new translations for existing string resources.<br/>\n"
                             + "<br/>\n"

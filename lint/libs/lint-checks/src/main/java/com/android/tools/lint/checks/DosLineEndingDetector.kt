@@ -35,26 +35,26 @@ class DosLineEndingDetector : LayoutDetector() {
         /** Detects mangled DOS line ending documents  */
         @JvmField
         val ISSUE = Issue.create(
-            "MangledCRLF",
-            "Mangled file line endings",
+            id = "MangledCRLF",
+            briefDescription = "Mangled file line endings",
+            explanation = """
+            On Windows, line endings are typically recorded as carriage return plus newline: \\r\\n.
 
-            """
-On Windows, line endings are typically recorded as carriage return plus newline: \\r\\n.
-
-This detector looks for invalid line endings with repeated carriage return characters \
-(without newlines). Previous versions of the ADT plugin could accidentally introduce these \
-into the file, and when editing the file, the editor could produce confusing visual artifacts.""",
-            "https://bugs.eclipse.org/bugs/show_bug.cgi?id=375421",
-
-            Category.CORRECTNESS,
-            2,
-            Severity.ERROR,
-            Implementation(
+            This detector looks for invalid line endings with repeated carriage return characters \
+            (without newlines). Previous versions of the ADT plugin could accidentally introduce these \
+            into the file, and when editing the file, the editor could produce confusing visual artifacts.
+            """,
+            moreInfo = "https://bugs.eclipse.org/bugs/show_bug.cgi?id=375421",
+            category = Category.CORRECTNESS,
+            priority = 2,
+            severity = Severity.ERROR,
+            // This check is probably not relevant for most users anymore
+            enabledByDefault = false,
+            implementation = Implementation(
                 DosLineEndingDetector::class.java,
                 Scope.RESOURCE_FILE_SCOPE
             )
         )
-            .setEnabledByDefault(false) // This check is probably not relevant for most users anymore
     }
 
     override fun visitDocument(context: XmlContext, document: Document) {

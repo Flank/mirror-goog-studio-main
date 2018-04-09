@@ -3,40 +3,40 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 iml_module(
-    name = "studio.lint-api",
+    name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
-    iml_files = ["libs/lint-api/lint-api.iml"],
+    iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:asm-tools",
-        "//tools/base/annotations:studio.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/build-system/builder-model:studio.builder-model",
-        "//tools/base/sdk-common:studio.sdk-common",
-        "//tools/base/layoutlib-api:studio.layoutlib-api",
-        "//tools/idea/java/java-psi-api",
-        "//tools/base/build-system:studio.manifest-merger",
-        "//tools/idea/uast/uast-common",
-        "//tools/idea/uast/uast-java",
+        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
+        "//tools/idea/java/java-psi-api:intellij.java.psi",
+        "//tools/base/build-system:studio.android.sdktools.manifest-merger",
+        "//tools/idea/uast/uast-common:intellij.platform.uast",
+        "//tools/idea/uast/uast-java:intellij.java.uast",
     ],
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:asm-tools",
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/build-system/builder-model:studio.builder-model[module]",
-        "//tools/base/common:studio.common[module]",
-        "//tools/base/sdklib:studio.sdklib[module]",
-        "//tools/base/sdk-common:studio.sdk-common[module]",
-        "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
-        "//tools/idea/java/java-psi-api[module]",
-        "//tools/idea/java/java-psi-impl[module]",
-        "//tools/base/build-system:studio.manifest-merger[module]",
+        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
+        "//tools/idea/java/java-psi-api:intellij.java.psi[module]",
+        "//tools/idea/java/java-psi-impl:intellij.java.psi.impl[module]",
+        "//tools/base/build-system:studio.android.sdktools.manifest-merger[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
-        "//tools/idea/uast/uast-common[module]",
-        "//tools/idea/uast/uast-java[module]",
+        "//tools/idea/uast/uast-common:intellij.platform.uast[module]",
+        "//tools/idea/uast/uast-java:intellij.java.uast[module]",
     ],
 )
 
@@ -82,15 +82,15 @@ maven_pom(
 )
 
 iml_module(
-    name = "studio.lint-checks",
+    name = "studio.android.sdktools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
-    iml_files = ["libs/lint-checks/lint-checks.iml"],
+    iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
-    exports = ["//tools/base/lint:studio.lint-api"],
+    exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/lint:studio.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

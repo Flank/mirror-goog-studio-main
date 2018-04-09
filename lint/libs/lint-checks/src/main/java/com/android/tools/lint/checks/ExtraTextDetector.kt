@@ -41,17 +41,16 @@ class ExtraTextDetector : ResourceXmlDetector() {
         /** The main issue discovered by this detector  */
         @JvmField
         val ISSUE = Issue.create(
-            "ExtraText",
-            "Extraneous text in resource files",
-
-            """
-Layout resource files should only contain elements and attributes. Any XML text content found \
-in the file is likely accidental (and potentially dangerous if the text resembles XML and the \
-developer believes the text to be functional)""",
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            Implementation(
+            id = "ExtraText",
+            briefDescription = "Extraneous text in resource files",
+            explanation = """
+            Layout resource files should only contain elements and attributes. Any XML text content found \
+            in the file is likely accidental (and potentially dangerous if the text resembles XML and the \
+            developer believes the text to be functional)""",
+            category = Category.CORRECTNESS,
+            priority = 3,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 ExtraTextDetector::class.java,
                 Scope.MANIFEST_AND_RESOURCE_SCOPE,
                 Scope.RESOURCE_FILE_SCOPE,

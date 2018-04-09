@@ -23,8 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Options for lint.
- * Example:
+ * Options for lint. Example:
  *
  * <pre>
  *
@@ -97,6 +96,8 @@ import java.util.Set;
  *          // problem. However, this leads to quite a bit of extra computation; a library is
  *          // analyzed repeatedly, for each module that it is used in.
  *          checkDependencies false
+ *          // Lint can fix some warnings to the source code automatically; turn this on:
+ *          applySuggestions true
  *     }
  * }
  * </pre>
@@ -242,6 +243,14 @@ public interface LintOptions {
      */
     @Nullable
     File getBaselineFile();
+
+    /**
+     * Whether lint should attempt to apply suggested fixes directly to the source code. Only fixes
+     * that have been specially marked as applicable for this will be included.
+     *
+     * @return true if fixes should be applied.
+     */
+    boolean getApplySuggestions();
 
     /**
      * An optional map of severity overrides. The map maps from issue id's to the corresponding

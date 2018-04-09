@@ -4,7 +4,7 @@ maven_repo(
     name = "gmaven",
     artifacts = [
         "//tools/data-binding:tools.compiler",
-        "//tools/base/build-system/gradle",
+        "//tools/base/build-system/gradle-core",
         "//tools/base/build-system/aapt2",
         "//tools/base/devicelib:tools.devicelib",
         "//tools/base/fakeadbserver:tools.fakeadbserver",

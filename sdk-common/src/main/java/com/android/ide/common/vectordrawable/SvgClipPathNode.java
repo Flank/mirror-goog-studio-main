@@ -16,11 +16,12 @@
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Node;
 
 /**
@@ -32,26 +33,27 @@ import org.w3c.dom.Node;
 public class SvgClipPathNode extends SvgGroupNode {
     private final ArrayList<SvgNode> mAffectedNodes = new ArrayList<>();
 
-    public SvgClipPathNode(SvgTree svgTree, Node docNode, String name) {
+    public SvgClipPathNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
         super(svgTree, docNode, name);
     }
 
     @Override
+    @NotNull
     public SvgClipPathNode deepCopy() {
         SvgClipPathNode newInstance = new SvgClipPathNode(getTree(), getDocumentNode(), getName());
-        copyTo(newInstance);
+        newInstance.copyFrom(this);
         return newInstance;
     }
 
-    protected void copyTo(SvgClipPathNode newInstance) {
-        super.copyTo(newInstance);
-        for (SvgNode n : mAffectedNodes) {
-            newInstance.addAffectedNode(n);
+    protected void copyFrom(@NonNull SvgClipPathNode from) {
+        super.copyFrom(from);
+        for (SvgNode node : from.mAffectedNodes) {
+            addAffectedNode(node);
         }
     }
 
     @Override
-    public void addChild(SvgNode child) {
+    public void addChild(@NonNull SvgNode child) {
         // Pass the presentation map down to the children, who can override the attributes.
         mChildren.add(child);
         // The child has its own attributes map. But the parents can still fill some attributes
@@ -59,14 +61,13 @@ public class SvgClipPathNode extends SvgGroupNode {
         child.fillEmptyAttributes(mVdAttributesMap);
     }
 
-    public void addAffectedNode(SvgNode child) {
+    public void addAffectedNode(@NonNull SvgNode child) {
         mAffectedNodes.add(child);
         child.fillEmptyAttributes(mVdAttributesMap);
     }
 
     @Override
-    public void flatten(AffineTransform transform) {
-
+    public void flatten(@NotNull AffineTransform transform) {
         for (SvgNode n : mChildren) {
             mStackedTransform.setTransform(transform);
             mStackedTransform.concatenate(mLocalTransform);
@@ -87,7 +88,7 @@ public class SvgClipPathNode extends SvgGroupNode {
     }
 
     @Override
-    public void transformIfNeeded(AffineTransform rootTransform) {
+    public void transformIfNeeded(@NotNull AffineTransform rootTransform) {
         for (SvgNode p : mChildren) {
             p.transformIfNeeded(rootTransform);
         }

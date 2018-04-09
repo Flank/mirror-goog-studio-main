@@ -400,6 +400,16 @@ public final class FileUtils {
     }
 
     /**
+     * Replace all unsafe characters for a file name (OS independent) with an underscore
+     * @param input an potentially unsafe file name
+     * @return a safe file name
+     */
+    @NonNull
+    public static String sanitizeFileName(String input) {
+        return input.replaceAll("[:\\\\/*\"?|<>']", "_");
+    }
+
+    /**
      * Chooses a directory name, based on a JAR file name, considering exploded-aar and classes.jar.
      */
     @NonNull

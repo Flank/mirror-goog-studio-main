@@ -66,19 +66,18 @@ class DetectMissingPrefix : LayoutDetector() {
         /** Attributes missing the android: prefix  */
         @JvmField
         val MISSING_NAMESPACE = Issue.create(
-            "MissingPrefix",
-            "Missing Android XML namespace",
-            """
-Most Android views have attributes in the Android namespace. When referencing these attributes \
-you **must** include the namespace prefix, or your attribute will be interpreted by `aapt` as \
-just a custom attribute.
+            id = "MissingPrefix",
+            briefDescription = "Missing Android XML namespace",
+            explanation = """
+            Most Android views have attributes in the Android namespace. When referencing these attributes \
+            you **must** include the namespace prefix, or your attribute will be interpreted by `aapt` as \
+            just a custom attribute.
 
-Similarly, in manifest files, nearly all attributes should be in the `android:` namespace.""",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            Implementation(
+            Similarly, in manifest files, nearly all attributes should be in the `android:` namespace.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            implementation = Implementation(
                 DetectMissingPrefix::class.java,
                 Scope.MANIFEST_AND_RESOURCE_SCOPE,
                 Scope.MANIFEST_SCOPE, Scope.RESOURCE_FILE_SCOPE

@@ -47,8 +47,19 @@ public final class AlarmManagerWrapper {
         }
     }
 
-    private static final Map<PendingIntent, Integer> operationIdMap =
-            new HashMap<PendingIntent, Integer>();
+    /** Data structure for PendingIntent Alarm parameters. */
+    private static final class PendingIntentParams {
+        final int id;
+        final boolean isRepeating;
+
+        PendingIntentParams(int id, boolean isRepeating) {
+            this.id = id;
+            this.isRepeating = isRepeating;
+        }
+    }
+
+    private static final Map<PendingIntent, PendingIntentParams> operationIdMap =
+            new HashMap<PendingIntent, PendingIntentParams>();
     private static final Map<OnAlarmListener, ListenerParams> listenerMap =
             new HashMap<OnAlarmListener, ListenerParams>();
 
@@ -81,20 +92,26 @@ public final class AlarmManagerWrapper {
             Handler targetHandler,
             WorkSource workSource,
             AlarmClockInfo alarmClock) {
+        if (type != AlarmManager.RTC_WAKEUP && type != AlarmManager.ELAPSED_REALTIME_WAKEUP) {
+            // Only instrument wakeup alarms.
+            return;
+        }
         if (operation != null) {
             if (!operationIdMap.containsKey(operation)) {
-                operationIdMap.put(operation, EventIdGenerator.nextId());
+                operationIdMap.put(
+                        operation,
+                        new PendingIntentParams(EventIdGenerator.nextId(), intervalMillis != 0L));
             }
             sendIntentAlarmScheduled(
-                    operationIdMap.get(operation),
+                    operationIdMap.get(operation).id,
                     type,
                     triggerAtMillis,
                     windowMillis,
                     intervalMillis,
                     operation.getCreatorPackage(),
                     operation.getCreatorUid(),
-                    // SetImpl is one level down of user code.
-                    StackTrace.getStackTrace(1));
+                    // SetImpl is one level down of public framework API and two levels down of user code.
+                    StackTrace.getStackTrace(2));
         } else if (listener != null) {
             if (!listenerMap.containsKey(listener)) {
                 listenerMap.put(
@@ -107,8 +124,8 @@ public final class AlarmManagerWrapper {
                     windowMillis,
                     intervalMillis,
                     listenerTag,
-                    // SetImpl is one level down of user code.
-                    StackTrace.getStackTrace(1));
+                    // SetImpl is one level down of public framework API and two levels down of user code.
+                    StackTrace.getStackTrace(2));
         } else {
             StudioLog.e("Invalid alarm: neither operation or listener is set.");
         }
@@ -121,11 +138,14 @@ public final class AlarmManagerWrapper {
      * @param operation the operation parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
-        sendIntentAlarmCancelled(
-                operationIdMap.containsKey(operation) ? operationIdMap.get(operation) : 0,
-                operation.getCreatorPackage(),
-                operation.getCreatorUid(),
-                StackTrace.getStackTrace());
+        if (operationIdMap.containsKey(operation)) {
+            sendIntentAlarmCancelled(
+                    operationIdMap.get(operation).id,
+                    operation.getCreatorPackage(),
+                    operation.getCreatorUid(),
+                    // API cancel is one level down of user code.
+                    StackTrace.getStackTrace(1));
+        }
     }
 
     /**
@@ -135,11 +155,11 @@ public final class AlarmManagerWrapper {
      * @param listener the listener parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, OnAlarmListener listener) {
-        ListenerParams params =
-                listenerMap.containsKey(listener)
-                        ? listenerMap.get(listener)
-                        : new ListenerParams(0, "");
-        sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace());
+        if (listenerMap.containsKey(listener)) {
+            ListenerParams params = listenerMap.get(listener);
+            // API cancel is one level down of user code.
+            sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace(1));
+        }
     }
 
     /**
@@ -153,6 +173,25 @@ public final class AlarmManagerWrapper {
             sendListenerAlarmFired(params.id, params.tag);
         }
         listener.onAlarm();
+    }
+
+    /**
+     * Sends the alarm-fired event if the given {@link PendingIntent} exists in the map.
+     *
+     * <p>Intent alarms are fired from other components of the system (e.g. Activity) so this is
+     * called by {@link PendingIntentWrapper} when there is potential match.
+     *
+     * @param pendingIntent the PendingIntent that was used in scheduling the alarm.
+     */
+    public static void sendIntentAlarmFiredIfExists(PendingIntent pendingIntent) {
+        if (operationIdMap.containsKey(pendingIntent)) {
+            AlarmManagerWrapper.PendingIntentParams params = operationIdMap.get(pendingIntent);
+            sendIntentAlarmFired(
+                    params.id,
+                    pendingIntent.getCreatorPackage(),
+                    pendingIntent.getCreatorUid(),
+                    params.isRepeating);
+        }
     }
 
     // Native functions to send alarm events to perfd.
@@ -182,4 +221,7 @@ public final class AlarmManagerWrapper {
             int eventId, String listenerTag, String stack);
 
     private static native void sendListenerAlarmFired(int eventId, String listenerTag);
+
+    private static native void sendIntentAlarmFired(
+            int eventId, String creatorPackage, int creatorUid, boolean isRepeating);
 }

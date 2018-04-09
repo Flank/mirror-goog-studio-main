@@ -16,20 +16,48 @@
 
 package android.app;
 
-public class PendingIntent {
-    private final String mCreatorPackage;
-    private final int mCreatorUid;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 
-    public PendingIntent(String creatorPackage, int creatorUid) {
-        mCreatorPackage = creatorPackage;
-        mCreatorUid = creatorUid;
-    }
+public class PendingIntent {
+    private String myCreatorPackage;
+    private int myCreatorUid;
+    private Intent myIntent;
 
     public String getCreatorPackage() {
-        return mCreatorPackage;
+        return myCreatorPackage;
     }
 
     public int getCreatorUid() {
-        return mCreatorUid;
+        return myCreatorUid;
+    }
+
+    private PendingIntent(Context context, Intent intent) {
+        myCreatorPackage = context.getPackageName();
+        myCreatorUid = context.getUserId();
+        myIntent = intent;
+    }
+
+    public static PendingIntent getActivity(
+            Context context, int requestCode, Intent intent, int flags, Bundle options) {
+        return new PendingIntent(context, intent);
+    }
+
+    public static PendingIntent getService(
+            Context context, int requestCode, Intent intent, int flags) {
+        return new PendingIntent(context, intent);
+    }
+
+    public Intent getIntent() {
+        return myIntent;
+    }
+
+    public void send() {
+        if (myIntent.hasActivity()) {
+            myIntent.getActivity().performCreate(null, null);
+        } else if (myIntent.hasService()) {
+            myIntent.getService().onStartCommand(myIntent, 0, 0);
+        }
     }
 }

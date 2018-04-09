@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jetifier-processor">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-processor/0.0.1/jetifier-processor-0.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

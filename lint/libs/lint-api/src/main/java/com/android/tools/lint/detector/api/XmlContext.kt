@@ -41,11 +41,7 @@ internal const val SUPPRESS_JAVA_COMMENT_PREFIX = "noinspection "
  * to adjust your code for the next tools release.**
  */
 @Beta
-open class XmlContext
-/**
- * Construct a new [XmlContext]
- */
-    (
+open class XmlContext(
     /** the driver running through the checks */
     driver: LintDriver,
 

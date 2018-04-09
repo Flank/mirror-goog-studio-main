@@ -59,6 +59,7 @@ startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
 build:remote --jobs=110
+build:remote --show_timestamps
 
 # Import several flags related to specifying the toolchain and (if applicable)
 # java properties.

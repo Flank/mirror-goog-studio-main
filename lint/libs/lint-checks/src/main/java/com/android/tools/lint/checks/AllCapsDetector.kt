@@ -40,16 +40,16 @@ class AllCapsDetector : LayoutDetector() {
         /** Using all caps with markup  */
         @JvmField
         val ISSUE = Issue.create(
-            "AllCaps",
-            "Combining textAllCaps and markup",
-            """
-The textAllCaps text transform will end up calling `toString` on the `CharSequence`, which has \
-the net effect of removing any markup such as `<b>`. This check looks for usages of strings \
-containing markup that also specify `textAllCaps=true`.""",
-            Category.TYPOGRAPHY,
-            8,
-            Severity.WARNING,
-            Implementation(
+            id = "AllCaps",
+            briefDescription = "Combining textAllCaps and markup",
+            explanation = """
+            The textAllCaps text transform will end up calling `toString` on the `CharSequence`, which has \
+            the net effect of removing any markup such as `<b>`. This check looks for usages of strings \
+            containing markup that also specify `textAllCaps=true`.""",
+            category = Category.TYPOGRAPHY,
+            priority = 8,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 AllCapsDetector::class.java,
                 Scope.ALL_RESOURCES_SCOPE,
                 Scope.RESOURCE_FILE_SCOPE

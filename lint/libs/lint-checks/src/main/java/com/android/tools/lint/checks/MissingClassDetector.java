@@ -315,7 +315,8 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                                 + fixed
                                 + "\"";
                 Location location = context.getLocation(classNameNode);
-                LintFix fix = LintFix.create().replace().text(className).with(fixed).build();
+                LintFix fix =
+                        LintFix.create().replace().text(className).with(fixed).autoFix().build();
                 context.report(INNERCLASS, element, location, message, fix);
             }
         }

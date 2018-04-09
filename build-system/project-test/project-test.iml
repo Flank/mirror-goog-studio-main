@@ -9,8 +9,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="project-test-lib" />
-    <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

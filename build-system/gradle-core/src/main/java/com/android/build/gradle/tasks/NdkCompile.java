@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.NdkLease;
@@ -477,20 +476,16 @@ public class NdkCompile extends NdkTask {
             }
 
             final Callable<Collection<File>> callable =
-                    TaskInputHelper.bypassFileCallable(
-                            () -> {
-                                Collection<File> sourceList = variantConfig.getJniSourceList();
-                                if (Boolean.TRUE.equals(
-                                        variantConfig
-                                                .getMergedFlavor()
-                                                .getRenderscriptNdkModeEnabled())) {
-                                    sourceList.add(
-                                            variantData.renderscriptCompileTask
-                                                    .getSourceOutputDir());
-                                }
+                    () -> {
+                        Collection<File> sourceList = variantConfig.getJniSourceList();
+                        if (Boolean.TRUE.equals(
+                                variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
+                            sourceList.add(
+                                    variantData.renderscriptCompileTask.getSourceOutputDir());
+                        }
 
-                                return sourceList;
-                            });
+                        return sourceList;
+                    };
             ndkCompile.sourceFolders = variantScope.getGlobalScope().getProject().files(callable);
 
             ndkCompile.setGeneratedMakefile(

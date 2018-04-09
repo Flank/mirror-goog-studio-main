@@ -75,12 +75,14 @@ message EnergyEventGroupRequest {
 }
 
 message EnergySample {
-  // Time when the energy sample usages occured.
+  // Time when the energy sample usages occurred.
   int64 timestamp = 1;
   // Sample usage data by cpu in mA.
   int32 cpu_usage = 2;
   // Sample usage data by network in mA.
   int32 network_usage = 3;
+  // Sample usage data by location in mA.
+  int32 location_usage = 4;
 }
 
 message EnergySamplesResponse {
@@ -427,15 +429,17 @@ message LocationChanged {
     // A previously requested PendingIntent.
     PendingIntent intent = 2;
   }
+  // The location data from the callback or intent extras.
+  Location location = 3;
 }
 
+// Contains no metadata but we need the message to indicate a listener is passed
+// to the location request.
 message LocationListener {
-  // The location data from the callback.
-  Location location = 1;
 }
 
 message LocationRequest {
-  // Piority of the location request. This is an abstraction of the accuracy and
+  // Priority of the location request. This is an abstraction of the accuracy and
   // power useage defined by two location APIs (criteria in LocationManager and
   // priority in FusedLocationProviderClient).
   enum Priority {
@@ -456,7 +460,7 @@ message LocationRequest {
   // Name of the location provider.
   // If set through LocationManager, it can be "gps", "network", "passive" or
   // empty.
-  // If set through FusedLocaitonProviderClient, it will be "fused".
+  // If set through FusedLocationProviderClient, it will be "fused".
   string provider = 1;
   // The desired interval of this request, in milliseconds.
   int64 interval_ms = 2;

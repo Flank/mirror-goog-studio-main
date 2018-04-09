@@ -27,35 +27,25 @@ import java.io.File
  * (both bitmaps and XML files; for XML files a subclass of this context is used:
  * [com.android.tools.lint.detector.api.XmlContext].)
  *
- *
+ * @param driver the driver running through the checks
+ * @param project the project containing the file being checked
+ * @param main the main project if this project is a library project, or
+ *   null if this is not a library project. The main project is
+ *   the root project of all library projects, not necessarily the
+ *   directly including project.
+ * @param file the file being checked
+ * @property resourceFolderType the [com.android.resources.ResourceFolderType] of this file, if any
+ * @constructor Constructs a new [ResourceContext]
+ * <p>
  * **NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.**
  */
 @Beta
-open class ResourceContext
-
-/**
- * Construct a new [ResourceContext]
- *
- * @param driver the driver running through the checks
- * @param project the project containing the file being checked
- * @param main the main project if this project is a library project, or
- * null if this is not a library project. The main project is
- * the root project of all library projects, not necessarily the
- * directly including project.
- * @param file the file being checked
- * @param resourceFolderType the [com.android.resources.ResourceFolderType] of this file, if any
- */
-    (
+open class ResourceContext(
     driver: LintDriver,
     project: Project,
     main: Project?,
     file: File,
-    /**
-     * Returns the resource folder type of this XML file, if any.
-     *
-     * @return the resource folder type or null
-     */
     val resourceFolderType: ResourceFolderType?,
     contents: String?
 ) : Context(driver, project, main, file, contents) {

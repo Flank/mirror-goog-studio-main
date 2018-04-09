@@ -38,6 +38,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -56,7 +57,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
 
     private File manifestFile;
 
-    private String mainPkgName;
+    private Supplier<String> mainPkgName;
 
     private int minSdkVersion;
 
@@ -120,9 +121,9 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
             Files.copy(apk, to);
 
-            builder.generateApkData(apk, outDir, mainPkgName, ANDROID_WEAR_MICRO_APK);
+            builder.generateApkData(apk, outDir, getMainPkgName(), ANDROID_WEAR_MICRO_APK);
         } else {
-            builder.generateUnbundledWearApkData(outDir, mainPkgName);
+            builder.generateUnbundledWearApkData(outDir, getMainPkgName());
         }
 
         AndroidBuilder.generateApkDataEntryInManifest(
@@ -148,7 +149,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
 
     @Input
     public String getMainPkgName() {
-        return mainPkgName;
+        return mainPkgName.get();
     }
 
     @Input
@@ -215,7 +216,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             task.apkDirectoryFileCollection = apkFileCollection;
 
             task.manifestFile = scope.getMicroApkManifestFile();
-            task.mainPkgName = variantConfiguration.getApplicationId();
+            task.mainPkgName = variantConfiguration::getApplicationId;
             task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
         }

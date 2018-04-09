@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -54,9 +55,14 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
             @NonNull File mainClassLocation,
             @NonNull File localJarsLocation,
             @Nullable BuildableArtifact typedefRecipe,
-            @NonNull String packageName,
+            @NonNull Supplier<String> packageNameSupplier,
             boolean packageBuildConfig) {
-        super(mainClassLocation, localJarsLocation, typedefRecipe, packageName, packageBuildConfig);
+        super(
+                mainClassLocation,
+                localJarsLocation,
+                typedefRecipe,
+                packageNameSupplier,
+                packageBuildConfig);
     }
 
     @NonNull

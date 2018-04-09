@@ -27,6 +27,7 @@ import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import com.google.common.base.Preconditions
+import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
@@ -205,7 +206,12 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     val noCompressList = Objects.requireNonNull(config.options).noCompress
     if (noCompressList != null) {
         for (noCompress in noCompressList) {
-            builder.add("-0", noCompress)
+            if (!Strings.isNullOrEmpty(noCompress)) {
+                builder.add("-0", noCompress)
+            } else {
+                // Empty sting means 'do not compress any resources'.
+                builder.add("--no-compress")
+            }
         }
     }
 

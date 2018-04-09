@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
+import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -46,6 +47,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -255,6 +257,36 @@ public class DesugarAppWithDesugarToolTest {
                         .with(BooleanOption.ENABLE_BUILD_CACHE, false)
                         .run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
+    }
+
+    @Test
+    public void testWithLegacyJacoco() throws IOException, InterruptedException {
+        // java command is not logged when using workers
+        Assume.assumeFalse(enableGradleWorkers);
+        enableJava8();
+
+        assertThat(
+                        getProjectExecutor()
+                                .withEnableInfoLogging(true)
+                                .run("assembleDebug")
+                                .getStdout())
+                .doesNotContain("--legacy_jacoco_fix");
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.buildTypes.debug.testCoverageEnabled true\n"
+                        + "android.jacoco.version '"
+                        + JacocoConfigurations.VERSION_FOR_DX
+                        + "'");
+
+        // now it should contain it as Jacoco version is lower
+        assertThat(
+                        getProjectExecutor()
+                                .withEnableInfoLogging(true)
+                                .run("assembleDebug")
+                                .getStdout())
+                .contains("--legacy_jacoco_fix");
     }
 
     private void enableJava8() throws IOException {

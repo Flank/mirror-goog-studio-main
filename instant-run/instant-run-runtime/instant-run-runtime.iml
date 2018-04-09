@@ -8,12 +8,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="instant-run-common" />
-    <orderEntry type="module" module-name="android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.instant-run-common" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
-    <orderEntry type="module" module-name="instant-run-client" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.instant-run-client" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="guava-tools" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>

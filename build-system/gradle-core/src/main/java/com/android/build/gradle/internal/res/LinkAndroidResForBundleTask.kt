@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
@@ -58,7 +59,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -71,9 +71,10 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class LinkAndroidResForBundleTask
-@Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
+@Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
     private var aaptGeneration: AaptGeneration? = null
+    private val workers = Workers.getWorker(workerExecutor)
 
     @Input
     fun getAaptGenerationString() = aaptGeneration.toString()
@@ -178,9 +179,9 @@ open class LinkAndroidResForBundleTask
             logger = builder.logger
         )
         //TODO: message rewriting.
-        workerExecutor.submit(Aapt2ProcessResourcesRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.params(Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config))
+        workers.use {
+            it.submit(Aapt2ProcessResourcesRunnable::class.java,
+                Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config))
         }
     }
 

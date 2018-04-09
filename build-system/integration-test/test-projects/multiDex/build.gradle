@@ -16,7 +16,7 @@ android {
     flavorDimensions 'foo'
     productFlavors {
         ics {
-            minSdkVersion 14
+            minSdkVersion rootProject.supportLibMinSdk
         }
         lollipop {
             minSdkVersion 21

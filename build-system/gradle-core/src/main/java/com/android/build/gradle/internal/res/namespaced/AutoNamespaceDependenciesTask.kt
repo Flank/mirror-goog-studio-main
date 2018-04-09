@@ -149,9 +149,10 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
         if (dependency.id !is ProjectComponentIdentifier && input != null) {
             val dependencyName = dependency.id.displayName
+            val sanitizedDependencyName = FileUtils.sanitizeFileName(dependencyName)
             val out = File(
                     outputDirectory,
-                    "namespaced-$dependencyName-${input.name}"
+                    "namespaced-$sanitizedDependencyName-${input.name}"
             )
 
             // The rewriting algorithm uses ordered symbol tables, with this library's table at the
@@ -168,7 +169,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ImmutableList.of(symbolTables[0]),
                     File(
                             outputRClassesDirectory,
-                            "namespaced-${dependency.id.displayName}-R.jar"
+                            "namespaced-$sanitizedDependencyName-R.jar"
                     ).toPath()
             )
         }

@@ -105,18 +105,18 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
         /** Unregistered activities and services  */
         @JvmField
         val ISSUE = Issue.create(
-            "SecureRandom",
-            "Using a fixed seed with `SecureRandom`",
-
-            "Specifying a fixed seed will cause the instance to return a predictable " +
-                    "sequence of numbers. This may be useful for testing but it is not " +
-                    "appropriate for secure use.",
-            "http://developer.android.com/reference/java/security/SecureRandom.html",
-
-            Category.SECURITY,
-            9,
-            Severity.WARNING,
-            Implementation(
+            id = "SecureRandom",
+            briefDescription = "Using a fixed seed with `SecureRandom`",
+            explanation = """
+                Specifying a fixed seed will cause the instance to return a predictable \
+                sequence of numbers. This may be useful for testing but it is not appropriate \
+                for secure use.
+                """,
+            moreInfo = "http://developer.android.com/reference/java/security/SecureRandom.html",
+            category = Category.SECURITY,
+            priority = 9,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 SecureRandomDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

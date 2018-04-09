@@ -598,7 +598,13 @@ public class GradleDetector extends Detector implements GradleScanner {
                 }
             } else if (property.equals("packageName")) {
                 String message = "Deprecated: Replace 'packageName' with 'applicationId'";
-                LintFix fix = fix().replace().text("packageName").with("applicationId").build();
+                LintFix fix =
+                        fix().name("Replace 'packageName' with 'applicationId'", true)
+                                .replace()
+                                .text("packageName")
+                                .with("applicationId")
+                                .autoFix()
+                                .build();
                 report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message, fix);
             }
             if (property.equals("versionCode")
@@ -739,7 +745,12 @@ public class GradleDetector extends Detector implements GradleScanner {
         } else if (property.equals("packageNameSuffix")) {
             String message = "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'";
             LintFix fix =
-                    fix().replace().text("packageNameSuffix").with("applicationIdSuffix").build();
+                    fix().name("Replace 'packageNameSuffix' with 'applicationIdSuffix'", true)
+                            .replace()
+                            .text("packageNameSuffix")
+                            .with("applicationIdSuffix")
+                            .autoFix()
+                            .build();
             report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message, fix);
         } else if (property.equals("applicationIdSuffix")) {
             String suffix = getStringLiteralValue(value);
@@ -930,7 +941,13 @@ public class GradleDetector extends Detector implements GradleScanner {
                 String message =
                         String.format(
                                 "'%1$s' is deprecated; use '%2$s' instead", plugin, replaceWith);
-                LintFix fix = fix().replace().text(plugin).with(replaceWith).build();
+                LintFix fix =
+                        fix().sharedName("Replace plugin")
+                                .replace()
+                                .text(plugin)
+                                .with(replaceWith)
+                                .autoFix()
+                                .build();
                 report(context, cookie, DEPRECATED, message, fix);
             }
         }
@@ -1425,9 +1442,11 @@ public class GradleDetector extends Detector implements GradleScanner {
             @NonNull String currentVersion, @NonNull String suggestedVersion) {
         return LintFix.create()
                 .name("Change to " + suggestedVersion)
+                .sharedName("Update versions")
                 .replace()
                 .text(currentVersion)
                 .with(suggestedVersion)
+                .autoFix()
                 .build();
     }
 

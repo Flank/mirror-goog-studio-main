@@ -2,6 +2,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -110,5 +111,20 @@ public class AaptOptionsTest {
 
         // Check that the extra R.java file is not generated if the extra options aren't present.
         assertThat(extraR).doesNotExist();
+    }
+
+    @Test
+    public void emptyNoCompressList() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "  aaptOptions {\n"
+                        + "    noCompress \"\"\n"
+                        + "  }\n"
+                        + "}\n");
+
+        // Should execute without failure.
+        project.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
     }
 }

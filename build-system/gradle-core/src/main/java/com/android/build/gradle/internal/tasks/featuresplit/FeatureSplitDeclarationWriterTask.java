@@ -17,12 +17,14 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -32,15 +34,21 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
 
-    @Input String uniqueIdentifier;
-    @Input String originalApplicationId;
+    @Input public String uniqueIdentifier;
+
+    @Input
+    public String getApplicationId() {
+        return originalApplicationIdSupplier.get();
+    }
+
+    @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
 
     @OutputDirectory File outputDirectory;
 
     @TaskAction
     public void fullTaskAction() throws IOException {
         FeatureSplitDeclaration declaration =
-                new FeatureSplitDeclaration(uniqueIdentifier, originalApplicationId);
+                new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId());
         declaration.save(outputDirectory);
     }
 
@@ -70,11 +78,9 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
             task.setVariantName(variantScope.getFullVariantName());
 
             task.uniqueIdentifier = variantScope.getGlobalScope().getProject().getPath();
-            task.originalApplicationId =
-                    variantScope
-                            .getVariantData()
-                            .getVariantConfiguration()
-                            .getOriginalApplicationId();
+            task.originalApplicationIdSupplier =
+                    variantScope.getVariantData().getVariantConfiguration()
+                            ::getOriginalApplicationId;
             task.outputDirectory =
                     variantScope
                             .getArtifacts()

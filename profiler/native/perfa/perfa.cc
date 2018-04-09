@@ -54,8 +54,7 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_env_;
 };
 
-bool energy_profiler_enabled = false;
-bool cpu_api_tracing_enabled = false;
+proto::AgentConfig agent_config;
 
 // Retrieve the app's data directory path
 static std::string GetAppDataPath() {
@@ -70,15 +69,21 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
-          cpu_api_tracing_enabled) ||
-         (energy_profiler_enabled &&
-          (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
+          agent_config.cpu_api_tracing_enabled()) ||
+         (agent_config.energy_profiler_enabled() &&
+          ((strcmp(sig_mutf8, "Landroid/app/Activity;") == 0 &&
+            // TODO(b/77586395): re-enable for API 26.
+            agent_config.android_feature_level() >= 27) ||
+           strcmp(sig_mutf8, "Landroid/app/ActivityThread;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
                0 ||
+           strcmp(sig_mutf8, "Landroid/app/IntentService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
                0 ||
+           strcmp(sig_mutf8, "Landroid/app/PendingIntent;") == 0 ||
            strcmp(sig_mutf8, "Landroid/location/LocationManager;") == 0 ||
            strcmp(sig_mutf8,
                   "Landroid/location/LocationManager$ListenerTransport;") ==
@@ -426,6 +431,80 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "(Landroid/os/Message;)V"))) {
       Log::E("Error instrumenting LocationListener.onLocationChanged");
     }
+  } else if (strcmp(name, "android/app/PendingIntent") == 0) {
+    slicer::MethodInstrumenter mi_activity(dex_ir);
+    mi_activity.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetActivityEntry"));
+    mi_activity.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetActivityExit"));
+    if (!mi_activity.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "getActivity",
+                         "(Landroid/content/Context;ILandroid/content/Intent;I"
+                         "Landroid/os/Bundle;)Landroid/app/PendingIntent;"))) {
+      Log::E("Error instrumenting PendingIntent.getActivity");
+    }
+
+    slicer::MethodInstrumenter mi_service(dex_ir);
+    mi_service.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetServiceEntry"));
+    mi_service.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetServiceExit"));
+    if (!mi_service.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "getService",
+                         "(Landroid/content/Context;ILandroid/content/Intent;I)"
+                         "Landroid/app/PendingIntent;"))) {
+      Log::E("Error instrumenting PendingIntent.getService");
+    }
+
+    slicer::MethodInstrumenter mi_broadcast(dex_ir);
+    mi_broadcast.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetBroadcastEntry"));
+    mi_broadcast.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "onGetBroadcastExit"));
+    if (!mi_broadcast.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "getBroadcast",
+                         "(Landroid/content/Context;ILandroid/content/Intent;I)"
+                         "Landroid/app/PendingIntent;"))) {
+      Log::E("Error instrumenting PendingIntent.getBroadcast");
+    }
+  } else if (strcmp(name, "android/app/Activity") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "wrapActivityCreate"));
+    if (!mi.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "performCreate",
+            "(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V"))) {
+      Log::E("Error instrumenting Activity.performCreate");
+    }
+  } else if (strcmp(name, "android/app/IntentService") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+        "wrapServiceStart"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "onStartCommand",
+                                          "(Landroid/content/Intent;II)I"))) {
+      Log::E("Error instrumenting IntentService.onStartCommand");
+    }
+  } else if (strcmp(name, "android/app/ActivityThread") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::DetourVirtualInvoke>(
+        ir::MethodId("Landroid/content/BroadcastReceiver;", "onReceive",
+                     "(Landroid/content/Context;Landroid/content/Intent;)V"),
+        ir::MethodId(
+            "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
+            "wrapBroadcastReceive"));
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "handleReceiver",
+                         "(Landroid/app/ActivityThread$ReceiverData;)V"))) {
+      Log::E("Error instrumenting BroadcastReceiver.onReceive");
+    }
   } else {
     Log::V("No transformation applied for class: %s", name);
     return;
@@ -492,6 +571,9 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
         "(ILjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
+        "sendIntentAlarmFired", "(ILjava/lang/String;IZ)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmFired", "(ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobScheduled",
@@ -527,6 +609,10 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationChanged", "(ILjava/lang/String;FDD)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
+        "sendIntentLocationChanged",
+        "(ILjava/lang/String;FDDLjava/lang/String;I)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {
@@ -660,11 +746,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   // TODO: Update options to support more than one argument if needed.
   profiler::Config config(options);
-  auto agent_config = config.GetAgentConfig();
+  agent_config = config.GetAgentConfig();
   Agent::Instance(&config);
-
-  energy_profiler_enabled = agent_config.energy_profiler_enabled();
-  cpu_api_tracing_enabled = agent_config.cpu_api_tracing_enabled();
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env, &agent_config);
@@ -714,7 +797,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  Agent::Instance().AddPerfdConnectedCallback([agent_config, vm] {
+  Agent::Instance().AddPerfdConnectedCallback([vm] {
     // MemoryTackingEnv needs a connection to perfd, which may not be always the
     // case. If we don't postpone until there is a connection, MemoryTackingEnv
     // is going to busy-wait, so not allowing the application to finish

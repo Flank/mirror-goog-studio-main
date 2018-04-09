@@ -119,6 +119,7 @@ public class DefaultConfiguration extends Configuration {
     private Boolean checkGeneratedSources;
     private Boolean checkDependencies;
     private Boolean explainIssues;
+    private Boolean applySuggestions;
     private Boolean removeFixedBaselineIssues;
     private Boolean abortOnError;
 
@@ -453,6 +454,7 @@ public class DefaultConfiguration extends Configuration {
             checkGeneratedSources = readBooleanFlag(root, "checkGeneratedSources");
             checkDependencies = readBooleanFlag(root, "checkDependencies");
             explainIssues = readBooleanFlag(root, "explainIssues");
+            applySuggestions = readBooleanFlag(root, "applySuggestions");
             removeFixedBaselineIssues = readBooleanFlag(root, "removeFixedBaselineIssues");
             abortOnError = readBooleanFlag(root, "abortOnError");
         }
@@ -527,6 +529,11 @@ public class DefaultConfiguration extends Configuration {
     public Boolean getExplainIssues() {
         ensureInitialized();
         return explainIssues;
+    }
+
+    public Boolean getApplySuggestions() {
+        ensureInitialized();
+        return applySuggestions;
     }
 
     @Nullable

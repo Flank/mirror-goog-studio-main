@@ -42,11 +42,7 @@ import java.util.EnumSet
  * to adjust your code for the next tools release.**
  */
 @Beta
-open class Context
-/**
- * Construct a new [Context]
- */
-    (
+open class Context(
     /** The driver running through the checks  */
     val driver: LintDriver,
     /** The project containing the file being checked  */

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
@@ -24,9 +23,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
-import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import java.io.File
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -70,8 +67,9 @@ class NamespacedResourcesTaskManager(
         taskFactory.create(StaticLibraryManifestTask.ConfigAction(variantScope))
         taskFactory.create(LinkLibraryAndroidResourcesTask.ConfigAction(variantScope))
         // TODO: also generate a private R.jar holding private resources.
-        taskFactory.create(GenerateNamespacedLibraryRFilesTask.ConfigAction(variantScope))
-
+        val genRClass = taskFactory.create(GenerateNamespacedLibraryRFilesTask.ConfigAction(variantScope))
+        // TODO: remove source generation dependency b/77676030
+        variantScope.sourceGenTask.dependsOn(genRClass)
         if (variantScope.type.isTestComponent) {
             if (variantScope.testedVariantData!!.type.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(

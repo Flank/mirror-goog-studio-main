@@ -71,4 +71,6 @@ message AgentConfig {
   bool energy_profiler_enabled = 8;
   // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.
   bool cpu_api_tracing_enabled = 9;
+  // Android API level as defined in com.android.sdklib.AndroidVersion.
+  int32 android_feature_level = 10;
 }

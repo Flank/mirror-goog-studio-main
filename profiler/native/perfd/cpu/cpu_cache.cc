@@ -148,12 +148,14 @@ ProfilingApp* CpuCache::GetOngoingCapture(int32_t pid) {
 
   // Not in |app_caches_|, try to find in |startup_profiling_apps_|.
   string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
-  if (app_pkg_name.empty()) {
-    return nullptr;
-  }
-  const auto& startup_app_iterator = startup_profiling_apps_.find(app_pkg_name);
-  if (startup_app_iterator != startup_profiling_apps_.end()) {
-    return &startup_app_iterator->second;
+  return GetOngoingStartupProfiling(app_pkg_name);
+}
+
+ProfilingApp* CpuCache::GetOngoingStartupProfiling(
+    const std::string& app_pkg_name) {
+  const auto& app_iterator = startup_profiling_apps_.find(app_pkg_name);
+  if (app_iterator != startup_profiling_apps_.end()) {
+    return &app_iterator->second;
   }
   return nullptr;
 }

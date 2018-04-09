@@ -273,7 +273,7 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
                 // TODO: enable manifest parsing only in execution phase after tasks have been
                 // moved over. There are still a few legitimate  use cases where we need to grab the
                 // min so we can't throw an exception yet. For now, print a warning.
-                LOGGER.warning("Warning: manifest is being parsed during configuration phase.");
+                LOGGER.warning("Warning: manifest is being parsed while tasks are generated.");
             }
             if (!initialized && manifestFile.isFile()) {
                 DefaultHandler handler =

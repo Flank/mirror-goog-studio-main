@@ -61,6 +61,7 @@ public class DesugarProcessArgsTest {
         expected.add("--desugar_try_with_resources_if_needed");
         expected.add("--desugar_try_with_resources_omit_runtime_classes");
         expected.add("--legacy_jacoco_fix");
+        expected.add("--copy_bridges_from_classpath");
 
         DesugarProcessArgs args =
                 new DesugarProcessArgs(
@@ -69,7 +70,8 @@ public class DesugarProcessArgsTest {
                         bootClasspath,
                         tmp.getRoot().toPath().toString(),
                         false,
-                        10);
+                        10,
+                        true);
         String windowsArgs = Iterables.getOnlyElement(args.getArgs(true)).substring(1);
         assertThat(Files.readAllLines(Paths.get(windowsArgs))).containsExactlyElementsIn(expected);
 
@@ -104,7 +106,7 @@ public class DesugarProcessArgsTest {
         expected.add(Integer.toString(19));
         expected.add("--nodesugar_try_with_resources_if_needed");
         expected.add("--desugar_try_with_resources_omit_runtime_classes");
-        expected.add("--legacy_jacoco_fix");
+        expected.add("--copy_bridges_from_classpath");
 
         DesugarProcessArgs args =
                 new DesugarProcessArgs(
@@ -113,7 +115,8 @@ public class DesugarProcessArgsTest {
                         bootClasspath,
                         tmp.getRoot().toPath().toString(),
                         true,
-                        19);
+                        19,
+                        false);
         List<String> winArgs = args.getArgs(true);
         assertThat(winArgs).containsExactlyElementsIn(expected);
     }

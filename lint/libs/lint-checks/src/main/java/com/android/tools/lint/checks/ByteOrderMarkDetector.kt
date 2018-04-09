@@ -42,19 +42,19 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
         /** Detects BOM characters in the middle of files  */
         @JvmField
         val BOM = Issue.create(
-            "ByteOrderMark",
-            "Byte order mark inside files",
-            """
-Lint will flag any byte-order-mark (BOM) characters it finds in the middle of a file. Since we \
-expect files to be encoded with UTF-8 (see the EnforceUTF8 issue), the BOM characters are not \
-necessary, and they are not handled correctly by all tools. For example, if you have a BOM as \
-part of a resource name in one particular translation, that name will not be considered identical \
-to the base resource's name and the translation will not be used.""",
-            "http://en.wikipedia.org/wiki/Byte_order_mark",
-            Category.I18N,
-            8,
-            Severity.FATAL,
-            Implementation(
+            id = "ByteOrderMark",
+            briefDescription = "Byte order mark inside files",
+            explanation = """
+            Lint will flag any byte-order-mark (BOM) characters it finds in the middle of a file. Since we \
+            expect files to be encoded with UTF-8 (see the EnforceUTF8 issue), the BOM characters are not \
+            necessary, and they are not handled correctly by all tools. For example, if you have a BOM as \
+            part of a resource name in one particular translation, that name will not be considered identical \
+            to the base resource's name and the translation will not be used.""",
+            moreInfo = "http://en.wikipedia.org/wiki/Byte_order_mark",
+            category = Category.I18N,
+            priority = 8,
+            severity = Severity.FATAL,
+            implementation = Implementation(
                 ByteOrderMarkDetector::class.java,
                 // Applies to all text files
                 EnumSet.of(

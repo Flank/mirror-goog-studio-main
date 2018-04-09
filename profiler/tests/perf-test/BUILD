@@ -21,7 +21,6 @@ sh_binary(
             "//tools/base/profiler/tests/app-launcher:app-launcher-dex",
         ],
     }),
-    tags = ["no_foundry"],  # b/73948555
 )
 
 # TODO: Have transform pull in dependency jar files, so we do not need to load multiple
@@ -36,7 +35,7 @@ java_binary(
     runtime_deps = ["//tools/base/profiler/transform"],
     deps = [
         "//tools/base/profiler/transform",
-        "//tools/base/testutils:studio.testutils_testlib",
+        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
     ],
 )
 
@@ -52,11 +51,11 @@ java_library(
     deps = [
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
-        "//tools/base/common:studio.common",
+        "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/profiler:netty-grpc-jar",
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
         "//tools/base/profiler/transform",
-        "//tools/base/testutils:studio.testutils_testlib",
+        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
         "//tools/idea/.idea/libraries:JUnit4",
         "//tools/idea/.idea/libraries:truth",
     ],
@@ -68,7 +67,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
         "testSrcs/com/android/tools/profiler/JvmtiAgentTest.java",
     ],
-    tags = ["no_foundry"],  # b/73948555
+    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -85,7 +84,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
     ],
-    tags = ["no_foundry"],  # b/73948555
+    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -99,7 +98,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
     ],
-    tags = ["no_foundry"],  # b/73948555
+    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -113,7 +112,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
     ],
-    tags = ["no_foundry"],  # b/73948555
+    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -128,7 +127,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
     ],
-    tags = ["no_foundry"],  # b/73948555
+    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -145,7 +144,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/energy/LocationTest.java",
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
-    tags = ["no_foundry"],  # b/73948555
+    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",

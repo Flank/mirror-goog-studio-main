@@ -61,81 +61,77 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         @JvmField
         val NO_HARD_KOTLIN_KEYWORDS = Issue.create(
-            "NoHardKeywords",
-            "No Hard Kotlin Keywords",
+            id = "NoHardKeywords",
+            briefDescription = "No Hard Kotlin Keywords",
 
-            """
-Do not use Kotlin’s hard keywords as the name of methods or fields.
-These require the use of backticks to escape when calling from Kotlin.
-Soft keywords, modifier keywords, and special identifiers are allowed.
+            explanation = """
+            Do not use Kotlin’s hard keywords as the name of methods or fields.
+            These require the use of backticks to escape when calling from Kotlin.
+            Soft keywords, modifier keywords, and special identifiers are allowed.
 
-For example, Mockito’s `when` function requires backticks when used from Kotlin:
+            For example, Mockito’s `when` function requires backticks when used from Kotlin:
 
-    val callable = Mockito.mock(Callable::class.java)
-    Mockito.\`when\`(callable.call()).thenReturn(/* … */)
-""",
-            "https://android.github.io/kotlin-guides/interop.html#no-hard-keywords",
-
-            Category.INTEROPERABILITY_KOTLIN,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION,
-            enabledByDefault = false
+                val callable = Mockito.mock(Callable::class.java)
+                Mockito.\`when\`(callable.call()).thenReturn(/* … */)
+            """,
+            moreInfo = "https://android.github.io/kotlin-guides/interop.html#no-hard-keywords",
+            category = Category.INTEROPERABILITY_KOTLIN,
+            priority = 6,
+            severity = Severity.WARNING,
+            enabledByDefault = false,
+            implementation = IMPLEMENTATION
         )
 
         @JvmField
         val LAMBDA_LAST = Issue.create(
-            "LambdaLast",
-            "Lambda Parameters Last",
+            id = "LambdaLast",
+            briefDescription = "Lambda Parameters Last",
 
-            """
-To improve calling this code from Kotlin,
-parameter types eligible for SAM conversion should be last.
-""",
-            "https://android.github.io/kotlin-guides/interop.html#lambda-parameters-last",
-
-            Category.INTEROPERABILITY_KOTLIN,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION,
-            enabledByDefault = false
+            explanation = """
+            To improve calling this code from Kotlin,
+            parameter types eligible for SAM conversion should be last.
+            """,
+            moreInfo = "https://android.github.io/kotlin-guides/interop.html#lambda-parameters-last",
+            category = Category.INTEROPERABILITY_KOTLIN,
+            priority = 6,
+            severity = Severity.WARNING,
+            enabledByDefault = false,
+            implementation = IMPLEMENTATION
         )
 
         @JvmField
         val PLATFORM_NULLNESS = Issue.create(
-            "UnknownNullness",
-            "Unknown nullness",
+            id = "UnknownNullness",
+            briefDescription = "Unknown nullness",
 
-            """
-To improve referencing this code from Kotlin, consider adding
-explicit nullness information here with either `@NonNull` or `@Nullable`.
-""",
-            "https://android.github.io/kotlin-guides/interop.html#nullability-annotations",
-
-            Category.INTEROPERABILITY_KOTLIN,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION,
-            enabledByDefault = false
+            explanation = """
+            To improve referencing this code from Kotlin, consider adding
+            explicit nullness information here with either `@NonNull` or `@Nullable`.
+            """,
+            moreInfo = "https://android.github.io/kotlin-guides/interop.html#nullability-annotations",
+            category = Category.INTEROPERABILITY_KOTLIN,
+            priority = 6,
+            severity = Severity.WARNING,
+            enabledByDefault = false,
+            implementation = IMPLEMENTATION
         )
 
         @JvmField
         val KOTLIN_PROPERTY = Issue.create(
-            "KotlinPropertyAccess",
-            "Kotlin Property Access",
+            id = "KotlinPropertyAccess",
+            briefDescription = "Kotlin Property Access",
 
-            """
-For a method to be represented as a property in Kotlin, strict “bean”-style prefixing must be used.
+            explanation = """
+            For a method to be represented as a property in Kotlin, strict “bean”-style prefixing must be used.
 
-Accessor methods require a ‘get’ prefix or for boolean-returning methods an ‘is’ prefix can be used.
-""",
-            "https://android.github.io/kotlin-guides/interop.html#property-prefixes",
-
-            Category.INTEROPERABILITY_KOTLIN,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION,
-            enabledByDefault = false
+            Accessor methods require a ‘get’ prefix or for boolean-returning methods an ‘is’ prefix can be used.
+            """,
+            moreInfo = "https://android.github.io/kotlin-guides/interop.html#property-prefixes",
+            category = Category.INTEROPERABILITY_KOTLIN,
+            priority = 6,
+            severity = Severity.WARNING,
+            enabledByDefault = false,
+            implementation = IMPLEMENTATION
         )
 
         private fun isKotlinHardKeyword(keyword: String): Boolean {
@@ -421,7 +417,7 @@ Accessor methods require a ‘get’ prefix or for boolean-returning methods an 
             val message = "Unknown nullability; explicitly declare as `@Nullable` or `@NonNull`" +
                     " to improve Kotlin interoperability; see " +
                     "https://android.github.io/kotlin-guides/interop.html#nullability-annotations"
-            val fix = LintFix.create().group(
+            val fix = LintFix.create().alternatives(
                 LintFix.create()
                     .replace()
                     .name("Annotate @NonNull")

@@ -54,7 +54,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     var isIntendedForBaseline: Boolean = false
 
     @Throws(IOException::class)
-    override fun write(stats: Reporter.Stats, issues: List<Warning>) {
+    override fun write(stats: LintStats, issues: List<Warning>) {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         // Format 4: added urls= attribute with all more info links, comma separated
         writer.write("<issues format=\"4\"")

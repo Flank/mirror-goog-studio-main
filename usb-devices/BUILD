@@ -13,6 +13,6 @@ iml_module(
     deps = [
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
         "//tools/idea/.idea/libraries:JUnit4",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )

@@ -859,11 +859,11 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for build.gradle line 4: Replace with applicationId:\n"
+                                + "Fix for build.gradle line 5: Replace 'packageName' with 'applicationId':\n"
                                 + "@@ -5 +5\n"
                                 + "-         packageName 'my.pkg'\n"
                                 + "+         applicationId 'my.pkg'\n"
-                                + "Fix for build.gradle line 8: Replace with applicationIdSuffix:\n"
+                                + "Fix for build.gradle line 9: Replace 'packageNameSuffix' with 'applicationIdSuffix':\n"
                                 + "@@ -9 +9\n"
                                 + "-             packageNameSuffix \".debug\"\n"
                                 + "+             applicationIdSuffix \".debug\"\n");

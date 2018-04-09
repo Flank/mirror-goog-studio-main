@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.Density;
+import com.android.resources.ResourceType;
 
 public class DensityBasedResourceValue extends ResourceValue {
-
     private final Density mDensity;
 
     public DensityBasedResourceValue(
@@ -38,6 +37,17 @@ public class DensityBasedResourceValue extends ResourceValue {
             @NonNull Density mDensity,
             @Nullable String libraryName) {
         super(reference, value, libraryName);
+        this.mDensity = mDensity;
+    }
+
+    public DensityBasedResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String value,
+            @NonNull Density mDensity,
+            @Nullable String libraryName) {
+        super(namespace, type, name, value, libraryName);
         this.mDensity = mDensity;
     }
 

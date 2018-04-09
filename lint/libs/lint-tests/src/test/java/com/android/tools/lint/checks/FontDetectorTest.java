@@ -61,7 +61,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 3: Replace with :\n"
+                        + "Fix for res/font/font1.xml line 3: Delete:\n"
                         + "@@ -4 +4\n"
                         + "-     <font\n"
                         + "-         android:fontStyle=\"normal\"\n"

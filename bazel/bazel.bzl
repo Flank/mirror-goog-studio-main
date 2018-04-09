@@ -468,7 +468,7 @@ def iml_module(name,
   )
 
   # Only add test utils to other than itself.
-  test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.testutils"]
+  test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils"]
   _iml_test_module_(
     name = name + "_testlib",
     tags = tags,

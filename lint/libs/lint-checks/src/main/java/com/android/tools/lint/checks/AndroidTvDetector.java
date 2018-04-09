@@ -316,7 +316,10 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             attrRequired == null
                                     ? xmlContext.getNameLocation(element)
                                     : xmlContext.getLocation(attrRequired);
-                    LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE).build();
+                    LintFix fix =
+                            fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE)
+                                    .autoFix()
+                                    .build();
                     xmlContext.report(
                             UNSUPPORTED_TV_HARDWARE,
                             element,
@@ -445,7 +448,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
      * iteration of the manifest element's children.
      *
      * @param featureNames The set of all features to look for inside the <code>&lt;manifest&gt;
-     *     </code> node of the document.
+     *                     </code> node of the document.
      * @param document The document/root node to use for iterating.
      * @return A list of all <code>&lt;uses-feature&gt;</code> elements that match the featureNames.
      */

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
@@ -28,7 +27,6 @@ import java.util.List;
  * items, one for array element.
  */
 public class ArrayResourceValue extends ResourceValue implements Iterable<String> {
-
     private final List<String> mItems = new ArrayList<>();
 
     public ArrayResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {
@@ -36,6 +34,14 @@ public class ArrayResourceValue extends ResourceValue implements Iterable<String
         assert reference.getResourceType() == ResourceType.ARRAY;
     }
 
+    public ArrayResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String libraryName) {
+        super(namespace, type, name, null, libraryName);
+        assert type == ResourceType.ARRAY;
+    }
 
     /**
      * Adds an element into the array

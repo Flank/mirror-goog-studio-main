@@ -58,25 +58,25 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
         /** Mixing Translucency and Orientation  */
         @JvmField
         val ISSUE = Issue.create(
-            "TranslucentOrientation",
-            "Mixing screenOrientation and translucency",
-            """
-Specifying a fixed screen orientation with a translucent theme isn't supported
-on apps with targetSdkVersion O or greater since there can be an another activity
-visible behind your activity with a conflicting request.
+            id = "TranslucentOrientation",
+            briefDescription = "Mixing screenOrientation and translucency",
+            explanation = """
+            Specifying a fixed screen orientation with a translucent theme isn't supported \
+            on apps with targetSdkVersion O or greater since there can be an another activity \
+            visible behind your activity with a conflicting request.
 
-For example, your activity requests landscape and the visible activity behind
-your translucent activity request portrait. In this case the system can only
-honor one of the requests and currently prefers to honor the request from
-non-translucent activities since there is nothing visible behind them.
+            For example, your activity requests landscape and the visible activity behind \
+            your translucent activity request portrait. In this case the system can only \
+            honor one of the requests and currently prefers to honor the request from \
+            non-translucent activities since there is nothing visible behind them.
 
-Devices running platform version O or greater will throw an exception in your
-app if this state is detected.
-""",
-            Category.CORRECTNESS,
-            8,
-            Severity.WARNING,
-            Implementation(
+            Devices running platform version O or greater will throw an exception in your \
+            app if this state is detected.
+            """,
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 TranslucentViewDetector::class.java,
                 EnumSet.of(Scope.MANIFEST, Scope.ALL_RESOURCE_FILES, Scope.JAVA_FILE)
             )

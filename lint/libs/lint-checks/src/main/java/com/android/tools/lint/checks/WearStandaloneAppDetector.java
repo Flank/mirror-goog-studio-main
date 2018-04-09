@@ -148,7 +148,7 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
                         || (!value.equalsIgnoreCase(VALUE_TRUE)
                                 && !value.equalsIgnoreCase(VALUE_FALSE))) {
                     LintFix fixes =
-                            fix().group(
+                            fix().alternatives(
                                             fix().replace().with(VALUE_TRUE).build(),
                                             fix().replace().with(VALUE_FALSE).build());
                     context.report(

@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
+import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -94,7 +95,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
@@ -121,6 +121,11 @@ public class VariantManager implements VariantModel {
     protected static final String COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION =
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
+    protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
+            "androidx.multidex:multidex:1.0.0-alpha1";
+    protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
+            "androidx.multidex:multidex-instrumentation:1.0.0-alpha1";
+
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final AndroidBuilder androidBuilder;
@@ -138,7 +143,9 @@ public class VariantManager implements VariantModel {
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
     @Nullable private final CoreSigningConfig signingOverride;
-    @NonNull private final BooleanSupplier isInExecutionPhase;
+    // We cannot use gradle's state of executed as that returns true while inside afterEvalute.
+    // Wew want this to only be true after all tasks have been create.
+    @NonNull private Boolean hasCreatedTasks = Boolean.FALSE;
 
     public VariantManager(
             @NonNull GlobalScope globalScope,
@@ -166,7 +173,6 @@ public class VariantManager implements VariantModel {
         this.productFlavors = Maps.newHashMap();
         this.signingConfigs = Maps.newHashMap();
         this.manifestParserMap = Maps.newHashMap();
-        this.isInExecutionPhase = () -> globalScope.isInExectionPhase();
 
         DefaultAndroidSourceSet mainSourceSet =
                 (DefaultAndroidSourceSet)
@@ -520,14 +526,18 @@ public class VariantManager implements VariantModel {
 
             if (variantType.isApk()) { // ANDROID_TEST
                 if (variantConfig.isLegacyMultiDexMode()) {
+                    String multiDexInstrumentationDep =
+                            globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                                    ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
+                                    : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
                     project.getDependencies()
                             .add(
                                     variantDep.getCompileClasspath().getName(),
-                                    COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                                    multiDexInstrumentationDep);
                     project.getDependencies()
                             .add(
                                     variantDep.getRuntimeClasspath().getName(),
-                                    COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                                    multiDexInstrumentationDep);
                 }
 
                 taskManager.createAndroidTestVariantTasks((TestVariantData) variantData);
@@ -600,11 +610,31 @@ public class VariantManager implements VariantModel {
     public void configureDependencies() {
         final DependencyHandler dependencies = project.getDependencies();
 
-        // register transforms.
+        // If Jetifier is enabled, replace old support libraries with new ones.
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            JetifyTransform.replaceOldSupportLibraries(project);
+        }
+
+        /*
+         * Register transforms.
+         */
+        String maybeJetifiedAar;
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
+                        reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JETIFIED_AAR);
+                        reg.artifactTransform(JetifyTransform.class);
+                    });
+            maybeJetifiedAar = AndroidArtifacts.TYPE_JETIFIED_AAR;
+        } else {
+            maybeJetifiedAar = AndroidArtifacts.TYPE_AAR;
+        }
+
         final String explodedAarType = ArtifactType.EXPLODED_AAR.getType();
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedAar);
                     reg.getTo().attribute(ARTIFACT_FORMAT, explodedAarType);
                     reg.artifactTransform(ExtractAarTransform.class);
                 });
@@ -654,10 +684,23 @@ public class VariantManager implements VariantModel {
                     });
         }
 
+        String maybeJetifiedJar;
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                        reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JETIFIED_JAR);
+                        reg.artifactTransform(JetifyTransform.class);
+                    });
+            maybeJetifiedJar = AndroidArtifacts.TYPE_JETIFIED_JAR;
+        } else {
+            maybeJetifiedJar = AndroidArtifacts.TYPE_JAR;
+        }
+
         for (String transformTarget : JarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, "jar");
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedJar);
                         reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
                         reg.artifactTransform(JarTransform.class);
                     });
@@ -886,7 +929,7 @@ public class VariantManager implements VariantModel {
                                 variantType,
                                 signingOverride,
                                 globalScope.getErrorHandler(),
-                                isInExecutionPhase);
+                                this::getHasCreatedTasks);
 
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
@@ -962,10 +1005,14 @@ public class VariantManager implements VariantModel {
         variantData.setVariantDependency(variantDep);
 
         if (variantConfig.isLegacyMultiDexMode()) {
-            project.getDependencies().add(
-                    variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
-            project.getDependencies().add(
-                    variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX);
+            String multiDexDependency =
+                    globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                            ? ANDROIDX_MULTIDEX_MULTIDEX
+                            : COM_ANDROID_SUPPORT_MULTIDEX;
+            project.getDependencies()
+                    .add(variantDep.getCompileClasspath().getName(), multiDexDependency);
+            project.getDependencies()
+                    .add(variantDep.getRuntimeClasspath().getName(), multiDexDependency);
         }
 
         if (variantConfig.getRenderscriptSupportModeEnabled()) {
@@ -1052,7 +1099,7 @@ public class VariantManager implements VariantModel {
                         testSourceSet != null ? getParser(testSourceSet.getManifestFile()) : null,
                         buildTypeData.getTestSourceSet(type),
                         type,
-                        isInExecutionPhase);
+                        this::getHasCreatedTasks);
 
 
         for (CoreProductFlavor productFlavor : productFlavorList) {
@@ -1302,6 +1349,15 @@ public class VariantManager implements VariantModel {
     @NonNull
     private ManifestAttributeSupplier getParser(@NonNull File file) {
         return manifestParserMap.computeIfAbsent(
-                file, f -> new DefaultManifestParser(f, isInExecutionPhase));
+                file, f -> new DefaultManifestParser(f, this::getHasCreatedTasks));
+    }
+
+    @NonNull
+    private Boolean getHasCreatedTasks() {
+        return hasCreatedTasks;
+    }
+
+    public void setHasCreatedTasks(@NonNull Boolean hasCreatedTasks) {
+        this.hasCreatedTasks = hasCreatedTasks;
     }
 }

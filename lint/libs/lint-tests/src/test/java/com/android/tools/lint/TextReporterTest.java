@@ -104,7 +104,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warnings.add(warning2);
             Collections.sort(warnings);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -220,7 +220,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warnings.add(warning3);
             Collections.sort(warnings);
 
-            reporter.write(new Reporter.Stats(0, 3), warnings);
+            reporter.write(LintStats.Companion.create(0, 3), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -251,7 +251,7 @@ public class TextReporterTest extends AbstractCheckTest {
                             + "   reasons:\n"
                             + "\n"
                             + "   * When creating configuration variations (for example for landscape or\n"
-                            + "   portrait)you have to repeat the actual text (and keep it up to date when\n"
+                            + "   portrait) you have to repeat the actual text (and keep it up to date when\n"
                             + "   making changes)\n"
                             + "\n"
                             + "   * The application cannot be translated to other languages by just adding\n"

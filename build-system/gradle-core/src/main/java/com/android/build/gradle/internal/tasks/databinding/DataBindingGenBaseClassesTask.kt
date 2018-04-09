@@ -38,6 +38,7 @@ import java.io.File
 import java.io.Serializable
 import java.util.ArrayList
 import javax.inject.Inject
+import kotlin.reflect.KFunction
 
 /**
  * Generates base classes from data binding info files.
@@ -55,8 +56,10 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     @get:InputDirectory lateinit var xmlInfoFolder: File
         private set
     // the package name for the module / app
-    @get:Input lateinit var packageName: String
+    lateinit var packageNameSupplier: KFunction<String>
         private set
+    @get:Input val packageName: String
+        get() = packageNameSupplier.call()
     // list of artifacts from dependencies
     @get:InputFiles lateinit var mergedArtifactsFromDependencies: BuildableArtifact
         private set
@@ -75,6 +78,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     @get:OutputDirectory lateinit var sourceOutFolder: File
         private set
     @get:OutputDirectory lateinit var classInfoBundleDir: File
+        private set
+    @get:Input
+    var useAndroidX: Boolean = false
         private set
 
     @TaskAction
@@ -96,7 +102,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
                 .files
                 .filter {
                     it.name.endsWith(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX) &&
-                            !it.name.startsWith(BASE_ADAPTERS_ARTIFACT) // ignore our libs
+                            !BASE_ADAPTERS_ARTIFACTS.any {
+                                    artifact -> it.name.startsWith(artifact)
+                            } // ignore our libs
                 }
                 .map {
                     it.name.substringBefore(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX)
@@ -138,7 +146,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
                 incremental = inputs.isIncremental,
                 packageName = packageName,
                 artifactFolder = classInfoBundleDir,
-                v1ArtifactsFolder = if (v1Artifacts.isEmpty()) null else v1Artifacts.single()
+                v1ArtifactsFolder = if (v1Artifacts.isEmpty()) null else v1Artifacts.single(),
+                useAndroidX = useAndroidX
         )
     }
 
@@ -153,7 +162,7 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.xmlInfoFolder = variantScope.layoutInfoOutputForDataBinding
             val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
-            task.packageName = variantData.variantConfiguration.originalApplicationId
+            task.packageNameSupplier = variantData.variantConfiguration::getOriginalApplicationId
             task.mergedArtifactsFromDependencies = artifacts.getFinalArtifactFiles(
                     DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS)
             task.v1Artifacts = artifacts.getFinalArtifactFiles(
@@ -168,6 +177,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.classInfoBundleDir = artifacts.appendArtifact(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                 task)
+            task.useAndroidX = variantScope.globalScope.projectOptions.get(
+                BooleanOption.USE_ANDROID_X)
         }
     }
 
@@ -180,6 +191,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     }
 
     companion object {
-        private const val BASE_ADAPTERS_ARTIFACT = "com.android.databinding.library.baseAdapters"
+        private val BASE_ADAPTERS_ARTIFACTS = listOf(
+            "com.android.databinding.library.baseAdapters",
+            "androidx.databinding.library.baseAdapters")
     }
 }

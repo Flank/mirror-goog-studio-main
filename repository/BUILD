@@ -4,16 +4,16 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.repository",
+    name = "studio.android.sdktools.repository",
     srcs = ["src/main/java"],
-    iml_files = ["repository.iml"],
+    iml_files = ["android.sdktools.repository.iml"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-compress",

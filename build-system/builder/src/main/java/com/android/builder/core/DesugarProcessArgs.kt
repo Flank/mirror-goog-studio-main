@@ -29,7 +29,8 @@ class DesugarProcessArgs(
         private val bootClasspath: List<String>,
         private val tmpDir: String,
         private val verbose: Boolean,
-        private val minSdkVersion: Int) : Serializable {
+        private val minSdkVersion: Int,
+        private val enableBugFixForJacoco: Boolean = true) : Serializable {
 
     companion object {
         const val MIN_SUPPORTED_API_TRY_WITH_RESOURCES = 19
@@ -47,7 +48,7 @@ class DesugarProcessArgs(
         }
         inputsToOutputs.forEach { input, out ->
             args.add("--input")
-            args.add(`input`)
+            args.add(input)
             args.add("--output")
             args.add(out)
         }
@@ -68,8 +69,11 @@ class DesugarProcessArgs(
             args.add("--nodesugar_try_with_resources_if_needed")
         }
         args.add("--desugar_try_with_resources_omit_runtime_classes")
-        // fix for b/62623509
-        args.add("--legacy_jacoco_fix")
+        if (enableBugFixForJacoco) {
+            // fix for b/62623509
+            args.add("--legacy_jacoco_fix")
+        }
+        args.add("--copy_bridges_from_classpath")
 
         return if (!isWindows || args.map { it.length }.sum() <= MAX_CMD_LENGTH_FOR_WINDOWS) {
             args

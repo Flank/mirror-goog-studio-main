@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
@@ -48,10 +47,9 @@ public class WorkerExecutorAdapterTest {
     @Test
     public void testSingleDelegation() {
 
-        WorkerExecutorFacade<Parameter> adapter =
-                new WorkerExecutorAdapter<>(workerExecutor, WorkAction.class);
+        WorkerExecutorFacade adapter = new WorkerExecutorAdapter(workerExecutor);
         Parameter params = new Parameter("one", "two");
-        adapter.submit(params);
+        adapter.submit(WorkAction.class, params);
         adapter.await();
         ArgumentCaptor<Action<? super WorkerConfiguration>> workItemCaptor =
                 ArgumentCaptor.forClass(Action.class);
@@ -59,25 +57,22 @@ public class WorkerExecutorAdapterTest {
         Mockito.verify(workerExecutor).await();
         Mockito.verifyNoMoreInteractions(workerExecutor);
 
-        ArgumentCaptor<Object> parameterCaptor = ArgumentCaptor.forClass(Object.class);
         WorkerConfiguration workerConfiguration = Mockito.mock(WorkerConfiguration.class);
         workItemCaptor.getValue().execute(workerConfiguration);
 
-        Mockito.verify(workerConfiguration).setIsolationMode(eq(IsolationMode.NONE));
-        Mockito.verify(workerConfiguration).setParams(parameterCaptor.capture());
+        Mockito.verify(workerConfiguration).setIsolationMode(IsolationMode.NONE);
+        Mockito.verify(workerConfiguration).params(params);
         Mockito.verifyNoMoreInteractions(workerConfiguration);
-        assertThat(parameterCaptor.getValue()).isEqualTo(params);
     }
 
     @Test
     public void testMultipleDelegation() {
 
-        WorkerExecutorFacade<Parameter> adapter =
-                new WorkerExecutorAdapter<>(workerExecutor, WorkAction.class);
+        WorkerExecutorFacade adapter = new WorkerExecutorAdapter(workerExecutor);
         List<Parameter> parametersList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Parameter params = new Parameter("+" + i, "-" + i);
-            adapter.submit(params);
+            adapter.submit(WorkAction.class, params);
             parametersList.add(params);
         }
         adapter.await();
@@ -91,13 +86,11 @@ public class WorkerExecutorAdapterTest {
         int index = 0;
         for (Action<? super WorkerConfiguration> action : workItemCaptor.getAllValues()) {
             WorkerConfiguration workerConfiguration = Mockito.mock(WorkerConfiguration.class);
-            ArgumentCaptor<Object> parameterCaptor = ArgumentCaptor.forClass(Object.class);
             action.execute(workerConfiguration);
 
             Mockito.verify(workerConfiguration).setIsolationMode(eq(IsolationMode.NONE));
-            Mockito.verify(workerConfiguration).setParams(parameterCaptor.capture());
+            Mockito.verify(workerConfiguration).params(parametersList.get(index++));
             Mockito.verifyNoMoreInteractions(workerConfiguration);
-            assertThat(parameterCaptor.getValue()).isEqualTo(parametersList.get(index++));
         }
     }
 

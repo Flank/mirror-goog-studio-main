@@ -48,7 +48,7 @@ class AutoNamespaceTest {
         TestFileUtils.appendToFile(
                 project.buildFile,
                 """dependencies {
-    implementation 'com.android.support:appcompat-v7:25.3.1'
+    implementation 'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 }"""
         )

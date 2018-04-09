@@ -2,9 +2,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.ddmlib",
+    name = "studio.android.sdktools.ddmlib",
     srcs = ["src/main/java"],
-    iml_files = ["ddmlib.iml"],
+    iml_files = ["android.sdktools.ddmlib.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
@@ -13,19 +13,19 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/base/common:studio.common",
+        "//tools/base/common:studio.android.sdktools.common",
         "//tools/idea/.idea/libraries:kxml2",
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/common:studio.common[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:easymock-tools[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/base/fakeadbserver:studio.fakeadbserver[module, test]",
+        "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -31,6 +30,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -286,50 +286,61 @@ public class ResPackagingTest {
 
     @Test
     public void testAppResourcesAreFilteredByMinSdkFull() throws Exception {
+        testAppResourcesAreFilteredByMinSdk(false);
+    }
+
+    @Test
+    public void testAppResourcesAreFilteredByMinSdkIncremental() throws Exception {
+        // Note: this test is very similar to the previous one but, instead of trying all 3
+        // versions independently, we start with min SDK 26, then change to <26 and set
+        // min SDK to 27. The outputs should be the same as in the previous test.
+        testAppResourcesAreFilteredByMinSdk(true);
+    }
+
+    private void testAppResourcesAreFilteredByMinSdk(boolean incremental) throws Exception {
         // Here are which files go into where:
-        //  (none)  v14     v16
+        //  (none)  v26     v27
         //  f1
         //  f2      f2
         //  f3      f3      f3
         //          f4      f4
         //                  f5
         //
-        // If we build without minSdk defined, we should get everything exactly as shown.
+        // If we build with minSdkVersion < 26, we should get everything exactly as shown.
         //
-        // If we build with minSdkVersion = 14 we should end up with:
-        // (none)   v14     v16
+        // If we build with minSdkVersion = 26 we should end up with:
+        // (none)   v26     v27
         //  f1
         //          f2
         //          f3      f3
         //          f4      f4
         //                  f5
         //
-        // If we build with minSdkVersion = 16 we should end up with:
-        // (none)   v14     v16
+        // If we build with minSdkVersion = 27 we should end up with:
+        // (none)   v26     v27
         //  f1
         //          f2
         //                  f3
         //                  f4
         //                  f5
-
         File raw = appProject.file("src/main/res/raw");
-        raw.mkdirs();
+        java.nio.file.Files.createDirectories(raw.toPath());
 
-        File raw14 = appProject.file("src/main/res/raw-v14");
-        raw14.mkdirs();
+        File raw26 = appProject.file("src/main/res/raw-v26");
+        java.nio.file.Files.createDirectories(raw26.toPath());
 
-        File raw16 = appProject.file("src/main/res/raw-v16");
-        raw16.mkdirs();
+        File raw27 = appProject.file("src/main/res/raw-v27");
+        java.nio.file.Files.createDirectories(raw27.toPath());
 
         byte[] f1NoneC = new byte[] { 0 };
-        byte[] f2NoneC = new byte[] { 1 };
-        byte[] f2v14C = new byte[] { 2 };
-        byte[] f3NoneC = new byte[] { 3 };
-        byte[] f3v14C = new byte[] { 4 };
-        byte[] f3v16C = new byte[] { 5 };
-        byte[] f4v14C = new byte[] { 6 };
-        byte[] f4v16C = new byte[] { 7 };
-        byte[] f5v16C = new byte[] { 8 };
+        byte[] f2NoneC = new byte[] {1};
+        byte[] f2v26C = new byte[] {2};
+        byte[] f3NoneC = new byte[] {3};
+        byte[] f3v26C = new byte[] {4};
+        byte[] f3v27C = new byte[] {5};
+        byte[] f4v26C = new byte[] {6};
+        byte[] f4v27C = new byte[] {7};
+        byte[] f5v27C = new byte[] {8};
 
         File f1None = new File(raw, "f1");
         Files.write(f1NoneC, f1None);
@@ -337,219 +348,89 @@ public class ResPackagingTest {
         File f2None = new File(raw, "f2");
         Files.write(f2NoneC, f2None);
 
-        File f2v14 = new File(raw14, "f2");
-        Files.write(f2v14C, f2v14);
+        File f2v26 = new File(raw26, "f2");
+        Files.write(f2v26C, f2v26);
 
         File f3None = new File(raw, "f3");
         Files.write(f3NoneC, f3None);
 
-        File f3v14 = new File(raw14, "f3");
-        Files.write(f3v14C, f3v14);
+        File f3v26 = new File(raw26, "f3");
+        Files.write(f3v26C, f3v26);
 
-        File f3v16 = new File(raw16, "f3");
-        Files.write(f3v16C, f3v16);
+        File f3v27 = new File(raw27, "f3");
+        Files.write(f3v27C, f3v27);
 
-        File f4v14 = new File(raw14, "f4");
-        Files.write(f4v14C, f4v14);
+        File f4v26 = new File(raw26, "f4");
+        Files.write(f4v26C, f4v26);
 
-        File f4v16 = new File(raw16, "f4");
-        Files.write(f4v16C, f4v16);
+        File f4v27 = new File(raw27, "f4");
+        Files.write(f4v27C, f4v27);
 
-        File f5v16 = new File(raw16, "f5");
-        Files.write(f5v16C, f5v16);
-
-
-        File appGradleFile = appProject.file("build.gradle");
-        String appGradleFileContents = Files.toString(appGradleFile, Charset.defaultCharset());
-
-        // Set no min SDK version and generate the APK.
-        String newBuild = appGradleFileContents.replaceAll("minSdkVersion 8", "");
-        Files.write(newBuild, appGradleFile, Charset.defaultCharset());
-        execute("clean", ":app:assembleDebug");
-
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f1", f1NoneC);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f2", f2NoneC);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f3", f3NoneC);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f2", f2v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f3", f3v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f4", f4v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f3", f3v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f4", f4v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f5", f5v16C);
-
-        // Set min SDK version 14 and generate the APK.
-        newBuild = appGradleFileContents.replaceAll("minSdkVersion 8", "minSdkVersion 14");
-        Files.write(newBuild, appGradleFile, Charset.defaultCharset());
-        execute("clean", ":app:assembleDebug");
-
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f1", f1NoneC);
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f2");
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f3");
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f2", f2v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f3", f3v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f4", f4v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f3", f3v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f4", f4v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f5", f5v16C);
-
-        // Set min SDK version 16 and generate the APK.
-        newBuild = appGradleFileContents.replaceAll("minSdkVersion 8", "minSdkVersion 16");
-        Files.write(newBuild, appGradleFile, Charset.defaultCharset());
-        execute("clean", ":app:assembleDebug");
-
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f1", f1NoneC);
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f2");
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f3");
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f2", f2v14C);
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw-v14/f3");
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw-v14/f4");
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f3", f3v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f4", f4v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f5", f5v16C);
-    }
-
-    @Test
-    public void testAppResourcesAreFilteredByMinSdkIncremental() throws Exception {
-        // Note: this test is very similar to the previous one but, instead of trying all 3
-        // versions independently, we start with min SDK 14, then change to no min SDK and set
-        // min SDK to 16. The outputs should be the same as in the previous test.
-
-        File raw = appProject.file("src/main/res/raw");
-        raw.mkdirs();
-
-        File raw14 = appProject.file("src/main/res/raw-v14");
-        raw14.mkdirs();
-
-        File raw16 = appProject.file("src/main/res/raw-v16");
-        raw16.mkdirs();
-
-        byte[] f1NoneC = new byte[] { 0 };
-        byte[] f2NoneC = new byte[] { 1 };
-        byte[] f2v14C = new byte[] { 2 };
-        byte[] f3NoneC = new byte[] { 3 };
-        byte[] f3v14C = new byte[] { 4 };
-        byte[] f3v16C = new byte[] { 5 };
-        byte[] f4v14C = new byte[] { 6 };
-        byte[] f4v16C = new byte[] { 7 };
-        byte[] f5v16C = new byte[] { 8 };
-
-        File f1None = new File(raw, "f1");
-        Files.write(f1NoneC, f1None);
-
-        File f2None = new File(raw, "f2");
-        Files.write(f2NoneC, f2None);
-
-        File f2v14 = new File(raw14, "f2");
-        Files.write(f2v14C, f2v14);
-
-        File f3None = new File(raw, "f3");
-        Files.write(f3NoneC, f3None);
-
-        File f3v14 = new File(raw14, "f3");
-        Files.write(f3v14C, f3v14);
-
-        File f3v16 = new File(raw16, "f3");
-        Files.write(f3v16C, f3v16);
-
-        File f4v14 = new File(raw14, "f4");
-        Files.write(f4v14C, f4v14);
-
-        File f4v16 = new File(raw16, "f4");
-        Files.write(f4v16C, f4v16);
-
-        File f5v16 = new File(raw16, "f5");
-        Files.write(f5v16C, f5v16);
+        File f5v27 = new File(raw27, "f5");
+        Files.write(f5v27C, f5v27);
 
 
         File appGradleFile = appProject.file("build.gradle");
-        String appGradleFileContents = Files.toString(appGradleFile, Charset.defaultCharset());
+        String appGradleFileContents =
+                Files.asCharSource(appGradleFile, StandardCharsets.UTF_8).read();
 
-        // Set min SDK version 14 and generate the APK.
-        String newBuild = appGradleFileContents.replaceAll("minSdkVersion 8", "minSdkVersion 14");
+        // Set min SDK version 26 and generate the APK.
+        String newBuild =
+                appGradleFileContents.replaceAll("minSdkVersion .*", "minSdkVersion 26 // Updated");
+        assertThat(newBuild).isNotEqualTo(appGradleFileContents);
         Files.write(newBuild, appGradleFile, Charset.defaultCharset());
         execute("clean", ":app:assembleDebug");
 
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f1", f1NoneC);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw/f1", f1NoneC);
         assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f2");
         assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f3");
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f2", f2v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f3", f3v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f4", f4v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f3", f3v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f4", f4v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f5", f5v16C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f2", f2v26C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f3", f3v26C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f4", f4v26C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f3", f3v27C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f4", f4v27C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f5", f5v27C);
 
-        // Set no min SDK version and generate the APK. Incremental update!
-        newBuild = appGradleFileContents.replaceAll("minSdkVersion 8", "");
-        Files.write(newBuild, appGradleFile, Charset.defaultCharset());
-        execute(":app:assembleDebug");
-
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f1", f1NoneC);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f2", f2NoneC);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw/f3", f3NoneC);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f2", f2v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f3", f3v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f4", f4v14C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f3", f3v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f4", f4v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f5", f5v16C);
-
-        // Set min SDK version 16 and generate the APK. Incremental update!
-        newBuild = appGradleFileContents.replaceAll("minSdkVersion 8", "minSdkVersion 16");
-        Files.write(newBuild, appGradleFile, Charset.defaultCharset());
-        execute(":app:assembleDebug");
+        // Set lower min SDK version and generate the APK. Incremental update!
+        newBuild = appGradleFileContents.replaceAll("minSdkVersion", "minSdkVersion 25 //");
+        assertThat(newBuild).isNotEqualTo(appGradleFileContents);
+        Files.asCharSink(appGradleFile, StandardCharsets.UTF_8).write(newBuild);
+        if (incremental) {
+            execute(":app:assembleDebug");
+        } else {
+            execute("clean", ":app:assembleDebug");
+        }
 
         assertThat(appProject.getApk("debug"))
                 .containsFileWithContent("res/raw/f1", f1NoneC);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw/f2", f2NoneC);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw/f3", f3NoneC);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f2", f2v26C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f3", f3v26C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f4", f4v26C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f3", f3v27C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f4", f4v27C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f5", f5v27C);
+
+        // Set min SDK version 27 and generate the APK. Incremental update!
+        newBuild = appGradleFileContents.replaceAll("minSdkVersion", "minSdkVersion 27 //");
+        assertThat(newBuild).isNotEqualTo(appGradleFileContents);
+        Files.asCharSink(appGradleFile, StandardCharsets.UTF_8).write(newBuild);
+        if (incremental) {
+            execute(":app:assembleDebug");
+        } else {
+            execute("clean", ":app:assembleDebug");
+        }
+
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw/f1", f1NoneC);
         assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f2");
         assertThat(appProject.getApk("debug")).doesNotContain("res/raw/f3");
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v14/f2", f2v14C);
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw-v14/f3");
-        assertThat(appProject.getApk("debug")).doesNotContain("res/raw-v14/f4");
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f3", f3v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f4", f4v16C);
-        assertThat(appProject.getApk("debug"))
-                .containsFileWithContent("res/raw-v16/f5", f5v16C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v26/f2", f2v26C);
+        assertThat(appProject.getApk("debug")).doesNotContain("res/raw-v26/f3");
+        assertThat(appProject.getApk("debug")).doesNotContain("res/raw-v26/f4");
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f3", f3v27C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f4", f4v27C);
+        assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw-v27/f5", f5v27C);
     }
 
     // ---- APP TEST ---

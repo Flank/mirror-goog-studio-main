@@ -17,6 +17,7 @@
 #define PERFD_PROFILER_COMPONENT_H_
 
 #include <grpc++/grpc++.h>
+#include <climits>
 
 namespace profiler {
 
@@ -31,6 +32,12 @@ class ProfilerComponent {
 
   // Returns the service that talks to device clients (e.g., the agent).
   virtual grpc::Service* GetInternalService() = 0;
+
+  // Returns the earliest time when data was available for the given |pid|. If
+  // no data is available yet, it should return LLONG_MAX. Overriding this
+  // method is useful when the |ProfilerComponent| receives data before a
+  // session begins (i.e startup CPU profiling).
+  virtual int64_t GetEarliestDataTime(int32_t pid) { return LLONG_MAX; }
 };
 
 }  // namespace profiler

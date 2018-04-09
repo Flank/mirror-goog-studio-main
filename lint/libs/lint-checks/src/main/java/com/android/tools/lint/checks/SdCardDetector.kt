@@ -37,21 +37,20 @@ class SdCardDetector : Detector(), SourceCodeScanner {
         /** Hardcoded /sdcard/ references  */
         @JvmField
         val ISSUE = Issue.create(
-            "SdCardPath",
-            "Hardcoded reference to `/sdcard`",
+            id = "SdCardPath",
+            briefDescription = "Hardcoded reference to `/sdcard`",
 
-            """
-Your code should not reference the `/sdcard` path directly; instead use \
-`Environment.getExternalStorageDirectory().getPath()`.
+            explanation = """
+            Your code should not reference the `/sdcard` path directly; instead use \
+            `Environment.getExternalStorageDirectory().getPath()`.
 
-Similarly, do not reference the `/data/data/` path directly; it can vary in multi-user scenarios. \
-Instead, use `Context.getFilesDir().getPath()`.""",
-            "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            Implementation(
+            Similarly, do not reference the `/data/data/` path directly; it can vary in multi-user scenarios. \
+            Instead, use `Context.getFilesDir().getPath()`.""",
+            moreInfo = "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 SdCardDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             )

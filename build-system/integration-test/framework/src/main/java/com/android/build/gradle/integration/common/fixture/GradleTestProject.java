@@ -50,6 +50,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -63,7 +65,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,7 +72,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.gradle.internal.impldep.org.codehaus.plexus.util.StringUtils;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
@@ -550,25 +550,23 @@ public final class GradleTestProject implements TestRule {
      */
     private static void deleteRecursivelyIfExistsExperimental(@NonNull Path path)
             throws IOException {
-        if (java.nio.file.Files.isDirectory(path)) {
-            try (Stream<Path> pathsInDir = java.nio.file.Files.list(path)) {
-                Iterator<Path> iterator = pathsInDir.iterator();
-                while (iterator.hasNext()) {
-                    deleteRecursivelyIfExistsExperimental(iterator.next());
-                }
-            }
-        }
-
         try {
-            java.nio.file.Files.deleteIfExists(path);
-        } catch (DirectoryNotEmptyException e) {
+            if (java.nio.file.Files.exists(path)) {
+                // Allow insecure delete for Guava's recursive file deletion to work on Windows,
+                // otherwise this method will throw an exception on Windows. An insecure delete
+                // means that files outside the given directory can be deleted if an inside
+                // directory is replaced by a symbolic link to an outside directory while the
+                // deletion is taking place. However, that scenario is unlikely to occur in
+                // practice, so it's probably not a problem to allow it here.
+                MoreFiles.deleteRecursively(path, RecursiveDeleteOption.ALLOW_INSECURE);
+            }
+        } catch (IOException e) {
             // Theory: There seems to be a timing/visibility issue on Windows filesystem, such that
             // even if we delete the contents of the directory before deleting the directory itself
             // (and no other thread/process is accessing the directory), the directory is still
             // being seen as non-empty. Let's try again and hope that the directory will be seen as
             // empty shortly.
-            System.err.println(
-                    "DirectoryNotEmptyException was thrown when deleting " + path.toAbsolutePath());
+            System.err.println("IOException was thrown when deleting " + path.toAbsolutePath());
             System.err.println(
                     "Number of files in directory: " + checkNotNull(path.toFile().list()).length);
             boolean directoryDeleted = false;
@@ -585,7 +583,9 @@ public final class GradleTestProject implements TestRule {
                                     + checkNotNull(path.toFile().list()).length);
                 }
             }
-            if (!directoryDeleted) {
+            if (directoryDeleted) {
+                System.err.println("Directory deleted");
+            } else {
                 throw e;
             }
         }

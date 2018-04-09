@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -33,7 +34,14 @@ import java.util.stream.Stream;
  */
 public interface ClassFileInput extends Closeable {
 
-    Predicate<String> CLASS_MATCHER = s -> s.endsWith(SdkConstants.DOT_CLASS);
+    Predicate<String> CLASS_MATCHER =
+            s -> {
+                String lowerCase = s.toLowerCase(Locale.US);
+                return lowerCase.endsWith(SdkConstants.DOT_CLASS)
+                        && !lowerCase.equals("module-info.class")
+                        && !lowerCase.startsWith("/meta-inf")
+                        && !lowerCase.startsWith("meta-inf");
+            };
 
     /**
      * @param filter filter specify which files should be part of the class input

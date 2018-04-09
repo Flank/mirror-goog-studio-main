@@ -28,6 +28,7 @@ import com.android.builder.model.SyncIssue;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -108,12 +109,54 @@ public class PerformanceTestProjects {
         TestFileUtils.searchAndReplace(
                 mainProject.file("afollestad/core/build.gradle"),
                 "minSdkVersion 8",
-                "minSdkVersion 10 // Updated by test");
+                "minSdkVersion rootProject.ext.minSdkVersion // Updated by test");
 
         TestFileUtils.searchAndReplace(
                 mainProject.file("afollestad/commons/build.gradle"),
                 "minSdkVersion 8",
-                "minSdkVersion 10 // Updated by test");
+                "minSdkVersion rootProject.ext.minSdkVersion  // Updated by test");
+
+        TestFileUtils.searchAndReplace(
+                mainProject.file("AntennaPod/build.gradle"),
+                "minSdkVersion = 10",
+                "minSdkVersion = " + TestVersions.SUPPORT_LIB_MIN_SDK + " // Updated by test");
+
+        // NotificationCompat has moved.
+        TestFileUtils.searchAndReplace(
+                mainProject.file(
+                        "AntennaPod/core/src/main/java/de/danoeh/antennapod/core/service/playback/PlaybackService.java"),
+                "android\\.support\\.v7\\.app\\.NotificationCompat\\.MediaStyle",
+                "android.support.v4.media.app.NotificationCompat.MediaStyle");
+
+        TestFileUtils.searchAndReplace(
+                mainProject.file(
+                        "AntennaPod/core/src/main/java/de/danoeh/antennapod/core/service/playback/PlaybackService.java"),
+                "v7\\.app\\.NotificationCompat",
+                "v4.app.NotificationCompat");
+
+        TestFileUtils.appendToFile(
+                mainProject.file("AntennaPod/core/build.gradle"),
+                "\ndependencies {\n"
+                        + "    compile \"com.android.support:support-media-compat:$supportVersion\"\n"
+                        + "}\n");
+
+        // ActionBarActivity is gone
+        ImmutableSet<String> activities =
+                ImmutableSet.of(
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/gpoddernet/GpodnetAuthenticationActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/OpmlImportBaseActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/AboutActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/OpmlFeedChooserActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/FlattrAuthActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/DownloadAuthenticationActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/OnlineFeedViewActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/FeedInfoActivity.java",
+                        "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/PreferenceActivity.java");
+
+        for (String activity : activities) {
+            TestFileUtils.searchAndReplace(
+                    mainProject.file(activity), "ActionBarActivity", "AppCompatActivity");
+        }
 
         TestFileUtils.searchAndReplace(
                 mainProject.file("afollestad/core/src/main/res/values-v11/styles.xml"),

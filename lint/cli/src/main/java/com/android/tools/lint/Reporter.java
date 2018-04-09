@@ -172,7 +172,7 @@ public abstract class Reporter {
      * @param stats the vital statistics for the lint report
      * @param issues the issues to be reported @throws IOException if an error occurs
      */
-    public abstract void write(@NonNull Stats stats, List<Warning> issues) throws IOException;
+    public abstract void write(@NonNull LintStats stats, List<Warning> issues) throws IOException;
 
     /**
      * Writes a project overview table
@@ -181,7 +181,7 @@ public abstract class Reporter {
      * @param projects the projects to write
      */
     public void writeProjectList(
-            @NonNull Stats stats, @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects)
+            @NonNull LintStats stats, @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects)
             throws IOException {
         throw new UnsupportedOperationException();
     }
@@ -533,38 +533,5 @@ public abstract class Reporter {
     /** Sets path prefix to strip from displayed file names */
     public void setStripPrefix(@Nullable String prefix) {
         stripPrefix = prefix;
-    }
-
-    /**
-     * Value object passed to {@link Reporter} instances providing statistics to include in the
-     * summary
-     */
-    public static final class Stats {
-        public final int errorCount;
-        public final int warningCount;
-        public final int baselineWarningCount;
-        public final int baselineErrorCount;
-        public final int baselineFixedCount;
-
-        public Stats(
-                int errorCount,
-                int warningCount,
-                int baselineErrorCount,
-                int baselineWarningCount,
-                int baselineFixedCount) {
-            this.errorCount = errorCount;
-            this.warningCount = warningCount;
-            this.baselineWarningCount = baselineWarningCount;
-            this.baselineErrorCount = baselineErrorCount;
-            this.baselineFixedCount = baselineFixedCount;
-        }
-
-        public Stats(int errorCount, int warningCount) {
-            this(errorCount, warningCount, 0, 0, 0);
-        }
-
-        public int count() {
-            return errorCount + warningCount;
-        }
     }
 }

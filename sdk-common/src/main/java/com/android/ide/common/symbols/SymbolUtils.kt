@@ -74,19 +74,16 @@ fun mergeAndRenumberSymbols(
     // 1. resourceType -> name. This is for all by the Styleable symbols
     // 2. styleable name -> children. This is for styleable only.
     val newSymbolMap = HashMultimap.create<ResourceType, String>()
-    val arrayToAttrs = HashMultimap.create<String, String>()
+    val arrayToAttrs = HashMap<String, MutableSet<String>>()
 
     tables.forEach { table ->
         table.symbols.values().forEach { symbol ->
             when (symbol) {
                 is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.name)
                 is Symbol.StyleableSymbol -> {
-                    arrayToAttrs.putAll(symbol.name, symbol.children)
-                    if (symbol.children.isEmpty()) {
-                        // In the unlikely case there is a styleable with no children, remember it
-                        // as well.
-                        newSymbolMap.put(symbol.resourceType, symbol.name)
-                    }
+                    arrayToAttrs
+                        .getOrPut(symbol.name) { HashSet() }
+                        .addAll(symbol.children)
                 }
                 else -> throw IOException("Unexpected symbol $symbol")
             }
@@ -106,38 +103,25 @@ fun mergeAndRenumberSymbols(
         symbolNames.sort()
 
         for (symbolName in symbolNames) {
-            // Handle empty styleables, don't writes ones that were also declared with children.
-            if (resourceType == ResourceType.STYLEABLE && !attrToValue.containsKey(symbolName)) {
-                tableBuilder.add(
-                        Symbol.StyleableSymbol(
-                                symbolName,
-                                ImmutableList.of<Int>(),
-                                Symbol.NO_CHILDREN
-                        )
-                )
-            } else {
-                val value = idProvider.next(resourceType)
-                val newSymbol =
-                        Symbol.NormalSymbol(
-                                resourceType = resourceType,
-                                name = symbolName,
-                                intValue = value
-                        )
-                tableBuilder.add(newSymbol)
+            val value = idProvider.next(resourceType)
+            val newSymbol =
+                    Symbol.NormalSymbol(
+                            resourceType = resourceType,
+                            name = symbolName,
+                            intValue = value
+                    )
+            tableBuilder.add(newSymbol)
 
-                if (resourceType == ResourceType.ATTR) {
-                    // store the new ATTR value in the map
-                    attrToValue[symbolName] = newSymbol
-                }
+            if (resourceType == ResourceType.ATTR) {
+                // store the new ATTR value in the map
+                attrToValue[symbolName] = newSymbol
             }
         }
     }
 
     // process the arrays.
-    for (arrayName in arrayToAttrs.keySet()) {
-        // get the attributes names as a list, because I'm not sure what stream() does on a set.
-        val attributes = Lists.newArrayList(arrayToAttrs.get(arrayName))
-        attributes.sort()
+    arrayToAttrs.forEach { arrayName, children ->
+        val attributes = children.sorted()
 
         // now get the attributes values using the new symbol map
         val attributeValues = ImmutableList.builder<Int>()

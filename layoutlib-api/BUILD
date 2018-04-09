@@ -2,9 +2,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.layoutlib-api",
+    name = "studio.android.sdktools.layoutlib-api",
     srcs = ["src/main/java"],
-    iml_files = ["layoutlib-api.iml"],
+    iml_files = ["android.sdktools.layoutlib-api.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -12,15 +12,15 @@ iml_module(
     exports = [
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:JUnit4",
-        "//tools/base/annotations:studio.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/base/annotations:studio.android-annotations[module]",
-        "//tools/idea/platform/annotations[module]",
-        "//tools/base/common:studio.common[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/idea/platform/annotations:intellij.platform.annotations.java5[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:Guava",
     ],
 )

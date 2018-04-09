@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
@@ -80,7 +81,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -175,7 +175,7 @@ public class MergeResources extends IncrementalTask {
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
             @Nullable FileCollection aapt2FromMaven,
-            @Nullable WorkerExecutor workerExecutor,
+            @NonNull WorkerExecutorFacade workerExecutor,
             boolean crunchPng,
             @NonNull VariantScope scope,
             @Nullable MergingLog blameLog,
@@ -198,8 +198,7 @@ public class MergeResources extends IncrementalTask {
                     Aapt2DaemonManagerService.registerAaptService(
                             aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
 
-            return new WorkerExecutorResourceCompilationService(
-                    Objects.requireNonNull(workerExecutor), aapt2ServiceKey);
+            return new WorkerExecutorResourceCompilationService(workerExecutor, aapt2ServiceKey);
         }
 
         // Finally, use AAPT or one of AAPT2 versions based on the project flags.
@@ -251,15 +250,11 @@ public class MergeResources extends IncrementalTask {
         return dataBindingLayoutInfoOutFolder;
     }
 
-    private final WorkerExecutor workerExecutor;
-    private final WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>
-            workerExecutorFacade;
+    private final WorkerExecutorFacade workerExecutorFacade;
 
     @Inject
     public MergeResources(WorkerExecutor workerExecutor) {
-        this.workerExecutor = workerExecutor;
-        this.workerExecutorFacade =
-                new WorkerExecutorAdapter<>(workerExecutor, FileGenerationWorkAction.class);
+        this.workerExecutorFacade = Workers.INSTANCE.getWorker(workerExecutor);
     }
 
     @Override
@@ -288,7 +283,7 @@ public class MergeResources extends IncrementalTask {
                         aaptGeneration,
                         getBuilder(),
                         aapt2FromMaven,
-                        workerExecutor,
+                        workerExecutorFacade,
                         crunchPng,
                         variantScope,
                         mergingLog,
@@ -390,7 +385,7 @@ public class MergeResources extends IncrementalTask {
                             aaptGeneration,
                             getBuilder(),
                             aapt2FromMaven,
-                            workerExecutor,
+                            workerExecutorFacade,
                             crunchPng,
                             variantScope,
                             mergingLog,
@@ -425,20 +420,6 @@ public class MergeResources extends IncrementalTask {
             throw new ResourceException(e.getMessage(), e);
         } finally {
             cleanup();
-        }
-    }
-
-    public static class FileGenerationWorkAction implements Runnable {
-        private final MergedResourceWriter.FileGenerationWorkAction workAction;
-
-        @Inject
-        public FileGenerationWorkAction(MergedResourceWriter.FileGenerationParameters workItem) {
-            this.workAction = new MergedResourceWriter.FileGenerationWorkAction(workItem);
-        }
-
-        @Override
-        public void run() {
-            workAction.run();
         }
     }
 
@@ -890,11 +871,10 @@ public class MergeResources extends IncrementalTask {
 
             mergeResourcesTask.resources = variantData.getAndroidResources();
             mergeResourcesTask.sourceFolderInputs =
-                    TaskInputHelper.bypassFileSupplier(
-                            () ->
-                                    variantData
-                                            .getVariantConfiguration()
-                                            .getSourceFiles(SourceProvider::getResDirectories));
+                    () ->
+                            variantData
+                                    .getVariantConfiguration()
+                                    .getSourceFiles(SourceProvider::getResDirectories);
             mergeResourcesTask.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
             mergeResourcesTask.renderscriptResOutputDir =
                     project.files(scope.getRenderscriptResOutputDir());
@@ -918,23 +898,32 @@ public class MergeResources extends IncrementalTask {
 
                 mergeResourcesTask.dataBindingLayoutProcessor =
                         new SingleFileProcessor() {
-                            final LayoutXmlProcessor processor =
-                                    variantData.getLayoutXmlProcessor();
+
+                            // Lazily instantiate the processor to avoid parsing the manifest.
+                            private LayoutXmlProcessor processor;
+
+                            private LayoutXmlProcessor getProcessor() {
+                                if (processor == null) {
+                                    processor = variantData.getLayoutXmlProcessor();
+                                }
+                                return processor;
+                            }
 
                             @Override
                             public boolean processSingleFile(File file, File out) throws Exception {
-                                return processor.processSingleFile(file, out);
+                                return getProcessor().processSingleFile(file, out);
                             }
 
                             @Override
                             public void processRemovedFile(File file) {
-                                processor.processRemovedFile(file);
+                                getProcessor().processRemovedFile(file);
                             }
 
                             @Override
                             public void end() throws JAXBException {
-                                processor.writeLayoutInfoFiles(
-                                        mergeResourcesTask.dataBindingLayoutInfoOutFolder);
+                                getProcessor()
+                                        .writeLayoutInfoFiles(
+                                                mergeResourcesTask.dataBindingLayoutInfoOutFolder);
                             }
                         };
             }

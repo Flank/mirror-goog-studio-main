@@ -227,7 +227,7 @@ public class MainDexListTransform extends BaseProguardAction {
                         + "  void attachBaseContext(android.content.Context);\n"
                         + "}",
                 "public class * extends android.app.backup.BackupAgent { <init>(); }",
-                "public class * extends java.lang.annotation.Annotation { *;}",
+                "public class * implements java.lang.annotation.Annotation { *;}",
                 "public class * extends android.test.InstrumentationTestCase { <init>(); }");
     }
 

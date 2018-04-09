@@ -32,7 +32,6 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Supplier
 import kotlin.streams.toList
 
 class DesugarTransformTest {
@@ -325,16 +324,18 @@ class DesugarTransformTest {
             additionalPaths: Set<File> = setOf()): DesugarTransform {
         val executor = WaitableExecutor.useDirectExecutor()
         val transform = DesugarTransform(
-                FakeFileCollection(),
-                null,
-                19,
-                processExecutor,
-                true,
-                false,
-                tmp.newFolder().toPath(),
-                "debug",
-                true,
-                executor)
+            FakeFileCollection(),
+            null,
+            19,
+            processExecutor,
+            true,
+            false,
+            tmp.newFolder().toPath(),
+            "debug",
+            true,
+            executor,
+            true
+        )
         transform.processInputs(invocation, additionalPaths)
         executor.waitForTasksWithQuickFail<Any>(true)
         return transform

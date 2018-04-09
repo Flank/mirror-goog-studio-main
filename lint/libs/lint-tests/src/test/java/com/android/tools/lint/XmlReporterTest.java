@@ -85,7 +85,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -118,7 +118,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                             + "        category=\"Internationalization\"\n"
                             + "        priority=\"5\"\n"
                             + "        summary=\"Hardcoded text\"\n"
-                            + "        explanation=\"Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup.\"\n"
+                            + "        explanation=\"Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup.\"\n"
                             + "        errorLine1=\"        android:text=&quot;Fooo&quot; />\"\n"
                             + "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n"
                             + "        <location\n"
@@ -190,7 +190,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -225,7 +225,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                             + "        category=\"Internationalization\"\n"
                             + "        priority=\"5\"\n"
                             + "        summary=\"Hardcoded text\"\n"
-                            + "        explanation=\"Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup.\"\n"
+                            + "        explanation=\"Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup.\"\n"
                             + "        errorLine1=\"        android:text=&quot;Fooo&quot; />\"\n"
                             + "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n"
                             + "        <location\n"
@@ -280,7 +280,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             List<Warning> warnings = new ArrayList<>();
             warnings.add(warning1);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(
@@ -372,7 +372,7 @@ public class XmlReporterTest extends AbstractCheckTest {
             warnings.add(warning1);
             warnings.add(warning2);
 
-            reporter.write(new Reporter.Stats(0, 2), warnings);
+            reporter.write(LintStats.Companion.create(0, 2), warnings);
 
             String report = Files.toString(file, Charsets.UTF_8);
             assertEquals(

@@ -48,30 +48,30 @@ class ChildCountDetector : LayoutDetector() {
         /** The main issue discovered by this detector  */
         @JvmField
         val SCROLLVIEW_ISSUE = Issue.create(
-            "ScrollViewCount",
-            "ScrollViews can have only one child",
-            """
-ScrollViews can only have one child widget. If you want more children, wrap them in a container \
-layout.""",
-            Category.CORRECTNESS,
-            8,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "ScrollViewCount",
+            briefDescription = "ScrollViews can have only one child",
+            explanation = """
+            ScrollViews can only have one child widget. If you want more children, wrap them \
+            in a container layout.""",
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
 
         /** The main issue discovered by this detector  */
         @JvmField
         val ADAPTER_VIEW_ISSUE = Issue.create(
-            "AdapterViewChildren",
-            "AdapterViews cannot have children in XML",
-            """
-AdapterViews such as ListViews must be configured with data from Java code, such as a \
-ListAdapter.""",
-            "http://developer.android.com/reference/android/widget/AdapterView.html",
-            Category.CORRECTNESS,
-            10,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "AdapterViewChildren",
+            briefDescription = "AdapterViews cannot have children in XML",
+            explanation = """
+            AdapterViews such as ListViews must be configured with data from Java code, such as a \
+            ListAdapter.""",
+            moreInfo = "http://developer.android.com/reference/android/widget/AdapterView.html",
+            category = Category.CORRECTNESS,
+            priority = 10,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
     }
 

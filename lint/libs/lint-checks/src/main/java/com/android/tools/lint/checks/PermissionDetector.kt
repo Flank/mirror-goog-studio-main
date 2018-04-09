@@ -449,39 +449,39 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Failing to enforce security by just calling check permission  */
         @JvmField
         val CHECK_PERMISSION = Issue.create(
-            "UseCheckPermission",
-            "Using the result of check permission calls",
-
-            "You normally want to use the result of checking a permission; these methods " +
-                    "return whether the permission is held; they do not throw an error if the permission " +
-                    "is not granted. Code which does not do anything with the return value probably " +
-                    "meant to be calling the enforce methods instead, e.g. rather than " +
-                    "`Context#checkCallingPermission` it should call `Context#enforceCallingPermission`.",
-
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "UseCheckPermission",
+            briefDescription = "Using the result of check permission calls",
+            explanation = """
+                You normally want to use the result of checking a permission; these methods \
+                return whether the permission is held; they do not throw an error if the \
+                permission is not granted. Code which does not do anything with the return \
+                value probably meant to be calling the enforce methods instead, e.g. rather \
+                than `Context#checkCallingPermission` it should call \
+                `Context#enforceCallingPermission`.""",
+            category = Category.SECURITY,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
 
         /** Method result should be used  */
         @JvmField
         val MISSING_PERMISSION = Issue.create(
-            "MissingPermission",
-            "Missing Permissions",
+            id = "MissingPermission",
+            briefDescription = "Missing Permissions",
+            explanation = """
+                This check scans through your code and libraries and looks at the APIs being \
+                used, and checks this against the set of permissions required to access \
+                those APIs. If the code using those APIs is called at runtime, then the \
+                program will crash.
 
-            "This check scans through your code and libraries and looks at the APIs being used, " +
-                    "and checks this against the set of permissions required to access those APIs. If " +
-                    "the code using those APIs is called at runtime, then the program will crash.\n" +
-                    "\n" +
-                    "Furthermore, for permissions that are revocable (with targetSdkVersion 23), client " +
-                    "code must also be prepared to handle the calls throwing an exception if the user " +
-                    "rejects the request for permission at runtime.",
-
-            Category.CORRECTNESS,
-            9,
-            Severity.ERROR,
-            IMPLEMENTATION
+                Furthermore, for permissions that are revocable (with targetSdkVersion 23), \
+                client code must also be prepared to handle the calls throwing an exception \
+                if the user rejects the request for permission at runtime.""",
+            category = Category.CORRECTNESS,
+            priority = 9,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
     }
 }

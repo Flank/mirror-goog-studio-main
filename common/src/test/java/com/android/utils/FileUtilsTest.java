@@ -76,6 +76,12 @@ public class FileUtilsTest {
     }
 
     @Test
+    public void testSanitizeFileName() {
+        assertThat(FileUtils.sanitizeFileName("foo:\\/*\"?|<>bar-123"))
+                .isEqualTo("foo_________bar-123");
+    }
+
+    @Test
     public void testParentDirExists() throws IOException {
         // Test absolute paths
         File rootDir = mTemporaryFolder.newFolder();

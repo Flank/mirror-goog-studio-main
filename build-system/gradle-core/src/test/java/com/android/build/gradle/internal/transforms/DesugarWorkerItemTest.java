@@ -70,7 +70,8 @@ public class DesugarWorkerItemTest {
                         ImmutableList.of(),
                         temporaryFolder.newFolder().toString(),
                         true,
-                        21);
+                        21,
+                        true);
         DesugarWorkerItem workerItem =
                 new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
 
@@ -107,7 +108,8 @@ public class DesugarWorkerItemTest {
                         "21",
                         "--nodesugar_try_with_resources_if_needed",
                         "--desugar_try_with_resources_omit_runtime_classes",
-                        "--legacy_jacoco_fix");
+                        "--legacy_jacoco_fix",
+                        "--copy_bridges_from_classpath");
         verify(workerConfiguration).setParams(params);
     }
 
@@ -120,7 +122,8 @@ public class DesugarWorkerItemTest {
                         ImmutableList.of(),
                         temporaryFolder.newFolder().toString(),
                         true,
-                        21);
+                        21,
+                        true);
 
         DesugarWorkerItem workerItem =
                 new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
@@ -140,7 +143,8 @@ public class DesugarWorkerItemTest {
                         ImmutableList.of(),
                         temporaryFolder.newFolder().toString(),
                         false,
-                        23);
+                        23,
+                        true);
 
         DesugarWorkerItem workerItem =
                 new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
@@ -156,7 +160,8 @@ public class DesugarWorkerItemTest {
                         "23",
                         "--nodesugar_try_with_resources_if_needed",
                         "--desugar_try_with_resources_omit_runtime_classes",
-                        "--legacy_jacoco_fix");
+                        "--legacy_jacoco_fix",
+                        "--copy_bridges_from_classpath");
         verify(workerConfiguration).setParams(params);
     }
 }

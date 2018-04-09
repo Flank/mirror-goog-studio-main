@@ -396,17 +396,16 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Makes sure values are within the allowed range */
         @JvmField
         val RANGE = Issue.create(
-            "Range",
-            "Outside Range",
-
-            "Some parameters are required to in a particular numerical range; this check " +
-                    "makes sure that arguments passed fall within the range. For arrays, Strings " +
-                    "and collections this refers to the size or length.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "Range",
+            briefDescription = "Outside Range",
+            explanation = """
+                Some parameters are required to in a particular numerical range; this check \
+                makes sure that arguments passed fall within the range. For arrays, Strings \
+                and collections this refers to the size or length.""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
     }
 }

@@ -98,7 +98,8 @@ public class BasicTest2 {
                             + "@aar",
                     "com.android.support:support-compat:"
                             + TestVersions.SUPPORT_LIB_VERSION
-                            + "@aar");
+                            + "@aar",
+                    "android.arch.lifecycle:runtime:1.0.3@aar");
 
     public static ModelContainer<AndroidProject> modelContainer;
     public static ProjectBuildOutput outputModel;
@@ -192,7 +193,9 @@ public class BasicTest2 {
                 .containsExactly(
                         "com.android.support:support-annotations:"
                                 + TestVersions.SUPPORT_LIB_VERSION
-                                + "@jar");
+                                + "@jar",
+                        "android.arch.lifecycle:common:1.0.3@jar",
+                        "android.arch.core:common:1.0.0@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(compileGraph).withType(ANDROID);
 
@@ -349,7 +352,9 @@ public class BasicTest2 {
                 .containsExactly(
                         "com.android.support:support-annotations:"
                                 + TestVersions.SUPPORT_LIB_VERSION
-                                + "@jar");
+                                + "@jar",
+                        "android.arch.lifecycle:common:1.0.3@jar",
+                        "android.arch.core:common:1.0.0@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(releaseGraph).withType(ANDROID);
         Set<String> coordinateCopies = Sets.newHashSet(coordinates);

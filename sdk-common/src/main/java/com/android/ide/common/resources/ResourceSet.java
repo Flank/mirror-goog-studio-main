@@ -180,7 +180,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                                 mLibraryName));
             }
 
-            return ResourceFile.generatedFiles(file, resourceItems, qualifier, folderConfiguration);
+            return ResourceFile.generatedFiles(file, resourceItems, folderConfiguration);
         }
         else if (typeAttr == null) {
             // FileType.XML_VALUES
@@ -212,7 +212,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                 }
             }
 
-            return new ResourceFile(file, resourceList, qualifier, folderConfiguration);
+            return new ResourceFile(file, resourceList, folderConfiguration);
         } else {
             // single res file
             ResourceType type = ResourceType.getEnum(typeAttr);
@@ -231,7 +231,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
             }
             ResourceMergerItem item =
                     new ResourceMergerItem(nameAttr, mNamespace, type, null, mLibraryName);
-            return new ResourceFile(file, item, qualifier, folderConfiguration);
+            return new ResourceFile(file, item, folderConfiguration);
         }
     }
 
@@ -471,7 +471,6 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                 return ResourceFile.generatedFiles(
                         file,
                         generatedFiles,
-                        folderData.qualifiers,
                         folderData.folderConfiguration);
             } else if (mShouldParseResourceIds && folderData.isIdGenerating &&
                        SdkUtils.endsWithIgnoreCase(file.getPath(), SdkConstants.DOT_XML)) {
@@ -489,7 +488,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                     ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
                     items.add(fileItem);
                 }
-                return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);
+                return new ResourceFile(file, items, folderData.folderConfiguration);
             } else {
                 return new ResourceFile(
                         file,
@@ -499,7 +498,6 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                                 folderData.type,
                                 null,
                                 mLibraryName),
-                        folderData.qualifiers,
                         folderData.folderConfiguration);
             }
         } else {
@@ -510,7 +508,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                 parser.setCheckDuplicates(mCheckDuplicates);
                 List<ResourceMergerItem> items = parser.parseFile();
 
-                return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);
+                return new ResourceFile(file, items, folderData.folderConfiguration);
             } catch (MergingException e) {
                 logger.error(e, "Failed to parse %s", file.getAbsolutePath());
                 throw e;
@@ -553,7 +551,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                             mNamespace,
                             generatedFile,
                             generatedFileFolderData.type,
-                            generatedFileFolderData.qualifiers,
+                            generatedFileFolderData.folderConfiguration.getQualifierString(),
                             mLibraryName));
         }
         return resourceItems;
@@ -581,7 +579,6 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
      * temp structure containing a qualifier string and a {@link com.android.resources.ResourceType}.
      */
     private static class FolderData {
-        String qualifiers = "";
         FolderConfiguration folderConfiguration = new FolderConfiguration();
         ResourceType type = null;
         ResourceFolderType folderType = null;
@@ -618,8 +615,6 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                 folderConfiguration.normalize();
             }
 
-            // Get the qualifier portion from the folder config.
-            fd.qualifiers = folderConfiguration.getQualifierString();
             fd.folderConfiguration = folderConfiguration;
         } else {
             fd.folderType = ResourceFolderType.getTypeByName(folderName);

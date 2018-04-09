@@ -3,9 +3,9 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 # do not generate: resources and test_srcs removed manually
 iml_module(
-    name = "studio.builder-model",
+    name = "studio.android.sdktools.builder-model",
     srcs = ["src/main/java"],
-    iml_files = ["builder-model.iml"],
+    iml_files = ["android.sdktools.builder-model.iml"],
     javacopts = [
         "-source 6",
         "-target 6",
@@ -13,7 +13,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
     ],
 )

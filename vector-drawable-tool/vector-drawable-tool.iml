@@ -10,8 +10,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="module" module-name="testutils" />
-    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>

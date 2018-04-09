@@ -12,13 +12,13 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="builder" />
-    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="module" module-name="gradle-core" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="module" module-name="builder-test-api" />
-    <orderEntry type="module" module-name="common" />
-    <orderEntry type="module" module-name="ddmlib" />
+    <orderEntry type="module" module-name="android.sdktools.android-annotations" />
+    <orderEntry type="module" module-name="android.sdktools.builder-test-api" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
+    <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>

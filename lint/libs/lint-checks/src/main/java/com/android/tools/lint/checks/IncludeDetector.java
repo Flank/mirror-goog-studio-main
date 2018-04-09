@@ -107,7 +107,7 @@ public class IncludeDetector extends LayoutDetector {
                                     "Layout parameter `%1$s` ignored unless %2$s on `<include>` tag",
                                     name, condition);
 
-                    LintFix.GroupBuilder fixes = fix().group();
+                    LintFix.GroupBuilder fixes = fix().alternatives();
                     if (!hasWidth) {
                         fixes.add(fix().set(ANDROID_URI, ATTR_LAYOUT_WIDTH, "").build());
                     }

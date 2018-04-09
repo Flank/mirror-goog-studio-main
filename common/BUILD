@@ -4,24 +4,24 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
 
 iml_module(
-    name = "studio.common",
+    name = "studio.android.sdktools.common",
     srcs = ["src/main/java"],
     bundle_data = [
         "src/main/java/com/android/SdkConstants.java",
     ],
-    iml_files = ["common.iml"],
+    iml_files = ["android.sdktools.common.iml"],
     resources = ["src/main/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
@@ -69,24 +69,24 @@ kotlin_test(
 )
 
 iml_module(
-    name = "studio.common-tests",
-    iml_files = ["common-tests.iml"],
+    name = "studio.android.sdktools.common.tests",
+    iml_files = ["android.sdktools.common.tests.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android-annotations",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/base/testutils:studio.testutils[module, test]",
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/base/common:studio.common[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

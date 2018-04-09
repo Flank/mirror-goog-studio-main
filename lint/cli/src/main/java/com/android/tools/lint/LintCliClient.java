@@ -23,6 +23,7 @@ import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_SOURCE_PROP;
 import static com.android.SdkConstants.VALUE_NONE;
 import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
+import static com.android.tools.lint.LintCliFlags.ERRNO_APPLIED_SUGGESTIONS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
@@ -45,7 +46,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
-import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
@@ -61,8 +61,8 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
@@ -210,24 +210,7 @@ public class LintCliClient extends LintClient {
 
         Collections.sort(warnings);
 
-        int baselineErrorCount = 0;
-        int baselineWarningCount = 0;
-        int fixedCount = 0;
-
-        LintBaseline baseline = driver.getBaseline();
-        if (baseline != null) {
-            baselineErrorCount = baseline.getFoundErrorCount();
-            baselineWarningCount = baseline.getFoundWarningCount();
-            fixedCount = baseline.getFixedCount();
-        }
-
-        Stats stats =
-                new Stats(
-                        errorCount,
-                        warningCount,
-                        baselineErrorCount,
-                        baselineWarningCount,
-                        fixedCount);
+        LintStats stats = LintStats.Companion.create(warnings, driver.getBaseline());
 
         boolean hasConsoleOutput = false;
         for (Reporter reporter : flags.getReporters()) {
@@ -237,9 +220,23 @@ public class LintCliClient extends LintClient {
             }
         }
 
+        if (flags.isAutoFix()) {
+            boolean fixed = new LintFixPerformer(this, !flags.isQuiet()).fix(warnings);
+            if (fixed && LintClient.Companion.isGradle()) {
+                String message =
+                        ""
+                                + "One or more issues were fixed in the source code.\n"
+                                + "Aborting the build since the edits to the source files were "
+                                + "performed **after** compilation, so the outputs do not "
+                                + "contain the fixes. Re-run the build.";
+                System.err.println(message);
+                return ERRNO_APPLIED_SUGGESTIONS;
+            }
+        }
+
         File baselineFile = flags.getBaselineFile();
         if (!flags.isQuiet() && !hasConsoleOutput) {
-            if (baselineErrorCount > 0 || baselineWarningCount > 0) {
+            if (stats.getBaselineErrorCount() > 0 || stats.getBaselineWarningCount() > 0) {
                 if (errorCount == 0 && warningCount == 1) {
                     // the warning is the warning about baseline issues having been filtered
                     // out, don't list this as "1 warning"
@@ -248,19 +245,25 @@ public class LintCliClient extends LintClient {
                     System.out.print(
                             String.format(
                                     "Lint found %1$s",
-                                    LintUtils.describeCounts(
+                                    Lint.describeCounts(
                                             errorCount,
                                             Math.max(0, warningCount - 1),
                                             true,
                                             false)));
+                    if (stats.getAutoFixedCount() > 0) {
+                        System.out.print(
+                                String.format(
+                                        " (%1$s of these were automatically fixed)",
+                                        stats.getAutoFixedCount()));
+                    }
                 }
                 assert baselineFile != null;
                 System.out.print(
                         String.format(
                                 " (%1$s filtered by baseline %2$s)",
-                                LintUtils.describeCounts(
-                                        stats.baselineErrorCount,
-                                        stats.baselineWarningCount,
+                                Lint.describeCounts(
+                                        stats.getBaselineErrorCount(),
+                                        stats.getBaselineWarningCount(),
                                         true,
                                         true),
                                 baselineFile.getName()));
@@ -268,7 +271,7 @@ public class LintCliClient extends LintClient {
                 System.out.print(
                         String.format(
                                 "Lint found %1$s",
-                                LintUtils.describeCounts(errorCount, warningCount, true, false)));
+                                Lint.describeCounts(errorCount, warningCount, true, false)));
             }
             System.out.println();
         }
@@ -550,7 +553,7 @@ public class LintCliClient extends LintClient {
     public CharSequence readFile(@NonNull File file) {
         CharSequence contents;
         try {
-            contents = LintUtils.getEncodedString(this, file, false);
+            contents = Lint.getEncodedString(this, file, false);
         } catch (IOException e) {
             contents = "";
         }
@@ -864,7 +867,7 @@ public class LintCliClient extends LintClient {
         String message = String.format("Unknown issue id \"%1$s\"", id);
 
         if (driver != null && project != null && !isSuppressed(IssueRegistry.LINT_ERROR)) {
-            Location location = LintUtils.guessGradleLocation(this, project.getDir(), id);
+            Location location = Lint.guessGradleLocation(this, project.getDir(), id);
             LintClient.Companion.report(
                     this,
                     IssueRegistry.LINT_ERROR,
@@ -1267,6 +1270,10 @@ public class LintCliClient extends LintClient {
                 flags.setBaselineFile(
                         baselineFile.getPath().equals(VALUE_NONE) ? null : baselineFile);
             }
+            Boolean applySuggestions = config.getApplySuggestions();
+            if (applySuggestions != null && applySuggestions) {
+                flags.setAutoFix(true);
+            }
         }
     }
 
@@ -1366,7 +1373,7 @@ public class LintCliClient extends LintClient {
 
         if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
             for (SourceProvider provider :
-                    LintUtils.getSourceProviders(
+                    Lint.getSourceProviders(
                             project.getGradleProjectModel(), project.getCurrentVariant())) {
                 File manifestFile = provider.getManifestFile();
                 if (manifestFile.exists()) { // model returns path whether or not it exists

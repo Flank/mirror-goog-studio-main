@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
@@ -32,7 +34,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
@@ -45,7 +46,7 @@ import javax.inject.Inject
  * The link step handles resource overlays.
  */
 open class CompileSourceSetResources
-@Inject constructor(private val workerExecutor: WorkerExecutor) : IncrementalTask() {
+@Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
@@ -55,6 +56,8 @@ open class CompileSourceSetResources
     @get:Input var isPseudoLocalize: Boolean = false; private set
     @get:OutputDirectory lateinit var outputDirectory: File private set
     @get:OutputDirectory lateinit var partialRDirectory: File private set
+
+    private val workers = Workers.getWorker(workerExecutor)
 
     override fun isIncremental() = true
 
@@ -93,7 +96,9 @@ open class CompileSourceSetResources
             }
         }
 
-        submit(requests)
+        workers.use {
+            submit(requests)
+        }
     }
 
     override fun doIncrementalTaskAction(changedInputs: MutableMap<File, FileStatus>) {
@@ -112,15 +117,17 @@ open class CompileSourceSetResources
                 }
             }
         }
-        if (!deletes.isEmpty()) {
-            workerExecutor.submit(Aapt2CompileDeleteRunnable::class.java) {
-                it.isolationMode = IsolationMode.NONE
-                it.setParams(Aapt2CompileDeleteRunnable.Params(
+        workers.use {
+            if (!deletes.isEmpty()) {
+                workers.submit(Aapt2CompileDeleteRunnable::class.java,
+                    Aapt2CompileDeleteRunnable.Params(
                         outputDirectory = outputDirectory,
-                        deletedInputs = deletes))
+                        deletedInputs = deletes
+                    )
+                )
             }
+            submit(requests)
         }
-        submit(requests)
     }
 
     private fun compileRequest(file: File, inputDirectoryName: String = file.parentFile.name) =
@@ -144,13 +151,12 @@ open class CompileSourceSetResources
             logger = iLogger
         )
         for (request in requests) {
-            workerExecutor.submit(Aapt2CompileRunnable::class.java) {
-                it.isolationMode = IsolationMode.NONE
-                it.setParams(Aapt2CompileRunnable.Params(
+            workers.submit(Aapt2CompileRunnable::class.java,
+                Aapt2CompileRunnable.Params(
                     aapt2ServiceKey = aapt2ServiceKey,
                     requests = listOf(request)
-                ))
-            }
+                )
+            )
         }
     }
 

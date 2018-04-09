@@ -531,7 +531,7 @@ public class HtmlReporter extends Reporter {
     }
 
     @Override
-    public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
+    public void write(@NonNull LintStats stats, List<Warning> issues) throws IOException {
         Map<Issue, String> missing = computeMissingIssues(issues);
         List<List<Warning>> related = computeIssueLists(issues);
 
@@ -588,7 +588,8 @@ public class HtmlReporter extends Reporter {
         finishReport();
         writeReport();
 
-        if (!client.getFlags().isQuiet() && (stats.errorCount > 0 || stats.warningCount > 0)) {
+        if (!client.getFlags().isQuiet()
+                && (stats.getErrorCount() > 0 || stats.getWarningCount() > 0)) {
             String url = SdkUtils.fileToUrlString(output.getAbsoluteFile());
             System.out.println(String.format("Wrote HTML report to %1$s", url));
         }
@@ -692,6 +693,10 @@ public class HtmlReporter extends Reporter {
                             append("<br clear=\"right\"/>");
                         } else {
                             append("<br />");
+                        }
+
+                        if (warning.wasAutoFixed) {
+                            append("This issue has been automatically fixed.<br />");
                         }
 
                         // Insert surrounding code block window
@@ -850,7 +855,7 @@ public class HtmlReporter extends Reporter {
         return related;
     }
 
-    private void startReport(@NonNull Stats stats) {
+    private void startReport(@NonNull LintStats stats) {
         sb = new StringBuilder(1800 * stats.count());
         builder = new HtmlBuilder(sb);
 
@@ -865,7 +870,7 @@ public class HtmlReporter extends Reporter {
         writeCloseHtmlTag();
     }
 
-    private void writeNavigationHeader(@NonNull Stats stats, @NonNull Runnable appender) {
+    private void writeNavigationHeader(@NonNull LintStats stats, @NonNull Runnable appender) {
         append(
                 ""
                         + "<div class=\"mdl-layout mdl-js-layout mdl-layout--fixed-header\">\n"
@@ -875,7 +880,7 @@ public class HtmlReporter extends Reporter {
                         + title
                         + ": "
                         + LintUtils.describeCounts(
-                                stats.errorCount, stats.warningCount, false, true)
+                                stats.getErrorCount(), stats.getWarningCount(), false, true)
                         + "</span>\n"
                         + "      <div class=\"mdl-layout-spacer\"></div>\n"
                         + "      <nav class=\"mdl-navigation mdl-layout--large-screen-only\">\n");
@@ -1443,7 +1448,7 @@ public class HtmlReporter extends Reporter {
 
     @Override
     public void writeProjectList(
-            @NonNull Stats stats, @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects)
+            @NonNull LintStats stats, @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects)
             throws IOException {
         startReport(stats);
 
@@ -1462,7 +1467,7 @@ public class HtmlReporter extends Reporter {
                     }
                 });
 
-        if (stats.errorCount == 0 && stats.warningCount == 0) {
+        if (stats.getErrorCount() == 0 && stats.getWarningCount() == 0) {
             writeCard(() -> append("Congratulations!"), "No Issues Found", "NoIssuesCard");
             return;
         }

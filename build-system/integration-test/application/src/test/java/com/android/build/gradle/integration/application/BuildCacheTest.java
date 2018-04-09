@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -135,7 +136,9 @@ public class BuildCacheTest {
     public void testBuildCacheDisabled() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\nandroid.defaultConfig.minSdkVersion 13\n"
+                "\nandroid.defaultConfig.minSdkVersion "
+                        + TestVersions.SUPPORT_LIB_MIN_SDK
+                        + "\n"
                         + "dependencies {\n"
                         + "    compile \"com.android.support:support-v13:${rootProject.supportLibVersion}\"\n"
                         + "}\n");

@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,8 +62,8 @@ public abstract class LibraryBaseTransform extends Transform {
     protected final File mainClassLocation;
     @Nullable
     protected final File localJarsLocation;
-    @NonNull
-    protected final String packagePath;
+    @Nullable private String packagePath;
+    @NonNull private final Supplier<String> packageNameSupplier;
     protected final boolean packageBuildConfig;
     @Nullable protected final BuildableArtifact typedefRecipe;
 
@@ -73,12 +74,12 @@ public abstract class LibraryBaseTransform extends Transform {
             @NonNull File mainClassLocation,
             @Nullable File localJarsLocation,
             @Nullable BuildableArtifact typedefRecipe,
-            @NonNull String packageName,
+            @NonNull Supplier<String> packageNameSupplier,
             boolean packageBuildConfig) {
         this.mainClassLocation = mainClassLocation;
         this.localJarsLocation = localJarsLocation;
         this.typedefRecipe = typedefRecipe;
-        this.packagePath = packageName.replace(".", "/");
+        this.packageNameSupplier = packageNameSupplier;
         this.packageBuildConfig = packageBuildConfig;
     }
 
@@ -133,6 +134,9 @@ public abstract class LibraryBaseTransform extends Transform {
         // these must be regexp to match the zip entries
         excludes.add(".*/R.class$");
         excludes.add(".*/R\\$(.*).class$");
+        if (packagePath == null) {
+            packagePath = packageNameSupplier.get().replace(".", "/");
+        }
         excludes.add(packagePath + "/Manifest.class$");
         excludes.add(packagePath + "/Manifest\\$(.*).class$");
         if (!packageBuildConfig) {

@@ -48,18 +48,16 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         /** Missing call to super  */
         @JvmField
         val ISSUE = Issue.create(
-            "MissingSuperCall",
-            "Missing Super Call",
-
-            """
-Some methods, such as `View#onDetachedFromWindow`, require that you also call the super
-implementation as part of your method.
-""",
-
-            Category.CORRECTNESS,
-            9,
-            Severity.ERROR,
-            IMPLEMENTATION
+            id = "MissingSuperCall",
+            briefDescription = "Missing Super Call",
+            explanation = """
+            Some methods, such as `View#onDetachedFromWindow`, require that you also call the \
+            super implementation as part of your method.
+            """,
+            category = Category.CORRECTNESS,
+            priority = 9,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         private val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")

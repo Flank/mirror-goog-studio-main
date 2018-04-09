@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.SdkConstants.VALUE_TRUE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintClient;
@@ -71,6 +73,7 @@ public class LintCliFlags {
     private boolean showAll;
     private boolean removedFixedBaselineIssues;
     private boolean writeBaselineIfMissing = true;
+    private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -79,6 +82,7 @@ public class LintCliFlags {
     public static final int ERRNO_HELP = 4;
     public static final int ERRNO_INVALID_ARGS = 5;
     public static final int ERRNO_CREATED_BASELINE = 6;
+    public static final int ERRNO_APPLIED_SUGGESTIONS = 7;
 
     /**
      * Returns the set of issue id's to suppress. Callers are allowed to modify this collection. To
@@ -602,5 +606,15 @@ public class LintCliFlags {
     /** If true, write the baseline file if missing. (This is the default.) */
     public void setWriteBaselineIfMissing(boolean writeBaselineIfMissing) {
         this.writeBaselineIfMissing = writeBaselineIfMissing;
+    }
+
+    /** Whether to apply safe suggestions */
+    public boolean isAutoFix() {
+        return autoFix;
+    }
+
+    /** Sets whether to apply safe suggestions */
+    public void setAutoFix(boolean autoFix) {
+        this.autoFix = autoFix;
     }
 }

@@ -309,11 +309,10 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
-  auto alarm_cancelled = energy_event.mutable_alarm_cancelled();
-  alarm_cancelled->mutable_operation()->set_creator_package(
-      creator_package_str.get());
-  alarm_cancelled->mutable_operation()->set_creator_uid(creator_uid);
   energy_event.set_is_terminal(true);
+  auto operation = energy_event.mutable_alarm_cancelled()->mutable_operation();
+  operation->set_creator_package(creator_package_str.get());
+  operation->set_creator_uid(creator_uid);
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
 }
@@ -326,11 +325,27 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
+  energy_event.set_is_terminal(true);
   energy_event.mutable_alarm_cancelled()->mutable_listener()->set_tag(
       listener_tag_str.get());
-  energy_event.set_is_terminal(true);
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAlarmFired(
+    JNIEnv* env, jclass clazz, jint event_id, jstring creator_package,
+    jint creator_uid, jboolean is_repeating) {
+  JStringWrapper creator_package_str(env, creator_package);
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  // Repeating alarms go on indefinitely until canceled.
+  energy_event.set_is_terminal(!is_repeating);
+  auto operation = energy_event.mutable_alarm_fired()->mutable_operation();
+  operation->set_creator_package(creator_package_str.get());
+  operation->set_creator_uid(creator_uid);
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -340,10 +355,10 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
-  energy_event.mutable_alarm_fired()->mutable_listener()->set_tag(
-      listener_tag_str.get());
   // Listener alarm cannot repeat so it's always terminal.
   energy_event.set_is_terminal(true);
+  energy_event.mutable_alarm_fired()->mutable_listener()->set_tag(
+      listener_tag_str.get());
   SubmitEnergyEvent(energy_event);
 }
 
@@ -590,9 +605,29 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
-  auto location = energy_event.mutable_location_changed()
-                      ->mutable_listener()
-                      ->mutable_location();
+  energy_event.mutable_location_changed()->mutable_listener();
+  auto location = energy_event.mutable_location_changed()->mutable_location();
+  JStringWrapper provider_str(env, provider);
+  location->set_provider(provider_str.get());
+  location->set_accuracy(accuracy);
+  location->set_latitude(latitude);
+  location->set_longitude(longitude);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationChanged(
+    JNIEnv* env, jclass clazz, jint event_id, jstring provider, jfloat accuracy,
+    jdouble latitude, jdouble longitude, jstring creator_package,
+    jint creator_uid) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  auto intent = energy_event.mutable_location_changed()->mutable_intent();
+  JStringWrapper creator_package_str(env, creator_package);
+  intent->set_creator_package(creator_package_str.get());
+  intent->set_creator_uid(creator_uid);
+  auto location = energy_event.mutable_location_changed()->mutable_location();
   JStringWrapper provider_str(env, provider);
   location->set_provider(provider_str.get());
   location->set_accuracy(accuracy);

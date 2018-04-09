@@ -135,17 +135,15 @@ public class ApiLookupTest extends AbstractCheckTest {
         //assertEquals(12, mDb.getMethodVersion("android/app/Fragment", "onInflate",
         //        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
         assertEquals(
-                23,
+                16,
                 mDb.getMethodDeprecatedIn(
-                        "android/app/Fragment",
-                        "onInflate",
-                        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+                        "android/app/Activity",
+                        "startManagingCursor",
+                        "(Landroid/database/Cursor;)V"));
         assertEquals(
                 -1,
                 mDb.getMethodDeprecatedIn(
-                        "android/app/Fragment",
-                        "onInflate",
-                        "(Landroid/content/Context;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+                        "android/app/Activity", "getParent", "()Landroid/app/Activity;"));
         // Deprecated
         assertEquals(
                 16,
@@ -161,7 +159,7 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     public void testDeprecatedClasses() {
         // Not deprecated:
-        assertEquals(-1, mDb.getClassDeprecatedIn("android/app/Fragment"));
+        assertEquals(-1, mDb.getClassDeprecatedIn("android/app/Activity"));
         // Deprecated
         assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
     }

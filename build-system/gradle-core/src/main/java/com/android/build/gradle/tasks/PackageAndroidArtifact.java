@@ -184,8 +184,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     private CoreSigningConfig signingConfig;
 
-    private PackagingOptions packagingOptions;
-
     protected Supplier<AndroidVersion> minSdkVersion;
 
     protected Supplier<InstantRunBuildContext> instantRunContext;
@@ -253,15 +251,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     public void setSigningConfig(CoreSigningConfig signingConfig) {
         this.signingConfig = signingConfig;
-    }
-
-    @Nested
-    public PackagingOptions getPackagingOptions() {
-        return packagingOptions;
-    }
-
-    public void setPackagingOptions(PackagingOptions packagingOptions) {
-        this.packagingOptions = packagingOptions;
     }
 
     @Input
@@ -929,8 +918,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     variantConfiguration.getBuildType().isJniDebuggable());
             packageAndroidArtifact.setDebugBuild(
                     variantConfiguration.getBuildType().isDebuggable());
-            packageAndroidArtifact.setPackagingOptions(
-                    globalScope.getExtension().getPackagingOptions());
 
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();

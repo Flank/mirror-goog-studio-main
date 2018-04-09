@@ -304,9 +304,13 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
+  int64_t start_timestamp = daemon_->clock()->GetCurrentTime();
+  for (const auto& component : daemon_->GetComponents()) {
+    start_timestamp = std::min(start_timestamp,
+                               component->GetEarliestDataTime(request->pid()));
+  }
   daemon_->sessions()->BeginSession(request->device_id(), request->pid(),
-                                    response->mutable_session());
-
+                                    response->mutable_session(), start_timestamp);
   Status status = Status::OK;
   if (request->jvmti_config().attach_agent()) {
     status = TryAttachAppAgent(request->pid(),

@@ -551,42 +551,40 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         /** Using a restricted API */
         @JvmField
         val RESTRICTED = Issue.create(
-            "RestrictedApi",
-            "Restricted API",
+            id = "RestrictedApi",
+            briefDescription = "Restricted API",
+            explanation = """
+                This API has been flagged with a restriction that has not been met.
 
-            "This API has been flagged with a restriction that has not been met.\n" +
-                    "\n" +
-                    "Examples of API restrictions:\n" +
-                    "* Method can only be invoked by a subclass\n" +
-                    "* Method can only be accessed from within the same library (defined by " +
-                    " the Gradle library group id)\n." +
-                    "* Method can only be accessed from tests.\n." +
-                    "\n" +
-                    "You can add your own API restrictions with the `@RestrictTo` annotation.",
+                Examples of API restrictions:
+                * Method can only be invoked by a subclass
+                * Method can only be accessed from within the same library (defined by the Gradle library group id)
+                * Method can only be accessed from tests.
 
-            Category.CORRECTNESS,
-            4,
-            Severity.ERROR,
-            IMPLEMENTATION
+                You can add your own API restrictions with the `@RestrictTo` annotation.""",
+            category = Category.CORRECTNESS,
+            priority = 4,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
         )
 
         /** Using an intended-for-tests API */
         @JvmField
         val TEST_VISIBILITY = Issue.create(
-            "VisibleForTests",
-            "Visible Only For Tests",
+            id = "VisibleForTests",
+            briefDescription = "Visible Only For Tests",
+            explanation = """
+                With the `@VisibleForTesting` annotation you can specify an `otherwise=` \
+                attribute which specifies the intended visibility if the method had not \
+                been made more widely visible for the tests.
 
-            "With the `@VisibleForTesting` annotation you can specify an `otherwise=` " +
-                    "attribute which specifies the intended visibility if the method had not " +
-                    "been made more widely visible for the tests.\n" +
-                    "\n" +
-                    "This check looks for accesses from production code (e.g. not tests) where " +
-                    "the access would not have been allowed with the intended production visibility.",
-
-            Category.CORRECTNESS,
-            4,
-            Severity.WARNING,
-            IMPLEMENTATION
+                This check looks for accesses from production code (e.g. not tests) where \
+                the access would not have been allowed with the intended production \
+                visibility.""",
+            category = Category.CORRECTNESS,
+            priority = 4,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
     }
 }

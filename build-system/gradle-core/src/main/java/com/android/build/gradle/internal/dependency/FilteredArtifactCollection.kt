@@ -17,18 +17,16 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.featuresplit.compIdToString
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.Sets
 import com.google.common.io.Files
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import java.io.File
+import java.util.concurrent.Callable
 import java.util.function.Consumer
-import java.util.function.Supplier
 import java.util.stream.Collectors
 
 /**
@@ -55,7 +53,7 @@ class FilteredArtifactCollection(
         // content when queried the first time, but not during configuration.
         // Include the original build dependencies.
         // and the dependency to generate the excludeDirectoryFiles.
-        fileCollection = project.files(TaskInputHelper.bypassFileCallable(filterResolver))
+        fileCollection = project.files(filterResolver)
                 .builtBy(mainArtifact.artifactFiles.buildDependencies)
                 .builtBy(excludeDirectoryFiles.buildDependencies)
     }
@@ -79,55 +77,33 @@ class FilteredArtifactCollection(
 
     private class FilterResolver(
             val mainArtifacts: ArtifactCollection,
-            private val directoryArtifacts: FileCollection) : Supplier<Collection<File>> {
-
-        // outputs
-        private var artifactResults: MutableSet<ResolvedArtifactResult>? = null
-        private var files: Collection<File>? = null
+            private val excludeDirectoryFiles: FileCollection)
+        : Callable<Collection<File>> {
 
         fun getArtifactResults(): Set<ResolvedArtifactResult> {
-            computeCollection()
-            return artifactResults!!
-        }
+            val filteredArtifacts = computeFilteredArtifacts()
 
-        @Throws(Exception::class)
-        override fun get(): Collection<File> {
-            computeCollection()
-            return files!!
-        }
-
-        private fun computeCollection() {
-            synchronized(this) {
-                if (artifactResults == null) {
-                    // get the list of component identifier coming from the sub-modules.
-                    val filteredArtifacts = computeFilteredArtifacts()
-
-                    if (filteredArtifacts.isEmpty()) {
-                        artifactResults = mainArtifacts.artifacts
-                        files = mainArtifacts.artifactFiles.files
-                    } else {
-
-                        // loop through the main artifacts, and rebuild a new Set of results + a list
-                        // of files.
-                        val results = Sets.newLinkedHashSet<ResolvedArtifactResult>()
-                        val builder = ImmutableList.builder<File>()
-                        for (artifactResult in mainArtifacts.artifacts) {
-                            if (!filteredArtifacts
-                                    .contains(compIdToString(artifactResult))) {
-                                results.add(artifactResult)
-                                builder.add(artifactResult.file)
-                            }
-                        }
-
-                        artifactResults = results
-                        files = builder.build()
-                    }
-                }
+            if (filteredArtifacts.isEmpty()) {
+                return mainArtifacts.artifacts
             }
+
+            return mainArtifacts.artifacts.asSequence()
+                .filter { !filteredArtifacts.contains(compIdToString(it)) }.toSet()
+        }
+
+        override fun call(): Collection<File> {
+            val excludedArtifacts = computeFilteredArtifacts()
+
+            if (excludedArtifacts.isEmpty()) {
+                return mainArtifacts.artifactFiles.files
+            }
+
+            return mainArtifacts.artifacts.asSequence()
+                .filter { !excludedArtifacts.contains(compIdToString(it)) }.map { it.file }.toSet()
         }
 
         private fun computeFilteredArtifacts(): Set<String>
-                = directoryArtifacts
+                = excludeDirectoryFiles
                 .files
                 .stream()
                 .map { file: File ->

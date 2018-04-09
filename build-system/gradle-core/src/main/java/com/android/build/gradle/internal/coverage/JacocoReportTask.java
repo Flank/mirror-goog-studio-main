@@ -244,8 +244,7 @@ public class JacocoReportTask extends DefaultTask {
                             .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES);
 
             task.sourceFolders =
-                    TaskInputHelper.bypassFileSupplier(
-                            () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage());
+                    () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage();
 
             task.setReportDir(testedScope.getCoverageReportDir());
         }

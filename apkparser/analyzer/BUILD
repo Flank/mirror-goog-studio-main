@@ -1,29 +1,32 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.analyzer",
+    name = "studio.intellij.android.analyzer",
     srcs = ["src/main/java"],
-    iml_files = ["analyzer.iml"],
-    tags = ["managed"],
+    iml_files = ["intellij.android.analyzer.iml"],
+    tags = [
+        "managed",
+        "no_test_windows",  # b/77288863
+    ],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/annotations:studio.android-annotations[module]",
-        "//tools/base/common:studio.common[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//prebuilts/tools/common/archive-patcher:explainer",
         "//prebuilts/tools/common/archive-patcher:generator",
         "//prebuilts/tools/common/archive-patcher:shared",
         "//tools/idea/.idea/libraries:dexlib2",
         "//tools/idea/.idea/libraries:baksmali",
-        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
-        "//tools/base/apkparser:studio.binary-resources[module]",
-        "//tools/base/sdk-common:studio.sdk-common[module]",
+        "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
     ],
 )
 
@@ -52,6 +55,7 @@ java_test(
     srcs = glob(["src/test/java/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.analyzer",

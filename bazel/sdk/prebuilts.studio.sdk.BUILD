@@ -82,7 +82,7 @@ filegroup(
         include = ["*/build-tools/26.0.0/**"],
     ),
     visibility = [
-        "//tools/base/build-system/gradle:__pkg__",
+        "//tools/base/build-system/gradle-core:__pkg__",
     ],
 )
 
@@ -99,7 +99,7 @@ filegroup(
         include = ["*/build-tools/25.0.0/**"],
     ),
     visibility = [
-        "//tools/base/build-system/gradle:__pkg__",
+        "//tools/base/build-system/gradle-core:__pkg__",
     ],
 )
 
@@ -229,10 +229,19 @@ platform_filegroup(
 )
 
 platform_filegroup(
+    name = "platforms/android-P",
+    visibility = [
+        "//tools/adt/idea/android-uitests:__pkg__",
+        "//tools/base/build-system/integration-test:__subpackages__",
+        "//tools/data-binding:__pkg__",
+    ],
+)
+
+platform_filegroup(
     name = "platforms/android-24",
     visibility = [
         "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/base/build-system/gradle:__pkg__",
+        "//tools/base/build-system/gradle-core:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
         "//tools/data-binding:__pkg__",
     ],

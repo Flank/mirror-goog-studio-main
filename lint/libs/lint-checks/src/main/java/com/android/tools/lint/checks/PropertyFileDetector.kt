@@ -168,9 +168,9 @@ class PropertyFileDetector : Detector() {
             val message = ("Windows file separators (`\\`) and drive letter " +
                     "separators (':') must be escaped (`\\\\`) in property files; use " +
                     escapedPath
-                // String is already escaped for Java; must double escape for the raw text
-                // format
-                .replace("\\", "\\\\"))
+                        // String is already escaped for Java; must double escape for the raw text
+                        // format
+                        .replace("\\", "\\\\"))
             val startOffset = offset + errorStart
             val endOffset = offset + errorEnd + 1
 
@@ -191,45 +191,48 @@ class PropertyFileDetector : Detector() {
         /** Property file not escaped  */
         @JvmField
         val ESCAPE = Issue.create(
-            "PropertyEscape",
-            "Incorrect property escapes",
-            "All backslashes and colons in .property files must be escaped with " +
-                    "a backslash (\\). This means that when writing a Windows path, you " +
-                    "must escape the file separators, so the path \\My\\Files should be " +
-                    "written as `key=\\\\My\\\\Files.`",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
+            id = "PropertyEscape",
+            briefDescription = "Incorrect property escapes",
+            explanation = """
+                All backslashes and colons in .property files must be escaped with a \
+                backslash (\). This means that when writing a Windows path, you must \
+                escape the file separators, so the path \My\Files should be written as \
+                `key=\\My\\Files.`""",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            implementation = Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
         )
 
         /** Using HTTP instead of HTTPS for the wrapper  */
         @JvmField
         val HTTP = Issue.create(
-            "UsingHttp",
-            "Using HTTP instead of HTTPS",
-            "The Gradle Wrapper is available both via HTTP and HTTPS. HTTPS is more " +
-                    "secure since it protects against man-in-the-middle attacks etc. Older " +
-                    "projects created in Android Studio used HTTP but we now default to HTTPS " +
-                    "and recommend upgrading existing projects.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
+            id = "UsingHttp",
+            briefDescription = "Using HTTP instead of HTTPS",
+            explanation = """
+                The Gradle Wrapper is available both via HTTP and HTTPS. HTTPS is more \
+                secure since it protects against man-in-the-middle attacks etc. Older \
+                projects created in Android Studio used HTTP but we now default to HTTPS \
+                and recommend upgrading existing projects.""",
+            category = Category.SECURITY,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
         )
 
         /** Using HTTP instead of HTTPS for the wrapper  */
         @JvmField
         val PROXY_PASSWORD = Issue.create(
-            "ProxyPassword",
-            "Proxy Password in Cleartext",
-            "Storing proxy server passwords in clear text is dangerous if this file is " +
-                    "shared via version control. If this is deliberate or this is a truly " +
-                    "private project, suppress this warning.",
-            Category.SECURITY,
-            2,
-            Severity.WARNING,
-            Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
+            id = "ProxyPassword",
+            briefDescription = "Proxy Password in Cleartext",
+            explanation = """
+                Storing proxy server passwords in clear text is dangerous if this file is \
+                shared via version control. If this is deliberate or this is a truly private \
+                project, suppress this warning.""",
+            category = Category.SECURITY,
+            priority = 2,
+            severity = Severity.WARNING,
+            implementation = Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
         )
 
         fun suggestEscapes(value: String): String {

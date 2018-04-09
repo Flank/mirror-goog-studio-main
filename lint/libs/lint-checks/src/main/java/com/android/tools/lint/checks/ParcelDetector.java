@@ -114,11 +114,12 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
                     && modifierList.findAnnotation("kotlin.jvm.JvmField") == null) {
                 Location location = context.getNameLocation(field);
                 LintFix fix =
-                        fix().name("Add @JvmField")
+                        fix().name("Add @JvmField", true)
                                 .replace()
                                 .text("val")
                                 .with("@JvmField val")
                                 .range(context.getLocation(field))
+                                .autoFix()
                                 .build();
                 context.report(
                         ISSUE, field, location, "Field should be annotated with `@JvmField`", fix);

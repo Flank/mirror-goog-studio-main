@@ -26,6 +26,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -101,7 +102,7 @@ public class MergeResourceWriterWithCompilerTest {
 
         ResourceMergerItem f1Item =
                 new ResourceMergerItem("f1.txt", null, ResourceType.RAW, null, null);
-        ResourceFile f1File = new ResourceFile(f1, f1Item, "", new FolderConfiguration());
+        ResourceFile f1File = new ResourceFile(f1, f1Item, new FolderConfiguration());
         f1Item.setSource(f1File);
 
         File f2 = new File(rawRes, "f2.xml");
@@ -109,7 +110,7 @@ public class MergeResourceWriterWithCompilerTest {
 
         ResourceMergerItem f2Item =
                 new ResourceMergerItem("f2.xml", null, ResourceType.RAW, null, null);
-        ResourceFile f2File = new ResourceFile(f2, f2Item, "", new FolderConfiguration());
+        ResourceFile f2File = new ResourceFile(f2, f2Item, new FolderConfiguration());
         f2Item.setSource(f2File);
 
         mResourceItems = new HashMap<>();
@@ -127,19 +128,28 @@ public class MergeResourceWriterWithCompilerTest {
         addAndDeleteFile("f2.xml");
     }
 
-    private WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters> facade =
-            new WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>() {
+    private WorkerExecutorFacade facade =
+            new WorkerExecutorFacade() {
 
                 @Override
-                public void submit(MergedResourceWriter.FileGenerationParameters parameter) {
-                    new MergedResourceWriter.FileGenerationWorkAction(parameter).run();
+                public void submit(Class<? extends Runnable> actionClass, Serializable parameter) {
+                    Runnable action;
+                    try {
+                        action =
+                                actionClass
+                                        .getConstructor(parameter.getClass())
+                                        .newInstance(parameter);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    action.run();
                 }
 
                 @Override
                 public void await() {}
 
                 @Override
-                public void taskActionDone() {}
+                public void close() {}
             };
 
     public void addAndDeleteFile(@NonNull String name) throws Exception {

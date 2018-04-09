@@ -26,10 +26,13 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
+import com.android.tools.build.bundletool.model.SigningConfiguration
+import com.android.tools.build.bundletool.utils.flags.Flag
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -37,12 +40,13 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
+import java.util.Optional
 import javax.inject.Inject
 
 /**
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
-open class BundleToApkTask @Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -50,7 +54,7 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
         private set
 
     @get:InputFiles
-    @get:Optional
+    @get:org.gradle.api.tasks.Optional
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var aapt2FromMaven: FileCollection
         private set
@@ -59,25 +63,55 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
     lateinit var outputFile: File
         private set
 
+    @get:InputFile
+    @get:org.gradle.api.tasks.Optional
+    var keystoreFile: File? = null
+        private set
+
+    @get:Input
+    @get:org.gradle.api.tasks.Optional
+    var keystorePassword: String? = null
+        private set
+
+    @get:Input
+    @get:org.gradle.api.tasks.Optional
+    var keyAlias: String? = null
+        private set
+
+    @get:Input
+    @get:org.gradle.api.tasks.Optional
+    var keyPassword: String? = null
+        private set
+
+    private val workers = Workers.getWorker(workerExecutor)
+
     @TaskAction
     fun generateApk() {
-        val adapter = WorkerExecutorAdapter<Params>(workerExecutor, BundleToolRunnable::class.java)
 
-        adapter.submit(
-            Params(
-                bundle.singleFile(),
-                File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
-                outputFile
+        workers.use {
+            it.submit(
+                BundleToolRunnable::class.java,
+                Params(
+                    bundle.singleFile(),
+                    File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
+                    outputFile,
+                    keystoreFile,
+                    keystorePassword,
+                    keyAlias,
+                    keyPassword
+                )
             )
-        )
-
-        adapter.taskActionDone()
+        }
     }
 
     private data class Params(
         val bundleFile: File,
         val aapt2File: File,
-        val outputFile: File
+        val outputFile: File,
+        val keystoreFile: File?,
+        val keystorePassword: String?,
+        val keyAlias: String?,
+        val keyPassword: String?
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -89,6 +123,22 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
                 .setBundlePath(params.bundleFile.toPath())
                 .setOutputFile(params.outputFile.toPath())
                 .setAapt2Command(Aapt2Command.createFromExecutablePath(params.aapt2File.toPath()))
+
+            params.keystoreFile?.let {
+                val storePassword = params.keystorePassword?.let {
+                    Optional.of(Flag.Password.createFromFlagValue("pass:$it"))
+                } ?: Optional.empty()
+
+                val keyPassword = params.keyPassword?.let {
+                    Optional.of(Flag.Password.createFromFlagValue("pass:$it"))
+                } ?: Optional.empty()
+
+                command.setSigningConfiguration(
+                    SigningConfiguration.extractFromKeystore(
+                        it.toPath(), params.keyAlias, storePassword, keyPassword
+                    )
+                )
+            }
 
             command.build().execute()
         }
@@ -109,6 +159,12 @@ open class BundleToApkTask @Inject constructor(private val workerExecutor: Worke
             task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
 
+            scope.variantConfiguration.signingConfig?.let {
+                task.keystoreFile = it.storeFile
+                task.keystorePassword = it.storePassword
+                task.keyAlias = it.keyAlias
+                task.keyPassword = it.keyPassword
+            }
         }
     }
 }

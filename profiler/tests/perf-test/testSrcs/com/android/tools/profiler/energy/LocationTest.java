@@ -38,6 +38,7 @@ import org.junit.Test;
 
 public class LocationTest {
     private static final String ACTIVITY_CLASS = "com.activity.energy.LocationActivity";
+    private static final float EPSILON = 0.0001f;
 
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
@@ -69,7 +70,8 @@ public class LocationTest {
 
     @Test
     public void testListenerLocationRequest() {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "listenerRequestAndRemoveLocationUpdates");
+        String methodName = "listenerRequestAndRemoveLocationUpdates";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
         assertThat(myAndroidDriver.waitForInput("LISTENER LOCATION UPDATES")).isTrue();
 
         EnergyEventsResponse response =
@@ -91,7 +93,7 @@ public class LocationTest {
         assertThat(request.getProvider()).isEqualTo("gps");
         assertThat(request.getIntervalMs()).isEqualTo(1000);
         assertThat(request.getFastestIntervalMs()).isEqualTo(1000);
-        assertThat(request.getSmallestDisplacementMeters()).isEqualTo(100.0f);
+        assertThat(request.getSmallestDisplacementMeters()).isWithin(EPSILON).of(100.0f);
         assertThat(request.getPriority()).isEqualTo(Priority.HIGH_ACCURACY);
 
         EnergyEvent locationChangeEvent = response.getEvents(1);
@@ -102,11 +104,11 @@ public class LocationTest {
         assertThat(locationChangeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_CHANGED);
         assertThat(locationChangeEvent.getLocationChanged().getActionCase())
                 .isEqualTo(LocationChanged.ActionCase.LISTENER);
-        Location location = locationChangeEvent.getLocationChanged().getListener().getLocation();
+        Location location = locationChangeEvent.getLocationChanged().getLocation();
         assertThat(location.getProvider()).isEqualTo("network");
-        assertThat(location.getAccuracy()).isEqualTo(100.0f);
-        assertThat(location.getLatitude()).isEqualTo(30.0);
-        assertThat(location.getLongitude()).isEqualTo(60.0);
+        assertThat(location.getAccuracy()).isWithin(EPSILON).of(100.0f);
+        assertThat(location.getLatitude()).isWithin(EPSILON).of(30.0f);
+        assertThat(location.getLongitude()).isWithin(EPSILON).of(60.0f);
 
         EnergyEvent removeEvent = response.getEvents(2);
         assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);
@@ -118,21 +120,22 @@ public class LocationTest {
                 .isEqualTo(LocationUpdateRemoved.ActionCase.LISTENER);
 
         String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
-        assertThat(requestStack).contains("request");
+        assertThat(requestStack).contains(methodName);
         String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
-        assertThat(removeStack).contains("remove");
+        assertThat(removeStack).contains(methodName);
     }
 
     @Test
     public void testIntentLocationRequest() {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "intentRequestAndRemoveLocationUpdates");
+        String methodName = "intentRequestAndRemoveLocationUpdates";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
         assertThat(myAndroidDriver.waitForInput("INTENT LOCATION UPDATES")).isTrue();
 
         EnergyEventsResponse response =
                 TestUtils.waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 2);
-        assertThat(response.getEventsCount()).isEqualTo(2);
+                        resp -> resp.getEventsCount() == 3);
+        assertThat(response.getEventsCount()).isEqualTo(3);
 
         EnergyEvent requestEvent = response.getEvents(0);
         assertThat(requestEvent.getTimestamp()).isGreaterThan(0L);
@@ -143,14 +146,36 @@ public class LocationTest {
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REQUESTED);
         assertThat(requestEvent.getLocationUpdateRequested().getActionCase())
                 .isEqualTo(LocationUpdateRequested.ActionCase.INTENT);
+        assertThat(requestEvent.getLocationUpdateRequested().getIntent().getCreatorPackage())
+                .isEqualTo("com.example");
+        assertThat(requestEvent.getLocationUpdateRequested().getIntent().getCreatorUid())
+                .isEqualTo(123);
         LocationRequest request = requestEvent.getLocationUpdateRequested().getRequest();
         assertThat(request.getProvider()).isEqualTo("");
         assertThat(request.getIntervalMs()).isEqualTo(2000);
         assertThat(request.getFastestIntervalMs()).isEqualTo(2000);
-        assertThat(request.getSmallestDisplacementMeters()).isEqualTo(50.0f);
+        assertThat(request.getSmallestDisplacementMeters()).isWithin(EPSILON).of(50.0f);
         assertThat(request.getPriority()).isEqualTo(Priority.BALANCED);
 
-        EnergyEvent removeEvent = response.getEvents(1);
+        EnergyEvent locationChangeEvent = response.getEvents(1);
+        assertThat(locationChangeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(locationChangeEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(locationChangeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
+        assertThat(locationChangeEvent.getIsTerminal()).isFalse();
+        assertThat(locationChangeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_CHANGED);
+        assertThat(locationChangeEvent.getLocationChanged().getActionCase())
+                .isEqualTo(LocationChanged.ActionCase.INTENT);
+        assertThat(locationChangeEvent.getLocationChanged().getIntent().getCreatorPackage())
+                .isEqualTo("com.example");
+        assertThat(locationChangeEvent.getLocationChanged().getIntent().getCreatorUid())
+                .isEqualTo(123);
+        Location location = locationChangeEvent.getLocationChanged().getLocation();
+        assertThat(location.getProvider()).isEqualTo("passive");
+        assertThat(location.getAccuracy()).isWithin(EPSILON).of(50.0f);
+        assertThat(location.getLatitude()).isWithin(EPSILON).of(60.0);
+        assertThat(location.getLongitude()).isWithin(EPSILON).of(30.0);
+
+        EnergyEvent removeEvent = response.getEvents(2);
         assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
@@ -160,8 +185,8 @@ public class LocationTest {
                 .isEqualTo(LocationUpdateRemoved.ActionCase.INTENT);
 
         String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
-        assertThat(requestStack).contains("request");
+        assertThat(requestStack).contains(methodName);
         String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
-        assertThat(removeStack).contains("remove");
+        assertThat(removeStack).contains(methodName);
     }
 }

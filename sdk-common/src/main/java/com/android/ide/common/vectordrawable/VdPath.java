@@ -31,7 +31,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -131,7 +131,7 @@ class VdPath extends VdElement {
             return false;
         }
 
-        public static String nodeListToString(Node[] nodes, DecimalFormat decimalFormat) {
+        public static String nodeListToString(Node[] nodes, NumberFormat format) {
             StringBuilder result = new StringBuilder();
             for (Node node : nodes) {
                 result.append(node.mType);
@@ -153,7 +153,7 @@ class VdPath extends VdElement {
                     if (!Float.isFinite(param)) {
                         throw new IllegalArgumentException("Invalid number: " + param);
                     }
-                    String str = XmlUtils.trimInsignificantZeros(decimalFormat.format(param));
+                    String str = XmlUtils.trimInsignificantZeros(format.format(param));
                     result.append(str);
                 }
             }

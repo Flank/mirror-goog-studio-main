@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.Workers
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
@@ -32,19 +33,21 @@ import javax.inject.Inject
  *
  * Not used for inter-project dependencies, where the classes directory is used directly.
  */
-open class JarRClassTask @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
+open class JarRClassTask @Inject constructor(workerExecutor: WorkerExecutor) : DefaultTask() {
 
     @get:InputFiles lateinit var rClassClasses: FileCollection private set
     @get:OutputFile lateinit var rClassJar: File private set
+    private val workers = Workers.getWorker(workerExecutor)
 
     @TaskAction
     fun jar() {
-        workerExecutor.submit(JarWorkerRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(
-                    JarRequest(
-                            toFile = rClassJar,
-                            fromDirectories = listOf(rClassClasses.singleFile)))
+        workers.use {
+            it.submit(JarWorkerRunnable::class.java,
+                JarRequest(
+                    toFile = rClassJar,
+                    fromDirectories = listOf(rClassClasses.singleFile)
+                )
+            )
         }
     }
 

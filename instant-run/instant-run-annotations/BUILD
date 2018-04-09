@@ -13,9 +13,9 @@ java_library(
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.instant-run-annotations",
+    name = "studio.android.sdktools.instant-run-annotations",
     srcs = ["src/main/java"],
-    iml_files = ["instant-run-annotations.iml"],
+    iml_files = ["android.sdktools.instant-run-annotations.iml"],
     javacopts = [
         "-source 6",
         "-target 6",
@@ -24,7 +24,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

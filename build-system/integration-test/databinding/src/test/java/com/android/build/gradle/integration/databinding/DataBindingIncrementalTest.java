@@ -68,12 +68,16 @@ public class DataBindingIncrementalTest {
 
     private final List<String> mainActivityBindingClasses;
 
-    @Parameterized.Parameters(name = "useV2_{0}")
-    public static Iterable<Boolean> classNames() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "useV2_{0}_useAndroidX_{1}")
+    public static Iterable<Boolean[]> classNames() {
+        return ImmutableList.of(
+                new Boolean[] {true, false},
+                new Boolean[] {false, false},
+                new Boolean[] {true, true},
+                new Boolean[] {false, true});
     }
 
-    public DataBindingIncrementalTest(boolean enableV2) {
+    public DataBindingIncrementalTest(boolean enableV2, boolean useAndroidX) {
         this.enableV2 = enableV2;
         if (enableV2) {
             mainActivityBindingClasses =
@@ -81,11 +85,13 @@ public class DataBindingIncrementalTest {
         } else {
             mainActivityBindingClasses = ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS);
         }
-        String props = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
+        String v2Prop = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
+        String androidXProp = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
-                        .addGradleProperties(props)
+                        .addGradleProperties(v2Prop)
+                        .addGradleProperties(androidXProp)
                         .create();
     }
 

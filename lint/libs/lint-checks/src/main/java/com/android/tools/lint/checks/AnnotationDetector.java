@@ -758,7 +758,12 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                             "1%s << %d",
                                             o instanceof Long ? "L" : "",
                                             shift);
-                            LintFix fix = fix().replace().with(replace).build();
+                            LintFix fix =
+                                    fix().replace()
+                                            .sharedName("Change declaration to <<")
+                                            .with(replace)
+                                            .autoFix()
+                                            .build();
                             Location location = mContext.getLocation(initializer);
                             mContext.report(FLAG_STYLE, initializer, location, message, fix);
                         }

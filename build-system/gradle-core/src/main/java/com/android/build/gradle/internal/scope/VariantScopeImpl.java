@@ -80,7 +80,6 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -112,11 +111,13 @@ import com.android.builder.model.BaseConfig;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
+import com.android.utils.PathUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -218,6 +219,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
     private DataBindingExportBuildInfoTask dataBindingExportBuildInfoTask;
+
+    private FileCollection bootClasspath;
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
@@ -1162,18 +1165,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return getGlobalScope()
                 .getProject()
                 .files(
-                        TaskInputHelper.bypassFileCallable(
-                                () -> {
-                                    try {
-                                        return dependencies
+                        (Callable<Collection<File>>)
+                                () ->
+                                        dependencies
                                                 .call()
                                                 .stream()
                                                 .flatMap((it) -> it.resolve().stream())
-                                                .collect(Collectors.toList());
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }))
+                                                .collect(Collectors.toList()))
                 .builtBy(dependencies);
     }
 
@@ -2130,5 +2128,42 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "r8",
                 getVariantConfiguration().getDirName(),
                 "mapping.txt");
+    }
+
+    @NonNull
+    @Override
+    public FileCollection getBootClasspath() {
+        if (bootClasspath != null) {
+            return bootClasspath;
+        }
+
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_CORE_LAMBDA_STUBS)) {
+            File coreLambdaStubsJar =
+                    new File(
+                            globalScope
+                                    .getAndroidBuilder()
+                                    .getBuildToolInfo()
+                                    .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS));
+            bootClasspath =
+                    getProject()
+                            .files(
+                                    globalScope.getAndroidBuilder().getBootClasspath(false),
+                                    coreLambdaStubsJar);
+        } else if (!keepDefaultBootstrap()) {
+            // Set boot classpath if we don't need to keep the default.  Otherwise, this is
+            // added as normal classpath.
+            bootClasspath =
+                    getProject().files(globalScope.getAndroidBuilder().getBootClasspath(false));
+        } else {
+            String currentBootclasspath = System.getProperty("sun.boot.class.path", "");
+            if (currentBootclasspath.isEmpty()) {
+                bootClasspath = getProject().files();
+            } else {
+                bootClasspath =
+                        getProject().files(PathUtils.getClassPathItems(currentBootclasspath));
+            }
+        }
+
+        return bootClasspath;
     }
 }

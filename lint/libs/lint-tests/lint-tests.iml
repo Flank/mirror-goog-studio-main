@@ -8,10 +8,10 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module" module-name="common" />
+    <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="module" module-name="lint-checks-base" />
     <orderEntry type="module" module-name="lint-cli" />
-    <orderEntry type="module" module-name="testutils" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" />
     <orderEntry type="module" module-name="lint-api-base" />
     <orderEntry type="library" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
@@ -20,16 +20,16 @@
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="groovy" level="project" />
-    <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
-    <orderEntry type="module" module-name="repository" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.repository" scope="TEST" />
     <orderEntry type="library" name="kxml2" level="project" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="module" module-name="manifest-merger-base" scope="TEST" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
-    <orderEntry type="module" module-name="binary-resources" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.binary-resources" scope="TEST" />
     <orderEntry type="module" module-name="analyzer-base" scope="TEST" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" scope="TEST" name="kotlin-compiler" level="project" />

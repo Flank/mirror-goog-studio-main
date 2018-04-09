@@ -58,6 +58,7 @@ import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCliXmlParser;
 import com.android.tools.lint.LintExternalAnnotationsManager;
+import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
@@ -535,7 +536,7 @@ public class TestLintClient extends LintCliClient {
             prev = warning;
         }
 
-        Reporter.Stats stats = new Reporter.Stats(errorCount, warningCount);
+        LintStats stats = LintStats.Companion.create(errorCount, warningCount);
         for (Reporter reporter : flags.getReporters()) {
             reporter.write(stats, warnings);
         }

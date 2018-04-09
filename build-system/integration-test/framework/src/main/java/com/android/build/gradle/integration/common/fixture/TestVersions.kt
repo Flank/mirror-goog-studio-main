@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.common.fixture
 
 
 const val PLAY_SERVICES_VERSION = "9.6.1"
-const val SUPPORT_LIB_VERSION = "25.3.1"
+const val SUPPORT_LIB_VERSION = "27.0.2"
 const val TEST_SUPPORT_LIB_VERSION = "0.5"
 const val TEST_CONSTRAINT_LAYOUT_VERSION = "1.0.2"
 const val SUPPORT_LIB_MIN_SDK = 14

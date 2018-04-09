@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -60,7 +61,7 @@ public class GenerateTestConfig extends DefaultTask {
     File generatedJavaResourcesDirectory;
     ApkInfo mainApkInfo;
     BuildableArtifact manifests;
-    String packageForR;
+    Supplier<String> packageForR;
 
     @Input
     ApkInfo getMainApkInfo() {
@@ -85,7 +86,7 @@ public class GenerateTestConfig extends DefaultTask {
                 Iterables.getOnlyElement(assets).toPath().toAbsolutePath(),
                 BuildableArtifactUtil.singleFile(resourcesDirectory).toPath().toAbsolutePath(),
                 sdkHome,
-                packageForR,
+                getPackageForR(),
                 checkNotNull(output, "Unable to find manifest output").getOutputFile().toPath(),
                 generatedJavaResourcesDirectory.toPath().toAbsolutePath());
     }
@@ -142,7 +143,7 @@ public class GenerateTestConfig extends DefaultTask {
 
     @Input
     public String getPackageForR() {
-        return packageForR;
+        return packageForR.get();
     }
 
     public static class ConfigAction implements TaskConfigAction<GenerateTestConfig> {
@@ -191,7 +192,7 @@ public class GenerateTestConfig extends DefaultTask {
                     scope.getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY, task, "out");
-            task.packageForR = testedScope.getVariantConfiguration().getOriginalApplicationId();
+            task.packageForR = testedScope.getVariantConfiguration()::getOriginalApplicationId;
         }
     }
 }

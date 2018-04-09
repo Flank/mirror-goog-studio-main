@@ -21,8 +21,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
+import com.android.ide.common.gradle.model.stubs.VariantStub;
 import java.io.Serializable;
 import java.util.Objects;
 import org.junit.Before;
@@ -48,7 +50,7 @@ public class IdeAndroidProjectImplTest {
     public void serialization() throws Exception {
         IdeAndroidProject androidProject =
                 new IdeAndroidProjectImpl(
-                        new AndroidProjectStub("2.4.0"), myModelCache, myDependenciesFactory);
+                        new AndroidProjectStub("2.4.0"), myModelCache, myDependenciesFactory, null);
         assertEquals("2.4.0", androidProject.getParsedModelVersion().toString());
         byte[] bytes = Serialization.serialize(androidProject);
         Object o = Serialization.deserialize(bytes);
@@ -100,7 +102,7 @@ public class IdeAndroidProjectImplTest {
                     }
                 };
         IdeAndroidProject androidProject =
-                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory);
+                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
         expectUnsupportedOperationException(androidProject::getBuildToolsVersion);
         expectUnsupportedOperationException(androidProject::getPluginGeneration);
     }
@@ -109,7 +111,20 @@ public class IdeAndroidProjectImplTest {
     public void constructor() throws Throwable {
         AndroidProject original = new AndroidProjectStub("2.4.0");
         IdeAndroidProjectImpl copy =
-                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory);
+                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
+        assertEqualsOrSimilar(original, copy);
+        verifyUsageOfImmutableCollections(copy);
+    }
+
+    @Test
+    public void constructorWithVariant() throws Throwable {
+        AndroidProject original = new AndroidProjectStub("2.4.0");
+        original.getVariants().clear();
+        Variant variant = new VariantStub();
+        IdeAndroidProjectImpl copy =
+                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, variant);
+
+        original.getVariants().add(variant);
         assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }

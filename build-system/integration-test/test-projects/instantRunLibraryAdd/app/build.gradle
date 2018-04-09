@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion rootProject.buildToolsVersion
     defaultConfig {
         applicationId "noapkrebuilt.tests.android.com.b220425"

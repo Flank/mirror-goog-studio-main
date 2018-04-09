@@ -41,17 +41,17 @@ class StartDestinationDetector : ResourceXmlDetector() {
 
         @JvmField
         val ISSUE = Issue.create(
-            "InvalidNavigation",
-            "No start destination specified",
+            id = "InvalidNavigation",
+            briefDescription = "No start destination specified",
 
-            """
-All `<navigation>` elements must have a start destination specified, and it must be a direct child of
-that `<navigation>`
-""",
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            Implementation(
+            explanation = """
+            All `<navigation>` elements must have a start destination specified, and it must \
+            be a direct child of that `<navigation>`.
+            """,
+            category = Category.CORRECTNESS,
+            priority = 3,
+            severity = Severity.WARNING,
+            implementation = Implementation(
                 StartDestinationDetector::class.java,
                 Scope.RESOURCE_FILE_SCOPE
             )
@@ -64,9 +64,13 @@ that `<navigation>`
     override fun getApplicableElements() = listOf(TAG_NAVIGATION)
 
     override fun visitElement(context: XmlContext, navigation: Element) {
+        val children = navigation.childNodes
+        // If there are no children, don't show the warning yet.
+        if ((0 until children.length).none { children.item(it) is Element }) return
+
         val destinationAttr = navigation.getAttributeNodeNS(AUTO_URI, ATTR_START_DESTINATION)
         val destinationAttrValue = destinationAttr?.value
-        // smart cast to non-null doesn't seem to work with isNullOrBlank?
+        // smart cast to non-null doesn't seem to work with isNullOrBlank
         if (destinationAttrValue == null || destinationAttrValue.isBlank()) {
             context.report(
                 ISSUE,
@@ -86,7 +90,6 @@ that `<navigation>`
                 )
                 return
             }
-            val children = navigation.childNodes
             for (i in 0 until children.length) {
                 val child = children.item(i) as? Element ?: continue
                 val childId = child.getAttributeNS(ANDROID_URI, ATTR_ID)

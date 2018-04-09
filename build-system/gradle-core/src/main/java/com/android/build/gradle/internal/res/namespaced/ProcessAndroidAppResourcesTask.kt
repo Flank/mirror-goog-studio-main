@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -41,7 +42,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
@@ -56,7 +56,10 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
-@Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
+@Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
+
+    private val workers = Workers.getWorker(workerExecutor)
+
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: BuildableArtifact private set
@@ -91,13 +94,10 @@ open class ProcessAndroidAppResourcesTask
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven = aapt2FromMaven, logger = iLogger
         )
-        val params = Aapt2LinkRunnable.Params(aapt2ServiceKey, config)
-        workerExecutor.submit(
-            Aapt2LinkRunnable::class.java,
-            {
-                it.isolationMode = IsolationMode.NONE
-                it.setParams(params)
-            })
+        workers.use {
+            it.submit(Aapt2LinkRunnable::class.java,
+                Aapt2LinkRunnable.Params(aapt2ServiceKey, config))
+        }
     }
 
     class ConfigAction(private val scope: VariantScope)

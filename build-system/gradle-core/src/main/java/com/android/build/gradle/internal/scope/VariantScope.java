@@ -422,4 +422,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getOutputProguardMappingFile();
+
+    @NonNull
+    FileCollection getBootClasspath();
 }

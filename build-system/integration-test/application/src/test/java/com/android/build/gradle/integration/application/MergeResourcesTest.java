@@ -418,7 +418,6 @@ public class MergeResourcesTest {
         // Regression test for http://issuetracker.google.com/65829618
         GradleTestProject appProject = project.getSubproject("app");
         File appBuildFile = project.getSubproject("app").getBuildFile();
-        TestFileUtils.searchAndReplace(appBuildFile, "minSdkVersion 8", "minSdkVersion 9");
         TestFileUtils.appendToFile(
                 appBuildFile,
                 "android {\n"

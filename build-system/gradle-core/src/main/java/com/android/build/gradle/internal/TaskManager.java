@@ -107,7 +107,6 @@ import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
@@ -203,6 +202,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -224,6 +224,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -2199,15 +2200,13 @@ public abstract class TaskManager {
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
 
-            JavaCompile javacTask = Preconditions.checkNotNull(variantScope.getJavacTask());
             FixStackFramesTransform fixFrames =
-                    new FixStackFramesTransform(
-                            javacTask.getOptions().getBootstrapClasspath(), userCache);
+                    new FixStackFramesTransform(variantScope.getBootClasspath(), userCache);
             transformManager.addTransform(taskFactory, variantScope, fixFrames);
 
             DesugarTransform desugarTransform =
                     new DesugarTransform(
-                            javacTask.getOptions().getBootstrapClasspath(),
+                            variantScope.getBootClasspath(),
                             userCache,
                             minSdk.getFeatureLevel(),
                             androidBuilder.getJavaProcessExecutor(),
@@ -2215,7 +2214,8 @@ public abstract class TaskManager {
                             projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                             variantScope.getGlobalScope().getTmpFolder().toPath(),
                             getProjectVariantId(variantScope),
-                            projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING));
+                            projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING),
+                            enableDesugarBugFixForJacoco(variantScope));
             transformManager.addTransform(taskFactory, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()
@@ -2501,14 +2501,15 @@ public abstract class TaskManager {
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
         BuildInfoLoaderTask buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(
-                        variantScope.getGlobalScope().getExtension().getDexOptions(),
-                        androidBuilder::getDexByteCodeConverter,
                         extractJarsTask.orElse(null),
                         allActionAnchorTask,
                         getResMergingScopes(variantScope),
                         instantRunMergedManifests,
                         true /* addResourceVerifier */,
-                        minSdkForDx.getFeatureLevel());
+                        minSdkForDx.getFeatureLevel(),
+                        variantScope.getJava8LangSupportType() == Java8LangSupport.D8,
+                        variantScope.getBootClasspath(),
+                        androidBuilder.getMessageReceiver());
 
         if (variantScope.getSourceGenTask() != null) {
             variantScope.getSourceGenTask().dependsOn(buildInfoLoaderTask);
@@ -2565,6 +2566,20 @@ public abstract class TaskManager {
             return JacocoConfigurations.VERSION_FOR_DX;
         } else {
             return extension.getJacoco().getVersion();
+        }
+    }
+
+    /**
+     * If a fix in Desugar should be enabled to handle broken bytecode produced by older Jacoco, see
+     * http://b/62623509.
+     */
+    private boolean enableDesugarBugFixForJacoco(@NonNull VariantScope scope) {
+        try {
+            GradleVersion current = GradleVersion.parse(getJacocoVersion(scope));
+            return JacocoConfigurations.MIN_WITHOUT_BROKEN_BYTECODE.compareTo(current) > 0;
+        } catch (Throwable ignored) {
+            // Cannot determine using version comparison, avoid passing the flag.
+            return true;
         }
     }
 
@@ -2698,7 +2713,6 @@ public abstract class TaskManager {
                     && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
                 ots.className(DataBindingBuilder.PROCESSOR_NAME);
             }
-            String packageName = variantConfiguration.getOriginalApplicationId();
 
             final BaseVariantData artifactVariantData;
             final boolean isTest;
@@ -2750,6 +2764,7 @@ public abstract class TaskManager {
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)
                                         .get());
             }
+            String packageName = variantConfiguration.getOriginalApplicationId();
             // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()
@@ -3118,15 +3133,16 @@ public abstract class TaskManager {
             @Nullable File outputProguardMapping,
             BaseVariantData testedVariantData,
             ProguardConfigurable transform) {
+
         if (testedVariantData != null) {
+            final VariantScope testedScope = testedVariantData.getScope();
             // This is an androidTest variant inside an app/library.
             applyProguardDefaultsForTest(transform);
 
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
-                            TaskInputHelper.bypassFileCallable(
-                                    testedVariantData.getScope()::getTestProguardFiles),
+                            (Callable<Collection<File>>) testedScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
         } else if (isTestedAppObfuscated(variantScope)) {
@@ -3136,7 +3152,7 @@ public abstract class TaskManager {
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
-                            TaskInputHelper.bypassFileCallable(variantScope::getTestProguardFiles),
+                            (Callable<Collection<File>>) variantScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
@@ -3193,7 +3209,7 @@ public abstract class TaskManager {
             transform.setActions(postprocessingFeatures);
         }
 
-        Supplier<Collection<File>> proguardConfigFiles =
+        Callable<Collection<File>> proguardConfigFiles =
                 () -> {
                     List<File> proguardFiles = new ArrayList<>(scope.getProguardFiles());
 
@@ -3206,7 +3222,7 @@ public abstract class TaskManager {
 
         transform.setConfigurationFiles(
                 project.files(
-                        TaskInputHelper.bypassFileCallable(proguardConfigFiles),
+                        proguardConfigFiles,
                         scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
         if (scope.getVariantData().getType().isAar()) {
@@ -3455,15 +3471,17 @@ public abstract class TaskManager {
         if (!options.isEnabled()) {
             return;
         }
-
+        boolean useAndroidX = globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X);
         String version = MoreObjects.firstNonNull(options.getVersion(),
                 dataBindingBuilder.getCompilerVersion());
+        String baseLibArtifact =
+                useAndroidX
+                        ? SdkConstants.ANDROIDX_DATA_BINDING_BASELIB_ARTIFACT
+                        : SdkConstants.DATA_BINDING_BASELIB_ARTIFACT;
         project.getDependencies()
                 .add(
                         "api",
-                        SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
-                                + ":"
-                                + dataBindingBuilder.getBaseLibraryVersion(version));
+                        baseLibArtifact + ":" + dataBindingBuilder.getBaseLibraryVersion(version));
         project.getDependencies()
                 .add(
                         "annotationProcessor",
@@ -3479,18 +3497,21 @@ public abstract class TaskManager {
                                     + ":"
                                     + version);
         }
-
         if (options.getAddDefaultAdapters()) {
+            String libArtifact =
+                    useAndroidX
+                            ? SdkConstants.ANDROIDX_DATA_BINDING_LIB_ARTIFACT
+                            : SdkConstants.DATA_BINDING_LIB_ARTIFACT;
+            String adaptersArtifact =
+                    useAndroidX
+                            ? SdkConstants.ANDROIDX_DATA_BINDING_ADAPTER_LIB_ARTIFACT
+                            : SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT;
+            project.getDependencies()
+                    .add("api", libArtifact + ":" + dataBindingBuilder.getLibraryVersion(version));
             project.getDependencies()
                     .add(
                             "api",
-                            SdkConstants.DATA_BINDING_LIB_ARTIFACT
-                                    + ":"
-                                    + dataBindingBuilder.getLibraryVersion(version));
-            project.getDependencies()
-                    .add(
-                            "api",
-                            SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT
+                            adaptersArtifact
                                     + ":"
                                     + dataBindingBuilder.getBaseAdaptersVersion(version));
         }

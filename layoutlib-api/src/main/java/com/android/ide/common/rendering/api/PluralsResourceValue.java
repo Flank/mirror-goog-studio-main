@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
@@ -22,13 +21,9 @@ import com.android.resources.ResourceType;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Represents an android plurals resource
- */
+/** Represents an android plurals resource. */
 public class PluralsResourceValue extends ResourceValue {
-
     private final List<String> mQuantities = new ArrayList<>();
-
     private final List<String> mValues = new ArrayList<>();
 
     public PluralsResourceValue(
@@ -37,6 +32,16 @@ public class PluralsResourceValue extends ResourceValue {
             @Nullable String libraryName) {
         super(reference, value, libraryName);
         assert reference.getResourceType() == ResourceType.PLURALS;
+    }
+
+    public PluralsResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        super(namespace, type, name, value, libraryName);
+        assert type == ResourceType.PLURALS;
     }
 
     /**

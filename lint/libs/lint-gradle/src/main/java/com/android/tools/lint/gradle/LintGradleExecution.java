@@ -26,6 +26,8 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
 import com.android.tools.lint.LintCliFlags;
+import com.android.tools.lint.LintFixPerformer;
+import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
@@ -36,8 +38,7 @@ import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.detector.api.ApiKt;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
-import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.gradle.api.LintExecutionRequest;
 import com.android.tools.lint.gradle.api.VariantInputs;
 import com.android.utils.Pair;
@@ -194,7 +195,7 @@ public class LintGradleExecution {
                 TextReporter reporter =
                         Reporter.createTextReporter(client, flags, null, writer, false);
                 try {
-                    Reporter.Stats stats = new Reporter.Stats(errors.size(), 0);
+                    LintStats stats = LintStats.Companion.create(errors.size(), 0);
                     reporter.setWriteStats(false);
                     reporter.write(stats, errors);
                     message += "\n\n" + prefix + writer.toString();
@@ -211,7 +212,8 @@ public class LintGradleExecution {
             @Nullable Variant variant,
             @NonNull VariantInputs variantInputs,
             boolean report,
-            boolean isAndroid) {
+            boolean isAndroid,
+            boolean allowFix) {
         IssueRegistry registry = createIssueRegistry(isAndroid);
         LintCliFlags flags = new LintCliFlags();
         LintGradleClient client =
@@ -230,7 +232,11 @@ public class LintGradleExecution {
             flags.setFatalOnly(true);
         }
         LintOptions lintOptions = descriptor.getLintOptions();
+        boolean fix = false;
         if (lintOptions != null) {
+            // IDEA: Find out if we're on a CI server (how? $DISPLAY available etc?)
+            // and if so turn off auto-suggest. Other clues include setting
+            // temp dir etc.
             syncOptions(
                     lintOptions,
                     client,
@@ -239,7 +245,8 @@ public class LintGradleExecution {
                     descriptor.getProject(),
                     descriptor.getReportsDir(),
                     report,
-                    fatalOnly);
+                    fatalOnly,
+                    allowFix);
         } else {
             // Set up some default reporters
             flags.getReporters()
@@ -296,7 +303,8 @@ public class LintGradleExecution {
             @NonNull Project project,
             @Nullable File reportsDir,
             boolean report,
-            boolean fatalOnly) {
+            boolean fatalOnly,
+            boolean allowAutoFix) {
         if (options != null) {
             SyncOptions.syncTo(
                     options,
@@ -309,6 +317,10 @@ public class LintGradleExecution {
         }
 
         client.syncConfigOptions();
+
+        if (!allowAutoFix && flags.isAutoFix()) {
+            flags.setAutoFix(false);
+        }
 
         boolean displayEmpty = !(fatalOnly || flags.isQuiet());
         for (Reporter reporter : flags.getReporters()) {
@@ -381,7 +393,7 @@ public class LintGradleExecution {
     public void lintSingleVariant(@NonNull Variant variant) {
         VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
         if (variantInputs != null) {
-            runLint(variant, variantInputs, true, true);
+            runLint(variant, variantInputs, true, true, true);
         }
     }
 
@@ -392,7 +404,7 @@ public class LintGradleExecution {
     public void lintNonAndroid() {
         VariantInputs variantInputs = descriptor.getVariantInputs("");
         if (variantInputs != null) {
-            runLint(null, variantInputs, true, false);
+            runLint(null, variantInputs, true, false, true);
         }
     }
 
@@ -408,13 +420,15 @@ public class LintGradleExecution {
 
         Map<Variant, List<Warning>> warningMap = Maps.newHashMap();
         List<LintBaseline> baselines = Lists.newArrayList();
+        boolean first = true;
         for (Variant variant : modelProject.getVariants()) {
             // we are not running lint on all the variants, so skip the ones where we don't have
             // a variant inputs (see TaskManager::isLintVariant)
             final VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
             if (variantInputs != null) {
                 Pair<List<Warning>, LintBaseline> pair =
-                        runLint(variant, variantInputs, false, true);
+                        runLint(variant, variantInputs, false, true, first);
+                first = false;
                 List<Warning> warnings = pair.getFirst();
                 warningMap.put(variant, warnings);
                 LintBaseline baseline = pair.getSecond();
@@ -444,15 +458,12 @@ public class LintGradleExecution {
         }
 
         List<Warning> mergedWarnings = LintGradleClient.merge(warningMap, modelProject);
-        int errorCount = 0;
-        int warningCount = 0;
-        for (Warning warning : mergedWarnings) {
-            if (warning.severity == Severity.ERROR || warning.severity == Severity.FATAL) {
-                errorCount++;
-            } else if (warning.severity == Severity.WARNING) {
-                warningCount++;
-            }
-        }
+        LintStats stats = LintStats.Companion.create(mergedWarnings, baselines);
+        int errorCount = stats.getErrorCount();
+        int warningCount = stats.getWarningCount();
+        int baselineErrorCount = stats.getBaselineErrorCount();
+        int baselineWarningCount = stats.getBaselineWarningCount();
+        int baselineFixedCount = stats.getBaselineFixedCount();
 
         // We pick the first variant to generate the full report and don't generate if we don't
         // have any variants.
@@ -485,40 +496,14 @@ public class LintGradleExecution {
                     descriptor.getProject(),
                     getReportsDir(),
                     true,
-                    isFatalOnly());
+                    isFatalOnly(),
+                    true);
 
-            // Compute baseline counts. This is tricky because an error could appear in
-            // multiple variants, and in that case it should only be counted as filtered
-            // from the baseline once, but if there are errors that appear only in individual
-            // variants, then they shouldn't count as one. To correctly account for this we
-            // need to ask the baselines themselves to merge their results. Right now they
-            // only contain the remaining (fixed) issues; to address this we'd need to move
-            // found issues to a different map such that at the end we can successively
-            // merge the baseline instances together to a final one which has the full set
-            // of filtered and remaining counts.
-            int baselineErrorCount = 0;
-            int baselineWarningCount = 0;
-            int fixedCount = 0;
-            if (!baselines.isEmpty()) {
-                // Figure out the actual overlap; later I could stash these into temporary
-                // objects to compare
-                // For now just combine them in a dumb way
-                for (LintBaseline baseline : baselines) {
-                    baselineErrorCount =
-                            Math.max(baselineErrorCount, baseline.getFoundErrorCount());
-                    baselineWarningCount =
-                            Math.max(baselineWarningCount, baseline.getFoundWarningCount());
-                    fixedCount = Math.max(fixedCount, baseline.getFixedCount());
-                }
+            // When running the individual variant scans we turn off auto fixing
+            // so perform it manually here when we have the merged results
+            if (flags.isAutoFix()) {
+                new LintFixPerformer(client, !flags.isQuiet()).fix(mergedWarnings);
             }
-
-            Reporter.Stats stats =
-                    new Reporter.Stats(
-                            errorCount,
-                            warningCount,
-                            baselineErrorCount,
-                            baselineWarningCount,
-                            fixedCount);
 
             for (Reporter reporter : flags.getReporters()) {
                 reporter.write(stats, mergedWarnings);
@@ -566,17 +551,17 @@ public class LintGradleExecution {
                         String.format(
                                 "%1$s were filtered out because "
                                         + "they were listed in the baseline file, %2$s\n",
-                                LintUtils.describeCounts(
+                                Lint.describeCounts(
                                         baselineErrorCount, baselineWarningCount, false, true),
                                 baselineFile));
             }
-            if (fixedCount > 0) {
+            if (baselineFixedCount > 0) {
                 System.out.println(
                         String.format(
                                 "%1$d errors/warnings were listed in the "
                                         + "baseline file (%2$s) but not found in the project; perhaps they have "
                                         + "been fixed?\n",
-                                fixedCount, baselineFile));
+                                baselineFixedCount, baselineFile));
             }
 
             if (flags.isSetExitCode() && errorCount > 0) {

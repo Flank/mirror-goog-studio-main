@@ -8,3 +8,48 @@ filegroup(
 
 # Used for bazel packages below this one that use GradleTestProject.
 exports_files(["test-projects/commonBuildScript.gradle"])
+
+LATEST_SUPPORT = "27.0.2"
+
+#keep sorted
+SUPPORT_LIBRARY_AARS = [
+    "animated-vector-drawable",
+    "appcompat-v7",
+    "cardview-v7",
+    "customtabs",
+    "design",
+    "gridlayout-v7",
+    "leanback-v17",
+    "mediarouter-v7",
+    "palette-v7",
+    "percent",
+    "preference-v7",
+    "recyclerview-v7",
+    "support-compat",
+    "support-core-ui",
+    "support-core-utils",
+    "support-fragment",
+    "support-media-compat",
+    "support-v13",
+    "support-v4",
+    "support-vector-drawable",
+    "transition",
+    "wear",
+]
+
+#keep sorted
+SUPPORT_LIBRARY_JARS = [
+    "support-annotations",
+]
+
+load("//tools/base/bazel:maven.bzl", "maven_repo")
+
+maven_repo(
+    name = "support_library_latest",
+    # keep sorted
+    artifacts = ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" + LATEST_SUPPORT +
+                 ":aar" for name in SUPPORT_LIBRARY_AARS] +
+                ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" + LATEST_SUPPORT +
+                 ":jar" for name in SUPPORT_LIBRARY_JARS],
+    visibility = [":__subpackages__"],
+)

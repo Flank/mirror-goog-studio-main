@@ -21,8 +21,11 @@ import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.FD_JARS
 import com.android.SdkConstants.FD_RES
+import com.android.SdkConstants.FN_PUBLIC_TXT
+import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.SdkConstants.VALUE_TRUE
+import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidTargetHash.PLATFORM_HASH_PREFIX
 import com.android.sdklib.SdkVersionInfo
@@ -76,6 +79,7 @@ private const val ATTR_JAR = "jar"
 private const val ATTR_ANDROID = "android"
 private const val ATTR_LIBRARY = "library"
 private const val ATTR_MODULE = "module"
+private const val ATTR_INCOMPLETE = "incomplete"
 /**
  * Compute a list of lint [Project] instances from the given XML descriptor files.
  * Each descriptor is considered completely separate from the other (e.g. you can't
@@ -107,7 +111,14 @@ data class ProjectMetadata(
     /** A map from module to a baseline to apply to that module, if any */
     val moduleBaselines: Map<Project, File?> = emptyMap(),
     /** A map from module to a list of custom rule JAR files to apply, if any */
-    val lintChecks: Map<Project, List<File>> = emptyMap()
+    val lintChecks: Map<Project, List<File>> = emptyMap(),
+    /**
+     * If true, the project metadata being passed in only represents a small
+     * subset of the real project sources, so only lint checks which can be run
+     * without full project context should be attempted. This is what happens for
+     * "on-the-fly" checks running in the IDE.
+     */
+    val incomplete: Boolean = false
 )
 
 /**
@@ -151,6 +162,10 @@ private class ProjectInitializer(
      * (which in turn can be looked up in [dependencies])
      */
     private val jarAarMap = mutableMapOf<File, String>()
+    /**
+     * Map from module name to resource visibility lookup
+     */
+    private val visibility = mutableMapOf<String, ResourceVisibilityLookup>()
 
     /** A cache directory to use, if specified */
     private var cache: File? = null
@@ -195,6 +210,8 @@ private class ProjectInitializer(
             reportError("Expected <project> as the root tag", projectElement)
             return ProjectMetadata()
         }
+
+        val incomplete = projectElement.getAttribute(ATTR_INCOMPLETE) == VALUE_TRUE
 
         // First gather modules and sources, and collect dependency information.
         // The dependency information is captured into a separate map since dependencies
@@ -276,6 +293,8 @@ private class ProjectInitializer(
             }
         }
 
+        computeResourceVisibility()
+
         return ProjectMetadata(
             projects = sortedModules,
             sdk = sdk,
@@ -283,8 +302,33 @@ private class ProjectInitializer(
             lintChecks = lintChecks,
             cache = cache,
             moduleBaselines = baselines,
-            mergedManifests = mergedManifests
+            mergedManifests = mergedManifests,
+            incomplete = incomplete
         )
+    }
+
+    private fun computeResourceVisibility() {
+        // TODO: We don't have dependency information from one AAR to another; we'll
+        // need to assume that all of them are in a flat hierarchy
+        for (module in modules.values) {
+            val aarDeps = mutableListOf<ResourceVisibilityLookup>()
+            for (dependencyName in dependencies.get(module)) {
+                val visibility = visibility[dependencyName] ?: continue
+                aarDeps.add(visibility)
+            }
+
+            if (aarDeps.isEmpty()) {
+                continue
+            } else {
+                val visibilityLookup = if (aarDeps.size == 1) {
+                    aarDeps[0]
+                } else {
+                    // Must create a composite
+                    ResourceVisibilityLookup.create(aarDeps)
+                }
+                module.setResourceVisibility(visibilityLookup)
+            }
+        }
     }
 
     private fun parseModule(moduleElement: Element) {
@@ -473,6 +517,11 @@ private class ProjectInitializer(
 
         jarAarMap[aarFile] = name
         modules[name] = project
+
+        val publicResources = File(expanded, FN_PUBLIC_TXT)
+        val allResources = File(expanded, FN_RESOURCE_TEXT)
+        visibility[name] = ResourceVisibilityLookup.create(publicResources, allResources, name)
+
         return name
     }
 
@@ -771,5 +820,15 @@ constructor(
                 )
             }
         }
+    }
+
+    private var resourceVisibility: ResourceVisibilityLookup? = null
+
+    fun setResourceVisibility(resourceVisibility: ResourceVisibilityLookup?) {
+        this.resourceVisibility = resourceVisibility
+    }
+
+    override fun getResourceVisibility(): ResourceVisibilityLookup {
+        return resourceVisibility ?: super.getResourceVisibility()
     }
 }

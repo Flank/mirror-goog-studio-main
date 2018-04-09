@@ -59,6 +59,10 @@ class CpuProfilerComponent final : public ProfilerComponent {
   // Returns the service that talks to device clients (e.g., the agent).
   grpc::Service* GetInternalService() override { return &internal_service_; }
 
+  int64_t GetEarliestDataTime(int32_t pid) override {
+    return public_service_.GetEarliestDataTime(pid);
+  }
+
  private:
   Clock* clock_;
   CpuCache cache_;

@@ -53,7 +53,6 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -122,44 +121,40 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
             @NonNull ResourceType resourceType,
             @NonNull String name,
             boolean isFramework) {
-        if (context.getProject().isGradleProject() && !isFramework) {
-            Project project = context.getProject();
-            if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
-                if (isPrivate(context, resourceType, name)) {
-                    // See if it's a local package reference
-                    boolean foreignPackage = false;
-                    if (node instanceof UReferenceExpression) {
-                        PsiElement resolved = ((UReferenceExpression) node).resolve();
-                        if (resolved instanceof PsiField) {
-                            PsiPackage pkg = context.getEvaluator().getPackage(resolved);
-                            if (pkg != null) {
-                                String pkgName = pkg.getQualifiedName();
-                                if (!(pkgName.equals(context.getProject().getPackage())
-                                        || pkgName.equals(context.getMainProject().getPackage()))) {
-                                    foreignPackage = true;
-                                }
+        if (!isFramework) {
+            if (isPrivate(context, resourceType, name)) {
+                // See if it's a local package reference
+                boolean foreignPackage = false;
+                if (node instanceof UReferenceExpression) {
+                    PsiElement resolved = ((UReferenceExpression) node).resolve();
+                    if (resolved instanceof PsiField) {
+                        PsiPackage pkg = context.getEvaluator().getPackage(resolved);
+                        if (pkg != null) {
+                            String pkgName = pkg.getQualifiedName();
+                            if (!(pkgName.equals(context.getProject().getPackage())
+                                    || pkgName.equals(context.getMainProject().getPackage()))) {
+                                foreignPackage = true;
                             }
                         }
                     }
+                }
 
-                    // See if this is resource we're overriding locally
-                    if (!foreignPackage) {
-                        AbstractResourceRepository repository =
-                                context.getClient()
-                                        .getResourceRepository(
-                                                context.getMainProject(), true, false);
-                        if (repository != null && repository.hasResourceItem(resourceType, name)) {
-                            return;
-                        }
-
-                        if (overriding != null && overriding.contains(resourceType + ":" + name)) {
-                            return;
-                        }
+                // See if this is resource we're overriding locally
+                if (!foreignPackage) {
+                    AbstractResourceRepository repository =
+                            context.getClient()
+                                    .getResourceRepository(context.getMainProject(), true, false);
+                    if (repository != null && repository.hasResourceItem(resourceType, name)) {
+                        return;
                     }
 
-                    String message = createUsageErrorMessage(context, resourceType, name);
-                    context.report(ISSUE, node, context.getLocation(node), message);
+                    if (overriding != null && overriding.contains(resourceType + ":" + name)) {
+                        return;
+                    }
                 }
+
+                String message = createUsageErrorMessage(context, resourceType, name);
+                context.report(ISSUE, node, context.getLocation(node), message);
             }
         }
     }
@@ -175,12 +170,10 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getNodeValue();
-        if (context.getProject().isGradleProject()) {
-            ResourceUrl url = ResourceUrl.parse(value);
-            if (isPrivate(context, url)) {
-                String message = createUsageErrorMessage(context, url.type, url.name);
-                context.report(ISSUE, attribute, context.getValueLocation(attribute), message);
-            }
+        ResourceUrl url = ResourceUrl.parse(value);
+        if (isPrivate(context, url)) {
+            String message = createUsageErrorMessage(context, url.type, url.name);
+            context.report(ISSUE, attribute, context.getValueLocation(attribute), message);
         }
     }
 
@@ -252,12 +245,8 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
             return false;
         }
 
-        if (context.getProject().isGradleProject()) {
-            ResourceVisibilityLookup lookup = context.getProject().getResourceVisibility();
-            return lookup.isPrivate(type, name);
-        }
-
-        return false;
+        ResourceVisibilityLookup lookup = context.getProject().getResourceVisibility();
+        return lookup.isPrivate(type, name);
     }
 
     private static boolean isPrivate(@NonNull Context context, @Nullable ResourceUrl url) {

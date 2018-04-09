@@ -38,7 +38,7 @@ def perf_test(name, srcs, test_app, deps = [], tags = None):
       ],
       deps = deps + [
           "//tools/base/profiler/tests/perf-test:profiler-service",
-          "//tools/base/common:studio.common",
+          "//tools/base/common:studio.android.sdktools.common",
           "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
           "//tools/base/profiler/app:perfa",
           "//tools/base/profiler/native/perfa:libperfa.so",

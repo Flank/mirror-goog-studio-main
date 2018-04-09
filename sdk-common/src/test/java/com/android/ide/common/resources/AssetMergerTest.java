@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.testutils.NoErrorsOrWarningsLogger;
 import com.android.testutils.TestResources;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,20 +49,8 @@ public class AssetMergerTest extends BaseTestCase {
 
     private static AssetMerger sAssetMerger = null;
 
-    private static WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters> facade =
-            new WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters>() {
-
-                @Override
-                public void submit(MergedAssetWriter.AssetWorkParameters parameter) {
-                    new MergedAssetWriter.AssetWorkAction(parameter).run();
-                }
-
-                @Override
-                public void await() {}
-
-                @Override
-                public void taskActionDone() {}
-            };
+    private static WorkerExecutorFacade facade =
+            new ExecutorServiceAdapter(Executors.newSingleThreadExecutor());
 
     @Test
     public void testMergeByCount() throws Exception {

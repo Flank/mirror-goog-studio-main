@@ -633,28 +633,31 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         /** Style parent cycles, resource alias cycles, layout include cycles, etc  */
         @JvmField
         val CYCLE = Issue.create(
-            "ResourceCycle",
-            "Cycle in resource definitions",
-            "There should be no cycles in resource definitions as this can lead to runtime " +
-                    "exceptions.",
-            Category.CORRECTNESS,
-            8,
-            Severity.FATAL,
-            IMPLEMENTATION
+            id = "ResourceCycle",
+            briefDescription = "Cycle in resource definitions",
+            explanation = """
+                There should be no cycles in resource definitions as this can lead to \
+                runtime exceptions.""",
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
         )
 
         /** Parent cycles  */
         @JvmField
         val CRASH = Issue.create(
-            "AaptCrash",
-            "Potential AAPT crash",
-            "Defining a style which sets `android:id` to a dynamically generated id can cause " +
-                    "many versions of `aapt`, the resource packaging tool, to crash. To work around " +
-                    "this, declare the id explicitly with `<item type=\"id\" name=\"...\" />` instead.",
-            Category.CORRECTNESS,
-            8,
-            Severity.FATAL,
-            IMPLEMENTATION
+            id = "AaptCrash",
+            briefDescription = "Potential AAPT crash",
+            explanation = """
+                Defining a style which sets `android:id` to a dynamically generated id can \
+                cause many versions of `aapt`, the resource packaging tool, to crash. \
+                To work around this, declare the id explicitly with \
+                `<item type="id" name="..." />` instead.""",
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
         )
     }
 }

@@ -19,6 +19,8 @@ package com.activity.energy;
 import android.app.AlarmManager;
 import android.app.AlarmManager.OnAlarmListener;
 import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import com.activity.PerfdTestActivity;
 
@@ -29,8 +31,10 @@ public class AlarmActivity extends PerfdTestActivity {
 
     public void setAndCancelIntentAlarm() {
         AlarmManager alarmManager = getAlarmManager();
-        PendingIntent pendingIntent = new PendingIntent("com.example", 1);
-        alarmManager.set(0x1, 1000, pendingIntent);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(
+                        new Context("com.example", 1), 0, new Intent(AlarmActivity.class), 0, null);
+        alarmManager.set(0x2, 1000, pendingIntent);
         alarmManager.cancel(pendingIntent);
         System.out.println("INTENT ALARM CANCELLED");
     }
@@ -47,6 +51,16 @@ public class AlarmActivity extends PerfdTestActivity {
         System.out.println("LISTENER ALARM CANCELLED");
     }
 
+    public void fireIntentAlarm() {
+        AlarmManager alarmManager = getAlarmManager();
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(
+                        new Context("foo.bar", 2), 0, new Intent(AlarmActivity.class), 0, null);
+        alarmManager.setRepeating(0x0, 1000, 60000, pendingIntent);
+        alarmManager.fire();
+        System.out.println("INTENT ALARM FIRED");
+    }
+
     public void fireListenerAlarm() {
         AlarmManager alarmManager = getAlarmManager();
         OnAlarmListener listener =
@@ -58,5 +72,17 @@ public class AlarmActivity extends PerfdTestActivity {
                 };
         alarmManager.set(0x0, 1000, "bar", listener, new Handler());
         alarmManager.fire();
+    }
+
+    public void setAndCancelNonWakeupAlarm() {
+        AlarmManager alarmManager = getAlarmManager();
+        OnAlarmListener listener =
+                new OnAlarmListener() {
+                    @Override
+                    public void onAlarm() {}
+                };
+        alarmManager.set(0x1, 1000, "foo", listener, null);
+        alarmManager.cancel(listener);
+        System.out.println("NON-WAKEUP ALARM");
     }
 }

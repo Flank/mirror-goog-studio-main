@@ -14,7 +14,6 @@ dependencies {
     testCompile project(':apksig')
     testCompile project(':base:builder')
     testCompile project(':base:builder-model')
-    testCompile project(':base:gradle')
     testCompile project(':base:instant-run:instant-run-client')
     testCompile project(':base:sdk-common')
     testCompile project(':base:testing-infrastructure:device-pool:device-provider')
@@ -39,9 +38,6 @@ dependencies {
     // Add dependency on plugin code.  Exclude transitive dependencies to avoid conflict due to
     // Groovy versions.
     testCompile(project(':base:gradle-core')) {
-        transitive = false
-    }
-    testCompile(project(':base:gradle')) {
         transitive = false
     }
 }

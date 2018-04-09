@@ -5,6 +5,6 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 8
+        minSdkVersion rootProject.supportLibMinSdk
     }
 }

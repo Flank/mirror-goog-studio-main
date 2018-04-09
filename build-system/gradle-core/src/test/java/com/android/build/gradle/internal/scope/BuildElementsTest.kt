@@ -172,7 +172,8 @@ class BuildElementsTest {
         val buildElements = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         val elementByType = buildElements.elementByType(VariantOutput.OutputType.MAIN)
         assertThat(elementByType).isNotNull()
-        assertThat(elementByType!!.outputPath.toString()).contains("/foo/bar/AndroidManifest.xml")
+        assertThat(elementByType!!.outputPath.toString()).contains(
+                File("/foo/bar/AndroidManifest.xml").path.toString())
     }
 
     @Test

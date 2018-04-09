@@ -25,7 +25,7 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion rootProject.supportLibMinSdk
         targetSdkVersion rootProject.latestCompileSdk
     }
 

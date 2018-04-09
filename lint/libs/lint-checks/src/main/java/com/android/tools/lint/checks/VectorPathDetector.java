@@ -25,7 +25,17 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceUrl;
-import com.android.tools.lint.detector.api.*;
+import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
+import com.android.tools.lint.detector.api.Scope;
+import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.XmlContext;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Collection;
@@ -284,7 +294,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
                         currentIndex,
                         number,
                         converted,
-                        message);
+                        message,
+                        "Replace scientific notation");
             }
 
             if ((s.startsWith(".", startPosition)
@@ -320,7 +331,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
                         currentIndex,
                         number,
                         replace,
-                        message);
+                        message,
+                        "Add leading 0");
             }
 
             int endPosition = currentIndex;
@@ -341,7 +353,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
             int currentIndex,
             @NonNull String number,
             @Nullable String replace,
-            @NonNull String message) {
+            @NonNull String message,
+            @NonNull String sharedName) {
         Location location = context.getValueLocation(attribute);
         Position startPos = location.getStart();
         assert startPos != null;
@@ -359,10 +372,12 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (replace != null) {
                 lintFix =
                         fix().name("Replace with " + replace.trim())
+                                .sharedName(sharedName)
                                 .replace()
                                 .text(number)
                                 .with(replace)
                                 .range(location)
+                                .autoFix()
                                 .build();
             }
         }

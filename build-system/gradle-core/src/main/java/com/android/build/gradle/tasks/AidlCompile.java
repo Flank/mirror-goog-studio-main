@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.incremental.DependencyData;
@@ -374,8 +373,7 @@ public class AidlCompile extends IncrementalTask {
             compileTask.setVariantName(scope.getVariantConfiguration().getFullName());
             compileTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
 
-            compileTask.sourceDirs = TaskInputHelper
-                    .bypassFileSupplier(variantConfiguration::getAidlSourceList);
+            compileTask.sourceDirs = variantConfiguration::getAidlSourceList;
             compileTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, AIDL);
 

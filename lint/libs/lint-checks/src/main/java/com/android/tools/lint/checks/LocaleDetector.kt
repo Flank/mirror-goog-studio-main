@@ -183,36 +183,40 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         /** Calling risky convenience methods  */
         @JvmField
         val STRING_LOCALE = Issue.create(
-            "DefaultLocale",
-            "Implied default locale in case conversion",
-            "Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an " +
-                    "explicit locale** is a common source of bugs. The reason for that is that those " +
-                    "methods will use the current locale on the user's device, and even though the " +
-                    "code appears to work correctly when you are developing the app, it will fail " +
-                    "in some locales. For example, in the Turkish locale, the uppercase replacement " +
-                    "for `i` is **not** `I`.\n" +
-                    "\n" +
-                    "If you want the methods to just perform ASCII replacement, for example to convert " +
-                    "an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to " +
-                    "use the current locale, call `String#toUpperCase(Locale.getDefault())` instead.",
-            "http://developer.android.com/reference/java/util/Locale.html#default_locale",
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "DefaultLocale",
+            briefDescription = "Implied default locale in case conversion",
+            explanation = """
+                Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an \
+                explicit locale** is a common source of bugs. The reason for that is that \
+                those methods will use the current locale on the user's device, and even \
+                though the code appears to work correctly when you are developing the app, \
+                it will fail in some locales. For example, in the Turkish locale, the \
+                uppercase replacement for `i` is **not** `I`.
+
+                If you want the methods to just perform ASCII replacement, for example to \
+                convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you \
+                really want to use the current locale, call \
+                `String#toUpperCase(Locale.getDefault())` instead.
+                """,
+            moreInfo = "http://developer.android.com/reference/java/util/Locale.html#default_locale",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
 
         /** Assuming locale doesn't change  */
         @JvmField
         val FINAL_LOCALE = Issue.create(
-            "ConstantLocale",
-            "Constant Locale",
-            "Assigning `Locale.getDefault()` to a constant is suspicious, because " +
-                    "the locale can change while the app is running.",
-            Category.I18N,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION
+            id = "ConstantLocale",
+            briefDescription = "Constant Locale",
+            explanation = """
+                Assigning `Locale.getDefault()` to a constant is suspicious, because \
+                the locale can change while the app is running.""",
+            category = Category.I18N,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
         )
     }
 }

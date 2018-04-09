@@ -23,7 +23,8 @@ public class SeparateTestModuleWithAppDependenciesTest {
                 "\n"
                         + "android {\n"
                         + "    defaultConfig {\n"
-                        + "        minSdkVersion 9\n"
+                        + "        minSdkVersion \n"
+                        + TestVersions.SUPPORT_LIB_MIN_SDK
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"

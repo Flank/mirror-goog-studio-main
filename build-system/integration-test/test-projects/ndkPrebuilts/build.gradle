@@ -8,7 +8,7 @@ android {
     compileSdkVersion 19
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {
-        minSdkVersion 3
+        minSdkVersion rootProject.supportLibMinSdk
     }
 
     flavorDimensions 'abi'

@@ -16,7 +16,7 @@
 
 package com.android.tools.lint;
 
-import static com.android.tools.lint.detector.api.LintUtils.describeCounts;
+import static com.android.tools.lint.detector.api.Lint.describeCounts;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
@@ -89,22 +89,22 @@ public class TextReporter extends Reporter {
     }
 
     @Override
-    public void write(@NonNull Stats stats, List<Warning> issues) throws IOException {
+    public void write(@NonNull LintStats stats, List<Warning> issues) throws IOException {
         boolean abbreviate = !flags.isShowEverything();
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
         if (issues.isEmpty()) {
             if (isDisplayEmpty() && writeStats) {
                 writer.write("No issues found");
-                if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                if (stats.getBaselineErrorCount() > 0 || stats.getBaselineWarningCount() > 0) {
                     File baselineFile = flags.getBaselineFile();
                     assert baselineFile != null;
                     writer.write(
                             String.format(
                                     " (%1$s filtered by baseline %2$s)",
                                     describeCounts(
-                                            stats.baselineErrorCount,
-                                            stats.baselineWarningCount,
+                                            stats.getBaselineErrorCount(),
+                                            stats.getBaselineWarningCount(),
                                             true,
                                             true),
                                     baselineFile.getName()));
@@ -155,6 +155,10 @@ public class TextReporter extends Reporter {
                 }
 
                 output.append('\n');
+
+                if (warning.wasAutoFixed) {
+                    output.append("This issue has been automatically fixed.\n");
+                }
 
                 if (warning.errorLine != null && !warning.errorLine.isEmpty()) {
                     output.append(warning.errorLine);
@@ -247,16 +251,16 @@ public class TextReporter extends Reporter {
                 writer.write(
                         String.format(
                                 "%1$d errors, %2$d warnings",
-                                stats.errorCount, stats.warningCount));
-                if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                                stats.getErrorCount(), stats.getWarningCount()));
+                if (stats.getBaselineErrorCount() > 0 || stats.getBaselineWarningCount() > 0) {
                     File baselineFile = flags.getBaselineFile();
                     assert baselineFile != null;
                     writer.write(
                             String.format(
                                     " (%1$s filtered by baseline %2$s)",
                                     describeCounts(
-                                            stats.baselineErrorCount,
-                                            stats.baselineWarningCount,
+                                            stats.getBaselineErrorCount(),
+                                            stats.getBaselineWarningCount(),
                                             true,
                                             true),
                                     baselineFile.getName()));
