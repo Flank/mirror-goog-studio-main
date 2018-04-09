@@ -128,7 +128,7 @@ public class TypoDetector extends ResourceXmlDetector {
         }
 
         if (!equal(mLastLanguage, mLanguage) || !equal(mLastRegion, mRegion)) {
-            mLookup = TypoLookup.get(context.getClient(), mLanguage, mRegion);
+            mLookup = TypoLookup.Companion.get(context.getClient(), mLanguage, mRegion);
             mLastLanguage = mLanguage;
             mLastRegion = mRegion;
         }

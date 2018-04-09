@@ -106,6 +106,7 @@ public class TypoLookupTest extends AbstractCheckTest {
 
     public void testRegion() {
         TypoLookup db = TypoLookup.get(createClient(), "en", "US");
+        assertNotNull(db);
         assertNotNull(db.getTypos("wiht", 0, "wiht".length()));
         db = TypoLookup.get(createClient(), "en", "GB");
         assertNotNull(db.getTypos("wiht", 0, "wiht".length()));
@@ -113,6 +114,7 @@ public class TypoLookupTest extends AbstractCheckTest {
 
     public void test2() {
         TypoLookup db = TypoLookup.get(createClient(), "nb", null);
+        assertNotNull(db);
         assertNull(db.getTypos("hello", 0, "hello".length()));
         assertNull(db.getTypos("this", 0, "this".length()));
 

@@ -1856,7 +1856,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "apply plugin: 'com.android.application'\n"
                                         + "\n"
                                         + "dependencies {\n"
-                                        + "    compile 'compile com.google.firebase:firebase-appindexing:11.0.4'\n"
+                                        + "    compile 'com.google.firebase:firebase-appindexing:11.0.4'\n"
                                         + "}"))
                 .issues(ManifestDetector.APP_INDEXING_SERVICE)
                 .run()
@@ -1897,7 +1897,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "apply plugin: 'com.android.application'\n"
                                         + "\n"
                                         + "dependencies {\n"
-                                        + "    compile 'compile com.google.firebase:firebase-appindexing:11.0.4'\n"
+                                        + "    compile 'com.google.firebase:firebase-appindexing:11.0.4'\n"
                                         + "}"))
                 .issues(ManifestDetector.APP_INDEXING_SERVICE)
                 .run()
