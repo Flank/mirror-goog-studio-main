@@ -1376,6 +1376,7 @@ public final class SdkConstants {
     public static final String ATTR_LISTFOOTER = "listfooter"; //$NON-NLS-1$
     public static final String ATTR_LISTHEADER = "listheader"; //$NON-NLS-1$
     public static final String ATTR_LISTITEM = "listitem"; //$NON-NLS-1$
+    public static final String ATTR_ITEM_COUNT = "itemCount";
 
     // Tools attributes for scrolling
     public static final String ATTR_SCROLLX = "scrollX"; //$NON-NLS-1$
@@ -1654,6 +1655,7 @@ public final class SdkConstants {
     public static final String ATTR_TAB_SELECTED_TEXT_COLOR = "tabSelectedTextColor"; //$NON-NLS-1$
     public static final String ATTR_TAB_TEXT_APPEARANCE = "tabTextAppearance"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
+    public static final String ATTR_SPAN_COUNT = "spanCount";
 
     // Values: Manifest
     public static final String VALUE_SPLIT_ACTION_BAR_WHEN_NARROW =
