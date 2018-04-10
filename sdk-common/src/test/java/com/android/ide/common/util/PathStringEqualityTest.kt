@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.projectmodel
+package com.android.ide.common.util
 
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
@@ -24,14 +24,14 @@ import org.junit.Test
 class PathStringEqualityTest {
     @Test
     fun testPathsWithCosmeticDifferencesNotEqual() {
-        Truth.assertThat(PathString("/foo")).isNotEqualTo(PathString("\\foo"))
-        Truth.assertThat(PathString("/foo/")).isNotEqualTo(PathString("/foo"))
+        assertThat(PathString("/foo")).isNotEqualTo(PathString("\\foo"))
+        assertThat(PathString("/foo/")).isNotEqualTo(PathString("/foo"))
     }
 
     @Test
     fun testPathEqualsItself() {
         val path = PathString("/foo")
-        Truth.assertThat(path).isEqualTo(path)
+        assertThat(path).isEqualTo(path)
     }
 
     @Test
@@ -39,16 +39,15 @@ class PathStringEqualityTest {
         val fooBarBazBar = PathString("/foo/bar/baz/bar")
         val fooBarBaz = PathString("/foo/bar/baz")
 
-        Truth.assertThat(fooBarBazBar.parent).isEqualTo(fooBarBaz)
-        Truth.assertThat(fooBarBazBar.fileName).isEqualTo(PathString("bar"))
-        Truth.assertThat(fooBarBazBar[1]).isEqualTo(PathString("bar"))
-        Truth.assertThat(fooBarBaz.relativize(fooBarBazBar)).isEqualTo(PathString("bar"))
+        assertThat(fooBarBazBar.parent).isEqualTo(fooBarBaz)
+        assertThat(fooBarBazBar[1]).isEqualTo(PathString("bar"))
+        assertThat(fooBarBaz.relativize(fooBarBazBar)).isEqualTo(PathString("bar"))
     }
 
     @Test
     fun testPathsWithEqualStringsAreEqual() {
         val path1 = PathString("C:\\Program Files\\My App\\someprogram.exe")
         val path2 = PathString("C:\\Program Files\\My App\\someprogram.exe")
-        Truth.assertThat(path1).isEqualTo(path2)
+        assertThat(path1).isEqualTo(path2)
     }
 }

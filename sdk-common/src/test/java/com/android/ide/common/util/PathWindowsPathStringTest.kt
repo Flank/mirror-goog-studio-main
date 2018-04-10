@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.projectmodel
+package com.android.ide.common.util
 
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
@@ -25,41 +25,41 @@ class PathWindowsPathStringTest {
     @Test
     fun testAbsoluteLocalPath() {
         val path = PathString("C:\\Program Files\\My App\\someprogram.exe")
-        Truth.assertThat(path.root!!.rawPath).isEqualTo("C:\\")
-        Truth.assertThat(path.isAbsolute).isTrue()
-        Truth.assertThat(path.root!!.isAbsolute).isTrue()
-        Truth.assertThat(path.parent).isEqualTo(PathString("C:\\Program Files\\My App"))
-        Truth.assertThat(path.fileName.rawPath).isEqualTo("someprogram.exe")
-        Truth.assertThat(path[0]).isEqualTo(PathString("Program Files"))
-        Truth.assertThat(path[1]).isEqualTo(PathString("My App"))
-        Truth.assertThat(path.subpath(1, 3)).isEqualTo(PathString("My App\\someprogram.exe"))
-        Truth.assertThat(path.subpath(0, 2)).isEqualTo(PathString("Program Files\\My App"))
+        assertThat(path.root!!.rawPath).isEqualTo("C:\\")
+        assertThat(path.isAbsolute).isTrue()
+        assertThat(path.root!!.isAbsolute).isTrue()
+        assertThat(path.parent).isEqualTo(PathString("C:\\Program Files\\My App"))
+        assertThat(path.fileName).isEqualTo("someprogram.exe")
+        assertThat(path[0]).isEqualTo(PathString("Program Files"))
+        assertThat(path[1]).isEqualTo(PathString("My App"))
+        assertThat(path.subpath(1, 3)).isEqualTo(PathString("My App\\someprogram.exe"))
+        assertThat(path.subpath(0, 2)).isEqualTo(PathString("Program Files\\My App"))
     }
 
     @Test
     fun testRelativeLocalPathWithRoot() {
         val path = PathString("C:Program Files\\My App\\someprogram.exe")
-        Truth.assertThat(path.root!!.rawPath).isEqualTo("C:")
-        Truth.assertThat(path.isAbsolute).isFalse()
-        Truth.assertThat(path.root!!.isAbsolute).isFalse()
+        assertThat(path.root!!.rawPath).isEqualTo("C:")
+        assertThat(path.isAbsolute).isFalse()
+        assertThat(path.root!!.isAbsolute).isFalse()
     }
 
     @Test
     fun testRelativeLocalPathWithoutRoot() {
         val path = PathString("Program Files\\My App\\someprogram.exe")
-        Truth.assertThat(path.root).isNull()
-        Truth.assertThat(path.isAbsolute).isFalse()
+        assertThat(path.root).isNull()
+        assertThat(path.isAbsolute).isFalse()
     }
 
     @Test
     fun resolveRootlessRelPathAgainstAbsPath() {
         val resolved = PathString("C:\\foo").resolve(PathString("bar\\baz"))
-        Truth.assertThat(resolved).isEqualTo(PathString("C:\\foo\\bar\\baz"))
+        assertThat(resolved).isEqualTo(PathString("C:\\foo\\bar\\baz"))
     }
 
     @Test
     fun resolveRootRelPathAgainstAbsPath() {
         val resolved = PathString("C:\\foo").resolve(PathString("bar\\baz"))
-        Truth.assertThat(resolved).isEqualTo(PathString("C:\\foo\\bar\\baz"))
+        assertThat(resolved).isEqualTo(PathString("C:\\foo\\bar\\baz"))
     }
 }

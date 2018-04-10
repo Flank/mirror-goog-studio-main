@@ -16,6 +16,8 @@
 
 package com.android.projectmodel
 
+import com.android.ide.common.util.PathString
+
 /**
  * Describes the filesystem for a given [Config]. It holds all source locations associated with a [Config].
  */

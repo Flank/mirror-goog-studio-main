@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 @file:JvmName("PathStringUtil")
-package com.android.projectmodel
+package com.android.ide.common.util
 
 import java.io.File
 import java.net.URI
@@ -61,25 +61,21 @@ class PathString private constructor(
          */
         private val prefixEndIndex: Int = 0,
         /**
-         * Separator to be used when interpreting the [path] string. This might be different from the
-         * system separator when manipulating paths intended for use on other filesystems.
+         * Separator to be used when interpreting the [path] string. This might be different from the system separator
+         * when manipulating paths intended for use on other filesystems.
          */
         private val separator: Char
 ) {
-
-    private val hash: Int = computeHash()
+    private var hash: Int = 0
 
     private constructor(filesystem: URI, path: String, rootLength: Int) :
-            this(filesystem, path, rootLength, path.length, rootLength,
-                    detectSeparator(path))
+            this(filesystem, path, rootLength, path.length, rootLength, detectSeparator(path))
 
-    constructor(filesystemUri: URI, path: String) : this(filesystemUri, path,
-            prefixLength(path))
+    constructor(filesystemUri: URI, path: String) : this(filesystemUri, path, prefixLength(path))
 
     constructor(path: String) : this(defaultFilesystemUri, path)
     constructor(path: File) : this(defaultFilesystemUri, path.path)
-    constructor(path: Path) : this(path.fileSystem.getPath(path.fileSystem.separator).toUri(),
-            path.toString())
+    constructor(path: Path) : this(path.fileSystem.getPath(path.fileSystem.separator).toUri(), path.toString())
 
     /**
      * The original, unmodified, path string.
@@ -103,11 +99,19 @@ class PathString private constructor(
      * Returns a string describing this path. The string describes both the filesystem and the path in use.
      */
     override fun toString(): String {
-        var schemeString = filesystemUri.toString()
+        val schemeString = filesystemUri.toString()
+        val path = rawPath
+        val buf = StringBuilder(schemeString.length + 1 + path.length)
         if (schemeString.endsWith("///")) {
-            schemeString = schemeString.substring(0, schemeString.length - 1)
+            buf.append(schemeString, 0, schemeString.length - 1)
+        } else {
+            buf.append(schemeString)
+            if (!schemeString.endsWith('/')) {
+                buf.append(':')
+            }
         }
-        return schemeString + rawPath
+        buf.append(path)
+        return buf.toString()
     }
 
     /**
@@ -149,22 +153,58 @@ class PathString private constructor(
         get() = prefixEndIndex != 0 && isSeparator(path[prefixEndIndex - 1])
 
     /**
-     * Returns the file name that is farthest from the root component. Returns an empty path if
+     * Returns the file name that is farthest from the root component. Returns an empty string if
      * this path is empty besides the root component.
      */
-    val fileName: PathString
+    val fileName: String
         get() {
             val end = endIndex
-            return PathString(filesystemUri,
-                    path,
-                    computeNameStart(end),
-                    end,
-                    0,
-                    separator)
+            return path.substring(computeNameStart(end), end)
         }
 
     /**
      * Returns the name of the given segment of the [PathString]. [index] must be between 0 and [nameCount]-1
+     */
+    fun segment(index: Int): String {
+        if (index < 0) {
+            throw IllegalArgumentException("Negative index: $index")
+        }
+
+        var separatorCount = 0
+        var subRangeStart = startIndex + startIndex.until(endIndex).countUntil {
+            if (isSeparator(path[it])) {
+                separatorCount++
+            }
+            separatorCount >= index
+        }
+
+        if (subRangeStart >= endIndex - 1) {
+            throw IllegalArgumentException("Invalid index $index for path ${toString()}")
+        }
+
+        if (isSeparator(path[subRangeStart])) {
+            subRangeStart++
+        }
+
+        var lengthCount = 0
+
+        val subRangeEnd = subRangeStart + subRangeStart.until(endIndex).countUntil {
+            if (isSeparator(path[it])) {
+                lengthCount++
+            }
+            lengthCount >= 1
+        }
+
+        if (lengthCount < 1 - 1) {
+            throw IllegalArgumentException()
+        }
+
+        return path.substring(subRangeStart, subRangeEnd)
+    }
+
+    /**
+     * Returns the name of the given segment of the [PathString] as a [PathString]. [index] must be
+     * between 0 and [nameCount]-1
      */
     operator fun get(index: Int): PathString = subRange(index)
 
@@ -204,6 +244,15 @@ class PathString private constructor(
                     newEnd,
                     prefixEndIndex,
                     separator)
+        }
+
+    /**
+     * Returns the file name of the parent path, or null if this is a root path.
+     * This is a convenience method similar to [File.getParent].
+     */
+    val parentFileName: String?
+        get() {
+            return parent?.fileName
         }
 
     /**
@@ -256,7 +305,26 @@ class PathString private constructor(
         return true
     }
 
-    override fun hashCode(): Int = hash
+    override fun hashCode(): Int {
+        if (hash == 0) {
+            hash = computeHash()
+        }
+        return hash
+    }
+
+    private fun computeHash(): Int {
+        var result = filesystemUri.hashCode()
+
+        for (i in 0.until(prefixEndIndex)) {
+            result = 31 * result + path[i].hashCode()
+        }
+
+        for (i in startIndex.until(suffixEndIndex)) {
+            result = 31 * result + path[i].hashCode()
+        }
+
+        return result
+    }
 
     /**
      * Returns a path equivalent to this one, but without redundant segments.
@@ -270,7 +338,7 @@ class PathString private constructor(
                 if (lastName != null && lastName != PARENT) {
                     newNames.removeLast()
                 } else if (!absolute) {
-                    // if there's a root and we have an extra ".." that would go up above the root, ignore it
+                    // If there's a root and we have an extra ".." that would go up above the root, ignore it.
                     newNames.add(it)
                 }
             } else if (it != SELF) {
@@ -349,8 +417,8 @@ class PathString private constructor(
     }
 
     /**
-     * Returns true iff this is the empty path (an empty path is a path with no names that always returns the other path when resolved against
-     * any other path).
+     * Returns true iff this is the empty path (an empty path is a path with no names that always returns the other path when resolved
+     * against any other path).
      */
     @get:JvmName("isEmptyPath")
     val isEmptyPath: Boolean
@@ -537,20 +605,6 @@ class PathString private constructor(
             }
             return result
         }
-
-    private fun computeHash(): Int {
-        var result = filesystemUri.hashCode()
-
-        for (i in 0.until(prefixEndIndex)) {
-            result = 31 * result + path[i].hashCode()
-        }
-
-        for (i in startIndex.until(suffixEndIndex)) {
-            result = 31 * result + path[i].hashCode()
-        }
-
-        return result
-    }
 }
 
 fun Path.toPathString() : PathString = PathString(this)

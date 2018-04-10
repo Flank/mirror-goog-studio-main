@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.projectmodel
+package com.android.ide.common.util
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
+import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 
@@ -83,13 +83,25 @@ class PathStringTest {
 
     @Test
     fun testFileName() {
-        assertThat(PathString("foo").fileName.rawPath).isEqualTo("foo")
-        assertThat(PathString("").fileName.rawPath).isEqualTo("")
-        assertThat(PathString("/").fileName.rawPath).isEqualTo("")
-        assertThat(PathString("foo/").fileName.rawPath).isEqualTo("foo")
-        assertThat(PathString("foo/bar").fileName.rawPath).isEqualTo("bar")
-        assertThat(PathString("C:\\").fileName.rawPath).isEqualTo("")
-        assertThat(PathString("\\\\server").fileName.rawPath).isEqualTo("server")
+        assertThat(PathString("foo").fileName).isEqualTo("foo")
+        assertThat(PathString("").fileName).isEqualTo("")
+        assertThat(PathString("/").fileName).isEqualTo("")
+        assertThat(PathString("foo/").fileName).isEqualTo("foo")
+        assertThat(PathString("foo/bar").fileName).isEqualTo("bar")
+        assertThat(PathString("C:\\").fileName).isEqualTo("")
+        assertThat(PathString("\\\\server").fileName).isEqualTo("server")
+    }
+
+    @Test
+    fun testParentFileName() {
+        assertThat(PathString("foo").parentFileName).isNull()
+        assertThat(PathString("").parentFileName).isNull()
+        assertThat(PathString("/").parentFileName).isNull()
+        assertThat(PathString("foo/").parentFileName).isNull()
+        assertThat(PathString("foo/bar").parentFileName).isEqualTo("foo")
+        assertThat(PathString("/foo/bar").parentFileName).isEqualTo("foo")
+        assertThat(PathString("C:\\").parentFileName).isNull()
+        assertThat(PathString("\\\\server").parentFileName).isEqualTo("")
     }
 
     @Test
@@ -128,12 +140,29 @@ class PathStringTest {
     }
 
     @Test
+    fun testSegment() {
+        val testPath = PathString("C:\\zero\\one\\two")
+
+        assertThat(testPath.segment(0)).isEqualTo("zero")
+        assertThat(testPath.segment(1)).isEqualTo("one")
+        assertThat(testPath.segment(2)).isEqualTo("two")
+    }
+
+    @Test
     fun testNameOperator() {
         val testPath = PathString("C:\\zero\\one\\two")
 
         assertThat(testPath[0]).isEqualTo(PathString("zero"))
         assertThat(testPath[1]).isEqualTo(PathString("one"))
         assertThat(testPath[2]).isEqualTo(PathString("two"))
+    }
+
+    @Test
+    fun testToString() {
+        assertThat(PathString(URI("file:///"), "/zero/one/two").toString()).isEqualTo("file:///zero/one/two")
+        assertThat(PathString(URI("file:///"), "zero/one/two").toString()).isEqualTo("file://zero/one/two")
+        assertThat(PathString(URI("zip:///foo/bar/baz.zip"), "zero/one/two").toString())
+            .isEqualTo("zip:///foo/bar/baz.zip:zero/one/two")
     }
 
     @Test
