@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
@@ -24,6 +25,8 @@ version = rootProject.ext.baseVersion
 dependencies {
     compile project(':base:common')
     compile libs.kxml
+    compile libs.kotlin_stdlib
+    compile libs.kotlin_reflect
 
     testCompile project(':base:testutils')
     testCompile libs.easymock

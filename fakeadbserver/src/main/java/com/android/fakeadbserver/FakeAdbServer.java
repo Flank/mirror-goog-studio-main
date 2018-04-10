@@ -28,6 +28,7 @@ import com.android.fakeadbserver.hostcommandhandlers.ListDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.GetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.LogcatCommandHandler;
+import com.android.fakeadbserver.shellcommandhandlers.PackageManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.ShellCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
 import com.android.fakeadbserver.statechangehubs.DeviceStateChangeHub;
@@ -112,6 +113,9 @@ public final class FakeAdbServer implements AutoCloseable {
                         () -> {
                             while (mServerKeepAccepting) {
                                 try {
+                                    // Socket can not be closed in finally block, because a separate thread will
+                                    // read from the socket. Closing the socket leads to a race condition.
+                                    //noinspection SocketOpenedButNotSafelyClosed
                                     Socket socket = mServerSocket.accept();
                                     mThreadPoolExecutor.submit(
                                             new ConnectionHandler(
@@ -336,6 +340,8 @@ public final class FakeAdbServer implements AutoCloseable {
             setShellCommandHandler(GetPropCommandHandler.COMMAND, GetPropCommandHandler::new);
             setShellCommandHandler(
                     WriteNoStopCommandHandler.COMMAND, WriteNoStopCommandHandler::new);
+            setShellCommandHandler(
+                    PackageManagerCommandHandler.COMMAND, PackageManagerCommandHandler::new);
 
             return this;
         }
