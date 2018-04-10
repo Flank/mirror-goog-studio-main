@@ -27,24 +27,13 @@ TEST_DEPS = [
 #keep sorted
 TEST_DATA = [
     ":prebuilts.zip",
-    "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:constraint-layout_latest",
-    "//prebuilts/studio/sdk:databinding_latest",
     "//prebuilts/studio/sdk:espresso_latest",
-    "//prebuilts/studio/sdk:gms_latest",
-    "//prebuilts/studio/sdk:multidex",
-    "//prebuilts/studio/sdk:ndk-bundle",
-    "//prebuilts/studio/sdk:platform-tools",
-    "//prebuilts/studio/sdk:platforms/android-19",
-    "//prebuilts/studio/sdk:platforms/android-21",
-    "//prebuilts/studio/sdk:platforms/android-23",
-    "//prebuilts/studio/sdk:platforms/android-24",
     "//prebuilts/studio/sdk:platforms/android-P",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
     "//prebuilts/studio/sdk:test-runner_latest",
-    "//prebuilts/studio/sdk:uiautomator_latest",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system:gradle_plugin_repo.zip",
@@ -102,7 +91,7 @@ java_test(
 
 # Maven repo with dependencies required by data binding test projects.
 #
-# TODO: Clean this up to the minimum requeired for data binding.
+# TODO: Clean this up to the minimum required for data binding.
 maven_repo(
     name = "prebuilts",
     # keep sorted
