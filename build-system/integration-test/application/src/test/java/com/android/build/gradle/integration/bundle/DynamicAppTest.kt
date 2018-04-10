@@ -62,6 +62,11 @@ class DynamicAppTest {
         "/feature2/res/layout/feature2_layout.xml",
         "/feature2/resources.pb")
 
+    private val signedContent: Array<String> = bundleContent.plus(arrayOf(
+        "/META-INF/ANDROIDD.RSA",
+        "/META-INF/ANDROIDD.SF",
+        "/META-INF/MANIFEST.MF"))
+
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
@@ -93,7 +98,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
         }
 
         // also test that the feature manifest contains the feature name.
@@ -109,7 +114,7 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test bundleRelease task`() {
+    fun `test unsigned bundleRelease task`() {
         val bundleTaskName = getBundleTaskName("release")
         project.execute("app:$bundleTaskName")
 
@@ -139,7 +144,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
         }
     }
 
@@ -173,7 +178,7 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val bundleContentWithAbis = bundleContent.plus(listOf(
+        val bundleContentWithAbis = signedContent.plus(listOf(
                 "/base/native.pb",
                 "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
                 "/feature1/native.pb",

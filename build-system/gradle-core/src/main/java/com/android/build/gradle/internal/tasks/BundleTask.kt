@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -31,6 +32,7 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -79,6 +81,26 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     lateinit var bundleOptions: BundleOptions
         private set
 
+    @get:InputFile
+    @get:Optional
+    var keystoreFile: File? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keystorePassword: String? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keyAlias: String? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keyPassword: String? = null
+        private set
+
     @get:OutputFile
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var bundleFile: File
@@ -86,6 +108,10 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
     @TaskAction
     fun bundleModules() {
+
+        val signature = if (keystoreFile != null)
+            JarSigner.Signature(keystoreFile!!, keystorePassword, keyAlias, keyPassword)
+        else null
 
         workers.use {
             it.submit(
@@ -96,6 +122,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                     mainDexList = mainDexList?.singleFile(),
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
+                    signature = signature,
                     bundleFile = bundleFile
                 )
             )
@@ -108,6 +135,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         val mainDexList: File?,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
+        val signature: JarSigner.Signature?,
         val bundleFile: File
     ) : Serializable
 
@@ -153,6 +181,10 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             }
 
             command.build().execute()
+
+            if (params.signature != null) {
+                JarSigner().sign(bundleFile, params.signature)
+            }
         }
 
         private fun getBundlePath(folder: File): Path {
@@ -184,7 +216,11 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             task.variantName = scope.fullVariantName
 
             // FIXME we need to improve the location of this.
-            task.bundleFile = scope.artifacts.appendArtifact(InternalArtifactType.BUNDLE, task, "bundle.aab")
+            task.bundleFile =
+                    scope.artifacts.appendArtifact(
+                        InternalArtifactType.BUNDLE,
+                        task,
+                        "bundle.aab")
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
@@ -205,6 +241,13 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                         scope.artifacts.getFinalArtifactFiles(
                             InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
                         )
+            }
+
+            scope.variantConfiguration.signingConfig?.let {
+                task.keystoreFile = it.storeFile
+                task.keystorePassword = it.storePassword
+                task.keyAlias = it.keyAlias
+                task.keyPassword = it.keyPassword
             }
         }
     }
