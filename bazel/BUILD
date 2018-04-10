@@ -252,6 +252,7 @@ java_binary(
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-tooling-api",
+        "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
     ],
