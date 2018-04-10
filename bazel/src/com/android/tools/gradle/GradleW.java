@@ -2,13 +2,13 @@ package com.android.tools.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
-import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -66,7 +66,7 @@ class GradleW {
             File distribution)
             throws IOException {
         File outDir = new File(outFile.getParentFile(), outFile.getName() + ".temp");
-        FileUtils.cleanOutputDir(outDir);
+        outDir.mkdirs();
         File buildDir = new File(outDir, "_build").getAbsoluteFile();
         buildDir.mkdirs();
         File androidDir = new File(outDir, "_android").getAbsoluteFile();
@@ -109,7 +109,10 @@ class GradleW {
         launcher.run();
         File source = new File(buildDir, outPath);
         Files.copy(source.toPath(), outFile.toPath());
-        FileUtils.cleanOutputDir(outDir);
+        Files.walk(outDir.toPath())
+                .map(Path::toFile)
+                .sorted((o1, o2) -> -o1.compareTo(o2))
+                .forEach(File::delete);
     }
 
     private static void createInitScript(File initScript, File repoDir) throws IOException {
