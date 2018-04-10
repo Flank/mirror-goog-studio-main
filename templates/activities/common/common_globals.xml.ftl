@@ -35,6 +35,8 @@
     <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'.')}" />
     <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./src/main/res')}" />
 
+    <global id="isDynamicFeature" type="boolean" value="false" />
+
     <global id="manifestOut" value="${manifestDir}" />
     <global id="buildVersion" value="${buildApi}" />
     <global id="buildApiRevision" type="integer" value="${buildApiRevision!0}" />
