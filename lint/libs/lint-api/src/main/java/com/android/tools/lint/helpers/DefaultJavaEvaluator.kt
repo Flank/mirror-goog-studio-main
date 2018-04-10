@@ -49,8 +49,12 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.getContainingUFile
 
-open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.project.Project?,
-        private val myLintProject: Project?) : JavaEvaluator() {
+open class DefaultJavaEvaluator(
+    private val myProject: com.intellij.openapi.project.Project?,
+    private val myLintProject: Project?
+) : JavaEvaluator() {
+    // cache of package name to package-info.class.
+    private val packageInfoCache = mutableMapOf<String, PsiPackage>()
 
     override val dependencies: Dependencies?
         get() {
@@ -166,23 +170,24 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
         if (containingFile != null) {
             // Optimization: JavaDirectoryService can be slow so try to compute it directly
             if (containingFile is PsiJavaFile) {
-                val packageName = containingFile.packageName
-                return object : PsiPackageImpl(node.manager, packageName) {
-                    override fun getAnnotationList(): PsiModifierList? {
-                        val cls = findClass(packageName + '.' + PsiPackage.PACKAGE_INFO_CLASS)
-                        if (cls != null) {
-                            val modifierList = cls.modifierList
-                            return if (modifierList != null) {
-                                // Use composite even if we just have one such that we don't
-                                // pass a modifier list tied to source elements in the class
-                                // (modifier lists can be part of the AST)
-                                PsiCompositeModifierList(manager,
-                                        listOf(modifierList))
-                            } else modifierList
+                return packageInfoCache.computeIfAbsent(containingFile.packageName,
+                    { name ->
+                        val cls = findClass(name + '.' + PsiPackage.PACKAGE_INFO_CLASS)
+                        val modifierList = cls?.modifierList
+                        object : PsiPackageImpl(node.manager, name) {
+                            override fun getAnnotationList(): PsiModifierList? {
+                                return if (modifierList != null) {
+                                    // Use composite even if we just have one such that we don't
+                                    // pass a modifier list tied to source elements in the class
+                                    // (modifier lists can be part of the AST)
+                                    PsiCompositeModifierList(
+                                        manager,
+                                        listOf(modifierList)
+                                    )
+                                } else null
+                            }
                         }
-                        return null
-                    }
-                }
+                    })
             }
 
             val dir = containingFile.parent
