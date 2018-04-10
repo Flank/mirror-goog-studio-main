@@ -1205,7 +1205,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 // c2 is the smallest of all the versions; if it is at least 14,
                 // they all are
                 val version = GradleVersion.tryParse(c2.version)
-                if (version != null && version.major >= 14) {
+                if (version != null && (version.major >= 14 || version.major == 0)) {
                     return
                 }
             }

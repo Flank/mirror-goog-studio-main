@@ -1385,6 +1385,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "dependencies {\n" +
                         "    compile 'com.google.android.gms:play-services-wearable:14.0.0'\n" +
                         "    compile 'com.google.android.gms:play-services-location:15.0.1'\n" +
+                        "    compile 'com.google.android.gms:play-services-foo-bar:0.0.1'\n" +
                         "}\n"
             )
         ).issues(COMPATIBILITY).run().expectClean()
