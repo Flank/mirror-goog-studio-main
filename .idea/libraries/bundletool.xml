@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="bundletool">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.2.2/bundletool-0.2.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.2.3/bundletool-0.2.3.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
