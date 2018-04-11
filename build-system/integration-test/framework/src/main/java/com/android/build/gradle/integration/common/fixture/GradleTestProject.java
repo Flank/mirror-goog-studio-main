@@ -1521,7 +1521,7 @@ public final class GradleTestProject implements TestRule {
             return;
         }
         Files.write(
-                Joiner.on('\n').join(gradleProperties),
+                Joiner.on(System.lineSeparator()).join(gradleProperties),
                 getGradlePropertiesFile(),
                 Charset.defaultCharset());
     }
