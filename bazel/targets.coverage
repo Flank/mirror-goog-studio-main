@@ -10,7 +10,6 @@
 //tools/adt/idea/assistant:assistant-test_tests
 //tools/adt/idea/build-common:intellij.android.buildCommon_tests
 //tools/adt/idea/connection-assistant:connection-assistant-test_tests
-//tools/adt/idea/designer:intellij.android.designer.tests_tests
 //tools/adt/idea/native-symbolizer:native-symbolizer_tests
 //tools/adt/idea/observable:intellij.android.observable_tests
 //tools/adt/idea/observable-ui:intellij.android.observable.ui_tests
