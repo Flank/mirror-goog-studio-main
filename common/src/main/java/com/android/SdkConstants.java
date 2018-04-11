@@ -739,28 +739,6 @@ public final class SdkConstants {
             AndroidxName.of("android.support.v7.app.", "AppCompatActivity");
     public static final AndroidxName CLASS_MEDIA_ROUTE_ACTION_PROVIDER =
             AndroidxName.of("android.support.v7.app.", "MediaRouteActionProvider");
-    public static final AndroidxName CLASS_COORDINATOR_LAYOUT =
-            AndroidxName.of("android.support.design.widget.", "CoordinatorLayout");
-    public static final AndroidxName CLASS_APP_BAR_LAYOUT =
-            AndroidxName.of("android.support.design.widget.", "AppBarLayout");
-    public static final AndroidxName CLASS_BOTTOM_NAVIGATION_VIEW =
-            AndroidxName.of("android.support.design.widget.", "BottomNavigationView");
-    public static final AndroidxName CLASS_FLOATING_ACTION_BUTTON =
-            AndroidxName.of("android.support.design.widget.", "FloatingActionButton");
-    public static final AndroidxName CLASS_COLLAPSING_TOOLBAR_LAYOUT =
-            AndroidxName.of("android.support.design.widget.", "CollapsingToolbarLayout");
-    public static final AndroidxName CLASS_NAVIGATION_VIEW =
-            AndroidxName.of("android.support.design.widget.", "NavigationView");
-    public static final AndroidxName CLASS_SNACKBAR =
-            AndroidxName.of("android.support.design.widget.", "Snackbar");
-    public static final AndroidxName CLASS_TAB_LAYOUT =
-            AndroidxName.of("android.support.design.widget.", "TabLayout");
-    public static final AndroidxName CLASS_TAB_ITEM =
-            AndroidxName.of("android.support.design.widget.", "TabItem");
-    public static final AndroidxName CLASS_TEXT_INPUT_LAYOUT =
-            AndroidxName.of("android.support.design.widget.", "TextInputLayout");
-    public static final AndroidxName CLASS_TEXT_INPUT_EDIT_TEXT =
-            AndroidxName.of("android.support.design.widget.", "TextInputEditText");
 
     public static final AndroidxName CLASS_NESTED_SCROLL_VIEW =
             AndroidxName.of("android.support.v4.widget.", "NestedScrollView");
@@ -807,6 +785,35 @@ public final class SdkConstants {
             "android.support.percent.PercentFrameLayout"; //$NON-NLS-1$
     public static final String SUPPORT_MULTI_DEX_APPLICATION =
             "android.support.multidex.MultiDexApplication";
+
+    /* Material Components */
+    public static final AndroidxName CLASS_APP_BAR_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "AppBarLayout");
+    public static final AndroidxName CLASS_BOTTOM_NAVIGATION_VIEW =
+            AndroidxName.of("android.support.design.widget.", "BottomNavigationView");
+    public static final AndroidxName CLASS_COORDINATOR_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "CoordinatorLayout");
+    public static final AndroidxName CLASS_COLLAPSING_TOOLBAR_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "CollapsingToolbarLayout");
+    public static final AndroidxName CLASS_FLOATING_ACTION_BUTTON =
+            AndroidxName.of("android.support.design.widget.", "FloatingActionButton");
+    public static final AndroidxName CLASS_NAVIGATION_VIEW =
+            AndroidxName.of("android.support.design.widget.", "NavigationView");
+    public static final AndroidxName CLASS_SNACKBAR =
+            AndroidxName.of("android.support.design.widget.", "Snackbar");
+    public static final AndroidxName CLASS_TAB_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "TabLayout");
+    public static final AndroidxName CLASS_TAB_ITEM =
+            AndroidxName.of("android.support.design.widget.", "TabItem");
+    public static final AndroidxName CLASS_TEXT_INPUT_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "TextInputLayout");
+    public static final AndroidxName CLASS_TEXT_INPUT_EDIT_TEXT =
+            AndroidxName.of("android.support.design.widget.", "TextInputEditText");
+    public static final String CLASS_BOTTOM_APP_BAR =
+            "com.google.android.material.bottomappbar.BottomAppBar";
+    public static final String CLASS_CHIP = "com.google.android.material.chip.Chip";
+    public static final String CLASS_CHIP_GROUP = "com.google.android.material.chip.ChipGroup";
+    public static final String CLASS_MATERIAL_BUTTON = "com.google.android.material.button.Button";
 
     /* Android ConstraintLayout Constants */
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT =
@@ -1011,6 +1018,7 @@ public final class SdkConstants {
     public static final String ANDROID_SUPPORT_PKG = "android.support";
     public static final String ANDROIDX_PKG = "androidx";
     public static final String MATERIAL2_PKG = "com.google.android.material";
+    public static final String MATERIAL1_PKG = "android.support.design.widget";
 
     public static final String SHERPA_PREFIX = "app"; //$NON-NLS-1$
     public static final String SHERPA_URI = "http://schemas.android.com/apk/res-auto"; //$NON-NLS-1$
@@ -1152,6 +1160,8 @@ public final class SdkConstants {
     public static final AndroidxName APP_BAR_LAYOUT = CLASS_APP_BAR_LAYOUT;
     public static final AndroidxName BOTTOM_NAVIGATION_VIEW = CLASS_BOTTOM_NAVIGATION_VIEW;
     public static final AndroidxName FLOATING_ACTION_BUTTON = CLASS_FLOATING_ACTION_BUTTON;
+    public static final String CHIP = CLASS_CHIP;
+    public static final String CHIP_GROUP = CLASS_CHIP_GROUP;
     public static final AndroidxName COLLAPSING_TOOLBAR_LAYOUT = CLASS_COLLAPSING_TOOLBAR_LAYOUT;
     public static final AndroidxName NAVIGATION_VIEW = CLASS_NAVIGATION_VIEW;
     public static final AndroidxName SNACKBAR = CLASS_SNACKBAR;
@@ -1159,6 +1169,8 @@ public final class SdkConstants {
     public static final AndroidxName TAB_ITEM = CLASS_TAB_ITEM;
     public static final AndroidxName TEXT_INPUT_LAYOUT = CLASS_TEXT_INPUT_LAYOUT;
     public static final AndroidxName TEXT_INPUT_EDIT_TEXT = CLASS_TEXT_INPUT_EDIT_TEXT;
+    public static final String BOTTOM_APP_BAR = CLASS_BOTTOM_APP_BAR;
+    public static final String MATERIAL_BUTTON = CLASS_MATERIAL_BUTTON;
     public static final AndroidxName NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
     public static final AndroidxName DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
     public static final AndroidxName VIEW_PAGER = CLASS_VIEW_PAGER;
@@ -1594,6 +1606,7 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_BEHAVIOR = "layout_behavior"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_KEYLINE = "layout_keyline"; //$NON-NLS-1$
     public static final String ATTR_BACKGROUND_TINT = "backgroundTint"; //$NON-NLS-1$
+    public static final String ATTR_BACKGROUND_TINT_MODE = "backgroundTintMode"; //$NON-NLS-1$
     public static final String ATTR_RIPPLE_COLOR = "rippleColor"; //$NON-NLS-1$
     public static final String ATTR_TINT = "tint"; //$NON-NLS-1$
     public static final String ATTR_FAB_SIZE = "fabSize"; //$NON-NLS-1$
@@ -1642,14 +1655,121 @@ public final class SdkConstants {
     public static final String ATTR_DRAW_SELECTOR_ON_TOP = "drawSelectorOnTop"; //$NON-NLS-1$
     public static final String ATTR_SCROLLBARS = "scrollbars"; //$NON-NLS-1$
     public static final String ATTR_COMPLETION_HINT = "completionHint"; //$NON-NLS-1$
-    public static final String ATTR_TAB_MODE = "tabMode"; //$NON-NLS-1$
-    public static final String ATTR_TAB_GRAVITY = "tabGravity"; //$NON-NLS-1$
-    public static final String ATTR_TAB_CONTENT_START = "tabContentStart"; //$NON-NLS-1$
-    public static final String ATTR_TAB_INDICATOR_COLOR = "tabIndicatorColor"; //$NON-NLS-1$
-    public static final String ATTR_TAB_SELECTED_TEXT_COLOR = "tabSelectedTextColor"; //$NON-NLS-1$
-    public static final String ATTR_TAB_TEXT_APPEARANCE = "tabTextAppearance"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
     public static final String ATTR_SPAN_COUNT = "spanCount";
+
+    // Material BottomAppBar Attributes
+    public static final String ATTR_FAB_ALIGNMENT_MODE = "fabAlignmentMode";
+    public static final String ATTR_FAB_ATTACHED = "fabAttached";
+    public static final String ATTR_FAB_CRADLE_DIAMETER = "fabCradleDiameter";
+    public static final String ATTR_FAB_CRADLE_ROUNDED_CORNER_RADIUS =
+            "fabCradleRoundedCornerRadius";
+    public static final String ATTR_FAB_CRADLE_VERTICAL_OFFSET = "fabCradleVerticalOffset";
+    public static final String ATTR_BOTTOM_APP_BAR_STYLE = "bottomAppBarStyle";
+
+    // Material Button Attributes
+    public static final String ATTR_MATERIAL_BUTTON_STYLE = "materialButtonStyle";
+    public static final String ATTR_INSET_LEFT = "insetLeft";
+    public static final String ATTR_INSET_RIGHT = "insetRight";
+    public static final String ATTR_INSET_TOP = "insetTop";
+    public static final String ATTR_INSET_BOTTOM = "insetBottom";
+    public static final String ATTR_ICON_PADDING = "iconPadding";
+    public static final String ATTR_ICON_TINT = "iconTint";
+    public static final String ATTR_ICON_TINT_MODE = "iconTintMode";
+    public static final String ATTR_ADDITIONAL_PADDING_LEFT_FOR_ICON =
+            "additionalPaddingLeftForIcon";
+    public static final String ATTR_ADDITIONAL_PADDING_RIGHT_FOR_ICON =
+            "additionalPaddingRightForIcon";
+    public static final String ATTR_STROKE_COLOR = "strokeColor";
+    public static final String ATTR_STROKE_WIDTH = "strokeWidth";
+    public static final String ATTR_CORNER_RADIUS = "cornerRadius";
+
+    // Material FloatingActionButton Attributes
+    public static final String ATTR_FLOATING_ACTION_BUTTON_STYLE = "floatingActionButtonStyle";
+    public static final String ATTR_FAB_CUSTOM_SIZE = "fabCustomSize";
+    public static final String ATTR_HOVERED_FOCUSED_TRANSLATION_Z = "hoveredFocusedTranslationZ";
+    public static final String ATTR_PRESSED_TRANSLATION_Z = "pressedTranslationZ";
+    public static final String ATTR_BORDER_WIDTH = "borderWidth";
+    public static final String ATTR_COMPAT_PADDING = "useCompatPadding";
+    public static final String ATTR_MAX_IMAGE_SIZE = "maxImageSize";
+    public static final String ATTR_SHOW_MOTION_SPEC = "showMotionSpec";
+    public static final String ATTR_HIDE_MOTION_SPEC = "hideMotionSpec";
+
+    // Material BottomNavigationView Attributes
+    public static final String ATTR_ITEM_HORIZONTAL_TRANSLATION = "itemHorizontalTranslation";
+    public static final String ATTR_LABEL_VISIBILITY_MODE = "labelVisibilityMode";
+
+    // Material ChipGroup Attributes
+    public static final String ATTR_CHIP_GROUP_STYLE = "chipGroupStyle";
+    public static final String ATTR_CHIP_SPACING = "chipSpacing";
+    public static final String ATTR_CHIP_SPACING_HORIZONTAL = "chipSpacingHorizontal";
+    public static final String ATTR_CHIP_SPACING_VERTICAL = "chipSpacingVertical";
+    public static final String ATTR_SINGLE_SELECTION = "singleSelection";
+    public static final String ATTR_CHECKED_CHIP = "checkedChip";
+
+    // Material TabLayout Attributes
+    public static final String ATTR_TAB_STYLE = "tabStyle";
+    public static final String ATTR_TAB_INDICATOR_HEIGHT = "tabIndicatorHeight";
+    public static final String ATTR_TAB_BACKGROUND = "tabBackground";
+    public static final String ATTR_TAB_INDICATOR = "tabIndicator";
+    public static final String ATTR_TAB_INDICATOR_GRAVITY = "tabIndicatorGravity";
+    public static final String ATTR_TAB_INDICATOR_ANIMATION_DURATION =
+            "tabIndicatorAnimationDuration";
+    public static final String ATTR_TAB_INDICATOR_FULL_WIDTH = "tabIndicatorFullWidth";
+    public static final String ATTR_TAB_MODE = "tabMode";
+    public static final String ATTR_TAB_GRAVITY = "tabGravity";
+    public static final String ATTR_TAB_CONTENT_START = "tabContentStart";
+    public static final String ATTR_TAB_INDICATOR_COLOR = "tabIndicatorColor";
+    public static final String ATTR_TAB_SELECTED_TEXT_COLOR = "tabSelectedTextColor";
+    public static final String ATTR_TAB_TEXT_APPEARANCE = "tabTextAppearance";
+    public static final String ATTR_TAB_INLINE_LABEL = "tabInlineLabel";
+    public static final String ATTR_TAB_MIN_WIDTH = "tabMinWidth";
+    public static final String ATTR_TAB_MAX_WIDTH = "tabMaxWidth";
+    public static final String ATTR_TAB_TEXT_COLOR = "tabTextColor";
+    public static final String ATTR_TAB_PADDING = "tabPadding";
+    public static final String ATTR_TAB_PADDING_START = "tabPaddingStart";
+    public static final String ATTR_TAB_PADDING_END = "tabPaddingEnd";
+    public static final String ATTR_TAB_PADDING_TOP = "tabPaddingTop";
+    public static final String ATTR_TAB_PADDING_BOTTOM = "tabPaddingBottom";
+    public static final String ATTR_TAB_ICON_TINT = "tabIconTint";
+    public static final String ATTR_TAB_ICON_TINT_MODE = "tabIconTintMode";
+    public static final String ATTR_TAB_RIPPLE_COLOR = "tabRippleColor";
+    public static final String ATTR_TAB_UNBOUNDED_RIPPLE = "tabUnboundedRipple";
+
+    // Material TextInputLayout Attributes
+    public static final String ATTR_HINT_ENABLED = "hintEnabled";
+    public static final String ATTR_HINT_ANIMATION_ENABLED = "hintAnimationEnabled";
+    public static final String ATTR_HINT_TEXT_APPEARANCE = "hintTextAppearance";
+    public static final String ATTR_HELPER_TEXT = "helperText";
+    public static final String ATTR_HELPER_TEXT_ENABLED = "helperTextEnabled";
+    public static final String ATTR_HELPER_TEXT_TEXT_APPEARANCE = "helperTextTextAppearance";
+    public static final String ATTR_ERROR_ENABLED = "errorEnabled";
+    public static final String ATTR_ERROR_TEXT_APPEARANCE = "errorTextAppearance";
+    public static final String ATTR_COUNTER_ENABLED = "counterEnabled";
+    public static final String ATTR_COUNTER_MAX_LENGTH = "counterMaxLength";
+    public static final String ATTR_COUNTER_TEXT_APPEARANCE = "counterTextAppearance";
+    public static final String ATTR_COUNTER_OVERFLOW_TEXT_APPEARANCE =
+            "counterOverflowTextAppearance";
+    public static final String ATTR_PASSWORD_TOGGLE_ENABLED = "passwordToggleEnabled";
+    public static final String ATTR_PASSWORD_TOGGLE_DRAWABLE = "passwordToggleDrawable";
+    public static final String ATTR_PASSWORD_TOGGLE_CONTENT_DESCRIPTION =
+            "passwordToggleContentDescription";
+    public static final String ATTR_PASSWORD_TOGGLE_TINT = "passwordToggleTint";
+    public static final String ATTR_PASSWORD_TOGGLE_TINT_MODE = "passwordToggleTintMode";
+    public static final String ATTR_BOX_BACKGROUND_MODE = "boxBackgroundMode";
+    public static final String ATTR_BOX_PADDING_LEFT = "boxPaddingLeft";
+    public static final String ATTR_BOX_COLLAPSED_PADDING_TOP = "boxCollapsedPaddingTop";
+    public static final String ATTR_EXPANDED_PADDING_TOP = "boxExpandedPaddingTop";
+    public static final String ATTR_BOX_PADDING_RIGHT = "boxPaddingRight";
+    public static final String ATTR_BOX_COLLAPSED_PADDING_BOTTOM = "boxCollapsedPaddingBottom";
+    public static final String ATTR_BOX_CORNER_RADIUS_TOP_LEFT = "boxCornerRadiusTopLeft";
+    public static final String ATTR_BOX_CORNER_RADIUS_TOP_RIGHT = "boxCornerRadiusTopRight";
+    public static final String ATTR_BOX_CORNER_RADIUS_BOTTOM_LEFT = "boxCornerRadiusBottomLeft";
+    public static final String ATTR_BOX_CORNER_RADIUS_BOTTOM_RIGHT = "boxCornerRadiusBottomRight";
+    public static final String ATTR_BOX_EXPANDED_PADDING_BOTTOM = "boxExpandedPaddingBottom";
+    public static final String ATTR_BOX_STROKE_COLOR = "boxStrokeColor";
+    public static final String ATTR_BOX_BACKGROUND_COLOR = "boxBackgroundColor";
+    public static final String ATTR_BOX_STROKE_WIDTH = "boxStrokeWidth";
 
     // Values: Manifest
     public static final String VALUE_SPLIT_ACTION_BAR_WHEN_NARROW =
