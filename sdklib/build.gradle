@@ -219,7 +219,7 @@ task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
     ]
 }
 
-task initSdkForConnectedTests(type: JavaExec) {
+task initSdkForConnectedTests {
     dependsOn initSdkForConnectedTestsStableChannel, initSdkForConnectedTestsUnstableChannel
 }
 
