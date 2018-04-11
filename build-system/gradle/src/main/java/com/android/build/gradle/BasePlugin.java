@@ -255,6 +255,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
 
+        checkConfigureOnDemandGradleVersionCompat();
         checkPathForErrors();
         checkModulesForErrors();
 
@@ -882,6 +883,20 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 extension.getLibraryRequests(),
                 androidBuilder,
                 SdkHandler.useCachedSdk(projectOptions));
+    }
+
+    private void checkConfigureOnDemandGradleVersionCompat() {
+        // https://issuetracker.google.com/77910727
+        if (project.getGradle().getStartParameter().isConfigureOnDemand()
+                && GradleVersion.parse(project.getGradle().getGradleVersion()).compareTo("4.6")
+                        >= 0) {
+            throw new StopExecutionException(
+                    "Configuration on demand is not supported by the current version of the Android"
+                            + " Gradle plugin since you are using Gradle version 4.6 or above."
+                            + " Suggestion: disable configuration on demand by setting"
+                            + " org.gradle.configureondemand=false in your gradle.properties file"
+                            + " or use a Gradle version less than 4.6.");
+        }
     }
 
     /**
