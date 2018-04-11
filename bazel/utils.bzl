@@ -50,14 +50,19 @@ def _fileset_impl(ctx):
     use_default_shell_env = True,
   )
 
-
 _fileset = rule(
-    executable=False,
     attrs = {
-      "srcs": attr.label_list(allow_files=True),
-      "maps": attr.string_dict(mandatory=True, non_empty=True),
-      "outs": attr.output_list(mandatory=True, non_empty=True),
+        "srcs": attr.label_list(allow_files = True),
+        "maps": attr.string_dict(
+            mandatory = True,
+            non_empty = True,
+        ),
+        "outs": attr.output_list(
+            mandatory = True,
+            non_empty = True,
+        ),
     },
+    executable = False,
     implementation = _fileset_impl,
 )
 
@@ -129,6 +134,18 @@ def platform_filegroup(name, visibility = ["//visibility:public"]):
       ),
       visibility = visibility
    )
+  build_only_name = name + "_build_only"
+  native.filegroup(
+      name = build_only_name,
+      srcs = native.glob(
+          include = [pattern + "/**"],
+          exclude = [
+              pattern + "/skins/**",
+              pattern + "/data/res/**",
+          ],
+      ),
+      visibility = visibility
+  )
 
 def merged_properties(name, srcs, mappings, visibility=None):
   native.genrule(
@@ -172,14 +189,17 @@ def _archive_impl(ctx):
   )
 
 archive = rule(
-  implementation = _archive_impl,
-  attrs = {
-    "deps": attr.label_keyed_string_dict(
-        non_empty = True,
-        allow_files = True,
-    ),
-    "$zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
-  },
-  outputs = {"out": "%{name}.jar"},
+    attrs = {
+        "deps": attr.label_keyed_string_dict(
+            non_empty = True,
+            allow_files = True,
+        ),
+        "$zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+    },
+    outputs = {"out": "%{name}.jar"},
+    implementation = _archive_impl,
 )
-
