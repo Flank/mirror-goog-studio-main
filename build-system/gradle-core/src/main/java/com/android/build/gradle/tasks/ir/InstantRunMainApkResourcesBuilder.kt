@@ -50,7 +50,6 @@ import org.gradle.api.tasks.TaskAction
  */
 open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
-    private lateinit var fileCache: FileCache
     private lateinit var aaptIntermediateFolder: File
 
     @get:InputFiles
@@ -126,7 +125,6 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.outputDirectory = variantScope.instantRunMainApkResourcesDir
             task.aaptGeneration = AaptGeneration.fromProjectOptions(
                     variantScope.globalScope.projectOptions)
-            task.fileCache = variantScope.globalScope.buildCache!!
             task.aaptIntermediateFolder = File(variantScope.getIncrementalDir(name), "aapt-temp")
 
             variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)
