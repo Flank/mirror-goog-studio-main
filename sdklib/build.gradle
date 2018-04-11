@@ -171,8 +171,7 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
     }
 }
 
-
-task initSdkForConnectedTests(type: JavaExec) {
+task initSdkForConnectedTestsStableChannel(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
@@ -206,6 +205,22 @@ task initSdkForConnectedTests(type: JavaExec) {
             'cmake;3.6.4111459',
             'ndk-bundle',
     ]
+}
+
+task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
+    standardInput = System.in
+    classpath = sourceSets.main.runtimeClasspath
+    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
+
+    args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
+            '--channel=2',
+            '--verbose',
+            'platforms;android-P',
+    ]
+}
+
+task initSdkForConnectedTests(type: JavaExec) {
+    dependsOn initSdkForConnectedTestsStableChannel, initSdkForConnectedTestsUnstableChannel
 }
 
 task initSdkForPerformanceTests(type: JavaExec) {
