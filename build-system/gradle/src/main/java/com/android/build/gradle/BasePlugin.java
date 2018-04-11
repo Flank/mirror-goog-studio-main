@@ -73,6 +73,7 @@ import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegist
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
@@ -760,7 +761,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     }
 
                     // Make sure no SourceSets were added through the DSL without being properly configured
-                    sourceSetManager.checkForUnconfiguredSourceSets();
+                    // Only do it if we are not restricting to a single variant (with Instant
+                    // Run or we can find extra source set
+                    if (projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME) == null) {
+                        sourceSetManager.checkForUnconfiguredSourceSets();
+                    }
 
                     // must run this after scopes are created so that we can configure kotlin
                     // kapt tasks
