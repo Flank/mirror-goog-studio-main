@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.ResourceReference;
@@ -201,14 +202,18 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
         }
 
         for (ResourceItem item : items) {
-            File source = item.getFile();
+            PathString source = item.getSource();
             if (source == null) {
-                return true; // not certain
+                return true; // Not certain.
             }
 
-            if (source.exists()) {
+            File file = source.toFile();
+            if (file == null) {
+                return true; // Not certain.
+            }
+            if (file.exists()) {
                 try {
-                    CharSequence s = client.readFile(source);
+                    CharSequence s = client.readFile(file);
                     Reader reader = CharSequences.getReader(s, true);
                     if (hasLayoutParams(reader)) {
                         return true;

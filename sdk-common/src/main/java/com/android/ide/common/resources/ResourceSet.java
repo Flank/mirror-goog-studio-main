@@ -374,7 +374,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
 
         // Set the source of newly determined items, so we can call getKey() on them.
         for (ResourceMergerItem currentItem : currentItems) {
-            currentItem.setSource(resourceFile);
+            currentItem.setSourceFile(resourceFile);
         }
 
         for (ResourceMergerItem newItem : currentItems) {
@@ -390,7 +390,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                 //noinspection SuspiciousMethodCalls
                 oldItems.remove(oldItem.getKey());
 
-                if (oldItem.getSource().getType() == DataFile.FileType.XML_VALUES) {
+                if (oldItem.getSourceFile().getType() == DataFile.FileType.XML_VALUES) {
                     if (!oldItem.compareValueWith(newItem)) {
                         // if the values are different, take the values from the newItem
                         // and update the old item status.
@@ -412,7 +412,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         // Now we need to add the new items to the resource file and the main map
         for (Map.Entry<String, ResourceMergerItem> entry : addedItems.entrySet()) {
             // Clear the item from the old file so it can be added to the new one.
-            entry.getValue().setSource(null);
+            entry.getValue().setSourceFile(null);
             addItem(entry.getValue(), entry.getKey());
         }
 

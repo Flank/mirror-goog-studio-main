@@ -39,7 +39,7 @@ public abstract class SourcelessResourceMergerItem extends ResourceMergerItem {
 
     /**
      * Determine the FolderConfiguration from the item's qualifiers instead of from {@link
-     * #getSource()}.
+     * #getSourceFile()}.
      *
      * @return the folder configuration
      */

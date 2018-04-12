@@ -242,7 +242,7 @@ public class AssetMergerTest extends BaseTestCase {
         assertTrue(newOverlay0.isWritten());
         assertFalse(newOverlay0.isTouched());
         AssetItem newOverlay1 = overlayAddedItem.get(1);
-        assertEquals(overlayAdded, newOverlay1.getSource().getFile());
+        assertEquals(overlayAdded, newOverlay1.getSourceFile().getFile());
         assertFalse(newOverlay1.isWritten());
         assertTrue(newOverlay1.isTouched());
 
@@ -253,7 +253,7 @@ public class AssetMergerTest extends BaseTestCase {
         assertFalse(overlayRemovedItem0.isWritten());
         assertFalse(overlayRemovedItem0.isTouched());
         AssetItem overlayRemovedItem1 = overlayRemovedItem.get(1);
-        assertEquals(overlayRemoved, overlayRemovedItem1.getSource().getFile());
+        assertEquals(overlayRemoved, overlayRemovedItem1.getSourceFile().getFile());
         assertTrue(overlayRemovedItem1.isWritten());
         assertTrue(overlayRemovedItem1.isRemoved());
 

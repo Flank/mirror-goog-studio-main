@@ -71,7 +71,7 @@ public class MergedAssetWriter
         @Override
         public void run() {
             try {
-                AssetFile assetFile = Preconditions.checkNotNull(item.getSource());
+                AssetFile assetFile = Preconditions.checkNotNull(item.getSourceFile());
 
                 Path fromFile = assetFile.getFile().toPath();
 

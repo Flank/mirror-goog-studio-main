@@ -35,6 +35,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.LintClient;
@@ -48,7 +49,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.io.File;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -209,7 +210,7 @@ public class NegativeMarginDetector extends LayoutDetector {
                             if (resourceValue != null) {
                                 String dimenValue = resourceValue.getValue();
                                 if (dimenValue != null && isNegativeDimension(dimenValue)) {
-                                    File sourceFile = item.getFile();
+                                    PathString sourceFile = item.getSource();
                                     assert sourceFile != null;
                                     String message =
                                             String.format(

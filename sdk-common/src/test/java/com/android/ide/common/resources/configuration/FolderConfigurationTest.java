@@ -455,7 +455,7 @@ public class FolderConfigurationTest extends TestCase {
                     }
                 };
         ResourceFile sourceBlank = ResourceFile.createSingle(new File("sourceBlank"), itemBlank, "");
-        itemBlank.setSource(sourceBlank);
+        itemBlank.setSourceFile(sourceBlank);
         FolderConfiguration configBlank = itemBlank.getConfiguration();
 
         ResourceMergerItem itemEn =
@@ -466,7 +466,7 @@ public class FolderConfigurationTest extends TestCase {
                     }
                 };
         ResourceFile sourceEn = ResourceFile.createSingle(new File("sourceEn"), itemBlank, "en");
-        itemEn.setSource(sourceEn);
+        itemEn.setSourceFile(sourceEn);
         FolderConfiguration configEn = itemEn.getConfiguration();
 
         ResourceMergerItem itemBcpEn =
@@ -477,7 +477,7 @@ public class FolderConfigurationTest extends TestCase {
                     }
                 };
         ResourceFile sourceBcpEn = ResourceFile.createSingle(new File("sourceBcpEn"), itemBlank, "b+en");
-        itemBcpEn.setSource(sourceBcpEn);
+        itemBcpEn.setSourceFile(sourceBcpEn);
         FolderConfiguration configBcpEn = itemBcpEn.getConfiguration();
 
         ResourceMergerItem itemDe =
@@ -489,7 +489,7 @@ public class FolderConfigurationTest extends TestCase {
                 };
 
         ResourceFile sourceDe = ResourceFile.createSingle(new File("sourceDe"), itemBlank, "de");
-        itemDe.setSource(sourceDe);
+        itemDe.setSourceFile(sourceDe);
         FolderConfiguration configDe = itemDe.getConfiguration();
 
         // "" matches everything

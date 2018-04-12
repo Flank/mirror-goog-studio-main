@@ -7,6 +7,7 @@ import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
 import java.io.File;
 import java.util.Comparator;
@@ -17,6 +18,9 @@ import java.util.Comparator;
  * not just its presence.
  */
 public interface ResourceItem extends Configurable {
+    String XLIFF_NAMESPACE_PREFIX = "urn:oasis:names:tc:xliff:document:";
+    String XLIFF_G_TAG = "g";
+    String ATTR_EXAMPLE = "example";
 
     /** Returns the name of this resource. */
     @NonNull
@@ -60,20 +64,26 @@ public interface ResourceItem extends Configurable {
      *
      * <p>The concrete type of the returned object depends on {@link #getType()}.
      *
-     * @return the parsed {@link ResourceValue} or null if there was an error parsing the XML or the
-     *     XML is no longer accessible (this may be the case in the IDE, when the item is based on
-     *     old PSI).
+     * @return the parsed {@link ResourceValue} or null if there was an error parsing the XML or
+     *     the XML is no longer accessible (this may be the case in the IDE, when the item is based
+     *     on old PSI).
      */
     @Nullable
     ResourceValue getResourceValue();
 
-    /** Returns the {@link File} from which this {@link ResourceItem} was created. */
+    /**
+     * Returns the {@link PathString} for the file from which this {@link ResourceItem} was
+     * created, or null if the resource is not associated with a file. The returned
+     * {@link PathString} may point to a file on the local file system, or to a zip file entry as
+     * possible for AAR resources.
+     */
     @Nullable
-    File getFile();
+    PathString getSource();
 
     /**
-     * Returns true if the {@link ResourceItem} represents a whole file, not an XML tag within a
-     * values XML file. This is the case for e.g. layouts or colors defined as state lists.
+     * Returns true if the {@link ResourceItem} represents a whole file or a whole zip file entry,
+     * not an XML tag within a values XML file. This is the case for e.g. layouts or colors defined
+     * as state lists.
      */
     boolean isFileBased();
 

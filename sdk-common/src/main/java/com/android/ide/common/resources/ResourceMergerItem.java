@@ -48,6 +48,7 @@ import com.android.ide.common.rendering.api.TextResourceValue;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.util.PathString;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
@@ -55,6 +56,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+
+import java.io.File;
 import java.nio.file.Paths;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Attr;
@@ -72,10 +75,6 @@ import org.w3c.dom.NodeList;
  */
 public class ResourceMergerItem extends DataItem<ResourceFile>
         implements Comparable<ResourceMergerItem>, ResourceItem {
-    public static final String XLIFF_NAMESPACE_PREFIX = "urn:oasis:names:tc:xliff:document:";
-    public static final String XLIFF_G_TAG = "g";
-    public static final String ATTR_EXAMPLE = "example";
-
     @NonNull private final ResourceType mType;
 
     /**
@@ -170,7 +169,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
      */
     @NonNull
     public String getQualifiers() {
-        ResourceFile resourceFile = getSource();
+        ResourceFile resourceFile = getSourceFile();
         if (resourceFile == null) {
             throw new RuntimeException("Cannot call getQualifier on " + toString());
         }
@@ -180,7 +179,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
     @NonNull
     public DataFile.FileType getSourceType() {
-        ResourceFile resourceFile = getSource();
+        ResourceFile resourceFile = getSourceFile();
         if (resourceFile == null) {
             throw new RuntimeException("Cannot call getSourceType on " + toString());
         }
@@ -207,7 +206,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     @NotNull
     @Override
     public FolderConfiguration getConfiguration() {
-        ResourceFile resourceFile = getSource();
+        ResourceFile resourceFile = getSourceFile();
         if (resourceFile == null) {
             throw new RuntimeException("Cannot call getConfiguration on " + toString());
         }
@@ -227,7 +226,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     @NotNull
     @Override
     public String getKey() {
-        if (getSource() == null) {
+        if (getSourceFile() == null) {
             throw new IllegalStateException(
                     "ResourceItem.getKey called on object with no ResourceFile: " + this);
         }
@@ -265,7 +264,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                                 ? getFolderDensity()
                                 : null;
 
-                ResourceFile source = getSource();
+                ResourceFile source = getSourceFile();
                 assert source != null;
 
                 if (density != null) {
@@ -292,6 +291,13 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
         }
 
         return mResourceValue;
+    }
+
+    @Override
+    @Nullable
+    public PathString getSource() {
+        File file = getFile();
+        return file == null ? null : new PathString(file);
     }
 
     @Override

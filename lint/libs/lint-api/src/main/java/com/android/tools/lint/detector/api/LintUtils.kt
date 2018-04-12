@@ -47,6 +47,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
 import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX
+import com.android.ide.common.util.PathString
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
@@ -438,6 +439,19 @@ fun idReferencesMatch(id1: String?, id2: String?): Boolean {
  */
 fun getFileNameWithParent(client: LintClient, file: File): String {
     return client.getDisplayPath(File(file.parentFile.name, file.name))
+}
+
+/**
+ * Computes a canonical "display path" for a resource (which typically is the parent name plus a
+ * file separator, plus the file name)
+ *
+ * @param client lint client used for formatting
+ * @param file resource file
+ * @return the display path
+ */
+fun getFileNameWithParent(client: LintClient, file: PathString): String {
+    val parent = file.parent ?: throw IllegalArgumentException()
+    return client.getDisplayPath(File(parent.fileName, file.fileName))
 }
 
 /**
@@ -2058,6 +2072,15 @@ object LintUtils {
         replaceWith = ReplaceWith("com.android.tools.lint.detector.api.getFileNameWithParent(client, file)")
     )
     fun getFileNameWithParent(client: LintClient, file: File): String {
+        return com.android.tools.lint.detector.api.getFileNameWithParent(client, file)
+    }
+
+    @JvmStatic
+    @Deprecated(
+      "Use package function instead",
+      replaceWith = ReplaceWith("com.android.tools.lint.detector.api.getFileNameWithParent(client, file)")
+    )
+    fun getFileNameWithParent(client: LintClient, file: PathString): String {
         return com.android.tools.lint.detector.api.getFileNameWithParent(client, file)
     }
 

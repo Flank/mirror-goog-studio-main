@@ -163,7 +163,7 @@ public abstract class BaseTestCase {
             ListMultimap<String, ? extends DataItem> itemMap = set.getDataMap();
 
             for (DataItem item : itemMap.values()) {
-                DataFile dataFile = item.getSource();
+                DataFile dataFile = item.getSourceFile();
                 File file = dataFile.getFile();
 
                 assertNotNull("Not in source file: " + file.getAbsolutePath(),

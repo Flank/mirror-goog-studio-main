@@ -303,9 +303,8 @@ protected constructor(
 
     class ResourceItemHandle(private val item: ResourceItem) : Handle {
         override fun resolve(): Location {
-            // TODO: Look up the exact item location more
-            // closely
-            val source = item.file ?: error(item)
+            // TODO: Look up the exact item location more closely.
+            val source = item.source?.toFile() ?: error(item)
             return create(source)
         }
 
