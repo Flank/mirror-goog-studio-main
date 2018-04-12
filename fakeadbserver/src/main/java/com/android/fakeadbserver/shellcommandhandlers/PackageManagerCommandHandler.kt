@@ -61,7 +61,9 @@ class PackageManagerCommandHandler : ShellCommandHandler() {
   }
 
   /**
-   * `pm path <app>` subcommand, e.g. `adb shell pm path com.google.android.simple`
+   * `pm path <app>` subcommand, e.g. `adb shell pm path com.google.android.simple`.
+   * By default, don't list any package. Show the fake Android system as not having
+   * anything installed. This is done by returning an empty string.
    */
   private fun pathToApp(args: String): String {
     val pathArgs = args.split(Pattern.compile(" "), 2)
@@ -69,6 +71,6 @@ class PackageManagerCommandHandler : ShellCommandHandler() {
       return "Error: no package specified"
     }
 
-    return "package:/data/app/${pathArgs.last()}.apk"
+    return ""
   }
 }
