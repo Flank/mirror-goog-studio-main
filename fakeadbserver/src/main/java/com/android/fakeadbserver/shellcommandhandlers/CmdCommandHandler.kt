@@ -20,11 +20,10 @@ import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
 import java.io.IOException
 import java.net.Socket
-import java.util.regex.Pattern
 
-class PackageManagerCommandHandler : ShellCommandHandler() {
+class CmdCommandHandler : ShellCommandHandler() {
   companion object {
-    const val COMMAND = "pm"
+    const val COMMAND = "cmd"
   }
 
   override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?): Boolean {
@@ -38,38 +37,34 @@ class PackageManagerCommandHandler : ShellCommandHandler() {
 
       CommandHandler.writeOkay(output)
 
-      // check what value args is. Get the first argument from args to see what sort of subcommand it is
       val response: String = when {
-        args == "list users" -> listUsers()
-        args.startsWith("path ") -> pathToApp(args)
+        args.startsWith("package install-create") -> installMultiple()
+        args.startsWith("package install-commit") -> installCommit()
         else -> ""
       }
 
       CommandHandler.writeString(output, response)
     } catch(ignored: IOException) {
     }
+
     return false
   }
 
   /**
-   * `pm list users` subcommand, as used in `adb shell pm list users`
+   * Handler for commands that look like:
+   *
+   *    adb shell cmd package install-create -r -t --ephemeral -S 1298948
    */
-  private fun listUsers(): String {
-    return "Users:\n" +
-         "\tUserInfo{0:Owner:13} running\n"
+  private fun installMultiple(): String {
+    return "Success: created install session [1234]"
   }
 
   /**
-   * `pm path <app>` subcommand, e.g. `adb shell pm path com.google.android.simple`.
-   * By default, don't list any package. Show the fake Android system as not having
-   * anything installed. This is done by returning an empty string.
+   * handler for commands that look like:
+   *
+   *    adb shell cmd package install-commit 538681231
    */
-  private fun pathToApp(args: String): String {
-    val pathArgs = args.split(Pattern.compile(" "), 2)
-    if (pathArgs.size < 2) {
-      return "Error: no package specified"
-    }
-
-    return ""
+  private fun installCommit(): String {
+    return "Success\n"
   }
 }
