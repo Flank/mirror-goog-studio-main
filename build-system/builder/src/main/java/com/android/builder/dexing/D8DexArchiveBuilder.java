@@ -34,7 +34,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -141,7 +142,12 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 builder.setDisableDesugaring(true);
             }
 
-            D8.run(builder.build(), ForkJoinPool.commonPool());
+            ExecutorService executorService = Executors.newFixedThreadPool(2);
+            try {
+                D8.run(builder.build(), executorService);
+            } finally {
+                executorService.shutdown();
+            }
         } catch (Throwable e) {
             throw getExceptionToRethrow(e, d8DiagnosticsHandler);
         }
