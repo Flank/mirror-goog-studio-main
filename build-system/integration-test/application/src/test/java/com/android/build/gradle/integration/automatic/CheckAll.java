@@ -84,9 +84,6 @@ public class CheckAll {
 
     @Test
     public void assembleAndLint() throws Exception {
-        // TODO(b/77849015): fix lint in this project.
-        Assume.assumeFalse(project.getName().equals("instantAppSimpleProject"));
-
         Assume.assumeTrue(canAssemble(project));
         project
                 .executor()
