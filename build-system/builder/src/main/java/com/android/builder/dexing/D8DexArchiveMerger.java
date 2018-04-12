@@ -104,7 +104,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     .setOutput(outputDir, OutputMode.DexIndexed)
                     .setDisableDesugaring(true)
                     .setIntermediate(false);
-            D8.run(builder.build(), ForkJoinPool.commonPool());
+            D8.run(builder.build());
         } catch (CompilationFailedException e) {
             throw getExceptionToRethrow(e, inputs, d8DiagnosticsHandler);
         }
