@@ -3,10 +3,10 @@ package ${packageName};
 import android.os.Bundle;
 <#if hasAppBar>
 <#if buildApi == 22>
-import android.support.design.widget.CollapsingToolbarLayout;
+import ${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)};
 </#if>
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;

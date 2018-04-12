@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
 <#if hasAppBar>
-import android.support.design.widget.Snackbar
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 </#if>
 import android.view.LayoutInflater
 import android.view.View

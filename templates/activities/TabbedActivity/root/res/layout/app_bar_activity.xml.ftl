@@ -8,7 +8,7 @@
     android:fitsSystemWindows="true"
     tools:context="${packageName}.${activityClass}">
 
-    <android.support.design.widget.AppBarLayout
+    <${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}
         android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,32 +35,32 @@
         </android.support.v7.widget.Toolbar>
 
         <#if features == 'tabs'>
-        <android.support.design.widget.TabLayout
+        <${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}
             android:id="@+id/tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <android.support.design.widget.TabItem
+            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
                 android:id="@+id/tabItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tab_text_1" />
 
-            <android.support.design.widget.TabItem
+            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
                 android:id="@+id/tabItem2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tab_text_2" />
 
-            <android.support.design.widget.TabItem
+            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
                 android:id="@+id/tabItem3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tab_text_3" />
 
-        </android.support.design.widget.TabLayout>
+        </${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}>
         </#if>
-    </android.support.design.widget.AppBarLayout>
+    </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
     <${viewContainer}
         android:id="@+id/container"
@@ -68,7 +68,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

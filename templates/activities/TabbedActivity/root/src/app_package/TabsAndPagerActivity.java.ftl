@@ -2,10 +2,10 @@ package ${packageName};
 
 <#if hasAppBar>
 <#if features == 'tabs'>
-import android.support.design.widget.TabLayout;
+import ${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)};
 </#if>
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 <#else>  <#-- hasAppBar -->

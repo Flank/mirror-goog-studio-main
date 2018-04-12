@@ -31,7 +31,7 @@
             android:orientation="vertical">
 
 <#if (buildApi gte 22) && appCompat>
-            <android.support.design.widget.TextInputLayout
+            <${getMaterialComponentName('android.support.design.widget.TextInputLayout', useMaterial2)}
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -46,9 +46,9 @@
                 android:singleLine="true"/>
 
 <#if (buildApi gte 22) && appCompat>
-            </android.support.design.widget.TextInputLayout>
+            </${getMaterialComponentName('android.support.design.widget.TextInputLayout', useMaterial2)}>
 
-            <android.support.design.widget.TextInputLayout
+            <${getMaterialComponentName('android.support.design.widget.TextInputLayout', useMaterial2)}
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -66,7 +66,7 @@
                 android:singleLine="true"/>
 
 <#if (buildApi gte 22) && appCompat>
-            </android.support.design.widget.TextInputLayout>
+            </${getMaterialComponentName('android.support.design.widget.TextInputLayout', useMaterial2)}>
 
 </#if>
             <Button

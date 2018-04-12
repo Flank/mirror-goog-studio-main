@@ -16,14 +16,14 @@
     tools:context="${packageName}.${DetailName}Activity"
     tools:ignore="MergeRootFrame">
 
-    <android.support.design.widget.AppBarLayout
+    <${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
         android:fitsSystemWindows="true"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <android.support.design.widget.CollapsingToolbarLayout
+        <${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)}
             android:id="@+id/toolbar_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -39,9 +39,9 @@
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-        </android.support.design.widget.CollapsingToolbarLayout>
+        </${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)}>
 
-    </android.support.design.widget.AppBarLayout>
+    </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/${detail_name}_container"
@@ -49,7 +49,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <android.support.design.widget.FloatingActionButton
+    <${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

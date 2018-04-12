@@ -2,7 +2,7 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 import android.content.Context
 import android.os.Bundle
-import android.support.design.widget.BottomSheetDialogFragment
+import ${getMaterialComponentName('android.support.design.widget.BottomSheetDialog', useMaterial2)}Fragment
 <#if columnCount == "1">
 import android.support.v7.widget.LinearLayoutManager
 <#else>

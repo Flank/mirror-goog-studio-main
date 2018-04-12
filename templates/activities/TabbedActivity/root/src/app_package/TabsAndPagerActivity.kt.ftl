@@ -2,9 +2,9 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 <#if hasAppBar>
 <#if features == 'tabs'>
-import android.support.design.widget.TabLayout
+import ${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}
 </#if>
-import android.support.design.widget.Snackbar
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 import android.support.v7.app.AppCompatActivity
 <#else>  <#-- hasAppBar -->
 import ${superClassFqcn};

@@ -3,7 +3,7 @@ package ${escapeKotlinIdentifiers(packageName)}
 import android.content.Intent
 import android.os.Bundle
 <#if hasAppBar>
-import android.support.design.widget.Snackbar
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 </#if>
 import ${superClassFqcn}
 <#if minApiLevel lt 16>

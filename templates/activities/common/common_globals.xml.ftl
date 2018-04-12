@@ -5,6 +5,7 @@
     <#assign appCompat=backwardsCompatibility!(theme.isAppCompat)!false>
     <#assign appCompatActivity=appCompat && (buildApi gte 22)>
     <#assign espresso=hasDependency('com.android.support.test.espresso:espresso-core', 'androidTestCompile')>
+    <#assign useMaterial2=hasDependency('com.google.android.material:material')>
     <#assign supportRunner=hasDependency('com.android.support.test:runner', 'androidTestCompile')>
     <#assign testSupportLib=espresso && supportRunner>
 
@@ -22,6 +23,7 @@
     <global id="appCompat" type="boolean" value="${appCompat?string}" />
     <global id="appCompatActivity" type="boolean" value="${appCompatActivity?string}" />
     <global id="hasAppBar" type="boolean" value="${appCompatActivity?string}" />
+    <global id="useMaterial2" type="boolean" value="${useMaterial2?string}" />
     <global id="hasNoActionBar" type="boolean" value="${appCompatActivity?string}" />
     <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
 

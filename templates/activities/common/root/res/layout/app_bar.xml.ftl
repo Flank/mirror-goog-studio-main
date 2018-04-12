@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context="${packageName}.${activityClass}">
 
-    <android.support.design.widget.AppBarLayout
+    <${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:theme="@style/${themeNameAppBarOverlay}">
@@ -19,11 +19,11 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/${themeNamePopupOverlay}" />
 
-    </android.support.design.widget.AppBarLayout>
+    </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
     <include layout="@layout/${simpleLayoutName}"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

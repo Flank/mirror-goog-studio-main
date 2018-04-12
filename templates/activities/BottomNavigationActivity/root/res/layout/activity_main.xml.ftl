@@ -19,7 +19,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.design.widget.BottomNavigationView
+    <${getMaterialComponentName('android.support.design.widget.BottomNavigationView', useMaterial2)}
         android:id="@+id/navigation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

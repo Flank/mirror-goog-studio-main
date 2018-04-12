@@ -8,8 +8,8 @@ import ${superClassFqcn};
 import android.support.v7.widget.RecyclerView;
 <#if hasAppBar>
 import android.support.v7.widget.Toolbar;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 </#if>
 import android.view.LayoutInflater;
 import android.view.View;

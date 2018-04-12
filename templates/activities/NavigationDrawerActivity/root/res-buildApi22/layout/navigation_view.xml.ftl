@@ -36,7 +36,7 @@
     </LinearLayout>
 </#if>
 
-    <android.support.design.widget.NavigationView
+    <${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)}
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

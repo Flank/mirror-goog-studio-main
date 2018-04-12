@@ -8,14 +8,14 @@
     android:fitsSystemWindows="true"
     tools:context="${packageName}.${activityClass}">
 
-    <android.support.design.widget.AppBarLayout
+    <${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}
         android:id="@+id/app_bar"
         android:fitsSystemWindows="true"
         android:layout_height="@dimen/app_bar_height"
         android:layout_width="match_parent"
         android:theme="@style/${themeNameAppBarOverlay}">
 
-        <android.support.design.widget.CollapsingToolbarLayout
+        <${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)}
             android:id="@+id/toolbar_layout"
             android:fitsSystemWindows="true"
             android:layout_width="match_parent"
@@ -31,12 +31,12 @@
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/${themeNamePopupOverlay}" />
 
-        </android.support.design.widget.CollapsingToolbarLayout>
-    </android.support.design.widget.AppBarLayout>
+        </${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)}>
+    </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
     <include layout="@layout/${simpleLayoutName}" />
 
-    <android.support.design.widget.FloatingActionButton
+    <${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
