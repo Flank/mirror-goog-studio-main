@@ -10,7 +10,7 @@
     <orderEntry type="library" scope="PROVIDED" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="framework" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
-    <orderEntry type="module" module-name="intellij.android.javaLibModel" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.java-lib-model" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
   </component>

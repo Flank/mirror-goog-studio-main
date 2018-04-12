@@ -35,7 +35,7 @@
     <orderEntry type="module" module-name="sdk-common-base" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="module" module-name="gradle-api" />
-    <orderEntry type="module" module-name="intellij.android.javaLibModel" />
+    <orderEntry type="module" module-name="android.sdktools.java-lib-model" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" scope="TEST" name="commons-io" level="project" />

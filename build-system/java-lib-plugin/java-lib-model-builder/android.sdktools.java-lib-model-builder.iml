@@ -10,7 +10,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="intellij.android.javaLibModel" />
+    <orderEntry type="module" module-name="android.sdktools.java-lib-model" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
