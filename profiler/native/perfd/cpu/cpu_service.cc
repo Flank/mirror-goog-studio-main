@@ -180,13 +180,15 @@ grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
                                                const CpuStopRequest* request,
                                                CpuStopResponse* response) {
   int32_t pid = request->session().pid();
-  cache_.DeallocateAppCache(pid);
   auto status = usage_sampler_.RemoveProcess(pid);
   if (status == CpuStopResponse::SUCCESS) {
     status = thread_monitor_.RemoveProcess(pid);
   }
   response->set_status(status);
   DoStopProfilingApp(pid, nullptr);
+  // cache_.DeallocateAppCache(pid) must happen last because prior actions such
+  // as DoStopProfilingApp() depends on data from the cache to act.
+  cache_.DeallocateAppCache(pid);
   return Status::OK;
 }
 
