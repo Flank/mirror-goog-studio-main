@@ -133,9 +133,9 @@ class ReflectiveLintRunner {
             val urls = ArrayList<URL>(uriMap.size)
             var seenLint = false
             for ((name, uri) in uriMap) {
-                if (name.startsWith("lint-api-")) {
+                if (name.startsWith("lint-api")) {
                     seenLint = true
-                } else if (name.startsWith("builder-model-")) {
+                } else if (name.startsWith("builder-model")) {
                     // This should never be on our class path, something is wrong
                     return null
                 }
@@ -156,7 +156,16 @@ class ReflectiveLintRunner {
             if (index == -1) {
                 return null
             }
-            return path.substring(index + 1)
+            var dash = path.indexOf('-', index)
+            while (dash != -1 && dash < path.length) {
+                if (path[dash + 1].isDigit()) {
+                    return path.substring(index + 1, dash)
+                } else {
+                    dash = path.indexOf('-', dash + 1)
+                }
+            }
+
+            return path.substring(index + 1, if (dash != -1) dash else path.length)
         }
 
         /**
