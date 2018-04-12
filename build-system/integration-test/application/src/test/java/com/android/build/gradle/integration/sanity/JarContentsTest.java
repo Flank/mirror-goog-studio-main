@@ -1062,7 +1062,7 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "androidx/databinding/compilerCommon",
+                "androidx/databinding/databinding-compiler-common",
                 "android/",
                 "android/databinding/",
                 "android/databinding/parser/",
@@ -1079,21 +1079,14 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "com/android/databinding/baseLibrary",
-                "android/",
-                "android/databinding/",
-                "NOTICE",
-                "META-INF/MANIFEST.MF",
-                "META-INF/");
-        expected.putAll(
-                "androidx/databinding/baseLibrary",
+                "androidx/databinding/databinding-common",
                 "androidx/",
                 "androidx/databinding/",
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
-                "androidx/databinding/compiler",
+                "androidx/databinding/databinding-compiler",
                 "android/",
                 "android/databinding/",
                 "android/databinding/annotationprocessor/",
@@ -1111,6 +1104,13 @@ public class JarContentsTest {
                 "META-INF/",
                 "META-INF/services/",
                 "META-INF/services/javax.annotation.processing.Processor");
+        expected.putAll( // kept for pre-android-x compatibility
+                "com/android/databinding/baseLibrary",
+                "android/",
+                "android/databinding/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
         expected.putAll(
                 "com/android/java/tools/build/java-lib-model",
                 "com/",
@@ -1162,11 +1162,11 @@ public class JarContentsTest {
 
     @Test
     public void checkDataBinding() throws Exception {
-        // Checks compiler and compilerCommon
-        checkGroup("androidx/databinding/compilerCommon", GMAVEN_ZIP);
-        checkGroup("androidx/databinding/compiler", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/databinding-common", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/databinding-compiler-common", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/databinding-compiler", GMAVEN_ZIP);
+        // pre-android X
         checkGroup("com/android/databinding/baseLibrary", GMAVEN_ZIP);
-        checkGroup("androidx/databinding/baseLibrary", GMAVEN_ZIP);
     }
 
     @Test
