@@ -17,9 +17,11 @@
 package com.android.tools.profiler.support.energy.gms;
 
 import android.app.PendingIntent;
+import android.location.Location;
 import android.os.Looper;
 import com.android.tools.profiler.support.energy.EventIdGenerator;
 import com.android.tools.profiler.support.energy.LocationManagerWrapper;
+import com.android.tools.profiler.support.energy.PendingIntentWrapper;
 import com.android.tools.profiler.support.util.StackTrace;
 import com.android.tools.profiler.support.util.StudioLog;
 import com.google.android.gms.location.LocationCallback;
@@ -86,7 +88,7 @@ public final class FusedLocationProviderClientWrapper {
                         callbackIdMap.get(callback),
                         LOCATION_PROVIDER_NAME,
                         interval,
-                        interval,
+                        fastestInterval,
                         smallestDisplacement,
                         0,
                         0,
@@ -146,6 +148,29 @@ public final class FusedLocationProviderClientWrapper {
                     callbackIntent.getCreatorUid(),
                     // API removeUpdates is one level down of user code.
                     StackTrace.getStackTrace(1));
+        }
+    }
+
+    /**
+     * Sends the location-changed event if the given {@link PendingIntent} exists in the map.
+     *
+     * <p>Location change intents are sent from other components of the system (e.g. Activity) so
+     * this is called by {@link PendingIntentWrapper} when there is a potential match.
+     *
+     * @param pendingIntent the PendingIntent that was used in scheduling the alarm.
+     * @param location the location data stored in the intent extras.
+     */
+    public static void sendIntentLocationChangedIfExists(
+            PendingIntent pendingIntent, Location location) {
+        if (intentIdMap.containsKey(pendingIntent)) {
+            LocationManagerWrapper.sendIntentLocationChanged(
+                    intentIdMap.get(pendingIntent),
+                    location.getProvider(),
+                    location.getAccuracy(),
+                    location.getLatitude(),
+                    location.getLongitude(),
+                    pendingIntent.getCreatorPackage(),
+                    pendingIntent.getCreatorUid());
         }
     }
 }

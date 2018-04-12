@@ -189,4 +189,69 @@ public class LocationTest {
         String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
         assertThat(removeStack).contains(methodName);
     }
+
+    @Test
+    public void testGmsIntentLocationRequest() {
+        String methodName = "gmsIntentRequestAndRemoveLocationUpdates";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
+        assertThat(myAndroidDriver.waitForInput("GMS INTENT LOCATION UPDATES")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 3);
+        assertThat(response.getEventsCount()).isEqualTo(3);
+
+        EnergyEvent requestEvent = response.getEvents(0);
+        assertThat(requestEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(requestEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(requestEvent.getEventId()).isGreaterThan(0);
+        assertThat(requestEvent.getIsTerminal()).isFalse();
+        assertThat(requestEvent.getMetadataCase())
+                .isEqualTo(MetadataCase.LOCATION_UPDATE_REQUESTED);
+        assertThat(requestEvent.getLocationUpdateRequested().getActionCase())
+                .isEqualTo(LocationUpdateRequested.ActionCase.INTENT);
+        assertThat(requestEvent.getLocationUpdateRequested().getIntent().getCreatorPackage())
+                .isEqualTo("com.google.gms");
+        assertThat(requestEvent.getLocationUpdateRequested().getIntent().getCreatorUid())
+                .isEqualTo(1);
+        LocationRequest request = requestEvent.getLocationUpdateRequested().getRequest();
+        assertThat(request.getProvider()).isEqualTo("fused");
+        assertThat(request.getIntervalMs()).isEqualTo(100);
+        assertThat(request.getFastestIntervalMs()).isEqualTo(10);
+        assertThat(request.getSmallestDisplacementMeters()).isWithin(EPSILON).of(1.0f);
+        assertThat(request.getPriority()).isEqualTo(Priority.HIGH_ACCURACY);
+
+        EnergyEvent locationChangeEvent = response.getEvents(1);
+        assertThat(locationChangeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(locationChangeEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(locationChangeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
+        assertThat(locationChangeEvent.getIsTerminal()).isFalse();
+        assertThat(locationChangeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_CHANGED);
+        assertThat(locationChangeEvent.getLocationChanged().getActionCase())
+                .isEqualTo(LocationChanged.ActionCase.INTENT);
+        assertThat(locationChangeEvent.getLocationChanged().getIntent().getCreatorPackage())
+                .isEqualTo("com.google.gms");
+        assertThat(locationChangeEvent.getLocationChanged().getIntent().getCreatorUid())
+                .isEqualTo(1);
+        Location location = locationChangeEvent.getLocationChanged().getLocation();
+        assertThat(location.getProvider()).isEqualTo("gps");
+        assertThat(location.getAccuracy()).isWithin(EPSILON).of(10.0f);
+        assertThat(location.getLatitude()).isWithin(EPSILON).of(45.0);
+        assertThat(location.getLongitude()).isWithin(EPSILON).of(45.0);
+
+        EnergyEvent removeEvent = response.getEvents(2);
+        assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(removeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
+        assertThat(removeEvent.getIsTerminal()).isTrue();
+        assertThat(removeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_UPDATE_REMOVED);
+        assertThat(removeEvent.getLocationUpdateRemoved().getActionCase())
+                .isEqualTo(LocationUpdateRemoved.ActionCase.INTENT);
+
+        String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
+        assertThat(requestStack).contains(methodName);
+        String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
+        assertThat(removeStack).contains(methodName);
+    }
 }

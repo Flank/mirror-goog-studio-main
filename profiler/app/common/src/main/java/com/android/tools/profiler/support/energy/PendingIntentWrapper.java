@@ -26,12 +26,21 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import com.android.tools.profiler.support.energy.gms.FusedLocationProviderClientWrapper;
+import com.android.tools.profiler.support.util.StudioLog;
 
 /**
  * A set of helpers for Android {@link PendingIntent} instrumentation, used by the Energy Profiler.
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class PendingIntentWrapper {
+    /** Bundle extra key referring to a LocationResult parcelable. */
+    private static final String EXTRA_LOCATION_RESULT =
+            "com.google.android.gms.location.EXTRA_LOCATION_RESULT";
+
+    private static final String LOCATION_RESULT_CLASS_NAME =
+            "com.google.android.gms.location.LocationResult";
+
     private static final ThreadLocal<Intent> intentData = new ThreadLocal<Intent>();
     private static final PendingIntentMap intentMap = new PendingIntentMap();
 
@@ -166,6 +175,27 @@ public final class PendingIntentWrapper {
             // Location-changed event.
             Location location = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
             LocationManagerWrapper.sendIntentLocationChangedIfExists(pendingIntent, location);
+        } else if (intent.hasExtra(EXTRA_LOCATION_RESULT)) {
+            // GMS location-changed event.
+            Object locationResult = intent.getParcelableExtra(EXTRA_LOCATION_RESULT);
+            if (locationResult != null) {
+                try {
+                    Class<?> locationResultClass =
+                            locationResult
+                                    .getClass()
+                                    .getClassLoader()
+                                    .loadClass(LOCATION_RESULT_CLASS_NAME);
+                    Location location =
+                            (Location)
+                                    locationResultClass
+                                            .getMethod("getLastLocation")
+                                            .invoke(locationResult);
+                    FusedLocationProviderClientWrapper.sendIntentLocationChangedIfExists(
+                            pendingIntent, location);
+                } catch (Exception e) {
+                    StudioLog.e("Could not send GMS LocationChanged event", e);
+                }
+            }
         }
     }
 }

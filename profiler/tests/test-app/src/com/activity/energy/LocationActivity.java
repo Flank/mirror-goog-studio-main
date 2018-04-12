@@ -25,6 +25,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Looper;
 import com.activity.PerfdTestActivity;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 
 public class LocationActivity extends PerfdTestActivity {
 
@@ -97,5 +99,25 @@ public class LocationActivity extends PerfdTestActivity {
         locationManager.requestSingleUpdate(
                 criteria,
                 PendingIntent.getService(new Context("p", 0), 0, new Intent(MyService.class), 0));
+    }
+
+    public void gmsIntentRequestAndRemoveLocationUpdates() {
+        Context context = new Context("com.google.gms", 1);
+        FusedLocationProviderClient client = new FusedLocationProviderClient(context);
+        PendingIntent intent = PendingIntent.getService(context, 0, new Intent(MyService.class), 0);
+        client.requestLocationUpdates(
+                new LocationRequest()
+                        .setPriority(100)
+                        .setInterval(100)
+                        .setFastestInterval(10)
+                        .setSmallestDisplacement(1.0f),
+                intent);
+        Location location = new Location("gps");
+        location.setAccuracy(10.0f);
+        location.setLatitude(45.0);
+        location.setLongitude(45.0);
+        client.changeLocation(location);
+        client.removeLocationUpdates(intent);
+        System.out.println("GMS INTENT LOCATION UPDATES");
     }
 }

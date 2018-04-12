@@ -280,7 +280,7 @@ public final class LocationManagerWrapper {
     private static native void sendListenerLocationChanged(
             int eventId, String provider, float accuracy, double latitude, double longitude);
 
-    private static native void sendIntentLocationChanged(
+    public static native void sendIntentLocationChanged(
             int eventId,
             String provider,
             float accuracy,

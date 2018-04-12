@@ -586,7 +586,7 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   JStringWrapper provider_str(env, provider);
   request->set_provider(provider_str.get());
   request->set_interval_ms(interval);
-  request->set_fastest_interval_ms(interval);
+  request->set_fastest_interval_ms(min_interval);
   request->set_smallest_displacement_meters(min_distance);
   request->set_priority(
       GetPriority(priority, accuracy, power_req, provider_str.get()));
