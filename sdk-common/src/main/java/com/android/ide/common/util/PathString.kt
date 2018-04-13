@@ -65,7 +65,7 @@ class PathString private constructor(
          * when manipulating paths intended for use on other filesystems.
          */
         private val separator: Char
-) {
+) : Comparable<PathString> {
     private var hash: Int = 0
 
     private constructor(filesystem: URI, path: String, rootLength: Int) :
@@ -476,7 +476,7 @@ class PathString private constructor(
                 separator)
     }
 
-    fun compareTo(other: PathString): Int {
+    override fun compareTo(other: PathString): Int {
         val schemeResult = filesystemUri.compareTo(other.filesystemUri)
 
         if (schemeResult != 0) {
