@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.wear.widget.SwipeDismissFrameLayout
+<${getMaterialComponentName('android.support.wear.widget.SwipeDismissFrameLayout', useAndroidX)}
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:map="http://schemas.android.com/apk/res-auto"
@@ -21,4 +21,4 @@
                 android:name="com.google.android.gms.maps.MapFragment"/>
 
     </FrameLayout>
-</android.support.wear.widget.SwipeDismissFrameLayout>
+</${getMaterialComponentName('android.support.wear.widget.SwipeDismissFrameLayout', useAndroidX)}>

@@ -5,17 +5,38 @@ package ${escapeKotlinIdentifiers(packageName)}
 import ${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}
 </#if>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
-import android.support.v7.app.AppCompatActivity
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 <#else>  <#-- hasAppBar -->
 import ${superClassFqcn};
+<#if useAndroidX>
+import ${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}
+import ${getMaterialComponentName('android.support.v4.app.FragmentTransaction', useAndroidX)}
+<#else>
 import android.<#if appCompat>support.v7.</#if>app.ActionBar
 import android.<#if appCompat>support.v4.</#if>app.FragmentTransaction
+</#if>
 </#if>   <#-- hasAppBar -->
+<#if useAndroidX>
+import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
+<#else>
 import android.<#if appCompat>support.v4.</#if>app.Fragment
+</#if>
 <#if hasViewPager>
+<#if useAndroidX>
+import ${getMaterialComponentName('android.support.v4.app.FragmentManager', useAndroidX)}
+<#else>
 import android.<#if appCompat>support.v4.</#if>app.FragmentManager
+</#if>
+<#if useAndroidX>
+import ${getMaterialComponentName('android.support.v4.app.FragmentPagerAdapter', useAndroidX)}
+<#else>
+<#if useAndroidX>
+import ${getMaterialComponentName('android.support.v4.app.FragmentPagerAdapter', useAndroidX)}
+<#else>
 import android.support.${(appCompat)?string('v4','v13')}.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
+</#if>
+</#if>
+import ${getMaterialComponentName('android.support.v4.view.ViewPager', useAndroidX)}
 </#if>
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -29,7 +50,7 @@ import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.ArrayAdapter
 import android.content.Context
 <#if buildApi gte 23>
-import android.support.v7.widget.ThemedSpinnerAdapter
+import ${getMaterialComponentName('android.support.v7.widget.ThemedSpinnerAdapter', useAndroidX)}
 import android.content.res.Resources.Theme
 <#else>
 import android.graphics.Color
@@ -48,12 +69,12 @@ class ${activityClass} : ${superClass}()<#if !hasAppBar && features == 'tabs'>, 
 
 <#if hasViewPager>
     /**
-     * The [android.support.v4.view.PagerAdapter] that will provide
+     * The [${getMaterialComponentName('android.support.v4.view.PagerAdapter', useAndroidX)}] that will provide
      * fragments for each of the sections. We use a
      * {@link FragmentPagerAdapter} derivative, which will keep every
      * loaded fragment in memory. If this becomes too memory intensive, it
      * may be best to switch to a
-     * [android.support.${(appCompat)?string('v4','v13')}.app.FragmentStatePagerAdapter].
+     * <#if useAndroidX>${getMaterialComponentName('android.support.v4.app.FragmentStatePagerAdapter', useAndroidX)}<#else>[android.support.${(appCompat)?string('v4','v13')}.app.FragmentStatePagerAdapter]</#if>.
      */
     private var mSectionsPagerAdapter: SectionsPagerAdapter? = null
 

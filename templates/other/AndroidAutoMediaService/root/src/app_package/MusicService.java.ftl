@@ -1,10 +1,10 @@
 package ${packageName};
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.media.MediaBrowserCompat.MediaItem;
-import android.support.v4.media.MediaBrowserServiceCompat;
-import android.support.v4.media.session.MediaSessionCompat;
+import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
+import ${getMaterialComponentName('android.support.v4.media.MediaBrowserCompat.MediaItem', useAndroidX)};
+import ${getMaterialComponentName('android.support.v4.media.MediaBrowserServiceCompat', useAndroidX)};
+import ${getMaterialComponentName('android.support.v4.media.session.MediaSessionCompat', useAndroidX)};
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +35,8 @@ import java.util.List;
  *      {@link android.media.MediaPlayer})
  *
  * <li> Update playbackState, "now playing" metadata and queue, using MediaSession proper methods
- *      {@link MediaSessionCompat#setPlaybackState(android.support.v4.media.session.PlaybackStateCompat)}
- *      {@link MediaSessionCompat#setMetadata(android.support.v4.media.MediaMetadataCompat)} and
+ *      {@link MediaSessionCompat#setPlaybackState(${getMaterialComponentName('android.support.v4.media.session.PlaybackStateCompat', useAndroidX)})}
+ *      {@link MediaSessionCompat#setMetadata(${getMaterialComponentName('android.support.v4.media.MediaMetadataCompat', useAndroidX)})} and
  *      {@link MediaSessionCompat#setQueue(java.util.List)})
  *
  * <li> Declare and export the service in AndroidManifest with an intent receiver for the action

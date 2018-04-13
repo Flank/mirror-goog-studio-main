@@ -3,10 +3,10 @@ package ${escapeKotlinIdentifiers(packageName)}
 import android.content.res.Configuration
 import android.os.Bundle
 import android.preference.PreferenceActivity
-import android.support.annotation.LayoutRes
-import android.support.v7.app.ActionBar
-import android.support.v7.app.AppCompatDelegate
-import android.support.v7.widget.Toolbar
+import ${getMaterialComponentName('android.support.annotation.LayoutRes', useAndroidX)}
+import ${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}
+import ${getMaterialComponentName('android.support.v7.app.AppCompatDelegate', useAndroidX)}
+import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
 import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup

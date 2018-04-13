@@ -1,6 +1,6 @@
 package ${kotlinEscapedPackageName}
 
-import android.support.v7.widget.RecyclerView
+import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)}
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

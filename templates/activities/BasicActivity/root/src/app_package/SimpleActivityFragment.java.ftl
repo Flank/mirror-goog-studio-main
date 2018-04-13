@@ -1,6 +1,10 @@
 package ${packageName};
 
-import android.<#if appCompat>support.v4.</#if>app.Fragment;
+<#if appCompat>
+import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)};
+<#else>
+import android.app.Fragment;
+</#if>
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
