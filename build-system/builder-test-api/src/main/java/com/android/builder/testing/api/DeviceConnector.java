@@ -110,15 +110,19 @@ public abstract class DeviceConnector implements IShellEnabledDevice {
 
     /**
      * Returns the API codename for the device, or null if it's a release device.
+     *
      * @return the API codename
      */
+    @Nullable
     public abstract String getApiCodeName();
 
     /**
-     * Returns the {@link com.android.ddmlib.IDevice.DeviceState} for the device, or null
-     * if if cannot determined.
+     * Returns the {@link com.android.ddmlib.IDevice.DeviceState} for the device, or null if if
+     * cannot determined.
+     *
      * @return the device state.
      */
+    @Nullable
     public abstract IDevice.DeviceState getState();
 
     /**
@@ -155,6 +159,9 @@ public abstract class DeviceConnector implements IShellEnabledDevice {
 
     @NonNull
     public abstract String getProperty(@NonNull String propertyName);
+
+    @Nullable
+    public abstract String getNullableProperty(@NonNull String propertyName);
 
     @NonNull
     public abstract DeviceConfig getDeviceConfig() throws DeviceException;

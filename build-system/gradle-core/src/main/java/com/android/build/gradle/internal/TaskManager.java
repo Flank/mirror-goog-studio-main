@@ -2984,9 +2984,7 @@ public abstract class TaskManager {
         // right output if there are more than one.
         // Add a task to install the application package
         if (signedApk) {
-            InstallVariantTask installTask =
-                    taskFactory.create(new InstallVariantTask.ConfigAction(variantScope));
-            installTask.dependsOn(variantScope.getAssembleTask());
+            createInstallTask(variantScope);
         }
 
         maybeCreateLintVitalTask(variantData);
@@ -2997,6 +2995,10 @@ public abstract class TaskManager {
 
         taskFactory.configure(
                 UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask.getName()));
+    }
+
+    protected void createInstallTask(VariantScope variantScope) {
+        taskFactory.create(new InstallVariantTask.ConfigAction(variantScope));
     }
 
     protected Task getValidateSigningTask(@NonNull VariantScope variantScope) {

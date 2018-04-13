@@ -227,6 +227,7 @@ public class ConnectedDevice extends DeviceConnector {
         return 0;
     }
 
+    @Nullable
     @Override
     public String getApiCodeName() {
         String codeName = getNullableProperty(IDevice.PROP_BUILD_CODENAME);
@@ -323,7 +324,8 @@ public class ConnectedDevice extends DeviceConnector {
     }
 
     @Nullable
-    private String getNullableProperty(@NonNull String propertyName) {
+    @Override
+    public String getNullableProperty(@NonNull String propertyName) {
         try {
             Future<String> property = iDevice.getSystemProperty(propertyName);
             if (mTimeout > 0) {

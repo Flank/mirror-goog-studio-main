@@ -28,6 +28,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -43,6 +44,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
+import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.SelectApksTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -221,6 +223,33 @@ public class ApplicationTaskManager extends TaskManager {
         taskFactory.create(new FeatureSplitTransitiveDepsWriterTask.ConfigAction(variantScope));
 
         createDynamicBundleTask(variantScope);
+    }
+
+    @Override
+    protected void createInstallTask(VariantScope variantScope) {
+        GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
+        final VariantType variantType = variantConfiguration.getType();
+
+        // feature split or AIA modules do not have their own install tasks
+        if (variantType.isFeatureSplit() || variantType.isHybrid()) {
+            return;
+        }
+
+        // if test app,
+        // or not a base module (unlikely but better to test),
+        // or no dynamic features are present,
+        // then use the default install task
+        if (variantType.isForTesting()
+                || !(extension instanceof BaseAppModuleExtension)
+                || AppModelBuilder.getDynamicFeatures(
+                                (BaseAppModuleExtension) extension, variantScope.getGlobalScope())
+                        .isEmpty()) {
+            super.createInstallTask(variantScope);
+
+        } else {
+            // use the install task that uses the App Bundle
+            taskFactory.create(new InstallVariantViaBundleTask.ConfigAction(variantScope));
+        }
     }
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */

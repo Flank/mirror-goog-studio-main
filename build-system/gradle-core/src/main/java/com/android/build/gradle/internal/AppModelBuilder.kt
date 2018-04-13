@@ -76,19 +76,7 @@ class AppModelBuilder(
     }
 
     override fun getDynamicFeatures(): MutableCollection<String> {
-        if (!extension.dynamicFeatures.isEmpty()) {
-            return extension.dynamicFeatures
-        }
-
-        @Suppress("DEPRECATION")
-        val featureConfig = globalScope.project.configurations.getByName(VariantDependencies.CONFIG_NAME_FEATURE)
-        val dependencies = featureConfig.dependencies
-
-        return dependencies
-            .asSequence()
-            .filter { it is ProjectDependency }
-            .map { (it as ProjectDependency).dependencyProject.path }
-            .toMutableList()
+        return getDynamicFeatures(extension, globalScope)
     }
 
     private fun buildMinimalisticModel(): Any {
@@ -107,5 +95,29 @@ class AppModelBuilder(
         }
 
         return DefaultAppBundleProjectBuildOutput(variantsOutput.build())
+    }
+
+    companion object {
+        @JvmStatic
+        fun getDynamicFeatures(
+            extension: BaseAppModuleExtension,
+            globalScope: GlobalScope
+        ): MutableCollection<String> {
+            // TODO remove method once the deprecated config is removed.
+            if (!extension.dynamicFeatures.isEmpty()) {
+                return extension.dynamicFeatures
+            }
+
+            @Suppress("DEPRECATION")
+            val featureConfig =
+                globalScope.project.configurations.getByName(VariantDependencies.CONFIG_NAME_FEATURE)
+            val dependencies = featureConfig.dependencies
+
+            return dependencies
+                .asSequence()
+                .filter { it is ProjectDependency }
+                .map { (it as ProjectDependency).dependencyProject.path }
+                .toMutableList()
+        }
     }
 }

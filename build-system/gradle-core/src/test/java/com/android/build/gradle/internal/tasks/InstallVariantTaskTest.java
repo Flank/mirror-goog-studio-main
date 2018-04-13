@@ -120,12 +120,12 @@ public class InstallVariantTaskTest {
         verifyNoMoreInteractions(deviceConnector);
     }
 
-    private static final class FakeDeviceProvider extends DeviceProvider {
+    static final class FakeDeviceProvider extends DeviceProvider {
 
         private final List<DeviceConnector> devices;
         private State state = State.NOT_READY;
 
-        private FakeDeviceProvider(@NonNull List<DeviceConnector> devices) {
+        FakeDeviceProvider(@NonNull List<DeviceConnector> devices) {
             this.devices = devices;
         }
 

@@ -263,6 +263,12 @@ public class FakeDevice extends DeviceConnector {
         return null;
     }
 
+    public String getNullableProperty(String propertyName) {
+        if ("ro.sf.lcd_density".equals(propertyName)) return "160";
+        return null;
+    }
+
+
     public Future<String> getSystemProperty(@NonNull String name) {
         return SettableFuture.create();
     }
