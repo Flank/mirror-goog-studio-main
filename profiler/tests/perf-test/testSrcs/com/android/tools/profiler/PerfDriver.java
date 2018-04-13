@@ -49,9 +49,8 @@ public class PerfDriver {
 
     public PerfDriver(boolean isOPlusDevice) {
         if (isOPlusDevice) {
-            // TODO(b/77586395): revert to 26 when fixed.
-            buildAndSaveConfig(27);
-            myPropertiesFile = new DeviceProperties("O+", "27", "27");
+            buildAndSaveConfig(26);
+            myPropertiesFile = new DeviceProperties("O+", "26", "26");
         } else {
             buildAndSaveConfig(24);
             myPropertiesFile = new DeviceProperties("Pre-O", "24", "24");

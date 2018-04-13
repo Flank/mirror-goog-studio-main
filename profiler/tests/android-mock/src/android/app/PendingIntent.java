@@ -24,6 +24,7 @@ public class PendingIntent {
     private String myCreatorPackage;
     private int myCreatorUid;
     private Intent myIntent;
+    private Instrumentation myInstrumentation;
 
     public String getCreatorPackage() {
         return myCreatorPackage;
@@ -37,6 +38,7 @@ public class PendingIntent {
         myCreatorPackage = context.getPackageName();
         myCreatorUid = context.getUserId();
         myIntent = intent;
+        myInstrumentation = new Instrumentation();
     }
 
     public static PendingIntent getActivity(
@@ -55,7 +57,7 @@ public class PendingIntent {
 
     public void send() {
         if (myIntent.hasActivity()) {
-            myIntent.getActivity().performCreate(null, null);
+            myInstrumentation.callActivityOnCreate(myIntent.getActivity(), null, null);
         } else if (myIntent.hasService()) {
             myIntent.getService().onStartCommand(myIntent, 0, 0);
         }

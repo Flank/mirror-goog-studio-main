@@ -17,6 +17,7 @@
 package com.android.tools.profiler.support.energy;
 
 import android.app.Activity;
+import android.app.Instrumentation;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -127,15 +128,40 @@ public final class PendingIntentWrapper {
     }
 
     /**
-     * EntryHook for {@link Activity#onCreate(Bundle, PersistableBundle)} to capture Activity
-     * Intent.
+     * EntryHook for {@link Instrumentation#callActivityOnCreate(Activity, Bundle)} to capture
+     * Activity Intent.
      *
-     * @param activity the wrapped {@link Activity} instance, i.e. "this".
+     * <p>Due to b/77549390, instrumenting {@link Activity} causes Profiler to crash. So we add the
+     * hook to {@link Instrumentation#callActivityOnCreate(Activity, Bundle)}, which calls {@link
+     * Activity#onCreate(Bundle)}.
+     *
+     * @param instrumentation the wrapped {@link Instrumentation} instance, i.e. "this".
+     * @param activity the activity parameter passed to the original method.
+     * @param savedInstance the persistableState parameter passed to the original method.
+     */
+    public static void wrapActivityCreate(
+            Instrumentation instrumentation, Activity activity, Bundle savedInstance) {
+        handleIntent(activity.getIntent());
+    }
+
+    /**
+     * EntryHook for {@link Instrumentation#callActivityOnCreate(Activity, Bundle,
+     * PersistableBundle)} to capture Activity Intent.
+     *
+     * <p>Due to b/77549390, instrumenting {@link Activity} causes Profiler to crash. So we add the
+     * hook to {@link Instrumentation#callActivityOnCreate(Activity, Bundle, PersistableBundle)},
+     * which calls {@link Activity#onCreate(Bundle, PersistableBundle)}.
+     *
+     * @param instrumentation the wrapped {@link Instrumentation} instance, i.e. "this".
+     * @param activity the activity parameter passed to the original method.
      * @param savedInstance the savedInstance parameter passed to the original method.
      * @param persistableState the persistableState parameter passed to the original method.
      */
     public static void wrapActivityCreate(
-            Activity activity, Bundle savedInstance, PersistableBundle persistableState) {
+            Instrumentation instrumentation,
+            Activity activity,
+            Bundle savedInstance,
+            PersistableBundle persistableState) {
         handleIntent(activity.getIntent());
     }
 

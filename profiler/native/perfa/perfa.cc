@@ -71,9 +71,7 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
          (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
           agent_config.cpu_api_tracing_enabled()) ||
          (agent_config.energy_profiler_enabled() &&
-          ((strcmp(sig_mutf8, "Landroid/app/Activity;") == 0 &&
-            // TODO(b/77586395): re-enable for API 26.
-            agent_config.android_feature_level() >= 27) ||
+          (strcmp(sig_mutf8, "Landroid/app/Instrumentation;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/ActivityThread;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
@@ -476,15 +474,24 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                          "Landroid/app/PendingIntent;"))) {
       Log::E("Error instrumenting PendingIntent.getBroadcast");
     }
-  } else if (strcmp(name, "android/app/Activity") == 0) {
+  } else if (strcmp(name, "android/app/Instrumentation") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
         "wrapActivityCreate"));
-    if (!mi.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "performCreate",
-            "(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V"))) {
-      Log::E("Error instrumenting Activity.performCreate");
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "callActivityOnCreate",
+                         "(Landroid/app/Activity;Landroid/os/Bundle;)V"))) {
+      Log::E(
+          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle)");
+    }
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "callActivityOnCreate",
+                         "(Landroid/app/Activity;Landroid/os/Bundle;Landroid/"
+                         "os/PersistableBundle;)V"))) {
+      Log::E(
+          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle, "
+          "PersistableBundle)");
     }
   } else if (strcmp(name, "android/app/IntentService") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
