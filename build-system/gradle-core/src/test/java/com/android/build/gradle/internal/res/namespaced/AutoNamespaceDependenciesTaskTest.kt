@@ -89,6 +89,23 @@ class AutoNamespaceDependenciesTaskTest {
             .build()
         SymbolIo.writeRDef(symbolTable, rDef.toPath())
 
+        val manifest = tempFolder.newFile("AndroidManifest.xml")
+        FileUtils.writeToFile(manifest, """<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.mymodule"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application android:label="@string/s1"
+        android:allowBackup="true">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/s2">
+        </activity>
+    </application>
+
+</manifest>""")
+
         val node = createDependency("libA")
 
         val dependencies = wrapDependencies(set(node))
@@ -96,18 +113,22 @@ class AutoNamespaceDependenciesTaskTest {
         val outputRClasses = tempFolder.newFolder("rClasses")
         val classesJar = tempFolder.newFile("namespaced-classes.jar")
         val rJar = tempFolder.newFile("r.jar")
+        val outputRewrittenManifests = tempFolder.newFolder("manifests")
         val rFiles = getArtifactCollection(map("libA", rDef))
         val jarFiles = getArtifactCollection(map("libA", testClassesJar))
+        val manifestsArtifact = getArtifactCollection(map("libA", manifest))
         task.log = log
 
         task.namespaceDependencies(
                 dependencies,
                 rFiles,
                 jarFiles,
+                manifestsArtifact,
                 outputRewrittenClasses,
                 outputRClasses,
                 classesJar,
-                rJar)
+                rJar,
+                outputRewrittenManifests)
 
         Truth.assertThat(log.warnings).isEmpty()
 
@@ -116,6 +137,25 @@ class AutoNamespaceDependenciesTaskTest {
         assertThat(File(outputRClasses, "namespaced-libA-R.jar")).exists()
         assertThat(rJar).exists()
         assertThat(classesJar).exists()
+
+        val namespacedManifest = File(outputRewrittenManifests, "libA_AndroidManifest.xml")
+        assertThat(namespacedManifest).exists()
+        assertThat(namespacedManifest).contains("""<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.mymodule"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <application
+        android:allowBackup="true"
+        android:label="@com.example.mymodule:string/s1" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@com.example.mymodule:string/s2" >
+        </activity>
+    </application>
+
+</manifest>""")
 
         ZFile(namespacedJar).use {
             it.add("com/example/mymodule/R.class", testRClass.inputStream())
@@ -146,13 +186,17 @@ class AutoNamespaceDependenciesTaskTest {
         val rStringClasses = HashMap<String, File>()
         val classesJars = HashMap<String, File>()
         val rFiles = HashMap<String, File>()
+        val manifests = HashMap<String, File>()
         val s1 = SymbolTable.builder().add(symbol("string", "s1")).build()
 
         // Three dependencies will have colliding identifiers that will later on be sanitized for
         // the filenames of the rewritten jars.
-        setUpDependency(classes, rClasses, rStringClasses, classesJars, rFiles, "libA", s1, "lib*")
-        setUpDependency(classes, rClasses, rStringClasses, classesJars, rFiles, "libB", s1, "lib?")
-        setUpDependency(classes, rClasses, rStringClasses, classesJars, rFiles, "libC", s1, "lib_")
+        setUpDependency(
+                classes, rClasses, rStringClasses, classesJars, rFiles, manifests, "libA", s1, "lib*")
+        setUpDependency(
+                classes, rClasses, rStringClasses, classesJars, rFiles, manifests, "libB", s1, "lib?")
+        setUpDependency(
+                classes, rClasses, rStringClasses, classesJars, rFiles, manifests, "libC", s1, "lib_")
 
         // Use the same identifiers as above so the graph is correct.
         val nodeC = createDependency("lib*")
@@ -164,18 +208,22 @@ class AutoNamespaceDependenciesTaskTest {
         val outputRClasses = tempFolder.newFolder("rClasses")
         val classesJar = tempFolder.newFile("namespaced-classes.jar")
         val rJar = tempFolder.newFile("r.jar")
+        val outputRewrittenManifests = tempFolder.newFolder("manifests")
         val rFilesArtifact = getArtifactCollection(rFiles)
         val jarFiles = getArtifactCollection(classesJars)
+        val manifestsArtifact = getArtifactCollection(manifests)
         task.log = log
 
         task.namespaceDependencies(
                 dependencies,
                 rFilesArtifact,
                 jarFiles,
+                manifestsArtifact,
                 outputRewrittenClasses,
                 outputRClasses,
                 classesJar,
-                rJar)
+                rJar,
+                outputRewrittenManifests)
 
         // Check if the colliding names got the underscore characters appended.
         assertThat(File(outputRewrittenClasses, "namespaced-lib_-classes.jar")).exists()
@@ -241,19 +289,20 @@ class AutoNamespaceDependenciesTaskTest {
         val rStringClasses = HashMap<String, File>()
         val classesJars = HashMap<String, File>()
         val rFiles = HashMap<String, File>()
+        val manifests = HashMap<String, File>()
 
         // Resource tables for generating R-def.txt files.
         val empty = SymbolTable.builder().build()
         val s1 = SymbolTable.builder().add(symbol("string", "s1")).build()
 
         // Generate R-def.txt files and collect inputs from each dependency.
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libG", s1)
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libF", s1)
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libE", empty)
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libD", s1)
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libC", empty)
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libB", s1)
-        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, "libA", empty)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libG", s1)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libF", s1)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libE", empty)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libD", s1)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libC", empty)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libB", s1)
+        setUpDependency(testClasses, rClasses, rStringClasses, classesJars, rFiles, manifests, "libA", empty)
 
         // Create dependencies between the nodes.
         val nodeG = createDependency("libG")
@@ -270,8 +319,10 @@ class AutoNamespaceDependenciesTaskTest {
         val outputRClasses = tempFolder.newFolder("rClasses")
         val classesJar = tempFolder.newFile("namespaced-classes.jar")
         val rJar = tempFolder.newFile("r.jar")
+        val outputRewrittenManifests = tempFolder.newFolder("manifests")
         val rFilesArtifact = getArtifactCollection(rFiles)
         val jarFiles = getArtifactCollection(classesJars)
+        val manifestsArtifact = getArtifactCollection(manifests)
         task.log = log
 
         // Execute the task.
@@ -279,10 +330,12 @@ class AutoNamespaceDependenciesTaskTest {
                 dependencies,
                 rFilesArtifact,
                 jarFiles,
+                manifestsArtifact,
                 outputRewrittenClasses,
                 outputRClasses,
                 classesJar,
-                rJar)
+                rJar,
+                outputRewrittenManifests)
 
         // Verify warnings about overrides were printed.
         Truth.assertThat(log.warnings).isNotEmpty()
@@ -320,6 +373,28 @@ class AutoNamespaceDependenciesTaskTest {
             assertReturnValue(classLoader, "com.example.libB", bValue)
             assertReturnValue(classLoader, "com.example.libA", fValue)
         }
+
+        // Also check the contents of the rewritten manifests: check that the library manifests uses
+        // values from the proper library (its own of from the dependency).
+        checkManifest(outputRewrittenManifests, "libG", "libG")
+        checkManifest(outputRewrittenManifests, "libF", "libF")
+        checkManifest(outputRewrittenManifests, "libE", "libG")
+        checkManifest(outputRewrittenManifests, "libD", "libD")
+        checkManifest(outputRewrittenManifests, "libC", "libF")
+        checkManifest(outputRewrittenManifests, "libB", "libB")
+        checkManifest(outputRewrittenManifests, "libA", "libF")
+    }
+
+    /**
+     * Check that the rewritten manifest exists and contains a string reference with the expected
+     * package.
+     */
+    private fun checkManifest(directory: File, libName: String, expectedPackage: String) {
+        val manifest = File(directory, "${libName}_AndroidManifest.xml")
+        // Sanity check that the rewritten manifest exists.
+        assertThat(manifest).exists()
+        // Make sure the string reference was properly rewritten.
+        assertThat(manifest).contains("@com.example.$expectedPackage:string/s1")
     }
 
     /**
@@ -363,7 +438,8 @@ class AutoNamespaceDependenciesTaskTest {
     }
 
     /**
-     * Generates the R-def.txt file and collects input files from the dependency.
+     * Generates the R-def.txt and AndroidManifest files and collects input files from the
+     * dependency.
      */
     private fun setUpDependency(
         testClasses: MutableMap<String, File>,
@@ -371,6 +447,7 @@ class AutoNamespaceDependenciesTaskTest {
         rStringClasses: MutableMap<String, File>,
         classesJars: MutableMap<String, File>,
         rFiles: MutableMap<String, File>,
+        manifests: MutableMap<String, File>,
         name: String,
         symbolTable: SymbolTable,
         identifier: String = name
@@ -390,6 +467,24 @@ class AutoNamespaceDependenciesTaskTest {
             it.add("com/example/$name/Test.class", testClass.inputStream())
         }
         classesJars.put(identifier, classesJar)
+
+        val manifest = tempFolder.newFile("$name-AndroidManifest.txt")
+        FileUtils.writeToFile(manifest,"""<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.$name"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application android:label="@string/s1"
+        android:allowBackup="true">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/s1">
+        </activity>
+    </application>
+
+</manifest>""")
+        manifests.put(identifier, manifest)
 
         val rFile = tempFolder.newFile("com.example.$name-R-def.txt")
         SymbolIo.writeRDef(symbolTable.rename( "com.example.$name"), rFile.toPath())

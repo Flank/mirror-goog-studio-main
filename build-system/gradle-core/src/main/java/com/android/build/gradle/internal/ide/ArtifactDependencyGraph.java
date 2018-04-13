@@ -287,6 +287,12 @@ public class ArtifactDependencyGraph {
                         consumedConfigType,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.MANIFEST);
+        ArtifactCollection nonNamespacedManifestList =
+                computeArtifactList(
+                        variantScope,
+                        consumedConfigType,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST);
 
         // We still need to understand wrapped jars and aars. The former is difficult (TBD), but
         // the latter can be done by querying for EXPLODED_AAR. If a sub-project is in this list,
@@ -344,7 +350,10 @@ public class ArtifactDependencyGraph {
         }
 
         // build a list of android dependencies based on them publishing a MANIFEST element
-        final Set<ResolvedArtifactResult> manifestArtifacts = manifestList.getArtifacts();
+        final Set<ResolvedArtifactResult> manifestArtifacts = new HashSet<>();
+        manifestArtifacts.addAll(manifestList.getArtifacts());
+        manifestArtifacts.addAll(nonNamespacedManifestList.getArtifacts());
+
         final Set<ComponentIdentifier> manifestIds =
                 Sets.newHashSetWithExpectedSize(manifestArtifacts.size());
         for (ResolvedArtifactResult result : manifestArtifacts) {
@@ -834,21 +843,25 @@ public class ArtifactDependencyGraph {
             this.buildMapping = buildMapping;
         }
 
+        @NonNull
         @Override
         public File getFile() {
             return delegate.getFile();
         }
 
+        @NonNull
         @Override
         public ResolvedVariantResult getVariant() {
             return delegate.getVariant();
         }
 
+        @NonNull
         @Override
         public ComponentArtifactIdentifier getId() {
             return delegate.getId();
         }
 
+        @NonNull
         @Override
         public Class<? extends Artifact> getType() {
             return delegate.getType();

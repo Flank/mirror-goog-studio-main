@@ -50,6 +50,7 @@ public class AndroidArtifacts {
     private static final String TYPE_JAVA_RES = "android-java-res";
     private static final String TYPE_SHARED_JAVA_RES = "android-shared-java-res";
     private static final String TYPE_MANIFEST = "android-manifest";
+    private static final String TYPE_NON_NAMESPACED_MANIFEST = "non-namespaced-android-manifest";
     private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
     private static final String TYPE_ANDROID_NAMESPACED_R_CLASS_JAR =
@@ -161,6 +162,8 @@ public class AndroidArtifacts {
 
         // manifest is published to both to compare and detect provided-only library dependencies.
         MANIFEST(TYPE_MANIFEST),
+        // manifests that need to be auto-namespaced.
+        NON_NAMESPACED_MANIFEST(TYPE_NON_NAMESPACED_MANIFEST),
         MANIFEST_METADATA(TYPE_MANIFEST_METADATA),
 
         // Resources static library are API (where only explicit dependencies are included) and

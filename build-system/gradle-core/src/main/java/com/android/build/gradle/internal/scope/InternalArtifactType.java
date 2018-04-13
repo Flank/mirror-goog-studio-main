@@ -139,6 +139,8 @@ public enum InternalArtifactType implements ArtifactType {
     COMPATIBLE_SCREEN_MANIFEST,
     MERGED_MANIFESTS,
     LIBRARY_MANIFEST,
+    // AAR manifests that have been auto-namespaced and are fully resource namespace aware.
+    NAMESPACED_MANIFESTS,
     AAPT_FRIENDLY_MERGED_MANIFESTS,
     INSTANT_RUN_MERGED_MANIFESTS,
     MANIFEST_METADATA,

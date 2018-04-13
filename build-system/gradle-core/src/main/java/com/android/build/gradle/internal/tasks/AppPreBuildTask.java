@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
@@ -26,6 +27,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -50,7 +52,9 @@ public class AppPreBuildTask extends AndroidVariantTask {
 
     // list of Android only compile and runtime classpath.
     private ArtifactCollection compileManifests;
+    private ArtifactCollection compileNonNamespacedManifests;
     private ArtifactCollection runtimeManifests;
+    private ArtifactCollection runtimeNonNamespacedManifests;
     private File fakeOutputDirectory;
     private boolean isBaseModule;
 
@@ -62,8 +66,20 @@ public class AppPreBuildTask extends AndroidVariantTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
+    public FileCollection getCompileNonNamespacedManifests() {
+        return compileNonNamespacedManifests.getArtifactFiles();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public FileCollection getRuntimeManifests() {
         return runtimeManifests.getArtifactFiles();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    public FileCollection getRuntimeNonNamespacedManifests() {
+        return runtimeNonNamespacedManifests.getArtifactFiles();
     }
 
     @OutputDirectory
@@ -78,8 +94,13 @@ public class AppPreBuildTask extends AndroidVariantTask {
 
     @TaskAction
     void run() {
-        Set<ResolvedArtifactResult> compileArtifacts = compileManifests.getArtifacts();
-        Set<ResolvedArtifactResult> runtimeArtifacts = runtimeManifests.getArtifacts();
+        Set<ResolvedArtifactResult> compileArtifacts = new HashSet<>();
+        compileArtifacts.addAll(compileManifests.getArtifacts());
+        compileArtifacts.addAll(compileNonNamespacedManifests.getArtifacts());
+
+        Set<ResolvedArtifactResult> runtimeArtifacts = new HashSet<>();
+        runtimeArtifacts.addAll(runtimeManifests.getArtifacts());
+        runtimeArtifacts.addAll(runtimeNonNamespacedManifests.getArtifacts());
 
         // create a map where the key is either the sub-project path, or groupId:artifactId for
         // external dependencies.
@@ -166,8 +187,14 @@ public class AppPreBuildTask extends AndroidVariantTask {
             task.isBaseModule = variantScope.getType().isBaseModule();
             task.compileManifests =
                     variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
+            task.compileNonNamespacedManifests =
+                    variantScope.getArtifactCollection(
+                            COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST);
             task.runtimeManifests =
                     variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.runtimeNonNamespacedManifests =
+                    variantScope.getArtifactCollection(
+                            RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST);
 
             task.fakeOutputDirectory =
                     new File(
