@@ -24,8 +24,8 @@ import com.android.SdkConstants.ATTR_PROMPT
 import com.android.SdkConstants.ATTR_TEXT
 import com.android.SdkConstants.ATTR_TITLE
 import com.android.resources.ResourceFolderType
-import com.android.tools.lint.checks.RestrictionsDetector.ATTR_DESCRIPTION
-import com.android.tools.lint.checks.RestrictionsDetector.TAG_RESTRICTIONS
+import com.android.tools.lint.checks.RestrictionsDetector.Companion.ATTR_DESCRIPTION
+import com.android.tools.lint.checks.RestrictionsDetector.Companion.TAG_RESTRICTIONS
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue

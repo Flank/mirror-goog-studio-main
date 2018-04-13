@@ -34,7 +34,7 @@ import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.VALUE_FALSE;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 
 import com.android.annotations.NonNull;
@@ -389,6 +389,10 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                                 hasPermission = true;
                                 break;
                             }
+                        }
+
+                        if (SliceDetector.Companion.isSliceProvider(element)) {
+                            return;
                         }
 
                         if (!hasPermission) {

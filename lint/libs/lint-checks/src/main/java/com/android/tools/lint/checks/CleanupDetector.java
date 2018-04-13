@@ -18,8 +18,8 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_CONTENTPROVIDER;
 import static com.android.SdkConstants.CLASS_CONTEXT;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
-import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 import static org.jetbrains.uast.UastUtils.getOutermostQualified;
 import static org.jetbrains.uast.UastUtils.getParentOfType;
 import static org.jetbrains.uast.UastUtils.getQualifiedChain;
@@ -50,28 +50,26 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
-import org.jetbrains.uast.UDeclarationsExpression;
 import org.jetbrains.uast.UDoWhileExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
-import org.jetbrains.uast.UExpressionList;
-import org.jetbrains.uast.UField;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.ULocalVariable;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UPolyadicExpression;
-import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UReturnExpression;
 import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UWhileExpression;
 import org.jetbrains.uast.UastCallKind;
-import org.jetbrains.uast.UastSpecialExpressionKind;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
@@ -185,6 +183,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             "android.content.SharedPreferences";
     private static final String ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
             "android.content.SharedPreferences.Editor";
+
+    private static final boolean USE_NEW_DATA_FLOW_ANALYZER = true;
 
     /** Constructs a new {@link CleanupDetector} */
     public CleanupDetector() {}
@@ -331,11 +331,145 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         }
     }
 
+    @SuppressWarnings("UnusedAssignment")
     private static void checkRecycled(
             @NonNull final JavaContext context,
             @NonNull UCallExpression node,
             @NonNull final String recycleType,
             @NonNull final String recycleName) {
+
+        if (!USE_NEW_DATA_FLOW_ANALYZER) {
+            checkRecycledOld(context, node, recycleType, recycleName);
+            return;
+        }
+
+        UMethod method = getParentOfType(node, UMethod.class, true);
+        if (method == null) {
+            return;
+        }
+        AtomicBoolean recycled = new AtomicBoolean(false);
+        AtomicBoolean escapes = new AtomicBoolean(false);
+        DataFlowAnalyzer visitor =
+                new DataFlowAnalyzer(Collections.singleton(node)) {
+                    @Override
+                    public void receiver(@NotNull UCallExpression call) {
+                        if (isCleanup(call)) {
+                            recycled.set(true);
+                        }
+                        super.receiver(call);
+                    }
+
+                    private boolean isCleanup(@NonNull UCallExpression call) {
+                        String methodName = getMethodName(call);
+
+                        if ("use".equals(methodName) && CLOSE.equals(recycleName)) {
+                            // Kotlin: "use" calls close; see issue 62377185
+                            // Can't call call.resolve() to check it's the runtime because
+                            // resolve returns null on these usages.
+                            // Now make sure we're calling it on the right variable
+                            UExpression operand = call.getReceiver();
+                            if (operand instanceof UReferenceExpression) {
+                                PsiElement resolved = ((UReferenceExpression) operand).resolve();
+                                //noinspection SuspiciousMethodCalls
+                                if (resolved != null && getReferences().contains(resolved)) {
+                                    return true;
+                                }
+                            }
+                        }
+
+                        if (!recycleName.equals(methodName)) {
+                            return false;
+                        }
+                        PsiMethod method = call.resolve();
+                        if (method != null) {
+                            PsiClass containingClass = method.getContainingClass();
+                            if (context.getEvaluator()
+                                    .extendsClass(containingClass, recycleType, false)) {
+                                // Yes, called the right recycle() method; now make sure
+                                // we're calling it on the right variable
+                                UExpression operand = call.getReceiver();
+                                if (operand instanceof UReferenceExpression) {
+                                    PsiElement resolved =
+                                            ((UReferenceExpression) operand).resolve();
+                                    //noinspection SuspiciousMethodCalls
+                                    if (resolved != null && getReferences().contains(resolved)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public void field(@NotNull UElement field) {
+                        escapes.set(true);
+                    }
+
+                    @Override
+                    public void argument(
+                            @NotNull UCallExpression call, @NotNull UElement reference) {
+                        // Special case
+                        if (recycleType.equals(SURFACE_TEXTURE_CLS)
+                                && UastExpressionUtils.isConstructorCall(call)) {
+                            PsiMethod resolved = call.resolve();
+                            if (resolved != null
+                                    && context.getEvaluator()
+                                            .isMemberInClass(resolved, SURFACE_CLS)) {
+                                return;
+                            }
+                        }
+
+                        // Special case: MotionEvent.obtain(MotionEvent): passing in an
+                        // event here does not recycle the event, and we also know it
+                        // doesn't escape
+                        if (OBTAIN.equals(getMethodName(call))) {
+                            PsiMethod method = call.resolve();
+                            if (context.getEvaluator().isMemberInClass(method, MOTION_EVENT_CLS)) {
+                                return;
+                            }
+                        }
+
+                        escapes.set(true);
+                    }
+
+                    @Override
+                    public void returns(@NotNull UReturnExpression expression) {
+                        escapes.set(true);
+                    }
+                };
+        method.accept(visitor);
+
+        if (!recycled.get() && !escapes.get()) {
+            String className = recycleType.substring(recycleType.lastIndexOf('.') + 1);
+            String message;
+            if (RECYCLE.equals(recycleName)) {
+                message =
+                        String.format(
+                                "This `%1$s` should be recycled after use with `#recycle()`",
+                                className);
+            } else {
+                message =
+                        String.format(
+                                "This `%1$s` should be freed up after use with `#%2$s()`",
+                                className, recycleName);
+            }
+
+            UElement locationNode = node.getMethodIdentifier();
+            if (locationNode == null) {
+                locationNode = node;
+            }
+            Location location = context.getLocation(locationNode);
+            context.report(RECYCLE_RESOURCE, node, location, message);
+        }
+    }
+
+    private static void checkRecycledOld(
+            @NonNull final JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull final String recycleType,
+            @NonNull final String recycleName) {
+
         PsiVariable boundVariable = getVariableElement(node);
         if (boundVariable == null) {
             return;
@@ -422,6 +556,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod calledMethod) {
+        // TODO: Switch to new DataFlowAnalyzer
         if (isBeginTransaction(context, calledMethod)) {
             PsiVariable boundVariable = getVariableElement(node, true, true);
             if (isCommittedInChainedCalls(context, node)) {
@@ -553,6 +688,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod calledMethod) {
+        // TODO: Switch to new DataFlowAnalyzer
         if (isSharedEditorCreation(context, calledMethod)) {
             if (!node.getValueArguments().isEmpty()) {
                 // Passing parameters to edit(); that's not the built-in edit method
@@ -789,65 +925,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     @Nullable
     public static PsiVariable getVariableElement(
             @NonNull UCallExpression rhs, boolean allowChainedCalls, boolean allowFields) {
-        UElement parent = skipParentheses(UastUtils.getQualifiedParentOrThis(rhs).getUastParent());
-
-        // Handle some types of chained calls; e.g. you might have
-        //    var = prefs.edit().put(key,value)
-        // and here we want to skip past the put call
-        if (allowChainedCalls) {
-            while (true) {
-                if ((parent instanceof UQualifiedReferenceExpression)) {
-                    UElement parentParent = skipParentheses(parent.getUastParent());
-                    if ((parentParent instanceof UQualifiedReferenceExpression)) {
-                        parent = skipParentheses(parentParent.getUastParent());
-                    } else if (parentParent instanceof UVariable
-                            || parentParent instanceof UPolyadicExpression) {
-                        parent = parentParent;
-                        break;
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-
-        if (UastExpressionUtils.isAssignment(parent)) {
-            UBinaryExpression assignment = (UBinaryExpression) parent;
-            assert assignment != null;
-            UExpression lhs = assignment.getLeftOperand();
-            if (lhs instanceof UReferenceExpression) {
-                PsiElement resolved = ((UReferenceExpression) lhs).resolve();
-                if (resolved instanceof PsiVariable
-                        && (allowFields || !(resolved instanceof PsiField))) {
-                    // e.g. local variable, parameter - but not a field
-                    return ((PsiVariable) resolved);
-                }
-            }
-        } else if (parent instanceof UVariable && (allowFields || !(parent instanceof UField))) {
-            // Handle elvis operators in Kotlin. A statement like this:
-            //   val transaction = f.beginTransaction() ?: return
-            // is turned into
-            //   var transaction: android.app.FragmentTransaction = elvis {
-            //       @org.jetbrains.annotations.NotNull var var8633f9d5: android.app.FragmentTransaction = f.beginTransaction()
-            //       if (var8633f9d5 != null) var8633f9d5 else return
-            //   }
-            // and here we want to record "transaction", not "var8633f9d5", as the variable
-            // to track.
-            if (parent.getUastParent() instanceof UDeclarationsExpression
-                    && parent.getUastParent().getUastParent() instanceof UExpressionList) {
-                UExpressionList exp = (UExpressionList) parent.getUastParent().getUastParent();
-                UastSpecialExpressionKind kind = exp.getKind();
-                if (kind.getName().equals("elvis") && exp.getUastParent() instanceof UVariable) {
-                    parent = exp.getUastParent();
-                }
-            }
-
-            return ((UVariable) parent).getPsi();
-        }
-
-        return null;
+        return DataFlowAnalyzer.Companion.getVariableElement(rhs, allowChainedCalls, allowFields);
     }
 
     private static boolean isBeginTransaction(

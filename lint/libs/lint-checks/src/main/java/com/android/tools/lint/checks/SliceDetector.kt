@@ -1,0 +1,529 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint.checks
+
+import com.android.SdkConstants
+import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.TAG_CATEGORY
+import com.android.SdkConstants.TAG_INTENT_FILTER
+import com.android.SdkConstants.TAG_PROVIDER
+import com.android.tools.lint.client.api.TYPE_LONG
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.resolveManifestName
+import com.android.utils.XmlUtils.getFirstSubTagByName
+import com.android.utils.XmlUtils.getNextTagByName
+import com.android.utils.next
+import com.android.utils.subtag
+import com.intellij.psi.PsiLocalVariable
+import com.intellij.psi.PsiMethod
+import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UClass
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.util.isConstructorCall
+import org.w3c.dom.Element
+
+/**
+ * Helps construct slices correctly
+ */
+class SliceDetector : Detector(), SourceCodeScanner {
+    companion object {
+        private val IMPLEMENTATION = Implementation(
+            SliceDetector::class.java,
+            Scope.JAVA_FILE_SCOPE
+        )
+
+        /** Problems with slice registration and construction */
+        @JvmField
+        val ISSUE = Issue.create(
+            id = "Slices",
+            briefDescription = "Slices",
+            explanation = """
+            This check analyzes usages of the Slices API and offers suggestions based
+            on best practices.
+            """,
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
+        )
+
+        private const val SLICE_PROVIDER_CLASS_1 = "androidx.slice.SliceProvider"
+        private const val SLICE_PROVIDER_CLASS_2 = "android.app.slice.SliceProvider"
+        private const val ICON_CLASS = "android.graphics.drawable.Icon"
+        private const val ICON_COMPAT_CLASS = "androidx.core.graphics.drawable.IconCompat"
+        private const val SLICE_ACTION_CLASS = "androidx.slice.builders.SliceAction"
+        private const val LIST_BUILDER_CLASS = "androidx.slice.builders.ListBuilder"
+        private const val LIST_INPUT_RANGE_BUILDER_CLASS =
+            "androidx.slice.builders.ListBuilder.InputRangeBuilder"
+        private const val LIST_RANGE_BUILDER_CLASS =
+            "androidx.slice.builders.ListBuilder.RangeBuilder"
+        private const val LIST_HEADER_BUILDER_CLASS =
+            "androidx.slice.builders.ListBuilder.HeaderBuilder"
+        private const val GRID_ROW_BUILDER_CLASS = "androidx.slice.builders.GridRowBuilder"
+        private const val GRID_ROW_CELL_BUILDER_CLASS =
+            "androidx.slice.builders.GridRowBuilder.CellBuilder"
+        private const val ROW_BUILDER_CLASS = "androidx.slice.builders.ListBuilder.RowBuilder"
+        private const val CATEGORY_SLICE = "android.app.slice.category.SLICE"
+
+        const val WARN_ABOUT_TOO_MANY_ROWS = false
+
+        /** Checks whether a provider is a slice provider  */
+        fun isSliceProvider(provider: Element): Boolean {
+            var intentFilter = getFirstSubTagByName(provider, TAG_INTENT_FILTER)
+            while (intentFilter != null) {
+                var category = getFirstSubTagByName(intentFilter, TAG_CATEGORY)
+                while (category != null) {
+                    val name = category.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                    if (CATEGORY_SLICE == name) {
+                        return true
+                    }
+                    category = getNextTagByName(category, TAG_CATEGORY)
+                }
+                intentFilter = getNextTagByName(intentFilter, TAG_INTENT_FILTER)
+            }
+
+            return false
+        }
+    }
+
+    override fun applicableSuperClasses(): List<String>? {
+        return listOf(SLICE_PROVIDER_CLASS_1, SLICE_PROVIDER_CLASS_2)
+    }
+
+    override fun visitClass(context: JavaContext, declaration: UClass) {
+        val sliceProvider = declaration.qualifiedName ?: return
+
+        // Make sure slice provider is registered correctly in the manifest
+        // Make sure this actions resource is registered in the manifest
+        if (context.mainProject.isLibrary) {
+            return
+        }
+
+        val mainProject = context.mainProject
+        val mergedManifest = mainProject.mergedManifest ?: return
+        val root = mergedManifest.documentElement ?: return
+        val application = root.subtag(SdkConstants.TAG_APPLICATION) ?: return
+
+        var provider = application.subtag(TAG_PROVIDER)
+        while (provider != null) {
+            val manifestName = resolveManifestName(provider)
+            if (sliceProvider == manifestName) {
+                break
+            }
+            provider = provider.next(TAG_PROVIDER)
+        }
+
+        if (provider == null) {
+            // Here we should report
+            //    "This `SliceProvider` should be registered in the manifest"
+            // but that's already done by an existing lint check, no need to
+            // double up the reports
+            return
+        }
+
+        var firstCategory: Element? = null
+        var intentFilter = getFirstSubTagByName(provider, TAG_INTENT_FILTER)
+        while (intentFilter != null) {
+            var foundCategory = false
+            var category = getFirstSubTagByName(intentFilter, TAG_CATEGORY)
+            while (category != null) {
+                val name = category.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                if (CATEGORY_SLICE == name) {
+                    foundCategory = true
+                    if (firstCategory == null) {
+                        firstCategory = category
+                    }
+                    break
+                }
+                category = getNextTagByName(category, TAG_CATEGORY)
+            }
+
+            if (!foundCategory) {
+                val location =
+                    context.client.findManifestSourceLocation(intentFilter)?.withSecondary(
+                        context.getNameLocation(declaration),
+                        "SliceProvider declaration"
+                    )
+                if (location != null) {
+                    context.report(
+                        ISSUE, location,
+                        "All `SliceProvider` filters require category slice to be set: " +
+                                " <category android:name=\"android.app.slice.category.SLICE\" />",
+                        null
+                    )
+                }
+            }
+
+            intentFilter = getNextTagByName(intentFilter, TAG_INTENT_FILTER)
+        }
+
+        val onMapMethod = declaration.methods.firstOrNull {
+            it.name == "onMapIntentToUri" && it.uastParameters.size == 1
+        }
+
+        // declares intent: firstCategory != null
+        // requires intent: onMapMethod != null
+
+        if (onMapMethod != null && firstCategory == null) {
+            context.report(
+                ISSUE, declaration, context.getNameLocation(onMapMethod),
+                "Define intent filters in your manifest on your " +
+                        "`<provider android:name=\"$sliceProvider\">`; otherwise " +
+                        "`onMapIntentToUri` will not be called."
+            )
+        } else if (firstCategory != null && onMapMethod == null) {
+            val location = context.getNameLocation(declaration)
+            context.client.findManifestSourceLocation(firstCategory)
+                ?.let { location.secondary = it }
+            context.report(
+                ISSUE, declaration, location,
+                "Implement `SliceProvider#onMapIntentToUri` to handle the intents " +
+                        "defined on your slice `<provider>` in your manifest."
+            )
+        }
+    }
+
+    override fun getApplicableConstructorTypes(): List<String>? {
+        return listOf(
+            LIST_BUILDER_CLASS,
+            ROW_BUILDER_CLASS,
+            GRID_ROW_BUILDER_CLASS,
+            GRID_ROW_CELL_BUILDER_CLASS,
+            LIST_HEADER_BUILDER_CLASS,
+            LIST_INPUT_RANGE_BUILDER_CLASS,
+            LIST_RANGE_BUILDER_CLASS
+        )
+    }
+
+    override fun visitConstructor(
+        context: JavaContext,
+        node: UCallExpression,
+        constructor: PsiMethod
+    ) {
+        val method = node.getParentOfType<UMethod>(UMethod::class.java, true) ?: return
+        val name = constructor.containingClass?.qualifiedName ?: return
+        when (name) {
+            LIST_BUILDER_CLASS -> checkListBuilder(context, node, method)
+            ROW_BUILDER_CLASS -> checkRowBuilder(context, node, method)
+            //GRID_ROW_BUILDER_CLASS -> checkGridRowBuilder(context, node, method)
+            GRID_ROW_CELL_BUILDER_CLASS, LIST_HEADER_BUILDER_CLASS -> checkHasContent(
+                name,
+                context,
+                node,
+                method
+            )
+        }
+    }
+
+    private fun checkListBuilder(
+        context: JavaContext,
+        listBuilder: UCallExpression,
+        method: UMethod
+    ) {
+        val rows = findRows(listBuilder, method)
+        if (rows.isEmpty()) {
+            context.report(
+                ISSUE, listBuilder, context.getLocation(listBuilder),
+                "A slice should have at least one row added to it"
+            )
+            return
+        }
+
+        var primaryAction = false
+        method.accept(object : DataFlowAnalyzer(rows) {
+            override fun receiver(call: UCallExpression) {
+                if (call.methodName == "setPrimaryAction") {
+                    primaryAction = true
+                }
+            }
+        })
+        if (!primaryAction) {
+            context.report(
+                ISSUE, listBuilder, context.getLocation(listBuilder),
+                "A slice should have a primary action set on one of its rows"
+            )
+            return
+        }
+
+        // Make sure that at least one of these defines at primary action
+        var rowCount = 0
+        val endActionItems = mutableListOf<UExpression>()
+        method.accept(object : DataFlowAnalyzer(listOf(listBuilder)) {
+            override fun receiver(call: UCallExpression) {
+                val methodName = call.methodName
+                if (call.methodName == "setPrimaryAction") {
+                    primaryAction = true
+                } else if (methodName == "addAction") {
+                    val arguments = call.valueArguments
+                    if (arguments.isEmpty()) {
+                        return
+                    }
+                    val first = arguments[0]
+                    val type = first.getExpressionType()?.canonicalText
+                    if (type == SLICE_ACTION_CLASS) {
+                        endActionItems.add(first)
+                    }
+                } else if (WARN_ABOUT_TOO_MANY_ROWS && (methodName == "addRow" ||
+                            methodName == "addInputRange" ||
+                            methodName == "addRange" ||
+                            methodName == "addGridRow"
+                            )
+                ) {
+                    rowCount++
+                    if (rowCount == 5) {
+                        context.report(
+                            ISSUE, listBuilder, context.getLocation(call),
+                            "Consider setting a see more action if more than 4 rows " +
+                                    "added to ListBuilder. Depending on where the slice is " +
+                                    "being displayed, all rows of content may not be visible, " +
+                                    "consider adding an intent to an activity with the rest " +
+                                    "of the content"
+                        )
+                    }
+                }
+            }
+        })
+
+        ensureSingleToggleType(
+            endActionItems, context,
+            "A mixture of slice actions and icons are not supported on a list, " +
+                    "add either actions or icons but not both."
+        )
+    }
+
+    private fun ensureSingleToggleType(
+        endActionItems: MutableList<UExpression>,
+        context: JavaContext,
+        message: String
+    ) {
+        if (endActionItems.size >= 2) {
+            var custom: UExpression? = null
+            var default: UExpression? = null
+            for (action in endActionItems) {
+                val constructorCall = findSliceActionConstructor(action) ?: continue
+                val constructorMethod = constructorCall.resolve() ?: continue
+                if (isCustomToggle(constructorMethod)) {
+                    custom = action
+                } else {
+                    default = action
+                }
+
+                if (custom != null && default != null) {
+                    val location = context.getLocation(custom).withSecondary(
+                        context.getLocation(default),
+                        "Conflicting action type here"
+                    )
+                    context.report(
+                        ISSUE, custom, location,
+                        message
+                    )
+                    break
+                }
+            }
+        }
+    }
+
+    /**
+     * Given a list builder construction, returns all the row builder constructor calls
+     * initialized with that list builder
+     */
+    private fun findRows(node: UCallExpression, method: UMethod): List<UCallExpression> {
+        val rows = mutableListOf<UCallExpression>()
+        method.accept(object : DataFlowAnalyzer(listOf(node)) {
+            override fun argument(
+                call: UCallExpression,
+                reference: UElement
+            ) {
+                if (call.isConstructorCall()) {
+                    val qualifiedName = call.resolve()?.containingClass?.qualifiedName ?: return
+                    when (qualifiedName) {
+                        LIST_INPUT_RANGE_BUILDER_CLASS,
+                        LIST_RANGE_BUILDER_CLASS,
+                        LIST_HEADER_BUILDER_CLASS,
+                        GRID_ROW_BUILDER_CLASS,
+                        GRID_ROW_CELL_BUILDER_CLASS, // Not sure about this one
+                        ROW_BUILDER_CLASS -> {
+                            rows.add(call)
+                        }
+                    }
+                }
+            }
+        })
+
+        return rows
+    }
+
+    private fun isContentMethod(methodName: String): Boolean {
+        // Methods on RowBuilder, HeaderBuilder, CellBuilder etc that add content items
+        return when (methodName) {
+            "setTitle",
+            "setPrimaryAction",
+            "addText",
+            "addTitleText",
+            "setSubtitle",
+            "addEndItem",
+            "setTitleItem",
+            "addImage",
+            "setSummarySubtitle",
+            "setSummary" -> true
+            else -> false
+        }
+    }
+
+    private fun checkHasContent(
+        qualifiedName: String,
+        context: JavaContext,
+        node: UCallExpression,
+        method: UMethod
+    ) {
+        var hasContent = false
+        method.accept(object : DataFlowAnalyzer(listOf(node)) {
+            override fun receiver(call: UCallExpression) {
+                val methodName = call.methodName ?: return
+                if (isContentMethod(methodName)) {
+                    hasContent = true
+                }
+            }
+        })
+
+        if (!hasContent) {
+            val name = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1)
+            warnMissingContent(name, context, node)
+        }
+    }
+
+    private fun checkRowBuilder(
+        context: JavaContext,
+        node: UCallExpression,
+        method: UMethod
+    ) {
+        var timestamp: UCallExpression? = null
+        var endActionItem: UCallExpression? = null
+        val endActionItems = mutableListOf<UExpression>()
+        var endIconItem: UCallExpression? = null
+        var hasContent = false
+        method.accept(object : DataFlowAnalyzer(listOf(node)) {
+            override fun receiver(call: UCallExpression) {
+                val methodName = call.methodName ?: return
+                if ((methodName == "addEndItem" || methodName == "setTitleItem")) {
+                    hasContent = true
+                    val arguments = call.valueArguments
+                    if (arguments.isEmpty()) {
+                        return
+                    }
+                    val first = arguments[0]
+                    val type = first.getExpressionType()?.canonicalText
+                    if (arguments.size == 1 && type == TYPE_LONG) {
+                        if (timestamp != null) {
+                            val location = context.getLocation(call).withSecondary(
+                                context.getLocation(timestamp!!),
+                                "Earlier timestamp here"
+                            )
+                            context.report(
+                                ISSUE, call, location,
+                                "RowBuilder can only have one timestamp added to it, " +
+                                        "remove one of your timestamps"
+                            )
+                        } else {
+                            timestamp = call
+                        }
+                    } else if (type == SLICE_ACTION_CLASS) {
+                        if (endIconItem != null) {
+                            val location = context.getLocation(call).withSecondary(
+                                context.getLocation(endIconItem!!),
+                                "Earlier icon here"
+                            )
+                            context.report(
+                                ISSUE, call, location,
+                                "RowBuilder cannot have a mixture of icons and slice " +
+                                        "actions added to the end items"
+                            )
+                        }
+                        endActionItem = call
+                        endActionItems.add(first)
+                    } else if (type == ICON_CLASS || type == ICON_COMPAT_CLASS) {
+                        if (endActionItem != null) {
+                            val location = context.getLocation(call).withSecondary(
+                                context.getLocation(endActionItem!!),
+                                "Earlier slice action here"
+                            )
+                            context.report(
+                                ISSUE, call, location,
+                                "RowBuilder cannot have a mixture of icons and slice " +
+                                        "actions added to the end items"
+                            )
+                        }
+                        endIconItem = call
+                    }
+                } else if (isContentMethod(methodName)) {
+                    hasContent = true
+                }
+            }
+        })
+
+        val message = "RowBuilder should not have a mixture of default and custom toggles"
+        ensureSingleToggleType(endActionItems, context, message)
+
+        if (!hasContent) {
+            warnMissingContent("RowBuilder", context, node)
+        }
+    }
+
+    private fun warnMissingContent(builder: String, context: JavaContext, node: UCallExpression) {
+        context.report(
+            ISSUE, node, context.getLocation(node),
+            "$builder should have a piece of content added to it"
+        )
+    }
+
+    private fun isCustomToggle(method: PsiMethod): Boolean {
+        return method.parameterList.parametersCount == 3
+    }
+
+    private fun findSliceActionConstructor(node: UElement): UCallExpression? {
+        if (node is UReferenceExpression) {
+            val resolved = node.resolve() ?: return null
+            if (resolved is ULocalVariable) {
+                val initializer = resolved.uastInitializer ?: return null
+                return findSliceActionConstructor(initializer)
+            } else if (resolved is PsiLocalVariable) {
+                val initializer = UastLintUtils.findLastAssignment(resolved, node) ?: return null
+                return findSliceActionConstructor(initializer)
+            }
+        } else if (node is UCallExpression && node.isConstructorCall()) {
+            val name = node.resolve()?.containingClass?.qualifiedName
+            if (name == SLICE_ACTION_CLASS) {
+                return node
+            }
+        }
+        return null
+    }
+}
