@@ -2,7 +2,7 @@
  * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * you may not use this/ file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
@@ -30,6 +32,8 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -44,6 +48,7 @@ import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -61,6 +66,7 @@ public class GenerateTestConfig extends DefaultTask {
     File generatedJavaResourcesDirectory;
     ApkInfo mainApkInfo;
     BuildableArtifact manifests;
+    BuildableArtifact compiledResourcesZip;
     Supplier<String> packageForR;
 
     @Input
@@ -88,6 +94,7 @@ public class GenerateTestConfig extends DefaultTask {
                 sdkHome,
                 getPackageForR(),
                 checkNotNull(output, "Unable to find manifest output").getOutputFile().toPath(),
+                compiledResourcesZip,
                 generatedJavaResourcesDirectory.toPath().toAbsolutePath());
     }
 
@@ -98,14 +105,19 @@ public class GenerateTestConfig extends DefaultTask {
             @NonNull Path sdkHome,
             @NonNull String packageForR,
             @NonNull Path manifest,
+            @Nullable BuildableArtifact compiledResourcesZip,
             @NonNull Path outputDir)
             throws IOException {
 
         Properties properties = new Properties();
         properties.setProperty("android_sdk_home", sdkHome.toAbsolutePath().toString());
         properties.setProperty("android_merged_resources", resDir.toAbsolutePath().toString());
-        properties.setProperty("android_merged_assets", assetsDir.toAbsolutePath().toString());
         properties.setProperty("android_merged_manifest", manifest.toAbsolutePath().toString());
+        properties.setProperty("android_merged_assets", assetsDir.toAbsolutePath().toString());
+        if (compiledResourcesZip != null) {
+            properties.setProperty("android_resource_apk",
+                    apkFrom(compiledResourcesZip).getPath());
+        }
         properties.setProperty("android_custom_package", packageForR);
 
         Path output =
@@ -136,6 +148,20 @@ public class GenerateTestConfig extends DefaultTask {
         return sdkHome.toString();
     }
 
+    @Optional
+    @Input
+    public String getCompiledResourcesZip() {
+        if (compiledResourcesZip == null) {
+            return null;
+        }
+        return apkFrom(compiledResourcesZip).getPath();
+    }
+
+    @NonNull
+    private static File apkFrom(BuildableArtifact compiledResourcesZip) {
+        return Iterables.getOnlyElement(compiledResourcesZip.getFiles());
+    }
+
     @OutputDirectory
     public File getOutputFile() {
         return generatedJavaResourcesDirectory;
@@ -155,7 +181,7 @@ public class GenerateTestConfig extends DefaultTask {
             this.scope = scope;
             this.testedScope =
                     Preconditions.checkNotNull(
-                                    scope.getTestedVariantData(), "Not a unit test variant.")
+                            scope.getTestedVariantData(), "Not a unit test variant.")
                             .getScope();
         }
 
@@ -183,6 +209,17 @@ public class GenerateTestConfig extends DefaultTask {
                     testedScope
                             .getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
+
+            boolean enableBinaryResources =
+                    scope.getGlobalScope().getProjectOptions().get(
+                            BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
+            if (enableBinaryResources) {
+                task.compiledResourcesZip = scope
+                        .getArtifacts().getFinalArtifactFiles(APK_FOR_LOCAL_TEST);
+
+                task.dependsOn(task.compiledResourcesZip);
+            }
+
             task.assets = testedScope.getArtifacts().getFinalArtifactFiles(MERGED_ASSETS);
             task.dependsOn(task.assets);
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();

@@ -45,7 +45,8 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class UnitTestingAndroidResourcesTest {
 
-    public static final String PLATFORM_JAR_NAME = "android-all-7.0.0_r1-robolectric-0.jar";
+    public static final String SDK_VERSION = "7.0.0_r1-robolectric-r1";
+    public static final String PLATFORM_JAR_NAME = "android-all-" + SDK_VERSION + ".jar";
 
     enum Plugin {
         LIBRARY,
@@ -57,16 +58,24 @@ public class UnitTestingAndroidResourcesTest {
         GENERATE_JAR,
     }
 
+    enum ResourcesMode {
+        RAW,
+        COMPILED
+    }
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("unitTestingAndroidResources").create();
 
-    @Parameterized.Parameters(name = "plugin={0}, aaptGeneration={1}, rClassStrategy={2}")
+    @Parameterized.Parameters(name = "plugin={0}, rClassStrategy={1}, resourcesMode={2}")
     public static Object[][] data() {
         return new Object[][] {
-            {Plugin.APPLICATION, null},
-            {Plugin.LIBRARY, RClassStrategy.COMPILE_SOURCES},
-            {Plugin.LIBRARY, RClassStrategy.GENERATE_JAR},
+            {Plugin.APPLICATION, null, ResourcesMode.RAW},
+            {Plugin.APPLICATION, null, ResourcesMode.COMPILED},
+            {Plugin.LIBRARY, RClassStrategy.COMPILE_SOURCES, ResourcesMode.RAW},
+            {Plugin.LIBRARY, RClassStrategy.COMPILE_SOURCES, ResourcesMode.COMPILED},
+            {Plugin.LIBRARY, RClassStrategy.GENERATE_JAR, ResourcesMode.RAW},
+            {Plugin.LIBRARY, RClassStrategy.GENERATE_JAR, ResourcesMode.COMPILED},
         };
     }
 
@@ -74,6 +83,9 @@ public class UnitTestingAndroidResourcesTest {
 
     @Parameterized.Parameter(value = 1)
     public RClassStrategy rClassStrategy;
+
+    @Parameterized.Parameter(value = 2)
+    public ResourcesMode resourcesMode;
 
     @Before
     public void changePlugin() throws Exception {
@@ -93,7 +105,7 @@ public class UnitTestingAndroidResourcesTest {
         for (Path path : GradleTestProject.getLocalRepositories()) {
             Path platformJar =
                     path.resolve(
-                            "org/robolectric/android-all/7.0.0_r1-robolectric-0/"
+                            "org/robolectric/android-all/" + SDK_VERSION + "/"
                                     + PLATFORM_JAR_NAME);
             if (Files.exists(platformJar)) {
                 found = true;
@@ -117,6 +129,10 @@ public class UnitTestingAndroidResourcesTest {
                         .with(
                                 BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
                                 rClassStrategy == RClassStrategy.GENERATE_JAR);
+
+        runGradleTasks.with(
+                BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES,
+                resourcesMode == ResourcesMode.COMPILED);
 
         runGradleTasks.run("testDebugUnitTest");
 
@@ -190,6 +206,10 @@ public class UnitTestingAndroidResourcesTest {
                     }
                 });
 
+        if (resourcesMode == ResourcesMode.COMPILED && plugin != Plugin.LIBRARY) {
+            assertThat(Paths.get(properties.getProperty("android_resource_apk"))).isNotNull();
+        }
+
         // Check the tests see the assets from dependencies, even in the library case where they
         // would not otherwise be merged.
         List<String> filenames =
@@ -198,7 +218,8 @@ public class UnitTestingAndroidResourcesTest {
                         .map(path -> path.getFileName().toString())
                         .collect(Collectors.toList());
 
-        assertThat(filenames).containsExactly("foo.txt", "bar.txt");
+        assertThat(filenames)
+                .containsExactly("foo.txt", "bar.txt", "test-asset.txt", "test-asset2.txt");
     }
 
     @Nullable

@@ -184,6 +184,7 @@ public enum InternalArtifactType implements ArtifactType {
     ABI_PACKAGED_SPLIT,
     FULL_APK,
     APK,
+    APK_FOR_LOCAL_TEST,
     APK_MAPPING,
     AAR,
     INSTANTAPP_BUNDLE,
