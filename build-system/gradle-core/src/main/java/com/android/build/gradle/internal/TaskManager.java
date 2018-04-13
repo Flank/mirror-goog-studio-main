@@ -110,6 +110,7 @@ import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
+import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -1126,13 +1127,16 @@ public abstract class TaskManager {
     }
 
     public void createApkProcessResTask(
-
             @NonNull VariantScope scope) {
-
         VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
         InternalArtifactType packageOutputType =
                 (variantType.isApk() && !variantType.isForTesting()) ? FEATURE_RESOURCE_PKG : null;
 
+        createApkProcessResTask(scope, packageOutputType);
+    }
+
+    private void createApkProcessResTask(@NonNull VariantScope scope,
+            InternalArtifactType packageOutputType) {
         createProcessResTask(
                 scope,
                 new File(
@@ -1707,15 +1711,49 @@ public abstract class TaskManager {
                 checkNotNull(variantScope.getTestedVariantData(), "Not a unit test variant");
         VariantScope testedVariantScope = testedVariantData.getScope();
 
-        createPreBuildTasks(variantScope);
+        boolean includeAndroidResources = extension.getTestOptions().getUnitTests()
+                .isIncludeAndroidResources();
+        boolean enableBinaryResources = includeAndroidResources
+                && globalScope.getProjectOptions().get(
+                        BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
+
+        if (enableBinaryResources) {
+            createAnchorTasks(variantScope);
+        } else {
+            createPreBuildTasks(variantScope);
+            createCompileAnchorTask(variantScope);
+        }
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
 
+        // process java resources
         createProcessJavaResTask(variantScope);
-        createCompileAnchorTask(variantScope);
 
-        if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+        PackageForUnitTest packageForUnitTest = null;
+        if (includeAndroidResources) {
+            if (enableBinaryResources) {
+                // Add a task to process the manifest
+                createProcessTestManifestTask(variantScope, testedVariantData.getScope());
+
+                // Add a task to create the res values
+                createGenerateResValuesTask(variantScope);
+
+                // Add a task to merge the resource folders
+                createMergeResourcesTask(variantScope, true);
+
+                if (isLibrary()) {
+                    // Add a task to process the Android Resources and generate source files
+                    createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
+                }
+
+                // Add a task to merge the assets folders
+                createMergeAssetsTask(variantScope);
+
+                packageForUnitTest = createPackagingTaskForUnitTest(variantScope,
+                        testedVariantData.getScope());
+            }
+
             GenerateTestConfig generateTestConfig =
                     taskFactory.create(new GenerateTestConfig.ConfigAction(variantScope));
             variantScope.getCompileTask().dependsOn(generateTestConfig);
@@ -1725,16 +1763,8 @@ public abstract class TaskManager {
         // dependencies on tasks that prepare necessary data files.
         Task compileTask = variantScope.getCompileTask();
         compileTask.dependsOn(
-
                 variantScope.getProcessJavaResourcesTask(),
                 testedVariantScope.getProcessJavaResourcesTask());
-        if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
-            compileTask.dependsOn(testedVariantScope.getMergeAssetsTask());
-            compileTask.dependsOn(
-                    testedVariantScope
-                            .getVariantData()
-                            .getTaskByKind(TaskContainer.TaskKind.PROCESS_MANIFEST));
-        }
 
         // Empty R class jar. TODO: Resources support for unit tests?
         variantScope
@@ -1752,9 +1782,21 @@ public abstract class TaskManager {
         createRunUnitTestTask(variantScope);
 
         DefaultTask assembleUnitTests = variantScope.getAssembleTask();
+        if (packageForUnitTest != null) {
+            assembleUnitTests.dependsOn(packageForUnitTest);
+        }
 
         // This hides the assemble unit test task from the task list.
         assembleUnitTests.setGroup(null);
+    }
+
+    private PackageForUnitTest createPackagingTaskForUnitTest(VariantScope scope,
+            VariantScope testedScope) {
+        PackageForUnitTest packageForUnitTest =
+                taskFactory.create(new PackageForUnitTest.ConfigAction(scope));
+        packageForUnitTest.dependsOn(testedScope.getProcessResourcesTask());
+        packageForUnitTest.dependsOn(testedScope.getMergeAssetsTask());
+        return packageForUnitTest;
     }
 
     protected void createSplitsDiscovery(VariantScope variantScope) {
