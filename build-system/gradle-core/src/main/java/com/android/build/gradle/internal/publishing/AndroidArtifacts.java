@@ -30,6 +30,7 @@ import org.gradle.api.attributes.Attribute;
  */
 public class AndroidArtifacts {
     public static final Attribute<String> ARTIFACT_TYPE = Attribute.of("artifactType", String.class);
+    public static final Attribute<String> MODULE_PATH = Attribute.of("modulePath", String.class);
 
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
@@ -85,6 +86,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
     private static final String TYPE_FEATURE_TRANSITIVE_DEPS = "android-feature-transitive-deps";
+    private static final String TYPE_FEATURE_DEX = "android-feature-dex";
 
     // types for metadata content.
     private static final String TYPE_METADATA_FEATURE_DECLARATION = "android-metadata-feature-decl";
@@ -217,6 +219,10 @@ public class AndroidArtifacts {
         // File containing the list of transitive dependencies of a given feature. This is consumed
         // by other features to avoid repackaging the same thing.
         FEATURE_TRANSITIVE_DEPS(TYPE_FEATURE_TRANSITIVE_DEPS),
+
+        // The feature dex files output by the DexSplitter from the base. The base produces and
+        // publishes these files when there's multi-apk code shrinking.
+        FEATURE_DEX(TYPE_FEATURE_DEX),
 
         // Metadata artifacts
         METADATA_FEATURE_DECLARATION(TYPE_METADATA_FEATURE_DECLARATION),

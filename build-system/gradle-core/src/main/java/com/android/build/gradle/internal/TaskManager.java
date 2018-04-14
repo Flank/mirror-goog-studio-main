@@ -33,6 +33,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
+import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
@@ -59,6 +61,7 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -69,6 +72,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -216,6 +220,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -252,6 +257,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
@@ -3369,6 +3375,7 @@ public abstract class TaskManager {
                             InternalArtifactType.FEATURE_DEX,
                             ImmutableList.of(dexSplitterOutput),
                             transformTask.get());
+            publishFeatureDex(variantScope);
         } else {
             androidBuilder
                     .getIssueReporter()
@@ -3376,6 +3383,55 @@ public abstract class TaskManager {
                             Type.GENERIC,
                             new EvalIssueException(
                                     "Internal error, could not add the DexSplitterTransform"));
+        }
+    }
+
+    /**
+     * We have a separate method for publishing the classes.dex files back to the features (instead
+     * of using the typical PublishingSpecs pipeline) because multiple artifacts are published per
+     * BuildableArtifact in this case.
+     *
+     * <p>This method is similar to VariantScopeImpl.publishIntermediateArtifact, and some of the
+     * code was pulled from there. Once there's support for publishing multiple artifacts per
+     * BuildableArtifact in the PublishingSpecs pipeline, we can get rid of this method.
+     */
+    private void publishFeatureDex(@NonNull VariantScope variantScope) {
+        // first calculate the list of module paths
+        final Collection<String> modulePaths;
+        final AndroidConfig extension = globalScope.getExtension();
+        if (extension instanceof BaseAppModuleExtension) {
+            modulePaths =
+                    AppModelBuilder.getDynamicFeatures(
+                            (BaseAppModuleExtension) extension, globalScope);
+        } else if (extension instanceof FeatureExtension) {
+            modulePaths = FeatureModelBuilder.getDynamicFeatures(globalScope);
+        } else {
+            return;
+        }
+
+        Configuration configuration =
+                variantScope.getVariantData().getVariantDependency().getRuntimeElements();
+        Preconditions.checkNotNull(
+                configuration,
+                "Publishing to Runtime Element with no Runtime Elements configuration object. "
+                        + "VariantType: "
+                        + variantScope.getType());
+        BuildableArtifact artifact =
+                variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.FEATURE_DEX);
+        for (String modulePath : modulePaths) {
+            Provider<File> file =
+                    project.provider(
+                            () ->
+                                    new File(
+                                            Iterables.getOnlyElement(artifact.getFiles()),
+                                            modulePath.replace(":", "/")));
+            Map<Attribute<String>, String> attributeMap = ImmutableMap.of(MODULE_PATH, modulePath);
+            publishArtifactToConfiguration(
+                    configuration,
+                    file,
+                    artifact,
+                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                    attributeMap);
         }
     }
 

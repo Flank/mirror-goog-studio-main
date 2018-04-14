@@ -34,6 +34,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
+import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
@@ -139,16 +140,15 @@ import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -344,28 +344,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     variantDependency.getBundleElements(), file, artifact, artifactType);
         }
 
-    }
-
-    private static void publishArtifactToConfiguration(
-            @NonNull Configuration configuration,
-            @NonNull Object file,
-            @NonNull Object builtBy,
-            @NonNull ArtifactType artifactType) {
-        String type = artifactType.getType();
-        configuration
-                .getOutgoing()
-                .variants(
-                        (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
-                            variants.create(
-                                    type,
-                                    (variant) ->
-                                            variant.artifact(
-                                                    file,
-                                                    (artifact) -> {
-                                                        artifact.setType(type);
-                                                        artifact.builtBy(builtBy);
-                                                    }));
-                        });
     }
 
     @Override
@@ -1004,7 +982,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
-        ArtifactCollection artifacts = computeArtifactCollection(configType, scope, artifactType);
+        return getArtifactFileCollection(configType, scope, artifactType, null);
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getArtifactFileCollection(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap) {
+        ArtifactCollection artifacts =
+                computeArtifactCollection(configType, scope, artifactType, attributeMap);
 
         FileCollection fileCollection;
 
@@ -1019,7 +1008,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     computeArtifactCollection(
                                                     RUNTIME_CLASSPATH,
                                                     MODULE,
-                                                    ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                                                    ArtifactType.FEATURE_TRANSITIVE_DEPS,
+                                                    attributeMap)
                                             .getArtifactFiles())
                             .getArtifactFiles();
         } else {
@@ -1121,11 +1111,27 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
+        return computeArtifactCollection(configType, scope, artifactType, null);
+    }
+
+    @NonNull
+    private ArtifactCollection computeArtifactCollection(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap) {
 
         Configuration configuration = getConfiguration(configType);
 
         Action<AttributeContainer> attributes =
-                container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
+                container -> {
+                    container.attribute(ARTIFACT_TYPE, artifactType.getType());
+                    if (attributeMap != null) {
+                        for (Attribute<String> attribute : attributeMap.keySet()) {
+                            container.attribute(attribute, attributeMap.get(attribute));
+                        }
+                    }
+                };
 
         Spec<ComponentIdentifier> filter = getComponentFilter(scope);
 
