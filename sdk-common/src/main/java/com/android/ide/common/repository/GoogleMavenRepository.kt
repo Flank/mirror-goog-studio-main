@@ -17,14 +17,10 @@ package com.android.ide.common.repository
 
 import com.android.SdkConstants
 import com.google.common.collect.Maps
-import com.google.common.io.Files
 import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.util.HashMap
@@ -41,28 +37,22 @@ val GMAVEN_BASE_URL = System.getenv(GMAVEN_TEST_BASE_URL_ENV_VAR) ?: DEFAULT_GMA
  */
 abstract class GoogleMavenRepository @JvmOverloads constructor(
     /** Location to search for cached repository content files */
-    val cacheDir: File? = null,
+    cacheDir: File? = null,
 
     /**
      * Number of milliseconds to wait until timing out attempting to access the remote
      * repository
      */
-    private val networkTimeoutMs: Int = 3000,
+    networkTimeoutMs: Int = 3000,
 
     /** Maximum allowed age of cached data; default is 7 days */
-    private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()
-) {
+    cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()
+) : NetworkCache(GMAVEN_BASE_URL, MAVEN_GOOGLE_CACHE_DIR_KEY, cacheDir, networkTimeoutMs, cacheExpiryHours) {
 
     companion object {
         /** Key used in cache directories to locate the maven.google.com network cache */
         const val MAVEN_GOOGLE_CACHE_DIR_KEY = "maven.google"
     }
-
-    /** Reads the given query URL in, with the given time out, and returns the bytes found */
-    protected abstract fun readUrlData(url: String, timeout: Int): ByteArray?
-
-    /** Reports an error found during I/O */
-    protected abstract fun error(throwable: Throwable, message: String?)
 
     private var packageMap: MutableMap<String, PackageInfo>? = null
 
@@ -139,45 +129,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 .max()
     }
 
-    private fun findData(relative: String): InputStream? {
-        if (cacheDir != null) {
-            synchronized(this) {
-                val file = File(cacheDir, relative)
-                if (file.exists()) {
-                    val lastModified = file.lastModified()
-                    val now = System.currentTimeMillis()
-                    val expiryMs = TimeUnit.HOURS.toMillis(cacheExpiryHours.toLong())
-
-                    if (lastModified == 0L || now - lastModified <= expiryMs) {
-                        // We found a cached file. Make sure it's actually newer than what the IDE
-                        // ships with? Not really necessary since within the cache expiry interval
-                        // it will be refreshed anyway
-                        return BufferedInputStream(FileInputStream(file))
-                    }
-                }
-
-                try {
-                    val index = readUrlData(
-                        "$GMAVEN_BASE_URL$relative",
-                        networkTimeoutMs
-                    )
-                    if (index != null) {
-                        val parent = file.parentFile
-                        parent?.mkdirs()
-                        Files.write(index, file)
-                        return ByteArrayInputStream(index)
-                    }
-                } catch (e: Throwable) {
-                    // timeouts etc: fall through to use built-in data
-                }
-            }
-        }
-
-        // Fallback: Builtin index, used for offline scenarios etc
-        return readDefaultData(relative)
-    }
-
-    protected open fun readDefaultData(relative: String): InputStream? {
+    override fun readDefaultData(relative: String): InputStream? {
         return GoogleMavenRepository::class.java.getResourceAsStream("/versions-offline/$relative")
     }
 

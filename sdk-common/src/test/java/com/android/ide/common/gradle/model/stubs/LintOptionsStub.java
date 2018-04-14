@@ -37,7 +37,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     @Nullable private final Map<String, Integer> mySeverityOverrides;
     private final boolean myAbortOnError;
     private final boolean myAbsolutePaths;
-    private final boolean myApplySuggestions;
     private final boolean myNoLines;
     private final boolean myQuiet;
     private final boolean myCheckAllWarnings;
@@ -66,7 +65,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 ImmutableMap.of("key", 1),
                 true,
                 true,
-                false,
                 true,
                 true,
                 true,
@@ -95,7 +93,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
             @Nullable Map<String, Integer> overrides,
             boolean abortOnError,
             boolean absolutePaths,
-            boolean applySuggestions,
             boolean noLines,
             boolean quiet,
             boolean checkAllWarnings,
@@ -121,7 +118,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
         mySeverityOverrides = overrides;
         myAbortOnError = abortOnError;
         myAbsolutePaths = absolutePaths;
-        myApplySuggestions = applySuggestions;
         myNoLines = noLines;
         myQuiet = quiet;
         myCheckAllWarnings = checkAllWarnings;
@@ -200,11 +196,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     @Override
     public boolean isAbsolutePaths() {
         return myAbsolutePaths;
-    }
-
-    @Override
-    public boolean getApplySuggestions() {
-        return myApplySuggestions;
     }
 
     @Override
@@ -308,7 +299,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 && equals(options, LintOptions::getTextOutput)
                 && equals(options, LintOptions::getHtmlOutput)
                 && equals(options, LintOptions::getXmlOutput)
-                && equals(options, LintOptions::getApplySuggestions)
                 && equals(options, LintOptions::getBaselineFile)
                 && equals(options, LintOptions::getSeverityOverrides);
     }
@@ -323,7 +313,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 getTextOutput(),
                 getHtmlOutput(),
                 getXmlOutput(),
-                getApplySuggestions(),
                 getBaselineFile(),
                 getSeverityOverrides(),
                 isAbortOnError(),
@@ -369,8 +358,6 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 + myAbortOnError
                 + ", myAbsolutePaths="
                 + myAbsolutePaths
-                + ", myApplySuggestions="
-                + myApplySuggestions
                 + ", myNoLines="
                 + myNoLines
                 + ", myQuiet="

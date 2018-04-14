@@ -54,8 +54,6 @@ import java.io.IOException
  */
 open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
-    private lateinit var fileCache: FileCache
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var resourceFiles: BuildableArtifact private set
@@ -142,7 +140,6 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
                     artifacts.appendArtifact(INSTANT_RUN_MAIN_APK_RESOURCES, task, "out")
             task.aaptGeneration = AaptGeneration.fromProjectOptions(
                     variantScope.globalScope.projectOptions)
-            task.fileCache = variantScope.globalScope.buildCache!!
             task.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
 
         }

@@ -570,7 +570,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 example, calling `Resources.getColor(R.string.name)` is wrong.""",
             category = Category.CORRECTNESS,
             priority = 7,
-            severity = Severity.FATAL,
+            severity = Severity.ERROR,
             implementation = IMPLEMENTATION
         )
 

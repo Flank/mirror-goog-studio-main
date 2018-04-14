@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -27,6 +28,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
@@ -49,7 +51,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import org.gradle.api.file.FileCollection;
 
 /**
  * Dexing as a transform.
@@ -73,7 +74,7 @@ public class DexTransform extends Transform {
 
     private boolean preDexEnabled;
 
-    @Nullable private final FileCollection mainDexListFile;
+    @Nullable private final BuildableArtifact mainDexListFile;
 
     @NonNull private final TargetInfo targetInfo;
     @NonNull private final DexByteCodeConverter dexByteCodeConverter;
@@ -84,7 +85,7 @@ public class DexTransform extends Transform {
             @NonNull DexOptions dexOptions,
             @NonNull DexingType dexingType,
             boolean preDexEnabled,
-            @Nullable FileCollection mainDexListFile,
+            @Nullable BuildableArtifact mainDexListFile,
             @NonNull TargetInfo targetInfo,
             @NonNull DexByteCodeConverter dexByteCodeConverter,
             @NonNull MessageReceiver messageReceiver,
@@ -208,7 +209,7 @@ public class DexTransform extends Transform {
 
             File mainDexList = null;
             if (mainDexListFile != null && dexingType == DexingType.LEGACY_MULTIDEX) {
-                mainDexList = mainDexListFile.getSingleFile();
+                mainDexList = BuildableArtifactUtil.singleFile(mainDexListFile);
             }
 
             dexByteCodeConverter.convertByteCode(

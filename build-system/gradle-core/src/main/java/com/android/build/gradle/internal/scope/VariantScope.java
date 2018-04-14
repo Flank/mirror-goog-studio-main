@@ -187,12 +187,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getProguardComponentsJarFile();
 
     @NonNull
-    File getManifestKeepListProguardFile();
-
-    @NonNull
-    File getMainDexListFile();
-
-    @NonNull
     File getRenderscriptSourceOutputDir();
 
     @NonNull

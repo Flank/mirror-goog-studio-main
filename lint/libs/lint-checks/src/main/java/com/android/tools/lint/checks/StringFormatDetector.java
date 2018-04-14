@@ -477,7 +477,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mFormatStrings != null) {
             boolean checkCount = context.isEnabled(ARG_COUNT);
             boolean checkValid = context.isEnabled(INVALID);

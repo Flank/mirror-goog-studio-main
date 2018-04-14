@@ -95,7 +95,7 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
     public LayoutInflationDetector() {}
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mPendingErrors != null) {
             for (Pair<String, Location> pair : mPendingErrors) {
                 String inflatedLayout = pair.getFirst();

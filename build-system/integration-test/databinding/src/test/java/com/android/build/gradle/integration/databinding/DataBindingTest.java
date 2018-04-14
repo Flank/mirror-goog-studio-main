@@ -42,11 +42,11 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {
 
-    @Parameterized.Parameters(name = "library={0},withoutAdapters={1},useV2={2}")
+    @Parameterized.Parameters(name = "library={0},withoutAdapters={1},useV2={2},useAndoirdX={3}")
     public static Collection<Object[]> getParameters() {
         List<Object[]> options = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0, (i & 4) != 0});
+        for (int i = 0; i < 16; i++) {
+            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0});
         }
         return options;
     }
@@ -54,11 +54,15 @@ public class DataBindingTest {
     private final boolean myLibrary;
     private final String buildFile;
     private final boolean myUseV2;
+    private final String myDbPkg;
 
-    public DataBindingTest(boolean library, boolean withoutAdapters, boolean useV2) {
+    public DataBindingTest(
+            boolean library, boolean withoutAdapters, boolean useV2, boolean useAndroidX) {
         myWithoutAdapters = withoutAdapters;
         myLibrary = library;
         myUseV2 = useV2;
+        myDbPkg = useAndroidX ? "Landroidx/databinding/" : "Landroid/databinding/";
+
         List<String> options = new ArrayList<>();
         if (library) {
             options.add("library");
@@ -67,10 +71,12 @@ public class DataBindingTest {
             options.add("withoutadapters");
         }
         String v2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + useV2;
+        String androidX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databinding")
                         .addGradleProperties(v2)
+                        .addGradleProperties(androidX)
                         .create();
         buildFile = options.isEmpty()
                 ? null
@@ -99,8 +105,8 @@ public class DataBindingTest {
                 assertThat(aar).doesNotContainClass(implClass);
             }
 
-            assertThat(aar).doesNotContainClass("Landroid/databinding/adapters/Converters;");
-            assertThat(aar).doesNotContainClass("Landroid/databinding/DataBindingComponent;");
+            assertThat(aar).doesNotContainClass(myDbPkg + "adapters/Converters;");
+            assertThat(aar).doesNotContainClass(myDbPkg + "DataBindingComponent;");
 
             // also builds the test app
             project.executor().run("assembleDebugAndroidTest");
@@ -121,11 +127,11 @@ public class DataBindingTest {
         if (myUseV2) {
             assertThat(apk).containsClass(implClass);
         }
-        assertThat(apk).containsClass("Landroid/databinding/DataBindingComponent;");
+        assertThat(apk).containsClass(myDbPkg + "DataBindingComponent;");
         if (myWithoutAdapters) {
-            assertThat(apk).doesNotContainClass("Landroid/databinding/adapters/Converters;");
+            assertThat(apk).doesNotContainClass(myDbPkg + "adapters/Converters;");
         } else {
-            assertThat(apk).containsClass("Landroid/databinding/adapters/Converters;");
+            assertThat(apk).containsClass(myDbPkg + "adapters/Converters;");
         }
     }
 }

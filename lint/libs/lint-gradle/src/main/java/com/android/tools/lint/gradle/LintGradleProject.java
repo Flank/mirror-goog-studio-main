@@ -96,6 +96,14 @@ public class LintGradleProject extends Project {
         }
     }
 
+    public void setExternalLibrary(boolean external) {
+        this.externalLibrary = external;
+    }
+
+    public void setMavenCoordinates(@Nullable MavenCoordinates coordinates) {
+        this.mavenCoordinates = coordinates;
+    }
+
     private static void addJarsFromJavaLibrariesTransitively(
             @NonNull Collection<? extends JavaLibrary> libraries,
             @NonNull List<File> list,
@@ -769,10 +777,11 @@ public class LintGradleProject extends Project {
     static class ProjectSearch {
         public final Map<AndroidProject, Project> appProjects = Maps.newHashMap();
         public final Map<AndroidLibrary, Project> libraryProjects = Maps.newHashMap();
-        public final Map<MavenCoordinates, Project> libraryProjectsByCoordinate = Maps.newHashMap();
+        public final Map<MavenCoordinates, LintGradleProject> libraryProjectsByCoordinate =
+                Maps.newHashMap();
         public final Map<String, Project> namedProjects = Maps.newHashMap();
         public final Map<JavaLibrary, Project> javaLibraryProjects = Maps.newHashMap();
-        public final Map<MavenCoordinates, Project> javaLibraryProjectsByCoordinate =
+        public final Map<MavenCoordinates, LintGradleProject> javaLibraryProjectsByCoordinate =
                 Maps.newHashMap();
         public final Map<org.gradle.api.Project, AndroidProject> gradleProjects = Maps.newHashMap();
         private final Set<Object> mSeen = Sets.newHashSet();
@@ -968,6 +977,7 @@ public class LintGradleProject extends Project {
                         Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
                         //noinspection StatementWithEmptyBody
                         if (javaLib != null) {
+                            ((LintGradleProject) javaLib).setExternalLibrary(true);
                             dependencies.add(javaLib);
                         } else {
                             // Else: Create wrapper here. Unfortunately, we don't have a
@@ -1123,6 +1133,10 @@ public class LintGradleProject extends Project {
             mSeen.add(library);
             File dir = library.getFolder();
             LibraryProject project = new LibraryProject(client, dir, dir, library);
+            project.setMavenCoordinates(coordinates);
+            if (library.getProject() == null) {
+                project.setExternalLibrary(true);
+            }
             libraryProjects.put(library, project);
             libraryProjectsByCoordinate.put(coordinates, project);
 
@@ -1149,6 +1163,8 @@ public class LintGradleProject extends Project {
             mSeen.add(library);
             File dir = library.getJarFile();
             JavaLibraryProject project = new JavaLibraryProject(client, dir, dir, library);
+            project.setMavenCoordinates(coordinates);
+            project.setExternalLibrary(true);
             javaLibraryProjects.put(library, project);
             javaLibraryProjectsByCoordinate.put(coordinates, project);
 

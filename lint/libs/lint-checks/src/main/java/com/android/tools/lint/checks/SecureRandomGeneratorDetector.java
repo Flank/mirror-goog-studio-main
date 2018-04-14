@@ -232,7 +232,7 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mLocation != null && !mIgnore) {
             String message =
                     "Potentially insecure random numbers on Android 4.3 and older. "

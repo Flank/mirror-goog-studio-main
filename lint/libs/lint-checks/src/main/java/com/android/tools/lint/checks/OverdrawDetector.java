@@ -178,7 +178,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (rootAttributes != null) {
             for (Pair<Location, String> pair : rootAttributes) {
                 Location location = pair.getFirst();

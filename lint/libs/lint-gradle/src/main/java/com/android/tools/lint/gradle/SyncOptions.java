@@ -111,11 +111,6 @@ public class SyncOptions {
         flags.setDefaultConfiguration(options.getLintConfig());
         flags.setExplainIssues(options.isExplainIssues());
         flags.setBaselineFile(options.getBaselineFile());
-        if (options.getApplySuggestions()) {
-            // Don't unconditionally set this, since user may have enabled via other
-            // means such as lint.autofix system property
-            flags.setAutoFix(true);
-        }
         Map<String, Integer> severityOverrides = options.getSeverityOverrides();
         if (severityOverrides != null) {
             Map<String, Severity> map = new HashMap<>();

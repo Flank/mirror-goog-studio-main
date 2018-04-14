@@ -4,7 +4,7 @@ import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.ArtifactTypeUtilKt;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -120,7 +120,7 @@ public class AndroidTestResourcesTest {
             GradleTestProject fixture, final int layout, final int textView) throws IOException {
         File rFile =
                 FileUtils.join(
-                        ArtifactTypeUtilKt.getOutputDir(
+                        ArtifactTypeUtil.getOutputDir(
                                 InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                                 new File(fixture.getTestDir(), "build")),
                         "debugAndroidTest",

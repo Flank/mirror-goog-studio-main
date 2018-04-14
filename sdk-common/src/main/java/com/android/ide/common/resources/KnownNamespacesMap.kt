@@ -28,7 +28,7 @@ import java.util.AbstractMap
  * Using other keys will result in [IllegalArgumentException].
  *
  * For now there is no support for [ResourceNamespace.ANDROID], since these resources don't change
- * over time and are usually stored separately (see [com.android.ide.common.util.LazyUnionMap] for
+ * over time and are usually stored separately (see [com.android.ide.common.util.DisjointUnionMap] for
  * a way to combine the two).
  */
 class KnownNamespacesMap<V> : MutableMap<ResourceNamespace, V> {

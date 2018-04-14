@@ -49,6 +49,7 @@ import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
+import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.client.api.LintClient;
@@ -411,6 +412,12 @@ public class LintCliClient extends LintClient {
     @Override
     public UastParser getUastParser(@Nullable Project project) {
         return new LintCliUastParser(project);
+    }
+
+    @NonNull
+    @Override
+    public GradleVisitor getGradleVisitor() {
+        return new GradleVisitor();
     }
 
     @Override

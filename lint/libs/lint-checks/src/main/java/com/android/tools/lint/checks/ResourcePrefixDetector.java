@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -89,15 +90,10 @@ public class ResourcePrefixDetector extends Detector implements BinaryResourceSc
     @Nullable
     private static String computeResourcePrefix(@NonNull Project project) {
         if (project.isGradleProject()) {
-            return LintUtils.computeResourcePrefix(project.getGradleProjectModel());
+            return Lint.computeResourcePrefix(project.getGradleProjectModel());
         }
 
         return null;
-    }
-
-    @Override
-    public void beforeCheckProject(@NonNull Context context) {
-        updatePrefix(context);
     }
 
     private void updatePrefix(@Nullable Context context) {
@@ -118,18 +114,12 @@ public class ResourcePrefixDetector extends Detector implements BinaryResourceSc
     }
 
     @Override
-    public void beforeCheckLibraryProject(@NonNull Context context) {
-        // TODO: Make sure this doesn't wipe out the prefix for the remaining projects
+    public void beforeCheckEachProject(@NonNull Context context) {
         updatePrefix(context);
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
-        updatePrefix(null);
-    }
-
-    @Override
-    public void afterCheckLibraryProject(@NonNull Context context) {
+    public void afterCheckEachProject(@NonNull Context context) {
         updatePrefix(null);
     }
 

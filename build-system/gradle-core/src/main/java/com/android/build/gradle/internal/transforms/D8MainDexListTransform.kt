@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope
@@ -24,7 +25,8 @@ import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.MainDexListTransform.ProguardInput.INPUT_JAR
 import com.android.build.gradle.internal.transforms.MainDexListTransform.ProguardInput.LIBRARY_JAR
@@ -42,26 +44,28 @@ import java.util.function.Supplier
  * Calculate the main dex list using D8.
  */
 class D8MainDexListTransform(
-        private val manifestProguardRules: Path,
+        private val manifestProguardRules: BuildableArtifact,
         private val userProguardRules: Path? = null,
         private val userClasses: Path? = null,
-        private val outputMainDexList: Path,
-        private val bootClasspath: Supplier<List<Path>>) : Transform() {
+        private val bootClasspath: Supplier<List<Path>>) : Transform(), MainDexListWriter {
 
     private val logger = LoggerWrapper.getLogger(D8MainDexListTransform::class.java)
-
+    private lateinit var outputMainDexList: Path
     constructor(variantScope: VariantScope) :
             this(
-                    variantScope.manifestKeepListProguardFile.toPath(),
+                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES),
                     variantScope.variantConfiguration.multiDexKeepProguard?.toPath(),
                     variantScope.variantConfiguration.multiDexKeepFile?.toPath(),
-                    variantScope.mainDexListFile.toPath(),
                     Supplier {
                         variantScope
                                 .globalScope
                                 .androidBuilder
                                 .getBootClasspath(true)
                                 .map { it.toPath() }})
+
+    override fun setMainDexListOutputFile(mainDexListFile: File) {
+        this.outputMainDexList = mainDexListFile.toPath()
+    }
 
     override fun getName(): String = "multidexlist"
 
@@ -83,10 +87,11 @@ class D8MainDexListTransform(
     override fun isCacheable(): Boolean = true
 
     override fun getSecondaryFiles(): MutableCollection<SecondaryFile> =
-            listOfNotNull(manifestProguardRules, userProguardRules, userClasses)
-                    .map { it.toFile() }
-                    .map { SecondaryFile.nonIncremental(it) }
-                    .toCollection(ArrayList())
+        ImmutableList.builder<SecondaryFile>().apply {
+            add(SecondaryFile.nonIncremental(manifestProguardRules))
+            userProguardRules?.let { add(SecondaryFile.nonIncremental(it.toFile())) }
+            userClasses?.let { add(SecondaryFile.nonIncremental(it.toFile())) }
+        }.build()
 
     override fun getSecondaryFileOutputs(): ImmutableList<File> =
             ImmutableList.of(outputMainDexList.toFile())
@@ -106,7 +111,8 @@ class D8MainDexListTransform(
                     "Proguard rule files: %s",
                     listOfNotNull(manifestProguardRules, userProguardRules).joinToString())
 
-            val proguardRules = listOfNotNull(manifestProguardRules, userProguardRules)
+            val proguardRules =
+                listOfNotNull(manifestProguardRules.singleFile().toPath(), userProguardRules)
             val mainDexClasses = mutableSetOf<String>()
 
             val keepRules = MainDexListTransform.getPlatformRules().map { it -> "-keep " + it }

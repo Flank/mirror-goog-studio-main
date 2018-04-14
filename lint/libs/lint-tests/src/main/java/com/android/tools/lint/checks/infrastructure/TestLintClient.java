@@ -65,6 +65,7 @@ import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
@@ -367,7 +368,9 @@ public class TestLintClient extends LintCliClient {
             description.type(ProjectDescription.Type.JAVA);
         }
 
-        return new TestProject(this, dir, referenceDir, description, mocker);
+        TestProject project = new TestProject(this, dir, referenceDir, description, mocker);
+        registerProject(dir, project);
+        return project;
     }
 
     @Nullable
@@ -684,6 +687,12 @@ public class TestLintClient extends LintCliClient {
                 return file;
             }
         };
+    }
+
+    @NonNull
+    @Override
+    public GradleVisitor getGradleVisitor() {
+        return new GroovyGradleVisitor();
     }
 
     @Override

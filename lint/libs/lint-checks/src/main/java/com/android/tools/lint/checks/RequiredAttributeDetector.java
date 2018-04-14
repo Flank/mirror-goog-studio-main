@@ -152,7 +152,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         // Process checks in two phases:
         // Phase 1: Gather styles and includes (styles are encountered after the layouts
         // so we can't do it in a single phase, and includes can be affected by includes from

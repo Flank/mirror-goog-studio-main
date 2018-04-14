@@ -36,6 +36,7 @@ android {
         abortOnError false
         xmlReport true
         xmlOutput file("lint-report.xml")
+        enable 'SyntheticAccessor'
     }
 }
 

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
+import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -74,21 +75,32 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
      * Returns a map of (module-path -> feature name) where the feature names are guaranteed to be
      * unique.
      */
-    private fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<String, String> {
+    @VisibleForTesting
+    fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<String, String> {
         val result = mutableMapOf<String, String>()
 
         // first go through all the module path, and search for duplicates in the last segment
-        // we're going to create a map of (leaf -> list(full paths))
-        val leafMap = features.groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
+        // we're going to create a map of (leaf -> list(full paths)).
+        // we sort features to ensure deterministic feature naming.
+        val leafMap =
+                features
+                        .sortedBy { it.modulePath }
+                        .groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
+
+        val usedNames = mutableSetOf<String>()
 
         for ((leaf, modules) in leafMap) {
-            if (modules.size == 1) {
+            if (modules.size == 1 && leaf !in usedNames) {
                 result[modules[0]] = leaf
+                usedNames.add(leaf)
             } else {
-                var index = 'A'
+                var index = 1
                 for (module in modules) {
-                    result[module] = leaf + index
-                    index++
+                    while ("$leaf$index" in usedNames) {
+                        index ++
+                    }
+                    result[module] = "$leaf$index"
+                    usedNames.add("$leaf$index")
                 }
             }
         }

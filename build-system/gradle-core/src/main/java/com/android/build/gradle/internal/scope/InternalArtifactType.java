@@ -91,6 +91,10 @@ public enum InternalArtifactType implements ArtifactType {
     // linked res for the unified bundle
     LINKED_RES_FOR_BUNDLE,
 
+    // Artifacts for legacy multidex
+    LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+    LEGACY_MULTIDEX_MAIN_DEX_LIST,
+
     // --- Namespaced android res ---
     // Compiled resources (directory of .flat files) for the local library
     RES_COMPILED_FLAT_FILES,

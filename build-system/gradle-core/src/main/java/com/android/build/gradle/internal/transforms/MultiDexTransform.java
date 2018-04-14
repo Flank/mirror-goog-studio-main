@@ -20,14 +20,17 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.sdk.TargetInfo;
@@ -35,6 +38,7 @@ import com.android.ide.common.process.ProcessException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -43,28 +47,26 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.logging.LoggingManager;
+import org.jetbrains.annotations.NotNull;
 import proguard.ParseException;
 
 /**
  * Transform for multi-dex.
  *
- * This does not actually consume anything, rather it only reads streams and extract information
+ * <p>This does not actually consume anything, rather it only reads streams and extract information
  * from them.
  */
-public class MultiDexTransform extends BaseProguardAction {
+public class MultiDexTransform extends BaseProguardAction implements MainDexListWriter {
 
     // Inputs
-    @NonNull
-    private final File manifestKeepListProguardFile;
+    @NonNull private final BuildableArtifact manifestKeepListProguardFile;
     @Nullable
     private final File userMainDexKeepProguard;
     @Nullable
@@ -77,22 +79,29 @@ public class MultiDexTransform extends BaseProguardAction {
     // Outputs
     @NonNull
     private final File configFileOut;
-    @NonNull
-    private final File mainDexListFile;
+    private File mainDexListFile;
 
     public MultiDexTransform(
             @NonNull VariantScope variantScope,
             @NonNull DexOptions dexOptions) {
         super(variantScope);
-        this.manifestKeepListProguardFile = variantScope.getManifestKeepListProguardFile();
+        this.manifestKeepListProguardFile =
+                variantScope
+                        .getArtifacts()
+                        .getFinalArtifactFiles(
+                                InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES);
         this.userMainDexKeepProguard = variantScope.getVariantConfiguration().getMultiDexKeepProguard();
         this.userMainDexKeepFile = variantScope.getVariantConfiguration().getMultiDexKeepFile();
         this.variantScope = variantScope;
         configFileOut = new File(variantScope.getGlobalScope().getBuildDir() + "/" + FD_INTERMEDIATES
                 + "/multi-dex/" + variantScope.getVariantConfiguration().getDirName()
                 + "/components.flags");
-        mainDexListFile = variantScope.getMainDexListFile();
         keepRuntimeAnnotatedClasses = dexOptions.getKeepRuntimeAnnotatedClasses();
+    }
+
+    @Override
+    public void setMainDexListOutputFile(@NotNull File file) {
+        mainDexListFile = file;
     }
 
     @NonNull
@@ -133,14 +142,15 @@ public class MultiDexTransform extends BaseProguardAction {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        return Arrays.asList(
-                        manifestKeepListProguardFile,
-                        userMainDexKeepFile,
-                        userMainDexKeepProguard)
-                .stream()
-                .filter(file -> file != null)
-                .map(SecondaryFile::nonIncremental)
-                .collect(Collectors.toList());
+        ImmutableList.Builder<SecondaryFile> builder = ImmutableList.builder();
+        builder.add(SecondaryFile.nonIncremental(manifestKeepListProguardFile));
+        if (userMainDexKeepFile != null) {
+            builder.add(SecondaryFile.nonIncremental(userMainDexKeepFile));
+        }
+        if (userMainDexKeepProguard != null) {
+            builder.add(SecondaryFile.nonIncremental(userMainDexKeepProguard));
+        }
+        return builder.build();
     }
 
     @NonNull
@@ -201,7 +211,7 @@ public class MultiDexTransform extends BaseProguardAction {
         dontnote();
         forceprocessing();
 
-        applyConfigurationFile(manifestKeepListProguardFile);
+        applyConfigurationFile(BuildableArtifactUtil.singleFile(manifestKeepListProguardFile));
         if (userMainDexKeepProguard != null) {
             applyConfigurationFile(userMainDexKeepProguard);
         }

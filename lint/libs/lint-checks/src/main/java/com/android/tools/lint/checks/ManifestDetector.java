@@ -147,11 +147,15 @@ public class ManifestDetector extends Detector implements XmlScanner {
                                     + "test your app to make sure everything works correctly. You may want to consult "
                                     + "the compatibility notes to see what changes apply to each version you are adding "
                                     + "support for: "
-                                    + "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html",
+                                    + "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html "
+                                    + "as well as follow this guide:\n"
+                                    + "https://developer.android.com/distribute/best-practices/develop/target-sdk.html",
                             Category.CORRECTNESS,
                             6,
                             Severity.WARNING,
                             IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
                     .addMoreInfo(
                             "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html");
 

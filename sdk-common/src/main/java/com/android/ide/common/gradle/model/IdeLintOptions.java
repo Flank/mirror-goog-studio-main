@@ -193,11 +193,6 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
     }
 
     @Override
-    public boolean getApplySuggestions() {
-        throw new UnusedModelMethodException("isCheckDependencies");
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

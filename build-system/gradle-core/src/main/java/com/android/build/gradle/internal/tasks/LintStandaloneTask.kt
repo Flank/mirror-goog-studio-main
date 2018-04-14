@@ -55,6 +55,8 @@ open class LintStandaloneTask : DefaultTask() {
     @get:Classpath
     var lintChecks: Configuration? = null
 
+    var autoFix: Boolean = false
+
     /** This resolves the dependency of the lintChecks configuration */
     private fun computeLocalChecks(): List<File> {
         val configuration = lintChecks ?: return emptyList()

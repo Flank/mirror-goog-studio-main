@@ -619,7 +619,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                 of the id in the Java code it ensures that it is treated as the same type.""",
             category = Category.CORRECTNESS,
             priority = 9,
-            severity = Severity.FATAL,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 ViewTypeDetector::class.java,
                 EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES),

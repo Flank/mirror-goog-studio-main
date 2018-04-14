@@ -45,28 +45,38 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
     @Rule public Adb adb = new Adb();
 
     public DataBindingExternalArtifactDependencyConnectedTest(
-            boolean libEnableV2, boolean appEnableV2) {
+            boolean libEnableV2, boolean appEnableV2, boolean useAndroidX) {
         String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
         String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
+        String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         library =
                 GradleTestProject.builder()
-                        .fromDataBindingIntegrationTest("IndependentLibrary")
+                        .fromDataBindingIntegrationTest("IndependentLibrary", useAndroidX)
                         .addGradleProperties(libV2)
+                        .addGradleProperties(useX)
                         .create();
         app =
                 GradleTestProject.builder()
-                        .fromDataBindingIntegrationTest("MultiModuleTestApp")
+                        .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
                         .addGradleProperties(appV2)
+                        .addGradleProperties(useX)
                         .create();
-
     }
 
-    @Parameterized.Parameters(name = "use_lib_V2_{0}_use_app_V2_{1}")
+    @Parameterized.Parameters(name = "use_lib_V2_{0}_use_app_V2_{1}_useAndroidX_{2}")
     public static Iterable<Boolean[]> params() {
-        return ImmutableList.of(
-                new Boolean[] {false, false},
-                new Boolean[] {false, true},
-                new Boolean[] {true, true});
+        ImmutableList.Builder<Boolean[]> builder = ImmutableList.builder();
+        for (boolean libV2 : new boolean[] {true, false}) {
+            for (boolean appV2 : new boolean[] {true, false}) {
+                for (boolean useAndroidX : new boolean[] {true, false}) {
+                    if (libV2 && !appV2) { // not supported
+                        continue;
+                    }
+                    builder.add(new Boolean[] {libV2, appV2, useAndroidX});
+                }
+            }
+        }
+        return builder.build();
     }
 
     @Test

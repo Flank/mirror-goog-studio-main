@@ -31,6 +31,7 @@ import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
+import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.client.api.LintDriver;
@@ -234,6 +235,12 @@ public class LintGradleClient extends LintCliClient {
         return super.getCacheDir(name, create);
     }
 
+    @NonNull
+    @Override
+    public GradleVisitor getGradleVisitor() {
+        return new GroovyGradleVisitor();
+    }
+
     @Override
     @NonNull
     protected LintRequest createLintRequest(@NonNull List<File> files) {
@@ -242,6 +249,11 @@ public class LintGradleClient extends LintCliClient {
         Project project =
                 search.getProject(this, gradleProject, variant != null ? variant.getName() : null);
         lintRequest.setProjects(Collections.singletonList(project));
+
+        registerProject(project.getDir(), project);
+        for (Project dependency : project.getAllLibraries()) {
+            registerProject(dependency.getDir(), dependency);
+        }
 
         return lintRequest;
     }

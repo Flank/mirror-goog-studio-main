@@ -733,12 +733,6 @@ public final class SdkConstants {
             "com.android.layoutlib.bridge.MockView"; //$NON-NLS-1$
 
     public static final String CLASS_LAYOUT_INFLATER = "android.view.LayoutInflater"; //$NON-NLS-1$
-    public static final String CLASS_DATA_BINDING_COMPONENT =
-            "android.databinding.DataBindingComponent"; //$NON-NLS-1$
-    public static final String CLASS_NAME_DATA_BINDING_COMPONENT =
-            "DataBindingComponent"; //$NON-NLS-1$
-    public static final String CLASS_DATA_BINDING_BASE_BINDING =
-            "android.databinding.ViewDataBinding";
 
     /* Android Support Class Constants */
     public static final AndroidxName CLASS_APP_COMPAT_ACTIVITY =
@@ -1376,6 +1370,7 @@ public final class SdkConstants {
     public static final String ATTR_LISTFOOTER = "listfooter"; //$NON-NLS-1$
     public static final String ATTR_LISTHEADER = "listheader"; //$NON-NLS-1$
     public static final String ATTR_LISTITEM = "listitem"; //$NON-NLS-1$
+    public static final String ATTR_ITEM_COUNT = "itemCount";
 
     // Tools attributes for scrolling
     public static final String ATTR_SCROLLX = "scrollX"; //$NON-NLS-1$
@@ -1654,6 +1649,7 @@ public final class SdkConstants {
     public static final String ATTR_TAB_SELECTED_TEXT_COLOR = "tabSelectedTextColor"; //$NON-NLS-1$
     public static final String ATTR_TAB_TEXT_APPEARANCE = "tabTextAppearance"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
+    public static final String ATTR_SPAN_COUNT = "spanCount";
 
     // Values: Manifest
     public static final String VALUE_SPLIT_ACTION_BAR_WHEN_NARROW =
@@ -2323,7 +2319,6 @@ public final class SdkConstants {
     public static final String TYPE_DEF_VALUE_ATTRIBUTE = "value";
     public static final String TYPE_DEF_FLAG_ATTRIBUTE = "flag";
     public static final String FN_ANNOTATIONS_ZIP = "annotations.zip";
-    public static final String BINDING_ADAPTER_ANNOTATION = "android.databinding.BindingAdapter";
 
     // Data Binding MISC
     public static final String DATA_BINDING_LIB_ARTIFACT = "com.android.databinding:library";
@@ -2343,7 +2338,20 @@ public final class SdkConstants {
             new String[] {TAG_VARIABLE, TAG_IMPORT, TAG_LAYOUT, TAG_DATA};
     public static final String[] ATTRS_DATA_BINDING =
             new String[] {ATTR_NAME, ATTR_TYPE, ATTR_CLASS, ATTR_ALIAS};
-    public static final String DATA_BINDING_VIEW_STUB_PROXY = "android.databinding.ViewStubProxy";
+
+    public static final AndroidxName DATA_BINDING_PKG = AndroidxName.of("android.databinding.");
+    public static final String CLASS_NAME_DATA_BINDING_COMPONENT = "DataBindingComponent";
+    public static final AndroidxName CLASS_DATA_BINDING_COMPONENT =
+            AndroidxName.of("android.databinding.", CLASS_NAME_DATA_BINDING_COMPONENT);
+
+    public static final AndroidxName CLASS_DATA_BINDING_BASE_BINDING =
+            AndroidxName.of("android.databinding.", "ViewDataBinding");
+    public static final AndroidxName CLASS_DATA_BINDING_BINDABLE =
+            AndroidxName.of("android.databinding.", "Bindable");
+    public static final AndroidxName CLASS_DATA_BINDING_VIEW_STUB_PROXY =
+            AndroidxName.of("android.databinding.", "ViewStubProxy");
+    public static final AndroidxName BINDING_ADAPTER_ANNOTATION =
+            AndroidxName.of("android.databinding.", "BindingAdapter");
 
     /** Name of keep attribute in XML */
     public static final String ATTR_KEEP = "keep";

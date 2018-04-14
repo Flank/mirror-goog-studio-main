@@ -39,6 +39,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATU
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
@@ -131,6 +132,7 @@ import com.android.build.gradle.internal.transforms.FixStackFramesTransform;
 import com.android.build.gradle.internal.transforms.JacocoTransform;
 import com.android.build.gradle.internal.transforms.JarMergingTransform;
 import com.android.build.gradle.internal.transforms.MainDexListTransform;
+import com.android.build.gradle.internal.transforms.MainDexListWriter;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.MultiDexTransform;
 import com.android.build.gradle.internal.transforms.PreDexTransform;
@@ -165,6 +167,7 @@ import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
+import com.android.build.gradle.tasks.LintFixTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
 import com.android.build.gradle.tasks.LintPerVariantTask;
 import com.android.build.gradle.tasks.MainApkListPersistence;
@@ -272,6 +275,7 @@ public abstract class TaskManager {
     public static final String CONNECTED_ANDROID_TEST = CONNECTED + VariantType.ANDROID_TEST_SUFFIX;
     public static final String ASSEMBLE_ANDROID_TEST = "assembleAndroidTest";
     public static final String LINT = "lint";
+    public static final String LINT_FIX = "lintFix";
     public static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
 
     @NonNull protected final Project project;
@@ -490,6 +494,7 @@ public abstract class TaskManager {
     public void createGlobalLintTask() {
         taskFactory.create(LINT, LintGlobalTask.class, task -> {});
         taskFactory.configure(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
+        taskFactory.create(LINT_FIX, LintFixTask.class, task -> {});
     }
 
     // this is run after all the variants are created.
@@ -502,9 +507,11 @@ public abstract class TaskManager {
             return;
         }
 
-        // configure the global lint task.
+        // configure the global lint tasks.
         new LintGlobalTask.GlobalConfigAction(globalScope, filteredVariants)
                 .execute((LintGlobalTask) taskFactory.findByName(LINT));
+        new LintFixTask.GlobalConfigAction(globalScope, filteredVariants)
+                .execute((LintFixTask) taskFactory.findByName(LINT_FIX));
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
@@ -2140,8 +2147,6 @@ public abstract class TaskManager {
             }
         }
 
-        Optional<TransformTask> multiDexClassListTask;
-
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
             boolean proguardInPipeline = variantScope.getCodeShrinker() == CodeShrinker.PROGUARD;
 
@@ -2162,6 +2167,7 @@ public abstract class TaskManager {
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
             Transform multiDexTransform;
+
             if (usingIncrementalDexing(variantScope)) {
                 if (projectOptions.get(BooleanOption.ENABLE_D8_MAIN_DEX_LIST)) {
                     multiDexTransform = new D8MainDexListTransform(variantScope);
@@ -2172,18 +2178,28 @@ public abstract class TaskManager {
             } else {
                 multiDexTransform = new MultiDexTransform(variantScope, extension.getDexOptions());
             }
-            multiDexClassListTask =
-                    transformManager.addTransform(taskFactory, variantScope, multiDexTransform);
-            multiDexClassListTask.ifPresent(variantScope::addColdSwapBuildTask);
-        } else {
-            multiDexClassListTask = Optional.empty();
+            transformManager
+                    .addTransform(taskFactory, variantScope, multiDexTransform)
+                    .ifPresent(
+                            task -> {
+                                variantScope.addColdSwapBuildTask(task);
+                                File mainDexListFile =
+                                        variantScope
+                                                .getArtifacts()
+                                                .appendArtifact(
+                                                        InternalArtifactType
+                                                                .LEGACY_MULTIDEX_MAIN_DEX_LIST,
+                                                        task,
+                                                        "maindexlist.txt");
+                                ((MainDexListWriter) multiDexTransform)
+                                        .setMainDexListOutputFile(mainDexListFile);
+                            });
         }
 
-
         if (usingIncrementalDexing(variantScope)) {
-            createNewDexTasks(variantScope, multiDexClassListTask.orElse(null), dexingType);
+            createNewDexTasks(variantScope, dexingType);
         } else {
-            createDexTasks(variantScope, multiDexClassListTask.orElse(null), dexingType);
+            createDexTasks(variantScope, dexingType);
         }
 
         if (preColdSwapTask != null) {
@@ -2257,7 +2273,6 @@ public abstract class TaskManager {
      */
     private void createNewDexTasks(
             @NonNull VariantScope variantScope,
-            @Nullable TransformTask multiDexClassListTask,
             @NonNull DexingType dexingType) {
         TransformManager transformManager = variantScope.getTransformManager();
 
@@ -2327,7 +2342,10 @@ public abstract class TaskManager {
                 new DexMergerTransform(
                         dexingType,
                         dexingType == DexingType.LEGACY_MULTIDEX
-                                ? project.files(variantScope.getMainDexListFile())
+                                ? variantScope
+                                        .getArtifacts()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
                                 : null,
                         variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
@@ -2337,13 +2355,7 @@ public abstract class TaskManager {
                 transformManager.addTransform(taskFactory, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream
         // consumption making this automatic
-        dexTask.ifPresent(
-                t -> {
-                    if (multiDexClassListTask != null) {
-                        t.dependsOn(multiDexClassListTask);
-                    }
-                    variantScope.addColdSwapBuildTask(t);
-                });
+        dexTask.ifPresent(variantScope::addColdSwapBuildTask);
     }
 
     @NonNull
@@ -2388,7 +2400,6 @@ public abstract class TaskManager {
     /** Creates the pre-dexing task if needed, and task for producing the final DEX file(s). */
     private void createDexTasks(
             @NonNull VariantScope variantScope,
-            @Nullable TransformTask multiDexClassListTask,
             @NonNull DexingType dexingType) {
         TransformManager transformManager = variantScope.getTransformManager();
         AndroidBuilder androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
@@ -2437,7 +2448,11 @@ public abstract class TaskManager {
                             dexOptions,
                             dexingType,
                             preDexEnabled,
-                            project.files(variantScope.getMainDexListFile()),
+                            dexingType == DexingType.LEGACY_MULTIDEX
+                                    ? variantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(LEGACY_MULTIDEX_MAIN_DEX_LIST)
+                                    : null,
                             checkNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
                             variantScope.getGlobalScope().getMessageReceiver(),
@@ -2446,13 +2461,7 @@ public abstract class TaskManager {
                     transformManager.addTransform(taskFactory, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream
             // consumption making this automatic
-            dexTask.ifPresent(
-                    t -> {
-                        if (multiDexClassListTask != null) {
-                            t.dependsOn(multiDexClassListTask);
-                        }
-                        variantScope.addColdSwapBuildTask(t);
-                    });
+            dexTask.ifPresent(variantScope::addColdSwapBuildTask);
         }
     }
 

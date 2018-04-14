@@ -88,7 +88,7 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
     public InvalidPackageDetector() {}
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         mApiDatabase =
                 ApiLookup.get(context.getClient(), context.getMainProject().getBuildTarget());
     }
@@ -233,7 +233,7 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mCandidates == null) {
             return;
         }

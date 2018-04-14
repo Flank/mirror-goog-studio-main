@@ -16,13 +16,16 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
+import com.google.common.collect.Iterators
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.function.Supplier
@@ -53,9 +56,9 @@ class D8MainDexListTransformTest {
 
         val transform =
                 D8MainDexListTransform(
-                        manifestProguardRules = proguardRules,
-                        outputMainDexList = output,
+                        manifestProguardRules = proguardRules.stubBuildableArtifact(),
                         bootClasspath = Supplier { getBootClasspath() })
+        transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output)).containsExactly("test/A.class")
@@ -78,10 +81,10 @@ class D8MainDexListTransformTest {
 
         val transform =
                 D8MainDexListTransform(
-                        manifestProguardRules = tmpDir.newFile().toPath(),
+                        manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
                         userProguardRules = userProguardRules,
-                        outputMainDexList = output,
                         bootClasspath = Supplier { getBootClasspath() })
+        transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output)).containsExactly("test/A.class")
@@ -107,10 +110,10 @@ class D8MainDexListTransformTest {
 
         val transform =
                 D8MainDexListTransform(
-                        manifestProguardRules = proguardRules,
+                        manifestProguardRules = proguardRules.stubBuildableArtifact(),
                         userProguardRules = userProguardRules,
-                        outputMainDexList = output,
                         bootClasspath = Supplier { getBootClasspath() })
+        transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output))
@@ -132,10 +135,10 @@ class D8MainDexListTransformTest {
 
         val transform =
                 D8MainDexListTransform(
-                        manifestProguardRules = tmpDir.newFile().toPath(),
+                        manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
                         userClasses = userClasses,
-                        outputMainDexList = output,
                         bootClasspath = Supplier { getBootClasspath() })
+        transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output))
@@ -154,12 +157,19 @@ class D8MainDexListTransformTest {
 
         val transform =
                 D8MainDexListTransform(
-                        manifestProguardRules = tmpDir.newFile().toPath(),
-                        outputMainDexList = output,
+                        manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
                         bootClasspath = Supplier { getBootClasspath() })
+        transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output)).isEmpty()
+    }
+
+    private fun Path.stubBuildableArtifact() : BuildableArtifact {
+        return Mockito.mock(BuildableArtifact::class.java).apply {
+            Mockito.`when`(iterator()).thenReturn(Iterators.singletonIterator(
+                this@stubBuildableArtifact.toFile()))
+        }
     }
 
     private fun getBootClasspath():

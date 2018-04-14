@@ -29,11 +29,17 @@ import java.util.Objects;
 public final class JavaLibraryImpl implements JavaLibrary, Serializable {
 
     @Nullable private final String myProject;
+    @Nullable private final String myBuildId;
     @NonNull private final String myName;
     @Nullable private final File myJarFile;
 
-    public JavaLibraryImpl(@Nullable String project, @NonNull String name, @Nullable File jarFile) {
+    public JavaLibraryImpl(
+            @Nullable String project,
+            @Nullable String buildId,
+            @NonNull String name,
+            @Nullable File jarFile) {
         this.myProject = project;
+        this.myBuildId = buildId;
         this.myName = name;
         this.myJarFile = jarFile;
     }
@@ -42,6 +48,12 @@ public final class JavaLibraryImpl implements JavaLibrary, Serializable {
     @Nullable
     public String getProject() {
         return myProject;
+    }
+
+    @Override
+    @Nullable
+    public String getBuildId() {
+        return myBuildId;
     }
 
     @Override
@@ -78,15 +90,13 @@ public final class JavaLibraryImpl implements JavaLibrary, Serializable {
         }
         JavaLibraryImpl that = (JavaLibraryImpl) o;
         return Objects.equals(myProject, that.myProject)
+                && Objects.equals(myBuildId, that.myBuildId)
                 && Objects.equals(myName, that.myName)
                 && Objects.equals(myJarFile, that.myJarFile);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                myProject,
-                myName,
-                myJarFile);
+        return Objects.hash(myProject, myBuildId, myName, myJarFile);
     }
 }

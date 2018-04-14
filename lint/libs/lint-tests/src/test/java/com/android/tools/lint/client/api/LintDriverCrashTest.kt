@@ -78,7 +78,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                    project0: Error: Lint crashed because it is being invoked with the wrong version of Guava
+                    src/test/pkg/Foo.java: Error: Lint crashed because it is being invoked with the wrong version of Guava
                     (the Android version instead of the JRE version, which is required in the
                     Gradle plugin).
 

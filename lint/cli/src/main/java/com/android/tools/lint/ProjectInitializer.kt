@@ -452,6 +452,8 @@ private class ProjectInitializer(
         this.lintChecks[module] = lintChecks
         this.mergedManifests[module] = mergedManifest
         this.baselines[module] = baseline
+
+        client.registerProject(module.dir, module)
     }
 
     private fun parseAar(element: Element, dir: File): String? {

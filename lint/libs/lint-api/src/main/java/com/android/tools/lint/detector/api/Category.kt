@@ -134,6 +134,10 @@ constructor(
         @JvmField
         val SECURITY = create("Security", 90)
 
+        /** Issues related to legal/compliance  */
+        @JvmField
+        val COMPLIANCE = create("Compliance", 85)
+
         /** Issues related to performance  */
         @JvmField
         val PERFORMANCE = create("Performance", 80)

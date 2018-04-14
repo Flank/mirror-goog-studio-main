@@ -35,6 +35,14 @@ public interface JavaLibrary {
     String getProject();
 
     /**
+     * Returns an optional build identifier if the library is output by a module.
+     *
+     * @return the build identifier.
+     */
+    @Nullable
+    String getBuildId();
+
+    /**
      * Returns a user friendly name.
      *
      * @return a user friendly name.

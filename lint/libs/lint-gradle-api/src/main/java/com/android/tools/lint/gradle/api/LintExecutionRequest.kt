@@ -44,4 +44,6 @@ abstract class LintExecutionRequest {
     abstract val variantName: String?
 
     abstract fun getVariantInputs(variantName: String): VariantInputs?
+
+    open var autoFix = false
 }

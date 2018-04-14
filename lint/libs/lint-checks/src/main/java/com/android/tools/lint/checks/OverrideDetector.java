@@ -83,7 +83,7 @@ public class OverrideDetector extends Detector implements ClassScanner {
     public OverrideDetector() {}
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         // Process the check in two passes:
         //
         // In the first pass, gather the full set of package private methods for

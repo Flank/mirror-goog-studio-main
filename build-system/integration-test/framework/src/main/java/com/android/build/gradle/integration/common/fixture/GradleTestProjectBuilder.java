@@ -239,11 +239,14 @@ public final class GradleTestProjectBuilder {
     }
 
     /** Create GradleTestProject from a data binding integration test. */
-    public GradleTestProjectBuilder fromDataBindingIntegrationTest(@NonNull String project) {
+    public GradleTestProjectBuilder fromDataBindingIntegrationTest(
+            @NonNull String project, boolean useAndroidX) {
         AndroidTestApp app = new EmptyTestApp();
         name = project;
         // compute the root folder of the checkout, based on test-projects.
-        File parentDir = TestUtils.getWorkspaceFile("tools/data-binding/integration-tests");
+        String suffix = useAndroidX ? "" : "-support";
+        File parentDir =
+                TestUtils.getWorkspaceFile("tools/data-binding/integration-tests" + suffix);
 
         File projectDir = new File(parentDir, project);
         if (!projectDir.exists()) {

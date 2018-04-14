@@ -216,7 +216,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (context.getProject() != context.getMainProject()) {
             return;
         }

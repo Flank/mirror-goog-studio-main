@@ -327,7 +327,7 @@ public class ApiDetector extends ResourceXmlDetector
     public ApiDetector() {}
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         if (mApiDatabase == null) {
             mApiDatabase =
                     ApiLookup.get(context.getClient(), context.getMainProject().getBuildTarget());

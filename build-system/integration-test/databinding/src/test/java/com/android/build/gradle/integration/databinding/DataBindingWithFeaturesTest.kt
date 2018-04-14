@@ -17,22 +17,24 @@
 package com.android.build.gradle.integration.databinding
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Apk
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import org.junit.runners.Parameterized
 
-@RunWith(JUnit4::class)
-class DataBindingWithFeaturesTest {
+@RunWith(FilterableParameterized::class)
+class DataBindingWithFeaturesTest(private val useAndroidX : Boolean) {
     @Rule
     @JvmField
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("databindingWithFeatures")
         .addGradleProperties(BooleanOption
             .ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.propertyName + "=true")
+        .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=" + useAndroidX)
         .addGradleProperties(BooleanOption.ENABLE_DATA_BINDING_V2.propertyName + "=true")
         .withDependencyChecker(false)
         .create()
@@ -64,11 +66,11 @@ class DataBindingWithFeaturesTest {
                 brClass(FEATURE_B))
 
         val baseClasses = listOf(
-                brClass(BASE_ADAPTERS),
+                brClass(BASE_ADAPTERS.get(useAndroidX)),
                 brClass(BASE),
-                DATA_BINDING_COMPONENT,
-                MERGED_MAPPER,
-                brClass(BASE_ADAPTERS),
+                DATA_BINDING_COMPONENT.get(useAndroidX),
+                MERGED_MAPPER.get(useAndroidX),
+                brClass(BASE_ADAPTERS.get(useAndroidX)),
                 bindingClass(BASE, BASE_ACTIVITY),
                 bindingClass(BASE, BASE_ACTIVITY_IMPL))
         featureAClasses.forEach {
@@ -102,8 +104,12 @@ class DataBindingWithFeaturesTest {
         const val BASE = "android.databinding.instantappwithfeatures"
         const val FEATURE_A = "android.databinding.instantappwithfeatures.featureA"
         const val FEATURE_B = "android.databinding.instantappwithfeatures.featureB"
-        const val MERGED_MAPPER = "Landroid/databinding/DataBinderMapperImpl;"
-        const val DATA_BINDING_COMPONENT = "Landroid/databinding/DataBindingComponent;"
+        val MERGED_MAPPER = DataBindingClass(
+            support = "Landroid/databinding/DataBinderMapperImpl;",
+            androidX = "Landroidx/databinding/DataBinderMapperImpl;")
+        val DATA_BINDING_COMPONENT = DataBindingClass(
+            support = "Landroid/databinding/DataBindingComponent;",
+            androidX = "Landroidx/databinding/DataBindingComponent;")
         const val NORMAL_MODULE = "android.databinding.instantappwithfeatures.normalModule"
         const val FEATURE_A_ACTIVITY = "ActivityMainBinding"
         const val FEATURE_A_ACTIVITY_IMPL = "ActivityMainBindingImpl"
@@ -111,6 +117,19 @@ class DataBindingWithFeaturesTest {
         const val FEATURE_B_ACTIVITY_IMPL = "FeatureBMainBindingImpl"
         const val BASE_ACTIVITY = "BaseLayoutBinding"
         const val BASE_ACTIVITY_IMPL = "BaseLayoutBindingImpl"
-        const val BASE_ADAPTERS = "com.android.databinding.library.baseAdapters"
+        val BASE_ADAPTERS = DataBindingClass(
+            support = "com.android.databinding.library.baseAdapters",
+            androidX = "androidx.databinding.library.baseAdapters")
+        @Parameterized.Parameters(name = "useAndroidX_{0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+
+        data class DataBindingClass(private val support : String, private val androidX : String) {
+            fun get(useAndroidX: Boolean) = if(useAndroidX) {
+                androidX
+            } else {
+                support
+            }
+        }
     }
 }

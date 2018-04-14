@@ -65,7 +65,9 @@ public final class JobWrapper {
      */
     public static int onScheduleJobExit(int scheduleResult) {
         JobInfo jobInfo = scheduleJobInfo.get();
-        jobIdToEventId.put(jobInfo.getId(), EventIdGenerator.nextId());
+        if (!jobIdToEventId.containsKey(jobInfo.getId())) {
+            jobIdToEventId.put(jobInfo.getId(), EventIdGenerator.nextId());
+        }
         sendJobScheduled(
                 jobIdToEventId.get(jobInfo.getId()),
                 jobInfo.getId(),
@@ -104,17 +106,17 @@ public final class JobWrapper {
      */
     public static void wrapOnStartJob(
             Object jobHandler, JobParameters params, boolean workOngoing) {
-        sendJobStarted(
-                jobIdToEventId.containsKey(params.getJobId())
-                        ? jobIdToEventId.get(params.getJobId())
-                        : 0,
-                params.getJobId(),
-                params.getTriggeredContentAuthorities(),
-                urisToStrings(params.getTriggeredContentUris()),
-                params.isOverrideDeadlineExpired(),
-                params.getExtras().toString(),
-                params.getTransientExtras().toString(),
-                workOngoing);
+        if (jobIdToEventId.containsKey(params.getJobId())) {
+            sendJobStarted(
+                    jobIdToEventId.get(params.getJobId()),
+                    params.getJobId(),
+                    params.getTriggeredContentAuthorities(),
+                    urisToStrings(params.getTriggeredContentUris()),
+                    params.isOverrideDeadlineExpired(),
+                    params.getExtras().toString(),
+                    params.getTransientExtras().toString(),
+                    workOngoing);
+        }
     }
 
     /**
@@ -126,17 +128,17 @@ public final class JobWrapper {
      * @param reschedule the reschedule parameter passed to the original method.
      */
     public static void wrapOnStopJob(Object jobHandler, JobParameters params, boolean reschedule) {
-        sendJobStopped(
-                jobIdToEventId.containsKey(params.getJobId())
-                        ? jobIdToEventId.get(params.getJobId())
-                        : 0,
-                params.getJobId(),
-                params.getTriggeredContentAuthorities(),
-                urisToStrings(params.getTriggeredContentUris()),
-                params.isOverrideDeadlineExpired(),
-                params.getExtras().toString(),
-                params.getTransientExtras().toString(),
-                reschedule);
+        if (jobIdToEventId.containsKey(params.getJobId())) {
+            sendJobStopped(
+                    jobIdToEventId.get(params.getJobId()),
+                    params.getJobId(),
+                    params.getTriggeredContentAuthorities(),
+                    urisToStrings(params.getTriggeredContentUris()),
+                    params.isOverrideDeadlineExpired(),
+                    params.getExtras().toString(),
+                    params.getTransientExtras().toString(),
+                    reschedule);
+        }
     }
 
     /**
@@ -148,19 +150,19 @@ public final class JobWrapper {
      */
     public static void wrapJobFinished(
             JobService jobService, JobParameters params, boolean wantsReschedule) {
-        sendJobFinished(
-                jobIdToEventId.containsKey(params.getJobId())
-                        ? jobIdToEventId.get(params.getJobId())
-                        : 0,
-                params.getJobId(),
-                params.getTriggeredContentAuthorities(),
-                urisToStrings(params.getTriggeredContentUris()),
-                params.isOverrideDeadlineExpired(),
-                params.getExtras().toString(),
-                params.getTransientExtras().toString(),
-                wantsReschedule,
-                // API finish is one level down of user code.
-                StackTrace.getStackTrace(1));
+        if (jobIdToEventId.containsKey(params.getJobId())) {
+            sendJobFinished(
+                    jobIdToEventId.get(params.getJobId()),
+                    params.getJobId(),
+                    params.getTriggeredContentAuthorities(),
+                    urisToStrings(params.getTriggeredContentUris()),
+                    params.isOverrideDeadlineExpired(),
+                    params.getExtras().toString(),
+                    params.getTransientExtras().toString(),
+                    wantsReschedule,
+                    // API finish is one level down of user code.
+                    StackTrace.getStackTrace(1));
+        }
     }
 
     private static String[] triggerContentUrisToStrings(JobInfo.TriggerContentUri[] uris) {

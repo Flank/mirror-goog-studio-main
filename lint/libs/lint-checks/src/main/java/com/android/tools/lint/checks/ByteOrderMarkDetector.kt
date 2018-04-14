@@ -53,7 +53,7 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
             moreInfo = "http://en.wikipedia.org/wiki/Byte_order_mark",
             category = Category.I18N,
             priority = 8,
-            severity = Severity.FATAL,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 ByteOrderMarkDetector::class.java,
                 // Applies to all text files
@@ -112,15 +112,19 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
         }
     }
 
+    // XML files: work is done in beforeCheckFile()
     override fun visitDocument(context: XmlContext, document: Document) =
-    // The work is done in beforeCheckFile()
         Unit
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? =
     // Java files: work is done in beforeCheckFile()
+    override fun createUastHandler(context: JavaContext): UElementHandler? =
         null
 
-    override fun run(context: Context) =
     // ProGuard files: work is done in beforeCheckFile()
+    override fun run(context: Context) =
         Unit
+
+    // Gradle: Don't attempt to visit the file
+    override val customVisitor: Boolean
+        get() = true
 }

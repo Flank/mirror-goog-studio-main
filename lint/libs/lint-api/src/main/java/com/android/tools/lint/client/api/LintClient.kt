@@ -28,6 +28,8 @@ import com.android.SdkConstants.LIBS_FOLDER
 import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SRC_FOLDER
 import com.android.builder.model.AndroidLibrary
+import com.android.ide.common.repository.GradleCoordinate
+import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.resources.AbstractResourceRepository
 import com.android.ide.common.resources.ResourceItem
@@ -70,6 +72,7 @@ import java.net.URLClassLoader
 import java.net.URLConnection
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.function.Predicate
 
 /**
  * Information about the tool embedding the lint analyzer. IDEs and other tools
@@ -191,6 +194,11 @@ abstract class LintClient {
      * @return a new [UastParser]
      */
     abstract fun getUastParser(project: Project?): UastParser
+
+    /**
+     * Returns a visitor to use to analyze Gradle build scripts
+     */
+    abstract fun getGradleVisitor(): GradleVisitor
 
     /**
      * Returns an optimal detector, if applicable. By default, just returns the
@@ -1329,14 +1337,26 @@ abstract class LintClient {
         node.ownerDocument?.getUserData(MERGED_MANIFEST) != null
 
     /** Cache used by [.findManifestSourceNode]  */
-    @Suppress("MemberVisibilityCanPrivate")
+    @Suppress("MemberVisibilityCanBePrivate")
     protected val reportFileCache: MutableMap<Any, BlameFile> =
         Maps.newHashMap<Any, BlameFile>()
 
     /** Cache used by [.findManifestSourceNode]  */
-    @Suppress("MemberVisibilityCanPrivate")
+    @Suppress("MemberVisibilityCanBePrivate")
     protected val sourceNodeCache: MutableMap<Node, Pair<File, out Node>> =
         Maps.newIdentityHashMap<Node, Pair<File, out Node>>()
+
+    /**
+     * Looks up the highest known version of the given library if possible, possibly
+     * applying the given [filter]
+     */
+    open fun getHighestKnownVersion(
+        coordinate: GradleCoordinate,
+        filter: Predicate<GradleVersion>?
+    ): GradleVersion? {
+        // Overridden in Studio to consult SDK manager's cache
+        return null
+    }
 
     /**
      * For the given node from a merged manifest, find the corresponding

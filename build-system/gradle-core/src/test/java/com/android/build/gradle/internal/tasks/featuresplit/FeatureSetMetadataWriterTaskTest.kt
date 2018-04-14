@@ -80,6 +80,17 @@ class FeatureSetMetadataWriterTaskTest {
         }
     }
 
+    @Test
+    fun testComputeFeatureNames() {
+        val features =
+                listOf(
+                        FeatureSplitDeclaration(":A", "id"),
+                        FeatureSplitDeclaration(":foo:A", "id"),
+                        FeatureSplitDeclaration(":AA", "id"))
+
+        assertThat(task.computeFeatureNames(features).values).containsExactly("A1", "A2", "AA")
+    }
+
     @Throws(IOException::class)
     private fun generateInputDir(id: String, appId: String): File {
         val inputDir = temporaryFolder.newFolder()

@@ -133,7 +133,7 @@ class NamespacedAarWithSharedLibTest {
                             |""".trimMargin()
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
-    @Suppress("MemberVisibilityCanPrivate") @get:Rule val tempFolder = TemporaryFolder()
+    @Suppress("MemberVisibilityCanBePrivate") @get:Rule val tempFolder = TemporaryFolder()
 
     @Test
     fun checkBuildsAsBundledStaticLib() {

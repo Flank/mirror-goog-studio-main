@@ -25,14 +25,14 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import com.google.gson.annotations.SerializedName
 import org.gradle.api.Project
 import org.gradle.api.Task
-import java.io.File
-import java.util.Locale
-import com.google.gson.annotations.SerializedName
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskDependency
+import java.io.File
 import java.io.FileReader
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>

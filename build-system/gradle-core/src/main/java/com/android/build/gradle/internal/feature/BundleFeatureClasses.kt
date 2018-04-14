@@ -32,6 +32,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.ReproducibleFileVisitor
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -55,6 +56,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
     @get:InputFiles lateinit var postJavacClasses: FileCollection
     @get:InputFiles private var thisRClassClasses: BuildableArtifact? = null
     @get:InputFiles private var dependencyRClassClasses: FileCollection? = null
+    @get:Input private lateinit var featurePath: String
 
     @TaskAction
     fun merge() {
@@ -76,7 +78,9 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
             it.submit(JarWorkerRunnable::class.java,
                 JarRequest(toFile = outputJar,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
-                    fromFiles = files))
+                    fromFiles = files,
+                    manifestProperties = mapOf(
+                        "feature-path" to featurePath)))
         }
     }
 
@@ -94,6 +98,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope
+            task.featurePath = globalScope.project.path
             if (java.lang.Boolean.TRUE == globalScope.extension.aaptOptions.namespaced) {
                 task.thisRClassClasses = scope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)

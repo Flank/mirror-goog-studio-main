@@ -54,7 +54,7 @@ public class OverrideConcreteDetector extends Detector implements SourceCodeScan
                             + "`minSdkVersion`.",
                     Category.CORRECTNESS,
                     6,
-                    Severity.FATAL,
+                    Severity.ERROR,
                     new Implementation(OverrideConcreteDetector.class, Scope.JAVA_FILE_SCOPE));
 
     // This check is currently hardcoded for the specific case of the

@@ -85,6 +85,7 @@ iml_module(
     name = "studio.android.sdktools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
     iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
+    resources = ["libs/lint-checks/src/main/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
@@ -97,17 +98,10 @@ iml_module(
 
 kotlin_library(
     name = "tools.lint-checks",
-    # TODO: move resources out of java?
     srcs = ["libs/lint-checks/src/main/java"],
     pom = "lint-checks.pom",
-    resource_strip_prefix = "tools/base/lint/libs/lint-checks",
-    resources = glob(
-        include = ["libs/lint-checks/src/main/java/**"],
-        exclude = [
-            "libs/lint-checks/src/main/java/**/*.java",
-            "libs/lint-checks/src/main/java/**/*.kt",
-        ],
-    ) + ["libs/lint-checks/NOTICE"],
+    resource_strip_prefix = "tools/base/lint/libs/lint-checks/src/main/resources",
+    resources = glob(["libs/lint-checks/src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",

@@ -19,8 +19,10 @@ package com.android.build.gradle.integration.databinding;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.sdklib.SdkVersionInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,26 +38,33 @@ public class DataBindingIntegrationTestAppsConnectedTest {
     @Rule public GradleTestProject project;
     @Rule public Adb adb = new Adb();
 
-    public DataBindingIntegrationTestAppsConnectedTest(String projectName, boolean useV2) {
-        project =
+    public DataBindingIntegrationTestAppsConnectedTest(
+            String projectName, boolean useV2, boolean useAndroidX) {
+        GradleTestProjectBuilder builder =
                 GradleTestProject.builder()
-                        .fromDataBindingIntegrationTest(projectName)
+                        .fromDataBindingIntegrationTest(projectName, useAndroidX)
                         .addGradleProperties(
                                 BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName()
                                         + "="
                                         + useV2)
-                        .create();
+                        .addGradleProperties(
+                                BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX);
+        if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
+            builder.withCompileSdkVersion("\"android-P\"");
+        }
+        this.project = builder.create();
     }
 
-    @Parameterized.Parameters(name = "app_{0}_useV2_{1}")
+    @Parameterized.Parameters(name = "app_{0}_useV2_{1}_useAndroidX_{2}")
     public static Iterable<Object[]> classNames() {
-        // "App With Spaces", not supported by bazel :/
         List<Object[]> params = new ArrayList<>();
         for (boolean useV2 : new boolean[] {true, false}) {
-            params.add(new Object[] {"IndependentLibrary", useV2});
-            params.add(new Object[] {"TestApp", useV2});
-            params.add(new Object[] {"ProguardedAppWithTest", useV2});
-            params.add(new Object[] {"AppWithDataBindingInTests", useV2});
+            for (boolean useAndroidX : new boolean[] {true, false}) {
+                params.add(new Object[] {"IndependentLibrary", useV2, useAndroidX});
+                params.add(new Object[] {"TestApp", useV2, useAndroidX});
+                params.add(new Object[] {"ProguardedAppWithTest", useV2, useAndroidX});
+                params.add(new Object[] {"AppWithDataBindingInTests", useV2, useAndroidX});
+            }
         }
         return params;
     }

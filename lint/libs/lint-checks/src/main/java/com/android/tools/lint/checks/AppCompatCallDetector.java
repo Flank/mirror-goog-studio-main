@@ -64,7 +64,7 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
     public AppCompatCallDetector() {}
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         Boolean dependsOnAppCompat = context.getProject().dependsOn(APPCOMPAT_LIB_ARTIFACT);
         mDependsOnAppCompat = dependsOnAppCompat != null && dependsOnAppCompat;
     }

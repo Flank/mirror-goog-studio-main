@@ -34,8 +34,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -187,15 +190,36 @@ public class JarMerger implements Closeable {
         jarOutputStream.close();
     }
 
+    public void setManifestProperties(Map<String, String> properties) throws IOException {
+        Manifest manifest = new Manifest();
+        Attributes global = manifest.getMainAttributes();
+        global.put(Attributes.Name.MANIFEST_VERSION, "1.0.0");
+        properties.forEach(
+                (attributeName, attributeValue) ->
+                        global.put(new Attributes.Name(attributeName), attributeValue));
+        JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
+        setEntryAttributes(manifestEntry);
+        jarOutputStream.putNextEntry(manifestEntry);
+        try {
+            manifest.write(jarOutputStream);
+        } finally {
+            jarOutputStream.closeEntry();
+        }
+    }
+
     private void write(@NonNull JarEntry entry, @NonNull InputStream from) throws IOException {
-        entry.setLastModifiedTime(ZERO_TIME);
-        entry.setLastAccessTime(ZERO_TIME);
-        entry.setCreationTime(ZERO_TIME);
+        setEntryAttributes(entry);
         jarOutputStream.putNextEntry(entry);
         int count;
         while ((count = from.read(buffer)) != -1) {
             jarOutputStream.write(buffer, 0, count);
         }
         jarOutputStream.closeEntry();
+    }
+
+    private void setEntryAttributes(@NonNull JarEntry entry) {
+        entry.setLastModifiedTime(ZERO_TIME);
+        entry.setLastAccessTime(ZERO_TIME);
+        entry.setCreationTime(ZERO_TIME);
     }
 }

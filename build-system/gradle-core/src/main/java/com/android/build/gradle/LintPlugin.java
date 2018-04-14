@@ -47,25 +47,52 @@ public class LintPlugin implements Plugin<Project> {
         this.project = project;
         createExtension(project);
         BasePlugin.createLintClasspathConfiguration(project);
-        withJavaPlugin(plugin -> {
-            JavaPluginConvention javaConvention = getJavaPluginConvention();
-            if (javaConvention != null) {
-                Configuration customLintChecksConfig =
-                        TaskManager.createCustomLintChecksConfig(project);
+        withJavaPlugin(
+                plugin -> {
+                    JavaPluginConvention javaConvention = getJavaPluginConvention();
+                    if (javaConvention != null) {
+                        Configuration customLintChecksConfig =
+                                TaskManager.createCustomLintChecksConfig(project);
 
-                String projectName = project.getName();
-                LintStandaloneTask task = createTask("lint",
-                        "Run Android Lint analysis on project '" + projectName + "'",
-                        project, javaConvention, customLintChecksConfig);
-                // Make the check task depend on the lint
-                project.getTasks().findByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(task);
+                        String projectName = project.getName();
+                        LintStandaloneTask task =
+                                createTask(
+                                        "lint",
+                                        "Run Android Lint analysis on project '"
+                                                + projectName
+                                                + "'",
+                                        project,
+                                        javaConvention,
+                                        customLintChecksConfig);
+                        // Make the check task depend on the lint
+                        project.getTasks()
+                                .findByName(JavaBasePlugin.CHECK_TASK_NAME)
+                                .dependsOn(task);
 
-                LintStandaloneTask lintVital = createTask("lintVital",
-                        "Runs lint on just the fatal issues in the project '" + projectName + "'",
-                        project, javaConvention, customLintChecksConfig);
-                lintVital.setFatalOnly(true);
-            }
-        });
+                        LintStandaloneTask lintVital =
+                                createTask(
+                                        "lintVital",
+                                        "Runs lint on just the fatal issues in the project '"
+                                                + projectName
+                                                + "'",
+                                        project,
+                                        javaConvention,
+                                        customLintChecksConfig);
+                        lintVital.setFatalOnly(true);
+
+                        LintStandaloneTask lintFix =
+                                createTask(
+                                        "lintFix",
+                                        "Runs lint on `"
+                                                + projectName
+                                                + "` and applies any safe suggestions to the source code.",
+                                        project,
+                                        javaConvention,
+                                        customLintChecksConfig);
+                        lintFix.setAutoFix(true);
+                        lintFix.setGroup("cleanup");
+                    }
+                });
     }
 
     private void createExtension(Project project) {

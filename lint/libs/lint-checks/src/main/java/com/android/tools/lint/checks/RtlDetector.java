@@ -229,7 +229,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mUsesRtlAttributes && mEnabledRtlSupport == null && rtlApplies(context)) {
             List<File> manifestFile = context.getMainProject().getManifestFiles();
             if (!manifestFile.isEmpty()) {

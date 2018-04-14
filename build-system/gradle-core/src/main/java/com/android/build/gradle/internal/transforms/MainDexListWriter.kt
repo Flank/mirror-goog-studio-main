@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-apply from: "../commonHeader.gradle"
-buildscript { apply from: "../commonBuildScript.gradle" }
-apply plugin: 'com.android.model.library'
+package com.android.build.gradle.internal.transforms
 
-apply from: "../commonLocalRepo.gradle"
+import java.io.File
 
-model {
-    android {
-        compileSdkVersion = rootProject.latestCompileSdk
-        buildToolsVersion = rootProject.buildToolsVersion
-        defaultConfig.minSdkVersion rootProject.supportLibMinSdk
-    }
-
-    android.dataBinding {
-        enabled = true
-        addDefaultAdapters = true
-    }
+interface MainDexListWriter {
+    fun setMainDexListOutputFile(mainDexListFile: File)
 }

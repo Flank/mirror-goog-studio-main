@@ -325,7 +325,7 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
             checkHandles(context);
         }
