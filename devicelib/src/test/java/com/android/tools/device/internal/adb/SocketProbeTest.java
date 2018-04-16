@@ -28,19 +28,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 
 public class SocketProbeTest {
     @Test
-    public void adbServerRunning_freePort() throws IOException, InterruptedException {
+    public void adbServerRunning_freePort() throws Exception {
         InetSocketAddress address = new InetSocketAddress(InetAddress.getByName(null), 0);
         assertThat(new SocketProbe().probe(address, 500, TimeUnit.MILLISECONDS)).isNull();
     }
 
     @Test
-    public void adbServerRunning_nonAdbServer()
-            throws IOException, InterruptedException, TimeoutException {
+    public void adbServerRunning_nonAdbServer() throws Exception {
         // create a disconnecting server and wait for it to start up
         CountDownLatch createLatch = new CountDownLatch(1);
         CountDownLatch acceptLatch = new CountDownLatch(1);
@@ -58,7 +56,11 @@ public class SocketProbeTest {
             assertThat(new SocketProbe().probe(addr, 50, TimeUnit.MILLISECONDS)).isNull();
 
             // verify that isAdbServerRunning() actually established connection to the server
-            // launched above
+            // launched above. If there was an exception, rethrow it here so the test fails
+            // with a meaningful stack trace.
+            if (ds.getException() != null) {
+                throw ds.getException();
+            }
             assertThat(acceptLatch.getCount()).isEqualTo(0);
         } finally {
             serverTask.cancel(true);
@@ -71,6 +73,7 @@ public class SocketProbeTest {
         private final CountDownLatch createLatch;
         private final CountDownLatch acceptLatch;
         private volatile int port;
+        private volatile Exception exception;
 
         /**
          * Constructs a {@link DisconnectingServer}.
@@ -99,11 +102,19 @@ public class SocketProbeTest {
                 }
             } catch (IOException e) {
                 System.err.println(e.toString());
+                exception = e;
             }
         }
 
-        int getPort() {
+        int getPort() throws Exception {
+            if (exception != null) {
+                throw exception;
+            }
             return port;
+        }
+
+        Exception getException() {
+            return exception;
         }
     }
 }
