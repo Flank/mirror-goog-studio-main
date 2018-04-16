@@ -29,7 +29,7 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
 import com.android.bundle.Devices
 import com.android.sdklib.AndroidVersion
-import com.android.tools.build.bundletool.commands.SelectApksCommand
+import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.protobuf.util.JsonFormat
@@ -139,7 +139,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
                         JsonFormat.parser().merge(it, builder)
                     }
 
-                    val command = createSelectApkCommand(builder, tempFolder)
+                    val command = createExtractApkCommand(builder, tempFolder)
 
                     // create the APKs
                     val apkPaths = command.build().execute()
@@ -187,11 +187,11 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
             }
         }
 
-        protected open fun createSelectApkCommand(
+        protected open fun createExtractApkCommand(
             builder: Devices.DeviceSpec.Builder,
             tempFolder: Path
-        ): SelectApksCommand.Builder {
-            return SelectApksCommand
+        ): ExtractApksCommand.Builder {
+            return ExtractApksCommand
                 .builder()
                 .setApksArchivePath(params.apkBundle.toPath())
                 .setDeviceSpec(builder.build())

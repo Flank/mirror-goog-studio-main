@@ -193,8 +193,8 @@ public enum InternalArtifactType implements ArtifactType {
     BUNDLE(Kind.OUTPUTS),
     // APK Set archive with APKs generated from a bundle.
     APKS_FROM_BUNDLE,
-    // output of ApkSelect applied to APKS_FROM_BUNDLE and a device config.
-    SELECTED_APKS,
+    // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
+    EXTRACTED_APKS,
 
     // file containing the metadata for the full feature set. This contains the feature names,
     // the res ID offset, both tied to the feature module path. Published by the base for the

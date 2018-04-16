@@ -44,9 +44,9 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
+import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
-import com.android.build.gradle.internal.tasks.SelectApksTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
@@ -471,7 +471,7 @@ public class ApplicationTaskManager extends TaskManager {
                     task.dependsOn(getValidateSigningTask(scope));
                 }
 
-                taskFactory.create(new SelectApksTask.ConfigAction(scope));
+                taskFactory.create(new ExtractApksTask.ConfigAction(scope));
             }
         }
     }

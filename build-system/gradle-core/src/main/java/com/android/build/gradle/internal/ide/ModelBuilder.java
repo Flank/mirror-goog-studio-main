@@ -53,7 +53,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
-import com.android.build.gradle.internal.tasks.SelectApksTask;
+import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -827,7 +827,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 testOptions,
                 scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName(),
                 BundleTask.Companion.getTaskName(scope),
-                SelectApksTask.Companion.getTaskName(scope));
+                ExtractApksTask.Companion.getTaskName(scope));
     }
 
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {

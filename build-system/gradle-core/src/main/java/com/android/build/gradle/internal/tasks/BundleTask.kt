@@ -133,12 +133,8 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
 
-            params.mainDexList?.let { mainDexList ->
-                check(mainDexList.name == AppBundle.Metadata.MAIN_DEX_LIST_FILE_NAME) {
-                    """Main dex list must have name '${AppBundle.Metadata.MAIN_DEX_LIST_FILE_NAME}'.
-                        |File: ${mainDexList.absolutePath}""".trimMargin()
-                }
-                command.addMetadataFile(AppBundle.Metadata.BUNDLETOOL_NAMESPACE, mainDexList.toPath())
+            params.mainDexList?.let {
+                command.setMainDexListFile(it.toPath())
             }
 
             command.build().execute()
@@ -176,7 +172,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                     scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
             // The bundle uses the main dex list even if legacy multidex is not explicitly enabled.
-            if (scope.getNeedsMainDexList()) {
+            if (scope.needsMainDexList) {
                 task.mainDexList =
                         scope.artifacts.getFinalArtifactFiles(
                             InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST

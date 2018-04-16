@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
 import com.android.bundle.Devices
-import com.android.tools.build.bundletool.commands.SelectApksCommand
+import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.junit.Before
@@ -63,7 +63,7 @@ class InstallVariantViaBundleTaskTest {
         )
 
         val outputPath = Files.createTempFile(
-            "select-apk",
+            "extract-apk",
             ""
         )
 
@@ -101,11 +101,11 @@ class InstallVariantViaBundleTaskTest {
         )
 
         val outputPath = Files.createTempFile(
-            "select-apk",
+            "extract-apk",
             ""
         )
         val outputPath2 = Files.createTempFile(
-            "select-apk",
+            "extract-apk",
             ""
         )
 
@@ -138,28 +138,28 @@ class InstallVariantViaBundleTaskTest {
         override fun createDeviceProvider(iLogger: ILogger): DeviceProvider =
             InstallVariantTaskTest.FakeDeviceProvider(ImmutableList.of(deviceConnector))
 
-        override fun createSelectApkCommand(
+        override fun createExtractApkCommand(
             builder: Devices.DeviceSpec.Builder,
             tempFolder: Path
-        ): SelectApksCommand.Builder = TestBuilder(*outputPaths)
+        ): ExtractApksCommand.Builder = TestBuilder(*outputPaths)
     }
 
-    private class TestBuilder(private vararg val outputPaths: Path) : SelectApksCommand.Builder() {
+    private class TestBuilder(private vararg val outputPaths: Path) : ExtractApksCommand.Builder() {
 
-        override fun setOutputDirectory(path: Path?): SelectApksCommand.Builder {
+        override fun setOutputDirectory(path: Path?): ExtractApksCommand.Builder {
             return this
         }
 
-        override fun setApksArchivePath(path: Path?): SelectApksCommand.Builder {
+        override fun setApksArchivePath(path: Path?): ExtractApksCommand.Builder {
             return this
         }
 
-        override fun setDeviceSpec(spec: Devices.DeviceSpec?): SelectApksCommand.Builder {
+        override fun setDeviceSpec(spec: Devices.DeviceSpec?): ExtractApksCommand.Builder {
             return this
         }
 
-        override fun build(): SelectApksCommand {
-            val commandMock = Mockito.mock(SelectApksCommand::class.java)
+        override fun build(): ExtractApksCommand {
+            val commandMock = Mockito.mock(ExtractApksCommand::class.java)
 
             `when`(commandMock.execute()).thenReturn(ImmutableList.copyOf(outputPaths))
 

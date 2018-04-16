@@ -87,7 +87,7 @@ class AppModelBuilder(
 
             if (artifacts.hasArtifact(InternalArtifactType.BUNDLE)) {
                 val bundleFile = artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE).singleFile()
-                val apkFolder = artifacts.getFinalArtifactFiles(InternalArtifactType.SELECTED_APKS).singleFile()
+                val apkFolder = artifacts.getFinalArtifactFiles(InternalArtifactType.EXTRACTED_APKS).singleFile()
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
                             variantScope.fullVariantName, bundleFile, apkFolder))

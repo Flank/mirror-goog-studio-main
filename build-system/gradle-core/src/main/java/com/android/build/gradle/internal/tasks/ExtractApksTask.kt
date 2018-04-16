@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
-import com.android.tools.build.bundletool.commands.SelectApksCommand
+import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.google.protobuf.util.JsonFormat
 import org.gradle.api.tasks.InputFile
@@ -43,10 +43,10 @@ import javax.inject.Inject
  * Task that extract APKs from the apk zip (created with [BundleToApkTask] into a folder. a Device
  * info file indicate which APKs to extract. Only APKs for that particular device are extracted.
  */
-open class SelectApksTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     companion object {
-        fun getTaskName(scope: VariantScope) = scope.getTaskName("selectApksFor")
+        fun getTaskName(scope: VariantScope) = scope.getTaskName("extractApksFor")
     }
 
     private val workers = Workers.getWorker(workerExecutor)
@@ -75,7 +75,7 @@ open class SelectApksTask @Inject constructor(workerExecutor: WorkerExecutor) : 
                 Params(
                     apkSetArchive.singleFile(),
                     deviceConfig
-                            ?: throw RuntimeException("Calling ApkSelect with no device config"),
+                            ?: throw RuntimeException("Calling ExtractApk with no device config"),
                     outputDir
                 )
             )
@@ -98,7 +98,7 @@ open class SelectApksTask @Inject constructor(workerExecutor: WorkerExecutor) : 
                 JsonFormat.parser().merge(it, builder)
             }
 
-            val command = SelectApksCommand
+            val command = ExtractApksCommand
                 .builder()
                 .setApksArchivePath(params.apkSetArchive.toPath())
                 .setDeviceSpec(builder.build())
@@ -108,14 +108,14 @@ open class SelectApksTask @Inject constructor(workerExecutor: WorkerExecutor) : 
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<SelectApksTask> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<ExtractApksTask> {
 
         override fun getName() = getTaskName(scope)
-        override fun getType() = SelectApksTask::class.java
+        override fun getType() = ExtractApksTask::class.java
 
-        override fun execute(task: SelectApksTask) {
+        override fun execute(task: ExtractApksTask) {
             task.variantName = scope.fullVariantName
-            task.outputDir = scope.artifacts.appendArtifact(InternalArtifactType.SELECTED_APKS, task)
+            task.outputDir = scope.artifacts.appendArtifact(InternalArtifactType.EXTRACTED_APKS, task)
             task.apkSetArchive = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
 
             val devicePath = scope.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
