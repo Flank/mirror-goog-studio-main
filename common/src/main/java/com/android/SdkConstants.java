@@ -2398,6 +2398,11 @@ public final class SdkConstants {
     /** use api or implementation */
     @Deprecated
     public static final String GRADLE_ANDROID_TEST_COMPILE_CONFIGURATION = "androidTestCompile";
+    public static final String GRADLE_IMPLEMENTATION_CONFIGURATION = "implementation";
+    public static final String GRADLE_API_CONFIGURATION = "api";
+    public static final String GRADLE_ANDROID_TEST_IMPLEMENTATION_CONFIGURATION =
+            "androidTestImplementation";
+    public static final String GRADLE_ANDROID_TEST_API_CONFIGURATION = "androidTestApi";
 
     public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
     public static final String CURRENT_BUILD_TOOLS_VERSION = "27.0.3";
