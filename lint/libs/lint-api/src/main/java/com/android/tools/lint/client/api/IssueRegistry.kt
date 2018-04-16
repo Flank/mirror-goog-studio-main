@@ -224,14 +224,13 @@ protected constructor() {
      * @return an iterator for all the categories, never null
      */
     fun getCategories(): List<Category> {
-        var categories = IssueRegistry.categories
+        var categories = this.categories
         if (categories == null) {
-            synchronized(IssueRegistry::class.java) {
-                categories = IssueRegistry.categories
-                if (categories == null) {
-                    categories = Collections.unmodifiableList(createCategoryList())
-                    IssueRegistry.categories = categories
-                }
+            categories = Collections.unmodifiableList(createCategoryList())
+            this.categories = categories
+            if (LintClient.isStudio) {
+                cachedCategories = categories
+
             }
         }
 
@@ -244,7 +243,7 @@ protected constructor() {
             categorySet.add(issue.category)
         }
         val sorted = ArrayList(categorySet)
-        Collections.sort(sorted)
+        sorted.sort()
         return sorted
     }
 
@@ -257,16 +256,14 @@ protected constructor() {
     fun getIssue(id: String): Issue? {
         var map = idToIssue
         if (map == null) {
-            synchronized(IssueRegistry::class.java) {
-                map = idToIssue
-                if (map == null) {
-                    map = createIdToIssueMap()
-                    idToIssue = map
-                }
+            map = createIdToIssueMap()
+            this.idToIssue = map
+            if (LintClient.isStudio) {
+                cachedIdToIssue = map
             }
         }
 
-        return map!![id]
+        return map[id]
     }
 
     private fun createIdToIssueMap(): Map<String, Issue> {
@@ -283,12 +280,34 @@ protected constructor() {
         return map
     }
 
+    @Volatile
+    private var categories: List<Category>?
+    @Volatile
+    private var idToIssue: Map<String, Issue>?
+    private var scopeIssues: MutableMap<EnumSet<Scope>, List<Issue>>
+
+    init {
+        if (LintClient.isStudio) {
+            // In the IDE, cache across incremental runs; here, lint is never run in parallel
+            scopeIssues = cachedScopeIssues
+            idToIssue = cachedIdToIssue
+            categories = cachedCategories
+        } else {
+            // Outside of the IDE, typically in Gradle, we don't want this caching since
+            // lint can run in parallel and this caching can be incorrect;
+            // see for example issue 77891711
+            scopeIssues = Maps.newHashMap()
+            idToIssue = null
+            categories = null
+        }
+    }
+
     companion object {
         @Volatile
-        private var categories: List<Category>? = null
+        private var cachedCategories: List<Category>? = null
         @Volatile
-        private var idToIssue: Map<String, Issue>? = null
-        private var scopeIssues: MutableMap<EnumSet<Scope>, List<Issue>> = Maps.newHashMap()
+        private var cachedIdToIssue: Map<String, Issue>? = null
+        private var cachedScopeIssues: MutableMap<EnumSet<Scope>, List<Issue>> = Maps.newHashMap()
 
         private val DUMMY_IMPLEMENTATION = Implementation(
             Detector::class.java,
@@ -412,9 +431,9 @@ protected constructor() {
          */
         fun reset() {
             synchronized(IssueRegistry::class.java) {
-                idToIssue = null
-                categories = null
-                scopeIssues = Maps.newHashMap()
+                cachedIdToIssue = null
+                cachedCategories = null
+                cachedScopeIssues = Maps.newHashMap()
             }
         }
     }

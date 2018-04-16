@@ -1587,6 +1587,7 @@ abstract class LintClient {
          * The client name returned by [.getClientName] when running in
          * Android Studio/IntelliJ IDEA
          */
+        @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_STUDIO = "studio"
 
         /**
@@ -1605,6 +1606,7 @@ abstract class LintClient {
          * The client name returned by [.getClientName] when running in
          * some unknown client
          */
+        @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_UNKNOWN = "unknown"
 
         /** The client name.  */

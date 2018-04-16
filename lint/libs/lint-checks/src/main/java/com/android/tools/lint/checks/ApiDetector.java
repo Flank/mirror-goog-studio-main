@@ -78,7 +78,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxName;
-import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UElementHandler;
@@ -320,7 +319,6 @@ public class ApiDetector extends ResourceXmlDetector
     private static final String TAG_ANIMATED_SELECTOR = "animated-selector";
 
     protected ApiLookup mApiDatabase;
-    private boolean mWarnedMissingDb;
     private int mMinApi = -1;
 
     /** Constructs a new API check */
@@ -335,14 +333,6 @@ public class ApiDetector extends ResourceXmlDetector
             // The manifest file hasn't been processed yet in the -before- project hook.
             // For now it's initialized lazily in getMinSdk(Context), but the
             // lint infrastructure should be fixed to parse manifest file up front.
-
-            if (mApiDatabase == null && !mWarnedMissingDb) {
-                mWarnedMissingDb = true;
-                context.report(
-                        IssueRegistry.LINT_ERROR,
-                        Location.create(context.file),
-                        "Can't find API database; API check not performed");
-            }
         }
     }
 
