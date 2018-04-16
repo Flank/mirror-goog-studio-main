@@ -34,6 +34,7 @@ kotlin_library(
 
 kotlin_test(
     name = "tests",
+    timeout = "long",
     srcs = ["src/test/java"],
     data = [
         "//prebuilts/studio/sdk:platform-tools",
