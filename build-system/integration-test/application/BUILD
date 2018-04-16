@@ -54,6 +54,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platforms/android-21",
     "//prebuilts/studio/sdk:platforms/android-23",
     "//prebuilts/studio/sdk:platforms/android-24",
+    "//prebuilts/studio/sdk:platforms/android-P",
     "//prebuilts/studio/sdk:platforms/latest-preview",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:uiautomator_latest",
@@ -80,6 +81,7 @@ gradle_integration_test(
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test:androidx_latest",
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
@@ -99,6 +101,7 @@ gradle_integration_test(
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test:androidx_latest",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
