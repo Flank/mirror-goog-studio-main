@@ -1,6 +1,6 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-import android.support.v7.app.AppCompatActivity
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 import android.os.Bundle
 
 import com.google.android.gms.maps.CameraUpdateFactory

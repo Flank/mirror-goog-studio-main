@@ -1,9 +1,9 @@
 package ${packageName};
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
 import ${getMaterialComponentName('android.support.design.widget.BottomNavigationView', useMaterial2)};
-import android.support.v7.app.AppCompatActivity;
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
 import android.view.MenuItem;
 import android.widget.TextView;
 

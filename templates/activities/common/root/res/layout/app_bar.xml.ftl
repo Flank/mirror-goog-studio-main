@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:theme="@style/${themeNameAppBarOverlay}">
 
-        <android.support.v7.widget.Toolbar
+        <${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
@@ -31,4 +31,4 @@
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
-</android.support.design.widget.CoordinatorLayout>
+</${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>

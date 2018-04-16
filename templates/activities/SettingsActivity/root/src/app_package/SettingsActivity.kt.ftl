@@ -17,7 +17,7 @@ import android.preference.RingtonePreference
 import android.text.TextUtils
 import android.view.MenuItem
 <#if parentActivityClass?has_content>
-import android.support.v4.app.NavUtils
+import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)}
 </#if>
 
 /**

@@ -1,9 +1,9 @@
 package ${kotlinEscapedPackageName}
 
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat.MediaItem
-import android.support.v4.media.MediaBrowserServiceCompat
-import android.support.v4.media.session.MediaSessionCompat
+import ${getMaterialComponentName('android.support.v4.media.MediaBrowserCompat.MediaItem', useAndroidX)}
+import ${getMaterialComponentName('android.support.v4.media.MediaBrowserServiceCompat', useAndroidX)}
+import ${getMaterialComponentName('android.support.v4.media.session.MediaSessionCompat', useAndroidX)}
 
 import java.util.ArrayList
 

@@ -18,15 +18,15 @@ package ${packageName};
 import android.net.Uri;
 </#if>
 import android.os.Bundle;
-import android.support.v17.leanback.app.VideoSupportFragment;
-import android.support.v17.leanback.app.VideoSupportFragmentGlueHost;
+import ${getMaterialComponentName('android.support.v17.leanback.app.VideoSupportFragment', useAndroidX)};
+import ${getMaterialComponentName('android.support.v17.leanback.app.VideoSupportFragmentGlueHost', useAndroidX)};
 <#if buildApi gte 27>
-import android.support.v17.leanback.media.MediaPlayerAdapter;
-import android.support.v17.leanback.media.PlaybackTransportControlGlue;
-import android.support.v17.leanback.widget.PlaybackControlsRow;
+import ${getMaterialComponentName('android.support.v17.leanback.media.MediaPlayerAdapter', useAndroidX)};
+import ${getMaterialComponentName('android.support.v17.leanback.media.PlaybackTransportControlGlue', useAndroidX)};
+import ${getMaterialComponentName('android.support.v17.leanback.widget.PlaybackControlsRow', useAndroidX)};
 <#else>
-import android.support.v17.leanback.media.MediaPlayerGlue;
-import android.support.v17.leanback.media.PlaybackGlue;
+import ${getMaterialComponentName('android.support.v17.leanback.media.MediaPlayerGlue', useAndroidX)};
+import ${getMaterialComponentName('android.support.v17.leanback.media.PlaybackGlue', useAndroidX)};
 </#if>
 
 /** Handles video playback with media controls. */

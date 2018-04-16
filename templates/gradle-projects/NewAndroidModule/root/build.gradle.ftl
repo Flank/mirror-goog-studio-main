@@ -18,9 +18,15 @@ apply plugin: 'com.android.application'
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
     <#if !improvedTestDeps>
+    <#if useAndroidX>
+    ${getConfigurationName("androidTestCompile")}('androidx.test.espresso:espresso-core:${espressoVersion!"+"}', {
+        exclude group: 'androidx.annotation', module: 'annotation'
+    })
+    <#else>
     ${getConfigurationName("androidTestCompile")}('com.android.support.test.espresso:espresso-core:${espressoVersion!"+"}', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    </#if>
     </#if>
     <@kt.addKotlinDependencies />
 <#if isInstantApp||isDynamicFeature>

@@ -1,4 +1,5 @@
 <globals>
+    <#include "root://activities/common/common_globals.xml.ftl" />
     <global id="topOut" value="." />
     <global id="projectOut" value="." />
 
