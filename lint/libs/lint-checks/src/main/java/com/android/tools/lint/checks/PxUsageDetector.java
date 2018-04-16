@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TEXT_SIZE;
+import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.DIMEN_PREFIX;
 import static com.android.SdkConstants.TAG_DIMEN;
 import static com.android.SdkConstants.TAG_ITEM;
@@ -50,9 +51,8 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import org.w3c.dom.Attr;
@@ -155,7 +155,7 @@ public class PxUsageDetector extends LayoutDetector {
     @Override
     @Nullable
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(TAG_STYLE);
+        return Arrays.asList(TAG_STYLE, TAG_DIMEN, TAG_ITEM);
     }
 
     @Override
@@ -192,8 +192,8 @@ public class PxUsageDetector extends LayoutDetector {
         }
 
         String value = attribute.getValue();
-        if (value.endsWith(UNIT_PX) && value.matches("\\d+px")) {
-            if (value.charAt(0) == '0' || value.equals("1px")) {
+        if (value.endsWith(UNIT_PX) && value.matches("\\d+(\\.\\d+)?px")) {
+            if (isZero(value) || value.equals("1px")) {
                 // 0px is fine. 0px is 0dp regardless of density...
                 // Similarly, 1px is typically used to create a single thin line (see issue 55722)
                 return;
@@ -205,10 +205,10 @@ public class PxUsageDetector extends LayoutDetector {
                         context.getLocation(attribute),
                         "Avoid using \"`px`\" as units; use \"`dp`\" instead");
             }
-        } else if (value.endsWith(UNIT_MM) && value.matches("\\d+mm")
-                || value.endsWith(UNIT_IN) && value.matches("\\d+in")) {
-            if (value.charAt(0) == '0') {
-                // 0mm == 0in == 0dp
+        } else if (value.endsWith(UNIT_MM) && value.matches("\\d+(\\.\\d+)?mm")
+                || value.endsWith(UNIT_IN) && value.matches("\\d+(\\.\\d+)?in")) {
+            if (isZero(value)) {
+                // 0mm == 0in == 0dp, ditto for 0.0
                 return;
             }
             if (context.isEnabled(IN_MM_ISSUE)) {
@@ -225,8 +225,8 @@ public class PxUsageDetector extends LayoutDetector {
         } else if (value.endsWith(UNIT_SP)
                 && (ATTR_TEXT_SIZE.equals(attribute.getLocalName())
                         || ATTR_LAYOUT_HEIGHT.equals(attribute.getLocalName()))
-                && value.matches("\\d+sp")) {
-            int size = getSize(value);
+                && value.matches("\\d+(\\.\\d+)?sp")) {
+            int size = getTruncatedSize(value);
             if (size > 0 && size < 12) {
                 context.report(
                         SMALL_SP_ISSUE,
@@ -295,18 +295,34 @@ public class PxUsageDetector extends LayoutDetector {
         }
     }
 
+    // Returns true if number is 0, or 0.00, but not 1, 0.1, etc
+    static boolean isZero(@NonNull String numberWithUnit) {
+        if (numberWithUnit.startsWith("0")) {
+            for (int i = 1; i < numberWithUnit.length(); i++) {
+                char c = numberWithUnit.charAt(i);
+                if (c != '0' && c != '.') {
+                    return !Character.isDigit(c);
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     @NonNull
     private static LintFix createDpToSpFix() {
-        return LintFix.create().replace().pattern("\\d+(di?p)").with("sp").build();
+        return LintFix.create().replace().pattern(".*(di?p)").with("sp").build();
     }
 
     private static boolean isDpUnit(String value) {
-        return (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP)) && (value.matches("\\d+di?p"));
+        return (value.endsWith(UNIT_DP) || value.endsWith(UNIT_DIP))
+                && (value.matches("\\d+(\\.\\d+)?di?p"));
     }
 
-    private static int getSize(String text) {
-        assert text.matches("\\d+sp") : text;
-        return Integer.parseInt(text.substring(0, text.length() - 2));
+    private static int getTruncatedSize(String text) {
+        assert text.matches("\\d+(\\.\\d+)?sp") : text;
+        int dot = text.indexOf('.');
+        return Integer.parseInt(text.substring(0, dot != -1 ? dot : text.length() - 2));
     }
 
     @Override
@@ -315,33 +331,46 @@ public class PxUsageDetector extends LayoutDetector {
             return;
         }
 
-        assert element.getTagName().equals(TAG_STYLE);
-        NodeList itemNodes = element.getChildNodes();
-        for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
-            Node item = itemNodes.item(j);
-            if (item.getNodeType() == Node.ELEMENT_NODE && TAG_ITEM.equals(item.getNodeName())) {
-                Element itemElement = (Element) item;
-                NodeList childNodes = item.getChildNodes();
-                for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-                    Node child = childNodes.item(i);
-                    if (child.getNodeType() != Node.TEXT_NODE) {
-                        return;
-                    }
+        String tagName = element.getTagName();
+        if (tagName.equals(TAG_STYLE)) {
+            NodeList itemNodes = element.getChildNodes();
+            for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
+                Node item = itemNodes.item(j);
+                if (item.getNodeType() == Node.ELEMENT_NODE
+                        && TAG_ITEM.equals(item.getNodeName())) {
+                    Element itemElement = (Element) item;
+                    NodeList childNodes = item.getChildNodes();
+                    for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                        Node child = childNodes.item(i);
+                        if (child.getNodeType() != Node.TEXT_NODE) {
+                            return;
+                        }
 
-                    checkStyleItem(context, itemElement, child);
+                        checkItem(context, itemElement, child);
+                    }
                 }
+            }
+        } else if (tagName.equals(TAG_DIMEN) || TAG_DIMEN.equals(element.getAttribute(ATTR_TYPE))) {
+            NodeList childNodes = element.getChildNodes();
+            for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                Node child = childNodes.item(i);
+                if (child.getNodeType() != Node.TEXT_NODE) {
+                    return;
+                }
+
+                checkItem(context, element, child);
             }
         }
     }
 
-    private static void checkStyleItem(XmlContext context, Element item, Node textNode) {
+    private static void checkItem(XmlContext context, Element item, Node textNode) {
         String text = textNode.getNodeValue();
         for (int j = text.length() - 1; j > 0; j--) {
             char c = text.charAt(j);
             if (!Character.isWhitespace(c)) {
                 if (c == 'x' && text.charAt(j - 1) == 'p') { // ends with px
                     text = text.trim();
-                    if (text.matches("\\d+px") && text.charAt(0) != '0' && !text.equals("1px")) {
+                    if (text.matches("\\d+(\\.\\d+)?px") && !isZero(text) && !text.equals("1px")) {
                         if (context.isEnabled(PX_ISSUE)) {
                             context.report(
                                     PX_ISSUE,
@@ -354,7 +383,7 @@ public class PxUsageDetector extends LayoutDetector {
                         || c == 'n' && text.charAt(j - 1) == 'i') {
                     text = text.trim();
                     String unit = text.substring(text.length() - 2);
-                    if (text.matches("\\d+" + unit) && text.charAt(0) != '0') {
+                    if (text.matches("\\d+(\\.\\d+)?" + unit) && !isZero(text)) {
                         if (context.isEnabled(IN_MM_ISSUE)) {
                             context.report(
                                     IN_MM_ISSUE,
@@ -373,7 +402,7 @@ public class PxUsageDetector extends LayoutDetector {
                     text = text.trim();
                     String name = item.getAttribute(ATTR_NAME);
                     if ((name.equals(ATTR_TEXT_SIZE) || name.equals("android:textSize"))
-                            && text.matches("\\d+di?p")) {
+                            && text.matches("\\d+(\\.\\d+)?di?p")) {
                         if (context.isEnabled(DP_ISSUE)) {
                             context.report(
                                     DP_ISSUE,
@@ -388,9 +417,9 @@ public class PxUsageDetector extends LayoutDetector {
                     if (ATTR_TEXT_SIZE.equals(name) || ATTR_LAYOUT_HEIGHT.equals(name)) {
                         text = text.trim();
                         String unit = text.substring(text.length() - 2);
-                        if (text.matches("\\d+" + unit)) {
+                        if (text.matches("\\d+(\\.\\d+)?" + unit)) {
                             if (context.isEnabled(SMALL_SP_ISSUE)) {
-                                int size = getSize(text);
+                                int size = getTruncatedSize(text);
                                 if (size > 0 && size < 12) {
                                     context.report(
                                             SMALL_SP_ISSUE,

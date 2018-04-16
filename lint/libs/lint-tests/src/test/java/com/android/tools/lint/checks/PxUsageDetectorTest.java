@@ -25,7 +25,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
         return new PxUsageDetector();
     }
 
-    public void testPx() {
+    public void testPxWarnings() {
         String expected =
                 ""
                         + "res/layout/now_playing_after.xml:49: Warning: Avoid using \"mm\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
@@ -101,7 +101,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSp() {
+    public void testSpWarnings() {
         String expected =
                 ""
                         + "res/layout/textsize.xml:11: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n"
@@ -113,10 +113,10 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                         + "res/layout/textsize.xml:33: Warning: Avoid using sizes smaller than 12sp: 11sp [SmallSp]\n"
                         + "        android:textSize=\"11sp\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/textsize.xml:37: Warning: Avoid using sizes smaller than 12sp: 6sp [SmallSp]\n"
-                        + "        android:layout_height=\"6sp\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n";
+                        + "res/layout/textsize.xml:37: Warning: Avoid using sizes smaller than 12sp: 6.5sp [SmallSp]\n"
+                        + "        android:layout_height=\"6.5sp\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 4 warnings";
         //noinspection all // Sample code
         lint().files(
                         xml(
@@ -158,7 +158,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    <ImageView\n"
                                         + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"6sp\" />\n"
+                                        + "        android:layout_height=\"6.5sp\" />\n"
                                         + "\n"
                                         + "    <!-- No warnings: wrong attribute, size == 0, etc -->\n"
                                         + "\n"
@@ -267,6 +267,43 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                                 + "+         <item name=\"android:textSize\"> 50sp </item>\n");
     }
 
+    public void testFloatingPoint() {
+        String expected =
+                ""
+                        + "res/values/dimens.xml:2: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
+                        + "    <item name=\"using_in_whole\" type=\"dimen\">5in</item>\n"
+                        + "                                             ^\n"
+                        + "res/values/dimens.xml:3: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
+                        + "    <item name=\"using_in\" type=\"dimen\">0.05in</item>\n"
+                        + "                                       ^\n"
+                        + "res/layout/test.xml:3: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
+                        + "    android:layout_width=\"0.05in\"\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/test.xml:4: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
+                        + "    android:layout_height=\"5in\"\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 4 warnings";
+        lint().files(
+                        xml(
+                                "res/values/dimens.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <item name=\"using_in_whole\" type=\"dimen\">5in</item>\n"
+                                        + "    <item name=\"using_in\" type=\"dimen\">0.05in</item>\n"
+                                        + "</resources>"),
+                        xml(
+                                "res/layout/test.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:layout_width=\"0.05in\"\n"
+                                        + "    android:layout_height=\"5in\"\n"
+                                        + "    android:orientation=\"horizontal\">\n"
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expect(expected);
+    }
+
     public void testIncrementalDimensions() {
         String expected =
                 ""
@@ -289,6 +326,18 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                         + "    res/layout/textsize2.xml:9: Dimension used as a text size here\n"
                         + "0 errors, 1 warnings\n";
         lint().files(dimens, textsize2).run().expect(expected);
+    }
+
+    public void testIsZero() {
+        assertFalse(PxUsageDetector.isZero(""));
+        assertTrue(PxUsageDetector.isZero("0"));
+        assertTrue(PxUsageDetector.isZero("0px"));
+        assertTrue(PxUsageDetector.isZero("0.0"));
+        assertTrue(PxUsageDetector.isZero("0.00"));
+        assertTrue(PxUsageDetector.isZero("0.00px"));
+        assertFalse(PxUsageDetector.isZero("1"));
+        assertFalse(PxUsageDetector.isZero("1px"));
+        assertFalse(PxUsageDetector.isZero("0.001px"));
     }
 
     @SuppressWarnings("all") // Sample code

@@ -49,7 +49,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
