@@ -15,9 +15,9 @@
  */
 package com.android.ddmlib;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +55,7 @@ class BatteryFetcher {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             for (String line : lines) {
                 Matcher batteryMatch = BATTERY_LEVEL.matcher(line);
                 if (batteryMatch.matches()) {
@@ -97,7 +97,7 @@ class BatteryFetcher {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             for (String line : lines) {
                 Matcher batteryMatch = BATTERY_LEVEL.matcher(line);
                 if (batteryMatch.matches()) {

@@ -18,8 +18,10 @@ package com.android.builder.testing.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellEnabledDevice;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.utils.ILogger;
 import com.google.common.annotations.Beta;
@@ -27,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A connector to a device to install/uninstall APKs, and run shell command.
@@ -148,6 +151,16 @@ public abstract class DeviceConnector implements IShellEnabledDevice {
      */
     @Nullable
     public abstract String getLanguage();
+
+    /**
+     * Returns the language strings for 21+ config splits.
+     *
+     * @return the list of languages or null if the device is <21
+     */
+    @Nullable
+    public abstract Set<String> getLanguageSplits()
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException;
 
     /**
      * Returns the user's region.

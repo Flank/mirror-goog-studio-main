@@ -32,6 +32,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
+import com.google.common.base.Joiner
 import com.google.protobuf.util.JsonFormat
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
@@ -210,10 +211,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
             val api = device.apiCodeName ?: device.apiLevel
             val density = device.density
             val abis = device.abis
-            val language :String? =  null
-            // FIXME we need to get the right way to query for the language see b/78017530
-            // this does not work: device.language ?: device.getNullableProperty("ro.product.locale")
-            // as it does not get all the languages even on a N device.
+            val languages: Set<String>? = device.languageSplits
 
             return Files.createTempFile("apkSelect", "").apply {
                 var json = "{\n" +
@@ -221,8 +219,8 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
                         "  \"screenDensity\": $density,\n" +
                         "  \"sdkVersion\": $api"
 
-                if (language != null) {
-                    json = "$json,\n  \"supportedLocales\": [ $language ]\n"
+                if (languages != null && !languages.isEmpty()) {
+                    json = "$json,\n  \"supportedLocales\": [ ${Joiner.on(',').join(languages)} ]\n"
                 }
 
                 json = "$json}"

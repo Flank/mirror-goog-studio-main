@@ -49,7 +49,7 @@ class PropertyFetcher {
                 Maps.newHashMapWithExpectedSize(EXPECTED_PROP_COUNT);
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             // We receive an array of lines. We're expecting
             // to have the build info in the first line, and the build
             // date in the 2nd line. There seems to be an empty line

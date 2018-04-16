@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -97,7 +98,7 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
             if (!mArray.isEmpty()) {
                 // at this point we've split all the lines.
                 // make the array
-                String[] lines = mArray.toArray(new String[mArray.size()]);
+                String[] lines = mArray.toArray(new String[0]);
 
                 // send it for final processing
                 processNewLines(lines);
@@ -132,5 +133,5 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
      *
      * @param lines The array containing the new lines.
      */
-    public abstract void processNewLines(String[] lines);
+    public abstract void processNewLines(@NonNull String[] lines);
 }

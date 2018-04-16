@@ -16,6 +16,7 @@
 
 package com.android.ddmlib.testrunner;
 
+import com.android.annotations.NonNull;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
@@ -266,7 +267,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
      * @see MultiLineReceiver#processNewLines
      */
     @Override
-    public void processNewLines(String[] lines) {
+    public void processNewLines(@NonNull String[] lines) {
         for (String line : lines) {
             parse(line);
             // in verbose mode, dump all adb output to log

@@ -76,7 +76,7 @@ class InstallVariantViaBundleTaskTest {
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiCodeName
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).density
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).abis
-        //verify<DeviceConnector>(deviceConnector, atLeastOnce()).deviceConfig
+        verify<DeviceConnector>(deviceConnector, atLeastOnce()).languageSplits
 
         verify<DeviceConnector>(deviceConnector).installPackage(
             ArgumentMatchers.eq(outputPath.toFile()),
@@ -118,7 +118,7 @@ class InstallVariantViaBundleTaskTest {
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiCodeName
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).density
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).abis
-        //verify<DeviceConnector>(deviceConnector, atLeastOnce()).deviceConfig
+        verify<DeviceConnector>(deviceConnector, atLeastOnce()).languageSplits
 
         verify<DeviceConnector>(deviceConnector).installPackages(
             ArgumentMatchers.eq(listOf(outputPath.toFile(), outputPath2.toFile())),

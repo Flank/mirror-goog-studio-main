@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
@@ -61,4 +62,8 @@ open class BaseAppModuleExtension(
             project.objects,
             extraModelInfo.deprecationReporter
         )
+
+    fun bundle(action: Action<BundleOptions>) {
+        action.execute(bundle)
+    }
 }

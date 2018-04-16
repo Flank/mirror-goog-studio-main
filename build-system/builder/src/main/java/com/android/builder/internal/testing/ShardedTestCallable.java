@@ -228,19 +228,20 @@ public class ShardedTestCallable implements Callable<Boolean> {
             if (isInstalled) {
                 // Get the coverage if needed.
                 if (testData.isTestCoverageEnabled()) {
-                    MultiLineReceiver outputReceiver = new MultiLineReceiver() {
-                        @Override
-                        public void processNewLines(String[] lines) {
-                            for (String line : lines) {
-                                logger.verbose(line);
-                            }
-                        }
+                    MultiLineReceiver outputReceiver =
+                            new MultiLineReceiver() {
+                                @Override
+                                public void processNewLines(@NonNull String[] lines) {
+                                    for (String line : lines) {
+                                        logger.verbose(line);
+                                    }
+                                }
 
-                        @Override
-                        public boolean isCancelled() {
-                            return false;
-                        }
-                    };
+                                @Override
+                                public boolean isCancelled() {
+                                    return false;
+                                }
+                            };
                     logger.verbose("Have %d coverage files to fetch", coverageFiles.size());
                     for (String name : coverageFiles) {
                         String temporaryCoverageCopy = "/data/local/tmp/"

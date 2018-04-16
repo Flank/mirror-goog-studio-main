@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -255,6 +256,12 @@ public class FakeDevice extends DeviceConnector {
     }
 
     public String getRegion() {
+        return null;
+    }
+
+    public Set<String> getLanguageSplits()
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
         return null;
     }
 

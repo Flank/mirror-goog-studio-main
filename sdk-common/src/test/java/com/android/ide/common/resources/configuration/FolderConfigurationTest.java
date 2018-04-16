@@ -15,7 +15,8 @@
  */
 package com.android.ide.common.resources.configuration;
 
-import static com.google.common.truth.Truth.assertThat;
+
+import static com.android.ide.common.resources.configuration.FolderConfigurationSubject.assertThat;
 
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceMergerItem;
@@ -26,20 +27,21 @@ import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRound;
 import com.android.resources.UiMode;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import junit.framework.TestCase;
+import java.util.stream.Collectors;
+import org.junit.Test;
 
-public class FolderConfigurationTest extends TestCase {
+public class FolderConfigurationTest {
     /*
      * Test createDefault creates all the qualifiers.
      */
-    public void testCreateDefault() {
+    @Test
+    public void createDefault() {
         FolderConfiguration defaultConfig = FolderConfiguration.createDefault();
 
         // this is always valid and up to date.
@@ -47,13 +49,14 @@ public class FolderConfigurationTest extends TestCase {
 
         // make sure all the qualifiers were created.
         for (int i = 0 ; i < count ; i++) {
-            assertThat(defaultConfig.getQualifier(i))
+            Truth.assertThat(defaultConfig.getQualifier(i))
                     .named("Qualifier with index " + i)
                     .isNotNull();
         }
     }
 
-    public void testSimpleResMatch() {
+    @Test
+    public void simpleResMatch() {
         runConfigMatchTest(
                 "en-rGB-port-hdpi-notouch-12key",
                 3,
@@ -66,18 +69,20 @@ public class FolderConfigurationTest extends TestCase {
                 "port-notouch-12key");
     }
 
-    public void testIsMatchFor() {
+    @Test
+    public void isMatchFor() {
         FolderConfiguration en = FolderConfiguration.getConfigForFolder("values-en");
+        Truth.assertThat(en).isNotNull();
         FolderConfiguration enUs = FolderConfiguration.getConfigForFolder("values-en-rUS");
-        assertNotNull(en);
-        assertNotNull(enUs);
-        assertTrue(enUs.isMatchFor(enUs));
-        assertTrue(en.isMatchFor(en));
-        assertTrue(enUs.isMatchFor(en));
-        assertTrue(en.isMatchFor(enUs));
+        Truth.assertThat(enUs).isNotNull();
+        assertThat(enUs).isMatchFor(enUs);
+        assertThat(en).isMatchFor(en);
+        assertThat(enUs).isMatchFor(en);
+        assertThat(en).isMatchFor(enUs);
     }
 
-    public void testVersionResMatch() {
+    @Test
+    public void versionResMatch() {
         runConfigMatchTest(
                 "en-rUS-w600dp-h1024dp-large-port-mdpi-finger-nokeys-v12",
                 2,
@@ -86,7 +91,8 @@ public class FolderConfigurationTest extends TestCase {
                 "w540dp");
     }
 
-    public void testVersionResMatchWithBcp47() {
+    @Test
+    public void versionResMatchWithBcp47() {
         runConfigMatchTest(
                 "b+kok+Knda+419+VARIANT-w600dp",
                 2,
@@ -95,8 +101,8 @@ public class FolderConfigurationTest extends TestCase {
                 "w540dp");
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void testAddQualifier() {
+    @Test
+    public void addQualifier() {
         FolderConfiguration defaultConfig = FolderConfiguration.createDefault();
 
         final int count = FolderConfiguration.getQualifierCount();
@@ -108,48 +114,54 @@ public class FolderConfigurationTest extends TestCase {
             empty.addQualifier(q);
 
             // check it was added
-            assertNotNull(
-                    "addQualifier failed for " + q.getClass().getName(), empty.getQualifier(i));
+            Truth.assertThat(empty.getQualifier(i))
+                    .named("addQualifier failed for " + q.getClass().getName())
+                    .isNotNull();
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void testGetConfig1() {
+    @Test
+    public void getConfig1() {
         FolderConfiguration configForFolder =
                 FolderConfiguration.getConfig(new String[] { "values", "en", "rUS" });
-        assertNotNull(configForFolder);
-        assertEquals("en", configForFolder.getLocaleQualifier().getLanguage());
-        assertEquals("US", configForFolder.getLocaleQualifier().getRegion());
-        assertNull(configForFolder.getScreenDimensionQualifier());
-        assertNull(configForFolder.getLayoutDirectionQualifier());
+        Truth.assertThat(configForFolder).isNotNull();
+
+        assertThat(configForFolder).hasLanguage("en");
+        assertThat(configForFolder).hasRegion("US");
+        assertThat(configForFolder).hasNoScreenDimension();
+        assertThat(configForFolder).hasNoLayoutDirection();
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void testInvalidRepeats() {
-        assertNull(FolderConfiguration.getConfigForFolder("values-en-rUS-rES"));
+    @Test
+    public void invalidRepeats() {
+        Truth.assertThat(FolderConfiguration.getConfigForFolder("values-en-rUS-rES"))
+                .named(("Folder Config for 'values-en-rUS-rES'"))
+                .isNull();
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void testGetConfig2() {
+    @Test
+    public void getConfig2() {
         FolderConfiguration configForFolder =
                 FolderConfiguration.getConfigForFolder("values-en-rUS");
-        assertNotNull(configForFolder);
-        assertEquals("en", configForFolder.getLocaleQualifier().getLanguage());
-        assertEquals("US", configForFolder.getLocaleQualifier().getRegion());
-        assertNull(configForFolder.getScreenDimensionQualifier());
-        assertNull(configForFolder.getLayoutDirectionQualifier());
+        Truth.assertThat(configForFolder).named("Folder Config for 'values-en-rUS'").isNotNull();
+        assertThat(configForFolder).hasLanguage("en");
+        assertThat(configForFolder).hasRegion("US");
+        assertThat(configForFolder).hasNoScreenDimension();
+        assertThat(configForFolder).hasNoLayoutDirection();
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void testGetConfigCaseInsensitive() {
+    @Test
+    public void getConfigCaseInsensitive() {
         FolderConfiguration configForFolder =
                 FolderConfiguration.getConfigForFolder("values-EN-rus");
-        assertNotNull(configForFolder);
-        assertEquals("en", configForFolder.getLocaleQualifier().getLanguage());
-        assertEquals("US", configForFolder.getLocaleQualifier().getRegion());
-        assertNull(configForFolder.getScreenDimensionQualifier());
-        assertNull(configForFolder.getLayoutDirectionQualifier());
-        assertEquals("layout-en-rUS", configForFolder.getFolderName(ResourceFolderType.LAYOUT));
+        Truth.assertThat(configForFolder).named("Folder Config for 'values-EN-rus'").isNotNull();
+        assertThat(configForFolder).hasLanguage("en");
+        assertThat(configForFolder).hasRegion("US");
+        assertThat(configForFolder).hasNoScreenDimension();
+        assertThat(configForFolder).hasNoLayoutDirection();
+        Truth.assertThat(configForFolder.getFolderName(ResourceFolderType.LAYOUT))
+                .named("Layout folder name for " + configForFolder.getQualifierString())
+                .isEqualTo("layout-en-rUS");
 
         runConfigMatchTest(
                 "en-rgb-Port-HDPI-notouch-12key",
@@ -163,17 +175,34 @@ public class FolderConfigurationTest extends TestCase {
                 "port-notouch-12key");
     }
 
-    public void testToStrings() {
+    @Test
+    public void toStrings() {
         FolderConfiguration configForFolder = FolderConfiguration.getConfigForFolder("values-en-rUS");
-        assertNotNull(configForFolder);
-        assertEquals("Locale en_US", configForFolder.toDisplayString());
-        assertEquals("en,US", configForFolder.toShortDisplayString());
-        assertEquals("layout-en-rUS", configForFolder.getFolderName(ResourceFolderType.LAYOUT));
-        assertEquals("en-rUS", configForFolder.getQualifierString());
-        assertEquals("", new FolderConfiguration().getQualifierString());
+
+        Truth.assertThat(configForFolder).named("Folder Config for 'values-en-rUS'").isNotNull();
+
+        Truth.assertThat(configForFolder.toDisplayString())
+                .named("Display String for " + configForFolder.getQualifierString())
+                .isEqualTo("Locale en_US");
+        Truth.assertThat(configForFolder.toShortDisplayString())
+                .named("Display String for " + configForFolder.getQualifierString())
+                .isEqualTo("en,US");
+
+        Truth.assertThat(configForFolder.getFolderName(ResourceFolderType.LAYOUT))
+                .named("Layout folder name for " + configForFolder.getQualifierString())
+                .isEqualTo("layout-en-rUS");
+
+        Truth.assertThat(configForFolder.getQualifierString())
+                .named("Qualifier String for " + configForFolder.getQualifierString())
+                .isEqualTo("en-rUS");
+
+        Truth.assertThat(new FolderConfiguration().getQualifierString())
+                .named("Qualifier string for empty FolderConfiguration")
+                .isEqualTo("");
     }
 
-    public void testNormalize() {
+    @Test
+    public void normalize() {
         // test normal qualifiers that all have the same min SDK
         doTestNormalize(4, "large");
         doTestNormalize(8, "notnight");
@@ -197,15 +226,14 @@ public class FolderConfigurationTest extends TestCase {
         FolderConfiguration configForFolder = FolderConfiguration.getConfigFromQualifiers(
                 Collections.singletonList("port"));
 
-        assertNotNull(configForFolder);
+        Truth.assertThat(configForFolder).isNotNull();
 
         configForFolder.normalize();
-        VersionQualifier versionQualifier = configForFolder.getVersionQualifier();
-        assertNull(versionQualifier);
+        assertThat(configForFolder).hasNoVersion();
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void testConfigMatch() {
+    @Test
+    public void configMatch() {
         FolderConfiguration ref = FolderConfiguration.createDefault();
         ref.setDensityQualifier(new DensityQualifier(Density.XHIGH));
         ref.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
@@ -218,22 +246,22 @@ public class FolderConfigurationTest extends TestCase {
         );
         // First check that when all qualifiers are present, we match only one resource.
         List<Configurable> matchingConfigurables = ref.findMatchingConfigurables(configurables);
-        assertEquals(ImmutableList.of(configurables.get(3)), matchingConfigurables);
+        Truth.assertThat(matchingConfigurables).containsExactly(configurables.get(3));
 
         // Now remove the version qualifier and check that we "xhdpi" and "xhdpi-v14"
         ref.setVersionQualifier(null);
         matchingConfigurables = ref.findMatchingConfigurables(configurables);
-        assertEquals(ImmutableSet.of(configurables.get(1), configurables.get(3)),
-                ImmutableSet.copyOf(matchingConfigurables));
-
+        Truth.assertThat(matchingConfigurables)
+                .containsExactly(configurables.get(1), configurables.get(3));
     }
 
-    public void testIsRoundMatch() {
+    @Test
+    public void isRoundMatch() {
         FolderConfiguration configForFolder = FolderConfiguration
                 .getConfigForFolder("values-en-round");
-        assertNotNull(configForFolder);
-        assertNotNull(configForFolder.getScreenRoundQualifier());
-        assertEquals(ScreenRound.ROUND, configForFolder.getScreenRoundQualifier().getValue());
+        Truth.assertThat(configForFolder).named("FoldeR Config for 'values-en-round'").isNotNull();
+        assertThat(configForFolder).hasScreenRound(ScreenRound.ROUND);
+
         runConfigMatchTest("en-rgb-Round-Port-HDPI-notouch-12key", 4,
                 "",
                 "en",
@@ -248,7 +276,8 @@ public class FolderConfigurationTest extends TestCase {
                 "port-12key");
     }
 
-    public void testDensityQualifier() {
+    @Test
+    public void densityQualifier() {
         // test find correct density
         runConfigMatchTest("hdpi", 2,
                 "ldpi",
@@ -297,12 +326,15 @@ public class FolderConfigurationTest extends TestCase {
                 "xxxhdpi");
     }
 
-    public void testNullQualifierValidity() {
+    @Test
+    public void nullQualifierValidity() {
         FolderConfiguration folderConfiguration = new FolderConfiguration();
         for (int i = 0; i < FolderConfiguration.getQualifierCount(); i++) {
             ResourceQualifier qualifier = folderConfiguration.getQualifier(i);
             if (qualifier != null) {
-                assertFalse(qualifier.isValid());
+                Truth.assertThat(qualifier.isValid())
+                        .named("isValid for " + i + "th qualifier")
+                        .isFalse();
             }
         }
     }
@@ -329,12 +361,12 @@ public class FolderConfigurationTest extends TestCase {
 
     private static void runConfigMatchTest(String refConfig, int resultIndex, String... configs) {
         FolderConfiguration reference = FolderConfiguration.getConfig(getFolderSegments(refConfig));
-        assertNotNull(reference);
+        Truth.assertThat(reference).isNotNull();
 
         List<Configurable> list = getConfigurable(configs);
 
         Configurable match = reference.findMatchingConfigurable(list);
-        assertEquals(resultIndex, list.indexOf(match));
+        Truth.assertThat(list.indexOf(match)).isEqualTo(resultIndex);
     }
 
     private static List<Configurable> getConfigurable(String... configs) {
@@ -351,7 +383,8 @@ public class FolderConfigurationTest extends TestCase {
         return (!config.isEmpty() ? "foo-" + config : "foo").split("-");
     }
 
-    public void testSort1() {
+    @Test
+    public void sort1() {
         List<FolderConfiguration> configs = new ArrayList<>();
         FolderConfiguration f1 = FolderConfiguration.getConfigForFolder("values-hdpi");
         FolderConfiguration f2 = FolderConfiguration.getConfigForFolder("values-v11");
@@ -361,12 +394,13 @@ public class FolderConfigurationTest extends TestCase {
         configs.add(f2);
         configs.add(f3);
         configs.add(f4);
-        assertEquals(Arrays.asList(f1, f2, f3, f4), configs);
+        Truth.assertThat(configs).containsExactly(f1, f2, f3, f4);
         Collections.sort(configs);
-        assertEquals(Arrays.asList(f2, f4, f1, f3), configs);
+        Truth.assertThat(configs).containsExactly(f2, f4, f1, f3).inOrder();
     }
 
-    public void testSort2() {
+    @Test
+    public void sort2() {
         // Test case from
         // http://developer.android.com/guide/topics/resources/providing-resources.html#BestMatch
         List<FolderConfiguration> configs = new ArrayList<>();
@@ -380,7 +414,7 @@ public class FolderConfigurationTest extends TestCase {
                 "drawable-port-notouch-12key"
          }) {
             FolderConfiguration config = FolderConfiguration.getConfigForFolder(name);
-            assertNotNull(name, config);
+            Truth.assertThat(config).named(name).isNotNull();
             configs.add(config);
         }
         Collections.sort(configs);
@@ -391,62 +425,66 @@ public class FolderConfigurationTest extends TestCase {
         for (FolderConfiguration config : configs) {
             strings.add(config.getQualifierString());
         }
-        assertEquals("fr-rCA,en-port,en-notouch-12key,en,port-ldpi,port-notouch-12key,",
-                Joiner.on(",").skipNulls().join(strings));
+        Truth.assertThat(Joiner.on(",").skipNulls().join(strings))
+                .isEqualTo("fr-rCA,en-port,en-notouch-12key,en,port-ldpi,port-notouch-12key,");
     }
 
     private static void doTestNormalize(int expectedVersion, String... segments) {
         FolderConfiguration configForFolder =
                 FolderConfiguration.getConfigFromQualifiers(Arrays.asList(segments));
 
-        assertNotNull(configForFolder);
+        Truth.assertThat(configForFolder).isNotNull();
 
         configForFolder.normalize();
-        VersionQualifier versionQualifier = configForFolder.getVersionQualifier();
-        assertNotNull(versionQualifier);
-        assertEquals(expectedVersion, versionQualifier.getVersion());
+        assertThat(configForFolder).hasVersion(expectedVersion);
     }
 
-    public void testCarModeAndLanguage() {
+    @Test
+    public void carModeAndLanguage() {
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-car");
-        assertNotNull(config);
-        assertNull(config.getLocaleQualifier());
-        assertNotNull(config.getUiModeQualifier());
-        assertEquals(UiMode.CAR, config.getUiModeQualifier().getValue());
+        Truth.assertThat(config).isNotNull();
+
+        assertThat(config).hasNoLocale();
+        assertThat(config).hasUiMode(UiMode.CAR);
 
         config = FolderConfiguration.getConfigForFolder("values-b+car");
-        assertNotNull(config);
-        assertNotNull(config.getLocaleQualifier());
-        assertNull(config.getUiModeQualifier());
-        assertEquals("car", config.getLocaleQualifier().getLanguage());
+        Truth.assertThat(config).isNotNull();
+
+        assertThat(config).hasLanguage("car");
+        assertThat(config).hasNoUiMode();
     }
 
-    public void testVrHeadset() {
+    @Test
+    public void vrHeadset() {
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-vrheadset");
-        assertNotNull(config);
-        assertNotNull(config.getUiModeQualifier());
-        assertEquals(UiMode.VR_HEADSET, config.getUiModeQualifier().getValue());
+        Truth.assertThat(config).isNotNull();
+
+        assertThat(config).hasUiMode(UiMode.VR_HEADSET);
     }
 
-    public void testIsMatchForBcp47() {
+    @Test
+    public void isMatchForBcp47() {
         FolderConfiguration blankFolder = FolderConfiguration.getConfigForFolder("values");
         FolderConfiguration enFolder = FolderConfiguration.getConfigForFolder("values-en");
         FolderConfiguration deFolder = FolderConfiguration.getConfigForFolder("values-de");
         FolderConfiguration deBcp47Folder = FolderConfiguration.getConfigForFolder("values-b+de");
-        assertNotNull(enFolder);
-        assertNotNull(deFolder);
-        assertNotNull(deBcp47Folder);
-        assertFalse(enFolder.isMatchFor(deFolder));
-        assertFalse(deFolder.isMatchFor(enFolder));
-        assertFalse(enFolder.isMatchFor(deBcp47Folder));
-        assertFalse(deBcp47Folder.isMatchFor(enFolder));
+        Truth.assertThat(blankFolder).isNotNull();
+        Truth.assertThat(enFolder).isNotNull();
+        Truth.assertThat(deFolder).isNotNull();
+        Truth.assertThat(deBcp47Folder).isNotNull();
 
-        assertTrue(enFolder.isMatchFor(blankFolder));
-        assertTrue(deFolder.isMatchFor(blankFolder));
-        assertTrue(deBcp47Folder.isMatchFor(blankFolder));
+        assertThat(enFolder).isNotMatchFor(deFolder);
+        assertThat(deFolder).isNotMatchFor(enFolder);
+        assertThat(enFolder).isNotMatchFor(deBcp47Folder);
+        assertThat(deBcp47Folder).isNotMatchFor(enFolder);
+
+        assertThat(enFolder).isMatchFor(blankFolder);
+        assertThat(deFolder).isMatchFor(blankFolder);
+        assertThat(deBcp47Folder).isMatchFor(blankFolder);
     }
 
-    public void testFindMatchingConfigurables() {
+    @Test
+    public void findMatchingConfigurables() {
         ResourceMergerItem itemBlank =
                 new ResourceMergerItem("foo", null, ResourceType.STRING, null, null) {
                     @Override
@@ -493,29 +531,34 @@ public class FolderConfigurationTest extends TestCase {
         FolderConfiguration configDe = itemDe.getConfiguration();
 
         // "" matches everything
-        assertEquals(Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe),
-                configBlank.findMatchingConfigurables(
-                        Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
+        Truth.assertThat(
+                        configBlank.findMatchingConfigurables(
+                                Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)))
+                .containsExactly(itemBlank, itemBcpEn, itemEn, itemDe);
 
         // "de" matches only "" and "de"
-        assertEquals(Arrays.asList(itemBlank, itemDe),
-                configDe.findMatchingConfigurables(
-                        Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
+        Truth.assertThat(
+                        configDe.findMatchingConfigurables(
+                                Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)))
+                .containsExactly(itemBlank, itemDe);
 
         // "en" matches "en" and "b+en"
-        assertTrue(configEn.isMatchFor(configBcpEn));
-        assertTrue(configBcpEn.isMatchFor(configEn));
-        assertEquals(Arrays.asList(itemBcpEn, itemEn),
-                configEn.findMatchingConfigurables(
-                        Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
+        assertThat(configEn).isMatchFor(configBcpEn);
+        assertThat(configBcpEn).isMatchFor(configEn);
+        Truth.assertThat(
+                        configEn.findMatchingConfigurables(
+                                Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)))
+                .containsExactly(itemBcpEn, itemEn);
 
         // "b+en" matches "en and "b+en"
-        assertEquals(Arrays.asList(itemBcpEn, itemEn),
-                configBcpEn.findMatchingConfigurables(
-                        Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
+        Truth.assertThat(
+                        configBcpEn.findMatchingConfigurables(
+                                Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)))
+                .containsExactly(itemBcpEn, itemEn);
     }
 
-    public void testFromQualifierString() {
+    @Test
+    public void fromQualifierString() {
         FolderConfiguration blankFolder = FolderConfiguration.getConfigForQualifierString("");
         FolderConfiguration enFolder = FolderConfiguration.getConfigForQualifierString("en");
         FolderConfiguration deFolder = FolderConfiguration.getConfigForQualifierString("de");
@@ -523,46 +566,55 @@ public class FolderConfigurationTest extends TestCase {
         FolderConfiguration twoQualifiersFolder =
                 FolderConfiguration.getConfigForQualifierString("de-hdpi");
 
-        assertNotNull(enFolder);
-        assertNotNull(deFolder);
-        assertNotNull(deBcp47Folder);
-        assertFalse(enFolder.isMatchFor(deFolder));
-        assertFalse(deFolder.isMatchFor(enFolder));
-        assertFalse(enFolder.isMatchFor(deBcp47Folder));
-        assertFalse(deBcp47Folder.isMatchFor(enFolder));
+        Truth.assertThat(blankFolder).isNotNull();
+        Truth.assertThat(enFolder).isNotNull();
+        Truth.assertThat(deFolder).isNotNull();
+        Truth.assertThat(deBcp47Folder).isNotNull();
+        Truth.assertThat(twoQualifiersFolder).isNotNull();
 
-        assertTrue(enFolder.isMatchFor(blankFolder));
-        assertTrue(deFolder.isMatchFor(blankFolder));
-        assertTrue(deBcp47Folder.isMatchFor(blankFolder));
+        assertThat(enFolder).isNotMatchFor(deFolder);
+        assertThat(deFolder).isNotMatchFor(enFolder);
+        assertThat(enFolder).isNotMatchFor(deBcp47Folder);
+        assertThat(deBcp47Folder).isNotMatchFor(enFolder);
 
-        assertEquals("de", twoQualifiersFolder.getLocaleQualifier().getLanguage());
-        assertEquals(Density.HIGH, twoQualifiersFolder.getDensityQualifier().getValue());
+        assertThat(enFolder).isMatchFor(blankFolder);
+        assertThat(deFolder).isMatchFor(blankFolder);
+        assertThat(deBcp47Folder).isMatchFor(blankFolder);
+
+        assertThat(twoQualifiersFolder).hasLanguage("de");
+        assertThat(twoQualifiersFolder).hasDensity(Density.HIGH);
     }
 
-    public void testCopyOf() {
+    @Test
+    public void copyOf() {
         FolderConfiguration deBcp47Folder = FolderConfiguration.getConfigForFolder("values-b+de");
         FolderConfiguration copy = FolderConfiguration.copyOf(deBcp47Folder);
-        assertTrue(copy.isMatchFor(deBcp47Folder));
+        Truth.assertThat(deBcp47Folder).isNotNull();
+        Truth.assertThat(copy).isNotNull();
+
+        assertThat(copy).isMatchFor(deBcp47Folder);
 
         copy.setLocaleQualifier(new LocaleQualifier("en"));
-        assertEquals("en", copy.getLocaleQualifier().getLanguage());
-        assertEquals("de", deBcp47Folder.getLocaleQualifier().getLanguage());
+        assertThat(copy).hasLanguage("en");
+        assertThat(deBcp47Folder).hasLanguage("de");
 
         copy.setDensityQualifier(new DensityQualifier(Density.HIGH));
-        assertEquals(Density.HIGH, copy.getDensityQualifier().getValue());
-        assertEquals(new FolderConfiguration().getDensityQualifier(),
-                deBcp47Folder.getDensityQualifier());
+        assertThat(copy).hasDensity(Density.HIGH);
+        Truth.assertThat(deBcp47Folder.getDensityQualifier())
+                .isEqualTo(new FolderConfiguration().getDensityQualifier());
 
         FolderConfiguration blankFolder = FolderConfiguration.getConfigForFolder("values");
+        Truth.assertThat(blankFolder).isNotNull();
         copy = FolderConfiguration.copyOf(blankFolder);
-        assertTrue(copy.isMatchFor(blankFolder));
+        assertThat(copy).isMatchFor(blankFolder);
 
         copy.setVersionQualifier(new VersionQualifier(21));
-        assertEquals(21, copy.getVersionQualifier().getVersion());
-        assertNull(blankFolder.getVersionQualifier());
+        assertThat(copy).hasVersion(21);
+        assertThat(blankFolder).hasNoVersion();
     }
 
-    public void testScreenSizeMatching() {
+    @Test
+    public void screenSizeMatching() {
         runConfigMatchTest("normal-v21", 2, "", "v21", "normal", "large");
         runConfigMatchTest("normal-v21", 1, "", "v21", "small", "large");
         runConfigMatchTest("normal-v21", 0, "", "v23", "small", "large");
@@ -572,19 +624,57 @@ public class FolderConfigurationTest extends TestCase {
         runConfigMatchTest("small-v21", 1, "", "v21", "normal", "xlarge");
     }
 
+    @Test
     public void testForEach() {
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-en-vrheadset");
-        assertNotNull(config);
+        Truth.assertThat(config).isNotNull();
         List<Object> list = new ArrayList<>();
         config.forEach(list::add);
-        assertEquals("[en, vrheadset]", list.toString());
+        Truth.assertThat(list.stream().map(Object::toString).collect(Collectors.toList()))
+                .containsExactly("en", "vrheadset");
     }
 
-    public void testAnyPredicate() {
+    @Test
+    public void anyPredicate() {
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-vrheadset");
-        assertNotNull(config);
-        assertNotNull(config.getUiModeQualifier());
-        assertTrue(config.any(qualifier -> qualifier instanceof UiModeQualifier));
-        assertFalse(config.any(qualifier -> qualifier instanceof DensityQualifier));
+        Truth.assertThat(config).isNotNull();
+        assertThat(config).hasUiMode(UiMode.VR_HEADSET);
+
+        Truth.assertThat(config.any(qualifier -> qualifier instanceof UiModeQualifier)).isTrue();
+        Truth.assertThat(config.any(qualifier -> qualifier instanceof DensityQualifier)).isFalse();
+    }
+
+    @Test
+    public void languageConfigFromQualifiers() {
+        Truth.assertThat(FolderConfiguration.getLanguageConfigFromQualifiers("en-rUS"))
+                .containsExactly("en");
+
+        Truth.assertThat(FolderConfiguration.getLanguageConfigFromQualifiers("en-rUS,fr-rFR"))
+                .containsExactly("en", "fr");
+
+        // qualifiers before and after, wrong WideGamut/HDR order (bug on O and P)
+        Truth.assertThat(
+                        FolderConfiguration.getLanguageConfigFromQualifiers(
+                                "mcc310-mnc410-en-rUS,fr-rFR-ldltr-sw411dp-w411dp-h746dp-normal-long-notround-lowdr-nowidecg-port-notnight-560dpi-finger-keysexposed-nokeys-navhidden-nonav-v27"))
+                .containsExactly("en", "fr");
+
+        // qualifiers after only
+        Truth.assertThat(
+                        FolderConfiguration.getLanguageConfigFromQualifiers(
+                                "en-rUS,fr-rFR-ldltr-sw411dp-w411dp-h746dp-normal-long-notround-lowdr-nowidecg-port-notnight-560dpi-finger-keysexposed-nokeys-navhidden-nonav-v27"))
+                .containsExactly("en", "fr");
+
+        // qualifiers before only
+        Truth.assertThat(
+                        FolderConfiguration.getLanguageConfigFromQualifiers(
+                                "mcc310-mnc410-en-rUS,fr-rFR"))
+                .containsExactly("en", "fr");
+
+        // Correct order for WideGamut/HDR
+        Truth.assertThat(
+                        FolderConfiguration.getLanguageConfigFromQualifiers(
+                                "en-rUS,fr-rFR-ldltr-sw411dp-w411dp-h746dp-normal-long-notround-nowidecg-lowdr-port-notnight-560dpi-finger-keysexposed-nokeys-navhidden-nonav-v27"))
+                .containsExactly("en", "fr");
+
     }
 }

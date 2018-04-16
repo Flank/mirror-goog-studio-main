@@ -406,22 +406,24 @@ final class Device implements IDevice {
             IOException {
 
         final AtomicReference<String> ref = Atomics.newReference();
-        executeShellCommand("echo $" + name, new MultiLineReceiver() { //$NON-NLS-1$
-            @Override
-            public boolean isCancelled() {
-                return false;
-            }
-
-            @Override
-            public void processNewLines(String[] lines) {
-                for (String line : lines) {
-                    if (!line.isEmpty()) {
-                        // this should be the only one.
-                        ref.set(line);
+        executeShellCommand(
+                "echo $" + name,
+                new MultiLineReceiver() { //$NON-NLS-1$
+                    @Override
+                    public boolean isCancelled() {
+                        return false;
                     }
-                }
-            }
-        });
+
+                    @Override
+                    public void processNewLines(@NonNull String[] lines) {
+                        for (String line : lines) {
+                            if (!line.isEmpty()) {
+                                // this should be the only one.
+                                ref.set(line);
+                            }
+                        }
+                    }
+                });
         return ref.get();
     }
 

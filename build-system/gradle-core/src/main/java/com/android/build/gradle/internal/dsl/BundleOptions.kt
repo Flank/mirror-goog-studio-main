@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import org.gradle.api.Action
 import javax.inject.Inject
 import org.gradle.api.model.ObjectFactory
 
@@ -29,4 +30,16 @@ open class BundleOptions @Inject constructor(
     val abi: BundleOptionsAbi = objectFactory.newInstance(BundleOptionsAbi::class.java)
     val density: BundleOptionsDensity = objectFactory.newInstance(BundleOptionsDensity::class.java)
     val language: BundleOptionsLanguage = objectFactory.newInstance(BundleOptionsLanguage::class.java)
+
+    fun abi(action: Action<BundleOptionsAbi>) {
+        action.execute(abi)
+    }
+
+    fun density(action: Action<BundleOptionsDensity>) {
+        action.execute(density)
+    }
+
+    fun language(action: Action<BundleOptionsLanguage>) {
+        action.execute(language)
+    }
 }

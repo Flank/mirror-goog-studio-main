@@ -16,6 +16,7 @@
 
 package com.android.ddmlib.log;
 
+import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
@@ -24,7 +25,6 @@ import com.android.ddmlib.log.EventValueDescription.ValueType;
 import com.android.ddmlib.log.LogReceiver.LogEntry;
 import com.android.ddmlib.utils.ArrayHelper;
 import com.google.common.base.Charsets;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -85,19 +85,21 @@ public final class EventLogParser {
     public boolean init(IDevice device) {
         // read the event tag map file on the device.
         try {
-            device.executeShellCommand("cat " + EVENT_TAG_MAP_FILE, //$NON-NLS-1$
+            device.executeShellCommand(
+                    "cat " + EVENT_TAG_MAP_FILE, //$NON-NLS-1$
                     new MultiLineReceiver() {
-                @Override
-                public void processNewLines(String[] lines) {
-                    for (String line : lines) {
-                        processTagLine(line);
-                    }
-                }
-                @Override
-                public boolean isCancelled() {
-                    return false;
-                }
-            });
+                        @Override
+                        public void processNewLines(@NonNull String[] lines) {
+                            for (String line : lines) {
+                                processTagLine(line);
+                            }
+                        }
+
+                        @Override
+                        public boolean isCancelled() {
+                            return false;
+                        }
+                    });
         } catch (Exception e) {
             // catch all possible exceptions and return false.
             return false;
