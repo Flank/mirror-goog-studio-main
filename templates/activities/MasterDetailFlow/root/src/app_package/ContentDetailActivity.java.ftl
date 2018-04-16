@@ -5,13 +5,13 @@ import android.os.Bundle;
 <#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
-import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 </#if>
 import ${superClassFqcn};
 import ${actionBarClassFqcn};
 <#if minApiLevel lt 16>
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)};
+import android.support.v4.app.NavUtils;
 </#if>
 import android.view.MenuItem;
 <#if applicationPackage??>

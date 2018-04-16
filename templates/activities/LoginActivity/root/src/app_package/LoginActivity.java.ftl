@@ -5,7 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 <#if includePermissionCheck>
 import android.content.pm.PackageManager;
-import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
+import android.support.annotation.NonNull;
 <#if appCompat>import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};</#if>
 </#if>
 import ${superClassFqcn};

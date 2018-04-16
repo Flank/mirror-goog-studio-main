@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}
+<android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -31,4 +31,4 @@
         app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/navigation" />
 
-</${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}>
+</android.support.constraint.ConstraintLayout>

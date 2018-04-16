@@ -6,7 +6,7 @@ import android.os.Bundle
 import ${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)}
 </#if>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
-import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
+import android.support.v7.app.AppCompatActivity
 <#else>
 import ${superClassFqcn}
 </#if>

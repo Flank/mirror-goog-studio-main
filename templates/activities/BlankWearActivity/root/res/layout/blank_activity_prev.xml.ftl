@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<${getMaterialComponentName('android.support.wearable.view.BoxInsetLayout', useAndroidX)}
+<android.support.wearable.view.BoxInsetLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -24,4 +24,4 @@
             android:text="@string/hello_world" />
 
     </FrameLayout>
-</${getMaterialComponentName('android.support.wearable.view.BoxInsetLayout', useAndroidX)}>
+</android.support.wearable.view.BoxInsetLayout>

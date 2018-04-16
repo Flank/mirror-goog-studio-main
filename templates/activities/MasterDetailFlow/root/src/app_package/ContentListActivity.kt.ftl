@@ -2,8 +2,8 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 import android.content.Intent
 import android.os.Bundle
-import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
-import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)}
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.RecyclerView
 <#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 </#if>
@@ -12,7 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 <#if parentActivityClass?has_content>
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)}
+import android.support.v4.app.NavUtils
 import ${actionBarClassFqcn}
 import android.view.MenuItem
 </#if>

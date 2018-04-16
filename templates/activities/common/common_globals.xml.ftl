@@ -6,7 +6,6 @@
     <#assign appCompatActivity=appCompat && (buildApi gte 22)>
     <#assign espresso=hasDependency('com.android.support.test.espresso:espresso-core', 'androidTestCompile')>
     <#assign useMaterial2=hasDependency('com.google.android.material:material')>
-    <#assign useAndroidX=buildApi gte 28>
     <#assign supportRunner=hasDependency('com.android.support.test:runner', 'androidTestCompile')>
     <#assign testSupportLib=espresso && supportRunner>
 
@@ -25,7 +24,6 @@
     <global id="appCompatActivity" type="boolean" value="${appCompatActivity?string}" />
     <global id="hasAppBar" type="boolean" value="${appCompatActivity?string}" />
     <global id="useMaterial2" type="boolean" value="${useMaterial2?string}" />
-    <global id="useAndroidX" type="boolean" value="${useAndroidX?string}" />
     <global id="hasNoActionBar" type="boolean" value="${appCompatActivity?string}" />
     <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
 
@@ -52,16 +50,16 @@
     <global id="kotlinFragmentManager" type="string" value="fragmentManager" />
 <#elseif appCompatActivity>
     <global id="superClass" type="string" value="AppCompatActivity"/>
-    <global id="superClassFqcn" type="string" value="${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}"/>
+    <global id="superClassFqcn" type="string" value="android.support.v7.app.AppCompatActivity"/>
     <global id="Support" value="Support" />
-    <global id="actionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
+    <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
     <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 <#else>
     <global id="superClass" type="string" value="ActionBarActivity"/>
-    <global id="superClassFqcn" type="string" value="${getMaterialComponentName('android.support.v7.app.ActionBarActivity', useAndroidX)}"/>
+    <global id="superClassFqcn" type="string" value="android.support.v7.app.ActionBarActivity"/>
     <global id="Support" value="Support" />
-    <global id="actionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
+    <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
     <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 </#if>

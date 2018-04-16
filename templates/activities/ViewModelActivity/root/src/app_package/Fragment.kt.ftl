@@ -1,8 +1,8 @@
 package ${escapeKotlinIdentifiers(packageName)}.${escapeKotlinIdentifiers(fragmentPackage)}
 
-import ${getMaterialComponentName('android.arch.lifecycle.ViewModelProviders', useAndroidX)}
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
-import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
+import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

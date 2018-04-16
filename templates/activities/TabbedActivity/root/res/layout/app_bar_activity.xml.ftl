@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_content"
@@ -15,7 +15,7 @@
         android:paddingTop="@dimen/appbar_padding_top"
         android:theme="@style/${themeNameAppBarOverlay}">
 
-        <${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
+        <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             app:title="@string/app_name"
             android:layout_width="match_parent"
@@ -32,7 +32,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </#if>
-        </${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}>
+        </android.support.v7.widget.Toolbar>
 
         <#if features == 'tabs'>
         <${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}
@@ -76,4 +76,4 @@
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
-</${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>
+</android.support.design.widget.CoordinatorLayout>

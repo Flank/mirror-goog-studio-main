@@ -14,13 +14,13 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName('android.support.v4.content.ContextCompat', useAndroidX)}
+import android.support.v4.content.ContextCompat
 import android.view.View
 
 /**
- * This class demonstrates how to extend [${getMaterialComponentName('android.support.v17.leanback.app.ErrorFragment', useAndroidX)}].
+ * This class demonstrates how to extend [android.support.v17.leanback.app.ErrorFragment].
  */
-class ErrorFragment : ${getMaterialComponentName('android.support.v17.leanback.app.ErrorFragment', useAndroidX)}() {
+class ErrorFragment : android.support.v17.leanback.app.ErrorFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

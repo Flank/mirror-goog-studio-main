@@ -8,7 +8,7 @@
 <#if appCompatActivity>
     <global id="preferenceSuperClass" type="string" value="AppCompatPreferenceActivity" />
     <global id="PreferenceSupport" type = "string" value="Support" />
-    <global id="PreferenceActionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
+    <global id="PreferenceActionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
 <#else>
     <global id="preferenceSuperClass" type="string" value="PreferenceActivity" />
     <global id="PreferenceSupport" type = "string" value="" />

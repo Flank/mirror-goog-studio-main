@@ -1,7 +1,7 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName('android.support.wearable.activity.WearableActivity', useAndroidX)}
+import android.support.wearable.activity.WearableActivity
 
 class ${activityClass} : WearableActivity() {
 

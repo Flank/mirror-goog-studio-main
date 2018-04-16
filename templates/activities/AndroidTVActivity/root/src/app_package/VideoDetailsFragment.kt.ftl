@@ -18,25 +18,25 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import ${getMaterialComponentName('android.support.v17.leanback.app.DetailsFragment', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.app.DetailsFragmentBackgroundController', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.Action', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ArrayObjectAdapter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ClassPresenterSelector', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.DetailsOverviewRow', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.FullWidthDetailsOverviewRowPresenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.FullWidthDetailsOverviewSharedElementHelper', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.HeaderItem', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ImageCardView', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ListRow', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ListRowPresenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.OnActionClickedListener', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.OnItemViewClickedListener', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.Presenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.Row', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.RowPresenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v4.app.ActivityOptionsCompat', useAndroidX)}
-import ${getMaterialComponentName('android.support.v4.content.ContextCompat', useAndroidX)}
+import android.support.v17.leanback.app.DetailsFragment
+import android.support.v17.leanback.app.DetailsFragmentBackgroundController
+import android.support.v17.leanback.widget.Action
+import android.support.v17.leanback.widget.ArrayObjectAdapter
+import android.support.v17.leanback.widget.ClassPresenterSelector
+import android.support.v17.leanback.widget.DetailsOverviewRow
+import android.support.v17.leanback.widget.FullWidthDetailsOverviewRowPresenter
+import android.support.v17.leanback.widget.FullWidthDetailsOverviewSharedElementHelper
+import android.support.v17.leanback.widget.HeaderItem
+import android.support.v17.leanback.widget.ImageCardView
+import android.support.v17.leanback.widget.ListRow
+import android.support.v17.leanback.widget.ListRowPresenter
+import android.support.v17.leanback.widget.OnActionClickedListener
+import android.support.v17.leanback.widget.OnItemViewClickedListener
+import android.support.v17.leanback.widget.Presenter
+import android.support.v17.leanback.widget.Row
+import android.support.v17.leanback.widget.RowPresenter
+import android.support.v4.app.ActivityOptionsCompat
+import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.widget.Toast
 

@@ -1,4 +1,4 @@
-<${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayout"
@@ -19,4 +19,4 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="@+id/constraintLayout" />
 
-</${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}>
+</android.support.constraint.ConstraintLayout>

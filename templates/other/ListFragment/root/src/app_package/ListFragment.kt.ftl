@@ -3,9 +3,9 @@ package ${kotlinEscapedPackageName}
 import android.content.Context
 import android.os.Bundle
 import android${SupportPackage}.app.Fragment
-import ${getMaterialComponentName('android.support.v7.widget.GridLayoutManager', useAndroidX)}
-import ${getMaterialComponentName('android.support.v7.widget.LinearLayoutManager', useAndroidX)}
-import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)}
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

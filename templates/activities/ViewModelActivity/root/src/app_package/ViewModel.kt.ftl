@@ -1,6 +1,6 @@
 package ${escapeKotlinIdentifiers(packageName)}.${escapeKotlinIdentifiers(fragmentPackage)}
 
-import ${getMaterialComponentName('android.arch.lifecycle.ViewModel', useAndroidX)}
+import android.arch.lifecycle.ViewModel
 
 class ${viewModelClass} : ViewModel() {
     // TODO: Implement the ViewModel

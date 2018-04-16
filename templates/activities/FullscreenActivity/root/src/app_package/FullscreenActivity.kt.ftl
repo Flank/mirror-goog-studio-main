@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 <#if parentActivityClass?has_content>
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)}
+import android.support.v4.app.NavUtils
 import android.view.MenuItem
 </#if>
 <#if applicationPackage??>

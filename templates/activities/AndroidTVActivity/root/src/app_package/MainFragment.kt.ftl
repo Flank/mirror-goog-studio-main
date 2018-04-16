@@ -23,20 +23,20 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
-import ${getMaterialComponentName('android.support.v17.leanback.app.BackgroundManager', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.app.BrowseFragment', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ArrayObjectAdapter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.HeaderItem', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ImageCardView', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ListRow', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.ListRowPresenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.OnItemViewClickedListener', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.OnItemViewSelectedListener', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.Presenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.Row', useAndroidX)}
-import ${getMaterialComponentName('android.support.v17.leanback.widget.RowPresenter', useAndroidX)}
-import ${getMaterialComponentName('android.support.v4.app.ActivityOptionsCompat', useAndroidX)}
-import ${getMaterialComponentName('android.support.v4.content.ContextCompat', useAndroidX)}
+import android.support.v17.leanback.app.BackgroundManager
+import android.support.v17.leanback.app.BrowseFragment
+import android.support.v17.leanback.widget.ArrayObjectAdapter
+import android.support.v17.leanback.widget.HeaderItem
+import android.support.v17.leanback.widget.ImageCardView
+import android.support.v17.leanback.widget.ListRow
+import android.support.v17.leanback.widget.ListRowPresenter
+import android.support.v17.leanback.widget.OnItemViewClickedListener
+import android.support.v17.leanback.widget.OnItemViewSelectedListener
+import android.support.v17.leanback.widget.Presenter
+import android.support.v17.leanback.widget.Row
+import android.support.v17.leanback.widget.RowPresenter
+import android.support.v4.app.ActivityOptionsCompat
+import android.support.v4.content.ContextCompat
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity

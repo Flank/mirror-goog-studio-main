@@ -19,7 +19,7 @@ package ${kotlinEscapedPackageName}
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import ${getMaterialComponentName('android.support.v4.app.RemoteInput', useAndroidX)}
+import android.support.v4.app.RemoteInput
 import android.util.Log
 
 private const val TAG = "${truncate(replyReceiverName,23)}"

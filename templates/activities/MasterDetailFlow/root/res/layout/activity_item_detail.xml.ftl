@@ -7,7 +7,7 @@
     tools:context="${packageName}.${DetailName}Activity"
     tools:ignore="MergeRootFrame" />
 <#else>
-<${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -32,7 +32,7 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:toolbarId="@+id/toolbar">
 
-            <${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
+            <android.support.v7.widget.Toolbar
                 android:id="@+id/detail_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
@@ -43,7 +43,7 @@
 
     </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
-    <${getMaterialComponentName('android.support.v4.widget.NestedScrollView', useAndroidX)}
+    <android.support.v4.widget.NestedScrollView
         android:id="@+id/${detail_name}_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -59,5 +59,5 @@
         app:layout_anchor="@+id/${detail_name}_container"
         app:layout_anchorGravity="top|end" />
 
-</${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>
+</android.support.design.widget.CoordinatorLayout>
 </#if>

@@ -14,7 +14,7 @@
 
 package ${escapeKotlinIdentifiers(packageName)}
 
-import ${getMaterialComponentName('android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter', useAndroidX)}
+import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter
 
 class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
 

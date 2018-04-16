@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<${getMaterialComponentName('android.support.v4.widget.DrawerLayout', useAndroidX)}
+<android.support.v4.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -20,7 +20,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
+        <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
@@ -45,4 +45,4 @@
         app:headerLayout="@layout/${navHeaderLayoutName}"
         app:menu="@menu/${drawerMenu}" />
 
-</${getMaterialComponentName('android.support.v4.widget.DrawerLayout', useAndroidX)}>
+</android.support.v4.widget.DrawerLayout>

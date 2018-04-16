@@ -4,11 +4,11 @@ import android.content.Context
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.design.widget.BottomSheetDialog', useMaterial2)}Fragment
 <#if columnCount == "1">
-import ${getMaterialComponentName('android.support.v7.widget.LinearLayoutManager', useAndroidX)}
+import android.support.v7.widget.LinearLayoutManager
 <#else>
-import ${getMaterialComponentName('android.support.v7.widget.GridLayoutManager', useAndroidX)}
+import android.support.v7.widget.GridLayoutManager
 </#if>
-import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)}
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

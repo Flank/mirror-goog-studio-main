@@ -11,7 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
-import ${getMaterialComponentName('android.support.v4.app.NotificationCompat', useAndroidX)};
+import android.support.v4.app.NotificationCompat;
 <#if expandedStyle == 'list'>
 import android.graphics.Color;
 import android.text.SpannableStringBuilder;

@@ -14,14 +14,14 @@
 package ${packageName};
 
 import android.os.Bundle;
-import ${getMaterialComponentName('android.support.v4.content.ContextCompat', useAndroidX)};
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 
 /*
  * This class demonstrates how to extend ErrorFragment
  */
-public class ErrorFragment extends ${getMaterialComponentName('android.support.v17.leanback.app.ErrorFragment', useAndroidX)} {
+public class ErrorFragment extends android.support.v17.leanback.app.ErrorFragment {
     private static final String TAG = "ErrorFragment";
     private static final boolean TRANSLUCENT = true;
 

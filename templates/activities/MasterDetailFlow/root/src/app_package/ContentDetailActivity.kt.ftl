@@ -7,7 +7,7 @@ import ${getMaterialComponentName('android.support.design.widget.Snackbar', useM
 </#if>
 import ${superClassFqcn}
 <#if minApiLevel lt 16>
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)}
+import android.support.v4.app.NavUtils
 </#if>
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_${detail_name}.*

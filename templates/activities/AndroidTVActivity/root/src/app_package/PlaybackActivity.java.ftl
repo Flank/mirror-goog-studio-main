@@ -15,7 +15,7 @@
 package ${packageName};
 
 import android.os.Bundle;
-import ${getMaterialComponentName('android.support.v4.app.FragmentActivity', useAndroidX)};
+import android.support.v4.app.FragmentActivity;
 
 /** Loads {@link PlaybackVideoFragment}. */
 public class PlaybackActivity extends FragmentActivity {

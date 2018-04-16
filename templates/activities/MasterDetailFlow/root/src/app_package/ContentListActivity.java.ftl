@@ -3,11 +3,11 @@ package ${packageName};
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
+import android.support.annotation.NonNull;
 import ${superClassFqcn};
-import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)};
+import android.support.v7.widget.RecyclerView;
 <#if hasAppBar>
-import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
+import android.support.v7.widget.Toolbar;
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 </#if>
@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 <#if parentActivityClass != "">
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)};
+import android.support.v4.app.NavUtils;
 import ${actionBarClassFqcn};
 import android.view.MenuItem;
 </#if>

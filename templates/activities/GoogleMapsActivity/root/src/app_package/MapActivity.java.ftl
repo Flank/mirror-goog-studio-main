@@ -1,6 +1,6 @@
 package ${packageName};
 
-import ${getMaterialComponentName('android.support.v4.app.FragmentActivity', useAndroidX)};
+import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 import com.google.android.gms.maps.CameraUpdateFactory;

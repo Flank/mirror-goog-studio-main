@@ -1,6 +1,6 @@
 package ${packageName}.${fragmentPackage};
 
-import ${getMaterialComponentName('android.arch.lifecycle.ViewModel', useAndroidX)};
+import android.arch.lifecycle.ViewModel;
 
 public class ${viewModelClass} extends ViewModel {
     // TODO: Implement the ViewModel
