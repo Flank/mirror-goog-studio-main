@@ -36,6 +36,7 @@ public class MergedJavaCompileOptions implements JavaCompileOptions {
     public void reset() {
         annotationProcessorOptions.getClassNames().clear();
         annotationProcessorOptions.getArguments().clear();
+        annotationProcessorOptions.getCompilerArgumentProviders().clear();
     }
 
     public void append(@NonNull JavaCompileOptions javaCompileOptions) {
@@ -43,6 +44,8 @@ public class MergedJavaCompileOptions implements JavaCompileOptions {
                 javaCompileOptions.getAnnotationProcessorOptions().getClassNames());
         annotationProcessorOptions.arguments(
                 javaCompileOptions.getAnnotationProcessorOptions().getArguments());
+        annotationProcessorOptions.compilerArgumentProviders(
+                javaCompileOptions.getAnnotationProcessorOptions().getCompilerArgumentProviders());
         if (javaCompileOptions.getAnnotationProcessorOptions().getIncludeCompileClasspath() != null) {
             annotationProcessorOptions.setIncludeCompileClasspath(
                     javaCompileOptions.getAnnotationProcessorOptions().getIncludeCompileClasspath());
