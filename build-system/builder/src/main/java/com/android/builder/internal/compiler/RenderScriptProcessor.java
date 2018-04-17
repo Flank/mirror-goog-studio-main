@@ -114,6 +114,8 @@ public class RenderScriptProcessor {
 
     private final boolean mSupportMode;
 
+    private final boolean mUseAndroidX;
+
     private final Set<String> mAbiFilters;
 
 
@@ -133,6 +135,7 @@ public class RenderScriptProcessor {
             int optimizationLevel,
             boolean ndkMode,
             boolean supportMode,
+            boolean useAndroidX,
             @Nullable Set<String> abiFilters,
             @NonNull ILogger logger) {
         mSourceFolders = sourceFolders;
@@ -146,6 +149,7 @@ public class RenderScriptProcessor {
         mOptimizationLevel = optimizationLevel;
         mNdkMode = ndkMode;
         mSupportMode = supportMode;
+        mUseAndroidX = useAndroidX;
         mAbiFilters = abiFilters;
         mLogger = logger;
 
@@ -266,7 +270,11 @@ public class RenderScriptProcessor {
         }
 
         if (mSupportMode) {
-            builder.addArgs("-rs-package-name=android.support.v8.renderscript");
+            if (mUseAndroidX) {
+                builder.addArgs("-rs-package-name=androidx.renderscript");
+            } else {
+                builder.addArgs("-rs-package-name=android.support.v8.renderscript");
+            }
         }
 
         // source output

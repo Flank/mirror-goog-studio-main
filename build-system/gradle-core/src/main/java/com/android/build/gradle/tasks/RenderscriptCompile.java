@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
@@ -72,6 +73,8 @@ public class RenderscriptCompile extends NdkTask {
     private Supplier<Integer> targetApi;
 
     private boolean supportMode;
+
+    private boolean useAndroidX;
 
     private int optimLevel;
 
@@ -151,6 +154,11 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @Input
+    public boolean useAndroidX() {
+        return useAndroidX;
+    }
+
+    @Input
     public int getOptimLevel() {
         return optimLevel;
     }
@@ -207,6 +215,7 @@ public class RenderscriptCompile extends NdkTask {
                         getOptimLevel(),
                         isNdkMode(),
                         isSupportMode(),
+                        useAndroidX(),
                         getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
                         new LoggedProcessOutputHandler(getILogger()));
     }
@@ -270,6 +279,8 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.targetApi = TaskInputHelper.memoize(config::getRenderscriptTarget);
 
             renderscriptTask.supportMode = config.getRenderscriptSupportModeEnabled();
+            renderscriptTask.useAndroidX =
+                    scope.getGlobalScope().getProjectOptions().get(BooleanOption.USE_ANDROID_X);
             renderscriptTask.ndkMode = ndkMode;
             renderscriptTask.debugBuild = config.getBuildType().isRenderscriptDebuggable();
             renderscriptTask.optimLevel = config.getBuildType().getRenderscriptOptimLevel();
