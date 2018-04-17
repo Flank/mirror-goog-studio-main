@@ -29,6 +29,11 @@ import com.google.gson.annotations.SerializedName
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskDependency
 import java.io.File
 import java.io.FileReader
@@ -65,18 +70,35 @@ abstract class BuildArtifactsHolder(
         // A list of all BuildableFiles for the artifact.  Technically, only the last
         // BuildableFiles are needed.  Storing the all BuildableFiles allows better error
         // messages to be generated in the future.
-        var history: MutableList<BuildableArtifact> = mutableListOf()
+        val history: MutableList<BuildableArtifact> = mutableListOf()
+
+        // last registered task that produced a [BuildableArtifact] for this artifact type record.
+        var lastProducer: BuildableProducer? = null
 
         /** The latest [BuildableArtifact] created for this artifact */
         var last : BuildableArtifact
             get() = history.last()
             set(value) {
-                history.add(value)
+                add(value, null)
             }
+
+        // adds a new [BuildableArtifact] with the producer information
+        fun add(buildableArtifact: BuildableArtifact, producer: BuildableProducer?) {
+            history.add(buildableArtifact)
+            this.lastProducer = producer
+        }
 
         val size : Int
             get() = history.size
     }
+
+    // unless a [BuildableArtifact] or [FileCollection] was used to initialize a new instance of
+    // [BuildableArtifact], the task as well as the Provider<> producing the file or folder
+    // associated with the new BuildableArtifact will be recorded here.
+    private data class BuildableProducer(
+        val fileOrDirProperty: Property<in FileSystemLocation>,
+        val task: Task,
+        val fileName: String)
 
     private class FinalBuildableArtifact(
         val artifactType: ArtifactType,
@@ -252,6 +274,68 @@ abstract class BuildArtifactsHolder(
         return output
     }
 
+    /**
+     * set a new file to a specified artifact type. The new content will be added
+     * after any existing content.
+     *
+     * @param artifactType [ArtifactType] the new file will be classified under.
+     * @param task [Task] producing the file.
+     * @param fileName expected file name for the file (location is determined by the build)
+     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
+     * location to write the [task] output to.
+     */
+    fun setArtifactFile(
+        artifactType: ArtifactType,
+        task : Task,
+        fileName: String = "out") : Provider<RegularFile> {
+
+        // TODO : split this method in 2, replaceArtifactFile, and setArtifactFile.
+
+        val artifactRecord = artifactRecordMap[artifactType]
+        val intermediatesOutput = InternalArtifactType.Kind.INTERMEDIATES.outputPath
+
+        val lastProducer = artifactRecord?.lastProducer
+        lastProducer?.fileOrDirProperty?.set(project.layout.buildDirectory.file(
+            FileUtils.join(
+                intermediatesOutput,
+                artifactType.name().toLowerCase(),
+                getIdentifier(),
+                lastProducer.task.name,
+                lastProducer.fileName))
+        )
+
+        val provider = project.layout.buildDirectory.file(
+                if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
+                    FileUtils.join(
+                        artifactType.getOutputPath(),
+                        artifactType.name().toLowerCase(),
+                        getIdentifier(),
+                        fileName
+                    )
+                } else {
+                    FileUtils.join(
+                        intermediatesOutput,
+                        artifactType.name().toLowerCase(),
+                        getIdentifier(),
+                        task.name,
+                        fileName
+                    )
+                })
+
+
+        val fileProperty = project.layout.fileProperty(provider)
+        createOutput(artifactType,
+            BuildableArtifactImpl(
+                project.files(fileProperty).builtBy(task),
+                dslScope),
+            @Suppress("UNCHECKED_CAST")
+            BuildableProducer(
+                fileProperty as Property<in FileSystemLocation>,
+                task,
+                fileName))
+        return fileProperty
+    }
+
     private fun createFileCollection(artifactRecord: ArtifactRecord?, newFiles: Any) =
         if (artifactRecord != null) {
             project.files(artifactRecord.last, newFiles)
@@ -265,10 +349,14 @@ abstract class BuildArtifactsHolder(
         return newBuildableArtifact
     }
 
-    private fun createOutput(type: ArtifactType, artifact: BuildableArtifact) : ArtifactRecord {
+    private fun createOutput(
+        type: ArtifactType,
+        artifact: BuildableArtifact,
+        producer: BuildableProducer? = null) : ArtifactRecord {
+
         synchronized(artifactRecordMap) {
             val output = artifactRecordMap.computeIfAbsent(type) { ArtifactRecord() }
-            output.last = artifact
+            output.add(artifact, producer)
             return output
         }
     }

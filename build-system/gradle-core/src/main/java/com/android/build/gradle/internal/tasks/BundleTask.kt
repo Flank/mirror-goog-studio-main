@@ -31,6 +31,8 @@ import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -103,7 +105,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
     @get:OutputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundleFile: File
+    lateinit var bundleFile: Provider<RegularFile>
         private set
 
     @TaskAction
@@ -123,7 +125,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     signature = signature,
-                    bundleFile = bundleFile
+                    bundleFile = bundleFile.get().asFile
                 )
             )
         }
@@ -215,12 +217,10 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         override fun execute(task: BundleTask) {
             task.variantName = scope.fullVariantName
 
-            // FIXME we need to improve the location of this.
-            task.bundleFile =
-                    scope.artifacts.appendArtifact(
-                        InternalArtifactType.BUNDLE,
-                        task,
-                        "bundle.aab")
+            task.bundleFile = scope.artifacts.setArtifactFile(
+                InternalArtifactType.BUNDLE,
+                task,
+                "bundle.aab")
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 

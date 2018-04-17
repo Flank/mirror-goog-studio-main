@@ -124,10 +124,7 @@ public class MultiDexTest {
 
         assertMainDexContains("debug", mandatoryClasses);
 
-        try (Zip bundle =
-                new Zip(
-                        project.getOutputFile(
-                                "bundle", "icsDebug", "bundleIcsDebug", "bundle.aab"))) {
+        try (Zip bundle = new Zip(project.getOutputFile("bundle", "icsDebug", "bundle.aab"))) {
             String mainDexListPath =
                     "BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt";
             assertThat(bundle)
