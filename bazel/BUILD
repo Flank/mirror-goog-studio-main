@@ -283,29 +283,28 @@ config_setting(
 
 config_setting(
     name = "android_cpu_x86",
-    values = {"android_cpu": "x86"},
+    values = {"cpu": "x86"},
     visibility = ["//visibility:public"],
 )
 
 config_setting(
     name = "android_cpu_x86_64",
-    values = {"android_cpu": "x86_64"},
+    values = {"cpu": "x86_64"},
     visibility = ["//visibility:public"],
 )
 
 config_setting(
     name = "android_cpu_arm",
-    values = {"android_cpu": "armeabi-v7a"},
+    values = {"cpu": "armeabi-v7a"},
     visibility = ["//visibility:public"],
 )
 
 config_setting(
     name = "android_cpu_arm_64",
-    values = {"android_cpu": "arm64-v8a"},
+    values = {"cpu": "arm64-v8a"},
     visibility = ["//visibility:public"],
 )
 
-# Use cpu for armeabi since android_cpu default value is armeabi
 config_setting(
     name = "android_cpu_armeabi",
     values = {"cpu": "armeabi"},
