@@ -1665,10 +1665,8 @@ public final class SdkConstants {
     public static final String ATTR_FAB_CRADLE_ROUNDED_CORNER_RADIUS =
             "fabCradleRoundedCornerRadius";
     public static final String ATTR_FAB_CRADLE_VERTICAL_OFFSET = "fabCradleVerticalOffset";
-    public static final String ATTR_BOTTOM_APP_BAR_STYLE = "bottomAppBarStyle";
 
     // Material Button Attributes
-    public static final String ATTR_MATERIAL_BUTTON_STYLE = "materialButtonStyle";
     public static final String ATTR_INSET_LEFT = "insetLeft";
     public static final String ATTR_INSET_RIGHT = "insetRight";
     public static final String ATTR_INSET_TOP = "insetTop";
@@ -1685,7 +1683,6 @@ public final class SdkConstants {
     public static final String ATTR_CORNER_RADIUS = "cornerRadius";
 
     // Material FloatingActionButton Attributes
-    public static final String ATTR_FLOATING_ACTION_BUTTON_STYLE = "floatingActionButtonStyle";
     public static final String ATTR_FAB_CUSTOM_SIZE = "fabCustomSize";
     public static final String ATTR_HOVERED_FOCUSED_TRANSLATION_Z = "hoveredFocusedTranslationZ";
     public static final String ATTR_PRESSED_TRANSLATION_Z = "pressedTranslationZ";
@@ -1700,7 +1697,6 @@ public final class SdkConstants {
     public static final String ATTR_LABEL_VISIBILITY_MODE = "labelVisibilityMode";
 
     // Material ChipGroup Attributes
-    public static final String ATTR_CHIP_GROUP_STYLE = "chipGroupStyle";
     public static final String ATTR_CHIP_SPACING = "chipSpacing";
     public static final String ATTR_CHIP_SPACING_HORIZONTAL = "chipSpacingHorizontal";
     public static final String ATTR_CHIP_SPACING_VERTICAL = "chipSpacingVertical";
@@ -1708,7 +1704,6 @@ public final class SdkConstants {
     public static final String ATTR_CHECKED_CHIP = "checkedChip";
 
     // Material TabLayout Attributes
-    public static final String ATTR_TAB_STYLE = "tabStyle";
     public static final String ATTR_TAB_INDICATOR_HEIGHT = "tabIndicatorHeight";
     public static final String ATTR_TAB_BACKGROUND = "tabBackground";
     public static final String ATTR_TAB_INDICATOR = "tabIndicator";
