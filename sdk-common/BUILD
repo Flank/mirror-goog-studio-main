@@ -80,7 +80,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:javax_inject_javax_inject",
+        "//tools/base/third_party:javax.inject_javax.inject",
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
