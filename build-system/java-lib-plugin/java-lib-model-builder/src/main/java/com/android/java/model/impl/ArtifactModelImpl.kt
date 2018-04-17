@@ -14,18 +14,28 @@
  * limitations under the License.
  */
 
-package com.android.java.model.impl;
+package com.android.java.model.impl
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import com.android.java.model.ArtifactModel
+import java.io.File
+import java.io.Serializable
 
 /**
- * Test class for {@link ArtifactModelImpl}.
+ * Implementation of the [ArtifactModel] object.
  */
-public class ArtifactModelImplTest {
+data class ArtifactModelImpl(
+  private val myName: String,
+  private val myArtifactsByConfiguration: Map<String, Set<File>>) : ArtifactModel, Serializable {
 
-    @Test
-    public void equals() throws Exception {
-        EqualsVerifier.forClass(ArtifactModelImpl.class).verify();
-    }
+  override fun getName(): String {
+    return myName
+  }
+
+  override fun getArtifactsByConfiguration(): Map<String, Set<File>> {
+    return myArtifactsByConfiguration
+  }
+
+  companion object {
+    private const val serialVersionUID = 1L
+  }
 }

@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.java.model.builder;
+package com.android.java.model.builder
 
-import static com.android.java.model.builder.JavaModelBuilder.isGradleAtLeast;
+import com.android.java.model.builder.JavaModelBuilder.Companion.isGradleAtLeast
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
-/** Test class for {@link JavaModelBuilder}. */
-public class JavaModelBuilderTest {
-    @Test
-    public void gradleVersionCheck() {
-        Assert.assertFalse(isGradleAtLeast("2.2", "2.12"));
-        Assert.assertFalse(isGradleAtLeast("2.2", "2.6"));
-        Assert.assertTrue(isGradleAtLeast("4.2", "2.6"));
-        Assert.assertTrue(isGradleAtLeast("4.2", "2.12"));
-        Assert.assertTrue(isGradleAtLeast("4.2", "4.2"));
-    }
+/** Test class for [JavaModelBuilder].  */
+class JavaModelBuilderTest {
+  @Test
+  fun gradleVersionCheck() {
+    assertFalse(isGradleAtLeast("2.2", "2.12"))
+    assertFalse(isGradleAtLeast("2.2", "2.6"))
+    assertTrue(isGradleAtLeast("4.2", "2.6"))
+    assertTrue(isGradleAtLeast("4.2", "2.12"))
+    assertTrue(isGradleAtLeast("4.2", "4.2"))
+  }
 }

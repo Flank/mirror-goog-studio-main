@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.java.model.impl;
+package com.android.java.model.impl
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import nl.jqno.equalsverifier.EqualsVerifier
+import org.junit.Test
 
 /**
- * Test class for {@link JavaProjectImpl}.
+ * Test class for [SourceSetImpl].
  */
-public class JavaProjectImplTest {
-    @Test
-    public void equals() throws Exception {
-        EqualsVerifier.forClass(JavaProjectImpl.class).verify();
-    }
+class SourceSetImplTest {
+  @Test
+  @Throws(Exception::class)
+  fun equals() {
+    EqualsVerifier.forClass(SourceSetImpl::class.java).verify()
+  }
 }
