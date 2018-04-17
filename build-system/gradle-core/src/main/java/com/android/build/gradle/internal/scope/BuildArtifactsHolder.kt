@@ -292,7 +292,7 @@ abstract class BuildArtifactsHolder(
         // TODO : split this method in 2, replaceArtifactFile, and setArtifactFile.
 
         val artifactRecord = artifactRecordMap[artifactType]
-        val intermediatesOutput = InternalArtifactType.Kind.INTERMEDIATES.outputPath
+        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
 
         val lastProducer = artifactRecord?.lastProducer
         lastProducer?.fileOrDirProperty?.set(project.layout.buildDirectory.file(
@@ -394,7 +394,7 @@ abstract class BuildArtifactsHolder(
      */
     internal fun createFile(task: Task, filename : String) =
             FileUtils.join(
-                InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(rootOutputDir()),
+                InternalArtifactType.Category.INTERMEDIATES.getOutputDir(rootOutputDir()),
                 MULTI_TYPES,
                 task.name,
                 filename)

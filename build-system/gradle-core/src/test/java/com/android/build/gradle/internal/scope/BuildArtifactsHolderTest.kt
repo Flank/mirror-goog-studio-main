@@ -207,7 +207,7 @@ class BuildArtifactsHolderTest {
         val relativeFile = outputFile.relativeTo(project.buildDir)
         assertThat(relativeFile.path).isEqualTo(
             FileUtils.join(
-                InternalArtifactType.Kind.INTERMEDIATES.name.toLowerCase(),
+                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
                 JAVAC_CLASSES.name.toLowerCase(),
                 "debug",
                 "finalFile"))
@@ -227,7 +227,7 @@ class BuildArtifactsHolderTest {
         val relativeFile1 = task1Output.get().asFile.relativeTo(project.buildDir)
         assertThat(relativeFile1.path).isEqualTo(
             FileUtils.join(
-                InternalArtifactType.Kind.INTERMEDIATES.outputPath,
+                InternalArtifactType.Category.INTERMEDIATES.outputPath,
                 InternalArtifactType.BUNDLE.name.toLowerCase(),
                 "debug",
                 "task1",
@@ -235,7 +235,7 @@ class BuildArtifactsHolderTest {
         val relativeFile2 = task2Output.get().asFile.relativeTo(project.buildDir)
         assertThat(relativeFile2.path).isEqualTo(
             FileUtils.join(
-                InternalArtifactType.Kind.OUTPUTS.name.toLowerCase(),
+                InternalArtifactType.Category.OUTPUTS.name.toLowerCase(),
                 InternalArtifactType.BUNDLE.name.toLowerCase(),
                 "debug",
                 "replacingFile")
