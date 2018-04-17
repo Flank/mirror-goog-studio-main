@@ -87,10 +87,15 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
 
         /**
          * Returns the new support library that replaces the old one if the given dependency is an
-         * old support library, otherwise returns null.
+         * old support library and the new one is available in remote repositories, otherwise
+         * returns null.
          */
         private fun getNewSupportLibrary(dependency: ModuleComponentSelector): String? {
             if (isOldSupportLibrary(dependency)) {
+                if (!newSupportLibraryAvailable(dependency)) {
+                    return null
+                }
+
                 val newSupportLibraries = jetifyProcessor.mapDependency(dependency.displayName)
                 if (newSupportLibraries == null || newSupportLibraries.isEmpty()) {
                     throw IllegalStateException(
@@ -107,6 +112,41 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             } else {
                 return null
             }
+        }
+
+        private fun isOldSupportLibrary(dependency: ModuleComponentSelector): Boolean {
+            // TODO (jetifier-core): Need a method to tell whether the given dependency is an
+            // old support library
+            return dependency.group.startsWith("com.android.support")
+                    || dependency.group.startsWith("android.arch")
+                    || dependency.group == "com.android.databinding"
+        }
+
+        private fun isOldSupportLibrary(aarOrJarFile: File): Boolean {
+            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is an
+            // old support library
+            return aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.*"))
+                    || aarOrJarFile.absolutePath.matches(Regex(".*android.arch.*"))
+                    || aarOrJarFile.absolutePath.matches(Regex(".*com.android.databinding.*"))
+        }
+
+        private fun newSupportLibraryAvailable(oldSupportLibDep: ModuleComponentSelector): Boolean  {
+            // TODO (AGP): New Android testing support library dependencies are not yet available.
+            // Remove this code when they are.
+            return !oldSupportLibDep.group.startsWith("com.android.support.test")
+        }
+
+        private fun newSupportLibraryAvailable(aarOrJarFile: File): Boolean {
+            // TODO (AGP): New Android testing support library dependencies are not yet available.
+            // Remove this code when they are.
+            return !aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.test.*"))
+        }
+
+        private fun isNewSupportLibrary(aarOrJarFile: File): Boolean {
+            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is a
+            // new support library
+            return aarOrJarFile.absolutePath.contains("androidx")
+                    || aarOrJarFile.absolutePath.matches(Regex(".*com.google.android.material.*"))
         }
 
         private fun getEffectiveTargetDependency(targetDependency: String): String {
@@ -133,29 +173,6 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             }
             return targetDependency
         }
-
-        private fun isOldSupportLibrary(dependency: ModuleComponentSelector): Boolean {
-            // TODO (jetifier-core): Need a method to tell whether the given dependency is an
-            // old support library
-            return dependency.group.startsWith("com.android.support")
-                    || dependency.group.startsWith("android.arch")
-                    || dependency.group == "com.android.databinding"
-        }
-
-        private fun isOldSupportLibrary(aarOrJarFile: File): Boolean {
-            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is an
-            // old support library
-            return aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.*"))
-                    || aarOrJarFile.absolutePath.matches(Regex(".*android.arch.*"))
-                    || aarOrJarFile.absolutePath.matches(Regex(".*com.android.databinding.*"))
-        }
-
-        private fun isNewSupportLibrary(aarOrJarFile: File): Boolean {
-            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is a
-            // new support library
-            return aarOrJarFile.absolutePath.contains("androidx")
-                    || aarOrJarFile.absolutePath.matches(Regex(".*com.google.android.material.*"))
-        }
     }
 
     override fun transform(aarOrJarFile: File): List<File> {
@@ -173,6 +190,12 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
          */
         // Case 1: If this is a new support library, no need to transform it
         if (isNewSupportLibrary(aarOrJarFile)) {
+            return listOf(aarOrJarFile)
+        }
+
+        // TODO (AGP): This additional case is only temporary. It will be removed in later versions.
+        // See newSupportLibraryAvailable() method.
+        if (isOldSupportLibrary(aarOrJarFile) && !newSupportLibraryAvailable(aarOrJarFile)) {
             return listOf(aarOrJarFile)
         }
 
