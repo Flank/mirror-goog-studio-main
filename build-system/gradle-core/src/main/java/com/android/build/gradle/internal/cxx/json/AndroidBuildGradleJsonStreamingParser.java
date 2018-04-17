@@ -43,6 +43,9 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
         while (reader.hasNext()) {
             String name = reader.nextName();
             switch (name) {
+                case "stringTable":
+                    parseStringTable();
+                    break;
                 case "buildFiles":
                     parseBuildFiles();
                     break;
@@ -194,11 +197,17 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
                 case "flags":
                     visitor.visitLibraryFileFlags(reader.nextString());
                     break;
+                case "flagsOrdinal":
+                    visitor.visitLibraryFileFlagsOrdinal(reader.nextInt());
+                    break;
                 case "src":
                     visitor.visitLibraryFileSrc(reader.nextString());
                     break;
                 case "workingDirectory":
                     visitor.visitLibraryFileWorkingDirectory(reader.nextString());
+                    break;
+                case "workingDirectoryOrdinal":
+                    visitor.visitLibraryFileWorkingDirectoryOrdinal(reader.nextInt());
                     break;
                 default:
                     parseUnknown();
@@ -208,10 +217,27 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
         reader.endObject();
     }
 
+    private void parseStringTable() throws IOException {
+        reader.beginObject();
+        visitor.beginStringTable();
+        while (reader.hasNext()) {
+            switch (reader.peek()) {
+                case NAME:
+                    String index = reader.nextName();
+                    String string = reader.nextString();
+                    visitor.visitStringTableEntry(Integer.parseInt(index), string);
+                    break;
+                default:
+                    throw new RuntimeException(reader.peek().toString());
+            }
+        }
+        visitor.endStringTable();
+        reader.endObject();
+    }
+
     private void parseBuildFiles() throws IOException {
         reader.beginArray();
         while (reader.hasNext()) {
-            JsonToken peek = reader.peek();
             switch (reader.peek()) {
                 case STRING:
                     visitor.visitBuildFile(reader.nextString());

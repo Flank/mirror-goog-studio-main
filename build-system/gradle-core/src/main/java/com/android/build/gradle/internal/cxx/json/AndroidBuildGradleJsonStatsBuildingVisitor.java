@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.NonNull;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
-import java.io.IOException;
 
 /** Streams over android_build_gradle.json and gathers statistics */
 public class AndroidBuildGradleJsonStatsBuildingVisitor
@@ -37,7 +36,8 @@ public class AndroidBuildGradleJsonStatsBuildingVisitor
         this.config = config;
     }
 
-    public GradleBuildVariant.NativeBuildConfigInfo.Builder getConfig() throws IOException {
+    @NonNull
+    public GradleBuildVariant.NativeBuildConfigInfo.Builder getConfig() {
         return config;
     }
 
@@ -53,11 +53,6 @@ public class AndroidBuildGradleJsonStatsBuildingVisitor
         this.libraryInfo.setSourceFileCount(runningSourceFileCount);
         this.config.addLibraries(this.libraryInfo);
         super.endLibrary();
-    }
-
-    @Override
-    protected void visitLibraryBuildType(@NonNull String buildType) {
-        super.visitLibraryBuildType(buildType);
     }
 
     @Override

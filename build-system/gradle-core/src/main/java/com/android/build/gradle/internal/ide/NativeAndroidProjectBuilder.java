@@ -113,6 +113,7 @@ class NativeAndroidProjectBuilder {
     static class JsonStreamingVisitor extends AndroidBuildGradleJsonStreamingVisitor {
         @NonNull private final NativeAndroidProjectBuilder builder;
         @NonNull private final String variantName;
+        @NonNull private final Map<Integer, String> stringTable = Maps.newHashMap();
         @Nullable private String currentToolchain = null;
         @Nullable private String currentCExecutable = null;
         @Nullable private String currentCppExecutable = null;
@@ -131,6 +132,11 @@ class NativeAndroidProjectBuilder {
                 @NonNull NativeAndroidProjectBuilder builder, @NonNull String variantName) {
             this.variantName = variantName;
             this.builder = builder;
+        }
+
+        @Override
+        protected void visitStringTableEntry(int index, @NonNull String value) {
+            stringTable.put(index, value);
         }
 
         @Override
@@ -241,6 +247,11 @@ class NativeAndroidProjectBuilder {
         }
 
         @Override
+        protected void visitLibraryFileFlagsOrdinal(@NonNull Integer flagsOrdinal) {
+            visitLibraryFileFlags(stringTable.get(flagsOrdinal));
+        }
+
+        @Override
         public void visitLibraryFileSrc(@NonNull String src) {
             this.currentLibraryFilePath = src;
         }
@@ -248,6 +259,12 @@ class NativeAndroidProjectBuilder {
         @Override
         public void visitLibraryFileWorkingDirectory(@NonNull String workingDirectory) {
             this.currentLibraryFileWorkingDirectory = workingDirectory;
+        }
+
+        @Override
+        protected void visitLibraryFileWorkingDirectoryOrdinal(
+                @NonNull Integer workingDirectoryOrdinal) {
+            visitLibraryFileWorkingDirectory(stringTable.get(workingDirectoryOrdinal));
         }
 
         @Override

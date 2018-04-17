@@ -855,6 +855,7 @@ public class NativeModelTest {
             project.model().fetch(NativeAndroidProject.class);
             NativeBuildConfigValue buildConfig =
                     getNativeBuildConfigValue(getJsonFile("debug", "x86_64"));
+            assert buildConfig.cleanCommands != null;
             for (String cleanCommand : buildConfig.cleanCommands) {
                 assertThat(cleanCommand).doesNotContain("-j");
             }
@@ -892,8 +893,17 @@ public class NativeModelTest {
     private static Set<String> uniqueFlags(NativeBuildConfigValue config) {
         Set<String> flags = Sets.newHashSet();
         for (NativeLibraryValue library : config.libraries.values()) {
+            assert library.files != null;
             for (NativeSourceFileValue file : library.files) {
-                flags.addAll(StringHelper.tokenizeCommandLineToRaw(file.flags));
+                String fileFlags;
+                if (file.flags == null) {
+                    assert config.stringTable != null;
+                    fileFlags = config.stringTable.get(file.flagsOrdinal);
+
+                } else {
+                    fileFlags = file.flags;
+                }
+                flags.addAll(StringHelper.tokenizeCommandLineToRaw(fileFlags));
             }
         }
         return flags;
@@ -927,12 +937,28 @@ public class NativeModelTest {
 
     /** Validates the NativeBuildConfigValue. Note: workingDirectory is optional. */
     private static void checkSourceFileValue(@NonNull NativeBuildConfigValue config) {
+        assert config.libraries != null;
         for (NativeLibraryValue library : config.libraries.values()) {
+            assert library.files != null;
             for (NativeSourceFileValue nativeSourceFileValue : library.files) {
                 assertThat(nativeSourceFileValue.src).exists();
-                assertThat(nativeSourceFileValue.flags).isNotEmpty();
-                if (nativeSourceFileValue.workingDirectory != null) {
-                    assertThat(nativeSourceFileValue.workingDirectory).exists();
+                String workingDirectory;
+                if (nativeSourceFileValue.workingDirectoryOrdinal != null) {
+                    assertThat(nativeSourceFileValue.flagsOrdinal).isNotNull();
+                    assertThat(config.stringTable).isNotNull();
+                    workingDirectory =
+                            config.stringTable.get(nativeSourceFileValue.workingDirectoryOrdinal);
+
+                } else {
+                    assertThat(nativeSourceFileValue.flags).isNotEmpty();
+                    if (nativeSourceFileValue.workingDirectory != null) {
+                        workingDirectory = nativeSourceFileValue.workingDirectory.toString();
+                    } else {
+                        workingDirectory = null;
+                    }
+                }
+                if (workingDirectory != null) {
+                    assertThat(new File(workingDirectory)).exists();
                 }
             }
         }

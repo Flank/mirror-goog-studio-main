@@ -752,6 +752,11 @@ public abstract class ExternalNativeJsonGenerator {
                 diagnostic("string JSON file %s", file.getAbsolutePath());
                 try (JsonReader reader = new JsonReader(new FileReader(file))) {
                     callback.accept(reader);
+                } catch (Throwable e) {
+                    diagnostic(
+                            "Error parsing: %s",
+                            String.join("\r\n", Files.readAllLines(file.toPath())));
+                    throw e;
                 }
             } else {
                 // If the tool didn't create the JSON file then create fallback with the

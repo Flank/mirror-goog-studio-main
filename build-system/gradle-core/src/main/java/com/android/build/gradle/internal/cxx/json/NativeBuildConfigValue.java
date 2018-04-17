@@ -26,6 +26,7 @@ import java.util.Map;
  * Value type to be used with Gson.
  */
 public class NativeBuildConfigValue {
+    @Nullable public Map<Integer, String> stringTable;
     @Nullable
     public Collection<File> buildFiles;
     @Nullable

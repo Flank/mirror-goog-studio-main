@@ -18,18 +18,27 @@ package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
+import java.util.Collections;
 import java.util.List;
 
 /** Visitor over Android Gradle JSon that delegates to a list of visitors. */
 public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJsonStreamingVisitor {
-    private List<AndroidBuildGradleJsonStreamingVisitor> visitors = Lists.newArrayList();
+    private final List<AndroidBuildGradleJsonStreamingVisitor> visitors = Lists.newArrayList();
 
     public AndroidBuildGradleJsonCompositeVisitor(
             @NonNull AndroidBuildGradleJsonStreamingVisitor... visitors) {
         super();
-        for (AndroidBuildGradleJsonStreamingVisitor visitor : visitors) {
-            this.visitors.add(visitor);
-        }
+        Collections.addAll(this.visitors, visitors);
+    }
+
+    @Override
+    protected void beginStringTable() {
+        visitors.forEach(AndroidBuildGradleJsonStreamingVisitor::beginStringTable);
+    }
+
+    @Override
+    protected void endStringTable() {
+        visitors.forEach(AndroidBuildGradleJsonStreamingVisitor::endStringTable);
     }
 
     @Override
@@ -39,17 +48,17 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
 
     @Override
     protected void endLibrary() {
-        visitors.forEach(parser -> parser.endLibrary());
+        visitors.forEach(AndroidBuildGradleJsonStreamingVisitor::endLibrary);
     }
 
     @Override
     protected void beginLibraryFile() {
-        visitors.forEach(parser -> parser.beginLibraryFile());
+        visitors.forEach(AndroidBuildGradleJsonStreamingVisitor::beginLibraryFile);
     }
 
     @Override
     protected void endLibraryFile() {
-        visitors.forEach(parser -> parser.endLibraryFile());
+        visitors.forEach(AndroidBuildGradleJsonStreamingVisitor::endLibraryFile);
     }
 
     @Override
@@ -59,7 +68,12 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
 
     @Override
     protected void endToolchain() {
-        visitors.forEach(parser -> parser.endToolchain());
+        visitors.forEach(AndroidBuildGradleJsonStreamingVisitor::endToolchain);
+    }
+
+    @Override
+    protected void visitStringTableEntry(int index, @NonNull String value) {
+        visitors.forEach(parser -> parser.visitStringTableEntry(index, value));
     }
 
     @Override
@@ -118,6 +132,11 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     }
 
     @Override
+    protected void visitLibraryFileFlagsOrdinal(@NonNull Integer flagsOrdinal) {
+        visitors.forEach(parser -> parser.visitLibraryFileFlagsOrdinal(flagsOrdinal));
+    }
+
+    @Override
     protected void visitLibraryFileSrc(@NonNull String src) {
         visitors.forEach(parser -> parser.visitLibraryFileSrc(src));
     }
@@ -125,6 +144,13 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     @Override
     protected void visitLibraryFileWorkingDirectory(@NonNull String workingDirectory) {
         visitors.forEach(parser -> parser.visitLibraryFileWorkingDirectory(workingDirectory));
+    }
+
+    @Override
+    protected void visitLibraryFileWorkingDirectoryOrdinal(
+            @NonNull Integer workingDirectoryOrdinal) {
+        visitors.forEach(
+                parser -> parser.visitLibraryFileWorkingDirectoryOrdinal(workingDirectoryOrdinal));
     }
 
     @Override
