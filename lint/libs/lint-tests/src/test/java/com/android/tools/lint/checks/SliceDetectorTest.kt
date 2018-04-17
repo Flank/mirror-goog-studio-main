@@ -637,6 +637,108 @@ class SliceDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testConsumer1() {
+        // RowBuilders are constructed inside consumer methods on builder
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+                    import android.app.PendingIntent;
+                    import android.content.Context;
+                    import android.net.Uri;
+
+                    import androidx.core.graphics.drawable.IconCompat;
+                    import androidx.slice.Slice;
+                    import androidx.slice.builders.ListBuilder;
+                    import androidx.slice.builders.SliceAction;
+
+                    import static androidx.slice.builders.ListBuilder.INFINITY;
+                    import static androidx.slice.builders.ListBuilder.SMALL_IMAGE;
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public abstract class SimpleTest {
+                        protected abstract Context getContext();
+                        private Slice createWeather(Uri sliceUri, PendingIntent intent, int image1, int image2, int image3) {
+                            SliceAction primaryAction = new SliceAction(intent,
+                                    IconCompat.createWithResource(getContext(), image1), SMALL_IMAGE,
+                                    "Weather is happening!");
+                            return new ListBuilder(getContext(), sliceUri, INFINITY)
+                                    .addGridRow(gb -> gb
+                                            .setPrimaryAction(primaryAction)
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            image2),
+                                                            SMALL_IMAGE)
+                                                    .addText("MON")
+                                                    .addTitleText("69\u00B0"))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            image3),
+                                                            SMALL_IMAGE)
+                                                    .addText("FRI")
+                                                    .addTitleText("68\u00B0")))
+                                    .build();
+                        }
+
+                        private Slice createGallery(Uri sliceUri) {
+                            SliceAction primaryAction = new SliceAction(
+                                    getBroadcastIntent(ACTION_TOAST, "open photo album"),
+                                    IconCompat.createWithResource(getContext(), R.drawable.slices_1),
+                                    LARGE_IMAGE,
+                                    "Open photo album");
+                            return new ListBuilder(getContext(), sliceUri, INFINITY) // 2
+                                    .setColor(0xff4285F4)
+                                    .addRow(b -> b
+                                            .setTitle("Family trip to Hawaii")
+                                            .setSubtitle("Sep 30, 2017 - Oct 2, 2017")
+                                            .setPrimaryAction(primaryAction))
+                                    .addAction(new SliceAction(
+                                            getBroadcastIntent(ACTION_TOAST, "cast photo album"),
+                                            IconCompat.createWithResource(getContext(), R.drawable.ic_cast),
+                                            "Cast photo album"))
+                                    .addAction(new SliceAction(
+                                            getBroadcastIntent(ACTION_TOAST, "share photo album"),
+                                            IconCompat.createWithResource(getContext(), R.drawable.ic_share),
+                                            "Share photo album"))
+                                    .addGridRow(b -> b
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_1),
+                                                            LARGE_IMAGE))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_2),
+                                                            LARGE_IMAGE))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_3),
+                                                            LARGE_IMAGE))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_4),
+                                                            LARGE_IMAGE))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_2),
+                                                            LARGE_IMAGE))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_3),
+                                                            LARGE_IMAGE))
+                                            .addCell(cb -> cb
+                                                    .addImage(IconCompat.createWithResource(getContext(),
+                                                            R.drawable.slices_4),
+                                                            LARGE_IMAGE))
+                                            .setSeeMoreAction(getBroadcastIntent(ACTION_TOAST, "see your gallery"))
+                                            .setContentDescription("Images from your trip to Hawaii"))
+                                    .build();
+                        }
+                    }
+                """
+            ).indented(),
+            *stubs
+        ).run().expectClean()
+    }
+
     fun testSliceProviderMissingCategory() {
         lint().files(
             manifest(
@@ -757,314 +859,165 @@ class SliceDetectorTest : AbstractCheckTest() {
 
     private val listBuilder: TestFile = java(
         """
-        package androidx.slice.builders;
+            package androidx.slice.builders;
+            import android.app.PendingIntent;
+            import android.content.Context;
+            import android.net.Uri;
 
-        import android.app.slice.Slice;
-        import android.content.Context;
-        import android.net.Uri;
-        import android.support.annotation.NonNull;
-        import android.support.annotation.Nullable;
-        import androidx.core.graphics.drawable.IconCompat;
+            import java.util.List;
 
-        import java.util.function.Consumer;
-
-        @SuppressWarnings("all") // stubs
-        public class ListBuilder {
-            public static final int ICON_IMAGE = SliceHints.ICON_IMAGE;
-            public static final int SMALL_IMAGE = SliceHints.SMALL_IMAGE;
-            public static final int LARGE_IMAGE = SliceHints.LARGE_IMAGE;
-            public static final int UNKNOWN_IMAGE = SliceHints.UNKNOWN_IMAGE;
-            public static final long INFINITY = SliceHints.INFINITY;
-
-
-            public ListBuilder(@NonNull Context context, @NonNull Uri uri, long ttl) {
-            }
-
-            public Slice build() {
-                return null;
-            }
-
-            @NonNull
-            public ListBuilder addRow(@NonNull RowBuilder builder) {
-                return this;
-            }
-
-            @NonNull
-            public ListBuilder addRow(@NonNull Consumer<RowBuilder> c) {
-                return this;
-            }
-
-            @NonNull
-            public ListBuilder addGridRow(@NonNull GridRowBuilder builder) {
-                return this;
-            }
-            @NonNull
-            public ListBuilder setHeader(@NonNull HeaderBuilder builder) {
-                return this;
-            }
-
-            @NonNull
-            public ListBuilder addAction(@NonNull SliceAction action) {
-                return this;
-            }
-
-            public static class RowBuilder {
-                public RowBuilder(@NonNull ListBuilder parent) {
+            import androidx.core.graphics.drawable.IconCompat;
+            import androidx.core.util.Consumer;
+            import androidx.slice.Slice;
+            @SuppressWarnings("all") // stubs
+            public class ListBuilder {
+                public static final int ICON_IMAGE = SliceHints.ICON_IMAGE;
+                public static final int SMALL_IMAGE = SliceHints.SMALL_IMAGE;
+                public static final int LARGE_IMAGE = SliceHints.LARGE_IMAGE;
+                public static final int UNKNOWN_IMAGE = SliceHints.UNKNOWN_IMAGE;
+                public static final long INFINITY = SliceHints.INFINITY;
+                public ListBuilder(Context context, Uri uri, long ttl) {
                 }
-
-                public RowBuilder(@NonNull ListBuilder parent, @NonNull Uri uri) {
+                public Slice build() {
+                    return null;
                 }
-
-                public RowBuilder(@NonNull Context context, @NonNull Uri uri) {
+                public ListBuilder addRow(RowBuilder builder) { return this; }
+                public ListBuilder addRow(Consumer<RowBuilder> c) { return this; }
+                public ListBuilder addGridRow(GridRowBuilder builder) { return this; }
+                public ListBuilder addGridRow(Consumer<GridRowBuilder> c) { return this; }
+                public ListBuilder setHeader(HeaderBuilder builder) { return this; }
+                public ListBuilder setHeader(Consumer<HeaderBuilder> c) { return this; }
+                public ListBuilder addAction(SliceAction action) { return this; }
+                public ListBuilder setColor(int i) { return this; }
+                public ListBuilder setKeywords(List<String> keywords) { return this; }
+                public ListBuilder setSeeMoreRow(RowBuilder builder) { return this; }
+                public ListBuilder setSeeMoreRow(Consumer<RowBuilder> c) { return this; }
+                public ListBuilder setSeeMoreAction(PendingIntent intent) { return this; }
+                public static class RowBuilder {
+                    public RowBuilder(ListBuilder parent) { }
+                    public RowBuilder(ListBuilder parent, Uri uri) { }
+                    public RowBuilder(Context context, Uri uri) { }
+                    public RowBuilder setTitleItem(long timeStamp) { return this; }
+                    public RowBuilder setTitleItem(IconCompat icon, int imageMode) { return this; }
+                    public RowBuilder setPrimaryAction(SliceAction action) { return this; }
+                    public RowBuilder setTitle(CharSequence title) { return this; }
+                    public RowBuilder setTitle(CharSequence title, boolean isLoading) { return this; }
+                    public RowBuilder setSubtitle(CharSequence subtitle) {
+                        return setSubtitle(subtitle, false /* isLoading */);
+                    }
+                    public RowBuilder setSubtitle(CharSequence subtitle, boolean isLoading) { return this; }
+                    public RowBuilder addEndItem(long timeStamp) { return this; }
+                    public RowBuilder addEndItem(IconCompat icon, int imageMode) {
+                        return addEndItem(icon, imageMode, false /* isLoading */);
+                    }
+                    public RowBuilder addEndItem(IconCompat icon, int imageMode,
+                                                 boolean isLoading) { return this; }
+                    public RowBuilder addEndItem(SliceAction action) { return this; }
+                    public RowBuilder setContentDescription(CharSequence description) { return this; }
                 }
-
-                @NonNull
-                public RowBuilder setTitleItem(long timeStamp) {
-                    return this;
+                public static class HeaderBuilder {
+                    public HeaderBuilder(ListBuilder parent) { }
+                    public HeaderBuilder setTitle(CharSequence title) { return this; }
+                    public HeaderBuilder setTitle(CharSequence title, boolean isLoading) { return this; }
+                    public HeaderBuilder setPrimaryAction(SliceAction action) { return this; }
+                    public HeaderBuilder setSummary(CharSequence summary) {
+                        return setSummary(summary, false /* isLoading */);
+                    }
+                    public HeaderBuilder setSummary(CharSequence summary, boolean isLoading) { return this; }
+                    public HeaderBuilder setSubtitle(CharSequence s) { return this; }
+                    public HeaderBuilder setSubtitle(CharSequence s, boolean isLoading) { return this; }
+                    public HeaderBuilder setContentDescription(CharSequence description) { return this; }
                 }
-
-                @NonNull
-                public RowBuilder setPrimaryAction(@NonNull SliceAction action) {
-                    return this;
+                public ListBuilder addInputRange(InputRangeBuilder b) { return this; }
+                public ListBuilder addInputRange(Consumer<InputRangeBuilder> c) { return this; }
+                public ListBuilder addRange(RangeBuilder rangeBuilder) { return this; }
+                public ListBuilder addRange(Consumer<RangeBuilder> c) { return this; }
+                public static class InputRangeBuilder {
+                    public InputRangeBuilder(ListBuilder lb) { }
+                    public InputRangeBuilder setMin(int min) { return this; }
+                    public InputRangeBuilder setMax(int max) { return this; }
+                    public InputRangeBuilder setValue(int value) { return this; }
+                    public InputRangeBuilder setTitle(CharSequence title) { return this; }
+                    public InputRangeBuilder setSubtitle(CharSequence title) { return this; }
+                    public InputRangeBuilder setThumb(IconCompat thumb) { return this; }
+                    public InputRangeBuilder setPrimaryAction(SliceAction action) { return this; }
+                    public InputRangeBuilder setContentDescription(CharSequence description) { return this; }
+                    public InputRangeBuilder setInputAction(PendingIntent action) { return this; }
                 }
-
-                @NonNull
-                public RowBuilder setTitle(@NonNull CharSequence title) {
-                    return this;
-                }
-
-                @NonNull
-                public RowBuilder setTitle(@Nullable CharSequence title, boolean isLoading) {
-                    return this;
-                }
-
-                @NonNull
-                public RowBuilder setSubtitle(@NonNull CharSequence subtitle) {
-                    return setSubtitle(subtitle, false /* isLoading */);
-                }
-
-                @NonNull
-                public RowBuilder setSubtitle(@Nullable CharSequence subtitle, boolean isLoading) {
-                    return this;
-                }
-
-                @NonNull
-                public RowBuilder addEndItem(long timeStamp) {
-                    return this;
-                }
-
-                @NonNull
-                public RowBuilder addEndItem(@NonNull IconCompat icon, int imageMode) {
-                    return addEndItem(icon, imageMode, false /* isLoading */);
-                }
-
-                @NonNull
-                public RowBuilder addEndItem(@Nullable IconCompat icon,int imageMode,
-                                             boolean isLoading) {
-                    return this;
-                }
-                @NonNull
-                public RowBuilder addEndItem(@NonNull SliceAction action) {
-                    return this;
+                public static class RangeBuilder {
+                    public RangeBuilder(ListBuilder parent) { }
+                    public RangeBuilder setMax(int max) { return this; }
+                    public RangeBuilder setValue(int value) { return this; }
+                    public RangeBuilder setTitle(CharSequence title) { return this; }
+                    public RangeBuilder setSubtitle(CharSequence title) { return this; }
+                    public RangeBuilder setPrimaryAction(SliceAction action) { return this; }
+                    public RangeBuilder setContentDescription(CharSequence description) { return this; }
                 }
             }
-
-            public static class HeaderBuilder {
-                public HeaderBuilder(@NonNull ListBuilder parent) {
-                }
-
-                @NonNull
-                public HeaderBuilder setTitle(@NonNull CharSequence title) {
-                    return this;
-                }
-
-                @NonNull
-                public HeaderBuilder setPrimaryAction(@NonNull SliceAction action) {
-                    return this;
-                }
-            }
-
-
-            @NonNull
-            public ListBuilder addInputRange(@NonNull InputRangeBuilder b) {
-                return this;
-            }
-
-            @NonNull
-            public ListBuilder addInputRange(@NonNull Consumer<InputRangeBuilder> c) {
-                return this;
-            }
-
-            @NonNull
-            public ListBuilder addRange(@NonNull RangeBuilder rangeBuilder) {
-                return this;
-            }
-
-            @NonNull
-            public ListBuilder addRange(@NonNull Consumer<RangeBuilder> c) {
-                return this;
-            }
-
-
-            public static class InputRangeBuilder {
-
-                public InputRangeBuilder(ListBuilder lb) {
-                }
-
-                @NonNull
-                public InputRangeBuilder setMin(int min) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setMax(int max) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setValue(int value) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setTitle(@NonNull CharSequence title) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setSubtitle(@NonNull CharSequence title) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setThumb(@NonNull IconCompat thumb) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setPrimaryAction(@NonNull SliceAction action) {
-                    return this;
-                }
-
-                @NonNull
-                public InputRangeBuilder setContentDescription(@NonNull CharSequence description) {
-                    return this;
-                }
-            }
-
-            public static class RangeBuilder {
-
-                public RangeBuilder(@NonNull ListBuilder parent) {
-                }
-
-                @NonNull
-                public RangeBuilder setMax(int max) {
-                    return this;
-
-                }
-
-                @NonNull
-                public RangeBuilder setValue(int value) {
-                    return this;
-                }
-
-                @NonNull
-                public RangeBuilder setTitle(@NonNull CharSequence title) {
-                    return this;
-                }
-
-                @NonNull
-                public RangeBuilder setSubtitle(@NonNull CharSequence title) {
-                    return this;
-                }
-
-                @NonNull
-                public RangeBuilder setPrimaryAction(@NonNull SliceAction action) {
-                    return this;
-                }
-
-                @NonNull
-                public RangeBuilder setContentDescription(@NonNull CharSequence description) {
-                    return this;
-                }
-            }
-
-        }
         """
     ).indented()
 
     private val gridRowBuilder: TestFile = java(
         """
-        package androidx.slice.builders;
+            package androidx.slice.builders;
+            import android.app.PendingIntent;
+            import android.net.Uri;
 
-        import android.net.Uri;
-        import android.support.annotation.NonNull;
-        import android.support.annotation.Nullable;
-
-        @SuppressWarnings("all") // stubs
-        public class GridRowBuilder {
-            public GridRowBuilder(ListBuilder parent) {
-            }
-
-            @NonNull
-            public GridRowBuilder addCell(@NonNull CellBuilder builder) {
-                return this;
-            }
-
-            @NonNull
-            public GridRowBuilder setPrimaryAction(@NonNull SliceAction action) {
-                return this;
-            }
-
-            public static final class CellBuilder {
-                public CellBuilder(@NonNull GridRowBuilder parent) {
+            import androidx.core.graphics.drawable.IconCompat;
+            import androidx.core.util.Consumer;
+            @SuppressWarnings("all") // stubs
+            public class GridRowBuilder {
+                public GridRowBuilder(ListBuilder parent) {
                 }
+                public GridRowBuilder addCell(CellBuilder builder) { return this; }
+                public GridRowBuilder addCell(Consumer<CellBuilder> c) { return this; }
+                public GridRowBuilder setPrimaryAction(SliceAction action) { return this; }
+                public GridRowBuilder setSeeMoreCell(CellBuilder builder) { return this; }
+                public GridRowBuilder setSeeMoreCell(Consumer<CellBuilder> c) { return this; }
+                public GridRowBuilder setSeeMoreAction(PendingIntent intent) { return this; }
+                public GridRowBuilder setContentDescription(CharSequence description) { return this; }
 
-                public CellBuilder(@NonNull GridRowBuilder parent, @NonNull Uri uri) {
+                public static final class CellBuilder {
+                    public CellBuilder(GridRowBuilder parent) { }
+                    public CellBuilder(GridRowBuilder parent, Uri uri) { }
+                    public CellBuilder addText(CharSequence text) { return this; }
+                    public CellBuilder addText(CharSequence text, boolean isLoading) { return this; }
+                    public CellBuilder addImage(IconCompat image, int imageMode) { return this; }
+                    public CellBuilder addImage(IconCompat image, int imageMode, boolean isLoading) { return this; }
+                    public CellBuilder addTitleText(CharSequence text) { return this; }
+                    public CellBuilder addTitleText(CharSequence text, boolean isLoading) { return this; }
+                    public CellBuilder setContentIntent(PendingIntent intent) { return this; }
+                    public CellBuilder setContentDescription(String s) { return this; }
                 }
-
-                @NonNull
-                public CellBuilder addText(@NonNull CharSequence text) {
-                    return addText(text, false /* isLoading */);
-                }
-
-                @NonNull
-                public CellBuilder addText(@Nullable CharSequence text, boolean isLoading) {
-                    return this;
-                }
-
             }
-        }
         """
     ).indented()
 
     private val sliceAction: TestFile = java(
         """
-        package androidx.slice.builders;
+            package androidx.slice.builders;
+            import android.app.PendingIntent;
 
-        import android.app.PendingIntent;
-        import android.support.annotation.NonNull;
-        import androidx.core.graphics.drawable.IconCompat;
-
-        @SuppressWarnings("all") // stubs
-        public class SliceAction {
-            public SliceAction(@NonNull PendingIntent action, @NonNull IconCompat actionIcon,
-                               @NonNull CharSequence actionTitle) {
-                this(action, actionIcon, ListBuilder.ICON_IMAGE, actionTitle);
+            import androidx.core.graphics.drawable.IconCompat;
+            @SuppressWarnings("all") // stubs
+            public class SliceAction {
+                public SliceAction(PendingIntent action, IconCompat actionIcon,
+                                   CharSequence actionTitle) {
+                    this(action, actionIcon, ListBuilder.ICON_IMAGE, actionTitle);
+                }
+                public SliceAction(PendingIntent action, IconCompat actionIcon,
+                                   int imageMode, CharSequence actionTitle) {
+                }
+                public SliceAction(PendingIntent action, IconCompat actionIcon,
+                                   CharSequence actionTitle, boolean isChecked) {
+                }
+                public SliceAction(PendingIntent action, CharSequence actionTitle,
+                                   boolean isChecked) {
+                }
+                public PendingIntent getAction() {
+                    return null;
+                }
             }
-
-            public SliceAction(@NonNull PendingIntent action, @NonNull IconCompat actionIcon,
-                               int imageMode, @NonNull CharSequence actionTitle) {
-            }
-
-            public SliceAction(@NonNull PendingIntent action, @NonNull IconCompat actionIcon,
-                               @NonNull CharSequence actionTitle, boolean isChecked) {
-            }
-
-            public SliceAction(@NonNull PendingIntent action, @NonNull CharSequence actionTitle,
-                               boolean isChecked) {
-            }
-        }
         """
     ).indented()
 
@@ -1086,11 +1039,14 @@ class SliceDetectorTest : AbstractCheckTest() {
     private val iconCompat: TestFile = java(
         """
             package androidx.core.graphics.drawable;
+            import android.content.Context;
             import android.graphics.Bitmap;
-
             @SuppressWarnings("all") // stubs
             public class IconCompat {
                 public static IconCompat createFromIcon(Bitmap icon) {
+                    return null;
+                }
+                public static IconCompat createWithResource(Context context, int resId) {
                     return null;
                 }
             }
@@ -1100,22 +1056,16 @@ class SliceDetectorTest : AbstractCheckTest() {
     private val sliceProvider: TestFile = java(
         """
             package androidx.slice;
-
-            import android.app.slice.Slice;
             import android.content.ContentProvider;
             import android.content.Intent;
             import android.net.Uri;
-
             @SuppressWarnings("all") // stubs
             public abstract class SliceProvider extends ContentProvider {
                 public abstract Slice onBindSlice(Uri sliceUri);
-
                 public void onSlicePinned(Uri sliceUri) {
                 }
-
                 public void onSliceUnpinned(Uri sliceUri) {
                 }
-
                 public Uri onMapIntentToUri(Intent intent) {
                     return null;
                 }
@@ -1126,55 +1076,61 @@ class SliceDetectorTest : AbstractCheckTest() {
     private val defaultSliceProvider: TestFile = java(
         """
             package test.pkg;
-
-            import android.app.slice.Slice;
             import android.content.ContentValues;
             import android.database.Cursor;
             import android.net.Uri;
-            import android.support.annotation.NonNull;
-            import android.support.annotation.Nullable;
 
+            import androidx.slice.Slice;
             import androidx.slice.SliceProvider;
-
             @SuppressWarnings("all") // stubs
-            public abstract class DefaultSliceProvider extends SliceProvider {
+            public class DefaultSliceProvider extends SliceProvider {
                 @Override
                 public Slice onBindSlice(Uri sliceUri) {
                     return null;
                 }
-
                 @Override
                 public boolean onCreate() {
                     return false;
                 }
-
-                @Nullable
                 @Override
-                public Cursor query(@NonNull Uri uri, @Nullable String[] strings, @Nullable String s, @Nullable String[] strings1, @Nullable String s1) {
+                public Cursor query(Uri uri, String[] strings, String s, String[] strings1, String s1) {
                     return null;
                 }
-
-                @Nullable
                 @Override
-                public String getType(@NonNull Uri uri) {
+                public String getType(Uri uri) {
                     return null;
                 }
-
-                @Nullable
                 @Override
-                public Uri insert(@NonNull Uri uri, @Nullable ContentValues contentValues) {
+                public Uri insert(Uri uri, ContentValues contentValues) {
                     return null;
                 }
-
                 @Override
-                public int delete(@NonNull Uri uri, @Nullable String s, @Nullable String[] strings) {
+                public int delete(Uri uri, String s, String[] strings) {
                     return 0;
                 }
-
                 @Override
-                public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {
+                public int update(Uri uri, ContentValues contentValues, String s, String[] strings) {
                     return 0;
                 }
+            }
+        """
+    ).indented()
+
+    private val consumer: TestFile = java(
+        """
+            package androidx.core.util;
+            @SuppressWarnings("all") // stubs
+            public interface Consumer<T> {
+                void accept(T t);
+            }
+        """
+    ).indented()
+
+    private val slice: TestFile = java(
+        """
+            package androidx.slice;
+            @SuppressWarnings("all") // stubs
+            public class Slice {
             }
         """
     ).indented()
@@ -1186,6 +1142,9 @@ class SliceDetectorTest : AbstractCheckTest() {
         sliceHints,
         iconCompat,
         sliceProvider,
-        defaultSliceProvider
+        defaultSliceProvider,
+        consumer,
+        slice,
+        iconCompat
     )
 }

@@ -39,10 +39,13 @@ import com.android.utils.next
 import com.android.utils.subtag
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
@@ -75,10 +78,12 @@ class SliceDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
+        private const val ICON_CLASS = "android.graphics.drawable.Icon"
+        private const val ICON_COMPAT_CLASS_1 = "androidx.core.graphics.drawable.IconCompat"
+        private const val ICON_COMPAT_CLASS_2 = "android.support.v4.graphics.drawable.IconCompat"
+
         private const val SLICE_PROVIDER_CLASS_1 = "androidx.slice.SliceProvider"
         private const val SLICE_PROVIDER_CLASS_2 = "android.app.slice.SliceProvider"
-        private const val ICON_CLASS = "android.graphics.drawable.Icon"
-        private const val ICON_COMPAT_CLASS = "androidx.core.graphics.drawable.IconCompat"
         private const val SLICE_ACTION_CLASS = "androidx.slice.builders.SliceAction"
         private const val LIST_BUILDER_CLASS = "androidx.slice.builders.ListBuilder"
         private const val LIST_INPUT_RANGE_BUILDER_CLASS =
@@ -91,8 +96,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
         private const val GRID_ROW_CELL_BUILDER_CLASS =
             "androidx.slice.builders.GridRowBuilder.CellBuilder"
         private const val ROW_BUILDER_CLASS = "androidx.slice.builders.ListBuilder.RowBuilder"
-        private const val CATEGORY_SLICE = "android.app.slice.category.SLICE"
 
+        private const val CATEGORY_SLICE = "android.app.slice.category.SLICE"
         const val WARN_ABOUT_TOO_MANY_ROWS = false
 
         /** Checks whether a provider is a slice provider  */
@@ -233,7 +238,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         when (name) {
             LIST_BUILDER_CLASS -> checkListBuilder(context, node, method)
             ROW_BUILDER_CLASS -> checkRowBuilder(context, node, method)
-            //GRID_ROW_BUILDER_CLASS -> checkGridRowBuilder(context, node, method)
+        //GRID_ROW_BUILDER_CLASS -> checkGridRowBuilder(context, node, method)
             GRID_ROW_CELL_BUILDER_CLASS, LIST_HEADER_BUILDER_CLASS -> checkHasContent(
                 name,
                 context,
@@ -257,8 +262,24 @@ class SliceDetector : Detector(), SourceCodeScanner {
             return
         }
 
+        // If you're calling say ListBuilder.addGridRow(Consumer<Builder>) that
+        // method is going to call a lambda with a single parameter which points
+        // to the new Builder; we want to track those as references to our
+        // target row.
+        val initialReferences = mutableListOf<PsiVariable>()
+        for (call in rows) {
+            if (!call.isConstructorCall() && isBuildConsumer(call)) {
+                val lambda = call.valueArguments[0]
+                if (lambda is ULambdaExpression) {
+                    val parameters = lambda.valueParameters
+                    val parameter = parameters[0].sourcePsi as? PsiParameter ?: continue
+                    initialReferences.add(parameter)
+                }
+            }
+        }
+
         var primaryAction = false
-        method.accept(object : DataFlowAnalyzer(rows) {
+        method.accept(object : DataFlowAnalyzer(rows, initialReferences) {
             override fun receiver(call: UCallExpression) {
                 if (call.methodName == "setPrimaryAction") {
                     primaryAction = true
@@ -376,9 +397,41 @@ class SliceDetector : Detector(), SourceCodeScanner {
                     }
                 }
             }
+
+            override fun receiver(call: UCallExpression) {
+                if (isBuildConsumer(call)) {
+                    rows.add(call)
+                }
+            }
         })
 
         return rows
+    }
+
+    private fun isBuildConsumer(call: UCallExpression): Boolean {
+        // A handful of methods actually initialize new row builders inside and then
+        // invoke a lambda on the new builder. We recognize these as methods that take
+        // a single Consumer parameter where the generic type is a Builder.
+        // Some examples:
+        //    main/java/androidx/slice/builders/ListBuilder.java
+        //        public ListBuilder addRow(@NonNull Consumer<RowBuilder> c) {
+        //        public ListBuilder addGrid(@NonNull Consumer<GridBuilder> c) {
+        //        public ListBuilder addGridRow(@NonNull Consumer<GridRowBuilder> c) {
+        //        ...
+        if (call.valueArgumentCount != 1) {
+            return false
+        }
+
+        val calledMethod = call.resolve() ?: return false
+        val arg = calledMethod.parameterList.parameters.firstOrNull() ?: return false
+        val type = arg.type.canonicalText
+        if (type.startsWith("androidx.core.util.Consumer<") &&
+            type.endsWith("Builder>")
+        ) {
+            return true
+        }
+
+        return false
     }
 
     private fun isContentMethod(methodName: String): Boolean {
@@ -469,7 +522,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                         }
                         endActionItem = call
                         endActionItems.add(first)
-                    } else if (type == ICON_CLASS || type == ICON_COMPAT_CLASS) {
+                    } else if (type == ICON_CLASS || type == ICON_COMPAT_CLASS_1 || type == ICON_COMPAT_CLASS_2) {
                         if (endActionItem != null) {
                             val location = context.getLocation(call).withSecondary(
                                 context.getLocation(endActionItem!!),

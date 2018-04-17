@@ -19,13 +19,10 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_REQUIRED
-import com.android.SdkConstants.ATTR_TYPE
-import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.TAG_APPLICATION
 import com.android.SdkConstants.TAG_META_DATA
 import com.android.SdkConstants.VALUE_TRUE
-import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.annotations.VisibleForTesting
 import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX
@@ -47,7 +44,6 @@ import com.android.utils.iterator
 import com.android.utils.next
 import com.android.utils.subtag
 import com.google.common.collect.Sets
-import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 
@@ -55,9 +51,6 @@ import org.w3c.dom.Element
  * Check which makes sure that an actions.xml file is correct.
  * See XmltreeActionsSchemaParser in the dev tools codebase to
  * check behavior enforced in the dev console.
- *
- * TODO: Check that URLs declared in <fulfillment> tags have associated <intent-filter> entries
- *   declared on at least one <activity> in the Android Manifest
  */
 class ActionsXmlDetector : ResourceXmlDetector() {
 
@@ -123,7 +116,7 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         }
 
         // Make sure the locales listed in the locale string are valid locales
-        val localeNode = actions.getAttributeNodeNS(ACTIONS_URI, "supportedLocales")
+        val localeNode = actions.getAttributeNode("supportedLocales")
         if (localeNode != null) {
             val locales = localeNode.value
             var index = 0
@@ -154,9 +147,10 @@ class ActionsXmlDetector : ResourceXmlDetector() {
     private fun checkAction(context: XmlContext, action: Element) {
         checkParent(context, action) ?: return
         // Make sure name is defined
-        checkRequiredAttribute(context, action, ACTIONS_URI, ATTR_INTENT_NAME) ?: return
+        checkRequiredAttribute(context, action, ATTR_INTENT_NAME) ?: return
 
         var atLeastOneFulfillment = false
+        var atLeastOneEntitySetReference = false
         var parameterNames: MutableSet<String>? = null
         var foundNonRequiredTemplate = false
         for (child in action) {
@@ -171,7 +165,10 @@ class ActionsXmlDetector : ResourceXmlDetector() {
                     if (parameterNames == null) {
                         parameterNames = mutableSetOf()
                     }
-                    checkParameter(context, child, parameterNames)
+                    val hasEntitySetReference = checkParameter(context, child, parameterNames)
+                    if (hasEntitySetReference) {
+                        atLeastOneEntitySetReference = true
+                    }
                 }
                 TAG_FULFILLMENT -> {
                     checkFulfillment(context, child)
@@ -188,10 +185,12 @@ class ActionsXmlDetector : ResourceXmlDetector() {
 
         // Make sure we have at least one fulfillment
         if (!atLeastOneFulfillment) {
-            context.report(
-                ISSUE, action, context.getElementLocation(action),
-                "`<action>` must declare a `<fulfillment>`"
-            )
+            if (!atLeastOneEntitySetReference) {
+                context.report(
+                    ISSUE, action, context.getElementLocation(action),
+                    "`<action>` must declare a `<fulfillment>` or a `<parameter>` with an `<entity-set-reference>`"
+                )
+            }
         } else if (!foundNonRequiredTemplate) {
             context.report(
                 ISSUE, action, context.getElementLocation(action),
@@ -205,7 +204,7 @@ class ActionsXmlDetector : ResourceXmlDetector() {
     private fun templateRequiresParameters(fulfillment: Element): Boolean {
         for (child in fulfillment) {
             if (child.tagName == TAG_PARAMETER_MAPPING) {
-                val required = child.getAttributeNS(ACTIONS_URI, ATTR_REQUIRED)
+                val required = child.getAttribute(ATTR_REQUIRED)
                 if (required == VALUE_TRUE) {
                     return true
                 }
@@ -219,16 +218,17 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         context: XmlContext,
         parameter: Element,
         parameterNames: MutableSet<String>
-    ) {
-        checkParent(context, parameter) ?: return
+    ): Boolean {
+        checkParent(context, parameter) ?: return false
 
         // Make sure name is defined
-        checkRequiredAttribute(context, parameter, ACTIONS_URI, ATTR_NAME) ?: return
-        // Make sure type is defined
-        checkRequiredAttribute(context, parameter, ACTIONS_URI, ATTR_TYPE)
+        checkRequiredAttribute(context, parameter, ATTR_NAME) ?: return false
+
+        // "type" is optional for built-in parameters
 
         // Make sure name is unique
-        val name = checkRequiredAttribute(context, parameter, ACTIONS_URI, ATTR_NAME) ?: return
+        val name =
+            checkRequiredAttribute(context, parameter, ATTR_NAME) ?: return false
         checkNotAlreadyPresent(
             name,
             ATTR_NAME,
@@ -239,24 +239,27 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             TAG_PARAMETER
         )
 
+        var hasEntitySetReference = false
         for (child in parameter) {
             val tag = child.tagName
             if (tag == TAG_PARAMETER) {
                 nestingNotAllowed(context, child)
-                return
+                return false
             }
-            checkParent(context, child) ?: return
+            checkParent(context, child) ?: return false
             if (tag == TAG_ENTITY_SET_REFERENCE) {
                 checkEntitySetReference(context, child)
+                hasEntitySetReference = true
             }
         }
+
+        return hasEntitySetReference
     }
 
     private fun checkEntitySetReference(context: XmlContext, entitySetReference: Element) {
         checkRequiredAttribute(
             context,
             entitySetReference,
-            ACTIONS_URI,
             ATTR_URL_FILTER
         ) ?: return
     }
@@ -266,12 +269,11 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         val urlTemplate = checkRequiredAttribute(
             context,
             fulfillment,
-            ACTIONS_URI,
             ATTR_URL_TEMPLATE,
             allowReference = false
         ) ?: return
 
-        val parameters = getUriTemplateParameters(urlTemplate)
+        val templateParameters = getUriTemplateParameters(urlTemplate)
 
         val intentParameterNames = mutableSetOf<String>()
         val urlParameters = mutableSetOf<String>()
@@ -286,8 +288,10 @@ class ActionsXmlDetector : ResourceXmlDetector() {
                 TAG_PARAMETER_MAPPING -> {
                     val parameter =
                         checkParameterMapping(context, child, intentParameterNames, urlParameters)
-                    if (parameter != null && !parameters.contains(parameter) &&
-                        !parameter.startsWith(PREFIX_RESOURCE_REF)
+                    if (parameter != null && !templateParameters.contains(parameter) &&
+                        !parameter.startsWith(PREFIX_RESOURCE_REF) &&
+                        // special built-in parameter
+                        parameter != VAR_URL
                     ) {
                         context.report(
                             ISSUE, child, context.getElementLocation(child),
@@ -301,11 +305,21 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             }
         }
 
+        // See if we should have a built-in "url" parameter: this happens if there
+        // is at least one parameter with an entity reference
+        if (templateParameters.contains(VAR_URL) && !urlParameters.contains(VAR_URL) &&
+            // See if any parameter in the action defines an entity reference. We can't just
+            // keep track of this during iteration and pass it in here, we have to search up
+            // from here since the parameter can be defined before or after the fulfillment tag.
+            hasEntitySetReference(fulfillment.parentNode as Element)) {
+            urlParameters.add(VAR_URL)
+        }
+
         // Make sure the parameters are fully mapped
-        val missing = Sets.difference(parameters, urlParameters)
+        val missing = Sets.difference(templateParameters, urlParameters)
         if (missing.isNotEmpty()) {
             val attributeLocation = context.getValueLocation(
-                fulfillment.getAttributeNodeNS(ACTIONS_URI, ATTR_URL_TEMPLATE)
+                fulfillment.getAttributeNode(ATTR_URL_TEMPLATE)
             )
             val message =
                 if (missing.size == 1) {
@@ -322,6 +336,24 @@ class ActionsXmlDetector : ResourceXmlDetector() {
     }
 
     /**
+     * Returns true if the given action tag defines at least one entity reference in
+     * one of its parameters
+     */
+    private fun hasEntitySetReference(action: Element): Boolean {
+        assert(action.tagName == TAG_ACTION)
+
+        for (parameter in action) {
+            if (parameter.tagName == TAG_PARAMETER) {
+                if (parameter.subtag(TAG_ENTITY_SET_REFERENCE) != null) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    /**
      * Checks parameter mapping parameter and returns the url parameter name (or null
      * if not declared or any other validation error was found)
      */
@@ -332,7 +364,7 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         urlParameters: MutableSet<String>
     ): String? {
         val intentParameter = checkRequiredAttribute(
-            context, parameterMapping, ACTIONS_URI, ATTR_INTENT_PARAMETER, allowReference = false
+            context, parameterMapping, ATTR_INTENT_PARAMETER, allowReference = false
         ) ?: return null
 
         checkParent(context, parameterMapping) ?: return null
@@ -340,7 +372,6 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         val urlParameter = checkRequiredAttribute(
             context,
             parameterMapping,
-            ACTIONS_URI,
             ATTR_URL_PARAMETER,
             allowReference = false
         ) ?: return null
@@ -374,9 +405,6 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             )
         )
 
-        // Namespace for actions is in flux
-        private const val ACTIONS_URI = AUTO_URI
-
         private const val TAG_ACTIONS = "actions"
         private const val TAG_ACTION = "action"
         private const val TAG_ACTION_DISPLAY = "action-display"
@@ -390,6 +418,7 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         private const val ATTR_INTENT_PARAMETER = "intentParameter"
         private const val ATTR_INTENT_NAME = "intentName"
         private const val ATTR_RESOURCE = "resource"
+        private const val VAR_URL = "url"
 
         /**
          * Checks that this element has the expected parent; this catches
@@ -456,12 +485,12 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             val duplicate = !parameterNames.add(name)
             if (duplicate) {
                 val location = context.getLocation(
-                    parameter.getAttributeNodeNS(ACTIONS_URI, nameAttribute)
+                    parameter.getAttributeNode(nameAttribute)
                 )
 
                 var prev = getPreviousTagByName(parameter, parameter.tagName)
                 while (prev != null) {
-                    val attr = prev.getAttributeNodeNS(ACTIONS_URI, nameAttribute)
+                    val attr = prev.getAttributeNode(nameAttribute)
                     if (attr?.value == name) {
                         location.secondary = context.getLocation(attr)
                         break
@@ -487,19 +516,16 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         private fun checkRequiredAttribute(
             context: XmlContext,
             element: Element,
-            namespace: String,
             attribute: String,
             allowBlank: Boolean = false,
             allowReference: Boolean = true
         ): String? {
-            val value = element.getAttributeNS(namespace, attribute)
+            val value = element.getAttribute(attribute)
             if (value != null && (allowBlank || !value.isBlank())) {
                 if (!allowReference && value.startsWith(PREFIX_RESOURCE_REF)) {
                     context.report(
                         ISSUE, element, context.getLocation(
-                            element.getAttributeNodeNS(
-                                namespace, attribute
-                            )
+                            element.getAttributeNode(attribute)
                         ),
                         "`$attribute` must be a value, not a reference"
                     )
@@ -507,31 +533,12 @@ class ActionsXmlDetector : ResourceXmlDetector() {
 
                 return value
             }
-            var fullAttribute = attribute
-            var prefix: String? = element.ownerDocument.lookupNamespaceURI(namespace)
-            if (prefix == null) {
-                val root = element.ownerDocument.documentElement
-                val attributes = root.attributes
-                var i = 0
-                val n = attributes.length
-                while (i < n) {
-                    val a = attributes.item(i) as Attr
-                    if (a.name.startsWith(XMLNS_PREFIX) && namespace == a.value) {
-                        prefix = a.name.substring(XMLNS_PREFIX.length)
-                        break
-                    }
-                    i++
-                }
-            }
-            if (prefix != null) {
-                fullAttribute = prefix + ':'.toString() + fullAttribute
-            }
-            val fix = LintFix.create().set().todo(namespace, attribute).build()
+            val fix = LintFix.create().set().todo(null, attribute).build()
             context.report(
                 ISSUE,
                 element,
                 context.getElementLocation(element),
-                "Missing required attribute `$fullAttribute`",
+                "Missing required attribute `$attribute`",
                 fix
             )
             return null

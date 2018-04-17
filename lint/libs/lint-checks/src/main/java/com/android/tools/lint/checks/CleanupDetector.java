@@ -350,7 +350,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         AtomicBoolean recycled = new AtomicBoolean(false);
         AtomicBoolean escapes = new AtomicBoolean(false);
         DataFlowAnalyzer visitor =
-                new DataFlowAnalyzer(Collections.singleton(node)) {
+                new DataFlowAnalyzer(Collections.singleton(node), Collections.emptyList()) {
                     @Override
                     public void receiver(@NotNull UCallExpression call) {
                         if (isCleanup(call)) {

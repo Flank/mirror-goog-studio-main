@@ -30,28 +30,24 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                        xmlns:actions="http://schemas.android.com/apk/res-auto"
-                        actions:supportedLocales="en-US,en-GB,es-ES,es-419">
-
-                    <action
-                            actions:intentName="com.taxiapp.my.GET_ESTIMATE">
+                <actions supportedLocales="en-US,en-GB,es-ES,es-419">
+                    <action intentName="com.taxiapp.my.GET_ESTIMATE">
                         <action-display
-                                actions:labelTemplate="@array/rideActionLabel"
-                                actions:icon="@mipmap/rideActionIcon"/>
+                                labelTemplate="@array/rideActionLabel"
+                                icon="@mipmap/rideActionIcon"/>
 
                         <fulfillment
-                                actions:urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
+                                urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
                             <parameter-mapping
-                                    actions:intentParameter="destination.latitude"
-                                    actions:urlParameter="destLat"/>
+                                    intentParameter="destination.latitude"
+                                    urlParameter="destLat"/>
                             <parameter-mapping
-                                    actions:intentParameter="destination.longitude"
-                                    actions:urlParameter="destLong"/>
+                                    intentParameter="destination.longitude"
+                                    urlParameter="destLong"/>
                         </fulfillment>
 
-                        <parameter actions:name="destination" actions:type="shared.types.Location"/>
-                        <parameter actions:name="serviceClass" actions:type="com.taxiapp.types.ServiceClass"/>
+                        <parameter name="destination" type="shared.types.Location"/>
+                        <parameter name="serviceClass" type="com.taxiapp.types.ServiceClass"/>
                     </action>
                 </actions>
                 """
@@ -80,30 +76,28 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="actions.intent.PLAY_MUSIC">
-                        <fulfillment actions:urlTemplate=
-                                             "http://www.example.com/artist/{artist_name}?autoplay=true">
+                <actions>
+                    <action intentName="actions.intent.PLAY_MUSIC">
+                        <fulfillment urlTemplate="http://www.example.com/artist/{artist_name}?autoplay=true">
                             <parameter-mapping
-                                    actions:intentParameter="artist.name"
-                                    actions:urlParameter="artist_name"
-                                    actions:required="true"/>
+                                    intentParameter="artist.name"
+                                    urlParameter="artist_name"
+                                    required="true"/>
                         </fulfillment>
-                        <fulfillment actions:urlTemplate=
-                                             "http://www.example.com/album/{album_name}?autoplay=true">
+                        <fulfillment urlTemplate="http://www.example.com/album/{album_name}?autoplay=true">
                             <parameter-mapping
-                                    actions:intentParameter="album.name"
-                                    actions:urlParameter="album_name"
-                                    actions:required="true"/>
+                                    intentParameter="album.name"
+                                    urlParameter="album_name"
+                                    required="true"/>
                         </fulfillment>
-                        <fulfillment actions:urlTemplate=
+                        <fulfillment urlTemplate=
                                              "http://www.example.com/song/{song_name}?autoplay=true">
                             <parameter-mapping
-                                    actions:intentParameter="song.name"
-                                    actions:urlParameter="song_name"
-                                    actions:required="true"/>
+                                    intentParameter="song.name"
+                                    urlParameter="song_name"
+                                    required="true"/>
                         </fulfillment>
-                        <fulfillment actions:urlTemplate="http://www.example.com/music/home">
+                        <fulfillment urlTemplate="http://www.example.com/music/home">
                         </fulfillment>
                     </action>
                 </actions>
@@ -114,7 +108,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
 
     fun testMissingManifestRegistration() {
         lint().files(
-            manifest("""
+            manifest(
+                """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                      package="com.example.helloworld"
                      android:versionCode="1"
@@ -126,14 +121,14 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
                        </activity>
                    </application>
                 </manifest>
-                """).indented(),
+                """
+            ).indented(),
             xml(
                 "res/xml/my_actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="name1">
-                        <fulfillment actions:urlTemplate="foo"/>
+                <actions>
+                    <action intentName="name1">
+                        <fulfillment urlTemplate="foo"/>
                     </action>
                 </actions>
                 """
@@ -141,7 +136,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/my_actions.xml:1: Error: This action resource should be registered in the manifest under the <application> tag as <meta-data android:name="com.google.android.actions" android:resource="@xml/my_actions" /> [ValidActionsXml]
-            <actions
+            <actions>
              ~~~~~~~
             1 errors, 0 warnings
             """
@@ -153,9 +148,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto"
-                    actions:supportedLocales="en-US,en-GB,es-ES,es-419" />
+                <actions supportedLocales="en-US,en-GB,es-ES,es-419" />
                 """
             ).indented()
         ).run().expectClean()
@@ -166,15 +159,14 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto"
-                    actions:supportedLocales="en-US,en-GB,abcdefg,es-419" />
+                <actions supportedLocales="en-US,en-GB,abcdefg,es-419" />
                 """
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:2: Error: Invalid BCP-47 locale qualifier abcdefg [ValidActionsXml]
-                actions:supportedLocales="en-US,en-GB,abcdefg,es-419" />
-                                                      ~~~~~~~
+            res/xml/actions.xml:1: Error: Invalid BCP-47 locale qualifier abcdefg [ValidActionsXml]
+            <actions supportedLocales="en-US,en-GB,abcdefg,es-419" />
+                                                   ~~~~~~~
             1 errors, 0 warnings
             """
         )
@@ -185,11 +177,9 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto">
-
-                    <action actions:intentName="name1">
-                        <action actions:intentName="name2">
+                <actions>
+                    <action intentName="name1">
+                        <action intentName="name2">
                         </action>
                     </action>
                 </actions>
@@ -197,8 +187,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:5: Error: Nesting <action> is not allowed [ValidActionsXml]
-                    <action actions:intentName="name2">
+            res/xml/actions.xml:3: Error: Nesting <action> is not allowed [ValidActionsXml]
+                    <action intentName="name2">
                      ~~~~~~
             1 errors, 0 warnings
             """
@@ -210,12 +200,10 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto">
-
-                    <action actions:intentName="name1">
-                        <fulfillment actions:urlTemplate="foo">
-                            <fulfillment actions:urlTemplate="bar"/>
+                <actions>
+                    <action intentName="name1">
+                        <fulfillment urlTemplate="foo">
+                            <fulfillment urlTemplate="bar"/>
                         </fulfillment>
                     </action>
                 </actions>
@@ -223,8 +211,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:6: Error: Nesting <fulfillment> is not allowed [ValidActionsXml]
-                        <fulfillment actions:urlTemplate="bar"/>
+            res/xml/actions.xml:4: Error: Nesting <fulfillment> is not allowed [ValidActionsXml]
+                        <fulfillment urlTemplate="bar"/>
                          ~~~~~~~~~~~
             1 errors, 0 warnings
             """
@@ -236,13 +224,13 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <action xmlns:actions="http://schemas.android.com/apk/res-auto"/>
+                <action />
                 """
             ).indented()
         ).run().expect(
             """
             res/xml/actions.xml:1: Error: <action> must be inside <actions> [ValidActionsXml]
-            <action xmlns:actions="http://schemas.android.com/apk/res-auto"/>
+            <action />
              ~~~~~~
             1 errors, 0 warnings
             """
@@ -254,15 +242,15 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <fulfillment actions:urlTemplate="foo"/>
+                <actions>
+                    <fulfillment urlTemplate="foo"/>
                 </actions>
                 """
             ).indented()
         ).run().expect(
             """
             res/xml/actions.xml:2: Error: <fulfillment> must be inside <action> [ValidActionsXml]
-                <fulfillment actions:urlTemplate="foo"/>
+                <fulfillment urlTemplate="foo"/>
                  ~~~~~~~~~~~
             1 errors, 0 warnings
             """
@@ -274,15 +262,15 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <parameter actions:name="foo"/>
+                <actions>
+                    <parameter name="foo"/>
                 </actions>
                 """
             ).indented()
         ).run().expect(
             """
             res/xml/actions.xml:2: Error: <parameter> must be inside <action> [ValidActionsXml]
-                <parameter actions:name="foo"/>
+                <parameter name="foo"/>
                  ~~~~~~~~~
             1 errors, 0 warnings
             """
@@ -294,10 +282,10 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <fulfillment actions:urlTemplate="foo">
-                            <parameter actions:name="foo"/>
+                <actions>
+                    <action intentName="ok">
+                        <fulfillment urlTemplate="foo">
+                            <parameter name="foo"/>
                         </fulfillment>
                     </action>
                 </actions>
@@ -306,7 +294,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/actions.xml:4: Error: <parameter> must be inside <action> [ValidActionsXml]
-                        <parameter actions:name="foo"/>
+                        <parameter name="foo"/>
                          ~~~~~~~~~
             1 errors, 0 warnings
             """
@@ -318,15 +306,15 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <parameter-mapping actions:intentName="foo"/>
+                <actions>
+                    <parameter-mapping intentName="foo"/>
                 </actions>
                 """
             ).indented()
         ).run().expect(
             """
             res/xml/actions.xml:2: Error: <parameter-mapping> must be inside <fulfillment> [ValidActionsXml]
-                <parameter-mapping actions:intentName="foo"/>
+                <parameter-mapping intentName="foo"/>
                  ~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
@@ -338,10 +326,10 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
+                <actions>
                   <action-display
-                      actions:labelTemplate="@array/rideActionLabel"
-                      actions:icon="@mipmap/rideActionIcon" />
+                      labelTemplate="@array/rideActionLabel"
+                      icon="@mipmap/rideActionIcon" />
                 </actions>
                 """
             ).indented()
@@ -360,64 +348,85 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto">
-
+                <actions>
                     <action>
-                        <fulfillment actions:urlTemplate="foo">
+                        <fulfillment urlTemplate="foo">
                         </fulfillment>
-                    </action>
-                </actions>
-                """
-            ).indented()
-        ).run().expect("""
-            res/xml/actions.xml:4: Error: Missing required attribute actions:intentName [ValidActionsXml]
-                <action>
-                 ~~~~~~
-            1 errors, 0 warnings
-            """
-        ).expectFixDiffs(
-            """
-            Fix for res/xml/actions.xml line 4: Set intentName:
-            @@ -4 +4
-            -     <action>
-            +     <action actions:intentName="[TODO]|" >
-            """
-        )
-    }
-
-    fun testActionMissesFulfillment() {
-        lint().files(
-            xml(
-                "res/xml/actions.xml",
-                """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <fulfillment actions:urlTemplate="foo">
-                        </fulfillment>
-                    </action>
-                    <action actions:intentName="wrong">
                     </action>
                 </actions>
                 """
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:6: Error: <action> must declare a <fulfillment> [ValidActionsXml]
-                <action actions:intentName="wrong">
+            res/xml/actions.xml:2: Error: Missing required attribute intentName [ValidActionsXml]
+                <action>
+                 ~~~~~~
+            1 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for res/xml/actions.xml line 2: Set intentName:
+            @@ -4 +4
+            -     <action>
+            +     <action intentName="[TODO]|" >
+            """
+        )
+    }
+
+    fun testActionMissesFulfillmentOrEntitySetReference() {
+        lint().files(
+            xml(
+                "res/xml/actions.xml",
+                """
+                <actions>
+                    <action intentName="ok">
+                        <fulfillment urlTemplate="foo">
+                        </fulfillment>
+                    </action>
+                    <action intentName="wrong">
+                    </action>
+                </actions>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/xml/actions.xml:6: Error: <action> must declare a <fulfillment> or a <parameter> with an <entity-set-reference> [ValidActionsXml]
+                <action intentName="wrong">
                  ~~~~~~
             1 errors, 0 warnings
             """
         )
     }
 
-    fun testFulfillmentMissesurlTemplate() {
+    fun testActionProvidesEntitySetReferenceInsteadOfFulfillment() {
         lint().files(
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
+                <actions>
+                    <action intentName="ok">
+                        <parameter
+                            name="song"
+                            type="org.schema.MusicRecording">
+                          <entity-set-reference
+                              type="org.schema.MusicRecording"
+                              actionType="schema.org/PlayAction"
+                              urlFilter="https://provider.com/track/.*" />
+                        </parameter>
+                    </action>
+                </actions>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testFulfillmentMissesUrlTemplate() {
+        lint().files(
+            xml(
+                "res/xml/actions.xml",
+                """
+                <actions>
+                    <action intentName="ok">
                         <fulfillment />
                     </action>
                 </actions>
@@ -425,7 +434,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:3: Error: Missing required attribute actions:urlTemplate [ValidActionsXml]
+            res/xml/actions.xml:3: Error: Missing required attribute urlTemplate [ValidActionsXml]
                     <fulfillment />
                     ~~~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -435,7 +444,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             Fix for res/xml/actions.xml line 3: Set urlTemplate:
             @@ -5 +5
             -         <fulfillment />
-            +         <fulfillment actions:urlTemplate="[TODO]|" />
+            +         <fulfillment urlTemplate="[TODO]|" />
             """
         )
     }
@@ -445,42 +454,19 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
+                <actions>
+                    <action intentName="ok">
                         <parameter />
-                        <fulfillment actions:urlTemplate="foo"/>
+                        <fulfillment urlTemplate="foo"/>
                     </action>
                 </actions>
                 """
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:3: Error: Missing required attribute actions:name [ValidActionsXml]
+            res/xml/actions.xml:3: Error: Missing required attribute name [ValidActionsXml]
                     <parameter />
                     ~~~~~~~~~~~~~
-            1 errors, 0 warnings
-            """
-        )
-    }
-
-    fun testParameterMissingType() {
-        lint().files(
-            xml(
-                "res/xml/actions.xml",
-                """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <parameter actions:name="name" />
-                        <fulfillment actions:urlTemplate="foo"/>
-                    </action>
-                </actions>
-                """
-            ).indented()
-        ).run().expect(
-            """
-            res/xml/actions.xml:3: Error: Missing required attribute actions:type [ValidActionsXml]
-                    <parameter actions:name="name" />
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )
@@ -491,13 +477,13 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <parameter actions:name="name1" actions:type="mytype" />
-                        <parameter actions:name="name2" actions:type="mytype" />
-                        <parameter actions:name="name3" actions:type="mytype" />
-                        <parameter actions:name="name1" actions:type="mytype" />
-                        <fulfillment actions:urlTemplate="foo"/>
+                <actions>
+                    <action intentName="ok">
+                        <parameter name="name1" type="mytype" />
+                        <parameter name="name2" type="mytype" />
+                        <parameter name="name3" type="mytype" />
+                        <parameter name="name1" type="mytype" />
+                        <fulfillment urlTemplate="foo"/>
                     </action>
                 </actions>
                 """
@@ -505,8 +491,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/actions.xml:6: Error: <action> contains two <parameter> elements with the same name, name1 [ValidActionsXml]
-                    <parameter actions:name="name1" actions:type="mytype" />
-                               ~~~~~~~~~~~~~~~~~~~~
+                    <parameter name="name1" type="mytype" />
+                               ~~~~~~~~~~~~
                 res/xml/actions.xml:3: <No location-specific message
             1 errors, 0 warnings
             """
@@ -518,9 +504,9 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <fulfillment actions:urlTemplate="foo">
+                <actions>
+                    <action intentName="ok">
+                        <fulfillment urlTemplate="foo">
                             <parameter-mapping />
                         </fulfillment>
                     </action>
@@ -529,7 +515,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:4: Error: Missing required attribute actions:intentParameter [ValidActionsXml]
+            res/xml/actions.xml:4: Error: Missing required attribute intentParameter [ValidActionsXml]
                         <parameter-mapping />
                         ~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -542,10 +528,10 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <fulfillment actions:urlTemplate="foo">
-                            <parameter-mapping actions:intentParameter="destination.longitude" />
+                <actions>
+                    <action intentName="ok">
+                        <fulfillment urlTemplate="foo">
+                            <parameter-mapping intentParameter="destination.longitude" />
                         </fulfillment>
                     </action>
                 </actions>
@@ -553,9 +539,9 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:4: Error: Missing required attribute actions:urlParameter [ValidActionsXml]
-                        <parameter-mapping actions:intentParameter="destination.longitude" />
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/xml/actions.xml:4: Error: Missing required attribute urlParameter [ValidActionsXml]
+                        <parameter-mapping intentParameter="destination.longitude" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )
@@ -566,18 +552,18 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="ok">
-                        <fulfillment actions:urlTemplate="{destLong1,destLong2,destLong3}">
+                <actions>
+                    <action intentName="ok">
+                        <fulfillment urlTemplate="{destLong1,destLong2,destLong3}">
                             <parameter-mapping
-                                actions:intentParameter="destination.longitude"
-                                actions:urlParameter="destLong1" />
+                                intentParameter="destination.longitude"
+                                urlParameter="destLong1" />
                             <parameter-mapping
-                                actions:intentParameter="other"
-                                actions:urlParameter="destLong2" />
+                                intentParameter="other"
+                                urlParameter="destLong2" />
                             <parameter-mapping
-                                actions:intentParameter="destination.longitude"
-                                actions:urlParameter="destLong3" />
+                                intentParameter="destination.longitude"
+                                urlParameter="destLong3" />
                         </fulfillment>
                     </action>
                 </actions>
@@ -586,8 +572,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/actions.xml:11: Error: <fulfillment> contains two <parameter-mapping> elements with the same intentParameter, destination.longitude [ValidActionsXml]
-                            actions:intentParameter="destination.longitude"
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            intentParameter="destination.longitude"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 res/xml/actions.xml:5: <No location-specific message
             1 errors, 0 warnings
             """
@@ -599,14 +585,13 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto">
+                <actions>
 
-                    <action actions:intentName="name1">
-                        <fulfillment actions:urlTemplate="@string/foo">
+                    <action intentName="name1">
+                        <fulfillment urlTemplate="@string/foo">
                           <parameter-mapping
-                              actions:intentParameter="@string/destination"
-                              actions:urlParameter="@string/parameter" />
+                              intentParameter="@string/destination"
+                              urlParameter="@string/parameter" />
                         </fulfillment>
                     </action>
                 </actions>
@@ -614,15 +599,15 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            res/xml/actions.xml:5: Error: urlTemplate must be a value, not a reference [ValidActionsXml]
-                    <fulfillment actions:urlTemplate="@string/foo">
-                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/xml/actions.xml:7: Error: intentParameter must be a value, not a reference [ValidActionsXml]
-                          actions:intentParameter="@string/destination"
-                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/xml/actions.xml:8: Error: urlParameter must be a value, not a reference [ValidActionsXml]
-                          actions:urlParameter="@string/parameter" />
-                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/xml/actions.xml:4: Error: urlTemplate must be a value, not a reference [ValidActionsXml]
+                    <fulfillment urlTemplate="@string/foo">
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/xml/actions.xml:6: Error: intentParameter must be a value, not a reference [ValidActionsXml]
+                          intentParameter="@string/destination"
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/xml/actions.xml:7: Error: urlParameter must be a value, not a reference [ValidActionsXml]
+                          urlParameter="@string/parameter" />
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             3 errors, 0 warnings
             """
         )
@@ -633,22 +618,21 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions
-                    xmlns:actions="http://schemas.android.com/apk/res-auto">
+                <actions>
                     <foo>
                         <foo/>
                     </foo>
-                    <action actions:intentName="name1">
+                    <action intentName="name1">
                         <bar>
                             <bar/>
                         </bar>
-                        <fulfillment actions:urlTemplate="{parameter}">
+                        <fulfillment urlTemplate="{parameter}">
                         <bar>
                             <bar/>
                         </bar>
                         <parameter-mapping
-                              actions:intentParameter="destination"
-                              actions:urlParameter="parameter" />
+                              intentParameter="destination"
+                              urlParameter="parameter" />
                         </fulfillment>
                     </action>
                 </actions>
@@ -670,7 +654,10 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         assertEquals("[hello, x, y]", getUriTemplateParameters("{x,hello,y}").sorted().toString())
         assertEquals("[path]", getUriTemplateParameters("{+path:6}/here").sorted().toString())
         assertEquals("[path]", getUriTemplateParameters("{#path:6}/here").sorted().toString())
-        assertEquals("[list, path]", getUriTemplateParameters("prefix{/list*,path:4}suffix").sorted().toString())
+        assertEquals(
+            "[list, path]",
+            getUriTemplateParameters("prefix{/list*,path:4}suffix").sorted().toString()
+        )
         assertEquals("[who]", getUriTemplateParameters("{.who,who}").sorted().toString())
         assertEquals("[who]", getUriTemplateParameters("{.who,who}").sorted().toString())
         assertEquals("[who]", getUriTemplateParameters("{.who,who}").sorted().toString())
@@ -681,8 +668,14 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         assertEquals("[empty, x, y]", getUriTemplateParameters("{?x,y,empty}").sorted().toString())
         assertEquals("[empty, x, y]", getUriTemplateParameters("{&x,y,empty}").sorted().toString())
 
-        assertEquals("[bar, foo]", getUriTemplateParameters("a{foo*}b{+bar:5}c").sorted().toString())
-        assertEquals("[count, two]", getUriTemplateParameters("a{count}b{two}c").sorted().toString())
+        assertEquals(
+            "[bar, foo]",
+            getUriTemplateParameters("a{foo*}b{+bar:5}c").sorted().toString()
+        )
+        assertEquals(
+            "[count, two]",
+            getUriTemplateParameters("a{count}b{two}c").sorted().toString()
+        )
 
         // Malformed:
         assertEquals("[foo]", getUriTemplateParameters("a{foo,}").sorted().toString())
@@ -694,22 +687,27 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="com.taxiapp.my.GET_ESTIMATE">
-                    <fulfillment actions:urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong,missingParameter}">
-                      <parameter-mapping
-                          actions:intentParameter="destination.latitude"
-                          actions:urlParameter="destLat" />
-                      <parameter-mapping
-                          actions:intentParameter="destination.longitude"
-                          actions:urlParameter="destLong" />
-                      <parameter-mapping
-                          actions:intentParameter="destination.extra"
-                          actions:urlParameter="extraParameter" />
-                    </fulfillment>
-
-                      <parameter actions:name="destination" actions:type="shared.types.Location" />
-                      <parameter actions:name="serviceClass" actions:type="com.taxiapp.types.ServiceClass" />
+                <actions>
+                    <action intentName="com.taxiapp.my.GET_ESTIMATE">
+                        <fulfillment urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong,missingParameter,url}">
+                            <parameter-mapping
+                                intentParameter="destination.latitude"
+                                urlParameter="destLat" />
+                            <parameter-mapping
+                                intentParameter="destination.longitude"
+                                urlParameter="destLong" />
+                            <parameter-mapping
+                                intentParameter="destination.extra"
+                                urlParameter="extraParameter" />
+                        </fulfillment>
+                        <parameter name="destination" type="shared.types.Location" />
+                        <parameter name="serviceClass" type="com.taxiapp.types.ServiceClass" />
+                        <parameter name="song" type="org.schema.MusicRecording">
+                            <entity-set-reference
+                                type="org.schema.MusicRecording"
+                                actionType="schema.org/PlayAction"
+                                urlFilter="https://provider.com/track/.*" />
+                        </parameter>
                     </action>
                 </actions>
                 """
@@ -717,11 +715,11 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/actions.xml:3: Error: The parameter missingParameter is not defined as a <parameter-mapping> element below [ValidActionsXml]
-                <fulfillment actions:urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong,missingParameter}">
-                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    <fulfillment urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong,missingParameter,url}">
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             res/xml/actions.xml:10: Error: The parameter extraParameter is not present in the urlTemplate [ValidActionsXml]
-                  <parameter-mapping
-                   ~~~~~~~~~~~~~~~~~
+                        <parameter-mapping
+                         ~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
             """
         )
@@ -732,28 +730,28 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="actions.intent.PLAY_MUSIC">
-                        <fulfillment actions:urlTemplate=
+                <actions>
+                    <action intentName="actions.intent.PLAY_MUSIC">
+                        <fulfillment urlTemplate=
                                              "http://www.example.com/artist/{artist_name}?autoplay=true">
                             <parameter-mapping
-                                    actions:intentParameter="artist.name"
-                                    actions:urlParameter="artist_name"
-                                    actions:required="true"/>
+                                    intentParameter="artist.name"
+                                    urlParameter="artist_name"
+                                    required="true"/>
                         </fulfillment>
-                        <fulfillment actions:urlTemplate=
+                        <fulfillment urlTemplate=
                                              "http://www.example.com/album/{album_name}?autoplay=true">
                             <parameter-mapping
-                                    actions:intentParameter="album.name"
-                                    actions:urlParameter="album_name"
-                                    actions:required="true"/>
+                                    intentParameter="album.name"
+                                    urlParameter="album_name"
+                                    required="true"/>
                         </fulfillment>
-                        <fulfillment actions:urlTemplate=
+                        <fulfillment urlTemplate=
                                              "http://www.example.com/song/{song_name}?autoplay=true">
                             <parameter-mapping
-                                    actions:intentParameter="song.name"
-                                    actions:urlParameter="song_name"
-                                    actions:required="true"/>
+                                    intentParameter="song.name"
+                                    urlParameter="song_name"
+                                    required="true"/>
                         </fulfillment>
                     </action>
                 </actions>
@@ -762,7 +760,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/actions.xml:2: Error: At least one <fulfillment> urlTemplate must not be required [ValidActionsXml]
-                <action actions:intentName="actions.intent.PLAY_MUSIC">
+                <action intentName="actions.intent.PLAY_MUSIC">
                  ~~~~~~
             1 errors, 0 warnings
             """
@@ -774,9 +772,9 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             xml(
                 "res/xml/actions.xml",
                 """
-                <actions xmlns:actions="http://schemas.android.com/apk/res-auto">
-                    <action actions:intentName="com.taxiapp.my.GET_ESTIMATE">
-                    <fulfillment actions:urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
+                <actions>
+                    <action intentName="com.taxiapp.my.GET_ESTIMATE">
+                    <fulfillment urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
                     </fulfillment>
                     </action>
                 </actions>
@@ -785,8 +783,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
             res/xml/actions.xml:3: Error: The parameters destLat and destLong are not defined as <parameter-mapping> elements below [ValidActionsXml]
-                <fulfillment actions:urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
-                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                <fulfillment urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )

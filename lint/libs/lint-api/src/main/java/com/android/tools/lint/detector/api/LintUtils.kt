@@ -2077,8 +2077,8 @@ object LintUtils {
 
     @JvmStatic
     @Deprecated(
-      "Use package function instead",
-      replaceWith = ReplaceWith("com.android.tools.lint.detector.api.getFileNameWithParent(client, file)")
+        "Use package function instead",
+        replaceWith = ReplaceWith("com.android.tools.lint.detector.api.getFileNameWithParent(client, file)")
     )
     fun getFileNameWithParent(client: LintClient, file: PathString): String {
         return com.android.tools.lint.detector.api.getFileNameWithParent(client, file)

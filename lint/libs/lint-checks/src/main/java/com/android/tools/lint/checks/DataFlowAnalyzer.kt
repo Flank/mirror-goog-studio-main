@@ -29,7 +29,6 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.ULocalVariable
-import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
@@ -42,7 +41,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /** Helper class for analyzing data flow */
 abstract class DataFlowAnalyzer(
-    val initial: Collection<UElement>
+    val initial: Collection<UElement>,
+    initialReferences: Collection<PsiVariable> = emptyList()
 ) : AbstractUastVisitor() {
 
     /** The instance being tracked is the receiver for a method call */
@@ -65,60 +65,49 @@ abstract class DataFlowAnalyzer(
     protected val instances: MutableSet<UElement> = Sets.newIdentityHashSet<UElement>()
 
     init {
+        if (references.isEmpty()) {
+            references.addAll(initialReferences)
+        }
         if (instances.isEmpty()) {
             instances.addAll(initial)
             for (element in initial) {
-                var parent = element.uastParent
-                var prev = element
-                while (parent != null) {
-                    if (parent is UParenthesizedExpression) {
-                        parent = parent.uastParent // don't reset prev
-                        continue
-                    }
-                    if (parent is UQualifiedReferenceExpression && parent.receiver === prev) {
-                        val selector = parent.selector
-                        if (selector is UCallExpression && returnsSelf(selector)) {
-                            instances.add(parent)
-                            instances.add(selector)
-                        } else {
-                            break
-                        }
-                    } else if (parent is UQualifiedReferenceExpression && parent.selector == prev) {
+                if (element is UCallExpression) {
+                    val parent = element.uastParent
+                    if (parent is UQualifiedReferenceExpression && parent.selector == element) {
                         instances.add(parent)
-                    } else if (parent is ULocalVariable) {
-                        if (prev === parent.uastInitializer) {
-                            (parent.sourcePsi as? PsiVariable)?.let { references.add(it) }
-                        } else {
-                            break
-                        }
-                    } else {
-                        if (element is UCallExpression) {
-                            val boundVariable = getVariableElement(element)
-                            if (boundVariable != null) {
-                                references.add(boundVariable)
-                            }
-                        }
-
-                        break
                     }
-                    prev = parent
-                    parent = parent.uastParent
                 }
             }
         }
     }
 
     override fun visitCallExpression(node: UCallExpression): Boolean {
-        node.receiver?.let { receiver ->
-            if (instances.contains(node)) {
+        val receiver = node.receiver
+        if (receiver != null) {
+            var matched = false
+            if (instances.contains(receiver)) {
+                matched = true
+            } else {
+                val resolved = receiver.tryResolve()
+                if (resolved != null) {
+                    if (references.contains(resolved)) {
+                        matched = true
+                    }
+                }
+            }
+            if (matched) {
                 if (!initial.contains(node)) {
                     receiver(node)
                 }
-            } else {
-                receiver.tryResolve().let { resolved ->
-                    if (references.contains(resolved)) {
-                        if (!initial.contains(node)) {
-                            receiver(node)
+                if (returnsSelf(node)) {
+                    instances.add(node)
+                    val parent = node.uastParent as? UQualifiedReferenceExpression
+                    if (parent != null) {
+                        instances.add(parent)
+                        val parentParent = parent.uastParent as? UQualifiedReferenceExpression
+                        val chained = parentParent?.selector
+                        if (chained != null) {
+                            instances.add(chained)
                         }
                     }
                 }
@@ -141,7 +130,7 @@ abstract class DataFlowAnalyzer(
         return super.visitCallExpression(node)
     }
 
-    override fun visitVariable(node: UVariable): Boolean {
+    override fun afterVisitVariable(node: UVariable) {
         if (node is ULocalVariable) {
             val variable = node.sourcePsi as? PsiLocalVariable ?: node
             val initializer = node.uastInitializer
@@ -157,13 +146,11 @@ abstract class DataFlowAnalyzer(
                 }
             }
         }
-
-        return super.visitVariable(node)
     }
 
-    override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
+    override fun afterVisitBinaryExpression(node: UBinaryExpression) {
         if (!node.isAssignment()) {
-            return super.visitBinaryExpression(node)
+            return
         }
 
         // TEMPORARILY DISABLED; see testDatabaseCursorReassignment
@@ -199,11 +186,9 @@ abstract class DataFlowAnalyzer(
                 references.remove(lhs)
             }
         }
-
-        return super.visitBinaryExpression(node)
     }
 
-    override fun visitReturnExpression(node: UReturnExpression): Boolean {
+    override fun afterVisitReturnExpression(node: UReturnExpression) {
         val returnValue = node.returnExpression
         if (returnValue != null) {
             if (instances.contains(returnValue)) {
@@ -215,8 +200,17 @@ abstract class DataFlowAnalyzer(
                 }
             }
         }
+    }
 
-        return super.visitReturnExpression(node)
+    /**
+     * Tries to guess whether the given method call returns self.
+     * This is intended to be able to tell that in a constructor
+     * call chain foo().bar().baz() is still invoking methods on the
+     * foo instance.
+     */
+    open fun returnsSelf(call: UCallExpression): Boolean {
+        // Heuristic: the return method is the same type as the class
+        return (call.returnType as? PsiClassType)?.resolve() == call.resolve()?.containingClass
     }
 
     companion object {
@@ -274,7 +268,8 @@ abstract class DataFlowAnalyzer(
                 // and here we want to record "transaction", not "var8633f9d5", as the variable
                 // to track.
                 if (parent.uastParent is UDeclarationsExpression &&
-                    parent.uastParent!!.uastParent is UExpressionList) {
+                    parent.uastParent!!.uastParent is UExpressionList
+                ) {
                     val exp = parent.uastParent!!.uastParent as UExpressionList
                     val kind = exp.kind
                     if (kind.name == "elvis" && exp.uastParent is UVariable) {
@@ -286,17 +281,6 @@ abstract class DataFlowAnalyzer(
             }
 
             return null
-        }
-
-        /**
-         * Tries to guess whether the given method call returns self.
-         * This is intended to be able to tell that in a constructor
-         * call chain foo().bar().baz() is still invoking methods on the
-         * foo instance.
-         */
-        fun returnsSelf(call: UCallExpression): Boolean {
-            // Heuristic: the return method is the same type as the class
-            return (call.returnType as? PsiClassType)?.resolve() == call.resolve()?.containingClass
         }
     }
 }
