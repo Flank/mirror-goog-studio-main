@@ -54,4 +54,11 @@ open class BaseAppModuleExtension(
 ) {
 
     var dynamicFeatures: MutableSet<String> = mutableSetOf()
+
+    val bundle: BundleOptions =
+        project.objects.newInstance(
+            BundleOptions::class.java,
+            project.objects,
+            extraModelInfo.deprecationReporter
+        )
 }

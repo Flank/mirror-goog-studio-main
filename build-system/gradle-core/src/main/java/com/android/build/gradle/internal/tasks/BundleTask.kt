@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -25,13 +26,13 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
-import com.android.tools.build.bundletool.model.AppBundle
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -74,6 +75,10 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
 
+    @get:Nested
+    lateinit var bundleOptions: BundleOptions
+        private set
+
     @get:OutputFile
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var bundleFile: File
@@ -90,6 +95,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                     featureFiles = featureZips.files,
                     mainDexList = mainDexList?.singleFile(),
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
+                    bundleOptions = bundleOptions,
                     bundleFile = bundleFile
                 )
             )
@@ -101,6 +107,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         val featureFiles: Set<File>,
         val mainDexList: File?,
         val aaptOptionsNoCompress: Collection<String>,
+        val bundleOptions: BundleOptions,
         val bundleFile: File
     ) : Serializable
 
@@ -121,15 +128,23 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             val noCompressGlobsForBundle =
                 PackagingUtils.getNoCompressGlobsForBundle(params.aaptOptionsNoCompress)
+
+            val splitsConfig =  Config.SplitsConfig.newBuilder()
+                .splitBy(Config.SplitDimension.Value.ABI, params.bundleOptions.enableAbi)
+                .splitBy(Config.SplitDimension.Value.SCREEN_DENSITY, params.bundleOptions.enableDensity)
+                .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
+
             val bundleConfig =
                 Config.BundleConfig.newBuilder()
                     .setCompression(
                         Config.Compression.newBuilder()
                             .addAllUncompressedGlob(noCompressGlobsForBundle))
-                    .build()
+                    .setOptimizations(
+                        Config.Optimizations.newBuilder()
+                            .setSplitsConfig(splitsConfig))
 
             val command = BuildBundleCommand.builder()
-                .setBundleConfig(bundleConfig)
+                .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
 
@@ -148,6 +163,17 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             return children[0].toPath()
         }
     }
+
+    data class BundleOptions (
+        @get:Input
+        @get:Optional
+        val enableAbi: Boolean?,
+        @get:Input
+        @get:Optional
+        val enableDensity: Boolean?,
+        @get:Input
+        @get:Optional
+        val enableLanguage: Boolean?) : Serializable
 
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
 
@@ -171,6 +197,8 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             task.aaptOptionsNoCompress =
                     scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
+            task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+
             // The bundle uses the main dex list even if legacy multidex is not explicitly enabled.
             if (scope.needsMainDexList) {
                 task.mainDexList =
@@ -180,4 +208,28 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             }
         }
     }
+}
+
+private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
+    BundleTask.BundleOptions(
+        enableAbi = abi.enableSplit,
+        enableDensity = density.enableSplit,
+        enableLanguage = language.enableSplit
+    )
+
+/**
+ * convenience function to call [Config.SplitsConfig.Builder.addSplitDimension]
+ *
+ * @param flag the [Config.SplitDimension.Value] on which to set the value
+ * @param value if true, split is enbaled for the given flag. If null, no change is made and the
+ *              bundle-tool will decide the value.
+ */
+private fun Config.SplitsConfig.Builder.splitBy(
+    flag: Config.SplitDimension.Value,
+    value: Boolean?
+): Config.SplitsConfig.Builder {
+    value?.let {
+        addSplitDimension(Config.SplitDimension.newBuilder().setValue(flag).setNegate(!it))
+    }
+    return this
 }
