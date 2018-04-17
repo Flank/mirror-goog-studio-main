@@ -19,4 +19,7 @@ dependencies {
     // This raises the version used by androidLibToRefactor to be consistent with the app to avoid 
     // lint errors.
     implementation "com.android.support:preference-v7:${rootProject.supportLibVersion}"
+
+    // Add this dependency as regression test for https://issuetracker.google.com/78144836
+    implementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
 }
