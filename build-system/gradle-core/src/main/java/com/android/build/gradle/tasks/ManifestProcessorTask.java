@@ -16,6 +16,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
@@ -54,12 +55,10 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     /** The processed Manifests files folder. */
     @OutputDirectory
+    @InternalID(InternalArtifactType.MERGED_MANIFESTS)
+    @Replace(out = "")
     public Provider<Directory> getManifestOutputDirectory() {
         return manifestOutputDirectory;
-    }
-
-    public void setManifestOutputDirectory(Provider<Directory> manifestOutputFolder) {
-        this.manifestOutputDirectory = manifestOutputFolder;
     }
 
     @OutputDirectory
