@@ -190,11 +190,11 @@ private class Relocator(private val prefix: String): JarMerger.Relocator {
 }
 
 private class DexRelocator(private val prefix: String): JarMerger.Relocator {
-    val index = AtomicInteger()
+    val index = AtomicInteger(1)
     override fun relocate(entryPath: String): String {
         val entryIndex = index.getAndIncrement()
         if (entryPath.startsWith("classes")) {
-            return if (entryIndex == 0) {
+            return if (entryIndex == 1) {
                 "$prefix/classes.dex"
             } else {
                 "$prefix/classes$entryIndex.dex"

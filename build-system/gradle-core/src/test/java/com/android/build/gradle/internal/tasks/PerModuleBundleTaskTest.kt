@@ -125,8 +125,8 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(dexFiles.files).thenReturn(
             setOf(
                 createDex(dexFolder, "classes.dex"),
-                createDex(dexFolder, "classes1.dex"),
-                createDex(dexFolder, "classes2.dex")))
+                createDex(dexFolder, "classes2.dex"),
+                createDex(dexFolder, "classes3.dex")))
         task.zip()
         verifyOutputZip(task.outputDir.listFiles().single(), 3)
     }
@@ -138,10 +138,10 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(dexFiles.files).thenReturn(
             setOf(
                 createDex(dexFolder0, "classes.dex"),
-                createDex(dexFolder0, "classes1.dex"),
                 createDex(dexFolder0, "classes2.dex"),
+                createDex(dexFolder0, "classes3.dex"),
                 createDex(dexFolder1, "classes0.dex"),
-                createDex(dexFolder1, "classes1.dex")))
+                createDex(dexFolder1, "classes2.dex")))
         task.zip()
 
         // verify naming and shuffling of names.
@@ -154,10 +154,10 @@ class PerModuleBundleTaskTest {
         assertThat(zipFile.exists())
         val thatZip = ZipFileSubject.assertThatZip(zipFile)
         thatZip.contains("dex/classes.dex")
-        for (index in 1..(expectedNumberOfDexFiles-1)) {
+        for (index in 2..expectedNumberOfDexFiles) {
             thatZip.contains("dex/classes$index.dex")
         }
-        thatZip.doesNotContain("dex/classes$expectedNumberOfDexFiles.dex")
+        thatZip.doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
     }
 
     private fun createDex(folder: File, id: String): File {
