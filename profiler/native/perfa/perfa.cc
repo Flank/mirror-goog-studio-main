@@ -193,6 +193,26 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
             ir::MethodId(desc.c_str(), "stopMethodTracing", "()V"))) {
       Log::E("Error instrumenting Debug.stopMethodTracing");
     }
+
+    // Instrument fixTracePath() at entry.
+    slicer::MethodInstrumenter mi_fix_entry(dex_ir);
+    mi_fix_entry.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
+        "onFixTracePathEntry"));
+    if (!mi_fix_entry.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "fixTracePath", "(Ljava/lang/String;)Ljava/lang/String;"))) {
+      Log::E("Error instrumenting Debug.fixTracePath entry");
+    }
+
+    // Instrument fixTracePath() at exit.
+    slicer::MethodInstrumenter mi_fix_exit(dex_ir);
+    mi_fix_exit.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
+        "onFixTracePathExit"));
+    if (!mi_fix_exit.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "fixTracePath", "(Ljava/lang/String;)Ljava/lang/String;"))) {
+      Log::E("Error instrumenting Debug.fixTracePath exit");
+    }
   } else if (strcmp(name, "android/os/PowerManager") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
@@ -683,6 +703,12 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
         "sendStopOperation", "(I)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
+        "recordInputPath", "(ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
+        "recordOutputPath", "(ILjava/lang/String;)V");
   }
 
   BindJNIMethod(jni,
