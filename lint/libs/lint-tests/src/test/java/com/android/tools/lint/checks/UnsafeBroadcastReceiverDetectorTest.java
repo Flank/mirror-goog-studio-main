@@ -282,7 +282,7 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public static void testDbUpToDate() throws Exception {
+    public void testDbUpToDate() throws IOException {
         List<String> expected = getProtectedBroadcasts();
         if (expected == null) {
             return;

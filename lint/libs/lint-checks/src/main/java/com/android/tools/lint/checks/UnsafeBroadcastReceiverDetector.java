@@ -39,8 +39,8 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -150,17 +150,25 @@ public class UnsafeBroadcastReceiverDetector extends Detector
     static boolean isProtectedBroadcast(@NonNull String actionName) {
         switch (actionName) {
             case "EventConditionProvider.EVALUATE":
+            case "NotificationManagerService.TIMEOUT":
             case "ScheduleConditionProvider.EVALUATE":
+            case "SnoozeHelper.EVALUATE":
             case "action.cne.started":
             case "android.accounts.LOGIN_ACCOUNTS_CHANGED":
+            case "android.accounts.action.ACCOUNT_REMOVED":
+            case "android.accounts.action.VISIBLE_ACCOUNTS_CHANGED":
             case "android.app.action.ACTION_PASSWORD_CHANGED":
             case "android.app.action.ACTION_PASSWORD_EXPIRING":
             case "android.app.action.ACTION_PASSWORD_FAILED":
             case "android.app.action.ACTION_PASSWORD_SUCCEEDED":
+            case "android.app.action.AFFILIATED_PROFILE_TRANSFER_OWNERSHIP_COMPLETE":
+            case "android.app.action.APPLICATION_DELEGATION_SCOPES_CHANGED":
+            case "android.app.action.APP_BLOCK_STATE_CHANGED":
             case "android.app.action.BUGREPORT_FAILED":
             case "android.app.action.BUGREPORT_SHARE":
             case "android.app.action.BUGREPORT_SHARING_DECLINED":
             case "android.app.action.CHOOSE_PRIVATE_KEY_ALIAS":
+            case "android.app.action.DATA_SHARING_RESTRICTION_CHANGED":
             case "android.app.action.DEVICE_ADMIN_DISABLED":
             case "android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED":
             case "android.app.action.DEVICE_ADMIN_ENABLED":
@@ -174,12 +182,20 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.app.action.INTERRUPTION_FILTER_CHANGED_INTERNAL":
             case "android.app.action.LOCK_TASK_ENTERING":
             case "android.app.action.LOCK_TASK_EXITING":
+            case "android.app.action.MANAGED_USER_CREATED":
+            case "android.app.action.NETWORK_LOGS_AVAILABLE":
             case "android.app.action.NEXT_ALARM_CLOCK_CHANGED":
+            case "android.app.action.NOTIFICATION_CHANNEL_BLOCK_STATE_CHANGED":
+            case "android.app.action.NOTIFICATION_CHANNEL_GROUP_BLOCK_STATE_CHANGED":
             case "android.app.action.NOTIFICATION_POLICY_ACCESS_GRANTED_CHANGED":
             case "android.app.action.NOTIFICATION_POLICY_CHANGED":
             case "android.app.action.NOTIFY_PENDING_SYSTEM_UPDATE":
+            case "android.app.action.PROFILE_OWNER_CHANGED":
             case "android.app.action.SECURITY_LOGS_AVAILABLE":
+            case "android.app.action.SHOW_DEVICE_MONITORING_DIALOG":
+            case "android.app.action.STATSD_STARTED":
             case "android.app.action.SYSTEM_UPDATE_POLICY_CHANGED":
+            case "android.app.action.TRANSFER_OWNERSHIP_COMPLETE":
             case "android.app.backup.intent.CLEAR":
             case "android.app.backup.intent.INIT":
             case "android.app.backup.intent.RUN":
@@ -192,22 +208,29 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.bluetooth.a2dp-sink.profile.action.AUDIO_CONFIG_CHANGED":
             case "android.bluetooth.a2dp-sink.profile.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.a2dp-sink.profile.action.PLAYING_STATE_CHANGED":
+            case "android.bluetooth.a2dp.profile.action.ACTIVE_DEVICE_CHANGED":
+            case "android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED":
             case "android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.a2dp.profile.action.PLAYING_STATE_CHANGED":
             case "android.bluetooth.adapter.action.BLE_ACL_CONNECTED":
             case "android.bluetooth.adapter.action.BLE_ACL_DISCONNECTED":
             case "android.bluetooth.adapter.action.BLE_STATE_CHANGED":
+            case "android.bluetooth.adapter.action.BLUETOOTH_ADDRESS_CHANGED":
             case "android.bluetooth.adapter.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.adapter.action.DISCOVERY_FINISHED":
             case "android.bluetooth.adapter.action.DISCOVERY_STARTED":
             case "android.bluetooth.adapter.action.LOCAL_NAME_CHANGED":
             case "android.bluetooth.adapter.action.SCAN_MODE_CHANGED":
             case "android.bluetooth.adapter.action.STATE_CHANGED":
+            case "android.bluetooth.avrcp-controller.profile.action.BROWSE_CONNECTION_STATE_CHANGED":
             case "android.bluetooth.avrcp-controller.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.avrcp-controller.profile.action.FOLDER_LIST":
+            case "android.bluetooth.avrcp-controller.profile.action.TRACK_EVENT":
             case "android.bluetooth.device.action.ACL_CONNECTED":
             case "android.bluetooth.device.action.ACL_DISCONNECTED":
             case "android.bluetooth.device.action.ACL_DISCONNECT_REQUESTED":
             case "android.bluetooth.device.action.ALIAS_CHANGED":
+            case "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED":
             case "android.bluetooth.device.action.BOND_STATE_CHANGED":
             case "android.bluetooth.device.action.CLASS_CHANGED":
             case "android.bluetooth.device.action.CONNECTION_ACCESS_CANCEL":
@@ -224,7 +247,9 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.bluetooth.device.action.UUID":
             case "android.bluetooth.devicepicker.action.DEVICE_SELECTED":
             case "android.bluetooth.devicepicker.action.LAUNCH":
+            case "android.bluetooth.headset.action.HF_INDICATORS_VALUE_CHANGED":
             case "android.bluetooth.headset.action.VENDOR_SPECIFIC_HEADSET_EVENT":
+            case "android.bluetooth.headset.profile.action.ACTIVE_DEVICE_CHANGED":
             case "android.bluetooth.headset.profile.action.AUDIO_STATE_CHANGED":
             case "android.bluetooth.headset.profile.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.headsetclient.profile.action.AG_CALL_CHANGED":
@@ -233,16 +258,29 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.bluetooth.headsetclient.profile.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.headsetclient.profile.action.LAST_VTAG":
             case "android.bluetooth.headsetclient.profile.action.RESULT":
+            case "android.bluetooth.hearingaid.profile.action.ACTIVE_DEVICE_CHANGED":
+            case "android.bluetooth.hearingaid.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.hearingaid.profile.action.PLAYING_STATE_CHANGED":
+            case "android.bluetooth.hiddevice.profile.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.input.profile.action.CONNECTION_STATE_CHANGED":
             case "android.bluetooth.input.profile.action.HANDSHAKE":
+            case "android.bluetooth.input.profile.action.IDLE_TIME_CHANGED":
             case "android.bluetooth.input.profile.action.PROTOCOL_MODE_CHANGED":
             case "android.bluetooth.input.profile.action.REPORT":
             case "android.bluetooth.input.profile.action.VIRTUAL_UNPLUG_STATUS":
             case "android.bluetooth.intent.DISCOVERABLE_TIMEOUT":
             case "android.bluetooth.map.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.mapmce.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.mapmce.profile.action.MESSAGE_DELIVERED_SUCCESSFULLY":
+            case "android.bluetooth.mapmce.profile.action.MESSAGE_RECEIVED":
+            case "android.bluetooth.mapmce.profile.action.MESSAGE_SENT_SUCCESSFULLY":
             case "android.bluetooth.pan.profile.action.CONNECTION_STATE_CHANGED":
-            case "android.bluetooth.pbap.intent.action.PBAP_STATE_CHANGED":
+            case "android.bluetooth.pbap.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.pbapclient.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.bluetooth.sap.profile.action.CONNECTION_STATE_CHANGED":
+            case "android.btopp.intent.action.ACCEPT":
             case "android.btopp.intent.action.CONFIRM":
+            case "android.btopp.intent.action.DECLINE":
             case "android.btopp.intent.action.HIDE":
             case "android.btopp.intent.action.HIDE_COMPLETE":
             case "android.btopp.intent.action.INCOMING_FILE_NOTIFICATION":
@@ -257,6 +295,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.btopp.intent.action.WHITELIST_DEVICE":
             case "android.content.jobscheduler.JOB_DEADLINE_EXPIRED":
             case "android.content.jobscheduler.JOB_DELAY_EXPIRED":
+            case "android.content.pm.action.SESSION_COMMITTED":
             case "android.content.syncmanager.SYNC_ALARM":
             case "android.hardware.display.action.WIFI_DISPLAY_STATUS_CHANGED":
             case "android.hardware.usb.action.USB_ACCESSORY_ATTACHED":
@@ -266,15 +305,12 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.hardware.usb.action.USB_PORT_CHANGED":
             case "android.hardware.usb.action.USB_STATE":
             case "android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED":
-            case "android.intent.action.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED":
-            case "android.intent.action.ACTION_DEFAULT_SUBSCRIPTION_CHANGED":
-            case "android.telephony.action.DEFAULT_SMS_SUBSCRIPTION_CHANGED":
-            case "android.telephony.action.DEFAULT_SUBSCRIPTION_CHANGED":
             case "android.intent.action.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED":
             case "android.intent.action.ACTION_IDLE_MAINTENANCE_END":
             case "android.intent.action.ACTION_IDLE_MAINTENANCE_START":
             case "android.intent.action.ACTION_POWER_CONNECTED":
             case "android.intent.action.ACTION_POWER_DISCONNECTED":
+            case "android.intent.action.ACTION_PREFERRED_ACTIVITY_CHANGED":
             case "android.intent.action.ACTION_RADIO_OFF":
             case "android.intent.action.ACTION_SET_RADIO_CAPABILITY_DONE":
             case "android.intent.action.ACTION_SET_RADIO_CAPABILITY_FAILED":
@@ -288,6 +324,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.ANY_DATA_STATE":
             case "android.intent.action.APPLICATION_RESTRICTIONS_CHANGED":
             case "android.intent.action.BATTERY_CHANGED":
+            case "android.intent.action.BATTERY_LEVEL_CHANGED":
             case "android.intent.action.BATTERY_LOW":
             case "android.intent.action.BATTERY_OKAY":
             case "android.intent.action.BOOT_COMPLETED":
@@ -298,6 +335,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.CONFIGURATION_CHANGED":
             case "android.intent.action.CONTENT_CHANGED":
             case "android.intent.action.DATE_CHANGED":
+            case "android.intent.action.DEVICE_LOCKED_CHANGED":
             case "android.intent.action.DEVICE_STORAGE_FULL":
             case "android.intent.action.DEVICE_STORAGE_LOW":
             case "android.intent.action.DEVICE_STORAGE_NOT_FULL":
@@ -310,6 +348,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.DYNAMIC_SENSOR_CHANGED":
             case "android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE":
             case "android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE":
+            case "android.intent.action.GET_RESTRICTION_ENTRIES":
             case "android.intent.action.GLOBAL_BUTTON":
             case "android.intent.action.HDMI_PLUGGED":
             case "android.intent.action.HEADSET_PLUG":
@@ -335,7 +374,13 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.MEDIA_UNMOUNTED":
             case "android.intent.action.MEDIA_UNSHARED":
             case "android.intent.action.MY_PACKAGE_REPLACED":
+            case "android.intent.action.MY_PACKAGE_SUSPENDED":
+            case "android.intent.action.MY_PACKAGE_UNSUSPENDED":
             case "android.intent.action.NEW_OUTGOING_CALL":
+            case "android.intent.action.OVERLAY_ADDED":
+            case "android.intent.action.OVERLAY_CHANGED":
+            case "android.intent.action.OVERLAY_PRIORITY_CHANGED":
+            case "android.intent.action.OVERLAY_REMOVED":
             case "android.intent.action.PACKAGES_SUSPENDED":
             case "android.intent.action.PACKAGES_UNSUSPENDED":
             case "android.intent.action.PACKAGE_ADDED":
@@ -360,6 +405,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.REQUEST_PERMISSION":
             case "android.intent.action.SCREEN_OFF":
             case "android.intent.action.SCREEN_ON":
+            case "android.intent.action.SPLIT_CONFIGURATION_CHANGED":
             case "android.intent.action.SUBSCRIPTION_PHONE_STATE":
             case "android.intent.action.SUB_DEFAULT_CHANGED":
             case "android.intent.action.THERMAL_EVENT":
@@ -368,6 +414,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.TIME_TICK":
             case "android.intent.action.TWILIGHT_CHANGED":
             case "android.intent.action.UID_REMOVED":
+            case "android.intent.action.USER_ACTIVITY_NOTIFICATION":
             case "android.intent.action.USER_ADDED":
             case "android.intent.action.USER_BACKGROUND":
             case "android.intent.action.USER_FOREGROUND":
@@ -401,6 +448,11 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.media.VIBRATE_SETTING_CHANGED":
             case "android.media.VOLUME_CHANGED_ACTION":
             case "android.media.action.HDMI_AUDIO_PLUG":
+            case "android.media.tv.action.CHANNEL_BROWSABLE_REQUESTED":
+            case "android.media.tv.action.PARENTAL_CONTROLS_ENABLED_CHANGED":
+            case "android.media.tv.action.PREVIEW_PROGRAM_ADDED_TO_WATCH_NEXT":
+            case "android.media.tv.action.PREVIEW_PROGRAM_BROWSABLE_DISABLED":
+            case "android.media.tv.action.WATCH_NEXT_PROGRAM_BROWSABLE_DISABLED":
             case "android.net.ConnectivityService.action.PKT_CNT_SAMPLE_INTERVAL_ELAPSED":
             case "android.net.conn.BACKGROUND_DATA_SETTING_CHANGED":
             case "android.net.conn.CAPTIVE_PORTAL":
@@ -428,12 +480,18 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.net.wifi.WIFI_CREDENTIAL_CHANGED":
             case "android.net.wifi.WIFI_SCAN_AVAILABLE":
             case "android.net.wifi.WIFI_STATE_CHANGED":
+            case "android.net.wifi.action.PASSPOINT_DEAUTH_IMMINENT":
+            case "android.net.wifi.action.PASSPOINT_ICON":
+            case "android.net.wifi.action.PASSPOINT_OSU_PROVIDERS_LIST":
+            case "android.net.wifi.action.PASSPOINT_SUBSCRIPTION_REMEDIATION":
+            case "android.net.wifi.aware.action.WIFI_AWARE_STATE_CHANGED":
             case "android.net.wifi.p2p.CONNECTION_STATE_CHANGE":
             case "android.net.wifi.p2p.DISCOVERY_STATE_CHANGE":
             case "android.net.wifi.p2p.PEERS_CHANGED":
             case "android.net.wifi.p2p.PERSISTENT_GROUPS_CHANGED":
             case "android.net.wifi.p2p.STATE_CHANGED":
             case "android.net.wifi.p2p.THIS_DEVICE_CHANGED":
+            case "android.net.wifi.rtt.action.WIFI_RTT_STATE_CHANGED":
             case "android.net.wifi.supplicant.CONNECTION_CHANGE":
             case "android.net.wifi.supplicant.STATE_CHANGE":
             case "android.nfc.action.ADAPTER_STATE_CHANGED":
@@ -456,6 +514,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.os.action.POWER_SAVE_WHITELIST_CHANGED":
             case "android.os.action.SCREEN_BRIGHTNESS_BOOST_CHANGED":
             case "android.os.action.SETTING_RESTORED":
+            case "android.os.action.USER_RESTRICTIONS_CHANGED":
             case "android.os.storage.action.DISK_SCANNED":
             case "android.os.storage.action.VOLUME_STATE_CHANGED":
             case "android.permission.CLEAR_APP_GRANTED_URI_PERMISSIONS":
@@ -464,29 +523,42 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.provider.action.DEFAULT_SMS_PACKAGE_CHANGED":
             case "android.search.action.SEARCHABLES_CHANGED":
             case "android.security.STORAGE_CHANGED":
+            case "android.security.action.KEYCHAIN_CHANGED":
+            case "android.security.action.KEY_ACCESS_CHANGED":
+            case "android.security.action.TRUST_STORE_CHANGED":
             case "android.telecom.action.DEFAULT_DIALER_CHANGED":
             case "android.telecom.action.PHONE_ACCOUNT_REGISTERED":
             case "android.telecom.action.PHONE_ACCOUNT_UNREGISTERED":
             case "android.telecom.action.SHOW_MISSED_CALLS_NOTIFICATION":
             case "android.telephony.action.CARRIER_CONFIG_CHANGED":
+            case "android.telephony.action.DEFAULT_SMS_SUBSCRIPTION_CHANGED":
+            case "android.telephony.action.DEFAULT_SUBSCRIPTION_CHANGED":
+            case "android.telephony.action.SHOW_VOICEMAIL_NOTIFICATION":
+            case "android.telephony.action.SUBSCRIPTION_PLANS_CHANGED":
+            case "android.telephony.euicc.action.OTA_STATUS_CHANGED":
+            case "com.android.bluetooth.BluetoothMapContentObserver.action.MESSAGE_DELIVERY":
+            case "com.android.bluetooth.BluetoothMapContentObserver.action.MESSAGE_SENT":
             case "com.android.bluetooth.btservice.action.ALARM_WAKEUP":
+            case "com.android.bluetooth.gatt.REFRESH_BATCHED_SCAN":
             case "com.android.bluetooth.map.USER_CONFIRM_TIMEOUT":
             case "com.android.bluetooth.pbap.authcancelled":
             case "com.android.bluetooth.pbap.authchall":
             case "com.android.bluetooth.pbap.authresponse":
             case "com.android.bluetooth.pbap.userconfirmtimeout":
-            case "com.android.ims.IMS_INCOMING_CALL":
-            case "com.android.ims.IMS_SERVICE_UP":
-            case "com.android.ims.internal.uce.UCE_SERVICE_UP":
-            case "com.android.intent.action.IMS_CONFIG_CHANGED":
-            case "com.android.intent.action.IMS_FEATURE_CHANGED":
+            case "com.android.bluetooth.sap.USER_CONFIRM_TIMEOUT":
+            case "com.android.bluetooth.sap.action.DISCONNECT_ACTION":
+            case "com.android.intent.action.timezone.RULES_UPDATE_OPERATION":
+            case "com.android.intent.action.timezone.TRIGGER_RULES_UPDATE_CHECK":
+            case "com.android.internal.action.EUICC_FACTORY_RESET":
             case "com.android.internal.location.ALARM_TIMEOUT":
             case "com.android.internal.location.ALARM_WAKEUP":
             case "com.android.nfc.action.LLCP_DOWN":
             case "com.android.nfc.action.LLCP_UP":
             case "com.android.nfc.cardemulation.action.CLOSE_TAP_DIALOG":
             case "com.android.nfc.handover.action.ALLOW_CONNECT":
+            case "com.android.nfc.handover.action.CANCEL_HANDOVER_TRANSFER":
             case "com.android.nfc.handover.action.DENY_CONNECT":
+            case "com.android.nfc.handover.action.TIMEOUT_CONNECT":
             case "com.android.nfc_extras.action.AID_SELECTED":
             case "com.android.nfc_extras.action.RF_FIELD_OFF_DETECTED":
             case "com.android.nfc_extras.action.RF_FIELD_ON_DETECTED":
@@ -496,6 +568,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "com.android.phone.SIP_REMOVE_PHONE":
             case "com.android.server.ACTION_EXPIRED_PASSWORD_NOTIFICATION":
             case "com.android.server.ACTION_TRIGGER_IDLE":
+            case "com.android.server.InputMethodManagerService.SHOW_INPUT_METHOD_PICKER":
             case "com.android.server.NetworkTimeUpdateService.action.POLL":
             case "com.android.server.Wifi.action.TOGGLE_PNO":
             case "com.android.server.WifiManager.action.DELAYED_DRIVER_STOP":
@@ -513,11 +586,24 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "com.android.server.device_idle.STEP_IDLE_STATE":
             case "com.android.server.device_idle.STEP_LIGHT_IDLE_STATE":
             case "com.android.server.fingerprint.ACTION_LOCKOUT_RESET":
+            case "com.android.server.net.action.SNOOZE_RAPID":
             case "com.android.server.net.action.SNOOZE_WARNING":
             case "com.android.server.notification.CountdownConditionProvider":
             case "com.android.server.pm.DISABLE_QUIET_MODE_AFTER_UNLOCK":
+            case "com.android.server.retaildemo.ACTION_RESET_DEMO":
+            case "com.android.server.stats.action.TRIGGER_COLLECTION":
             case "com.android.server.telecom.intent.action.CALLS_ADD_ENTRY":
             case "com.android.server.usb.ACTION_OPEN_IN_APPS":
+            case "com.android.server.wifi.ConnectToNetworkNotification.CONNECT_TO_NETWORK":
+            case "com.android.server.wifi.ConnectToNetworkNotification.PICK_NETWORK_AFTER_FAILURE":
+            case "com.android.server.wifi.ConnectToNetworkNotification.PICK_WIFI_NETWORK":
+            case "com.android.server.wifi.ConnectToNetworkNotification.USER_DISMISSED_NOTIFICATION":
+            case "com.android.server.wifi.wakeup.DISMISS_NOTIFICATION":
+            case "com.android.server.wifi.wakeup.OPEN_WIFI_PREFERENCES":
+            case "com.android.server.wifi.wakeup.OPEN_WIFI_SETTINGS":
+            case "com.android.server.wifi.wakeup.TURN_OFF_WIFI_WAKE":
+            case "com.android.server.wm.ACTION_REVOKE_SYSTEM_ALERT_WINDOW_PERMISSION":
+            case "com.android.settings.bluetooth.ACTION_DISMISS_PAIRING":
             case "com.android.settings.location.MODE_CHANGING":
             case "com.android.sync.SYNC_CONN_STATUS_CHANGED":
             case "intent.action.ACTION_RF_BAND_INFO":
@@ -543,7 +629,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         if (TAG_RECEIVER.equals(tag)) {
-            String name = LintUtils.resolveManifestName(element);
+            String name = Lint.resolveManifestName(element);
             String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
             // If no permission attribute, then if any exists at the application
             // element, it applies
@@ -604,7 +690,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                                         String actionName =
                                                 action.getAttributeNS(ANDROID_URI, ATTR_NAME);
                                         if (isProtectedBroadcast(actionName)) {
-                                            String name = LintUtils.resolveManifestName(element);
+                                            String name = Lint.resolveManifestName(element);
                                             mReceiversWithProtectedBroadcastIntentFilter.add(name);
                                         }
                                     }
