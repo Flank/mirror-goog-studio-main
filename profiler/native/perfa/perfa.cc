@@ -864,6 +864,10 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     // is going to busy-wait, so not allowing the application to finish
     // initialization. This callback will be called each time perfd connects.
     MemoryTrackingEnv::Instance(vm, agent_config.mem_config());
+    // Starts the heartbeat thread after MemoryTrackingEnv is fully initialized
+    // and has opened a grpc stream perfd. The order is important as a heartbeat
+    // will trigger Studio to start live allocation tracking.
+    Agent::Instance().StartHeartbeat();
     // Perf-test currently waits on this message to determine that perfa is
     // connected to perfd.
     Log::V("Perfa connected to Perfd.");
