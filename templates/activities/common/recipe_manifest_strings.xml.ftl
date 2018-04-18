@@ -1,5 +1,5 @@
 <recipe folder="root://activities/common">
-<#if isInstantApp!false>
+<#if (isInstantApp!false) || (isDynamicFeature!false)>
     <merge from="root/res/values/manifest_strings.xml.ftl"
              to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
 <#else>

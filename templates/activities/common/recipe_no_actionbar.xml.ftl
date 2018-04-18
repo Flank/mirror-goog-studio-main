@@ -1,5 +1,5 @@
 <recipe folder="root://activities/common">
-    <#if isInstantApp>
+    <#if isInstantApp || isDynamicFeature>
     <merge from="root/res/values/no_actionbar_styles.xml.ftl"
              to="${escapeXmlAttribute(baseFeatureResOut)}/values/styles.xml" />
     <#else>

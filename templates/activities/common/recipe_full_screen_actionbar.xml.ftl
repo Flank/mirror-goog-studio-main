@@ -1,5 +1,5 @@
 <recipe folder="root://activities/common">
-    <#if isInstantApp>
+    <#if isInstantApp || isDynamicFeature>
         <#assign finalResOut="${escapeXmlAttribute(baseFeatureResOut)}">
     <#else>
         <#assign finalResOut="${escapeXmlAttribute(resOut)}">

@@ -13,7 +13,7 @@
     <instantiate from="root/res/layout/activity_fullscreen.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
-    <#if isInstantApp!false>
+    <#if (isInstantApp!false) || (isDynamicFeature!false)>
       <merge from="root/res/values/strings.xml.ftl"
                to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
     <#else>
