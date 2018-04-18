@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROIDX_MATERIAL_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_SUPPORT_PKG_PREFIX
@@ -29,6 +30,7 @@ import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.ATTR_SRC_COMPAT
 import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.BUTTON
 import com.android.SdkConstants.CONSTRAINT_LAYOUT
 import com.android.SdkConstants.CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.TAG_LAYOUT
@@ -190,6 +192,11 @@ class DetectMissingPrefix : LayoutDetector() {
                         for (item in items) {
                             val libraryName = item.libraryName
                             if (libraryName != null && libraryName.startsWith("appcompat-")) {
+                                return
+                            }
+                            if (attribute.ownerElement.tagName == BUTTON &&
+                                libraryName?.startsWith(ANDROIDX_MATERIAL_ARTIFACT) == true) {
+                                // Button is inflated as a MaterialButton with extra
                                 return
                             }
                         }

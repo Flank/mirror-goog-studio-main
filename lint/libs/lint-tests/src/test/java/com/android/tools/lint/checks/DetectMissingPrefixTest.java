@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ANDROIDX_MATERIAL_ARTIFACT;
+
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -413,6 +415,43 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                                         + "</resources>\n")));
     }
 
+    public void testMaterialDesign2() throws Exception {
+        // Regression test for https://b.corp.google.com/78246338
+        assertEquals(
+                "No warnings.",
+                lintProjectIncrementally(
+                        "res/layout/app_compat.xml",
+                        xml(
+                                "res/layout/app_compat.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    android:orientation=\"vertical\">\n"
+                                        + "\n"
+                                        + "    <Button\n"
+                                        + "        android:id=\"@+id/m_button\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:cornerRadius=\"12dp\"\n"
+                                        + "        app:rippleColor=\"@android:color/holo_blue_bright\"\n"
+                                        + "        app:strokeColor=\"@android:color/holo_blue_light\"\n"
+                                        + "        app:strokeWidth=\"2dp\" />"
+                                        + "\n"
+                                        + "</LinearLayout>"),
+                        xml(
+                                "res/values/res.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <attr name=\"cornerRadius\" />\n"
+                                        + "    <attr name=\"rippleColor\" />\n"
+                                        + "    <attr name=\"strokeColor\" />\n"
+                                        + "    <attr name=\"strokeWidth\" />\n"
+                                        + "</resources>\n")));
+    }
+
     public void testAaptBundleFormat() throws Exception {
         assertEquals(
                 "No warnings.",
@@ -498,6 +537,17 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                 @Nullable
                 protected String getProjectResourceLibraryName() {
                     return "appcompat-v7";
+                }
+            };
+        }
+        if (getName().equals("testMaterialDesign2")) {
+            return new ToolsBaseTestLintClient() {
+                // Set fake library name on resources in this test to pretend the
+                // attr comes from appcompat
+                @Override
+                @Nullable
+                protected String getProjectResourceLibraryName() {
+                    return ANDROIDX_MATERIAL_ARTIFACT + ":1.0.0";
                 }
             };
         }
