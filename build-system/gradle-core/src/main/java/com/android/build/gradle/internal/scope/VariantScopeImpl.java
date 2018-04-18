@@ -175,6 +175,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     // Tasks
     private DefaultTask assembleTask;
+    private DefaultTask bundleTask;
     private DefaultTask preBuildTask;
 
     private Task sourceGenTask;
@@ -1593,6 +1594,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setAssembleTask(@NonNull DefaultTask assembleTask) {
         this.assembleTask = assembleTask;
+    }
+
+    @Override
+    public DefaultTask getBundleTask() {
+        return bundleTask;
+    }
+
+    @Override
+    public void setBundleTask(@NonNull DefaultTask bundleTask) {
+        this.bundleTask = bundleTask;
     }
 
     @Override

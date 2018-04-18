@@ -55,10 +55,6 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
     private val workers = Workers.getWorker(workerExecutor)
 
-    companion object {
-        fun getTaskName(scope: VariantScope) = scope.getTaskName("bundle")
-    }
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     lateinit var baseModuleZip: BuildableArtifact
@@ -211,7 +207,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
 
-        override fun getName() = getTaskName(scope)
+        override fun getName() = scope.getTaskName("package", "Bundle")
         override fun getType() = BundleTask::class.java
 
         override fun execute(task: BundleTask) {

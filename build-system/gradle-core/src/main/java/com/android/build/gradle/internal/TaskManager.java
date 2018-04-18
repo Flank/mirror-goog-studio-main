@@ -3045,9 +3045,13 @@ public abstract class TaskManager {
     public DefaultTask createAssembleTask(@NonNull final BaseVariantData variantData) {
         return taskFactory.create(
                 variantData.getScope().getTaskName("assemble"),
-                task -> {
-                    variantData.addTask(TaskContainer.TaskKind.ASSEMBLE, task);
-                });
+                task -> variantData.addTask(TaskContainer.TaskKind.ASSEMBLE, task));
+    }
+
+    public DefaultTask createBundleTask(@NonNull final BaseVariantData variantData) {
+        return taskFactory.create(
+                variantData.getScope().getTaskName("bundle"),
+                task -> variantData.addTask(TaskContainer.TaskKind.BUNDLE, task));
     }
 
     @NonNull
@@ -3055,9 +3059,21 @@ public abstract class TaskManager {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.create(
-                StringHelper.appendCapitalized("assemble", sourceSetName),
+                "assemble" + sourceSetName,
                 assembleTask -> {
                     assembleTask.setDescription("Assembles all " + sourceSetName + " builds.");
+                    assembleTask.setGroup(BasePlugin.BUILD_GROUP);
+                });
+    }
+
+    @NonNull
+    public DefaultTask createBundleTask(@NonNull VariantDimensionData dimensionData) {
+        final String sourceSetName =
+                StringHelper.capitalize(dimensionData.getSourceSet().getName());
+        return taskFactory.create(
+                "bundle" + sourceSetName,
+                assembleTask -> {
+                    assembleTask.setDescription("Creates all " + sourceSetName + " bundles.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);
                 });
     }

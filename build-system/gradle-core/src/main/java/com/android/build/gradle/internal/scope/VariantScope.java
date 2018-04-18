@@ -308,6 +308,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     void setAssembleTask(@NonNull DefaultTask assembleTask);
 
+    DefaultTask getBundleTask();
+
+    void setBundleTask(@NonNull DefaultTask bundleTask);
+
     DefaultTask getPreBuildTask();
 
     void setPreBuildTask(DefaultTask preBuildTask);

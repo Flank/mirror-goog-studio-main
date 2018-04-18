@@ -51,7 +51,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -840,7 +839,9 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 manifestsProxy,
                 testOptions,
                 scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName(),
-                BundleTask.Companion.getTaskName(scope),
+                variantData.getTaskByKind(TaskContainer.TaskKind.BUNDLE) == null
+                        ? scope.getTaskName("bundle")
+                        : variantData.getTaskByKind(TaskContainer.TaskKind.BUNDLE).getName(),
                 ExtractApksTask.Companion.getTaskName(scope));
     }
 

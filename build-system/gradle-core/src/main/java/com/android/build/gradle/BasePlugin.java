@@ -153,7 +153,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     protected Project project;
 
-    private ProjectOptions projectOptions;
+    protected ProjectOptions projectOptions;
 
     private SdkHandler sdkHandler;
 

@@ -356,7 +356,7 @@ public class ApplicationTaskManager extends TaskManager {
                     @NonNull
                     @Override
                     public String getName() {
-                        return scope.getTaskName("bundleAppClasses");
+                        return scope.getTaskName("packageAppClasses");
                     }
 
                     @NonNull
@@ -472,6 +472,7 @@ public class ApplicationTaskManager extends TaskManager {
 
             if (scope.getType().isBaseModule()) {
                 BundleTask bundleTask = taskFactory.create(new BundleTask.ConfigAction(scope));
+                scope.getBundleTask().dependsOn(bundleTask);
 
                 BundleToApkTask task = taskFactory.create(new BundleToApkTask.ConfigAction(scope));
                 // make the task depend on the validate signing task to ensure that the keystore

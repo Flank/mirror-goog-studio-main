@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -61,6 +62,10 @@ public class AppPlugin extends AbstractAppPlugin {
                                 extraModelInfo.getDeprecationReporter(),
                                 DeprecationReporter.DeprecationTarget.FEATURE_CONFIG));
 
+        // root bundle task
+        if (projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS)) {
+            taskManager.getTaskFactory().create("bundle");
+        }
     }
 
     @Override

@@ -25,8 +25,9 @@ import org.gradle.api.DefaultTask;
  * Class containing a ProductFlavor and associated data (sourcesets)
  */
 public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimensionData {
-    private final T productFlavor;
+    @NonNull private final T productFlavor;
     @Nullable private DefaultTask assembleTask;
+    @Nullable private DefaultTask bundleTask;
 
     ProductFlavorData(
             @NonNull T productFlavor,
@@ -38,6 +39,7 @@ public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimen
         this.productFlavor = productFlavor;
     }
 
+    @NonNull
     public T getProductFlavor() {
         return productFlavor;
     }
@@ -49,5 +51,14 @@ public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimen
 
     public void setAssembleTask(@NonNull DefaultTask assembleTask) {
         this.assembleTask = assembleTask;
+    }
+
+    @Nullable
+    public DefaultTask getBundleTask() {
+        return bundleTask;
+    }
+
+    public void setBundleTask(@Nullable DefaultTask bundleTask) {
+        this.bundleTask = bundleTask;
     }
 }
