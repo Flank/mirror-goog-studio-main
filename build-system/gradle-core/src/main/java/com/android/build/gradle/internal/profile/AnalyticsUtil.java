@@ -212,6 +212,7 @@ public class AnalyticsUtil {
             case HOST:
                 return TestRun.TestExecution.HOST;
             case ANDROID_TEST_ORCHESTRATOR:
+            case ANDROIDX_TEST_ORCHESTRATOR:
                 return TestRun.TestExecution.ANDROID_TEST_ORCHESTRATOR;
         }
         throw new AssertionError("Unrecognized type " + execution);

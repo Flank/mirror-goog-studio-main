@@ -18,24 +18,38 @@ package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.TestOptions;
 import com.android.builder.testing.api.DeviceConnector;
-import com.android.ddmlib.testrunner.OnDeviceOrchestratorRemoteAndroidTestRunner;
+import com.android.ddmlib.testrunner.AndroidTestOrchestratorRemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ide.common.process.ProcessExecutor;
+import com.google.common.base.Preconditions;
 import java.io.File;
 
 /** Implementation of {@link TestRunner} that invokes tests through Odo. */
 public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
+
+    @NonNull private final TestOptions.Execution execution;
+
     public OnDeviceOrchestratorTestRunner(
-            @Nullable File splitSelectExec, @NonNull ProcessExecutor processExecutor) {
+            @Nullable File splitSelectExec,
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull TestOptions.Execution execution) {
         super(splitSelectExec, processExecutor);
+        Preconditions.checkArgument(
+                execution == TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR
+                        || execution == TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR);
+        this.execution = execution;
     }
 
     @NonNull
     @Override
     protected RemoteAndroidTestRunner createRemoteAndroidTestRunner(
             @NonNull TestData testData, @NonNull DeviceConnector device) {
-        return new OnDeviceOrchestratorRemoteAndroidTestRunner(
-                testData.getApplicationId(), testData.getInstrumentationRunner(), device);
+        return new AndroidTestOrchestratorRemoteAndroidTestRunner(
+                testData.getApplicationId(),
+                testData.getInstrumentationRunner(),
+                device,
+                execution == TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR);
     }
 }

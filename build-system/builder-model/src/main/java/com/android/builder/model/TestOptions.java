@@ -22,7 +22,9 @@ public interface TestOptions {
         /** On device orchestration is not used in this case. */
         HOST,
         /** On device orchestration is used. */
-        ANDROID_TEST_ORCHESTRATOR
+        ANDROID_TEST_ORCHESTRATOR,
+        /** On device orchestration is used, with androidx class names. */
+        ANDROIDX_TEST_ORCHESTRATOR,
     }
 
     boolean getAnimationsDisabled();
