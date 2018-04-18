@@ -72,12 +72,18 @@ Agent::Agent(const Config& config)
     // Pre-O, we don't need to start the socket thread, as the agent
     // communicates to perfd via a fixed port.
     ConnectToPerfd(config.GetAgentConfig().service_address());
+    StartHeartbeat();
   }
 
 #ifdef NDEBUG
   gpr_set_log_verbosity(static_cast<gpr_log_severity>(SHRT_MAX));
 #endif
+}
 
+void Agent::StartHeartbeat() {
+  if (heartbeat_thread_.joinable()) {
+    return;
+  }
   heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
 }
 
@@ -141,7 +147,7 @@ void Agent::SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks) {
   });
 }
 
-void Agent::SubmitCpuTasks(const std::vector <CpuServiceTask>& tasks) {
+void Agent::SubmitCpuTasks(const std::vector<CpuServiceTask>& tasks) {
   background_queue_.EnqueueTask([this, tasks] {
     for (auto task : tasks) {
       if (can_grpc_target_change_) {

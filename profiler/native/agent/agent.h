@@ -88,6 +88,10 @@ class Agent {
   // new Perfd, the stub will resolve to the correct grpc target.
   MemoryComponent& memory_component();
 
+  // Tell the agent to start sending heartbeats back to perfd to signal
+  // that the app agent is alive.
+  void StartHeartbeat();
+
   void SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks);
 
   void SubmitEventTasks(const std::vector<EventServiceTask>& tasks);
