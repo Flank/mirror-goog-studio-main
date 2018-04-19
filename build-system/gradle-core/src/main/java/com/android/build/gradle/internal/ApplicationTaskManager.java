@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
@@ -194,6 +195,7 @@ public class ApplicationTaskManager extends TaskManager {
                 // file which is passed into the Data Binding annotation processor.
                 taskFactory.create(new DataBindingExportFeatureInfoTask.ConfigAction(variantScope));
             }
+            taskFactory.create(new MergeConsumerProguardFilesConfigAction(variantScope));
         }
 
         // Add data binding tasks if enabled

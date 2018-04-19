@@ -35,14 +35,14 @@ import org.junit.runners.Parameterized
  *
  * <pre>
  *                  --->  library2  ------>
- *   otherFeature1                           library1
+ *   otherFeature1  --->  library3           library1
  *                  --->  baseFeature  --->
  *   otherFeature2
  *
  * More explicitly,
  *    instantApp  depends on  otherFeature1, otherFeature2, baseFeature  (not pictured)
  *           app  depends on  otherFeature1, otherFeature2, baseFeature  (not pictured)
- * otherFeature1  depends on  library2, baseFeature
+ * otherFeature1  depends on  library2, library3, baseFeature
  * otherFeature2  depends on  baseFeature
  *   baseFeature  depends on  library1
  *      library2  depends on  library1
@@ -69,18 +69,92 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
 
     private val lib1 =
             MinimalSubProject.lib("com.example.lib1")
-                    .appendToBuild(
-                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+                    .appendToBuild("""
+                            android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                    minified {
+                                        consumerProguardFiles "proguard-rules.pro"
+                                    }
+                                }
+                            }
+                            """)
+                    .withFile(
+                            "src/main/java/com/example/lib1/Lib1Class.java",
+                            """package com.example.lib1;
+                            public class Lib1Class {
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/lib1/EmptyClassToKeep.java",
+                            """package com.example.lib1;
+                            public class EmptyClassToKeep {
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/lib1/EmptyClassToRemove.java",
+                            """package com.example.lib1;
+                            public class EmptyClassToRemove {
+                            }""")
+                    .withFile(
+                            "proguard-rules.pro",
+                            """-keep public class com.example.lib1.EmptyClassToKeep""")
 
     private val lib2 =
             MinimalSubProject.lib("com.example.lib2")
-                    .appendToBuild(
-                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+                    .appendToBuild("""
+                            android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                    minified {
+                                        consumerProguardFiles "proguard-rules.pro"
+                                    }
+                                }
+                            }
+                            """)
+                    .withFile(
+                            "src/main/java/com/example/lib2/Lib2Class.java",
+                            """package com.example.lib2;
+                            public class Lib2Class {
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/lib2/EmptyClassToKeep.java",
+                            """package com.example.lib2;
+                            public class EmptyClassToKeep {
+                            }""")
+                    .withFile(
+                            "src/main/java/com/example/lib2/EmptyClassToRemove.java",
+                            """package com.example.lib2;
+                            public class EmptyClassToRemove {
+                            }""")
+                    .withFile(
+                            "proguard-rules.pro",
+                            """-keep public class com.example.lib2.EmptyClassToKeep""")
+
+    private val lib3 =
+            MinimalSubProject.lib("com.example.lib3")
+                    .appendToBuild("""
+                            android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                }
+                            }
+                            """)
 
     private val baseFeature =
             MinimalSubProject.feature("com.example.baseFeature")
                     .appendToBuild("""
                             android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
                                 baseFeature true
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
@@ -139,11 +213,15 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                             import java.lang.Exception;
                             import java.lang.RuntimeException;
 
+                            import com.example.lib1.Lib1Class;
+
                             public class Main extends Activity {
 
                                 private int foo = 1234;
 
                                 private final StringProvider stringProvider = new StringProvider();
+
+                                private final Lib1Class lib1Class = new Lib1Class();
 
                                 /** Called when the activity is first created. */
                                 @Override
@@ -152,11 +230,16 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                                     setContentView(R.layout.base_main);
 
                                     TextView tv = (TextView) findViewById(R.id.dateText);
+                                    tv.setText(getLib1Class().toString());
                                     tv.setText(getStringProvider().getString(foo));
                                 }
 
                                 public StringProvider getStringProvider() {
                                     return stringProvider;
+                                }
+
+                                public Lib1Class getLib1Class() {
+                                    return lib1Class;
                                 }
 
                                 public void handleOnClick(android.view.View view) {
@@ -189,8 +272,23 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
 
     private val otherFeature1 =
             MinimalSubProject.feature("com.example.otherFeature1")
-                    .appendToBuild(
-                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+                    .appendToBuild("""
+                            android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                    minified {
+                                        consumerProguardFiles "proguard-rules.pro"
+                                    }
+                                }
+                            }
+
+                            dependencies {
+                                implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+                            }
+                            """)
                     .withFile(
                             "src/main/AndroidManifest.xml",
                             """<?xml version="1.0" encoding="utf-8"?>
@@ -238,12 +336,15 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                             import java.lang.RuntimeException;
 
                             import com.example.baseFeature.StringProvider;
+                            import com.example.lib2.Lib2Class;
 
                             public class Main extends Activity {
 
                                 private int foo = 1234;
 
                                 private final StringProvider stringProvider = new StringProvider();
+
+                                private final Lib2Class lib2Class = new Lib2Class();
 
                                 /** Called when the activity is first created. */
                                 @Override
@@ -252,11 +353,16 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                                     setContentView(R.layout.other_main);
 
                                     TextView tv = (TextView) findViewById(R.id.dateText);
+                                    tv.setText(getLib2Class().toString());
                                     tv.setText(getStringProvider().getString(foo));
                                 }
 
                                 public StringProvider getStringProvider() {
                                     return stringProvider;
+                                }
+
+                                public Lib2Class getLib2Class() {
+                                    return lib2Class;
                                 }
 
                                 public void handleOnClick(android.view.View view) {
@@ -279,8 +385,16 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
 
     private val otherFeature2 =
         MinimalSubProject.feature("com.example.otherFeature2")
-            .appendToBuild(
-                "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+            .appendToBuild("""
+                            android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                }
+                            }
+                            """)
             .withFile(
                 "src/main/AndroidManifest.xml",
                 """<?xml version="1.0" encoding="utf-8"?>
@@ -356,8 +470,16 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
 
     private val app =
             MinimalSubProject.app("com.example.app")
-                    .appendToBuild(
-                            "android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+                .appendToBuild("""
+                            android {
+                                defaultConfig {
+                                    minSdkVersion 18
+                                }
+                                buildTypes {
+                                    minified.initWith(buildTypes.debug)
+                                }
+                            }
+                            """)
 
     private val instantApp = MinimalSubProject.instantApp()
 
@@ -365,6 +487,7 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
             MultiModuleTestProject.builder()
                     .subproject(":lib1", lib1)
                     .subproject(":lib2", lib2)
+                    .subproject(":lib3", lib3)
                     .subproject(":baseFeature", baseFeature)
                     .subproject(":otherFeature1", otherFeature1)
                     .subproject(":otherFeature2", otherFeature2)
@@ -374,6 +497,10 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                     .dependency(app, otherFeature1)
                     .dependency(app, otherFeature2)
                     .dependency(otherFeature1, lib2)
+                    // otherFeature1 depends on lib3 to test having multiple library module
+                    // dependencies, which is non-trivial because some of the full.jar files need to
+                    // be renamed when copied to avoid collision.
+                    .dependency(otherFeature1, lib3)
                     .dependency(otherFeature1, baseFeature)
                     .dependency(otherFeature2, baseFeature)
                     .dependency(lib2, lib1)
@@ -415,11 +542,21 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
             assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/a;")
         }
         assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/EmptyClassToKeep;")
+        assertThat(baseFeatureApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
+        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
+            assertThat(baseFeatureApk).containsClass("Lcom/example/lib1/Lib1Class;")
+        } else {
+            assertThat(baseFeatureApk).containsClass("Lcom/example/lib1/a;")
+        }
         assertThat(baseFeatureApk).containsJavaResource("base_java_res.txt")
         assertThat(baseFeatureApk).containsJavaResource("other_java_res_1.txt")
         assertThat(baseFeatureApk).containsJavaResource("other_java_res_2.txt")
         assertThat(baseFeatureApk).doesNotContainClass(
             "Lcom/example/baseFeature/EmptyClassToRemove;")
+        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
+        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
+        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib2/a;")
         assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
         assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
 
@@ -431,9 +568,20 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                             override fun isSigned() = true
                         })
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/Main;")
+        assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
+        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
+        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
+            assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/Lib2Class;")
+        } else {
+            assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/a;")
+        }
         assertThat(otherFeature1Apk).doesNotContainJavaResource("other_java_res_1.txt")
         assertThat(otherFeature1Apk).doesNotContainClass(
             "Lcom/example/otherFeature1/EmptyClassToRemove;")
+        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
+        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
+        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/Lib1Class;")
+        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/a;")
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/baseFeature/Main;")
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
 
@@ -446,6 +594,8 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                         })
         assertThat(otherFeature2Apk).containsClass("Lcom/example/otherFeature2/Main;")
         assertThat(otherFeature2Apk).doesNotContainJavaResource("other_java_res_2.txt")
+        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
+        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseFeature/Main;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
     }

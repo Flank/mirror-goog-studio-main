@@ -140,6 +140,7 @@ import com.android.build.gradle.internal.transforms.JacocoTransform;
 import com.android.build.gradle.internal.transforms.JarMergingTransform;
 import com.android.build.gradle.internal.transforms.MainDexListTransform;
 import com.android.build.gradle.internal.transforms.MainDexListWriter;
+import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.MultiDexTransform;
 import com.android.build.gradle.internal.transforms.PreDexTransform;
@@ -252,6 +253,7 @@ import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -681,31 +683,6 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
 
-        // if variantScope.consumesFeatureJars(), add streams of classes and java resources from
-        // features or dynamic-features.
-        // The main dex list calculation for the bundle also needs the feature classes for reference
-        // only
-        if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
-            transformManager.addStream(
-                    OriginalStream.builder(project, "feature-classes")
-                            .addContentTypes(TransformManager.CONTENT_CLASS)
-                            .addScope(InternalScope.FEATURES)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            METADATA_VALUES, MODULE, METADATA_CLASSES))
-                            .build());
-        }
-        if (variantScope.consumesFeatureJars()) {
-            transformManager.addStream(
-                    OriginalStream.builder(project, "feature-java-res")
-                            .addContentTypes(TransformManager.CONTENT_RESOURCES)
-                            .addScope(InternalScope.FEATURES)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            METADATA_VALUES, MODULE, METADATA_JAVA_RES))
-                            .build());
-        }
-
         // same for the resources which can be java-res or jni
         transformManager.addStream(
                 OriginalStream.builder(project, "sub-projects-res-plus-native")
@@ -725,6 +702,31 @@ public abstract class TaskManager {
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(RUNTIME_CLASSPATH, MODULE, JNI))
                         .build());
+
+        // if variantScope.consumesFeatureJars(), add streams of classes and java resources from
+        // features or dynamic-features.
+        // The main dex list calculation for the bundle also needs the feature classes for reference
+        // only
+        if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
+            transformManager.addStream(
+                    OriginalStream.builder(project, "metadata-classes")
+                            .addContentTypes(TransformManager.CONTENT_CLASS)
+                            .addScope(InternalScope.FEATURES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            METADATA_VALUES, MODULE, METADATA_CLASSES))
+                            .build());
+        }
+        if (variantScope.consumesFeatureJars()) {
+            transformManager.addStream(
+                    OriginalStream.builder(project, "metadata-java-res")
+                            .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                            .addScope(InternalScope.FEATURES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            METADATA_VALUES, MODULE, METADATA_JAVA_RES))
+                            .build());
+        }
 
         // provided only scopes.
         transformManager.addStream(
@@ -1409,10 +1411,26 @@ public abstract class TaskManager {
                         DefaultContentType.RESOURCES,
                         "mergeJavaRes",
                         variantScope);
-        variantScope.setMergeJavaResourcesTask(
-                transformManager
-                        .addTransform(taskFactory, variantScope, mergeTransform)
-                        .orElse(null));
+        Optional<TransformTask> transformTask =
+                transformManager.addTransform(taskFactory, variantScope, mergeTransform);
+        variantScope.setMergeJavaResourcesTask(transformTask.orElse(null));
+
+        File mergeJavaResOutput =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "transforms",
+                        "mergeJavaRes",
+                        variantScope.getVariantConfiguration().getDirName(),
+                        "0.jar");
+
+        if (transformTask.isPresent()) {
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
+                            ImmutableList.of(mergeJavaResOutput),
+                            transformTask.get());
+        }
     }
 
     public AidlCompile createAidlTask(@NonNull VariantScope scope) {
@@ -2141,6 +2159,12 @@ public abstract class TaskManager {
                                     variantScope.getAssembleTask().dependsOn(t);
                                 }
                             });
+        }
+
+        // Add transform to create merged runtime classes if this is a feature or dynamic-feature.
+        // Merged runtime classes are needed if code minification is enabled in multi-apk project.
+        if (variantData.getType().isFeatureSplit()) {
+            createMergeClassesTransform(variantScope);
         }
 
         // ----- Android studio profiling transforms
@@ -3261,22 +3285,25 @@ public abstract class TaskManager {
             applyProguardDefaultsForTest(transform);
 
             // All -dontwarn rules for test dependencies should go in here:
-            transform.setConfigurationFiles(
+            final ConfigurableFileCollection configurationFiles =
                     project.files(
                             (Callable<Collection<File>>) testedScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
+                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES));
+            maybeAddFeatureProguardRules(variantScope, configurationFiles);
+            transform.setConfigurationFiles(configurationFiles);
         } else if (isTestedAppObfuscated(variantScope)) {
             // This is a test-only module and the app being tested was obfuscated with ProGuard.
             applyProguardDefaultsForTest(transform);
 
             // All -dontwarn rules for test dependencies should go in here:
-            transform.setConfigurationFiles(
+            final ConfigurableFileCollection configurationFiles =
                     project.files(
                             (Callable<Collection<File>>) variantScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
-
+                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES));
+            maybeAddFeatureProguardRules(variantScope, configurationFiles);
+            transform.setConfigurationFiles(configurationFiles);
         } else {
             // This is a "normal" variant in an app/library.
             applyProguardConfigForNonTest(transform, variantScope);
@@ -3341,10 +3368,12 @@ public abstract class TaskManager {
                     return proguardFiles;
                 };
 
-        transform.setConfigurationFiles(
+        final ConfigurableFileCollection configurationFiles =
                 project.files(
                         proguardConfigFiles,
-                        scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
+                        scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES));
+        maybeAddFeatureProguardRules(scope, configurationFiles);
+        transform.setConfigurationFiles(configurationFiles);
 
         if (scope.getVariantData().getType().isAar()) {
             transform.keep("class **.R");
@@ -3357,6 +3386,16 @@ public abstract class TaskManager {
             transform.keep("class org.jacoco.** {*;}");
             transform.keep("interface org.jacoco.** {*;}");
             transform.dontwarn("org.jacoco.**");
+        }
+    }
+
+    private void maybeAddFeatureProguardRules(
+            @NonNull VariantScope variantScope,
+            @NonNull ConfigurableFileCollection configurationFiles) {
+        if (variantScope.consumesFeatureJars()) {
+            configurationFiles.from(
+                    variantScope.getArtifactFileCollection(
+                            METADATA_VALUES, MODULE, PROGUARD_RULES));
         }
     }
 
@@ -3502,6 +3541,40 @@ public abstract class TaskManager {
                     artifact,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     attributeMap);
+        }
+    }
+
+    private void createMergeClassesTransform(@NonNull VariantScope variantScope) {
+
+        File outputJar =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "merged-classes",
+                        variantScope.getVariantConfiguration().getDirName(),
+                        SdkConstants.FN_CLASSES_JAR);
+
+        MergeClassesTransform transform =
+                new MergeClassesTransform(outputJar, globalScope.getProject().getPath());
+
+        Optional<TransformTask> transformTask =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(taskFactory, variantScope, transform);
+
+        if (transformTask.isPresent()) {
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_CLASSES,
+                            ImmutableList.of(outputJar),
+                            transformTask.get());
+        } else {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(
+                                    "Internal error, could not add the MergeClassesTransform"));
         }
     }
 
