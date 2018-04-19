@@ -21,6 +21,7 @@ filegroup(
         "databinding",
         "databindingIncremental",
         "databindingAndDagger",
+        "databindingAndJetifier",
         "databindingWithFeatures",
     ]
 ]
