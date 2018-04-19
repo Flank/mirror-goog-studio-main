@@ -50,4 +50,9 @@ public class CallStatement extends Statement {
     public CallExpression getCall() {
         return call;
     }
+
+    boolean isManaged() {
+        Expression tags = call.getArgument("tags");
+        return (tags instanceof ListExpression) && ((ListExpression)tags).contains("managed");
+    }
 }

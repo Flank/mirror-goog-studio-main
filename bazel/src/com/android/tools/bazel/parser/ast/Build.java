@@ -120,12 +120,8 @@ public class Build extends Node {
         for (Statement statement : statements) {
             if (statement instanceof CallStatement) {
                 CallStatement call = ((CallStatement)statement);
-                Expression tags = call.getCall().getArgument("tags");
-                if (tags instanceof ListExpression) {
-                    ListExpression list = (ListExpression)tags;
-                    if (list.contains("managed")) {
-                        statement.setHidden(true);
-                    }
+                if (call.isManaged()) {
+                    statement.setHidden(true);
                 }
             }
         }
