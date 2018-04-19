@@ -110,6 +110,7 @@ public class CheckAll {
                     "databindingAndDagger",
                     "databinding",
                     "databindingAndKotlin",
+                    "databindingAndJetifier",
                     "databindingWithFeatures",
 
                     // These are all right:
