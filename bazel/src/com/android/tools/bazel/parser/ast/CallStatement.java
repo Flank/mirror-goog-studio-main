@@ -52,11 +52,12 @@ public class CallStatement extends Statement {
     }
 
     boolean isManaged() {
-        Expression tags = call.getArgument("tags");
-        return (tags instanceof ListExpression) && ((ListExpression)tags).contains("managed");
+        return preComments.stream().anyMatch(s -> s.toLowerCase().contains("iml_to_build"));
     }
 
     public void setIsManaged() {
-        call.addElementToList("tags", "managed");
+        if (!isManaged()) {
+            preComments.add("# managed by go/iml_to_build\n");
+        }
     }
 }
