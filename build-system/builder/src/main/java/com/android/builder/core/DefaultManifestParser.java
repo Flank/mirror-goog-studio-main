@@ -54,7 +54,6 @@ import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
-import java.util.logging.Logger;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
@@ -69,7 +68,6 @@ import org.xml.sax.helpers.DefaultHandler;
 public class DefaultManifestParser implements ManifestAttributeSupplier {
 
     private static final SAXParserFactory PARSER_FACTORY = SAXParserFactory.newInstance();
-    private static final Logger LOGGER = Logger.getLogger(DefaultManifestParser.class.getName());
 
     static {
         XmlUtils.configureSaxFactory(PARSER_FACTORY, true, false);
@@ -272,7 +270,6 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
             if (!canParseManifest.getAsBoolean()) {
                 // TODO: add a deprecation warning for any DSL APIs that access values directly vs
                 // using a supplier.
-                LOGGER.warning("Warning: manifest is being parsed while tasks are generated.");
             }
             if (!initialized && manifestFile.isFile()) {
                 DefaultHandler handler =
