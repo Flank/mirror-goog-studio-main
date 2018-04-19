@@ -8,13 +8,13 @@ load(
     "maven_repo",
 )
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = [
-        "managed",
         "no_test_windows",  # b/77288863
     ],
     test_srcs = ["manifest-merger/src/test/java"],

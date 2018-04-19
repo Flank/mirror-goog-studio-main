@@ -1,10 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.binary-resources",
     srcs = ["binary-resources/src/main/java"],
     iml_files = ["binary-resources/android.sdktools.binary-resources.iml"],
-    tags = ["managed"],
     test_resources = ["binary-resources/src/test/resources"],
     test_srcs = ["binary-resources/src/test/java"],
     visibility = ["//visibility:public"],

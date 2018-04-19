@@ -2,11 +2,11 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.fakeadbserver",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.fakeadbserver.iml"],
-    tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

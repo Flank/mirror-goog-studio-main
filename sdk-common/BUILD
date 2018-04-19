@@ -3,13 +3,13 @@ load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.sdk-common",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdk-common.iml"],
     resources = ["src/main/resources"],
     tags = [
-        "managed",
         "no_test_windows",
     ],
     test_resources = ["src/test/resources"],

@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.pixelprobe",
     # do not sort: must match IML order
@@ -10,7 +11,6 @@ iml_module(
     ],
     iml_files = ["android.sdktools.pixelprobe.iml"],
     resources = ["src/main/resources"],
-    tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

@@ -1,10 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.flags",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.flags.iml"],
-    tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

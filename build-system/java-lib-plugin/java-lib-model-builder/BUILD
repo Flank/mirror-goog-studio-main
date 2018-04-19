@@ -1,12 +1,12 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.java-lib-model-builder",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.java-lib-model-builder.iml"],
     resources = ["src/main/resources"],
-    tags = ["managed"],
     test_srcs = ["src/test/java"],
     test_tags = ["manual"],  # Test is below, due to needing runtime version of gradle API
     visibility = ["//visibility:public"],
