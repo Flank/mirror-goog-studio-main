@@ -62,6 +62,16 @@ SUPPORT_LIBRARY_JARS = [
     "support-annotations",
 ]
 
+#keep sorted
+ANDROID_ARCH_DEPS = [
+    "android/arch/core/runtime/1.0.0:aar",
+    "android/arch/lifecycle/common/1.1.0:jar",
+    "android/arch/persistence/db-framework/1.0.0:aar",
+    "android/arch/persistence/db/1.0.0:aar",
+    "android/arch/persistence/room/common/1.0.0:jar",
+    "android/arch/persistence/room/runtime/1.0.0:aar",
+]
+
 LATEST_ANDROID_X_SUPPORT = "1.0.0-alpha1"
 
 #keep sorted
@@ -96,7 +106,7 @@ ANDROID_X_SUPPORT_JARS = [
     "androidx/collection/collection",
 ]
 
-LATEST_ANDROD_X_ARCH = "2.0.0-alpha1"
+LATEST_ANDROID_X_ARCH = "2.0.0-alpha1"
 
 #keep sorted
 ANDROID_X_ARCH_AARS = [
@@ -104,12 +114,16 @@ ANDROID_X_ARCH_AARS = [
     "androidx/lifecycle/lifecycle-livedata-core",
     "androidx/lifecycle/lifecycle-runtime",
     "androidx/lifecycle/lifecycle-viewmodel",
+    "androidx/room/room-runtime",
+    "androidx/sqlite/sqlite",
+    "androidx/sqlite/sqlite-framework",
 ]
 
 #keep sorted
 ANDROID_X_ARCH_JARS = [
     "androidx/arch/core/core-common",
     "androidx/lifecycle/lifecycle-common",
+    "androidx/room/room-common",
 ]
 
 load("//tools/base/bazel:maven.bzl", "maven_repo")
@@ -117,10 +131,11 @@ load("//tools/base/bazel:maven.bzl", "maven_repo")
 maven_repo(
     name = "support_library_latest",
     # keep sorted
-    artifacts = ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" + LATEST_SUPPORT +
-                 ":aar" for name in SUPPORT_LIBRARY_AARS] +
-                ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" + LATEST_SUPPORT +
-                 ":jar" for name in SUPPORT_LIBRARY_JARS],
+    artifacts = ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" +
+                 LATEST_SUPPORT + ":aar" for name in SUPPORT_LIBRARY_AARS] +
+                ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" +
+                 LATEST_SUPPORT + ":jar" for name in SUPPORT_LIBRARY_JARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name for name in ANDROID_ARCH_DEPS],
     visibility = [":__subpackages__"],
 )
 
@@ -131,9 +146,9 @@ maven_repo(
                  ":aar" for name in ANDROID_X_SUPPORT_AARS] +
                 ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_SUPPORT +
                  ":jar" for name in ANDROID_X_SUPPORT_JARS] +
-                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROD_X_ARCH +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_ARCH +
                  ":aar" for name in ANDROID_X_ARCH_AARS] +
-                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROD_X_ARCH +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_ARCH +
                  ":jar" for name in ANDROID_X_ARCH_JARS],
     visibility = [":__subpackages__"],
 )

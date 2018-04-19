@@ -78,7 +78,8 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             // library and the new one is available in remote repositories. Let's replace it.
             val targetDependency = newSupportLibrary ?: requestedDependency.displayName
 
-            val effectiveTargetDependency = correctVersionNumber(targetDependency)
+            val effectiveTargetDependency =
+                correctVersionNumber(targetDependency, requestedDependency)
             if (effectiveTargetDependency != requestedDependency.displayName) {
                 dependencySubstitution
                     .useTarget(
@@ -116,15 +117,26 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         }
 
         /**
-         * Corrects the version number since the stable versions may not yet be available in remote
-         * repositories. This is useful for testing while the feature is still under development,
-         * eventually this method should be removed.
+         * Corrects the version number of the target dependency since the stable versions may not
+         * yet be available in remote repositories. This is useful for testing while the feature is
+         * still under development, eventually this method should be removed.
          */
-        private fun correctVersionNumber(targetDependency: String): String {
+        private fun correctVersionNumber(
+            targetDependency: String, requestedDependency: ModuleComponentSelector
+        ): String {
             val parts = targetDependency.split(':')
             val group = parts[0]
             val module = parts[1]
             val version = parts[2]
+
+            // TODO (jetifier-core): Need to map android.arch.* to 2.0.0. Right now jetifier-core is
+            // mapping it to 1.0.0, which is incorrect.
+            if (requestedDependency.group.startsWith("android.arch")
+                && group.startsWith("androidx")
+                && version == "1.0.0"
+            ) {
+                return "$group:$module:2.0.0-alpha1" // alpha1 since stable version is not available
+            }
 
             // TODO (jetifier-core): Need to map databinding to the Android Gradle plugin version.
             // Right now jetifier-core is mapping it to versions such as 1.0.0, which is incorrect.
@@ -183,22 +195,20 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         }
 
         private fun isOldSupportLibrary(aarOrJarFile: File): Boolean {
-            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is an
-            // old support library
+            // TODO (jetifier-core): Similar to isOldSupportLibrary(ModuleComponentSelector)
             return aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.*"))
                     || aarOrJarFile.absolutePath.matches(Regex(".*android.arch.*"))
                     || aarOrJarFile.absolutePath.matches(Regex(".*com.android.databinding.*"))
         }
 
         private fun newSupportLibraryAvailable(oldSupportLibDep: ModuleComponentSelector): Boolean {
-            // TODO (AGP): New Android testing support library dependencies are not yet available.
-            // Remove this code when they are.
+            // TODO (AGP): AndroidX versions of Android testing support library are not yet
+            // available. Remove this code when they are.
             return !oldSupportLibDep.group.startsWith("com.android.support.test")
         }
 
         private fun newSupportLibraryAvailable(aarOrJarFile: File): Boolean {
-            // TODO (AGP): New Android testing support library dependencies are not yet available.
-            // Remove this code when they are.
+            // TODO (AGP): Similar to newSupportLibraryAvailable(ModuleComponentSelector)
             return !aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.test.*"))
         }
 

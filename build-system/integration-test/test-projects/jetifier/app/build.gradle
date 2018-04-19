@@ -20,6 +20,10 @@ dependencies {
     // lint errors.
     implementation "com.android.support:preference-v7:${rootProject.supportLibVersion}"
 
+    // Add these dependencies as regression test for https://issuetracker.google.com/78202788
+    implementation 'android.arch.lifecycle:common:1.1.0'
+    implementation 'android.arch.persistence.room:runtime:1.0.0'
+
     // Add this dependency as regression test for https://issuetracker.google.com/78144836
-    implementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
 }
