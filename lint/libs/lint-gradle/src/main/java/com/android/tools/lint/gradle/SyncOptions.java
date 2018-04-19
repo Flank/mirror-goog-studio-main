@@ -105,6 +105,7 @@ public class SyncOptions {
         flags.setIgnoreWarnings(options.isIgnoreWarnings());
         flags.setWarningsAsErrors(options.isWarningsAsErrors());
         flags.setCheckTestSources(options.isCheckTestSources());
+        flags.setIgnoreTestSources(options.isIgnoreTestSources());
         flags.setCheckGeneratedSources(options.isCheckGeneratedSources());
         flags.setCheckDependencies(options.isCheckDependencies());
         flags.setShowEverything(options.isShowAll());

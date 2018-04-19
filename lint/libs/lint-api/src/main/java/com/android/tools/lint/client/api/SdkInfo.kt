@@ -44,8 +44,8 @@ abstract class SdkInfo {
             if (parentViewFqcn == current) {
                 return true
             }
-            val parent = getParentViewClass(current) ?: // Unknown view - err on the side of caution
-            return true
+            val parent = getParentViewClass(current)
+                    ?: return true // Unknown view - err on the side of caution
             current = parent
         }
 

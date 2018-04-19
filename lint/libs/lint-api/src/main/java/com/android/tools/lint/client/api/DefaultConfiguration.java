@@ -116,6 +116,7 @@ public class DefaultConfiguration extends Configuration {
 
     private Boolean fatalOnly;
     private Boolean checkTestSources;
+    private Boolean ignoreTestSources;
     private Boolean checkGeneratedSources;
     private Boolean checkDependencies;
     private Boolean explainIssues;
@@ -451,6 +452,7 @@ public class DefaultConfiguration extends Configuration {
             warningsAsErrors = readBooleanFlag(root, "warningsAsErrors");
             fatalOnly = readBooleanFlag(root, "fatalOnly");
             checkTestSources = readBooleanFlag(root, "checkTestSources");
+            ignoreTestSources = readBooleanFlag(root, "ignoreTestSources");
             checkGeneratedSources = readBooleanFlag(root, "checkGeneratedSources");
             checkDependencies = readBooleanFlag(root, "checkDependencies");
             explainIssues = readBooleanFlag(root, "explainIssues");
@@ -511,6 +513,12 @@ public class DefaultConfiguration extends Configuration {
     public Boolean getCheckTestSources() {
         ensureInitialized();
         return checkTestSources;
+    }
+
+    @Nullable
+    public Boolean getIgnoreTestSources() {
+        ensureInitialized();
+        return ignoreTestSources;
     }
 
     @Nullable

@@ -868,7 +868,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_gravity=\"center_horizontal\" />\n"
                                         + "</LinearLayout>"),
                         java(
-                                "test/my/pkg/MyTest.java",
+                                "src/my/pkg/MyTest.java",
                                 ""
                                         + "package my.pkg;\n"
                                         + "class MyTest {\n"
@@ -888,7 +888,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
                         java(
-                                "test/my/pkg/MyTest.java",
+                                "src/my/pkg/MyTest.java",
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
@@ -946,7 +946,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"foo.bar.your_name\">Your Name</string>\n"
                                         + "</resources>\n"),
                         java(
-                                "test/my/pkg/MyTest.java",
+                                "src/my/pkg/MyTest.java",
                                 ""
                                         + "package my.pkg;\n"
                                         + "class MyTest {\n"

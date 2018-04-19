@@ -109,6 +109,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "    warningsAsErrors='true'\n"
                                 + "    fatalOnly='true'\n"
                                 + "    checkTestSources='true'\n"
+                                + "    ignoreTestSources='true'\n"
                                 + "    checkGeneratedSources='true'\n"
                                 + "    checkDependencies='true'\n"
                                 + "    explainIssues='true'\n"
@@ -121,6 +122,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertThat(configuration.getWarningsAsErrors()).isTrue();
         assertThat(configuration.getFatalOnly()).isTrue();
         assertThat(configuration.getCheckTestSources()).isTrue();
+        assertThat(configuration.getIgnoreTestSources()).isTrue();
         assertThat(configuration.getCheckGeneratedSources()).isTrue();
         assertThat(configuration.getCheckDependencies()).isTrue();
         assertThat(configuration.getExplainIssues()).isTrue();

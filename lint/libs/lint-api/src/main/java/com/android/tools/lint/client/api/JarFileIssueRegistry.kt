@@ -271,9 +271,11 @@ private constructor(
                                     separator = ",\n                    "
                                 ) { "\"$it\"" }}\n" +
                                 "        }\n" +
-                                "    }\n")
-                            .// Force indentation
-                                replace("    ", "\u00a0\u00a0\u00a0\u00a0")
+                                "    }\n").replace(
+                            // Force indentation
+                            "    ",
+                            "\u00a0\u00a0\u00a0\u00a0"
+                        )
                     }
 
                     LintClient.report(

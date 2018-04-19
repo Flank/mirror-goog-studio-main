@@ -55,6 +55,7 @@ public class LintCliFlags {
     private boolean quiet;
     private boolean warnAll;
     private boolean checkTests;
+    private boolean ignoreTests;
     private boolean checkGenerated;
     private boolean checkDependencies = true;
     private boolean noWarnings;
@@ -292,6 +293,30 @@ public class LintCliFlags {
     /** Sets whether lint should run all the normal checks on test sources */
     public void setCheckTestSources(boolean checkTests) {
         this.checkTests = checkTests;
+        if (checkTests) {
+            this.ignoreTests = false;
+        }
+    }
+
+    /**
+     * Like {@link #isCheckTestSources()}, but always skips analyzing tests -- meaning that it also
+     * ignores checks that have explicitly asked to look at test sources, such as the unused
+     * resource check.
+     */
+    public boolean isIgnoreTestSources() {
+        return ignoreTests;
+    }
+
+    /**
+     * Sets whether we should completely skip test sources.
+     *
+     * @param ignoreTests if true, ignore tests completely
+     */
+    public void setIgnoreTestSources(boolean ignoreTests) {
+        this.ignoreTests = ignoreTests;
+        if (ignoreTests) {
+            this.checkTests = false;
+        }
     }
 
     /** Returns whether lint should run checks on generated sources. */

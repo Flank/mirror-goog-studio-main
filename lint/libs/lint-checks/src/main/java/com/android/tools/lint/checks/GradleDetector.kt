@@ -1414,7 +1414,7 @@ open class GradleDetector : Detector(), GradleScanner {
         message: String,
         lintFix: LintFix? = null
     ) {
-        if (context.driver.isFatalOnlyMode) {
+        if (context.driver.fatalOnlyMode) {
             return
         }
 
@@ -1435,7 +1435,7 @@ open class GradleDetector : Detector(), GradleScanner {
         location: Location,
         message: String
     ) {
-        if (context.driver.isFatalOnlyMode) {
+        if (context.driver.fatalOnlyMode) {
             return
         }
 

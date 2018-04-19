@@ -26,6 +26,8 @@ import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.TAG_DATA;
 import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TOOLS_PREFIX;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static com.android.utils.XmlUtils.getFirstSubTagByName;
@@ -92,22 +94,51 @@ import org.w3c.dom.Node;
 public class UnusedResourceDetector extends ResourceXmlDetector
         implements SourceCodeScanner, BinaryResourceScanner, XmlScanner {
 
-    private static final Implementation IMPLEMENTATION =
-            new Implementation(
-                    UnusedResourceDetector.class,
-                    EnumSet.of(
-                            Scope.MANIFEST,
-                            Scope.ALL_RESOURCE_FILES,
-                            Scope.ALL_JAVA_FILES,
-                            Scope.BINARY_RESOURCE_FILE,
-                            Scope.TEST_SOURCES));
+    private static final Implementation IMPLEMENTATION;
+
+    public static final String EXCLUDE_TESTS_PROPERTY = "lint.unused-resources.exclude-tests";
+    public static final String INCLUDE_TESTS_PROPERTY = "lint.unused-resources.include-tests";
+
+    static {
+        EnumSet<Scope> scopeSet =
+                EnumSet.of(
+                        Scope.MANIFEST,
+                        Scope.ALL_RESOURCE_FILES,
+                        Scope.ALL_JAVA_FILES,
+                        Scope.BINARY_RESOURCE_FILE);
+
+        // Whether to includ etest sources in the scope. Currently true but controlleable
+        // with a couple of flags.
+        if (VALUE_TRUE.equals(System.getProperty(INCLUDE_TESTS_PROPERTY))
+                || !VALUE_FALSE.equals(System.getProperty(EXCLUDE_TESTS_PROPERTY))) {
+            scopeSet.add(Scope.TEST_SOURCES);
+        }
+
+        IMPLEMENTATION = new Implementation(UnusedResourceDetector.class, scopeSet);
+    }
+
+    private static final String EXCLUDING_TESTS_EXPLANATION =
+            ""
+                    + "The unused resource check can ignore tests. If you want to include "
+                    + "resources that are only referenced from tests, consider packaging them "
+                    + "in a test source set instead.\n"
+                    + "\n"
+                    + "You can include test sources in the unused resource check by setting "
+                    + "the system property "
+                    + INCLUDE_TESTS_PROPERTY
+                    + "=true, and to "
+                    + "exclude them (usually for performance reasons), use "
+                    + EXCLUDE_TESTS_PROPERTY
+                    + "=true.";
 
     /** Unused resources (other than ids). */
     public static final Issue ISSUE =
             Issue.create(
                     "UnusedResources",
                     "Unused resources",
-                    "Unused resources make applications larger and slow down builds.",
+                    "Unused resources make applications larger and slow down builds.\n"
+                            + "\n"
+                            + EXCLUDING_TESTS_EXPLANATION,
                     Category.PERFORMANCE,
                     3,
                     Severity.WARNING,
@@ -121,7 +152,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                             "This resource id definition appears not to be needed since it is not referenced "
                                     + "from anywhere. Having id definitions, even if unused, is not necessarily a bad "
                                     + "idea since they make working on layouts and menus easier, so there is not a "
-                                    + "strong reason to delete these.",
+                                    + "strong reason to delete these.\n"
+                                    + "\n"
+                                    + EXCLUDING_TESTS_EXPLANATION,
                             Category.PERFORMANCE,
                             1,
                             Severity.WARNING,
@@ -591,7 +624,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         return new UElementHandler() {
             @Override
             public void visitSimpleNameReferenceExpression(
-                    USimpleNameReferenceExpression expression) {
+                    @NonNull USimpleNameReferenceExpression expression) {
 
                 String name = expression.getIdentifier();
                 String resourceName = bindingClasses.get(name);
