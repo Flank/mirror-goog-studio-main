@@ -92,7 +92,7 @@ def _iml_module_jar_impl(ctx,
   kotlin_providers = []
   if kotlin_srcs:
     kotlin_providers += [kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs,
-        transitive_runtime_jars, ctx.attr.package_prefixes, kotlin_jar, friends)]
+        transitive_runtime_jars + transitive_compile_time_jars, ctx.attr.package_prefixes, kotlin_jar, friends)]
 
     jars += [kotlin_jar]
 
