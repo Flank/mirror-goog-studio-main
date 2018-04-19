@@ -30,8 +30,8 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -177,7 +177,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
 
     @Nullable
     private static String getExpectedType(@NonNull UCallExpression method, int evaluatorIndex) {
-        String methodName = LintUtils.getMethodName(method);
+        String methodName = Lint.getMethodName(method);
 
         if (methodName == null) {
             return null;
@@ -309,7 +309,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
 
     private static boolean isHolderConstructionMethod(
             @NonNull JavaContext context, @NonNull UCallExpression callExpression) {
-        String referenceName = LintUtils.getMethodName(callExpression);
+        String referenceName = Lint.getMethodName(callExpression);
         if (referenceName != null
                 && referenceName.startsWith("of")
                 // This will require more indirection; see unit test

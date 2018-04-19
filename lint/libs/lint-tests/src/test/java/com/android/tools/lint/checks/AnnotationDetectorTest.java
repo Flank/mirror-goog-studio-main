@@ -597,7 +597,8 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                         + "        return null;\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    @IntRange(from = 1, to = 0)\n" // wrong range, and wrong type
+                                        + "    @IntRange(from = 1, to = 0)\n"
+                                        // wrong range, and wrong type
                                         + "    @Size(min=10, max = 8)\n" // non-positive multiplier
                                         + "    public String wrongIntRange() {\n"
                                         + "        return null;\n"

@@ -113,7 +113,8 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/AccessTest.java:33: Warning: Access to private constructor of class AccessTest requires synthetic accessor [SyntheticAccessor]
                         new AccessTest(); // ERROR
                         ~~~~~~~~~~~~~~~~
@@ -139,7 +140,8 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                             method1(); // ERROR
                             ~~~~~~~
             0 errors, 8 warnings
-            """).expectFixDiffs(
+            """
+        ).expectFixDiffs(
             """
                 Fix for src/test/pkg/AccessTest.java line 33: Make package protected:
                 @@ -13 +13
@@ -254,7 +256,8 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/AccessTest2.kt:29: Warning: Access to private constructor of class AccessTest2 requires synthetic accessor [SyntheticAccessor]
                         AccessTest2()   // ERROR
                         ~~~~~~~~~~~
@@ -271,7 +274,8 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                             method1() // ERROR
                             ~~~~~~~
             0 errors, 5 warnings
-            """).expectFixDiffs(
+            """
+        ).expectFixDiffs(
             """
                 Fix for src/test/pkg/AccessTest2.kt line 29: Make internal:
                 @@ -13 +13
@@ -339,7 +343,8 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect("""
+        ).run().expect(
+            """
                 src/test/pkg/AccessTest3.java:7: Warning: Access to private member of class Hidden2 requires synthetic accessor [SyntheticAccessor]
                         Hidden2 hidden2 = new Hidden2(); // ERROR
                                           ~~~~~~~~~~~~~
@@ -353,8 +358,9 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                             int f = hidden.field; // ERROR
                                            ~~~~~
                 0 errors, 4 warnings
-                """).expectFixDiffs(
-                // TODO: Here I shouldn't make the private class public, I should add a new package private constructor!
+                """
+        ).expectFixDiffs(
+            // TODO: Here I shouldn't make the private class public, I should add a new package private constructor!
             """
                 Fix for src/test/pkg/AccessTest3.java line 7: Make package protected:
                 @@ -21 +21

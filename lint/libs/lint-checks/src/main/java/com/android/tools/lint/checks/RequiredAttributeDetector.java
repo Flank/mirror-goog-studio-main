@@ -44,7 +44,7 @@ import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.resources.ResourceFolderType.LAYOUT;
 import static com.android.resources.ResourceFolderType.VALUES;
-import static com.android.tools.lint.detector.api.LintUtils.getLayoutName;
+import static com.android.tools.lint.detector.api.Lint.getLayoutName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

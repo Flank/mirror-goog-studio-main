@@ -27,8 +27,8 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -185,11 +185,11 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
             }
         } else if (call.owner.equals(POWER_MANAGER)) {
             if (call.name.equals(NEW_WAKE_LOCK_METHOD)) {
-                AbstractInsnNode prev = LintUtils.getPrevInstruction(call);
+                AbstractInsnNode prev = Lint.getPrevInstruction(call);
                 if (prev == null) {
                     return;
                 }
-                prev = LintUtils.getPrevInstruction(prev);
+                prev = Lint.getPrevInstruction(prev);
                 if (prev == null || prev.getOpcode() != Opcodes.LDC) {
                     return;
                 }
@@ -291,9 +291,9 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                     //
                     // The above shouldn't be considered a scenario where release() may not
                     // be called.
-                    AbstractInsnNode next = LintUtils.getNextInstruction(from);
+                    AbstractInsnNode next = Lint.getNextInstruction(from);
                     if (next != null && next.getType() == AbstractInsnNode.VAR_INSN) {
-                        next = LintUtils.getNextInstruction(next);
+                        next = Lint.getNextInstruction(next);
                         if (next != null && next.getType() == AbstractInsnNode.METHOD_INSN) {
                             MethodInsnNode method = (MethodInsnNode) next;
                             if (method.name.equals(RELEASE_METHOD)
@@ -309,12 +309,12 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
             } else if (from.getOpcode() == Opcodes.IFEQ) {
                 JumpInsnNode jump = (JumpInsnNode) from;
                 if (jump.label == to) {
-                    AbstractInsnNode prev = LintUtils.getPrevInstruction(from);
+                    AbstractInsnNode prev = Lint.getPrevInstruction(from);
                     if (prev != null && prev.getType() == AbstractInsnNode.METHOD_INSN) {
                         MethodInsnNode method = (MethodInsnNode) prev;
                         if (method.name.equals(IS_HELD_METHOD)
                                 && method.owner.equals(WAKELOCK_OWNER)) {
-                            AbstractInsnNode next = LintUtils.getNextInstruction(from);
+                            AbstractInsnNode next = Lint.getNextInstruction(from);
                             if (next != null) {
                                 super.add(from, next);
                                 return;

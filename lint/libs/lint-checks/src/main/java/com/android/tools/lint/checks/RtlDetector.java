@@ -65,8 +65,8 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -268,7 +268,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             };
 
     static {
-        if (LintUtils.assertionsEnabled()) {
+        if (Lint.assertionsEnabled()) {
             for (int i = 0; i < ATTRIBUTES.length; i += 2) {
                 String replace = ATTRIBUTES[i];
                 String with = ATTRIBUTES[i + 1];

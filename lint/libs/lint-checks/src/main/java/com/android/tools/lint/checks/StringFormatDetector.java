@@ -52,7 +52,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
@@ -461,7 +461,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         }
 
         // This heuristic only works in English!
-        if (LintUtils.isEnglishResource(context, true)) {
+        if (Lint.isEnglishResource(context, true)) {
             String message =
                     String.format(
                             "Formatting %%d followed by words (\"%1$s\"): "
@@ -641,7 +641,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                         str,
                                         currentFormat,
                                         format,
-                                        LintUtils.getFileNameWithParent(context.getClient(), f));
+                                        Lint.getFileNameWithParent(context.getClient(), f));
                         //warned = true;
                         context.report(ARG_TYPES, location, message);
                         break;

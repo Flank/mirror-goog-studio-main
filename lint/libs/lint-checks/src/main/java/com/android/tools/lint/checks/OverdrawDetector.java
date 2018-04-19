@@ -35,8 +35,8 @@ import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.TRANSPARENT_COLOR;
 import static com.android.SdkConstants.VALUE_DISABLED;
-import static com.android.tools.lint.detector.api.LintUtils.endsWith;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.endsWith;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 
 import com.android.annotations.NonNull;
@@ -50,7 +50,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -296,7 +296,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
                 if (activity.startsWith(".")) {
                     activity = context.getProject().getPackage() + activity;
                 }
-                registerLayoutActivity(LintUtils.getLayoutName(context.file), activity);
+                registerLayoutActivity(Lint.getLayoutName(context.file), activity);
             }
         }
     }

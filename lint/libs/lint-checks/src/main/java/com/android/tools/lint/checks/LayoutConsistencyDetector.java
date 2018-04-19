@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
-import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
+import static com.android.tools.lint.detector.api.Lint.stripIdPrefix;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -32,7 +32,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -131,7 +131,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
 
                 getFileMapList(context).add(Pair.of(context.file, fileMap));
             } else {
-                String name = LintUtils.getLayoutName(context.file);
+                String name = Lint.getLayoutName(context.file);
                 Map<String, List<Location>> map = mLocations.get(name);
                 if (map != null) {
                     lookupLocations(context, root, map);
@@ -142,7 +142,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
 
     @NonNull
     private List<Pair<File, Map<String, String>>> getFileMapList(@NonNull XmlContext context) {
-        String name = LintUtils.getLayoutName(context.file);
+        String name = Lint.getLayoutName(context.file);
         List<Pair<File, Map<String, String>>> list = mMap.get(name);
         if (list == null) {
             list = Lists.newArrayListWithCapacity(4);
@@ -315,8 +315,8 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
                                         + "layout configurations: %3$s (missing from %4$s)",
                                 id,
                                 layout,
-                                LintUtils.formatList(layouts, Integer.MAX_VALUE),
-                                LintUtils.formatList(missing, Integer.MAX_VALUE));
+                                Lint.formatList(layouts, Integer.MAX_VALUE),
+                                Lint.formatList(missing, Integer.MAX_VALUE));
             } else {
                 message =
                         String.format(
@@ -324,8 +324,8 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
                                         + "configurations: %3$s (present in %4$s)",
                                 id,
                                 layout,
-                                LintUtils.formatList(missing, Integer.MAX_VALUE),
-                                LintUtils.formatList(layouts, Integer.MAX_VALUE));
+                                Lint.formatList(missing, Integer.MAX_VALUE),
+                                Lint.formatList(layouts, Integer.MAX_VALUE));
             }
             messages.put(id, message);
         }

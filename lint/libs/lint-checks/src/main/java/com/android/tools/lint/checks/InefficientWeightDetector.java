@@ -44,8 +44,8 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -158,7 +158,7 @@ public class InefficientWeightDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        List<Element> children = LintUtils.getChildren(element);
+        List<Element> children = Lint.getChildren(element);
         // See if there is exactly one child with a weight
         boolean multipleWeights = false;
         Element weightChild = null;
@@ -238,7 +238,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             if (element.hasAttribute(ATTR_STYLE)) {
                 if (context.getClient().supportsProjectResources()) {
                     List<ResourceValue> values =
-                            LintUtils.getStyleAttributes(
+                            Lint.getStyleAttributes(
                                     context.getMainProject(),
                                     context.getClient(),
                                     element.getAttribute(ATTR_STYLE),
@@ -309,7 +309,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             if (sizeNode == null && weightChild.hasAttribute(ATTR_STYLE)) {
                 String style = weightChild.getAttribute(ATTR_STYLE);
                 List<ResourceValue> sizes =
-                        LintUtils.getStyleAttributes(
+                        Lint.getStyleAttributes(
                                 context.getMainProject(),
                                 context.getClient(),
                                 style,

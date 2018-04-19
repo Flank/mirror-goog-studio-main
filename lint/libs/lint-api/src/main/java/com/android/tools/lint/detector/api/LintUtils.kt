@@ -1920,6 +1920,7 @@ fun isNumberString(s: String?): Boolean {
 }
 
 // For compatibility reasons
+@Suppress("unused")
 object LintUtils {
     @Deprecated(
         "Use package function instead",

@@ -28,7 +28,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -142,7 +142,7 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
             if (call.getOpcode() != Opcodes.INVOKESTATIC || !owner.equals(JAVA_LANG_CLASS)) {
                 return;
             }
-            AbstractInsnNode prev = LintUtils.getPrevInstruction(call);
+            AbstractInsnNode prev = Lint.getPrevInstruction(call);
             if (prev instanceof LdcInsnNode) {
                 Object cst = ((LdcInsnNode) prev).cst;
                 //noinspection SpellCheckingInspection
@@ -172,7 +172,7 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
                 int arity = getDescArity(call.desc);
                 AbstractInsnNode node = call;
                 for (int i = 0; i < arity; i++) {
-                    node = LintUtils.getPrevInstruction(node);
+                    node = Lint.getPrevInstruction(node);
                     if (node == null) {
                         break;
                     }

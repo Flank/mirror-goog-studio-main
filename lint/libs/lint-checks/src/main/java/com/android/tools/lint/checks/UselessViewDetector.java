@@ -45,7 +45,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -133,7 +133,7 @@ public class UselessViewDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        int childCount = LintUtils.getChildCount(element);
+        int childCount = Lint.getChildCount(element);
         if (childCount == 0) {
             // Check to see if this is a leaf layout that can be removed
             checkUselessLeaf(context, element);
@@ -169,9 +169,9 @@ public class UselessViewDetector extends LayoutDetector {
         }
 
         // This method is only called when we've already ensured that it has children
-        assert LintUtils.getChildCount(element) > 0;
+        assert Lint.getChildCount(element) > 0;
 
-        int parentChildCount = LintUtils.getChildCount(parent);
+        int parentChildCount = Lint.getChildCount(parent);
         if (parentChildCount != 1) {
             // Don't remove if the node has siblings
             return;
@@ -243,7 +243,7 @@ public class UselessViewDetector extends LayoutDetector {
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
             Node attribute = attributes.item(i);
             String nodeValue = attribute.getNodeValue();
-            if (LintUtils.isDataBindingExpression(nodeValue)) {
+            if (Lint.isDataBindingExpression(nodeValue)) {
                 return true;
             }
         }
@@ -253,7 +253,7 @@ public class UselessViewDetector extends LayoutDetector {
 
     // This is the old UselessView check from layoutopt
     private static void checkUselessLeaf(XmlContext context, Element element) {
-        assert LintUtils.getChildCount(element) == 0;
+        assert Lint.getChildCount(element) == 0;
 
         // Conditions:
         // - The node is a container view (LinearLayout, etc.)

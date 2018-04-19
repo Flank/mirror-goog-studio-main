@@ -28,7 +28,7 @@ import static com.android.SdkConstants.SUPPORT_LIB_GROUP_ID;
 import static com.android.SdkConstants.TAG_FONT;
 import static com.android.SdkConstants.TAG_FONT_FAMILY;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
-import static com.android.tools.lint.detector.api.LintUtils.coalesce;
+import static com.android.tools.lint.detector.api.Lint.coalesce;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

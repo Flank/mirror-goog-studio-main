@@ -53,8 +53,8 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceContext;
@@ -164,7 +164,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             @NonNull Project project, @NonNull Map<String, ClassField> resValues) {
         Set<String> keys = resValues.keySet();
         if (!keys.isEmpty()) {
-            Location location = LintUtils.guessGradleLocation(project);
+            Location location = Lint.guessGradleLocation(project);
             for (String name : keys) {
                 ClassField field = resValues.get(name);
                 ResourceType type = ResourceType.getEnum(field.getType());
@@ -265,7 +265,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     // from the resource name (though the presence of qualifiers like -land etc
                     // makes it a little tricky if there's no base file provided)
                     ResourceType type = resource.type;
-                    if (type != null && LintUtils.isFileBasedResourceType(type)) {
+                    if (type != null && Lint.isFileBasedResourceType(type)) {
                         String name = resource.name;
 
                         List<File> folders = Lists.newArrayList();
@@ -507,7 +507,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     bindingClasses = Maps.newHashMap();
                 }
                 String fileName = context.file.getName();
-                String resourceName = LintUtils.getBaseName(fileName);
+                String resourceName = Lint.getBaseName(fileName);
                 Element data = getFirstSubTagByName(root, TAG_DATA);
                 String bindingClass = null;
                 while (data != null) {

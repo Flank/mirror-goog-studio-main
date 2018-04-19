@@ -22,10 +22,10 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.getMethodName
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -50,7 +50,7 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
         for (method in drawMethods) {
             method.accept(object : AbstractUastVisitor() {
                 override fun visitCallExpression(node: UCallExpression): Boolean {
-                    val name = LintUtils.getMethodName(node)
+                    val name = getMethodName(node)
                     if (name == GET_WIDTH || name == GET_HEIGHT) {
                         val sizeMethod = node.resolve()
                         if (sizeMethod != null &&

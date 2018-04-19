@@ -24,8 +24,8 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -349,7 +349,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 if (child.hasAttribute(ATTR_DIGEST)) {
                     Attr digestAttr = child.getAttributeNode(ATTR_DIGEST);
                     if (!PIN_DIGEST_ALGORITHM.equalsIgnoreCase(digestAttr.getValue())) {
-                        String values = LintUtils.formatList(getSupportedPinDigestAlgorithms(), 2);
+                        String values = Lint.formatList(getSupportedPinDigestAlgorithms(), 2);
                         LintFix.GroupBuilder fixBuilder = LintFix.create().group();
                         for (String algorithm : getSupportedPinDigestAlgorithms()) {
                             fixBuilder.add(
@@ -484,7 +484,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 suggestionString =
                         String.format("%1$s or %2$s", suggestions.get(0), suggestions.get(1));
             } else {
-                suggestionString = LintUtils.formatList(suggestions, -1);
+                suggestionString = Lint.formatList(suggestions, -1);
             }
             String message =
                     String.format(
@@ -536,7 +536,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
             @NonNull String name, @NonNull Collection<String> validAttributeNames) {
         List<String> suggestions = null;
         for (String suggestion : validAttributeNames) {
-            if (LintUtils.isEditableTo(suggestion, name, 3)) {
+            if (Lint.isEditableTo(suggestion, name, 3)) {
                 if (suggestions == null) {
                     suggestions = new ArrayList<>(validAttributeNames.size());
                 }

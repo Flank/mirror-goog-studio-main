@@ -61,7 +61,7 @@ public class DefaultSdkInfoTest extends TestCase {
 
     /*
     // Check that all widgets lead to the root view
-    if (LintUtils.assertionsEnabled()) {
+    if (Lint.assertionsEnabled()) {
         for (String key : PARENTS.keySet()) {
             String parent = PARENTS.get(key);
             if (!parent.equals(VIEW)) {

@@ -23,7 +23,7 @@ import static com.android.tools.lint.checks.PluralsDatabase.Quantity.zero;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -168,7 +168,7 @@ public class PluralsDatabase {
             for (Quantity quantity : set) {
                 list.add('`' + quantity.name() + '`');
             }
-            return LintUtils.formatList(list, Integer.MAX_VALUE);
+            return Lint.formatList(list, Integer.MAX_VALUE);
         }
     }
 

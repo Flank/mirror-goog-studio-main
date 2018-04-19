@@ -77,8 +77,8 @@ import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
@@ -999,7 +999,7 @@ public class TestLintClient extends LintCliClient {
             Element element = (Element) node;
             String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (id != null && !id.isEmpty()) {
-                ids.add(LintUtils.stripIdPrefix(id));
+                ids.add(Lint.stripIdPrefix(id));
             }
 
             NamedNodeMap attributes = element.getAttributes();
@@ -1401,8 +1401,7 @@ public class TestLintClient extends LintCliClient {
                 if (mocker != null) {
                     testSourceFolders = Lists.newArrayList();
                     for (SourceProvider provider :
-                            LintUtils.getTestSourceProviders(
-                                    mocker.getProject(), mocker.getVariant())) {
+                            Lint.getTestSourceProviders(mocker.getProject(), mocker.getVariant())) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
                         List<File> list = new ArrayList<>();

@@ -23,7 +23,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -73,7 +73,7 @@ public class StateListDetector extends ResourceXmlDetector {
 
         Element root = document.getDocumentElement();
         if (root != null && root.getTagName().equals("selector")) {
-            List<Element> children = LintUtils.getChildren(root);
+            List<Element> children = Lint.getChildren(root);
             Map<Element, Set<String>> states = Maps.newHashMapWithExpectedSize(children.size());
 
             for (Element child : children) {

@@ -31,8 +31,8 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -113,7 +113,7 @@ public class TypoDetector extends ResourceXmlDetector {
         mLanguage = null;
         mRegion = null;
 
-        LocaleQualifier locale = LintUtils.getLocale(context);
+        LocaleQualifier locale = Lint.getLocale(context);
         if (locale != null && locale.hasLanguage()) {
             mLanguage = locale.getLanguage();
             mRegion = locale.hasRegion() ? locale.getRegion() : null;

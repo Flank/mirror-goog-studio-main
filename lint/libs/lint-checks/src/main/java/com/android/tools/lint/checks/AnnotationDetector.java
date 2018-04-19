@@ -29,7 +29,7 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
-import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
+import static com.android.tools.lint.detector.api.Lint.getAutoBoxedType;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.RES_SUFFIX;

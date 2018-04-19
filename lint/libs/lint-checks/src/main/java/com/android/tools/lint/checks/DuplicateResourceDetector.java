@@ -30,8 +30,8 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -263,7 +263,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
     }
 
     private static void checkUniqueNames(XmlContext context, Element parent) {
-        List<Element> items = LintUtils.getChildren(parent);
+        List<Element> items = Lint.getChildren(parent);
         if (items.size() > 1) {
             Set<String> names = Sets.newHashSet();
             for (Element item : items) {

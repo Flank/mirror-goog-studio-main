@@ -42,8 +42,8 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
-import static com.android.tools.lint.detector.api.LintUtils.endsWith;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.endsWith;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
@@ -65,7 +65,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceEvaluator;
@@ -1009,7 +1009,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         Dimension dip = entry2.getValue();
                         Dimension px = pixelSizes.get(file);
                         String example =
-                                LintUtils.getFileNameWithParent(context.getClient(), file)
+                                Lint.getFileNameWithParent(context.getClient(), file)
                                         + ": "
                                         + String.format(
                                                 "%1$dx%2$d dp (%3$dx%4$d px)",
@@ -1069,7 +1069,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         String.format(
                                 "Missing density variation folders in `%1$s`: %2$s",
                                 context.getProject().getDisplayPath(res),
-                                LintUtils.formatList(missing, -1)));
+                                Lint.formatList(missing, -1)));
             }
         }
 
@@ -1109,7 +1109,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             location,
                             String.format(
                                     "The following images appear in both `-nodpi` and in a density folder: %1$s",
-                                    LintUtils.formatList(
+                                    Lint.formatList(
                                             list, context.getDriver().isAbbreviating() ? 10 : -1)));
                 }
             }
@@ -1146,14 +1146,14 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     Multimap<String, File> map = ArrayListMultimap.create();
                     Set<String> bases = Sets.newHashSetWithExpectedSize(overlap.size());
                     for (String name : overlap) {
-                        bases.add(LintUtils.getBaseName(name));
+                        bases.add(Lint.getBaseName(name));
                     }
 
                     for (String base : bases) {
                         for (Map.Entry<File, Set<String>> entry : folderMap.entrySet()) {
                             File folder = entry.getKey();
                             for (String n : entry.getValue()) {
-                                if (base.equals(LintUtils.getBaseName(n))) {
+                                if (base.equals(Lint.getBaseName(n))) {
                                     map.put(base, new File(folder, n));
                                 }
                             }
@@ -1185,7 +1185,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                 location,
                                 String.format(
                                         "The following images appear both as density independent `.xml` files and as bitmap files: %1$s",
-                                        LintUtils.formatList(
+                                        Lint.formatList(
                                                 fileNames,
                                                 context.getDriver().isAbbreviating() ? 10 : -1)));
                     }
@@ -1230,7 +1230,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             foundIn =
                                     String.format(
                                             " (found in %1$s)",
-                                            LintUtils.formatList(
+                                            Lint.formatList(
                                                     defined,
                                                     context.getDriver().isAbbreviating() ? 5 : -1));
                         }
@@ -1248,7 +1248,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             String.format(
                                     "Missing the following drawables in `%1$s`: %2$s%3$s",
                                     folder,
-                                    LintUtils.formatList(
+                                    Lint.formatList(
                                             delta, context.getDriver().isAbbreviating() ? 5 : -1),
                                     foundIn));
                 }
@@ -1315,11 +1315,11 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     private static Set<String> nameDifferences(Set<String> a, Set<String> b) {
         Set<String> names1 = new HashSet<>(a.size());
         for (String s : a) {
-            names1.add(LintUtils.getBaseName(s));
+            names1.add(Lint.getBaseName(s));
         }
         Set<String> names2 = new HashSet<>(b.size());
         for (String s : b) {
-            names2.add(LintUtils.getBaseName(s));
+            names2.add(Lint.getBaseName(s));
         }
 
         names1.removeAll(names2);
@@ -1328,12 +1328,12 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             // Map filenames back to original filenames with extensions
             Set<String> result = new HashSet<>(names1.size());
             for (String s : a) {
-                if (names1.contains(LintUtils.getBaseName(s))) {
+                if (names1.contains(Lint.getBaseName(s))) {
                     result.add(s);
                 }
             }
             for (String s : b) {
-                if (names1.contains(LintUtils.getBaseName(s))) {
+                if (names1.contains(Lint.getBaseName(s))) {
                     result.add(s);
                 }
             }
@@ -1352,11 +1352,11 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     private static Set<String> nameIntersection(Set<String> a, Set<String> b) {
         Set<String> names1 = new HashSet<>(a.size());
         for (String s : a) {
-            names1.add(LintUtils.getBaseName(s));
+            names1.add(Lint.getBaseName(s));
         }
         Set<String> names2 = new HashSet<>(b.size());
         for (String s : b) {
-            names2.add(LintUtils.getBaseName(s));
+            names2.add(Lint.getBaseName(s));
         }
 
         names1.retainAll(names2);
@@ -1365,12 +1365,12 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             // Map filenames back to original filenames with extensions
             Set<String> result = new HashSet<>(names1.size());
             for (String s : a) {
-                if (names1.contains(LintUtils.getBaseName(s))) {
+                if (names1.contains(Lint.getBaseName(s))) {
                     result.add(s);
                 }
             }
             for (String s : b) {
-                if (names1.contains(LintUtils.getBaseName(s))) {
+                if (names1.contains(Lint.getBaseName(s))) {
                     result.add(s);
                 }
             }
@@ -2129,7 +2129,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         ICON_EXPECTED_SIZE,
                         Location.create(file),
                         "Incorrect icon size for `"
-                                + LintUtils.getFileNameWithParent(context.getClient(), file)
+                                + Lint.getFileNameWithParent(context.getClient(), file)
                                 + "`: "
                                 + String.format(
                                         "expected %1$dx%2$d, but was %3$dx%4$d",
@@ -2139,7 +2139,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         ICON_EXPECTED_SIZE,
                         Location.create(file),
                         "Incorrect icon size for `"
-                                + LintUtils.getFileNameWithParent(context.getClient(), file)
+                                + Lint.getFileNameWithParent(context.getClient(), file)
                                 + "`: "
                                 + String.format(
                                         "icon size should be at most %1$dx%2$d, but "

@@ -71,7 +71,8 @@ class CanvasSizeDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            kotlin("""
+            kotlin(
+                """
                 package test.pkg
 
                 import android.annotation.SuppressLint
@@ -94,8 +95,10 @@ class CanvasSizeDetectorTest : AbstractCheckTest() {
                         val height5 = canvas.getHeight() // WARN
                     }
                 }
-                """).indented(),
-            java("""
+                """
+            ).indented(),
+            java(
+                """
                 package test.pkg;
 
                 import android.graphics.Canvas;
@@ -110,8 +113,10 @@ class CanvasSizeDetectorTest : AbstractCheckTest() {
                         int height2 = canvas.getHeight(); // WARN
                     }
                 }
-                """).indented(),
-            kotlin("""
+                """
+            ).indented(),
+            kotlin(
+                """
                 package test.pkg
 
                 import android.graphics.Canvas
@@ -124,7 +129,8 @@ class CanvasSizeDetectorTest : AbstractCheckTest() {
                         val height2 = canvas.height // WARN
                     }
                 }
-                """).indented()
+                """
+            ).indented()
         ).run().expect(
             """
             src/test/pkg/MyCustomView1.java:27: Warning: Calling Canvas.getWidth is usually wrong; you should be calling getWidth instead [CanvasSize]

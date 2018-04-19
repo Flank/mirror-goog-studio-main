@@ -48,7 +48,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -130,7 +130,7 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
             // Try to find the corresponding match
             List<String> suggestions = null;
             for (String suggestion : sValidTags) {
-                if (LintUtils.isEditableTo(suggestion, tag, 3)) {
+                if (Lint.isEditableTo(suggestion, tag, 3)) {
                     if (suggestions == null) {
                         suggestions = Lists.newArrayList();
                     }
@@ -146,7 +146,7 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
                     suggestionString =
                             String.format("%1$s or %2$s", suggestions.get(0), suggestions.get(1));
                 } else {
-                    suggestionString = LintUtils.formatList(suggestions, -1);
+                    suggestionString = Lint.formatList(suggestions, -1);
                 }
                 String message =
                         String.format(

@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.JavaEvaluator;

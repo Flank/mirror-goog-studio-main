@@ -43,7 +43,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
@@ -150,13 +150,13 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
             }
         } else {
             assert tag.equals(FRAME_LAYOUT);
-            if (LintUtils.isRootElement(element)
+            if (Lint.isRootElement(element)
                     && ((isWidthFillParent(element) && isHeightFillParent(element))
                             || !element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY))
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND)
                     && !hasPadding(element)) {
-                String layout = LintUtils.getLayoutName(context.file);
+                String layout = Lint.getLayoutName(context.file);
                 Handle handle = context.createLocationHandle(element);
                 handle.setClientData(element);
 

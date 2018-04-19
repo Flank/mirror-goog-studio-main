@@ -20,7 +20,7 @@ import static com.android.SdkConstants.CLASS_APPLICATION;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_VIEW;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -40,7 +40,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -351,11 +351,11 @@ public class DuplicateIdDetector extends LayoutDetector {
         }
 
         String getLayoutName() {
-            return LintUtils.getLayoutName(mFile);
+            return Lint.getLayoutName(mFile);
         }
 
         String getDisplayName(@NonNull LintClient client) {
-            return LintUtils.getFileNameWithParent(client, mFile);
+            return Lint.getFileNameWithParent(client, mFile);
         }
 
         void include(Layout target) {
@@ -411,7 +411,7 @@ public class DuplicateIdDetector extends LayoutDetector {
             Multimap<String, Layout> nameToLayout =
                     ArrayListMultimap.create(mFileToLayout.size(), 4);
             for (File file : mFileToLayout.keySet()) {
-                String name = LintUtils.getLayoutName(file);
+                String name = Lint.getLayoutName(file);
                 nameToLayout.put(name, mFileToLayout.get(file));
             }
 

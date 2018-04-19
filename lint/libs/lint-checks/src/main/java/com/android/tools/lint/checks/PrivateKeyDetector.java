@@ -22,7 +22,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.OtherFileScanner;
 import com.android.tools.lint.detector.api.Scope;
@@ -51,8 +51,8 @@ public class PrivateKeyDetector extends Detector implements OtherFileScanner {
 
     private static boolean isPrivateKeyFile(File file) {
         if (!file.isFile()
-                || (!LintUtils.endsWith(file.getPath(), "pem")
-                        && !LintUtils.endsWith(file.getPath(), "key"))) {
+                || (!Lint.endsWith(file.getPath(), "pem")
+                        && !Lint.endsWith(file.getPath(), "key"))) {
             return false;
         }
 
@@ -85,7 +85,7 @@ public class PrivateKeyDetector extends Detector implements OtherFileScanner {
 
         File file = context.file;
         if (isPrivateKeyFile(file)) {
-            String fileName = LintUtils.getFileNameWithParent(context.getClient(), file);
+            String fileName = Lint.getFileNameWithParent(context.getClient(), file);
             String message =
                     String.format(
                             "The `%1$s` file seems to be a private key file. "

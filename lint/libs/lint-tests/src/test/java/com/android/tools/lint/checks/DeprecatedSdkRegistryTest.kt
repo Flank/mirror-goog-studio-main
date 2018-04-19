@@ -44,6 +44,7 @@ class DeprecatedSdkRegistryTest : TestCase() {
  </library>
 </sdk_metadata>
         """
+
     fun testBasic() {
         @Language("XML")
         val xml = """

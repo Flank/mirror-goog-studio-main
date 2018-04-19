@@ -33,7 +33,6 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceContext;
@@ -129,7 +128,7 @@ public class ResourcePrefixDetector extends Detector implements BinaryResourceSc
             XmlContext xmlContext = (XmlContext) context;
             ResourceFolderType folderType = xmlContext.getResourceFolderType();
             if (folderType != null && folderType != ResourceFolderType.VALUES) {
-                String name = LintUtils.getBaseName(context.file.getName());
+                String name = Lint.getBaseName(context.file.getName());
                 if (!libraryPrefixMatches(mUnderlinePrefix, name)) {
                     // Attempt to report the error on the root tag of the associated
                     // document to make suppressing the error with a tools:suppress
@@ -159,7 +158,7 @@ public class ResourcePrefixDetector extends Detector implements BinaryResourceSc
         return String.format(
                 "Resource named '`%1$s`' does not start "
                         + "with the project's resource prefix '`%2$s`'; rename to '`%3$s`' ?",
-                name, mPrefix, LintUtils.computeResourceName(mPrefix, name, folderType));
+                name, mPrefix, Lint.computeResourceName(mPrefix, name, folderType));
     }
 
     // --- Implements XmlScanner ----
@@ -214,7 +213,7 @@ public class ResourcePrefixDetector extends Detector implements BinaryResourceSc
         if (mUnderlinePrefix != null) {
             ResourceFolderType folderType = context.getResourceFolderType();
             if (folderType != null && folderType != ResourceFolderType.VALUES) {
-                String name = LintUtils.getBaseName(context.file.getName());
+                String name = Lint.getBaseName(context.file.getName());
                 if (!name.startsWith(mUnderlinePrefix)) {
                     // Turns out the Gradle plugin will generate raw resources
                     // for renderscript. We don't want to flag these.

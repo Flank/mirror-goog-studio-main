@@ -235,6 +235,7 @@ public class LintFix {
         public GroupBuilder alternatives() {
             return group();
         }
+
         /**
          * Creates a composite fix: multiple lint fixes which will all be applied as a single unit.
          *

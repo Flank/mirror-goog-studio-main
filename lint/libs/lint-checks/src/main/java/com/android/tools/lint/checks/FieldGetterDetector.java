@@ -24,7 +24,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -107,7 +107,7 @@ public class FieldGetterDetector extends Detector implements ClassScanner {
         String name = node.name;
         String owner = node.owner;
 
-        AbstractInsnNode prev = LintUtils.getPrevInstruction(instruction);
+        AbstractInsnNode prev = Lint.getPrevInstruction(instruction);
         if (prev == null || prev.getOpcode() != Opcodes.ALOAD) {
             return;
         }

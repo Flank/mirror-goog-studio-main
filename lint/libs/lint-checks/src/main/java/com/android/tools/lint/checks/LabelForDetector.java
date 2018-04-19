@@ -28,7 +28,7 @@ import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.MULTI_AUTO_COMPLETE_TEXT_VIEW;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.TEXT_VIEW;
-import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
+import static com.android.tools.lint.detector.api.Lint.stripIdPrefix;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

@@ -46,7 +46,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -253,14 +253,14 @@ public class ButtonDetector extends ResourceXmlDetector {
                             if (c == '"' || c == '\'') {
                                 continue;
                             }
-                            if (LintUtils.startsWith(text, CANCEL_LABEL, j)) {
+                            if (Lint.startsWith(text, CANCEL_LABEL, j)) {
                                 String label = stripLabel(text);
                                 if (label.equalsIgnoreCase(CANCEL_LABEL)) {
                                     String name = element.getAttribute(ATTR_NAME);
                                     foundResource(context, name, element);
 
                                     if (!label.equals(CANCEL_LABEL)
-                                            && LintUtils.isEnglishResource(context, true)
+                                            && Lint.isEnglishResource(context, true)
                                             && context.isEnabled(CASE)) {
                                         assert label.trim().equalsIgnoreCase(CANCEL_LABEL) : label;
                                         context.report(
@@ -273,14 +273,14 @@ public class ButtonDetector extends ResourceXmlDetector {
                                                         label));
                                     }
                                 }
-                            } else if (LintUtils.startsWith(text, OK_LABEL, j)) {
+                            } else if (Lint.startsWith(text, OK_LABEL, j)) {
                                 String label = stripLabel(text);
                                 if (label.equalsIgnoreCase(OK_LABEL)) {
                                     String name = element.getAttribute(ATTR_NAME);
                                     foundResource(context, name, element);
 
                                     if (!label.equals(OK_LABEL)
-                                            && LintUtils.isEnglishResource(context, true)
+                                            && Lint.isEnglishResource(context, true)
                                             && context.isEnabled(CASE)) {
                                         assert label.trim().equalsIgnoreCase(OK_LABEL) : label;
                                         context.report(
@@ -293,7 +293,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                                                         label));
                                     }
                                 }
-                            } else if (LintUtils.startsWith(text, BACK_LABEL, j)
+                            } else if (Lint.startsWith(text, BACK_LABEL, j)
                                     && stripLabel(text).equalsIgnoreCase(BACK_LABEL)) {
                                 String name = element.getAttribute(ATTR_NAME);
                                 foundResource(context, name, element);
@@ -410,7 +410,7 @@ public class ButtonDetector extends ResourceXmlDetector {
      * check the context (for OK/Cancel the button order etc).
      */
     private void foundResource(XmlContext context, String name, Element element) {
-        if (!LintUtils.isEnglishResource(context, true)) {
+        if (!Lint.isEnglishResource(context, true)) {
             return;
         }
 
@@ -498,7 +498,7 @@ public class ButtonDetector extends ResourceXmlDetector {
             }
         }
 
-        List<Element> buttons = LintUtils.getChildren(element.getParentNode());
+        List<Element> buttons = Lint.getChildren(element.getParentNode());
 
         if (mIgnore == null) {
             mIgnore = new HashSet<>();
@@ -644,7 +644,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         }
 
         // Don't warn about single Cancel / OK buttons
-        if (LintUtils.getChildCount(parent) < 2) {
+        if (Lint.getChildCount(parent) < 2) {
             return false;
         }
 
@@ -681,7 +681,7 @@ public class ButtonDetector extends ResourceXmlDetector {
         Element parent = (Element) parentNode;
 
         // Don't warn about single Cancel / OK buttons
-        if (LintUtils.getChildCount(parent) < 2) {
+        if (Lint.getChildCount(parent) < 2) {
             return false;
         }
 
@@ -765,7 +765,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     private static boolean isButtonId(Element parent, String targetId) {
         for (Element child : XmlUtils.getSubTags(parent)) {
             String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
-            if (LintUtils.idReferencesMatch(id, targetId)) {
+            if (Lint.idReferencesMatch(id, targetId)) {
                 return child.getTagName().equals(BUTTON);
             }
         }

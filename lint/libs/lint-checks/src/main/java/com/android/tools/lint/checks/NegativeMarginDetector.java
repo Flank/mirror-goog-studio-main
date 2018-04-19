@@ -43,7 +43,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -217,8 +217,7 @@ public class NegativeMarginDetector extends LayoutDetector {
                                                             + "(`%1$s` is defined as `%2$s` in `%3$s`",
                                                     value,
                                                     dimenValue,
-                                                    LintUtils.getFileNameWithParent(
-                                                            client, sourceFile));
+                                                    Lint.getFileNameWithParent(client, sourceFile));
                                     context.report(
                                             ISSUE, scope, context.getLocation(scope), message);
                                     break;
