@@ -210,7 +210,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         assertNotNull(itemList);
         //assertFalse(item.hasDefault());
         assertEquals(1, itemList.size());
-        ResourceFile resourceFile = ((ResourceMergerItem) itemList.get(0)).getSource();
+        ResourceFile resourceFile = ((ResourceMergerItem) itemList.get(0)).getSourceFile();
         assertEquals("only_land.xml", resourceFile.getFile().getName());
         assertEquals(ScreenOrientation.LANDSCAPE.getResourceValue(), resourceFile.getQualifiers());
 
@@ -286,7 +286,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         itemList = mRepository.getResourceItem(ResourceType.STRING, "dummy");
         assertNotNull(itemList);
         assertNotNull(itemList.get(0));
-        ResourceFile stringResFile = ((ResourceMergerItem) itemList.get(0)).getSource();
+        ResourceFile stringResFile = ((ResourceMergerItem) itemList.get(0)).getSourceFile();
         File stringFile = stringResFile.getFile();
         assertTrue(stringFile.exists());
         String strings = Files.toString(stringFile, Charsets.UTF_8);

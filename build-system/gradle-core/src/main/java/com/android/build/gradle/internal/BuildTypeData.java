@@ -25,8 +25,9 @@ import org.gradle.api.DefaultTask;
  * Class containing a BuildType and associated data (Sourceset for instance).
  */
 public class BuildTypeData extends VariantDimensionData {
-    private final CoreBuildType buildType;
-    private DefaultTask assembleTask;
+    @NonNull private final CoreBuildType buildType;
+    @Nullable private DefaultTask assembleTask;
+    @Nullable private DefaultTask bundleTask;
 
     BuildTypeData(
             @NonNull CoreBuildType buildType,
@@ -38,6 +39,7 @@ public class BuildTypeData extends VariantDimensionData {
         this.buildType = buildType;
     }
 
+    @NonNull
     public CoreBuildType getBuildType() {
         return buildType;
     }
@@ -49,5 +51,14 @@ public class BuildTypeData extends VariantDimensionData {
 
     public void setAssembleTask(DefaultTask assembleTask) {
         this.assembleTask = assembleTask;
+    }
+
+    @Nullable
+    public DefaultTask getBundleTask() {
+        return bundleTask;
+    }
+
+    public void setBundleTask(DefaultTask bundleTask) {
+        this.bundleTask = bundleTask;
     }
 }

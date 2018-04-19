@@ -71,9 +71,7 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
          (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
           agent_config.cpu_api_tracing_enabled()) ||
          (agent_config.energy_profiler_enabled() &&
-          ((strcmp(sig_mutf8, "Landroid/app/Activity;") == 0 &&
-            // TODO(b/77586395): re-enable for API 26.
-            agent_config.android_feature_level() >= 27) ||
+          (strcmp(sig_mutf8, "Landroid/app/Instrumentation;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/ActivityThread;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
@@ -89,7 +87,10 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
                   "Landroid/location/LocationManager$ListenerTransport;") ==
                0 ||
            strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0));
+           strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 ||
+           strcmp(sig_mutf8,
+                  "Lcom/google/android/gms/location/"
+                  "FusedLocationProviderClient;") == 0));
 }
 
 // ClassPrepare event callback to invoke transformation of selected
@@ -191,6 +192,26 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(desc.c_str(), "stopMethodTracing", "()V"))) {
       Log::E("Error instrumenting Debug.stopMethodTracing");
+    }
+
+    // Instrument fixTracePath() at entry.
+    slicer::MethodInstrumenter mi_fix_entry(dex_ir);
+    mi_fix_entry.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
+        "onFixTracePathEntry"));
+    if (!mi_fix_entry.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "fixTracePath", "(Ljava/lang/String;)Ljava/lang/String;"))) {
+      Log::E("Error instrumenting Debug.fixTracePath entry");
+    }
+
+    // Instrument fixTracePath() at exit.
+    slicer::MethodInstrumenter mi_fix_exit(dex_ir);
+    mi_fix_exit.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
+        "onFixTracePathExit"));
+    if (!mi_fix_exit.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "fixTracePath", "(Ljava/lang/String;)Ljava/lang/String;"))) {
+      Log::E("Error instrumenting Debug.fixTracePath exit");
     }
   } else if (strcmp(name, "android/os/PowerManager") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
@@ -473,15 +494,24 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                          "Landroid/app/PendingIntent;"))) {
       Log::E("Error instrumenting PendingIntent.getBroadcast");
     }
-  } else if (strcmp(name, "android/app/Activity") == 0) {
+  } else if (strcmp(name, "android/app/Instrumentation") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
         "wrapActivityCreate"));
-    if (!mi.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "performCreate",
-            "(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V"))) {
-      Log::E("Error instrumenting Activity.performCreate");
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "callActivityOnCreate",
+                         "(Landroid/app/Activity;Landroid/os/Bundle;)V"))) {
+      Log::E(
+          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle)");
+    }
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "callActivityOnCreate",
+                         "(Landroid/app/Activity;Landroid/os/Bundle;Landroid/"
+                         "os/PersistableBundle;)V"))) {
+      Log::E(
+          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle, "
+          "PersistableBundle)");
     }
   } else if (strcmp(name, "android/app/IntentService") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
@@ -504,6 +534,57 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
             ir::MethodId(desc.c_str(), "handleReceiver",
                          "(Landroid/app/ActivityThread$ReceiverData;)V"))) {
       Log::E("Error instrumenting BroadcastReceiver.onReceive");
+    }
+  } else if (strcmp(name,
+                    "com/google/android/gms/location/"
+                    "FusedLocationProviderClient") == 0) {
+    slicer::MethodInstrumenter mi_req(dex_ir);
+    mi_req.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
+                     "FusedLocationProviderClientWrapper;",
+                     "wrapRequestLocationUpdates"),
+        true);
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(Lcom/google/android/gms/location/LocationRequest;"
+            "Lcom/google/android/gms/location/LocationCallback;"
+            "Landroid/os/Looper;)Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.requestLocationUpdates("
+          "LocationCallback)");
+    }
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(Lcom/google/android/gms/location/LocationRequest;Landroid/app/"
+            "PendingIntent;)Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.requestLocationUpdates(PendingIntent)");
+    }
+
+    slicer::MethodInstrumenter mi_rmv(dex_ir);
+    mi_rmv.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
+                     "FusedLocationProviderClientWrapper;",
+                     "wrapRemoveLocationUpdates"),
+        true);
+    if (!mi_rmv.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "removeLocationUpdates",
+                         "(Lcom/google/android/gms/location/LocationCallback;)"
+                         "Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.removeLocationUpdates("
+          "LocationCallback)");
+    }
+    if (!mi_rmv.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "removeLocationUpdates",
+                         "(Landroid/app/PendingIntent;)"
+                         "Lcom/google/android/gms/tasks/Task;"))) {
+      Log::E(
+          "Error instrumenting "
+          "FusedLocationProviderClient.removeLocationUpdates(PendingIntent)");
     }
   } else {
     Log::V("No transformation applied for class: %s", name);
@@ -594,11 +675,11 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationUpdateRequested",
-        "(ILjava/lang/String;JFIILjava/lang/String;)V");
+        "(ILjava/lang/String;JJFIIILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendIntentLocationUpdateRequested",
-        "(ILjava/lang/String;JFIILjava/lang/String;ILjava/lang/String;)V");
+        "(ILjava/lang/String;JJFIIILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationUpdateRemoved", "(ILjava/lang/String;)V");
@@ -622,6 +703,12 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
         "sendStopOperation", "(I)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
+        "recordInputPath", "(ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
+        "recordOutputPath", "(ILjava/lang/String;)V");
   }
 
   BindJNIMethod(jni,

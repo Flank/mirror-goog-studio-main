@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.ATTR_NAME;
@@ -71,7 +70,6 @@ import org.w3c.dom.Node;
  */
 public class MergedResourceWriter
         extends MergeWriter<ResourceMergerItem, MergedResourceWriter.FileGenerationParameters> {
-
     @NonNull
     private final ResourcePreprocessor mPreprocessor;
 
@@ -343,7 +341,7 @@ public class MergedResourceWriter
             // We'll figure out later if the files needs to be written or (not)
             mValuesResMap.put(item.getQualifiers(), item);
         } else {
-            checkState(item.getSource() != null);
+            checkState(item.getSourceFile() != null);
             // This is a single value file or a set of generated files. Only write it if the state
             // is TOUCHED.
             if (item.isTouched()) {
@@ -355,11 +353,11 @@ public class MergedResourceWriter
                     try {
                         FileGenerationParameters workItem =
                                 new FileGenerationParameters(item, mPreprocessor);
-                        if (workItem.resourceItem.getSource() != null) {
+                        if (workItem.resourceItem.getSourceFile() != null) {
                             getExecutor().submit(FileGenerationWorkAction.class, workItem);
                         }
                     } catch (Exception e) {
-                        throw new ConsumerException(e, item.getSource().getFile());
+                        throw new ConsumerException(e, item.getSourceFile().getFile());
                     }
                 }
 
@@ -395,11 +393,11 @@ public class MergedResourceWriter
             try {
                 workItem.resourcePreprocessor.generateFile(
                         workItem.resourceItem.getFile(),
-                        workItem.resourceItem.getSource().getFile());
+                        workItem.resourceItem.getSourceFile().getFile());
             } catch (Exception e) {
                 throw new RuntimeException(
                         "Error while processing "
-                                + workItem.resourceItem.getSource().getFile()
+                                + workItem.resourceItem.getSourceFile().getFile()
                                 + " : "
                                 + e.getMessage(),
                         e);
@@ -421,7 +419,6 @@ public class MergedResourceWriter
             case GENERATED_FILES:
                 if (replacedType == DataFile.FileType.SINGLE_FILE
                         || replacedType == DataFile.FileType.GENERATED_FILES) {
-
                     File removedFile = getResourceOutputFile(removedItem);
                     File replacedFile = getResourceOutputFile(replacedBy);
                     if (removedFile.equals(replacedFile)) {
@@ -525,7 +522,7 @@ public class MergedResourceWriter
                         // also add an indent of 4 spaces.
                         rootNode.appendChild(document.createTextNode("\n    "));
 
-                        ResourceFile source = item.getSource();
+                        ResourceFile source = item.getSourceFile();
 
                         Node adoptedNode = NodeUtils.adoptNode(document, nodeValue);
                         if (source != null) {

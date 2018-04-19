@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
@@ -31,9 +30,7 @@ import org.w3c.dom.Node;
  * the same as as the owner ResourceFile.
  */
 public class GeneratedResourceMergerItem extends SourcelessResourceMergerItem {
-
     private final File mGeneratedFile;
-
     private final String mQualifiers;
 
     public GeneratedResourceMergerItem(

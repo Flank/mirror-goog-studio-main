@@ -1,8 +1,8 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
-import android.support.v7.app.AppCompatActivity
+import ${getMaterialComponentName('android.support.design.widget.BottomNavigationView', useMaterial2)}
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 import kotlinx.android.synthetic.main.${layoutName}.*
 
 class ${activityClass} : AppCompatActivity() {

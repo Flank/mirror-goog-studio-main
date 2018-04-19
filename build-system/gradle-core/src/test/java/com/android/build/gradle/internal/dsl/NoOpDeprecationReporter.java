@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.options.Option;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
 
@@ -56,11 +57,19 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
     }
 
     @Override
-    public void reportDeprecatedConfiguration(
+    public void reportRenamedConfiguration(
             @NonNull String newConfiguration,
             @NonNull String oldConfiguration,
             @NonNull DeprecationTarget deprecationTarget,
             @Nullable String url) {
+        // do nothing
+    }
+
+    @Override
+    public void reportDeprecatedConfiguration(
+            @NotNull String newDslElement,
+            @NotNull String oldConfiguration,
+            @NotNull DeprecationTarget deprecationTarget) {
         // do nothing
     }
 

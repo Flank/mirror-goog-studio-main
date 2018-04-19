@@ -43,7 +43,7 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
     /**
      * Creates a resource file with a single resource item.
      *
-     * <p>The source file is set on the item with {@link ResourceMergerItem#setSource(DataFile)}
+     * <p>The source file is set on the item with {@link ResourceMergerItem#setSourceFile(DataFile)}
      *
      * <p>The type of the ResourceFile will be {@link FileType#SINGLE_FILE}.
      *
@@ -63,7 +63,7 @@ public class ResourceFile extends DataFile<ResourceMergerItem> {
     /**
      * Creates a resource file with a list of resource items.
      *
-     * <p>The source file is set on the items with {@link ResourceMergerItem#setSource(DataFile)}
+     * <p>The source file is set on the items with {@link ResourceMergerItem#setSourceFile(DataFile)}
      *
      * <p>The type of the ResourceFile will be {@link FileType#XML_VALUES}.
      *

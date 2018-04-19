@@ -55,7 +55,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
     @NonNull private final String mName;
 
     /** File the data item comes from. */
-    @Nullable private F mSource;
+    @Nullable private F mSourceFile;
 
     /**
      * The status of the Item. It's a bit mask as opposed to an enum
@@ -84,8 +84,8 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * Returns the DataFile the item is coming from.
      */
     @Nullable
-    public F getSource() {
-        return mSource;
+    public F getSourceFile() {
+        return mSourceFile;
     }
 
     /**
@@ -94,8 +94,8 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * @param sourceFile the data file, if null then the item is marked as being removed from the
      *     data file
      */
-    public void setSource(@Nullable F sourceFile) {
-        mSource = sourceFile;
+    public void setSourceFile(@Nullable F sourceFile) {
+        mSourceFile = sourceFile;
     }
 
     /**
@@ -248,8 +248,8 @@ abstract class DataItem<F extends DataFile> implements Serializable {
         if (!mName.equals(other.mName)) {
             return false;
         }
-        DataFile source = getSource();
-        DataFile otherSource = other.getSource();
+        DataFile source = getSourceFile();
+        DataFile otherSource = other.getSourceFile();
         if (source == otherSource) {
             return true;
         }
@@ -271,11 +271,11 @@ abstract class DataItem<F extends DataFile> implements Serializable {
 
     /**
      * Returns the {@link File} from which this {@link DataItem} was created, if known. For some
-     * subclasses of {@link DataItem}, the file is known even if {@link #getSource()} returns null.
+     * subclasses of {@link DataItem}, the file is known even if {@link #getSourceFile()} returns null.
      */
     @Nullable
     public File getFile() {
-        F source = getSource();
+        F source = getSourceFile();
         return source == null ? null : source.getFile();
     }
 
@@ -283,7 +283,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
     public String toString() {
         return MoreObjects.toStringHelper(this.getClass())
                 .add("name", mName)
-                .add("source", mSource)
+                .add("sourceFile", mSourceFile)
                 .add("isRemoved", isRemoved())
                 .add("isTouched", isTouched())
                 .add("isWritten", isWritten())

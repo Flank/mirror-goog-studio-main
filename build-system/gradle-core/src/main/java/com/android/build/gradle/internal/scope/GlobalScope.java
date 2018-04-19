@@ -26,9 +26,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.FeatureExtension;
+import com.android.build.gradle.internal.AppModelBuilder;
+import com.android.build.gradle.internal.FeatureModelBuilder;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -287,5 +291,17 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public BuildArtifactsHolder getArtifacts() {
         return globalArtifacts;
+    }
+
+    public boolean hasDynamicFeatures() {
+        final AndroidConfig extension = getExtension();
+        if (extension instanceof BaseAppModuleExtension) {
+            return !AppModelBuilder.getDynamicFeatures((BaseAppModuleExtension) extension, this)
+                    .isEmpty();
+        }
+        if (extension instanceof FeatureExtension) {
+            return !FeatureModelBuilder.getDynamicFeatures(this).isEmpty();
+        }
+        return false;
     }
 }

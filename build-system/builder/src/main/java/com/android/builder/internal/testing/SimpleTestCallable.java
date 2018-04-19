@@ -230,7 +230,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
         MultiLineReceiver outputReceiver =
                 new MultiLineReceiver() {
                     @Override
-                    public void processNewLines(String[] lines) {
+                    public void processNewLines(@NonNull String[] lines) {
                         for (String line : lines) {
                             logger.verbose(line);
                         }

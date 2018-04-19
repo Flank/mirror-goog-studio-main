@@ -49,9 +49,11 @@ import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
@@ -98,6 +100,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isCrunchPngs();
 
+    boolean consumesFeatureJars();
+
     @Override
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();
@@ -109,6 +113,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     DexingType getDexingType();
+
+    boolean getNeedsMainDexList();
 
     @NonNull
     AndroidVersion getMinSdkVersion();
@@ -161,6 +167,13 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     BuildArtifactsHolder getArtifacts();
+
+    @NonNull
+    FileCollection getArtifactFileCollection(
+            @NonNull AndroidArtifacts.ConsumedConfigType configType,
+            @NonNull AndroidArtifacts.ArtifactScope scope,
+            @NonNull ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap);
 
     @NonNull
     FileCollection getArtifactFileCollection(
@@ -294,6 +307,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     DefaultTask getAssembleTask();
 
     void setAssembleTask(@NonNull DefaultTask assembleTask);
+
+    DefaultTask getBundleTask();
+
+    void setBundleTask(@NonNull DefaultTask bundleTask);
 
     DefaultTask getPreBuildTask();
 

@@ -29,7 +29,6 @@ class DefaultConfigImpl(
             private val variantProperties: VariantPropertiesImpl,
             private val buildTypeOrProductFlavor: BuildTypeOrProductFlavorImpl,
             private val productFlavorOrVariant: ProductFlavorOrVariantImpl,
-            private val fallbackStrategy: FallbackStrategyImpl,
             private val baseFlavor: BaseFlavorImpl,
             dslScope: DslScope)
         : SealableObject(dslScope),
@@ -37,7 +36,6 @@ class DefaultConfigImpl(
         VariantProperties by variantProperties,
         BuildTypeOrProductFlavor by buildTypeOrProductFlavor,
         ProductFlavorOrVariant by productFlavorOrVariant,
-        FallbackStrategy by fallbackStrategy,
         BaseFlavor by baseFlavor {
 
     override fun seal() {
@@ -46,7 +44,6 @@ class DefaultConfigImpl(
         variantProperties.seal()
         buildTypeOrProductFlavor.seal()
         productFlavorOrVariant.seal()
-        fallbackStrategy.seal()
         baseFlavor.seal()
     }
 }

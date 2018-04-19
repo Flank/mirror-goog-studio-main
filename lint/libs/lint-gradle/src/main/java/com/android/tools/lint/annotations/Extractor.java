@@ -1827,7 +1827,9 @@ public class Extractor {
                     // Platform typedef annotations now declare a prefix attribute for
                     // documentation generation purposes; this should not be part of the
                     // extracted metadata.
-                    if ("prefix".equals(name) && INT_DEF_ANNOTATION.isEquals(this.name)) {
+                    if (("prefix".equals(name) || "suffix".equals(name))
+                            && (INT_DEF_ANNOTATION.isEquals(this.name)
+                                    || STRING_DEF_ANNOTATION.isEquals(this.name))) {
                         continue;
                     }
 

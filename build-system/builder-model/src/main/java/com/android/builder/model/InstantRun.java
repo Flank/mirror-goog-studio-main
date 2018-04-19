@@ -42,6 +42,9 @@ public interface InstantRun {
     /** Instant Run is currently disabled for the experimental plugin. */
     int STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN = 5;
 
+    /** Instant Run is currently disabled for multi-apk applications (http://b/77685496) */
+    int STATUS_NOT_SUPPORTED_FOR_MULTI_APK = 6;
+
     /**
      * Returns the last incremental build information, including success or failure, verifier
      * reason for requesting a restart, etc...

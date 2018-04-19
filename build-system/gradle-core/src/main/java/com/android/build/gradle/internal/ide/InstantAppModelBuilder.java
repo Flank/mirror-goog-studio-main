@@ -287,7 +287,8 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                         variantConfiguration.getMergedResValues(),
                         new InstantRunImpl(
                                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
-                                variantConfiguration.getInstantRunSupportStatus()),
+                                variantConfiguration.getInstantRunSupportStatus(
+                                        variantScope.getGlobalScope())),
                         (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
                                 () ->
                                         ImmutableList.of(

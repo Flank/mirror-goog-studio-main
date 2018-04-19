@@ -269,7 +269,7 @@ public class ResourceSetTest extends BaseTestCase {
         assertNotNull(resources);
         assertFalse(resources.isEmpty());
 
-        int extraOffset =  Files.toString(resources.get(0).getSource().getFile(), Charsets.UTF_8)
+        int extraOffset =  Files.toString(resources.get(0).getSourceFile().getFile(), Charsets.UTF_8)
                 .contains("\r") ? 13 : 0;  // Account for \r on Windows
         assertEquals(new SourcePosition(13, 4, 529 + extraOffset, 13, 53, 578 + extraOffset),
                 XmlUtils.getSourceFilePosition(resources.get(0).getValue()).getPosition());

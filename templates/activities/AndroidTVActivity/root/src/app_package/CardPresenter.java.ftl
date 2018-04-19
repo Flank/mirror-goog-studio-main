@@ -15,9 +15,9 @@
 package ${packageName};
 
 import android.graphics.drawable.Drawable;
-import android.support.v17.leanback.widget.ImageCardView;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v4.content.ContextCompat;
+import ${getMaterialComponentName('android.support.v17.leanback.widget.ImageCardView', useAndroidX)};
+import ${getMaterialComponentName('android.support.v17.leanback.widget.Presenter', useAndroidX)};
+import ${getMaterialComponentName('android.support.v4.content.ContextCompat', useAndroidX)};
 import android.util.Log;
 import android.view.ViewGroup;
 

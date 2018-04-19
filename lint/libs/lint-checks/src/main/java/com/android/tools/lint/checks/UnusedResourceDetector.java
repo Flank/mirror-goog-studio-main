@@ -45,6 +45,7 @@ import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.BinaryResourceScanner;
 import com.android.tools.lint.detector.api.Category;
@@ -189,7 +190,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             // we need to make sure we find references in those source sets as well
             // such that we don't incorrectly remove resources that are
             // used by some other source set.
-            if (sIncludeInactiveReferences && project.isGradleProject() && !project.isLibrary()) {
+            // In Gradle etc we don't need to do this (and in large projects it's expensive)
+            if (sIncludeInactiveReferences
+                    && project.isGradleProject()
+                    && !project.isLibrary()
+                    && LintClient.isStudio()) {
                 AndroidProject model = project.getGradleProjectModel();
                 Variant variant = project.getCurrentVariant();
                 if (model != null && variant != null) {

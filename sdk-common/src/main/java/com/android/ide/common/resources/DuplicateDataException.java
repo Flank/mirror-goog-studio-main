@@ -62,7 +62,7 @@ public class DuplicateDataException extends MergingException {
     }
 
     private static SourceFilePosition getPosition(DataItem item) {
-        DataFile dataFile = item.getSource();
+        DataFile dataFile = item.getSourceFile();
         if (dataFile == null) {
             return new SourceFilePosition(new SourceFile(item.getKey()), SourcePosition.UNKNOWN);
         }

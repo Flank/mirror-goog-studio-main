@@ -84,20 +84,23 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
             Issue.create(
-                    "RequiredSize",
-                    "Missing `layout_width` or `layout_height` attributes",
-                    "All views must specify an explicit `layout_width` and `layout_height` attribute. "
-                            + "There is a runtime check for this, so if you fail to specify a size, an exception "
-                            + "is thrown at runtime.\n"
-                            + "\n"
-                            + "It's possible to specify these widths via styles as well. GridLayout, as a special "
-                            + "case, does not require you to specify a size.",
-                    Category.CORRECTNESS,
-                    4,
-                    Severity.ERROR,
-                    new Implementation(
-                            RequiredAttributeDetector.class,
-                            EnumSet.of(Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)));
+                            "RequiredSize",
+                            "Missing `layout_width` or `layout_height` attributes",
+                            "All views must specify an explicit `layout_width` and `layout_height` attribute. "
+                                    + "There is a runtime check for this, so if you fail to specify a size, an exception "
+                                    + "is thrown at runtime.\n"
+                                    + "\n"
+                                    + "It's possible to specify these widths via styles as well. GridLayout, as a special "
+                                    + "case, does not require you to specify a size.",
+                            Category.CORRECTNESS,
+                            4,
+                            Severity.ERROR,
+                            new Implementation(
+                                    RequiredAttributeDetector.class,
+                                    EnumSet.of(Scope.JAVA_FILE, Scope.ALL_RESOURCE_FILES)))
+                    // This detector has a lot of false positives in Gradle projects when
+                    // checkDependencies are off; see b/71693758, b/32714429, b/37138580
+                    .setEnabledByDefault(false);
 
     public static final String PERCENT_RELATIVE_LAYOUT =
             "android.support.percent.PercentRelativeLayout";

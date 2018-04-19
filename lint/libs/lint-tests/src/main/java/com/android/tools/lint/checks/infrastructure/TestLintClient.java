@@ -49,6 +49,7 @@ import com.android.ide.common.resources.ResourceMerger;
 import com.android.ide.common.resources.ResourceMergerItem;
 import com.android.ide.common.resources.ResourceRepositories;
 import com.android.ide.common.resources.ResourceSet;
+import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -941,12 +942,16 @@ public class TestLintClient extends LintCliClient {
             ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
             if (layouts != null) {
                 for (ResourceItem item : layouts.values()) {
-                    File source = item.getFile();
+                    PathString source = item.getSource();
                     if (source == null) {
                         continue;
                     }
+                    File file = source.toFile();
+                    if (file == null) {
+                        continue;
+                    }
                     try {
-                        String xml = Files.toString(source, Charsets.UTF_8);
+                        String xml = Files.toString(file, Charsets.UTF_8);
                         Document document = XmlUtils.parseDocumentSilently(xml, true);
                         assertNotNull(document);
                         Set<String> ids = Sets.newHashSet();
@@ -963,7 +968,7 @@ public class TestLintClient extends LintCliClient {
                                                 ResourceType.ID,
                                                 null,
                                                 null);
-                                String qualifiers = source.getParentFile().getName();
+                                String qualifiers = source.getParentFileName();
                                 if (qualifiers.startsWith("layout-")) {
                                     qualifiers = qualifiers.substring("layout-".length());
                                 } else if (qualifiers.equals("layout")) {
@@ -973,7 +978,7 @@ public class TestLintClient extends LintCliClient {
                                 // Creating the resource file will set the source of
                                 // idItem.
                                 //noinspection ResultOfObjectAllocationIgnored
-                                ResourceFile.createSingle(source, idItem, qualifiers);
+                                ResourceFile.createSingle(file, idItem, qualifiers);
                                 idMap.put(id, idItem);
                             }
                         }

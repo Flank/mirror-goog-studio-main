@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -450,7 +451,7 @@ public final class FileListingService {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             for (String line : lines) {
                 // no need to handle empty lines.
                 if (line.isEmpty()) {
@@ -595,22 +596,23 @@ public final class FileListingService {
                 throws TimeoutException, AdbCommandRejectedException,
                 ShellCommandUnresponsiveException, IOException {
             final int[] nLines = {0};
-            MultiLineReceiver receiver = new MultiLineReceiver() {
-                @Override
-                public void processNewLines(String[] lines) {
-                    for (String line : lines) {
-                        Matcher m = LS_LD_PATTERN.matcher(line);
-                        if (m.matches()) {
-                            nLines[0]++;
+            MultiLineReceiver receiver =
+                    new MultiLineReceiver() {
+                        @Override
+                        public void processNewLines(@NonNull String[] lines) {
+                            for (String line : lines) {
+                                Matcher m = LS_LD_PATTERN.matcher(line);
+                                if (m.matches()) {
+                                    nLines[0]++;
+                                }
+                            }
                         }
-                    }
-                }
 
-                @Override
-                public boolean isCancelled() {
-                    return false;
-                }
-            };
+                        @Override
+                        public boolean isCancelled() {
+                            return false;
+                        }
+                    };
 
             for (FileEntry entry : entries) {
                 if (entry.getType() != TYPE_LINK) continue;
@@ -716,66 +718,68 @@ public final class FileListingService {
         // we launch a thread that will do ls and give the listing
         // to the receiver
         Thread t = new Thread("ls " + entry.getFullPath()) { //$NON-NLS-1$
-            @Override
-            public void run() {
-                doLs(entry);
+                    @Override
+                    public void run() {
+                        doLs(entry);
 
-                receiver.setChildren(entry, entry.getCachedChildren());
+                        receiver.setChildren(entry, entry.getCachedChildren());
 
-                final FileEntry[] children = entry.getCachedChildren();
-                if (children.length > 0 && children[0].isApplicationPackage()) {
-                    final HashMap<String, FileEntry> map = new HashMap<String, FileEntry>();
+                        final FileEntry[] children = entry.getCachedChildren();
+                        if (children.length > 0 && children[0].isApplicationPackage()) {
+                            final HashMap<String, FileEntry> map = new HashMap<String, FileEntry>();
 
-                    for (FileEntry child : children) {
-                        String path = child.getFullPath();
-                        map.put(path, child);
-                    }
+                            for (FileEntry child : children) {
+                                String path = child.getFullPath();
+                                map.put(path, child);
+                            }
 
-                    // call pm.
-                    String command = PM_FULL_LISTING;
-                    try {
-                        mDevice.executeShellCommand(command, new MultiLineReceiver() {
-                            @Override
-                            public void processNewLines(String[] lines) {
-                                for (String line : lines) {
-                                    if (!line.isEmpty()) {
-                                        // get the filepath and package from the line
-                                        Matcher m = sPmPattern.matcher(line);
-                                        if (m.matches()) {
-                                            // get the children with that path
-                                            FileEntry entry = map.get(m.group(1));
-                                            if (entry != null) {
-                                                entry.info = m.group(2);
-                                                receiver.refreshEntry(entry);
+                            // call pm.
+                            String command = PM_FULL_LISTING;
+                            try {
+                                mDevice.executeShellCommand(
+                                        command,
+                                        new MultiLineReceiver() {
+                                            @Override
+                                            public void processNewLines(@NonNull String[] lines) {
+                                                for (String line : lines) {
+                                                    if (!line.isEmpty()) {
+                                                        // get the filepath and package from the line
+                                                        Matcher m = sPmPattern.matcher(line);
+                                                        if (m.matches()) {
+                                                            // get the children with that path
+                                                            FileEntry entry = map.get(m.group(1));
+                                                            if (entry != null) {
+                                                                entry.info = m.group(2);
+                                                                receiver.refreshEntry(entry);
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
-                                        }
-                                    }
-                                }
+
+                                            @Override
+                                            public boolean isCancelled() {
+                                                return false;
+                                            }
+                                        });
+                            } catch (Exception e) {
+                                // adb failed somehow, we do nothing.
                             }
-                            @Override
-                            public boolean isCancelled() {
-                                return false;
+                        }
+
+                        // if another thread is pending, launch it
+                        synchronized (mThreadList) {
+                            // first remove ourselves from the list
+                            mThreadList.remove(this);
+
+                            // then launch the next one if applicable.
+                            if (!mThreadList.isEmpty()) {
+                                Thread t = mThreadList.get(0);
+                                t.start();
                             }
-                        });
-                    } catch (Exception e) {
-                        // adb failed somehow, we do nothing.
+                        }
                     }
-                }
-
-
-                // if another thread is pending, launch it
-                synchronized (mThreadList) {
-                    // first remove ourselves from the list
-                    mThreadList.remove(this);
-
-                    // then launch the next one if applicable.
-                    if (!mThreadList.isEmpty()) {
-                        Thread t = mThreadList.get(0);
-                        t.start();
-                    }
-                }
-            }
-        };
+                };
 
         // we don't want to run multiple ls on the device at the same time, so we
         // store the thread in a list and launch it only if there's no other thread running.

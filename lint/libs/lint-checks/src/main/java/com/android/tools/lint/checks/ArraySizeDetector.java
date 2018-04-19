@@ -26,6 +26,7 @@ import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintClient;
@@ -291,8 +292,8 @@ public class ArraySizeDetector extends ResourceXmlDetector {
         List<ResourceItem> items = resources.getResourceItem(ResourceType.ARRAY, name);
         if (items != null) {
             for (ResourceItem item : items) {
-                File source = item.getFile();
-                if (source != null && LintUtils.isSameResourceFile(context.file, source)) {
+                PathString source = item.getSource();
+                if (source != null && LintUtils.isSameResourceFile(context.file, source.toFile())) {
                     continue;
                 }
                 ResourceValue rv = item.getResourceValue();

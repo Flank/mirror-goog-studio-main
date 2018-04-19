@@ -364,7 +364,8 @@ class R8TransformTest {
                 outputProguardMapping = outputProguardMapping,
                 typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
-                variantType = VariantTypeImpl.BASE_APK
+                variantType = VariantTypeImpl.BASE_APK,
+                includeFeaturesInScopes = false
         )
     }
 

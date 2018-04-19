@@ -107,14 +107,14 @@ public abstract class DataFile<I extends DataItem> implements Serializable {
 
     public void addItem(@NonNull I item) {
           //noinspection unchecked
-          item.setSource(this);
+          item.setSourceFile(this);
           mItems.put(item.getKey(), item);
      }
 
     public void addItems(@NonNull Iterable<I> items) {
         for (I item : items) {
             //noinspection unchecked
-            item.setSource(this);
+            item.setSourceFile(this);
             mItems.put(item.getKey(), item);
         }
     }
@@ -122,7 +122,7 @@ public abstract class DataFile<I extends DataItem> implements Serializable {
     public void removeItem(I item) {
         mItems.remove(item.getKey());
         //noinspection unchecked - I is a raw type, but calling setSource with null is safe anyway.
-        item.setSource(null);
+        item.setSourceFile(null);
     }
 
     void addExtraAttributes(Document document, Node node, String namespaceUri) {
@@ -132,9 +132,9 @@ public abstract class DataFile<I extends DataItem> implements Serializable {
     public void replace(@NonNull I oldItem, @NonNull I newItem) {
         mItems.remove(oldItem.getKey());
         //noinspection unchecked
-        oldItem.setSource(null);
+        oldItem.setSourceFile(null);
         //noinspection unchecked
-        newItem.setSource(this);
+        newItem.setSourceFile(this);
         mItems.put(newItem.getKey(), newItem);
     }
 

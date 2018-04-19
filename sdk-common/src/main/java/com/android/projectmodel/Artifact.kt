@@ -15,6 +15,8 @@
  */
 package com.android.projectmodel
 
+import com.android.ide.common.util.PathString
+
 /**
  * Holds information about what is involved in producing a single Android artifact (a single output
  * of the project).

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
@@ -29,10 +28,8 @@ import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
-import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -51,6 +48,7 @@ class DynamicAppTest {
 
     private val bundleContent: Array<String> = arrayOf(
         "/BundleConfig.pb",
+        "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt",
         "/base/dex/classes.dex",
         "/base/manifest/AndroidManifest.xml",
         "/base/res/layout/base_layout.xml",
@@ -63,6 +61,11 @@ class DynamicAppTest {
         "/feature2/manifest/AndroidManifest.xml",
         "/feature2/res/layout/feature2_layout.xml",
         "/feature2/resources.pb")
+
+    private val signedContent: Array<String> = bundleContent.plus(arrayOf(
+        "/META-INF/ANDROIDD.RSA",
+        "/META-INF/ANDROIDD.SF",
+        "/META-INF/MANIFEST.MF"))
 
     @Test
     @Throws(IOException::class)
@@ -95,7 +98,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
         }
 
         // also test that the feature manifest contains the feature name.
@@ -111,7 +114,7 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test bundleRelease task`() {
+    fun `test unsigned bundleRelease task`() {
         val bundleTaskName = getBundleTaskName("release")
         project.execute("app:$bundleTaskName")
 
@@ -141,7 +144,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
         }
     }
 
@@ -175,7 +178,7 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val bundleContentWithAbis = bundleContent.plus(listOf(
+        val bundleContentWithAbis = signedContent.plus(listOf(
                 "/base/native.pb",
                 "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
                 "/feature1/native.pb",

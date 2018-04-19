@@ -22,7 +22,9 @@ import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ScreenOrientation;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Streams;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,8 +32,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Represents the configuration for Resource Folders. All the properties have a default value which
@@ -304,6 +308,128 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
         return config;
     }
+
+    /**
+     * Parse a config line returned by 'am get-config' to extra the language configurations.
+     *
+     * <p>The line should be stripped of the 'config: ' prefix.
+     *
+     * @param qualifierString the list of dash-separated qualifier
+     * @return a list of language-rRegion
+     */
+    @NonNull
+    public static Set<String> getLanguageConfigFromQualifiers(@NonNull String qualifierString) {
+        // because the format breaks the normal list of dash-separated qualifiers, we have to
+        // process things differently.
+        // the string will look like this:
+        // [mcc-][mnc-]lang-rRegion[,lang-rRegion[...]][-other-qualifiers[-...]]
+        //
+        // So the language + region qualifiers are grouped and potentially repeated with comma
+        // separation. To solve this we need to remove extraneous qualifiers before and after
+        // and then split by comma.
+
+        if (qualifierString.isEmpty()) {
+            return ImmutableSet.of();
+        }
+
+        // create a folder config to handle the qualifiers.
+        final FolderConfiguration config = new FolderConfiguration();
+
+        // search for qualifiers manually
+        int start = 0;
+        int qualifierIndex = 0;
+        boolean stop = false;
+
+        while (qualifierIndex < INDEX_LOCALE && !stop) {
+            int end = qualifierString.indexOf('-', start);
+
+            String qualifier =
+                    (end == -1)
+                            ? qualifierString.substring(start)
+                            : qualifierString.substring(start, end);
+
+            // TODO: Perform case normalization later (on a per qualifier basis)
+            qualifier = qualifier.toLowerCase(Locale.US);
+
+            while (qualifierIndex < INDEX_LOCALE
+                    && !DEFAULT_QUALIFIERS[qualifierIndex].checkAndSet(qualifier, config)) {
+                qualifierIndex++;
+            }
+
+            if (end == -1) {
+                stop = true;
+            } else if (qualifierIndex != INDEX_LOCALE) {
+                start = end + 1;
+            }
+        }
+
+        if (stop) {
+            // reach end of string before locale, return.
+            return ImmutableSet.of();
+        }
+
+        // record start of languages.
+        int languageStart = start;
+
+        // now do the same backward.
+        int end = qualifierString.length() - 1;
+        qualifierIndex = INDEX_COUNT - 1;
+
+        while (qualifierIndex > INDEX_LOCALE && !stop) {
+            start = qualifierString.lastIndexOf('-', end);
+
+            String qualifier =
+                    (start == -1) ? qualifierString : qualifierString.substring(start + 1, end + 1);
+
+            // TODO: Perform case normalization later (on a per qualifier basis)
+            qualifier = qualifier.toLowerCase(Locale.US);
+
+            while (qualifierIndex > INDEX_LOCALE
+                    && !checkQualifier(config, qualifierIndex, qualifier)) {
+                qualifierIndex--;
+            }
+
+            if (start == -1) {
+                stop = true;
+            } else if (qualifierIndex != INDEX_LOCALE) {
+                end = start - 1;
+            }
+        }
+
+        String languages = qualifierString.substring(languageStart, end + 1);
+
+        return Streams.stream(Splitter.on(",").split(languages))
+                .map(
+                        locale -> {
+                            DEFAULT_QUALIFIERS[INDEX_LOCALE].checkAndSet(locale, config);
+                            if (config.getLocaleQualifier() != null) {
+                                return config.getLocaleQualifier().getLanguage();
+                            }
+                            return null;
+                        })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    private static boolean checkQualifier(
+            @NonNull FolderConfiguration config,
+            int qualifierIndex,
+            @NonNull String qualifierValue) {
+        if (DEFAULT_QUALIFIERS[qualifierIndex].checkAndSet(qualifierValue, config)) {
+            return true;
+        }
+
+        // account for broken WideGamut/HDR order (b/78136980)
+
+        if (qualifierIndex == INDEX_HIGH_DYNAMIC_RANGE) {
+            return DEFAULT_QUALIFIERS[INDEX_WIDE_COLOR_GAMUT].checkAndSet(qualifierValue, config);
+        } else if (qualifierIndex == INDEX_WIDE_COLOR_GAMUT) {
+            return DEFAULT_QUALIFIERS[INDEX_HIGH_DYNAMIC_RANGE].checkAndSet(qualifierValue, config);
+        }
+
+        return false;
+    }
+
 
     /**
      * Creates a {@link FolderConfiguration} matching the given folder name.

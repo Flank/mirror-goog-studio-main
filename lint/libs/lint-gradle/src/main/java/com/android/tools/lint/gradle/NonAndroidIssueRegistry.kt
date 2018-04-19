@@ -19,6 +19,7 @@ package com.android.tools.lint.gradle
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.InvalidPackageDetector
+import com.android.tools.lint.checks.PrivateApiDetector
 import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
@@ -54,7 +55,8 @@ class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
             ApiDetector.INLINED,
             ApiDetector.OVERRIDE,
             ApiDetector.OBSOLETE_SDK,
-            InvalidPackageDetector.ISSUE
+            InvalidPackageDetector.ISSUE,
+            PrivateApiDetector.ISSUE
         )
 
         private fun isAndroidSpecific(issue: Issue): Boolean {

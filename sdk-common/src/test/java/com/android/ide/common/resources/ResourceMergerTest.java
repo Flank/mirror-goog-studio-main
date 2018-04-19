@@ -148,7 +148,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals(2, values.size());
         ResourceMergerItem mainLayout = values.get(1);
 
-        ResourceFile sourceFile = mainLayout.getSource();
+        ResourceFile sourceFile = mainLayout.getSourceFile();
         assertTrue(sourceFile.getFile().getAbsolutePath()
             .endsWith(getPlatformPath("overlay/layout/main.xml")));
     }
@@ -530,8 +530,8 @@ public class ResourceMergerTest extends BaseTestCase {
                         input ->
                                 input.getType() == ResourceType.LAYOUT
                                         && input.getName().equals("layout_for_id_scan")
-                                        && input.getSource() != null
-                                        && input.getSource().equals(parsedFile));
+                                        && input.getSourceFile() != null
+                                        && input.getSourceFile().equals(parsedFile));
         assertEquals(1, layoutItems.size());
 
         // Also check that the layout item's ResourceValue makes sense.
@@ -545,8 +545,8 @@ public class ResourceMergerTest extends BaseTestCase {
                         parsedFile.getItems(),
                         input ->
                                 input.getType() == ResourceType.ID
-                                        && input.getSource() != null
-                                        && input.getSource().equals(parsedFile));
+                                        && input.getSourceFile() != null
+                                        && input.getSourceFile().equals(parsedFile));
         assertEquals(11, idItems.size());
 
         File folder = TestUtils.createTempDirDeletedOnExit();
@@ -669,7 +669,7 @@ public class ResourceMergerTest extends BaseTestCase {
         String stringKey = "string/basic_string";
         assertNotNull(merger.getDataMap().get(stringKey));
         assertFalse(merger.getDataMap().get(stringKey).isEmpty());
-        ResourceFile resourceFile = merger.getDataMap().get(stringKey).get(0).getSource();
+        ResourceFile resourceFile = merger.getDataMap().get(stringKey).get(0).getSourceFile();
         assertNotNull(resourceFile);
         assertTrue(resourceFile.getFile().getName().equals("values.xml"));
 
@@ -707,7 +707,7 @@ public class ResourceMergerTest extends BaseTestCase {
         // not omitted
         assertNotNull(loadedWithoutTimestamps.getDataMap().get(stringKey));
         assertFalse(loadedWithoutTimestamps.getDataMap().get(stringKey).isEmpty());
-        resourceFile = loadedWithoutTimestamps.getDataMap().get(stringKey).get(0).getSource();
+        resourceFile = loadedWithoutTimestamps.getDataMap().get(stringKey).get(0).getSourceFile();
         assertNotNull(resourceFile);
         assertTrue(resourceFile.getFile().getName().equals("values.xml"));
     }
@@ -724,7 +724,7 @@ public class ResourceMergerTest extends BaseTestCase {
         String stringKey = "string/basic_string";
         assertNotNull(merger.getDataMap().get(stringKey));
         assertFalse(merger.getDataMap().get(stringKey).isEmpty());
-        ResourceFile resourceFile = merger.getDataMap().get(stringKey).get(0).getSource();
+        ResourceFile resourceFile = merger.getDataMap().get(stringKey).get(0).getSourceFile();
         assertNotNull(resourceFile);
         assertTrue(resourceFile.getFile().getName().equals("values.xml"));
 
@@ -848,7 +848,7 @@ public class ResourceMergerTest extends BaseTestCase {
         List<ResourceMergerItem> drawableNewOverlay = mergedMap.get("drawable/new_overlay");
         assertEquals(2, drawableNewOverlay.size());
         ResourceMergerItem newOverlay = drawableNewOverlay.get(1);
-        assertEquals(overlayDrawableNewOverlay, newOverlay.getSource().getFile());
+        assertEquals(overlayDrawableNewOverlay, newOverlay.getSourceFile().getFile());
         assertFalse(newOverlay.isWritten());
         assertTrue(newOverlay.isTouched());
 
@@ -857,7 +857,7 @@ public class ResourceMergerTest extends BaseTestCase {
                 mergedMap.get("drawable-hdpi-v4/new_alternate");
         assertEquals(1, drawableHdpiNewAlternate.size());
         ResourceMergerItem newAlternate = drawableHdpiNewAlternate.get(0);
-        assertEquals(overlayDrawableHdpiNewAlternate, newAlternate.getSource().getFile());
+        assertEquals(overlayDrawableHdpiNewAlternate, newAlternate.getSourceFile().getFile());
         assertFalse(newAlternate.isWritten());
         assertTrue(newAlternate.isTouched());
 
@@ -1177,14 +1177,14 @@ public class ResourceMergerTest extends BaseTestCase {
         assertFalse(replacedByAlias.isTouched());
         assertTrue(replacedByAlias.isRemoved());
         assertNull(replacedByAlias.getValue());
-        assertEquals("file_replaced_by_alias.xml", replacedByAlias.getSource().getFile().getName());
+        assertEquals("file_replaced_by_alias.xml", replacedByAlias.getSourceFile().getFile().getName());
         // 2nd version is the new one
         replacedByAlias = layoutReplacedByAlias.get(1);
         assertFalse(replacedByAlias.isWritten());
         assertTrue(replacedByAlias.isTouched());
         assertFalse(replacedByAlias.isRemoved());
         assertNotNull(replacedByAlias.getValue());
-        assertEquals("values.xml", replacedByAlias.getSource().getFile().getName());
+        assertEquals("values.xml", replacedByAlias.getSourceFile().getFile().getName());
 
         // check alias_replaced_by_file has 2 version, 2nd is TOUCHED, and contains a Node
         List<ResourceMergerItem> layoutReplacedByFile =
@@ -1196,14 +1196,14 @@ public class ResourceMergerTest extends BaseTestCase {
         assertFalse(replacedByFile.isTouched());
         assertTrue(replacedByFile.isRemoved());
         assertNotNull(replacedByFile.getValue());
-        assertEquals("values.xml", replacedByFile.getSource().getFile().getName());
+        assertEquals("values.xml", replacedByFile.getSourceFile().getFile().getName());
         // 2nd version is the new one
         replacedByFile = layoutReplacedByFile.get(1);
         assertFalse(replacedByFile.isWritten());
         assertTrue(replacedByFile.isTouched());
         assertFalse(replacedByFile.isRemoved());
         assertNull(replacedByFile.getValue());
-        assertEquals("alias_replaced_by_file.xml", replacedByFile.getSource().getFile().getName());
+        assertEquals("alias_replaced_by_file.xml", replacedByFile.getSourceFile().getFile().getName());
 
         // write and check the result of writeResourceFolder
         // copy the current resOut which serves as pre incremental update state.

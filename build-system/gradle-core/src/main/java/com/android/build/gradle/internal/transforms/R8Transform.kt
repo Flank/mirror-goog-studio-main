@@ -62,9 +62,10 @@ class R8Transform(
     private val outputProguardMapping: File,
     private val typesToOutput: MutableSet<out QualifiedContent.ContentType>,
     proguardConfigurationFiles: ConfigurableFileCollection,
-    variantType: VariantType
+    variantType: VariantType,
+    includeFeaturesInScopes: Boolean
 ) :
-        ProguardConfigurable(proguardConfigurationFiles, variantType) {
+        ProguardConfigurable(proguardConfigurationFiles, variantType, includeFeaturesInScopes) {
 
     // This is a huge sledgehammer, but it is necessary until http://b/72683872 is fixed.
     private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
@@ -89,7 +90,8 @@ class R8Transform(
                     outputProguardMapping,
                     if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX_WITH_RESOURCES,
                     scope.globalScope.project.files(),
-                    scope.variantData.type
+                    scope.variantData.type,
+                    scope.consumesFeatureJars()
             )
 
     override fun getName(): String = "r8"

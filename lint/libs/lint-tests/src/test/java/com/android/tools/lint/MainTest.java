@@ -517,9 +517,7 @@ public class MainTest extends AbstractCheckTest {
         assertTrue(outputDir.setWritable(true));
 
         checkDriver(
-                "\n"
-                        + "Scanning MainTest_testValidateOutput: .\n"
-                        + "Scanning MainTest_testValidateOutput (Phase 2): \n", // Expected output
+                "\nScanning MainTest_testValidateOutput: .\n", // Expected output
                 "",
 
                 // Expected exit code

@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
@@ -18,9 +19,9 @@ iml_module(
     ],
 )
 
-maven_java_library(
+kotlin_library(
     name = "tools.fakeadbserver",
-    srcs = glob(["src/main/java/**"]),
+    srcs = ["src/main/java"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],

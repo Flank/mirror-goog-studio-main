@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTra
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -145,7 +146,7 @@ public class VariantManager implements VariantModel {
     @Nullable private final CoreSigningConfig signingOverride;
     // We cannot use gradle's state of executed as that returns true while inside afterEvalute.
     // Wew want this to only be true after all tasks have been create.
-    @NonNull private Boolean hasCreatedTasks = Boolean.FALSE;
+    private boolean hasCreatedTasks = false;
 
     public VariantManager(
             @NonNull GlobalScope globalScope,
@@ -374,26 +375,48 @@ public class VariantManager implements VariantModel {
     /** Create assemble task for VariantData. */
     private void createAssembleTaskForVariantData(final BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
-        if (variantData.getType().isTestComponent()) {
+        VariantType variantType = variantData.getType();
+        boolean needBundleTask =
+                variantType.isBaseModule()
+                        && !variantType.isHybrid()
+                        && projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS);
+        if (variantType.isTestComponent()) {
             variantScope.setAssembleTask(taskManager.createAssembleTask(variantData));
         } else {
             BuildTypeData buildTypeData =
                     buildTypes.get(variantData.getVariantConfiguration().getBuildType().getName());
 
             Preconditions.checkNotNull(buildTypeData.getAssembleTask());
+            if (needBundleTask) {
+                Preconditions.checkNotNull(buildTypeData.getBundleTask());
+            }
 
             if (productFlavors.isEmpty()) {
                 // Reuse assemble task for build type if there is no product flavor.
                 variantScope.setAssembleTask(buildTypeData.getAssembleTask());
-
                 variantData.addTask(
                         TaskContainer.TaskKind.ASSEMBLE, buildTypeData.getAssembleTask());
+
+                if (needBundleTask) {
+                    variantScope.setBundleTask(buildTypeData.getBundleTask());
+                    variantData.addTask(
+                            TaskContainer.TaskKind.BUNDLE, buildTypeData.getBundleTask());
+                }
             } else {
-                variantScope.setAssembleTask(taskManager.createAssembleTask(variantData));
+                DefaultTask variantAssembleTask = taskManager.createAssembleTask(variantData);
+                variantScope.setAssembleTask(variantAssembleTask);
 
                 // setup the task dependencies
                 // build type
-                buildTypeData.getAssembleTask().dependsOn(variantScope.getAssembleTask());
+                buildTypeData.getAssembleTask().dependsOn(variantAssembleTask);
+
+                DefaultTask variantBundleTask = null;
+                if (needBundleTask) {
+                    variantBundleTask = taskManager.createBundleTask(variantData);
+                    variantScope.setBundleTask(variantBundleTask);
+
+                    buildTypeData.getBundleTask().dependsOn(variantBundleTask);
+                }
 
                 // each flavor
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
@@ -405,7 +428,16 @@ public class VariantManager implements VariantModel {
                         flavorAssembleTask = taskManager.createAssembleTask(productFlavorData);
                         productFlavorData.setAssembleTask(flavorAssembleTask);
                     }
-                    flavorAssembleTask.dependsOn(variantScope.getAssembleTask());
+                    flavorAssembleTask.dependsOn(variantAssembleTask);
+
+                    if (needBundleTask) {
+                        DefaultTask flavorBundleTask = productFlavorData.getBundleTask();
+                        if (flavorBundleTask == null) {
+                            flavorBundleTask = taskManager.createBundleTask(productFlavorData);
+                            productFlavorData.setBundleTask(flavorBundleTask);
+                        }
+                        flavorBundleTask.dependsOn(variantBundleTask);
+                    }
                 }
 
                 // assembleTask for this flavor(dimension), created on demand if needed.
@@ -419,10 +451,28 @@ public class VariantManager implements VariantModel {
                         task.setGroup("Build");
                         task.dependsOn(variantScope.getAssembleTask().getName());
                     }
+
                     taskManager
                             .getTaskFactory()
                             .configure(
                                     "assemble", task1 -> task1.dependsOn(variantAssembleTaskName));
+
+                    if (needBundleTask) {
+                        final String variantBundleTaskName =
+                                StringHelper.appendCapitalized("bundle", name);
+                        if (!taskManager.getTaskFactory().containsKey(variantBundleTaskName)) {
+                            Task task = taskManager.getTaskFactory().create(variantBundleTaskName);
+                            task.setDescription(
+                                    "Assembles all bundles for flavor combination: " + name);
+                            task.setGroup("Build");
+                            task.dependsOn(variantScope.getBundleTask().getName());
+                        }
+
+                        taskManager
+                                .getTaskFactory()
+                                .configure(
+                                        "bundle", task1 -> task1.dependsOn(variantBundleTaskName));
+                    }
                 }
             }
         }
@@ -449,6 +499,23 @@ public class VariantManager implements VariantModel {
                             assert buildTypeData.getAssembleTask() != null;
                             task.dependsOn(buildTypeData.getAssembleTask().getName());
                         });
+
+        if (variantScope.getType().isBaseModule()
+                && !variantScope.getType().isHybrid()
+                && projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS)) {
+            if (buildTypeData.getBundleTask() == null) {
+                buildTypeData.setBundleTask(taskManager.createBundleTask(buildTypeData));
+            }
+
+            taskManager
+                    .getTaskFactory()
+                    .configure(
+                            "bundle",
+                            task -> {
+                                assert buildTypeData.getBundleTask() != null;
+                                task.dependsOn(buildTypeData.getBundleTask());
+                            });
+        }
 
         createAssembleTaskForVariantData(variantData);
         if (variantType.isTestComponent()) {
@@ -1014,6 +1081,10 @@ public class VariantManager implements VariantModel {
             builder.setPublishType(instantiateAndroidTypeAttr(publishType));
         }
 
+        if (extension instanceof BaseAppModuleExtension) {
+            builder.setFeatureList(((BaseAppModuleExtension) extension).getDynamicFeatures());
+        }
+
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);
 
@@ -1365,12 +1436,11 @@ public class VariantManager implements VariantModel {
                 file, f -> new DefaultManifestParser(f, this::getHasCreatedTasks));
     }
 
-    @NonNull
-    private Boolean getHasCreatedTasks() {
+    private boolean getHasCreatedTasks() {
         return hasCreatedTasks;
     }
 
-    public void setHasCreatedTasks(@NonNull Boolean hasCreatedTasks) {
+    public void setHasCreatedTasks(boolean hasCreatedTasks) {
         this.hasCreatedTasks = hasCreatedTasks;
     }
 }

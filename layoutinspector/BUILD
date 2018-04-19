@@ -1,9 +1,9 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.intellij.android.layoutInspector",
+    name = "studio.android.sdktools.layoutinspector",
     srcs = ["src"],
-    iml_files = ["intellij.android.layoutInspector.iml"],
+    iml_files = ["android.sdktools.layoutinspector.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.android.sdktools.common"],

@@ -28,6 +28,8 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ide.common.util.DeviceUtils;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -35,10 +37,12 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -227,6 +231,7 @@ public class ConnectedDevice extends DeviceConnector {
         return 0;
     }
 
+    @Nullable
     @Override
     public String getApiCodeName() {
         String codeName = getNullableProperty(IDevice.PROP_BUILD_CODENAME);
@@ -309,6 +314,19 @@ public class ConnectedDevice extends DeviceConnector {
         return getNullableProperty(IDevice.PROP_DEVICE_LANGUAGE);
     }
 
+    @Nullable
+    @Override
+    public Set<String> getLanguageSplits()
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        AndroidVersion version = iDevice.getVersion();
+        if (version.getApiLevel() < 21) {
+            return null;
+        }
+
+        return DeviceUtils.getLanguages(iDevice, Duration.ofMillis(mTimeUnit.toMillis(mTimeout)));
+    }
+
     @Override
     public String getRegion() {
         return getNullableProperty(IDevice.PROP_DEVICE_REGION);
@@ -323,7 +341,8 @@ public class ConnectedDevice extends DeviceConnector {
     }
 
     @Nullable
-    private String getNullableProperty(@NonNull String propertyName) {
+    @Override
+    public String getNullableProperty(@NonNull String propertyName) {
         try {
             Future<String> property = iDevice.getSystemProperty(propertyName);
             if (mTimeout > 0) {
@@ -344,17 +363,18 @@ public class ConnectedDevice extends DeviceConnector {
     @Override
     public DeviceConfig getDeviceConfig() throws DeviceException {
         final List<String> output = new ArrayList<String>();
-        final MultiLineReceiver receiver = new MultiLineReceiver() {
-            @Override
-            public void processNewLines(String[] lines) {
-                output.addAll(Arrays.asList(lines));
-            }
+        final MultiLineReceiver receiver =
+                new MultiLineReceiver() {
+                    @Override
+                    public void processNewLines(@NonNull String[] lines) {
+                        output.addAll(Arrays.asList(lines));
+                    }
 
-            @Override
-            public boolean isCancelled() {
-                return false;
-            }
-        };
+                    @Override
+                    public boolean isCancelled() {
+                        return false;
+                    }
+                };
         try {
             executeShellCommand("am get-config", receiver, mTimeout, mTimeUnit);
             return DeviceConfig.Builder.parse(output);

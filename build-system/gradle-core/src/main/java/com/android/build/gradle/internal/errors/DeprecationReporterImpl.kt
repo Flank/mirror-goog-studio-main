@@ -73,7 +73,7 @@ class DeprecationReporterImpl(
                 "$oldDslElement::::${deprecationTarget.name}")
     }
 
-    override fun reportDeprecatedConfiguration(
+    override fun reportRenamedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
             deprecationTarget: DeprecationTarget,
@@ -87,6 +87,19 @@ class DeprecationReporterImpl(
                 Severity.WARNING,
                 if (url != null) "$msg For more information see: $url" else msg,
                 "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")
+    }
+
+    override fun reportDeprecatedConfiguration(
+        newDslElement: String,
+        oldConfiguration: String,
+        deprecationTarget: DeprecationTarget
+    ) {
+        issueReporter.reportIssue(
+            Type.DEPRECATED_CONFIGURATION,
+            Severity.WARNING,
+            "Configuration '$oldConfiguration' is obsolete and has been replaced with DSL element '$newDslElement'.\n" +
+                    "It will be removed ${deprecationTarget.removalTime}",
+            "$oldConfiguration::$newDslElement::${deprecationTarget.name}")
     }
 
     override fun reportDeprecatedValue(dslElement: String,

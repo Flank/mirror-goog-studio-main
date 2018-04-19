@@ -500,6 +500,7 @@ public abstract class PermissionRequirement {
     @VisibleForTesting
     static final String[] REVOCABLE_PERMISSION_NAMES =
             new String[] {
+                "android.permission.ACCEPT_HANDOVER",
                 "android.permission.ACCESS_COARSE_LOCATION",
                 "android.permission.ACCESS_FINE_LOCATION",
                 "android.permission.ANSWER_PHONE_CALLS",

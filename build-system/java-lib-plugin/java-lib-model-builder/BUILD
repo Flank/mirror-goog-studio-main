@@ -2,9 +2,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
-    name = "studio.intellij.android.javaLibModel.builder",
+    name = "studio.android.sdktools.java-lib-model-builder",
     srcs = ["src/main/java"],
-    iml_files = ["intellij.android.javaLibModel.builder.iml"],
+    iml_files = ["android.sdktools.java-lib-model-builder.iml"],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
@@ -13,7 +13,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/idea/.idea/libraries:gradle-api",
-        "//tools/base/build-system/java-lib-plugin/java-lib-model:studio.intellij.android.javaLibModel[module]",
+        "//tools/base/build-system/java-lib-plugin/java-lib-model:studio.android.sdktools.java-lib-model[module]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
@@ -26,7 +26,7 @@ java_test(
     jvm_flags = ["-Dtest.suite.jar=builder_test.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
-        ":studio.intellij.android.javaLibModel.builder_testlib",
+        ":studio.android.sdktools.java-lib-model-builder_testlib",
         "//tools/base/build-system:gradle-api",
         "//tools/base/testutils:studio.android.sdktools.testutils",
     ],

@@ -25,6 +25,7 @@ import com.google.common.primitives.UnsignedInteger
 import com.google.common.truth.Truth.assertThat
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -46,6 +47,7 @@ import java.util.logging.Logger
  * It does however test an internal API and will likely be removed or migrated to use the public
  * API when it becomes available.
  */
+@Ignore("b/78030495")
 class AdbServerServiceIntegrationTest {
     companion object {
         lateinit private var logger: Logger

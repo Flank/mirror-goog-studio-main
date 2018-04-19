@@ -512,7 +512,8 @@ public class DexTransformTest {
                         targetInfo,
                         byteCodeConverter,
                         mock(MessageReceiver.class),
-                        1);
+                        1,
+                        false);
 
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
         when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
@@ -539,7 +540,8 @@ public class DexTransformTest {
                         fakeAndroidBuilder,
                         buildCache,
                         DexingType.MONO_DEX,
-                        1);
+                        1,
+                        false);
 
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
         when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))

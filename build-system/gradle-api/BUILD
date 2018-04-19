@@ -28,7 +28,7 @@ maven_pom(
 
 kotlin_test(
     name = "tests",
-    size = "small",
+    size = "medium",
     srcs = ["src/test/java"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),

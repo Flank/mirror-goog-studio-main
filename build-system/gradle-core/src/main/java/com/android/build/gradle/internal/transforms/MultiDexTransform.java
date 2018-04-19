@@ -75,6 +75,7 @@ public class MultiDexTransform extends BaseProguardAction implements MainDexList
     private final VariantScope variantScope;
 
     private final boolean keepRuntimeAnnotatedClasses;
+    private final boolean isLegacyMultidexEnabled;
 
     // Outputs
     @NonNull
@@ -83,7 +84,8 @@ public class MultiDexTransform extends BaseProguardAction implements MainDexList
 
     public MultiDexTransform(
             @NonNull VariantScope variantScope,
-            @NonNull DexOptions dexOptions) {
+            @NonNull DexOptions dexOptions,
+            boolean isLegacyMultidexEnabled) {
         super(variantScope);
         this.manifestKeepListProguardFile =
                 variantScope
@@ -97,6 +99,7 @@ public class MultiDexTransform extends BaseProguardAction implements MainDexList
                 + "/multi-dex/" + variantScope.getVariantConfiguration().getDirName()
                 + "/components.flags");
         keepRuntimeAnnotatedClasses = dexOptions.getKeepRuntimeAnnotatedClasses();
+        this.isLegacyMultidexEnabled = isLegacyMultidexEnabled;
     }
 
     @Override
@@ -158,6 +161,7 @@ public class MultiDexTransform extends BaseProguardAction implements MainDexList
     public Map<String, Object> getParameterInputs() {
         ImmutableMap.Builder<String, Object> params = ImmutableMap.builder();
         params.put("keepRuntimeAnnotatedClasses", keepRuntimeAnnotatedClasses);
+        params.put("isLegacyMultidexEnabled", isLegacyMultidexEnabled);
         TargetInfo targetInfo = variantScope.getGlobalScope().getAndroidBuilder().getTargetInfo();
         if (targetInfo != null) {
             params.put("build_tools", targetInfo.getBuildTools().getRevision().toString());
@@ -184,6 +188,12 @@ public class MultiDexTransform extends BaseProguardAction implements MainDexList
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
+        if (!isLegacyMultidexEnabled) {
+            throw new IllegalStateException(
+                    "To generate a main dex list for the bundle please enable D8/R8.\n"
+                            + "Remove android.enableD8=false and/or android.useDexArchive=false "
+                            + "from this project's gradle.properties");
+        }
         // Re-direct the output to appropriate log levels, just like the official ProGuard task.
         LoggingManager loggingManager = invocation.getContext().getLogging();
         loggingManager.captureStandardOutput(LogLevel.INFO);

@@ -9,6 +9,7 @@ import com.android.build.gradle.integration.common.fixture.SourceSetContainerUti
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -105,6 +106,25 @@ public class BasicMultiFlavorTest {
         project.execute("assembleFreeBetaDebug");
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta"))
                 .containsResource("drawable/free.png");
+    }
+
+    @Test
+    public void checkExtraSourceSetWithIntantRun() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    sourceSets {\n"
+                        + "        freeBetaDebug {\n"
+                        + "            java.srcDir \"src/blah/java\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+
+        project.executor()
+                .with(StringOption.IDE_RESTRICT_VARIANT_PROJECT, ":")
+                .with(StringOption.IDE_RESTRICT_VARIANT_NAME, "paidBetaDebug")
+                .run("assemblePaidBetaDebug");
     }
 
     private void addResValuesAndPlaceholders() throws IOException {

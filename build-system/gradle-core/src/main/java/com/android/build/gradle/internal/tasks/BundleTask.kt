@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -29,8 +31,13 @@ import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -48,10 +55,6 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
     private val workers = Workers.getWorker(workerExecutor)
 
-    companion object {
-        fun getTaskName(scope: VariantScope) = scope.getTaskName("bundle")
-    }
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     lateinit var baseModuleZip: BuildableArtifact
@@ -62,26 +65,63 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     lateinit var featureZips: FileCollection
         private set
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    var mainDexList: BuildableArtifact? = null
+        private set
+
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
 
+    @get:Nested
+    lateinit var bundleOptions: BundleOptions
+        private set
+
+    @get:InputFile
+    @get:Optional
+    var keystoreFile: File? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keystorePassword: String? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keyAlias: String? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keyPassword: String? = null
+        private set
+
     @get:OutputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundleFile: File
+    lateinit var bundleFile: Provider<RegularFile>
         private set
 
     @TaskAction
     fun bundleModules() {
 
+        val signature = if (keystoreFile != null)
+            JarSigner.Signature(keystoreFile!!, keystorePassword, keyAlias, keyPassword)
+        else null
+
         workers.use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(
-                    baseModuleZip.singleFile(),
-                    featureZips.files,
-                    aaptOptionsNoCompress,
-                    bundleFile
+                    baseModuleFile = baseModuleZip.singleFile(),
+                    featureFiles = featureZips.files,
+                    mainDexList = mainDexList?.singleFile(),
+                    aaptOptionsNoCompress = aaptOptionsNoCompress,
+                    bundleOptions = bundleOptions,
+                    signature = signature,
+                    bundleFile = bundleFile.get().asFile
                 )
             )
         }
@@ -90,7 +130,10 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     private data class Params(
         val baseModuleFile: File,
         val featureFiles: Set<File>,
+        val mainDexList: File?,
         val aaptOptionsNoCompress: Collection<String>,
+        val bundleOptions: BundleOptions,
+        val signature: JarSigner.Signature?,
         val bundleFile: File
     ) : Serializable
 
@@ -111,19 +154,35 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             val noCompressGlobsForBundle =
                 PackagingUtils.getNoCompressGlobsForBundle(params.aaptOptionsNoCompress)
+
+            val splitsConfig =  Config.SplitsConfig.newBuilder()
+                .splitBy(Config.SplitDimension.Value.ABI, params.bundleOptions.enableAbi)
+                .splitBy(Config.SplitDimension.Value.SCREEN_DENSITY, params.bundleOptions.enableDensity)
+                .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
+
             val bundleConfig =
                 Config.BundleConfig.newBuilder()
                     .setCompression(
                         Config.Compression.newBuilder()
                             .addAllUncompressedGlob(noCompressGlobsForBundle))
-                    .build()
+                    .setOptimizations(
+                        Config.Optimizations.newBuilder()
+                            .setSplitsConfig(splitsConfig))
 
             val command = BuildBundleCommand.builder()
-                .setBundleConfig(bundleConfig)
+                .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
 
+            params.mainDexList?.let {
+                command.setMainDexListFile(it.toPath())
+            }
+
             command.build().execute()
+
+            if (params.signature != null) {
+                JarSigner().sign(bundleFile, params.signature)
+            }
         }
 
         private fun getBundlePath(folder: File): Path {
@@ -135,16 +194,29 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         }
     }
 
+    data class BundleOptions (
+        @get:Input
+        @get:Optional
+        val enableAbi: Boolean?,
+        @get:Input
+        @get:Optional
+        val enableDensity: Boolean?,
+        @get:Input
+        @get:Optional
+        val enableLanguage: Boolean?) : Serializable
+
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
 
-        override fun getName() = getTaskName(scope)
+        override fun getName() = scope.getTaskName("package", "Bundle")
         override fun getType() = BundleTask::class.java
 
         override fun execute(task: BundleTask) {
             task.variantName = scope.fullVariantName
 
-            // FIXME we need to improve the location of this.
-            task.bundleFile = scope.artifacts.appendArtifact(InternalArtifactType.BUNDLE, task, "bundle.aab")
+            task.bundleFile = scope.artifacts.setArtifactFile(
+                InternalArtifactType.BUNDLE,
+                task,
+                "bundle.aab")
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
@@ -156,6 +228,47 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             task.aaptOptionsNoCompress =
                     scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
+
+            task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+
+            // The bundle uses the main dex list even if legacy multidex is not explicitly enabled.
+            if (scope.needsMainDexList) {
+                task.mainDexList =
+                        scope.artifacts.getFinalArtifactFiles(
+                            InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
+                        )
+            }
+
+            scope.variantConfiguration.signingConfig?.let {
+                task.keystoreFile = it.storeFile
+                task.keystorePassword = it.storePassword
+                task.keyAlias = it.keyAlias
+                task.keyPassword = it.keyPassword
+            }
         }
     }
+}
+
+private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
+    BundleTask.BundleOptions(
+        enableAbi = abi.enableSplit,
+        enableDensity = density.enableSplit,
+        enableLanguage = language.enableSplit
+    )
+
+/**
+ * convenience function to call [Config.SplitsConfig.Builder.addSplitDimension]
+ *
+ * @param flag the [Config.SplitDimension.Value] on which to set the value
+ * @param value if true, split is enbaled for the given flag. If null, no change is made and the
+ *              bundle-tool will decide the value.
+ */
+private fun Config.SplitsConfig.Builder.splitBy(
+    flag: Config.SplitDimension.Value,
+    value: Boolean?
+): Config.SplitsConfig.Builder {
+    value?.let {
+        addSplitDimension(Config.SplitDimension.newBuilder().setValue(flag).setNegate(!it))
+    }
+    return this
 }

@@ -9,7 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 <#if parentActivityClass != "">
 import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
+import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)};
 </#if>
 <#if applicationPackage??>
 import ${applicationPackage}.R;

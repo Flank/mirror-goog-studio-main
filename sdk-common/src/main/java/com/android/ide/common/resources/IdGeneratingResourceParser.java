@@ -212,7 +212,7 @@ class IdGeneratingResourceParser {
             // However, we're serializing it as XML and in that case the ResourceValue comes from
             // parsing the XML. So store the file path in the XML to make the ResourceValues equivalent.
             if (getType() != ResourceType.ID) {
-                ResourceFile sourceFile = getSource();
+                ResourceFile sourceFile = getSourceFile();
                 assert sourceFile != null;
                 newNode.setTextContent(sourceFile.getFile().getAbsolutePath());
             }

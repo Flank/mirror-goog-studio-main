@@ -28,10 +28,13 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
+import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
@@ -58,6 +61,7 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -68,6 +72,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -125,6 +130,7 @@ import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
+import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
@@ -214,6 +220,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -250,6 +257,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
@@ -641,15 +649,24 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
 
-        // if base module, add stream of classes from features or dynamic-features for Proguard/R8
-        if (variantScope.getVariantData().getType().isBaseModule()) {
+        // if variantScope.consumesFeatureJars(), add streams of classes and java resources from
+        // features or dynamic-features.
+        if (variantScope.consumesFeatureJars()) {
             transformManager.addStream(
                     OriginalStream.builder(project, "feature-classes")
-                            .addContentTypes(TransformManager.CONTENT_JARS)
+                            .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
                                             METADATA_VALUES, MODULE, METADATA_CLASSES))
+                            .build());
+            transformManager.addStream(
+                    OriginalStream.builder(project, "feature-java-res")
+                            .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                            .addScope(InternalScope.FEATURES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            METADATA_VALUES, MODULE, METADATA_JAVA_RES))
                             .build());
         }
 
@@ -1104,8 +1121,9 @@ public abstract class TaskManager {
 
         createSplitsDiscovery(scope);
 
-        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                scope.getDexingType() == DexingType.LEGACY_MULTIDEX;
+        // The manifest main dex list proguard rules are always needed for the bundle,
+        // even if legacy multidex is not explicitly enabled.
+        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
 
         if (Boolean.TRUE.equals(
                 scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
@@ -1624,7 +1642,8 @@ public abstract class TaskManager {
                         globalScope.getProject(),
                         globalScope.getNdkHandler(),
                         globalScope.getExtension().getPackagingOptions().getDoNotStrip(),
-                        scope.getVariantConfiguration().getType().isAar()));
+                        scope.getVariantConfiguration().getType().isAar(),
+                        scope.consumesFeatureJars()));
     }
 
     /** Creates the tasks to build unit tests. */
@@ -2110,11 +2129,12 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         maybeCreateResourcesShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
+            maybeCreateDexSplitterTransform(variantScope);
+            // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
             return;
         }
 
         // ----- 10x support
-
         PreColdSwapTask preColdSwapTask = null;
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
 
@@ -2131,8 +2151,8 @@ public abstract class TaskManager {
 
             extension.getDexOptions().setJumboMode(true);
         }
-        // ----- Multi-Dex support
 
+        // ----- Multi-Dex support
         DexingType dexingType = variantScope.getDexingType();
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
@@ -2162,6 +2182,9 @@ public abstract class TaskManager {
                         .addTransform(taskFactory, variantScope, jarMergingTransform)
                         .ifPresent(variantScope::addColdSwapBuildTask);
             }
+        }
+
+        if (variantScope.getNeedsMainDexList()) {
 
             // ---------
             // create the transform that's going to take the code and the proguard keep list
@@ -2176,7 +2199,14 @@ public abstract class TaskManager {
                             new MainDexListTransform(variantScope, extension.getDexOptions());
                 }
             } else {
-                multiDexTransform = new MultiDexTransform(variantScope, extension.getDexOptions());
+                // This legacy codepath cannot be used without merging all the
+                // classes first. We can't fail during configuration for the bundle tool, but we
+                // should fail with a clear error message during execution.
+                multiDexTransform =
+                        new MultiDexTransform(
+                                variantScope,
+                                extension.getDexOptions(),
+                                dexingType == DexingType.LEGACY_MULTIDEX);
             }
             transformManager
                     .addTransform(taskFactory, variantScope, multiDexTransform)
@@ -2190,7 +2220,7 @@ public abstract class TaskManager {
                                                         InternalArtifactType
                                                                 .LEGACY_MULTIDEX_MAIN_DEX_LIST,
                                                         task,
-                                                        "maindexlist.txt");
+                                                        "mainDexList.txt");
                                 ((MainDexListWriter) multiDexTransform)
                                         .setMainDexListOutputFile(mainDexListFile);
                             });
@@ -2207,6 +2237,10 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
+
+        // TODO: support DexSplitterTransform when IR enabled (http://b/77585545)
+        maybeCreateDexSplitterTransform(variantScope);
+        // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
     }
 
     private void maybeCreateDesugarTask(
@@ -2317,6 +2351,7 @@ public abstract class TaskManager {
                         .setProjectVariant(getProjectVariantId(variantScope))
                         .setNumberOfBuckets(
                                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))
+                        .setIncludeFeaturesInScope(variantScope.consumesFeatureJars())
                         .createDexArchiveBuilderTransform();
         transformManager
                 .addTransform(taskFactory, variantScope, preDexTransform)
@@ -2350,7 +2385,8 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
-                        isDebuggable);
+                        isDebuggable,
+                        variantScope.consumesFeatureJars());
         Optional<TransformTask> dexTask =
                 transformManager.addTransform(taskFactory, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2435,7 +2471,8 @@ public abstract class TaskManager {
                             androidBuilder,
                             buildCache,
                             dexingType,
-                            variantScope.getMinSdkVersion().getFeatureLevel());
+                            variantScope.getMinSdkVersion().getFeatureLevel(),
+                            variantScope.consumesFeatureJars());
             transformManager
                     .addTransform(taskFactory, variantScope, preDexTransform)
                     .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2456,7 +2493,8 @@ public abstract class TaskManager {
                             checkNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
                             variantScope.getGlobalScope().getMessageReceiver(),
-                            variantScope.getMinSdkVersion().getFeatureLevel());
+                            variantScope.getMinSdkVersion().getFeatureLevel(),
+                            variantScope.consumesFeatureJars());
             Optional<TransformTask> dexTask =
                     transformManager.addTransform(taskFactory, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2773,6 +2811,8 @@ public abstract class TaskManager {
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)
                                         .get());
             }
+            // TODO: find a way to not pass the packageName if possible, as this may force us to
+            // parse the manifest for data binding during configuration.
             String packageName = variantConfiguration.getOriginalApplicationId();
             // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
@@ -2973,9 +3013,7 @@ public abstract class TaskManager {
         // right output if there are more than one.
         // Add a task to install the application package
         if (signedApk) {
-            InstallVariantTask installTask =
-                    taskFactory.create(new InstallVariantTask.ConfigAction(variantScope));
-            installTask.dependsOn(variantScope.getAssembleTask());
+            createInstallTask(variantScope);
         }
 
         maybeCreateLintVitalTask(variantData);
@@ -2986,6 +3024,10 @@ public abstract class TaskManager {
 
         taskFactory.configure(
                 UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask.getName()));
+    }
+
+    protected void createInstallTask(VariantScope variantScope) {
+        taskFactory.create(new InstallVariantTask.ConfigAction(variantScope));
     }
 
     protected Task getValidateSigningTask(@NonNull VariantScope variantScope) {
@@ -3003,9 +3045,13 @@ public abstract class TaskManager {
     public DefaultTask createAssembleTask(@NonNull final BaseVariantData variantData) {
         return taskFactory.create(
                 variantData.getScope().getTaskName("assemble"),
-                task -> {
-                    variantData.addTask(TaskContainer.TaskKind.ASSEMBLE, task);
-                });
+                task -> variantData.addTask(TaskContainer.TaskKind.ASSEMBLE, task));
+    }
+
+    public DefaultTask createBundleTask(@NonNull final BaseVariantData variantData) {
+        return taskFactory.create(
+                variantData.getScope().getTaskName("bundle"),
+                task -> variantData.addTask(TaskContainer.TaskKind.BUNDLE, task));
     }
 
     @NonNull
@@ -3013,9 +3059,21 @@ public abstract class TaskManager {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.create(
-                StringHelper.appendCapitalized("assemble", sourceSetName),
+                "assemble" + sourceSetName,
                 assembleTask -> {
                     assembleTask.setDescription("Assembles all " + sourceSetName + " builds.");
+                    assembleTask.setGroup(BasePlugin.BUILD_GROUP);
+                });
+    }
+
+    @NonNull
+    public DefaultTask createBundleTask(@NonNull VariantDimensionData dimensionData) {
+        final String sourceSetName =
+                StringHelper.capitalize(dimensionData.getSourceSet().getName());
+        return taskFactory.create(
+                "bundle" + sourceSetName,
+                assembleTask -> {
+                    assembleTask.setDescription("Creates all " + sourceSetName + " bundles.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);
                 });
     }
@@ -3297,6 +3355,100 @@ public abstract class TaskManager {
                 variantScope.getOutputProguardMappingFile(),
                 testedVariantData,
                 transform);
+    }
+
+    private void maybeCreateDexSplitterTransform(@NonNull VariantScope variantScope) {
+        if (!variantScope.consumesFeatureJars()) {
+            return;
+        }
+
+        File dexSplitterOutput =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "dex-splitter",
+                        variantScope.getVariantConfiguration().getDirName());
+        FileCollection featureJars =
+                variantScope.getArtifactFileCollection(METADATA_VALUES, MODULE, METADATA_CLASSES);
+        BuildableArtifact mappingFileSrc =
+                variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
+                        ? variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+                        : null;
+
+        DexSplitterTransform transform =
+                new DexSplitterTransform(dexSplitterOutput, featureJars, mappingFileSrc);
+
+        Optional<TransformTask> transformTask =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(taskFactory, variantScope, transform);
+
+        if (transformTask.isPresent()) {
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.FEATURE_DEX,
+                            ImmutableList.of(dexSplitterOutput),
+                            transformTask.get());
+            publishFeatureDex(variantScope);
+        } else {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(
+                                    "Internal error, could not add the DexSplitterTransform"));
+        }
+    }
+
+    /**
+     * We have a separate method for publishing the classes.dex files back to the features (instead
+     * of using the typical PublishingSpecs pipeline) because multiple artifacts are published per
+     * BuildableArtifact in this case.
+     *
+     * <p>This method is similar to VariantScopeImpl.publishIntermediateArtifact, and some of the
+     * code was pulled from there. Once there's support for publishing multiple artifacts per
+     * BuildableArtifact in the PublishingSpecs pipeline, we can get rid of this method.
+     */
+    private void publishFeatureDex(@NonNull VariantScope variantScope) {
+        // first calculate the list of module paths
+        final Collection<String> modulePaths;
+        final AndroidConfig extension = globalScope.getExtension();
+        if (extension instanceof BaseAppModuleExtension) {
+            modulePaths =
+                    AppModelBuilder.getDynamicFeatures(
+                            (BaseAppModuleExtension) extension, globalScope);
+        } else if (extension instanceof FeatureExtension) {
+            modulePaths = FeatureModelBuilder.getDynamicFeatures(globalScope);
+        } else {
+            return;
+        }
+
+        Configuration configuration =
+                variantScope.getVariantData().getVariantDependency().getRuntimeElements();
+        Preconditions.checkNotNull(
+                configuration,
+                "Publishing to Runtime Element with no Runtime Elements configuration object. "
+                        + "VariantType: "
+                        + variantScope.getType());
+        BuildableArtifact artifact =
+                variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.FEATURE_DEX);
+        for (String modulePath : modulePaths) {
+            Provider<File> file =
+                    project.provider(
+                            () ->
+                                    new File(
+                                            Iterables.getOnlyElement(artifact.getFiles()),
+                                            modulePath.replace(":", "/")));
+            Map<Attribute<String>, String> attributeMap = ImmutableMap.of(MODULE_PATH, modulePath);
+            publishArtifactToConfiguration(
+                    configuration,
+                    file,
+                    artifact,
+                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                    attributeMap);
+        }
     }
 
     /**

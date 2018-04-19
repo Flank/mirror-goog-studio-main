@@ -30,9 +30,28 @@ public final class TraceOperationTracker {
         sendStartOperation(Os.gettid(), tracePath);
     }
 
-    /** Entry hook for {@link Debug#stopMethodTracing()}. */
+    /** Exit hook for {@link Debug#stopMethodTracing()}. */
     public static void onStopMethodTracing() {
         sendStopOperation(Os.gettid());
+    }
+
+    /**
+     * Entry hook for {@link String Debug#fixTracePath(String)}.
+     *
+     * @param tracePath the path passed in, potentially a relative path.
+     */
+    public static void onFixTracePathEntry(String tracePath) {
+        recordInputPath(Os.gettid(), tracePath);
+    }
+
+    /**
+     * Exit hook for {@link String Debug#fixTracePath(String)}.
+     *
+     * @param fixedPath return value of fixTracePath(). It is an absolute path with the right extension.
+     */
+    public static String onFixTracePathExit(String fixedPath) {
+        recordOutputPath(Os.gettid(), fixedPath);
+        return fixedPath;
     }
 
     // Native functions to send trace operations to perfd.
@@ -41,4 +60,8 @@ public final class TraceOperationTracker {
     private static native void sendStartOperation(int thread_id, String tracePath);
 
     private static native void sendStopOperation(int thread_id);
+
+    private static native void recordInputPath(int thread_id, String input_path);
+
+    private static native void recordOutputPath(int thread_id, String output_path);
 }

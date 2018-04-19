@@ -27,12 +27,14 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolutionStrategy;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Usage;
@@ -68,7 +71,7 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_COMPILE_ONLY = "compileOnly";
     public static final String CONFIG_NAME_IMPLEMENTATION = "implementation";
     public static final String CONFIG_NAME_RUNTIME_ONLY = "runtimeOnly";
-    public static final String CONFIG_NAME_FEATURE = "feature";
+    @Deprecated public static final String CONFIG_NAME_FEATURE = "feature";
     public static final String CONFIG_NAME_APPLICATION = "application";
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
@@ -95,12 +98,6 @@ public class VariantDependencies {
     @Nullable private final Configuration metadataValuesConfiguration;
     @Nullable private final Configuration bundleElements;
 
-    /**
-     *  Whether we have a direct dependency on com.android.support:support-annotations; this
-     * is used to drive whether we extract annotations when building libraries for example
-     */
-    private boolean annotationsPresent;
-
     public static final class Builder {
         @NonNull private final Project project;
         @NonNull private final SyncIssueHandler errorReporter;
@@ -122,6 +119,8 @@ public class VariantDependencies {
         private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
         private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
         private VariantDependencies testedVariantDependencies;
+
+        @Nullable private Set<String> featureList;
 
         protected Builder(
                 @NonNull Project project,
@@ -159,6 +158,11 @@ public class VariantDependencies {
         public Builder setTestedVariantDependencies(
                 @NonNull VariantDependencies testedVariantDependencies) {
             this.testedVariantDependencies = testedVariantDependencies;
+            return this;
+        }
+
+        public Builder setFeatureList(Set<String> featureList) {
+            this.featureList = featureList;
             return this;
         }
 
@@ -365,12 +369,38 @@ public class VariantDependencies {
                     // metadata and the application metadata. It's per-variant to contain the
                     // right attribute. It'll be used to get the applicationId and to consume
                     // the manifest.
-                    metadataValues = configurations.maybeCreate(variantName + "MetadataValues");
-                    metadataValues.extendsFrom(configurations.getByName(CONFIG_NAME_FEATURE));
-                    if (variantType.isHybrid()) {
-                        metadataValues.extendsFrom(
-                                configurations.getByName(CONFIG_NAME_APPLICATION));
+                    final String metadataValuesName = variantName + "MetadataValues";
+                    metadataValues = configurations.maybeCreate(metadataValuesName);
+
+                    if (featureList != null) {
+                        DependencyHandler depHandler = project.getDependencies();
+                        List<String> notFound = new ArrayList<>();
+
+                        for (String feature : featureList) {
+                            Project p = project.findProject(feature);
+                            if (p != null) {
+                                depHandler.add(metadataValuesName, p);
+                            } else {
+                                notFound.add(feature);
+                            }
+                        }
+
+                        if (!notFound.isEmpty()) {
+                            errorReporter.reportError(
+                                    EvalIssueReporter.Type.GENERIC,
+                                    new EvalIssueException(
+                                            "Unable to find matching projects for Dynamic Features: "
+                                                    + notFound));
+                        }
+                    } else {
+                        //noinspection deprecation
+                        metadataValues.extendsFrom(configurations.getByName(CONFIG_NAME_FEATURE));
+                        if (variantType.isHybrid()) {
+                            metadataValues.extendsFrom(
+                                    configurations.getByName(CONFIG_NAME_APPLICATION));
+                        }
                     }
+
                     metadataValues.setDescription(
                             "Metadata Values dependencies for the base Split");
                     metadataValues.setCanBeConsumed(false);

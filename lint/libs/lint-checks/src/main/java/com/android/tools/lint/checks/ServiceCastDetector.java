@@ -386,6 +386,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.net.ConnectivityManager";
             case "CONSUMER_IR_SERVICE":
                 return "android.hardware.ConsumerIrManager";
+            case "EUICC_SERVICE":
+                return "android.telephony.euicc.EuiccManager";
             case "DEVICE_POLICY_SERVICE":
                 return "android.app.admin.DevicePolicyManager";
             case "DISPLAY_SERVICE":

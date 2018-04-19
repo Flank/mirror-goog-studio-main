@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.builder.packaging.JarMerger.MODULE_PATH
 import com.android.testutils.truth.FileSubject
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileCollection
@@ -96,7 +97,7 @@ class BundleFeatureClassesTest {
         FileSubject.assertThat(task.outputJar).exists()
         JarInputStream(BufferedInputStream(FileInputStream(task.outputJar))).use {
             assertThat(it.manifest).isNotNull()
-            assertThat(it.manifest.mainAttributes).containsKey(Attributes.Name("feature-path"))
+            assertThat(it.manifest.mainAttributes).containsKey(Attributes.Name(MODULE_PATH))
         }
     }
 }

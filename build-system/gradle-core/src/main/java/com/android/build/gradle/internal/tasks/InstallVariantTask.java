@@ -56,8 +56,8 @@ import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
@@ -104,7 +104,8 @@ public class InstallVariantTask extends AndroidBuilderTask {
             List<OutputFile> outputs =
                     ImmutableList.copyOf(
                             ExistingBuildElements.from(
-                                    InternalArtifactType.APK, getApkDirectory()));
+                                    InternalArtifactType.APK,
+                                    BuildableArtifactUtil.singleFile(apkDirectory)));
 
             install(
                     getProjectName(),
@@ -238,9 +239,9 @@ public class InstallVariantTask extends AndroidBuilderTask {
         this.installOptions = installOptions;
     }
 
-    @InputDirectory
-    public File getApkDirectory() {
-        return BuildableArtifactUtil.singleFile(apkDirectory);
+    @InputFiles
+    public BuildableArtifact getApkDirectory() {
+        return apkDirectory;
     }
 
     public void setApkDirectory(BuildableArtifact apkDirectory) {

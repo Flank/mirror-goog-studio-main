@@ -69,6 +69,7 @@ public class LintGradleClient extends LintCliClient {
     private final String version;
     private File sdkHome;
     @NonNull private final VariantInputs variantInputs;
+    private String baselineVariantName;
     private final BuildToolInfo buildToolInfo;
     private final boolean isAndroid;
 
@@ -81,12 +82,14 @@ public class LintGradleClient extends LintCliClient {
             @Nullable Variant variant,
             @NonNull VariantInputs variantInputs,
             @Nullable BuildToolInfo buildToolInfo,
-            boolean isAndroid) {
+            boolean isAndroid,
+            String baselineVariantName) {
         super(flags, CLIENT_GRADLE);
         this.version = version;
         this.gradleProject = gradleProject;
         this.sdkHome = sdkHome;
         this.variantInputs = variantInputs;
+        this.baselineVariantName = baselineVariantName;
         this.registry = registry;
         this.buildToolInfo = buildToolInfo;
         this.variant = variant;
@@ -383,6 +386,12 @@ public class LintGradleClient extends LintCliClient {
     @Override
     public BuildToolInfo getBuildTools(@NonNull Project project) {
         return buildToolInfo;
+    }
+
+    @Nullable
+    @Override
+    protected String getBaselineVariantName() {
+        return baselineVariantName;
     }
 
     @Override

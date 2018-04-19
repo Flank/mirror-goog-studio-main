@@ -15,10 +15,10 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
-import android.support.v7.graphics.Palette
-import android.support.wearable.watchface.CanvasWatchFaceService
-import android.support.wearable.watchface.WatchFaceService
-import android.support.wearable.watchface.WatchFaceStyle
+import ${getMaterialComponentName('android.support.v7.graphics.Palette', useAndroidX)}
+import ${getMaterialComponentName('android.support.wearable.watchface.CanvasWatchFaceService', useAndroidX)}
+import ${getMaterialComponentName('android.support.wearable.watchface.WatchFaceService', useAndroidX)}
+import ${getMaterialComponentName('android.support.wearable.watchface.WatchFaceStyle', useAndroidX)}
 import android.view.SurfaceHolder
 <#if isInteractive>import android.widget.Toast</#if>
 

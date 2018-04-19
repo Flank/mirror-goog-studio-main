@@ -198,6 +198,50 @@ class BuildArtifactsHolderTest {
         assertThat(newJavaClasses.buildDependencies.getDependencies(null)).containsExactly(task1)
     }
 
+    @Test
+    fun finalBuildableLocation() {
+        holder.setArtifactFile(JAVAC_CLASSES, task1, "finalFile")
+        val finalArtifactFiles = holder.getFinalArtifactFiles(JAVAC_CLASSES)
+        assertThat(finalArtifactFiles.files).hasSize(1)
+        val outputFile = finalArtifactFiles.files.elementAt(0)
+        val relativeFile = outputFile.relativeTo(project.buildDir)
+        assertThat(relativeFile.path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Kind.INTERMEDIATES.name.toLowerCase(),
+                JAVAC_CLASSES.name.toLowerCase(),
+                "debug",
+                "finalFile"))
+    }
+
+    @Test
+    fun finalReplacedBuildableLocation() {
+        val task1Output = holder.setArtifactFile(
+            InternalArtifactType.BUNDLE, task1, "finalFile")
+        val task2Output = holder.setArtifactFile(
+            InternalArtifactType.BUNDLE, task2, "replacingFile")
+        val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
+        assertThat(finalArtifactFiles.files).hasSize(1)
+        val outputFile = finalArtifactFiles.files.elementAt(0)
+        // check that our output file 
+        assertThat(task2Output.get().asFile.path).isEqualTo(outputFile.path)
+        val relativeFile1 = task1Output.get().asFile.relativeTo(project.buildDir)
+        assertThat(relativeFile1.path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Kind.INTERMEDIATES.outputPath,
+                InternalArtifactType.BUNDLE.name.toLowerCase(),
+                "debug",
+                "task1",
+                "finalFile"))
+        val relativeFile2 = task2Output.get().asFile.relativeTo(project.buildDir)
+        assertThat(relativeFile2.path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Kind.OUTPUTS.name.toLowerCase(),
+                InternalArtifactType.BUNDLE.name.toLowerCase(),
+                "debug",
+                "replacingFile")
+        )
+    }
+
     private class TestBuildArtifactsHolder(
         project: Project,
         rootOutputDir: () -> File,

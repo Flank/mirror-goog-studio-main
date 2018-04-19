@@ -408,7 +408,6 @@ class DslModelDataImplTest {
                 VariantPropertiesImpl(dslScope),
                 BuildTypeOrProductFlavorImpl(dslScope) { baseFlavor.postProcessing },
                 ProductFlavorOrVariantImpl(dslScope),
-                FallbackStrategyImpl(dslScope),
                 baseFlavor,
                 dslScope)
 

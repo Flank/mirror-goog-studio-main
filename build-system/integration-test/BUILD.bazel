@@ -6,6 +6,25 @@ filegroup(
     ],
 )
 
+[
+    filegroup(
+        name = "test-projects/" + project_name,
+        srcs = glob(["test-projects/" + project_name + "/**"]),
+        visibility = [
+            ":__subpackages__",
+        ],
+    )
+    for project_name in
+    #keep sorted
+    [
+        "databindingAndKotlin",
+        "databinding",
+        "databindingIncremental",
+        "databindingAndDagger",
+        "databindingWithFeatures",
+    ]
+]
+
 # Used for bazel packages below this one that use GradleTestProject.
 exports_files(["test-projects/commonBuildScript.gradle"])
 

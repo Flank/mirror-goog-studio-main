@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants
 import com.android.SdkConstants.ATTR_FILE
+import com.android.SdkConstants.ATTR_FORMAT
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_LINE
 import com.android.SdkConstants.ATTR_MESSAGE
@@ -30,7 +31,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
-import com.android.utils.XmlUtils
+import com.android.utils.XmlUtils.toXmlAttributeValue
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -47,7 +48,6 @@ import java.io.InputStreamReader
 import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.util.ArrayList
-import java.util.Collections
 
 /**
  * A lint baseline is a collection of warnings for a project that have been
@@ -124,6 +124,11 @@ class LintBaseline(
     val fixedCount: Int
         get() = totalCount - foundErrorCount - foundWarningCount
 
+    /**
+     * Custom attributes defined for this baseline
+     */
+    private var attributes: MutableMap<String, String>? = null
+
     init {
         readBaselineFile()
     }
@@ -161,7 +166,7 @@ class LintBaseline(
                 ids[entry.issueId] = count
             }
             val sorted = Lists.newArrayList(ids.keys)
-            Collections.sort(sorted)
+            sorted.sort()
             val issueTypes = StringBuilder()
             for (id in sorted) {
                 if (issueTypes.isNotEmpty()) {
@@ -188,7 +193,7 @@ class LintBaseline(
                         "You can turn this back on with " +
                         "`android.lintOptions.checkDependencies=true`."
             }
-            message += " Unmatched issue types: " + issueTypes
+            message += " Unmatched issue types: $issueTypes"
 
             LintClient.report(
                 client, IssueRegistry.BASELINE, message,
@@ -277,6 +282,26 @@ class LintBaseline(
         return false
     }
 
+    /**
+     * Returns a custom attribute previously persistently set with [setAttribute]
+     */
+    fun getAttribute(name: String): String? {
+        return attributes?.get(name)
+    }
+
+    /**
+     * Set a custom attribute on this baseline (which is persisted and can be
+     * retrieved later with [getAttribute])
+     */
+    fun setAttribute(name: String, value: String) {
+        val attributes = attributes ?: run {
+            val newMap = mutableMapOf<String, String>()
+            attributes = newMap
+            newMap
+        }
+        attributes[name] = value
+    }
+
     /** Read in the XML report  */
     private fun readBaselineFile() {
         if (!file.exists()) {
@@ -342,8 +367,14 @@ class LintBaseline(
                                 }
                             }
                             ATTR_FILE -> path = value
-                        // For now not reading ATTR_LINE; not used for baseline entry matching
-                        //ATTR_LINE -> line = value
+                            // For now not reading ATTR_LINE; not used for baseline entry matching
+                            //ATTR_LINE -> line = value
+                            ATTR_FORMAT, "by" -> {} // not currently interesting, don't store
+                            else -> {
+                                if (parser.depth == 1) {
+                                    setAttribute(name, value)
+                                }
+                            }
                         }
                         i++
                     }
@@ -387,11 +418,16 @@ class LintBaseline(
                     if (revision != null) {
                         writer.write(String.format(" by=\"lint %1\$s\"", revision))
                     }
+                    attributes?.let {
+                        it.asSequence().sortedBy { it.key }.forEach {
+                            writer.write(" ${it.key}=\"${toXmlAttributeValue(it.value)}\"")
+                        }
+                    }
                     writer.write(">\n")
 
                     totalCount = 0
                     if (entriesToWrite != null) {
-                        Collections.sort(entriesToWrite!!)
+                        entriesToWrite!!.sort()
                         for (entry in entriesToWrite!!) {
                             entry.write(writer, client)
                             totalCount++
@@ -566,6 +602,9 @@ class LintBaseline(
     }
 
     companion object {
+        const val VARIANT_ALL = "all"
+        const val VARIANT_FATAL = "fatal"
+
         /**
          * Given an error message produced by this lint detector for the given issue type,
          * determines whether this corresponds to the warning (produced by
@@ -574,7 +613,7 @@ class LintBaseline(
          * <p>
          * Intended for IDE quickfix implementations.
          */
-        @SuppressWarnings("unused") // Used from the IDE
+        @Suppress("unused") // Used from the IDE
         fun isFilteredMessage(errorMessage: String, format: TextFormat): Boolean {
             return format.toText(errorMessage).contains("filtered out because")
         }
@@ -587,7 +626,7 @@ class LintBaseline(
          * <p>
          * Intended for IDE quickfix implementations.
          */
-        @SuppressWarnings("unused") // Used from the IDE
+        @Suppress("unused") // Used from the IDE
         fun isFixedMessage(errorMessage: String, format: TextFormat): Boolean {
             return format.toText(errorMessage).contains("perhaps they have been fixed")
         }
@@ -667,7 +706,7 @@ class LintBaseline(
             indent(writer, indent)
             writer.write(name)
             writer.write("=\"")
-            writer.write(XmlUtils.toXmlAttributeValue(value))
+            writer.write(toXmlAttributeValue(value))
             writer.write("\"")
         }
 

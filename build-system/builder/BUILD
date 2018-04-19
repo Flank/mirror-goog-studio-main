@@ -84,7 +84,10 @@ kotlin_test(
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    tags = ["no_test_windows"],  # b/77288863
+    tags = [
+        "no_test_windows",  # b/77288863
+        "slow",
+    ],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
         # Need to put this on the classpath before TestRunner_deploy.jar which contains

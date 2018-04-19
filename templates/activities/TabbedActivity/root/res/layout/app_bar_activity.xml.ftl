@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_content"
@@ -8,14 +8,14 @@
     android:fitsSystemWindows="true"
     tools:context="${packageName}.${activityClass}">
 
-    <android.support.design.widget.AppBarLayout
+    <${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}
         android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/appbar_padding_top"
         android:theme="@style/${themeNameAppBarOverlay}">
 
-        <android.support.v7.widget.Toolbar
+        <${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
             android:id="@+id/toolbar"
             app:title="@string/app_name"
             android:layout_width="match_parent"
@@ -32,35 +32,35 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </#if>
-        </android.support.v7.widget.Toolbar>
+        </${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}>
 
         <#if features == 'tabs'>
-        <android.support.design.widget.TabLayout
+        <${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}
             android:id="@+id/tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <android.support.design.widget.TabItem
+            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
                 android:id="@+id/tabItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tab_text_1" />
 
-            <android.support.design.widget.TabItem
+            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
                 android:id="@+id/tabItem2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tab_text_2" />
 
-            <android.support.design.widget.TabItem
+            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
                 android:id="@+id/tabItem3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tab_text_3" />
 
-        </android.support.design.widget.TabLayout>
+        </${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}>
         </#if>
-    </android.support.design.widget.AppBarLayout>
+    </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
     <${viewContainer}
         android:id="@+id/container"
@@ -68,7 +68,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -76,4 +76,4 @@
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
-</android.support.design.widget.CoordinatorLayout>
+</${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>

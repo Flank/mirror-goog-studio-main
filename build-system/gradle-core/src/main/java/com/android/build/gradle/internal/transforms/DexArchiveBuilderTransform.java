@@ -191,6 +191,7 @@ public class DexArchiveBuilderTransform extends Transform {
     private final boolean isDebuggable;
     @NonNull private final VariantScope.Java8LangSupport java8LangSupportType;
     private final int numberOfBuckets;
+    private final boolean includeFeaturesInScopes;
 
     DexArchiveBuilderTransform(
             @NonNull Supplier<List<File>> androidJarClasspath,
@@ -206,7 +207,8 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull VariantScope.Java8LangSupport java8LangSupportType,
             @NonNull String projectVariant,
             boolean enableIncrementalDesugaring,
-            @Nullable Integer numberOfBuckets) {
+            @Nullable Integer numberOfBuckets,
+            boolean includeFeaturesInScopes) {
         this.androidJarClasspath = androidJarClasspath;
         this.dexOptions = dexOptions;
         this.messageReceiver = messageReceiver;
@@ -226,6 +228,7 @@ public class DexArchiveBuilderTransform extends Transform {
         this.isDebuggable = isDebuggable;
         this.java8LangSupportType = java8LangSupportType;
         this.numberOfBuckets = numberOfBuckets == null ? DEFAULT_NUM_BUCKETS : numberOfBuckets;
+        this.includeFeaturesInScopes = includeFeaturesInScopes;
     }
 
     @NonNull
@@ -249,6 +252,9 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
+        if (includeFeaturesInScopes) {
+            return TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES;
+        }
         return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 

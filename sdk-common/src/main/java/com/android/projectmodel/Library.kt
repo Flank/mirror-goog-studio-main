@@ -15,6 +15,7 @@
  */
 package com.android.projectmodel
 
+import com.android.ide.common.util.PathString
 /**
  * Represents a dependency for a [Variant].
  */

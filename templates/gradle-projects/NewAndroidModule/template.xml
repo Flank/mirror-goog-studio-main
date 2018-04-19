@@ -103,6 +103,12 @@
         type="boolean"
         default="false" />
 
+    <parameter
+        id="isDynamicFeature"
+        name="Is a Dynamic Feature"
+        type="boolean"
+        default="false" />
+
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />
 

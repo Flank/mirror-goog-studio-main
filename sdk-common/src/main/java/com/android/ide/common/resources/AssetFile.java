@@ -27,7 +27,7 @@ class AssetFile extends DataFile<AssetItem> {
     /**
      * Creates a resource file with a single resource item.
      *
-     * The source file is set on the item with {@link AssetItem#setSource(DataFile)}
+     * The source file is set on the item with {@link AssetItem#setSourceFile(DataFile)}
      *
      * @param file the File
      * @param item the resource item

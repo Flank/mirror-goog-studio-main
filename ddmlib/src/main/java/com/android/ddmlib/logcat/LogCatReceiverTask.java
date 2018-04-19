@@ -25,7 +25,6 @@ import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -102,7 +101,7 @@ public class LogCatReceiverTask implements Runnable {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             if (!mCancelled.get()) {
                 processLogLines(lines);
             }

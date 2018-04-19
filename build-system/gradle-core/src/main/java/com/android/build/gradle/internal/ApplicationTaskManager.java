@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
+import static com.android.builder.packaging.JarMerger.MODULE_PATH;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -28,6 +29,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -43,8 +45,9 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
+import com.android.build.gradle.internal.tasks.ExtractApksTask;
+import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
-import com.android.build.gradle.internal.tasks.SelectApksTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
@@ -61,6 +64,7 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
@@ -223,6 +227,33 @@ public class ApplicationTaskManager extends TaskManager {
         createDynamicBundleTask(variantScope);
     }
 
+    @Override
+    protected void createInstallTask(VariantScope variantScope) {
+        GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
+        final VariantType variantType = variantConfiguration.getType();
+
+        // feature split or AIA modules do not have their own install tasks
+        if (variantType.isFeatureSplit() || variantType.isHybrid()) {
+            return;
+        }
+
+        // if test app,
+        // or not a base module (unlikely but better to test),
+        // or no dynamic features are present,
+        // then use the default install task
+        if (variantType.isForTesting()
+                || !(extension instanceof BaseAppModuleExtension)
+                || AppModelBuilder.getDynamicFeatures(
+                                (BaseAppModuleExtension) extension, variantScope.getGlobalScope())
+                        .isEmpty()) {
+            super.createInstallTask(variantScope);
+
+        } else {
+            // use the install task that uses the App Bundle
+            taskFactory.create(new InstallVariantViaBundleTask.ConfigAction(variantScope));
+        }
+    }
+
     /** Create tasks related to creating pure split APKs containing sharded dex files. */
     @Nullable
     private BuildInfoWriterTask createInstantRunPackagingTasks(@NonNull VariantScope variantScope) {
@@ -325,7 +356,7 @@ public class ApplicationTaskManager extends TaskManager {
                     @NonNull
                     @Override
                     public String getName() {
-                        return scope.getTaskName("bundleAppClasses");
+                        return scope.getTaskName("packageAppClasses");
                     }
 
                     @NonNull
@@ -347,6 +378,10 @@ public class ApplicationTaskManager extends TaskManager {
                         task.from(postJavacGeneratedBytecode);
                         task.setDestinationDir(outputFile.getParentFile());
                         task.setArchiveName(outputFile.getName());
+                        task.manifest(
+                                it -> {
+                                    it.attributes(ImmutableMap.of(MODULE_PATH, project.getPath()));
+                                });
                     }
                 });
 
@@ -376,6 +411,9 @@ public class ApplicationTaskManager extends TaskManager {
     @NonNull
     @Override
     protected Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
+        if (variantScope.consumesFeatureJars()) {
+            return TransformManager.SCOPE_FULL_WITH_FEATURES;
+        }
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
@@ -433,16 +471,18 @@ public class ApplicationTaskManager extends TaskManager {
             taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
 
             if (scope.getType().isBaseModule()) {
-                taskFactory.create(new BundleTask.ConfigAction(scope));
+                BundleTask bundleTask = taskFactory.create(new BundleTask.ConfigAction(scope));
+                scope.getBundleTask().dependsOn(bundleTask);
 
                 BundleToApkTask task = taskFactory.create(new BundleToApkTask.ConfigAction(scope));
                 // make the task depend on the validate signing task to ensure that the keystore
                 // is created if it's a debug one.
                 if (scope.getVariantConfiguration().getSigningConfig() != null) {
                     task.dependsOn(getValidateSigningTask(scope));
+                    bundleTask.dependsOn(getValidateSigningTask(scope));
                 }
 
-                taskFactory.create(new SelectApksTask.ConfigAction(scope));
+                taskFactory.create(new ExtractApksTask.ConfigAction(scope));
             }
         }
     }

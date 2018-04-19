@@ -50,6 +50,8 @@ public class JarMerger implements Closeable {
     public static final Predicate<String> EXCLUDE_CLASSES =
             archivePath -> !archivePath.endsWith(SdkConstants.DOT_CLASS);
 
+    public static final String MODULE_PATH = "module-path";
+
     public interface Transformer {
         /**
          * Transforms the given file.

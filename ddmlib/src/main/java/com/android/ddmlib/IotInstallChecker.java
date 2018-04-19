@@ -62,7 +62,7 @@ public class IotInstallChecker {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             for (MultiLineReceiver receiver : receivers) {
                 receiver.processNewLines(lines);
             }
@@ -143,7 +143,7 @@ public class IotInstallChecker {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             for (String l : lines) {
                 processNewLine(l);
             }

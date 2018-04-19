@@ -259,7 +259,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                             b = a;
                         }
                     }
-                            """
+                    """
             ).indented()
         ).run().expect(expected)
     }

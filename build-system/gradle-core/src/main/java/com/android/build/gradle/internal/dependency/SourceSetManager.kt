@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
-import com.android.build.gradle.internal.variant2.DeprecatedConfigurationAction
+import com.android.build.gradle.internal.variant2.RenamedConfigurationAction
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
@@ -79,7 +79,7 @@ class SourceSetManager(
                 "compile" == compileName || "testCompile" == compileName /*canBeResolved*/)
         compile.allDependencies
                 .whenObjectAdded(
-                        DeprecatedConfigurationAction(
+                        RenamedConfigurationAction(
                                 "$implementationName' and '$apiName",
                                 compileName,
                                 dslScope.deprecationReporter,
@@ -101,7 +101,7 @@ class SourceSetManager(
         val apk = createConfiguration(apkName, packageConfigDescription)
         apk.allDependencies
                 .whenObjectAdded(
-                        DeprecatedConfigurationAction(
+                        RenamedConfigurationAction(
                                 runtimeOnlyName,
                                 apkName,
                                 dslScope.deprecationReporter,
@@ -114,7 +114,7 @@ class SourceSetManager(
                 getDeprecatedConfigDesc("Provided", sourceSet.name, compileOnlyName))
         provided.allDependencies
                 .whenObjectAdded(
-                        DeprecatedConfigurationAction(
+                        RenamedConfigurationAction(
                                 compileOnlyName,
                                 providedName,
                                 dslScope.deprecationReporter,
@@ -127,7 +127,7 @@ class SourceSetManager(
         if (isTestComponent) {
             api.allDependencies
                     .whenObjectAdded(
-                            DeprecatedConfigurationAction(
+                            RenamedConfigurationAction(
                                     implementationName,
                                     apiName,
                                     dslScope.deprecationReporter,

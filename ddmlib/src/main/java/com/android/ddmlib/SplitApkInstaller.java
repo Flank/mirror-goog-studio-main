@@ -260,7 +260,7 @@ public class SplitApkInstaller {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             for (String line : lines) {
                 Matcher matcher = successPattern.matcher(line);
                 if (matcher.matches()) {
@@ -286,7 +286,7 @@ public class SplitApkInstaller {
         }
 
         @Override
-        public void processNewLines(String[] lines) {
+        public void processNewLines(@NonNull String[] lines) {
             if (!processedFirstLine) {
                 processedFirstLine = true;
                 success = lines[0].startsWith("Success");

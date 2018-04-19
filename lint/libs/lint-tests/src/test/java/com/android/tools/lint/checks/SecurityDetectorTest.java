@@ -847,6 +847,30 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "</manifest>\n")));
     }
 
+    public void testSlices() {
+        // Intent filter for standard Android action
+        //noinspection all // Sample code
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"${packageName}\">\n"
+                                        + "    <application>\n"
+                                        + "        <provider android:name=\"MySliceProvider\"\n"
+                                        + "            android:authorities=\"com.example.app\"\n"
+                                        + "            android:exported=\"true\" >\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <category android:name=\"android.app.slice.category.SLICE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </provider>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mStrings =
             xml(

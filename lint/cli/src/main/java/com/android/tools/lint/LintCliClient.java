@@ -27,6 +27,8 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_APPLIED_SUGGESTIONS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
+import static com.android.tools.lint.client.api.LintBaseline.VARIANT_ALL;
+import static com.android.tools.lint.client.api.LintBaseline.VARIANT_FATAL;
 import static com.android.utils.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
@@ -37,6 +39,8 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.Variant;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestMerger2.MergeType;
@@ -193,6 +197,23 @@ public class LintCliClient extends LintClient {
         }
     }
 
+    @NonNull
+    protected String getBaselineVariantName() {
+        if (flags.isFatalOnly()) {
+            return VARIANT_FATAL;
+        }
+
+        Collection<Project> projects = driver.getProjects();
+        for (Project project : projects) {
+            Variant variant = project.getCurrentVariant();
+            if (variant != null) {
+                return variant.getName();
+            }
+        }
+
+        return VARIANT_ALL;
+    }
+
     /**
      * Runs the static analysis command line driver. You need to add at least one error reporter to
      * the command line flags.
@@ -211,14 +232,11 @@ public class LintCliClient extends LintClient {
 
         Collections.sort(warnings);
 
-        LintStats stats = LintStats.Companion.create(warnings, driver.getBaseline());
+        LintBaseline baseline = driver.getBaseline();
+        LintStats stats = LintStats.Companion.create(warnings, baseline);
 
-        boolean hasConsoleOutput = false;
         for (Reporter reporter : flags.getReporters()) {
             reporter.write(stats, warnings);
-            if (reporter instanceof TextReporter && ((TextReporter) reporter).isWriteToConsole()) {
-                hasConsoleOutput = true;
-            }
         }
 
         if (flags.isAutoFix()) {
@@ -236,6 +254,67 @@ public class LintCliClient extends LintClient {
         }
 
         File baselineFile = flags.getBaselineFile();
+        if (baselineFile != null && baseline != null) {
+            emitBaselineDiagnostics(baseline, baselineFile, stats);
+        }
+
+        if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing()) {
+            File dir = baselineFile.getParentFile();
+            boolean ok = true;
+            if (dir != null && !dir.isDirectory()) {
+                ok = dir.mkdirs();
+            }
+            if (!ok) {
+                System.err.println("Couldn't create baseline folder " + dir);
+            } else {
+                XmlReporter reporter = Reporter.createXmlReporter(this, baselineFile, true);
+                reporter.setBaselineAttributes(this, getBaselineVariantName());
+                reporter.write(stats, warnings);
+                System.err.println(getBaselineCreationMessage(baselineFile));
+                return ERRNO_CREATED_BASELINE;
+            }
+        }
+
+        return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
+    }
+
+    @SuppressWarnings("MethodMayBeStatic")
+    public String getBaselineCreationMessage(@NonNull File baselineFile) {
+        String message =
+                ""
+                        + "Created baseline file "
+                        + baselineFile
+                        + "\n"
+                        + "\n"
+                        + "Also breaking the build in case this was not intentional. If you\n"
+                        + "deliberately created the baseline file, re-run the build and this\n"
+                        + "time it should succeed without warnings.\n"
+                        + "\n"
+                        + "If not, investigate the baseline path in the lintOptions config\n"
+                        + "or verify that the baseline file has been checked into version\n"
+                        + "control.\n";
+
+        if (LintClient.Companion.isGradle()) {
+            message +=
+                    ""
+                            + "\n"
+                            + "You can set the system property lint.baselines.continue=true\n"
+                            + "if you want to create many missing baselines in one go.";
+        }
+
+        return message;
+    }
+
+    public void emitBaselineDiagnostics(
+            @NonNull LintBaseline baseline, @NonNull File baselineFile, LintStats stats) {
+        boolean hasConsoleOutput = false;
+        for (Reporter reporter : flags.getReporters()) {
+            if (reporter instanceof TextReporter && ((TextReporter) reporter).isWriteToConsole()) {
+                hasConsoleOutput = true;
+                break;
+            }
+        }
+
         if (!flags.isQuiet() && !hasConsoleOutput) {
             if (stats.getBaselineErrorCount() > 0 || stats.getBaselineWarningCount() > 0) {
                 if (errorCount == 0 && warningCount == 1) {
@@ -258,7 +337,6 @@ public class LintCliClient extends LintClient {
                                         stats.getAutoFixedCount()));
                     }
                 }
-                assert baselineFile != null;
                 System.out.print(
                         String.format(
                                 " (%1$s filtered by baseline %2$s)",
@@ -275,47 +353,66 @@ public class LintCliClient extends LintClient {
                                 Lint.describeCounts(errorCount, warningCount, true, false)));
             }
             System.out.println();
-        }
-
-        if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing()) {
-            File dir = baselineFile.getParentFile();
-            boolean ok = true;
-            if (dir != null && !dir.isDirectory()) {
-                ok = dir.mkdirs();
+            if (stats.getBaselineFixedCount() > 0) {
+                System.out.println(
+                        String.format(
+                                "\n%1$d errors/warnings were listed in the "
+                                        + "baseline file (%2$s) but not found in the project; perhaps they have "
+                                        + "been fixed?",
+                                stats.getBaselineFixedCount(), baselineFile));
             }
-            if (!ok) {
-                System.err.println("Couldn't create baseline folder " + dir);
-            } else {
-                Reporter reporter = Reporter.createXmlReporter(this, baselineFile, true);
-                reporter.write(stats, warnings);
-                String message =
-                        ""
-                                + "Created baseline file "
-                                + baselineFile
-                                + "\n"
-                                + "\n"
-                                + "Also breaking the build in case this was not intentional. If you\n"
-                                + "deliberately created the baseline file, re-run the build and this\n"
-                                + "time it should succeed without warnings.\n"
-                                + "\n"
-                                + "If not, investigate the baseline path in the lintOptions config\n"
-                                + "or verify that the baseline file has been checked into version\n"
-                                + "control.\n";
 
-                if (LintClient.Companion.isGradle()) {
-                    message +=
-                            ""
-                                    + "\n"
-                                    + "You can set the system property lint.baselines.continue=true\n"
-                                    + "if you want to create many missing baselines in one go.";
+            String checkVariant = getBaselineVariantName();
+            String creationVariant = baseline.getAttribute("variant");
+            if (creationVariant != null && !creationVariant.equals(checkVariant)) {
+                System.out.println(
+                        "\nNote: The baseline was created using a different target/variant than it was checked against.");
+                System.out.println("Creation variant: " + getTargetName(creationVariant));
+                System.out.println("Current variant: " + getTargetName(checkVariant));
+            }
+
+            // TODO: If the versions don't match, emit some additional diagnostic hints, such as
+            // the possibility that newer versions of lint have newer checks not included in
+            // older ones, have existing checks that cover more areas, etc.
+            if (stats.getBaselineFixedCount() > 0) {
+                String checkVersion = getClientRevision();
+                String checkClient = LintClient.Companion.getClientName();
+                String creationVersion = baseline.getAttribute("version");
+                String creationClient = baseline.getAttribute("client");
+                if (checkClient.equals(creationClient)
+                        && creationVersion != null
+                        && checkVersion != null
+                        && !creationVersion.equals(checkVersion)) {
+                    GradleVersion created = GradleVersion.tryParse(creationVersion);
+                    GradleVersion current = GradleVersion.tryParse(checkVersion);
+                    if (created != null && current != null && created.compareTo(current) > 0) {
+                        System.out.println(
+                                "\nNote: The baseline was created with a newer version of "
+                                        + checkClient
+                                        + " ("
+                                        + creationVersion
+                                        + ") than the current version ("
+                                        + checkVersion
+                                        + ")");
+                        System.out.println(
+                                "This means that some of the issues marked as fixed in the baseline may not actually be fixed, but may ");
+                        System.out.println(
+                                "be new issues uncovered by the more recent version of lint.");
+                    }
                 }
-
-                System.err.println(message);
-                return ERRNO_CREATED_BASELINE;
             }
         }
+    }
 
-        return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
+    protected String getTargetName(@NonNull String baselineVariantName) {
+        if (LintClient.isGradle()) {
+            if (VARIANT_ALL.equals(baselineVariantName)) {
+                return "lint";
+            } else if (VARIANT_FATAL.equals(baselineVariantName)) {
+                return "lintVitalRelease";
+            }
+        }
+        return baselineVariantName;
     }
 
     protected void validateIssueIds() {

@@ -5,6 +5,8 @@ apply plugin: 'com.android.feature'
 <#else>
   <#if isLibraryProject>
 apply plugin: 'com.android.library'
+  <#elseif isDynamicFeature>
+apply plugin: 'com.andorid.dynamic-feature'
   <#else>
 apply plugin: 'com.android.application'
   </#if>
@@ -21,7 +23,7 @@ dependencies {
     })
     </#if>
     <@kt.addKotlinDependencies />
-<#if isInstantApp>
+<#if isInstantApp||isDynamicFeature>
   <#if isBaseFeature>
     <#if monolithicModuleName?has_content>
     application project(':${monolithicModuleName}')

@@ -17,6 +17,7 @@
 package com.android.tools.profiler.support.energy;
 
 import android.app.Activity;
+import android.app.Instrumentation;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -26,12 +27,21 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import com.android.tools.profiler.support.energy.gms.FusedLocationProviderClientWrapper;
+import com.android.tools.profiler.support.util.StudioLog;
 
 /**
  * A set of helpers for Android {@link PendingIntent} instrumentation, used by the Energy Profiler.
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class PendingIntentWrapper {
+    /** Bundle extra key referring to a LocationResult parcelable. */
+    private static final String EXTRA_LOCATION_RESULT =
+            "com.google.android.gms.location.EXTRA_LOCATION_RESULT";
+
+    private static final String LOCATION_RESULT_CLASS_NAME =
+            "com.google.android.gms.location.LocationResult";
+
     private static final ThreadLocal<Intent> intentData = new ThreadLocal<Intent>();
     private static final PendingIntentMap intentMap = new PendingIntentMap();
 
@@ -118,15 +128,40 @@ public final class PendingIntentWrapper {
     }
 
     /**
-     * EntryHook for {@link Activity#onCreate(Bundle, PersistableBundle)} to capture Activity
-     * Intent.
+     * EntryHook for {@link Instrumentation#callActivityOnCreate(Activity, Bundle)} to capture
+     * Activity Intent.
      *
-     * @param activity the wrapped {@link Activity} instance, i.e. "this".
+     * <p>Due to b/77549390, instrumenting {@link Activity} causes Profiler to crash. So we add the
+     * hook to {@link Instrumentation#callActivityOnCreate(Activity, Bundle)}, which calls {@link
+     * Activity#onCreate(Bundle)}.
+     *
+     * @param instrumentation the wrapped {@link Instrumentation} instance, i.e. "this".
+     * @param activity the activity parameter passed to the original method.
+     * @param savedInstance the persistableState parameter passed to the original method.
+     */
+    public static void wrapActivityCreate(
+            Instrumentation instrumentation, Activity activity, Bundle savedInstance) {
+        handleIntent(activity.getIntent());
+    }
+
+    /**
+     * EntryHook for {@link Instrumentation#callActivityOnCreate(Activity, Bundle,
+     * PersistableBundle)} to capture Activity Intent.
+     *
+     * <p>Due to b/77549390, instrumenting {@link Activity} causes Profiler to crash. So we add the
+     * hook to {@link Instrumentation#callActivityOnCreate(Activity, Bundle, PersistableBundle)},
+     * which calls {@link Activity#onCreate(Bundle, PersistableBundle)}.
+     *
+     * @param instrumentation the wrapped {@link Instrumentation} instance, i.e. "this".
+     * @param activity the activity parameter passed to the original method.
      * @param savedInstance the savedInstance parameter passed to the original method.
      * @param persistableState the persistableState parameter passed to the original method.
      */
     public static void wrapActivityCreate(
-            Activity activity, Bundle savedInstance, PersistableBundle persistableState) {
+            Instrumentation instrumentation,
+            Activity activity,
+            Bundle savedInstance,
+            PersistableBundle persistableState) {
         handleIntent(activity.getIntent());
     }
 
@@ -166,6 +201,27 @@ public final class PendingIntentWrapper {
             // Location-changed event.
             Location location = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
             LocationManagerWrapper.sendIntentLocationChangedIfExists(pendingIntent, location);
+        } else if (intent.hasExtra(EXTRA_LOCATION_RESULT)) {
+            // GMS location-changed event.
+            Object locationResult = intent.getParcelableExtra(EXTRA_LOCATION_RESULT);
+            if (locationResult != null) {
+                try {
+                    Class<?> locationResultClass =
+                            locationResult
+                                    .getClass()
+                                    .getClassLoader()
+                                    .loadClass(LOCATION_RESULT_CLASS_NAME);
+                    Location location =
+                            (Location)
+                                    locationResultClass
+                                            .getMethod("getLastLocation")
+                                            .invoke(locationResult);
+                    FusedLocationProviderClientWrapper.sendIntentLocationChangedIfExists(
+                            pendingIntent, location);
+                } catch (Exception e) {
+                    StudioLog.e("Could not send GMS LocationChanged event", e);
+                }
+            }
         }
     }
 }

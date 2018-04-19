@@ -31,12 +31,13 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 337;
+    static final int INITIAL_CAPACITY = 339;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
 
         issues.add(AccessibilityDetector.ISSUE);
+        issues.add(ActionsXmlDetector.ISSUE);
         issues.add(AddJavascriptInterfaceDetector.ISSUE);
         issues.add(AlarmDetector.ISSUE);
         issues.add(AllCapsDetector.ISSUE);
@@ -307,6 +308,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(SetJavaScriptEnabledDetector.ISSUE);
         issues.add(SetTextDetector.SET_TEXT_I18N);
         issues.add(SignatureOrSystemDetector.ISSUE);
+        issues.add(SliceDetector.ISSUE);
         issues.add(SslCertificateSocketFactoryDetector.CREATE_SOCKET);
         issues.add(SslCertificateSocketFactoryDetector.GET_INSECURE);
         issues.add(StartDestinationDetector.ISSUE);
@@ -399,7 +401,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 110;
+                initialSize += 120;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {

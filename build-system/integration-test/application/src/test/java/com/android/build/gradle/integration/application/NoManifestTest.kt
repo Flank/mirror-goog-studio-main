@@ -19,8 +19,11 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.google.common.collect.Iterables
 import org.junit.Rule
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class NoManifestTest {
 
@@ -34,8 +37,25 @@ class NoManifestTest {
     @Test
     fun noManifestConfigurationPassesTest() {
         project.execute("tasks")
-
         // we should be able to create task list, without a valid manifest.
+    }
+
+    @Test
+    fun noManifestSyncNoApplicationIdTest() {
+        val issues = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+        // there should only be a sync issue relating to the applicationId being unavailable.
+        assertEquals(1, issues.size)
+    }
+
+    @Test
+    fun noManifestSyncNoIssuesTest() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            "\nandroid.defaultConfig.applicationId \"com.example.app\"\n"
+        )
+        val issues = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+
+        assertEquals(0, issues.size)
     }
 
 }

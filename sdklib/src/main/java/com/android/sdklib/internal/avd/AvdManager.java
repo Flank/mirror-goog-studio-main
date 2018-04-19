@@ -256,6 +256,9 @@ public class AvdManager {
      * AVD/config.ini key name representing whether to boot from a snapshot
      */
     public static final String AVD_INI_FORCE_COLD_BOOT_MODE = "fastboot.forceColdBoot";
+    public static final String AVD_INI_FORCE_CHOSEN_SNAPSHOT_BOOT_MODE = "fastboot.forceChosenSnapshotBoot";
+    public static final String AVD_INI_FORCE_FAST_BOOT_MODE = "fastboot.forceFastBoot";
+    public static final String AVD_INI_CHOSEN_SNAPSHOT_FILE = "fastboot.chosenSnapshotFile";
     public static final String AVD_INI_COLD_BOOT_ONCE = "once"; // Key value in addition to "yes" and "no"
 
     /**
@@ -1925,7 +1928,7 @@ public class AvdManager {
         Abi abi = Abi.getEnum(abiType);
         if (abi != null) {
             String arch = abi.getCpuArch();
-            // Chrome OS image is a speical case: the system image
+            // Chrome OS image is a special case: the system image
             // is actually x86_64 while the android container inside
             // it is x86. We have to set it x86_64 to let it boot
             // under android emulator.

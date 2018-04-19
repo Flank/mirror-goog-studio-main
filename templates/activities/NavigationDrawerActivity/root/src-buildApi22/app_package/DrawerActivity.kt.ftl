@@ -2,12 +2,12 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
 <#if hasAppBar>
-import android.support.design.widget.Snackbar
+import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 </#if>
-import android.support.design.widget.NavigationView
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AppCompatActivity
+import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)}
+import ${getMaterialComponentName('android.support.v4.view.GravityCompat', useAndroidX)}
+import ${getMaterialComponentName('android.support.v7.app.ActionBarDrawerToggle', useAndroidX)}
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.${layoutName}.*

@@ -34,6 +34,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
+import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
@@ -139,16 +140,15 @@ import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -175,6 +175,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     // Tasks
     private DefaultTask assembleTask;
+    private DefaultTask bundleTask;
     private DefaultTask preBuildTask;
 
     private Task sourceGenTask;
@@ -346,28 +347,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     }
 
-    private static void publishArtifactToConfiguration(
-            @NonNull Configuration configuration,
-            @NonNull Object file,
-            @NonNull Object builtBy,
-            @NonNull ArtifactType artifactType) {
-        String type = artifactType.getType();
-        configuration
-                .getOutgoing()
-                .variants(
-                        (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
-                            variants.create(
-                                    type,
-                                    (variant) ->
-                                            variant.artifact(
-                                                    file,
-                                                    (artifact) -> {
-                                                        artifact.setType(type);
-                                                        artifact.builtBy(builtBy);
-                                                    }));
-                        });
-    }
-
     @Override
     @NonNull
     public GlobalScope getGlobalScope() {
@@ -429,6 +408,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return false;
         }
 
+        // TODO: support resource shrinking for multi-apk applications http://b/78119690
+        if (variantData.getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(
+                                    "Resource shrinker cannot be used for multi-apk applications"));
+            return false;
+        }
+
         if (variantData.getType().isAar()) {
             if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
@@ -473,6 +463,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // If not overridden, use the default from the build type.
         //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
         return getVariantConfiguration().getBuildType().isCrunchPngsDefault();
+    }
+
+    @Override
+    public boolean consumesFeatureJars() {
+        return getVariantData().getType().isBaseModule()
+                && getVariantConfiguration().getBuildType().isMinifyEnabled()
+                && globalScope.hasDynamicFeatures();
     }
 
     @Nullable
@@ -691,6 +688,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         } else {
             return variantData.getVariantConfiguration().getDexingType();
         }
+    }
+
+    @Override
+    public boolean getNeedsMainDexList() {
+        // The bundle relies on the main dex list even if multidex is not enabled.
+        return variantData.getVariantConfiguration().getMinSdkVersion().getFeatureLevel() < 21;
     }
 
     @NonNull
@@ -980,7 +983,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
-        ArtifactCollection artifacts = computeArtifactCollection(configType, scope, artifactType);
+        return getArtifactFileCollection(configType, scope, artifactType, null);
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getArtifactFileCollection(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap) {
+        ArtifactCollection artifacts =
+                computeArtifactCollection(configType, scope, artifactType, attributeMap);
 
         FileCollection fileCollection;
 
@@ -995,7 +1009,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     computeArtifactCollection(
                                                     RUNTIME_CLASSPATH,
                                                     MODULE,
-                                                    ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                                                    ArtifactType.FEATURE_TRANSITIVE_DEPS,
+                                                    attributeMap)
                                             .getArtifactFiles())
                             .getArtifactFiles();
         } else {
@@ -1097,11 +1112,27 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
+        return computeArtifactCollection(configType, scope, artifactType, null);
+    }
+
+    @NonNull
+    private ArtifactCollection computeArtifactCollection(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap) {
 
         Configuration configuration = getConfiguration(configType);
 
         Action<AttributeContainer> attributes =
-                container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
+                container -> {
+                    container.attribute(ARTIFACT_TYPE, artifactType.getType());
+                    if (attributeMap != null) {
+                        for (Attribute<String> attribute : attributeMap.keySet()) {
+                            container.attribute(attribute, attributeMap.get(attribute));
+                        }
+                    }
+                };
 
         Spec<ComponentIdentifier> filter = getComponentFilter(scope);
 
@@ -1563,6 +1594,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setAssembleTask(@NonNull DefaultTask assembleTask) {
         this.assembleTask = assembleTask;
+    }
+
+    @Override
+    public DefaultTask getBundleTask() {
+        return bundleTask;
+    }
+
+    @Override
+    public void setBundleTask(@NonNull DefaultTask bundleTask) {
+        this.bundleTask = bundleTask;
     }
 
     @Override

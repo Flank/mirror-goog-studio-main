@@ -30,7 +30,9 @@ public interface TaskContainer {
         // Task to package all variant's outputs.
         PACKAGE_ANDROID_ARTIFACT,
         // Task to assemble the variant and all its output.
-        ASSEMBLE
+        ASSEMBLE,
+        // Task to assemble the variant and all its output.
+        BUNDLE
     }
 
     void addTask(TaskKind taskKind, Task task);

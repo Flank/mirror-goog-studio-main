@@ -1,9 +1,9 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 iml_module(
-    name = "studio.intellij.android.analyzer",
+    name = "studio.android.sdktools.analyzer",
     srcs = ["src/main/java"],
-    iml_files = ["intellij.android.analyzer.iml"],
+    iml_files = ["android.sdktools.analyzer.iml"],
     tags = [
         "managed",
         "no_test_windows",  # b/77288863

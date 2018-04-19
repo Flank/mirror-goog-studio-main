@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.annotations.NonNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +42,7 @@ public final class InstallReceiver extends MultiLineReceiver {
     public InstallReceiver() {}
 
     @Override
-    public void processNewLines(String[] lines) {
+    public void processNewLines(@NonNull String[] lines) {
         for (String line : lines) {
             if (!line.isEmpty()) {
                 if (line.startsWith(SUCCESS_OUTPUT)) {

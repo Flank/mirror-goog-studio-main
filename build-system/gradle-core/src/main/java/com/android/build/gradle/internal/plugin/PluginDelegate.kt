@@ -25,11 +25,9 @@ import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPr
 import com.android.build.gradle.internal.api.dsl.model.BaseFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.DefaultConfigImpl
-import com.android.build.gradle.internal.api.dsl.model.FallbackStrategyImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl
 import com.android.build.gradle.internal.variant2.ContainerFactory
@@ -118,7 +116,6 @@ class PluginDelegate<out E: BaseExtension2>(
                 VariantPropertiesImpl(dslScope),
                 BuildTypeOrProductFlavorImpl(dslScope) { baseFlavor.postProcessing },
                 ProductFlavorOrVariantImpl(dslScope),
-                FallbackStrategyImpl(dslScope),
                 baseFlavor,
                 dslScope)
 

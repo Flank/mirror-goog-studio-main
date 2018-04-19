@@ -16,11 +16,13 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.AAPT_URI
 import com.android.SdkConstants.GRID_VIEW
 import com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW
 import com.android.SdkConstants.LIST_VIEW
 import com.android.SdkConstants.REQUEST_FOCUS
 import com.android.SdkConstants.SCROLL_VIEW
+import com.android.SdkConstants.TAG_ATTR
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -28,9 +30,8 @@ import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
-import com.android.tools.lint.detector.api.getChildCount
+import com.android.utils.iterator
 import org.w3c.dom.Element
-import org.w3c.dom.Node
 import java.util.Arrays
 
 /**
@@ -84,10 +85,20 @@ class ChildCountDetector : LayoutDetector() {
     )
 
     override fun visitElement(context: XmlContext, element: Element) {
-        val childCount = getChildCount(element)
+        var childCount = 0
+        for (child in element) {
+            val tagName = child.localName
+            if (REQUEST_FOCUS == tagName) {
+                continue
+            } else if (tagName == TAG_ATTR && child.namespaceURI == AAPT_URI) {
+                continue
+            } else {
+                childCount++
+            }
+        }
         val tagName = element.tagName
         if (tagName == SCROLL_VIEW || tagName == HORIZONTAL_SCROLL_VIEW) {
-            if (childCount > 1 && getAccurateChildCount(element) > 1) {
+            if (childCount > 1) {
                 context.report(
                     SCROLLVIEW_ISSUE, element,
                     context.getNameLocation(element), "A scroll view can have only one child"
@@ -95,7 +106,7 @@ class ChildCountDetector : LayoutDetector() {
             }
         } else {
             // Adapter view
-            if (childCount > 0 && getAccurateChildCount(element) > 0) {
+            if (childCount > 0) {
                 context.report(
                     ADAPTER_VIEW_ISSUE, element,
                     context.getNameLocation(element),
@@ -103,22 +114,5 @@ class ChildCountDetector : LayoutDetector() {
                 )
             }
         }
-    }
-
-    /** Counts the number of children, but skips certain tags like `<requestFocus>`  */
-    private fun getAccurateChildCount(element: Element): Int {
-        val childNodes = element.childNodes
-        var childCount = 0
-        var i = 0
-        val n = childNodes.length
-        while (i < n) {
-            val child = childNodes.item(i)
-            if (child.nodeType == Node.ELEMENT_NODE && REQUEST_FOCUS != child.nodeName) {
-                childCount++
-            }
-            i++
-        }
-
-        return childCount
     }
 }

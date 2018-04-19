@@ -4,10 +4,15 @@ package(default_visibility = ["//visibility:public"])
 
 java_library(
     name = "studio-profiler",
-    srcs = glob([
-        "supportlib/src/main/**/*.java",
-        "common/src/main/**/*.java",
-    ]),
+    srcs = glob(
+        include = [
+            "supportlib/src/main/**/*.java",
+            "common/src/main/**/*.java",
+        ],
+        # Since Energy profiler doesn't support compile-time instrumentation, don't include the src
+        # to avoid adding its dependencies.
+        exclude = ["common/src/main/java/com/android/tools/profiler/support/energy/**/*.java"],
+    ),
     resource_jars = select({
         "//tools/base/bazel:windows": [],
         "//conditions:default": ["//tools/base/profiler/native/agent:supportjni"],
@@ -25,6 +30,8 @@ java_library(
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        # TODO(b/77923456): Track version changes and revisit.
+        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
     ],
 )
 
