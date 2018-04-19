@@ -8,18 +8,11 @@ java_proto_library(
 )
 
 java_jarjar(
-    name = "jarjar",
+    name = "aia-manifest-proto-1.0-jarjar",
     srcs = [
         ":proto",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],
-)
-
-java_library(
-    name = "aia-manifest-proto-1.0-jarjar",
-    visibility = ["//visibility:public"],
-    exports = [":jarjar"],
-    runtime_deps = [":jarjar"],
 )
