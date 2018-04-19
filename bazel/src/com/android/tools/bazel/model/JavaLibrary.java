@@ -46,7 +46,7 @@ public class JavaLibrary extends BazelRule {
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
-        call.addElementToList("tags", "managed");
+        statement.setIsManaged();
     }
 }
 

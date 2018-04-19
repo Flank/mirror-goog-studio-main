@@ -55,4 +55,8 @@ public class CallStatement extends Statement {
         Expression tags = call.getArgument("tags");
         return (tags instanceof ListExpression) && ((ListExpression)tags).contains("managed");
     }
+
+    public void setIsManaged() {
+        call.addElementToList("tags", "managed");
+    }
 }
