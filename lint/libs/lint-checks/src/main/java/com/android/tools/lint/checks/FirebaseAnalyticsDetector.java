@@ -67,7 +67,8 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics#logEvent(java.lang.String,%20android.os.Bundle)");
+                            "http://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics#logEvent(java.lang.String,%20android.os.Bundle)")
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link FirebaseAnalyticsDetector} */
     public FirebaseAnalyticsDetector() {}

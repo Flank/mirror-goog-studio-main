@@ -67,18 +67,19 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
             Issue.create(
-                    "CutPasteId",
-                    "Likely cut & paste mistakes",
-                    "This lint check looks for cases where you have cut & pasted calls to "
-                            + "`findViewById` but have forgotten to update the R.id field. It's possible "
-                            + "that your code is simply (redundantly) looking up the field repeatedly, "
-                            + "but lint cannot distinguish that from a case where you for example want to "
-                            + "initialize fields `prev` and `next` and you cut & pasted `findViewById(R.id.prev)` "
-                            + "and forgot to update the second initialization to `R.id.next`.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(CutPasteDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "CutPasteId",
+                            "Likely cut & paste mistakes",
+                            "This lint check looks for cases where you have cut & pasted calls to "
+                                    + "`findViewById` but have forgotten to update the R.id field. It's possible "
+                                    + "that your code is simply (redundantly) looking up the field repeatedly, "
+                                    + "but lint cannot distinguish that from a case where you for example want to "
+                                    + "initialize fields `prev` and `next` and you cut & pasted `findViewById(R.id.prev)` "
+                                    + "and forgot to update the second initialization to `R.id.next`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(CutPasteDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     private PsiMethod lastMethod;
     private Map<String, UCallExpression> ids;

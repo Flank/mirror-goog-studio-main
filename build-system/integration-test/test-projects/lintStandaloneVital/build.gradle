@@ -6,8 +6,8 @@ apply plugin: 'java-library'
 apply plugin: 'com.android.lint'
 
 lintOptions {
-    // Promote SdCardPath to an issue enforced by the lintVital task:
-    fatal 'SdCardPath'
+    // Promote UseValueOf to an issue enforced by the lintVital task:
+    fatal 'UseValueOf'
 
     htmlReport true
     htmlOutput file("lint-report.html")

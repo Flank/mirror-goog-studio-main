@@ -1681,6 +1681,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 but will likely stop working in a future update.""",
             category = Category.CORRECTNESS,
             priority = 6,
+            androidSpecific = true,
             severity = Severity.WARNING,
             implementation = IMPLEMENTATION
         )
@@ -1698,6 +1699,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1774,6 +1776,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1791,6 +1794,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.FATAL,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1811,6 +1815,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1861,6 +1866,7 @@ open class GradleDetector : Detector(), GradleScanner {
             priority = 4,
             severity = Severity.WARNING,
             implementation = IMPLEMENTATION,
+            androidSpecific = true,
             enabledByDefault = false
         )
 
@@ -1895,6 +1901,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.PERFORMANCE,
             priority = 4,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1912,6 +1919,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1937,6 +1945,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.PERFORMANCE,
             priority = 2,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1959,6 +1968,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.FATAL,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -1988,6 +1998,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.COMPLIANCE,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
             .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
@@ -2014,6 +2025,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.COMPLIANCE,
             priority = 8,
             severity = Severity.FATAL,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
             .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
@@ -2035,6 +2047,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.COMPLIANCE,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -2059,6 +2072,7 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.SECURITY,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 

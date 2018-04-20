@@ -25,14 +25,15 @@ public class StringAuthLeakDetector extends Detector implements SourceCodeScanne
     /** Looks for hidden code */
     public static final Issue AUTH_LEAK =
             Issue.create(
-                    "AuthLeak",
-                    "Code might contain an auth leak",
-                    "Strings in java apps can be discovered by decompiling apps, this lint check looks "
-                            + "for code which looks like it may contain an url with a username and password",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(StringAuthLeakDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "AuthLeak",
+                            "Code might contain an auth leak",
+                            "Strings in java apps can be discovered by decompiling apps, this lint check looks "
+                                    + "for code which looks like it may contain an url with a username and password",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(StringAuthLeakDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     @Nullable
     @Override

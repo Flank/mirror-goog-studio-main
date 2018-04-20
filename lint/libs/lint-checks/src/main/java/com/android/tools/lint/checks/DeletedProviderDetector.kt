@@ -94,6 +94,7 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
             category = Category.SECURITY,
             priority = 9,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = Implementation(
                 DeletedProviderDetector::class.java,
                 Scope.JAVA_FILE_SCOPE

@@ -47,14 +47,15 @@ public class WrongCallDetector extends Detector implements SourceCodeScanner {
     /** Calling the wrong method */
     public static final Issue ISSUE =
             Issue.create(
-                    "WrongCall",
-                    "Using wrong draw/layout method",
-                    "Custom views typically need to call `measure()` on their children, not `onMeasure`. "
-                            + "Ditto for onDraw, onLayout, etc.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    new Implementation(WrongCallDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "WrongCall",
+                            "Using wrong draw/layout method",
+                            "Custom views typically need to call `measure()` on their children, not `onMeasure`. "
+                                    + "Ditto for onDraw, onLayout, etc.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(WrongCallDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link WrongCallDetector} */
     public WrongCallDetector() {}

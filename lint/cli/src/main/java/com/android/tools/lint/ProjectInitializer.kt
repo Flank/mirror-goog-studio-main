@@ -37,6 +37,7 @@ import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.XmlUtils.getFirstSubTag
@@ -50,6 +51,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
 import java.io.IOException
+import java.util.EnumSet
 import java.util.HashSet
 import java.util.regex.Pattern
 import java.util.zip.ZipException
@@ -126,7 +128,8 @@ data class ProjectMetadata(
     val lintChecks: Map<Project, List<File>> = emptyMap(),
     /** list of boot classpath jars to use for non-Android projects */
     val jdkBootClasspath: List<File> = emptyList(),
-
+    /** Target platforms we're analyzing  */
+    val platforms: EnumSet<Platform>? = null,
     /**
      * If true, the project metadata being passed in only represents a small
      * subset of the real project sources, so only lint checks which can be run
@@ -185,6 +188,9 @@ private class ProjectInitializer(
     /** A cache directory to use, if specified */
     private var cache: File? = null
 
+    /** Whether we're analyzing an Android project */
+    private var android: Boolean = false
+
     /** Compute a list of lint [Project] instances from the given XML descriptor */
     fun computeMetadata(): ProjectMetadata {
         assert(file.isFile) // should already have been enforced by the driver
@@ -227,6 +233,8 @@ private class ProjectInitializer(
         }
 
         val incomplete = projectElement.getAttribute(ATTR_INCOMPLETE) == VALUE_TRUE
+        android = projectElement.getAttribute(ATTR_ANDROID) == VALUE_TRUE
+
         val globalLintChecks = mutableListOf<File>()
 
         // First gather modules and sources, and collect dependency information.
@@ -335,7 +343,8 @@ private class ProjectInitializer(
             moduleBaselines = baselines,
             mergedManifests = mergedManifests,
             incomplete = incomplete,
-            jdkBootClasspath = jdkBootClasspath
+            jdkBootClasspath = jdkBootClasspath,
+            platforms = if (android) Platform.ANDROID_SET else Platform.JDK_SET
         )
     }
 
@@ -368,6 +377,10 @@ private class ProjectInitializer(
         val library = moduleElement.getAttribute(ATTR_LIBRARY) == VALUE_TRUE
         val android = moduleElement.getAttribute(ATTR_ANDROID) != VALUE_FALSE
         val buildApi: String = moduleElement.getAttribute(ATTR_COMPILE_SDK_VERSION)
+
+        if (android) {
+            this.android = true
+        }
 
         // Special case: if the module is a path (with an optional :suffix),
         // use this as the module directory, otherwise fall back to the default root

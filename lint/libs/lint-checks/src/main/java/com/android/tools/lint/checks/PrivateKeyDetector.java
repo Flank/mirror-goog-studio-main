@@ -38,13 +38,14 @@ public class PrivateKeyDetector extends Detector implements OtherFileScanner {
     /** Packaged private key files */
     public static final Issue ISSUE =
             Issue.create(
-                    "PackagedPrivateKey",
-                    "Packaged private key",
-                    "In general, you should not package private key files inside your app.",
-                    Category.SECURITY,
-                    8,
-                    Severity.FATAL,
-                    new Implementation(PrivateKeyDetector.class, Scope.OTHER_SCOPE));
+                            "PackagedPrivateKey",
+                            "Packaged private key",
+                            "In general, you should not package private key files inside your app.",
+                            Category.SECURITY,
+                            8,
+                            Severity.FATAL,
+                            new Implementation(PrivateKeyDetector.class, Scope.OTHER_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link PrivateKeyDetector} check */
     public PrivateKeyDetector() {}

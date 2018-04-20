@@ -71,7 +71,8 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
                             Severity.WARNING,
                             IMPL)
                     .addMoreInfo(
-                            "https://cordova.apache.org/announcements/2015/11/20/security.html");
+                            "https://cordova.apache.org/announcements/2015/11/20/security.html")
+                    .setAndroidSpecific(true);
 
     /** Version string format in a class file. Note that any qualifiers such as -dev are ignored. */
     private static final Pattern VERSION_STR = Pattern.compile("(\\d+\\.\\d+\\.\\d+).*");

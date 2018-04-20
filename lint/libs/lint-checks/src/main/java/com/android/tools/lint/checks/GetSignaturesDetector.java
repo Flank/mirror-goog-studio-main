@@ -52,7 +52,8 @@ public class GetSignaturesDetector extends Detector implements SourceCodeScanner
                             8,
                             Severity.WARNING,
                             new Implementation(GetSignaturesDetector.class, Scope.JAVA_FILE_SCOPE))
-                    .addMoreInfo("https://bluebox.com/technical/android-fake-id-vulnerability/");
+                    .addMoreInfo("https://bluebox.com/technical/android-fake-id-vulnerability/")
+                    .setAndroidSpecific(true);
 
     private static final String PACKAGE_MANAGER_CLASS = "android.content.pm.PackageManager";
     private static final String GET_PACKAGE_INFO = "getPackageInfo";

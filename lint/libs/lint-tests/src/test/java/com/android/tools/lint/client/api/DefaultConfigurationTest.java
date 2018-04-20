@@ -115,6 +115,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "    explainIssues='true'\n"
                                 + "    removeFixedBaselineIssues='true'\n"
                                 + "    abortOnError='true'\n"
+                                + "    allowSuppress='true'\n"
                                 + ">\n"
                                 + "</lint>");
         assertThat(configuration.getCheckAllWarnings()).isTrue();

@@ -54,6 +54,7 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
                             3,
                             Severity.ERROR,
                             new Implementation(ParcelDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true)
                     .addMoreInfo(
                             "http://developer.android.com/reference/android/os/Parcelable.html");
 

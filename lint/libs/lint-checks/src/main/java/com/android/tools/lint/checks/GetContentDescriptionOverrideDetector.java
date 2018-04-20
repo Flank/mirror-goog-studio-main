@@ -39,16 +39,18 @@ public class GetContentDescriptionOverrideDetector extends Detector implements S
 
     public static final Issue ISSUE =
             Issue.create(
-                    "GetContentDescriptionOverride",
-                    "Overriding `getContentDescription()` on a View",
-                    "Overriding `getContentDescription()` may prevent some accessibility services from "
-                            + "properly navigating content exposed by your view. Instead, call "
-                            + "`setContentDescription()` when the content description needs to be changed.",
-                    Category.A11Y,
-                    9,
-                    Severity.ERROR,
-                    new Implementation(
-                            GetContentDescriptionOverrideDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "GetContentDescriptionOverride",
+                            "Overriding `getContentDescription()` on a View",
+                            "Overriding `getContentDescription()` may prevent some accessibility services from "
+                                    + "properly navigating content exposed by your view. Instead, call "
+                                    + "`setContentDescription()` when the content description needs to be changed.",
+                            Category.A11Y,
+                            9,
+                            Severity.ERROR,
+                            new Implementation(
+                                    GetContentDescriptionOverrideDetector.class,
+                                    Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new GetContentDescriptionOverrideDetector check. */
     public GetContentDescriptionOverrideDetector() {}

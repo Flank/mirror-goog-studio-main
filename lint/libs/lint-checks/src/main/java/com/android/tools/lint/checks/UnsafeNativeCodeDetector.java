@@ -49,37 +49,39 @@ public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScan
 
     public static final Issue LOAD =
             Issue.create(
-                    "UnsafeDynamicallyLoadedCode",
-                    "`load` used to dynamically load code",
-                    "Dynamically loading code from locations other than the application's library "
-                            + "directory or the Android platform's built-in library directories is dangerous, "
-                            + "as there is an increased risk that the code could have been tampered with. "
-                            + "Applications should use `loadLibrary` when possible, which provides increased "
-                            + "assurance that libraries are loaded from one of these safer locations. "
-                            + "Application developers should use the features of their development "
-                            + "environment to place application native libraries into the lib directory "
-                            + "of their compiled APKs.",
-                    Category.SECURITY,
-                    4,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "UnsafeDynamicallyLoadedCode",
+                            "`load` used to dynamically load code",
+                            "Dynamically loading code from locations other than the application's library "
+                                    + "directory or the Android platform's built-in library directories is dangerous, "
+                                    + "as there is an increased risk that the code could have been tampered with. "
+                                    + "Applications should use `loadLibrary` when possible, which provides increased "
+                                    + "assurance that libraries are loaded from one of these safer locations. "
+                                    + "Application developers should use the features of their development "
+                                    + "environment to place application native libraries into the lib directory "
+                                    + "of their compiled APKs.",
+                            Category.SECURITY,
+                            4,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     public static final Issue UNSAFE_NATIVE_CODE_LOCATION =
             Issue.create(
-                    "UnsafeNativeCodeLocation",
-                    "Native code outside library directory",
-                    "In general, application native code should only be placed in the application's "
-                            + "library directory, not in other locations such as the res or assets directories. "
-                            + "Placing the code in the library directory provides increased assurance that the "
-                            + "code will not be tampered with after application installation. Application "
-                            + "developers should use the features of their development environment to place "
-                            + "application native libraries into the lib directory of their compiled "
-                            + "APKs. Embedding non-shared library native executables into applications should "
-                            + "be avoided when possible.",
-                    Category.SECURITY,
-                    4,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "UnsafeNativeCodeLocation",
+                            "Native code outside library directory",
+                            "In general, application native code should only be placed in the application's "
+                                    + "library directory, not in other locations such as the res or assets directories. "
+                                    + "Placing the code in the library directory provides increased assurance that the "
+                                    + "code will not be tampered with after application installation. Application "
+                                    + "developers should use the features of their development environment to place "
+                                    + "application native libraries into the lib directory of their compiled "
+                                    + "APKs. Embedding non-shared library native executables into applications should "
+                                    + "be avoided when possible.",
+                            Category.SECURITY,
+                            4,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     private static final String RUNTIME_CLASS = "java.lang.Runtime";
     private static final String SYSTEM_CLASS = "java.lang.System";

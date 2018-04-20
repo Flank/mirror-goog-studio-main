@@ -206,22 +206,23 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
     /** IntDef annotations should be unique */
     public static final Issue UNIQUE =
             Issue.create(
-                    "UniqueConstants",
-                    "Overlapping Enumeration Constants",
-                    "The `@IntDef` annotation allows you to "
-                            + "create a light-weight \"enum\" or type definition. However, it's possible to "
-                            + "accidentally specify the same value for two or more of the values, which can "
-                            + "lead to hard-to-detect bugs. This check looks for this scenario and flags any "
-                            + "repeated constants.\n"
-                            + "\n"
-                            + "In some cases, the repeated constant is intentional (for example, renaming a "
-                            + "constant to a more intuitive name, and leaving the old name in place for "
-                            + "compatibility purposes).  In that case, simply suppress this check by adding a "
-                            + "`@SuppressLint(\"UniqueConstants\")` annotation.",
-                    Category.CORRECTNESS,
-                    3,
-                    Severity.ERROR,
-                    IMPLEMENTATION);
+                            "UniqueConstants",
+                            "Overlapping Enumeration Constants",
+                            "The `@IntDef` annotation allows you to "
+                                    + "create a light-weight \"enum\" or type definition. However, it's possible to "
+                                    + "accidentally specify the same value for two or more of the values, which can "
+                                    + "lead to hard-to-detect bugs. This check looks for this scenario and flags any "
+                                    + "repeated constants.\n"
+                                    + "\n"
+                                    + "In some cases, the repeated constant is intentional (for example, renaming a "
+                                    + "constant to a more intuitive name, and leaving the old name in place for "
+                                    + "compatibility purposes).  In that case, simply suppress this check by adding a "
+                                    + "`@SuppressLint(\"UniqueConstants\")` annotation.",
+                            Category.CORRECTNESS,
+                            3,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Flags should typically be specified as bit shifts */
     public static final Issue FLAG_STYLE =
@@ -239,14 +240,15 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
     /** All IntDef constants should be included in switch */
     public static final Issue SWITCH_TYPE_DEF =
             Issue.create(
-                    "SwitchIntDef",
-                    "Missing @IntDef in Switch",
-                    "This check warns if a `switch` statement does not explicitly include all "
-                            + "the values declared by the typedef `@IntDef` declaration.",
-                    Category.CORRECTNESS,
-                    3,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "SwitchIntDef",
+                            "Missing @IntDef in Switch",
+                            "This check warns if a `switch` statement does not explicitly include all "
+                                    + "the values declared by the typedef `@IntDef` declaration.",
+                            Category.CORRECTNESS,
+                            3,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link AnnotationDetector} check */
     public AnnotationDetector() {}

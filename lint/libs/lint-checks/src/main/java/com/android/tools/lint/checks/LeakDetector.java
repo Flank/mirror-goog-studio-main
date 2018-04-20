@@ -69,23 +69,24 @@ public class LeakDetector extends Detector implements SourceCodeScanner {
     /** Leaking data via static fields */
     public static final Issue ISSUE =
             Issue.create(
-                    "StaticFieldLeak",
-                    "Static Field Leaks",
-                    "A static field will leak contexts.\n"
-                            + "\n"
-                            + "Non-static inner classes have an implicit reference to their outer class. "
-                            + "If that outer class is for example a `Fragment` or `Activity`, then this "
-                            + "reference means that the long-running handler/loader/task will hold a reference "
-                            + "to the activity which prevents it from getting garbage collected.\n"
-                            + "\n"
-                            + "Similarly, direct field references to activities and fragments from these "
-                            + "longer running instances can cause leaks.\n"
-                            + "\n"
-                            + "ViewModel classes should never point to Views or non-application Contexts.",
-                    Category.PERFORMANCE,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(LeakDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "StaticFieldLeak",
+                            "Static Field Leaks",
+                            "A static field will leak contexts.\n"
+                                    + "\n"
+                                    + "Non-static inner classes have an implicit reference to their outer class. "
+                                    + "If that outer class is for example a `Fragment` or `Activity`, then this "
+                                    + "reference means that the long-running handler/loader/task will hold a reference "
+                                    + "to the activity which prevents it from getting garbage collected.\n"
+                                    + "\n"
+                                    + "Similarly, direct field references to activities and fragments from these "
+                                    + "longer running instances can cause leaks.\n"
+                                    + "\n"
+                                    + "ViewModel classes should never point to Views or non-application Contexts.",
+                            Category.PERFORMANCE,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(LeakDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     private static final List<String> SUPER_CLASSES =
             Arrays.asList(

@@ -47,19 +47,21 @@ public class AppCompatCustomViewDetector extends Detector implements SourceCodeS
     /** Copy/pasted item decorator code */
     public static final Issue ISSUE =
             Issue.create(
-                    "AppCompatCustomView",
-                    "Appcompat Custom Widgets",
-                    "In order to support features such as tinting, the appcompat library will "
-                            + "automatically load special appcompat replacements for the builtin "
-                            + "widgets. However, this does not work for your own custom views.\n"
-                            + "\n"
-                            + "Instead of extending the `android.widget` classes directly, you should "
-                            + "instead extend one of the delegate classes in "
-                            + "`android.support.v7.widget.AppCompat`.",
-                    Category.CORRECTNESS,
-                    4,
-                    Severity.ERROR,
-                    new Implementation(AppCompatCustomViewDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "AppCompatCustomView",
+                            "Appcompat Custom Widgets",
+                            "In order to support features such as tinting, the appcompat library will "
+                                    + "automatically load special appcompat replacements for the builtin "
+                                    + "widgets. However, this does not work for your own custom views.\n"
+                                    + "\n"
+                                    + "Instead of extending the `android.widget` classes directly, you should "
+                                    + "instead extend one of the delegate classes in "
+                                    + "`android.support.v7.widget.AppCompat`.",
+                            Category.CORRECTNESS,
+                            4,
+                            Severity.ERROR,
+                            new Implementation(
+                                    AppCompatCustomViewDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link AppCompatCustomViewDetector} */
     public AppCompatCustomViewDetector() {}

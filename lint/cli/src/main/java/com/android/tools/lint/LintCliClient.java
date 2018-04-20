@@ -453,6 +453,7 @@ public class LintCliClient extends LintClient {
         driver.setCheckGeneratedSources(flags.isCheckGeneratedSources());
         driver.setFatalOnlyMode(flags.isFatalOnly());
         driver.setCheckDependencies(flags.isCheckDependencies());
+        driver.setAllowSuppress(flags.getAllowSuppress());
 
         File baselineFile = flags.getBaselineFile();
         if (baselineFile != null) {
@@ -836,6 +837,11 @@ public class LintCliClient extends LintClient {
 
         private Severity computeSeverity(@NonNull Issue issue) {
             Severity severity = super.getSeverity(issue);
+
+            // Issue not allowed to be suppressed?
+            if (issue.getSuppressNames() != null && !flags.getAllowSuppress()) {
+                return getDefaultSeverity(issue);
+            }
 
             String id = issue.getId();
             Set<String> suppress = flags.getSuppressedIds();

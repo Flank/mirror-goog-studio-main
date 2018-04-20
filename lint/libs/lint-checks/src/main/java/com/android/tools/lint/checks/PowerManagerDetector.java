@@ -49,6 +49,7 @@ public class PowerManagerDetector extends Detector implements Detector.UastScann
                             6,
                             Severity.ERROR,
                             IMPLEMENTATION)
+                    .setAndroidSpecific(true)
                     .addMoreInfo(
                             "https://developer.android.com/reference/android/os/PowerManager.html");
 

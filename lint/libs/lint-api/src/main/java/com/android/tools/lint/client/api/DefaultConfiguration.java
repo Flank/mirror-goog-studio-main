@@ -296,6 +296,22 @@ public class DefaultConfiguration extends Configuration {
     public Severity getSeverity(@NonNull Issue issue) {
         ensureInitialized();
 
+        if (issue.getSuppressNames() != null) {
+            // Not allowed to suppress this issue via lint.xml.
+            // Consider reporting this as well (not easy here since we don't have
+            // a context.)
+            // Ideally we'd report this to the user too, but we can't really do
+            // that here because we can't access the flag which lets you opt out
+            // of the restrictions, where we'd unconditionally continue to
+            // report this warning:
+            //    if (this.severity.get(issue.getId()) != null) {
+            //        LintClient.Companion.report(client, IssueRegistry.LINT_ERROR,
+            //                "Issue `" + issue.getId() + "` is not allowed to be suppressed",
+            //                configFile, project);
+            //    }
+            return getDefaultSeverity(issue);
+        }
+
         Severity severity = this.severity.get(issue.getId());
         if (severity == null) {
             // id's can also refer to categories
@@ -461,6 +477,7 @@ public class DefaultConfiguration extends Configuration {
             applySuggestions = readBooleanFlag(root, "applySuggestions");
             removeFixedBaselineIssues = readBooleanFlag(root, "removeFixedBaselineIssues");
             abortOnError = readBooleanFlag(root, "abortOnError");
+            // Note that we don't let you configure the allowSuppress flag by lint.xml
         }
     }
 

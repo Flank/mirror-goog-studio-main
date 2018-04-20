@@ -59,16 +59,17 @@ public class TrustAllX509TrustManagerDetector extends Detector
 
     public static final Issue ISSUE =
             Issue.create(
-                    "TrustAllX509TrustManager",
-                    "Insecure TLS/SSL trust manager",
-                    "This check looks for X509TrustManager implementations whose `checkServerTrusted` or "
-                            + "`checkClientTrusted` methods do nothing (thus trusting any certificate chain) "
-                            + "which could result in insecure network traffic caused by trusting arbitrary "
-                            + "TLS/SSL certificates presented by peers.",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "TrustAllX509TrustManager",
+                            "Insecure TLS/SSL trust manager",
+                            "This check looks for X509TrustManager implementations whose `checkServerTrusted` or "
+                                    + "`checkClientTrusted` methods do nothing (thus trusting any certificate chain) "
+                                    + "which could result in insecure network traffic caused by trusting arbitrary "
+                                    + "TLS/SSL certificates presented by peers.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     public TrustAllX509TrustManagerDetector() {}
 

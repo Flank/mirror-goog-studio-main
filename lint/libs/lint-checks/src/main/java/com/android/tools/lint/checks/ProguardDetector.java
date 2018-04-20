@@ -53,7 +53,8 @@ public class ProguardDetector extends Detector {
                             8,
                             Severity.FATAL,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://http://code.google.com/p/android/issues/detail?id=16384");
+                    .addMoreInfo("http://http://code.google.com/p/android/issues/detail?id=16384")
+                    .setAndroidSpecific(true);
 
     /**
      * Finds ProGuard files that contain non-project specific configuration locally and suggests
@@ -61,35 +62,36 @@ public class ProguardDetector extends Detector {
      */
     public static final Issue SPLIT_CONFIG =
             Issue.create(
-                    "ProguardSplit",
-                    "Proguard.cfg file contains generic Android rules",
-                    "Earlier versions of the Android tools bundled a single `proguard.cfg` file "
-                            + "containing a ProGuard configuration file suitable for Android shrinking and "
-                            + "obfuscation. However, that version was copied into new projects, which "
-                            + "means that it does not continue to get updated as we improve the default "
-                            + "ProGuard rules for Android.\n"
-                            + "\n"
-                            + "In the new version of the tools, we have split the ProGuard configuration "
-                            + "into two halves:\n"
-                            + "* A simple configuration file containing only project-specific flags, in "
-                            + "your project\n"
-                            + "* A generic configuration file containing the recommended set of ProGuard "
-                            + "options for Android projects. This generic file lives in the SDK install "
-                            + "directory which means that it gets updated along with the tools.\n"
-                            + "\n"
-                            + "In order for this to work, the proguard.config property in the "
-                            + "`project.properties` file now refers to a path, so you can reference both "
-                            + "the generic file as well as your own (and any additional files too).\n"
-                            + "\n"
-                            + "To migrate your project to the new setup, create a new `proguard-project.txt` file "
-                            + "in your project containing any project specific ProGuard flags as well as "
-                            + "any customizations you have made, then update your project.properties file "
-                            + "to contain:\n"
-                            + "`proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard-project.txt`",
-                    Category.CORRECTNESS,
-                    3,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "ProguardSplit",
+                            "Proguard.cfg file contains generic Android rules",
+                            "Earlier versions of the Android tools bundled a single `proguard.cfg` file "
+                                    + "containing a ProGuard configuration file suitable for Android shrinking and "
+                                    + "obfuscation. However, that version was copied into new projects, which "
+                                    + "means that it does not continue to get updated as we improve the default "
+                                    + "ProGuard rules for Android.\n"
+                                    + "\n"
+                                    + "In the new version of the tools, we have split the ProGuard configuration "
+                                    + "into two halves:\n"
+                                    + "* A simple configuration file containing only project-specific flags, in "
+                                    + "your project\n"
+                                    + "* A generic configuration file containing the recommended set of ProGuard "
+                                    + "options for Android projects. This generic file lives in the SDK install "
+                                    + "directory which means that it gets updated along with the tools.\n"
+                                    + "\n"
+                                    + "In order for this to work, the proguard.config property in the "
+                                    + "`project.properties` file now refers to a path, so you can reference both "
+                                    + "the generic file as well as your own (and any additional files too).\n"
+                                    + "\n"
+                                    + "To migrate your project to the new setup, create a new `proguard-project.txt` file "
+                                    + "in your project containing any project specific ProGuard flags as well as "
+                                    + "any customizations you have made, then update your project.properties file "
+                                    + "to contain:\n"
+                                    + "`proguard.config=${sdk.dir}/tools/proguard/proguard-android.txt:proguard-project.txt`",
+                            Category.CORRECTNESS,
+                            3,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     @Override
     public void run(@NonNull Context context) {

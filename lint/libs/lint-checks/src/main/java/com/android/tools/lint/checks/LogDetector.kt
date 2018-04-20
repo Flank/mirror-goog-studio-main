@@ -74,6 +74,7 @@ class LogDetector : Detector(), SourceCodeScanner {
             category = Category.PERFORMANCE,
             priority = 5,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         ).setEnabledByDefault(false)
 
@@ -90,6 +91,7 @@ class LogDetector : Detector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 5,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -103,6 +105,7 @@ class LogDetector : Detector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 5,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 

@@ -71,137 +71,143 @@ public class ApiDetector extends ResourceXmlDetector
     @SuppressWarnings("unchecked")
     public static final Issue UNSUPPORTED =
             Issue.create(
-                    "NewApi",
-                    "Calling new methods on older versions",
-                    "This check scans through all the Android API calls in the application and "
-                            + "warns about any calls that are not available on **all** versions targeted "
-                            + "by this application (according to its minimum SDK attribute in the manifest).\n"
-                            + "\n"
-                            + "If you really want to use this API and don't need to support older devices just "
-                            + "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files.\n"
-                            + "\n"
-                            + "If your code is **deliberately** accessing newer APIs, and you have ensured "
-                            + "(e.g. with conditional execution) that this code will only ever be called on a "
-                            + "supported platform, then you can annotate your class or method with the "
-                            + "`@TargetApi` annotation specifying the local minimum SDK to apply, such as "
-                            + "`@TargetApi(11)`, such that this check considers 11 rather than your manifest "
-                            + "file's minimum SDK as the required API level.\n"
-                            + "\n"
-                            + "If you are deliberately setting `android:` attributes in style definitions, "
-                            + "make sure you place this in a `values-v`*NN* folder in order to avoid running "
-                            + "into runtime conflicts on certain devices where manufacturers have added "
-                            + "custom attributes whose ids conflict with the new ones on later platforms.\n"
-                            + "\n"
-                            + "Similarly, you can use tools:targetApi=\"11\" in an XML file to indicate that "
-                            + "the element will only be inflated in an adequate context.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    new Implementation(
-                            ApiDetector.class,
-                            EnumSet.of(Scope.JAVA_FILE, Scope.RESOURCE_FILE, Scope.MANIFEST),
-                            Scope.JAVA_FILE_SCOPE,
-                            Scope.RESOURCE_FILE_SCOPE,
-                            Scope.MANIFEST_SCOPE));
+                            "NewApi",
+                            "Calling new methods on older versions",
+                            "This check scans through all the Android API calls in the application and "
+                                    + "warns about any calls that are not available on **all** versions targeted "
+                                    + "by this application (according to its minimum SDK attribute in the manifest).\n"
+                                    + "\n"
+                                    + "If you really want to use this API and don't need to support older devices just "
+                                    + "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files.\n"
+                                    + "\n"
+                                    + "If your code is **deliberately** accessing newer APIs, and you have ensured "
+                                    + "(e.g. with conditional execution) that this code will only ever be called on a "
+                                    + "supported platform, then you can annotate your class or method with the "
+                                    + "`@TargetApi` annotation specifying the local minimum SDK to apply, such as "
+                                    + "`@TargetApi(11)`, such that this check considers 11 rather than your manifest "
+                                    + "file's minimum SDK as the required API level.\n"
+                                    + "\n"
+                                    + "If you are deliberately setting `android:` attributes in style definitions, "
+                                    + "make sure you place this in a `values-v`*NN* folder in order to avoid running "
+                                    + "into runtime conflicts on certain devices where manufacturers have added "
+                                    + "custom attributes whose ids conflict with the new ones on later platforms.\n"
+                                    + "\n"
+                                    + "Similarly, you can use tools:targetApi=\"11\" in an XML file to indicate that "
+                                    + "the element will only be inflated in an adequate context.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(
+                                    ApiDetector.class,
+                                    EnumSet.of(
+                                            Scope.JAVA_FILE, Scope.RESOURCE_FILE, Scope.MANIFEST),
+                                    Scope.JAVA_FILE_SCOPE,
+                                    Scope.RESOURCE_FILE_SCOPE,
+                                    Scope.MANIFEST_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Accessing an inlined API on older platforms */
     public static final Issue INLINED =
             Issue.create(
-                    "InlinedApi",
-                    "Using inlined constants on older versions",
-                    "This check scans through all the Android API field references in the application "
-                            + "and flags certain constants, such as static final integers and Strings, "
-                            + "which were introduced in later versions. These will actually be copied "
-                            + "into the class files rather than being referenced, which means that "
-                            + "the value is available even when running on older devices. In some "
-                            + "cases that's fine, and in other cases it can result in a runtime "
-                            + "crash or incorrect behavior. It depends on the context, so consider "
-                            + "the code carefully and decide whether it's safe and can be suppressed "
-                            + "or whether the code needs to be guarded.\n"
-                            + "\n"
-                            + "If you really want to use this API and don't need to support older devices just "
-                            + "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files."
-                            + "\n"
-                            + "If your code is **deliberately** accessing newer APIs, and you have ensured "
-                            + "(e.g. with conditional execution) that this code will only ever be called on a "
-                            + "supported platform, then you can annotate your class or method with the "
-                            + "`@TargetApi` annotation specifying the local minimum SDK to apply, such as "
-                            + "`@TargetApi(11)`, such that this check considers 11 rather than your manifest "
-                            + "file's minimum SDK as the required API level.\n",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "InlinedApi",
+                            "Using inlined constants on older versions",
+                            "This check scans through all the Android API field references in the application "
+                                    + "and flags certain constants, such as static final integers and Strings, "
+                                    + "which were introduced in later versions. These will actually be copied "
+                                    + "into the class files rather than being referenced, which means that "
+                                    + "the value is available even when running on older devices. In some "
+                                    + "cases that's fine, and in other cases it can result in a runtime "
+                                    + "crash or incorrect behavior. It depends on the context, so consider "
+                                    + "the code carefully and decide whether it's safe and can be suppressed "
+                                    + "or whether the code needs to be guarded.\n"
+                                    + "\n"
+                                    + "If you really want to use this API and don't need to support older devices just "
+                                    + "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files."
+                                    + "\n"
+                                    + "If your code is **deliberately** accessing newer APIs, and you have ensured "
+                                    + "(e.g. with conditional execution) that this code will only ever be called on a "
+                                    + "supported platform, then you can annotate your class or method with the "
+                                    + "`@TargetApi` annotation specifying the local minimum SDK to apply, such as "
+                                    + "`@TargetApi(11)`, such that this check considers 11 rather than your manifest "
+                                    + "file's minimum SDK as the required API level.\n",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Method conflicts with new inherited method */
     public static final Issue OVERRIDE =
             Issue.create(
-                    "Override",
-                    "Method conflicts with new inherited method",
-                    "Suppose you are building against Android API 8, and you've subclassed Activity. "
-                            + "In your subclass you add a new method called `isDestroyed`(). At some later point, "
-                            + "a method of the same name and signature is added to Android. Your method will "
-                            + "now override the Android method, and possibly break its contract. Your method "
-                            + "is not calling `super.isDestroyed()`, since your compilation target doesn't "
-                            + "know about the method.\n"
-                            + "\n"
-                            + "The above scenario is what this lint detector looks for. The above example is "
-                            + "real, since `isDestroyed()` was added in API 17, but it will be true for **any** "
-                            + "method you have added to a subclass of an Android class where your build target "
-                            + "is lower than the version the method was introduced in.\n"
-                            + "\n"
-                            + "To fix this, either rename your method, or if you are really trying to augment "
-                            + "the builtin method if available, switch to a higher build target where you can "
-                            + "deliberately add `@Override` on your overriding method, and call `super` if "
-                            + "appropriate etc.\n",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "Override",
+                            "Method conflicts with new inherited method",
+                            "Suppose you are building against Android API 8, and you've subclassed Activity. "
+                                    + "In your subclass you add a new method called `isDestroyed`(). At some later point, "
+                                    + "a method of the same name and signature is added to Android. Your method will "
+                                    + "now override the Android method, and possibly break its contract. Your method "
+                                    + "is not calling `super.isDestroyed()`, since your compilation target doesn't "
+                                    + "know about the method.\n"
+                                    + "\n"
+                                    + "The above scenario is what this lint detector looks for. The above example is "
+                                    + "real, since `isDestroyed()` was added in API 17, but it will be true for **any** "
+                                    + "method you have added to a subclass of an Android class where your build target "
+                                    + "is lower than the version the method was introduced in.\n"
+                                    + "\n"
+                                    + "To fix this, either rename your method, or if you are really trying to augment "
+                                    + "the builtin method if available, switch to a higher build target where you can "
+                                    + "deliberately add `@Override` on your overriding method, and call `super` if "
+                                    + "appropriate etc.\n",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Attribute unused on older versions */
     public static final Issue UNUSED =
-            Issue.create(
-                    "UnusedAttribute",
-                    "Attribute unused on older versions",
-                    "This check finds attributes set in XML files that were introduced in a version "
-                            + "newer than the oldest version targeted by your application (with the "
-                            + "`minSdkVersion` attribute).\n"
-                            + "\n"
-                            + "This is not an error; the application will simply ignore the attribute. However, "
-                            + "if the attribute is important to the appearance or functionality of your "
-                            + "application, you should consider finding an alternative way to achieve the "
-                            + "same result with only available attributes, and then you can optionally create "
-                            + "a copy of the layout in a layout-vNN folder which will be used on API NN or "
-                            + "higher where you can take advantage of the newer attribute.\n"
-                            + "\n"
-                            + "Note: This check does not only apply to attributes. For example, some tags can be "
-                            + "unused too, such as the new `<tag>` element in layouts introduced in API 21.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(
-                            ApiDetector.class,
-                            EnumSet.of(Scope.RESOURCE_FILE, Scope.RESOURCE_FOLDER),
-                            Scope.RESOURCE_FILE_SCOPE,
-                            Scope.RESOURCE_FOLDER_SCOPE));
+            Issue.Companion.create(
+                            "UnusedAttribute",
+                            "Attribute unused on older versions",
+                            "This check finds attributes set in XML files that were introduced in a version "
+                                    + "newer than the oldest version targeted by your application (with the "
+                                    + "`minSdkVersion` attribute).\n"
+                                    + "\n"
+                                    + "This is not an error; the application will simply ignore the attribute. However, "
+                                    + "if the attribute is important to the appearance or functionality of your "
+                                    + "application, you should consider finding an alternative way to achieve the "
+                                    + "same result with only available attributes, and then you can optionally create "
+                                    + "a copy of the layout in a layout-vNN folder which will be used on API NN or "
+                                    + "higher where you can take advantage of the newer attribute.\n"
+                                    + "\n"
+                                    + "Note: This check does not only apply to attributes. For example, some tags can be "
+                                    + "unused too, such as the new `<tag>` element in layouts introduced in API 21.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(
+                                    ApiDetector.class,
+                                    EnumSet.of(Scope.RESOURCE_FILE, Scope.RESOURCE_FOLDER),
+                                    Scope.RESOURCE_FILE_SCOPE,
+                                    Scope.RESOURCE_FOLDER_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Obsolete SDK_INT version check */
     public static final Issue OBSOLETE_SDK =
             Issue.create(
-                    "ObsoleteSdkInt",
-                    "Obsolete SDK_INT Version Check",
-                    "This check flags version checks that are not necessary, because the "
-                            + "`minSdkVersion` (or surrounding known API level) is already at least "
-                            + "as high as the version checked for.\n"
-                            + "\n"
-                            + "Similarly, it also looks for resources in `-vNN` folders, such as "
-                            + "`values-v14` where the version qualifier is less than or equal to the "
-                            + "`minSdkVersion`, where the contents should be merged into the best folder.",
-                    Category.PERFORMANCE,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "ObsoleteSdkInt",
+                            "Obsolete SDK_INT Version Check",
+                            "This check flags version checks that are not necessary, because the "
+                                    + "`minSdkVersion` (or surrounding known API level) is already at least "
+                                    + "as high as the version checked for.\n"
+                                    + "\n"
+                                    + "Similarly, it also looks for resources in `-vNN` folders, such as "
+                                    + "`values-v14` where the version qualifier is less than or equal to the "
+                                    + "`minSdkVersion`, where the contents should be merged into the best folder.",
+                            Category.PERFORMANCE,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     private static final String TAG_RIPPLE = "ripple";
     private static final String TAG_ANIMATED_SELECTOR = "animated-selector";

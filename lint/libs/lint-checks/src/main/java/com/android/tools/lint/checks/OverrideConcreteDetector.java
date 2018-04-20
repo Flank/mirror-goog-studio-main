@@ -42,20 +42,22 @@ public class OverrideConcreteDetector extends Detector implements SourceCodeScan
     /** Are previously-abstract methods all overridden? */
     public static final Issue ISSUE =
             Issue.create(
-                    "OverrideAbstract",
-                    "Not overriding abstract methods on older platforms",
-                    "To improve the usability of some APIs, some methods that used to be `abstract` have "
-                            + "been made concrete by adding default implementations. This means that when compiling "
-                            + "with new versions of the SDK, your code does not have to override these methods.\n"
-                            + "\n"
-                            + "However, if your code is also targeting older versions of the platform where these "
-                            + "methods were still `abstract`, the code will crash. You must override all methods "
-                            + "that used to be abstract in any versions targeted by your application's "
-                            + "`minSdkVersion`.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    new Implementation(OverrideConcreteDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "OverrideAbstract",
+                            "Not overriding abstract methods on older platforms",
+                            "To improve the usability of some APIs, some methods that used to be `abstract` have "
+                                    + "been made concrete by adding default implementations. This means that when compiling "
+                                    + "with new versions of the SDK, your code does not have to override these methods.\n"
+                                    + "\n"
+                                    + "However, if your code is also targeting older versions of the platform where these "
+                                    + "methods were still `abstract`, the code will crash. You must override all methods "
+                                    + "that used to be abstract in any versions targeted by your application's "
+                                    + "`minSdkVersion`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(
+                                    OverrideConcreteDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     // This check is currently hardcoded for the specific case of the
     // NotificationListenerService change in API 21. We should consider

@@ -52,7 +52,7 @@ class LintStandaloneVitalTest {
 
         val file = project.file("lint-results.txt")
         assertThat(file).exists()
-        assertThat(file).contains("MyClass.java:4: Error: Do not hardcode \"/sdcard/\"")
+        assertThat(file).contains("MyClass.java:5: Error: Use Boolean.valueOf(true) instead")
         assertThat(file).contains("1 errors, 0 warnings")
     }
 }

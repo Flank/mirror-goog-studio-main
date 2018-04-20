@@ -57,6 +57,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.OtherFileScanner
+import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
 import com.android.tools.lint.detector.api.ResourceFolderScanner
@@ -67,6 +68,7 @@ import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.assertionsEnabled
+import com.android.tools.lint.detector.api.formatList
 import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getNextInstruction
 import com.android.tools.lint.detector.api.isAnonymousClass
@@ -185,6 +187,14 @@ class LintDriver
      */
     var scope: EnumSet<Scope> = request.getScope() ?: Scope.infer(projectRoots)
 
+    /**
+     * The relevant platforms lint is to run on. By default,
+     * this is [Platform.ANDROID_SET]. Note that within an
+     * Android project there may be non-Android libraries, but this
+     * flag indicates whether there's any Android sources.
+     */
+    var platforms: EnumSet<Platform> = request.getPlatform() ?: Platform.ANDROID_SET
+
     private lateinit var applicableDetectors: List<Detector>
     private lateinit var scopeDetectors: Map<Scope, MutableList<Detector>>
     private var listeners: MutableList<LintListener>? = null
@@ -207,6 +217,9 @@ class LintDriver
      * Whether lint should abbreviate output when appropriate.
      */
     var isAbbreviating = true
+
+    /** Whether to allow suppressing issues with restrictions ([Issue.suppressNames]) */
+    var allowSuppress = false
 
     private var parserErrors: Boolean = false
     /** Whether we should run all normal checks on test sources  */
@@ -602,7 +615,7 @@ class LintDriver
         val configuration = project.getConfiguration(this)
         val map = EnumMap<Scope, MutableList<Detector>>(Scope::class.java)
         scopeDetectors = map
-        applicableDetectors = registry.createDetectors(client, configuration, scope, map)
+        applicableDetectors = registry.createDetectors(client, configuration, scope, platforms, map)
 
         validateScopeList()
     }
@@ -1053,9 +1066,10 @@ class LintDriver
                     checkIndividualJavaFiles(project, main, checks, files)
                 } else {
                     val sourceFolders = project.javaSourceFolders
-                    val testFolders = if (scope.contains(Scope.TEST_SOURCES))
+                    val testFolders = if (!ignoreTestSources)
                         project.testSourceFolders
-                    else emptyList<File>()
+                    else
+                        emptyList<File>()
 
                     val generatedFolders = if (checkGeneratedSources)
                         project.generatedSourceFolders
@@ -1902,7 +1916,7 @@ class LintDriver
                 ) {
                     val context = object : ResourceContext(this, project, main, file, type, "") {
                         override val resourceFolder: File?
-                        // Like super, but for the parent folder instead of the context file
+                            // Like super, but for the parent folder instead of the context file
                             get() = if (resourceFolderType != null) file.parentFile else null
                     }
                     fireEvent(EventType.SCANNING_FILE, context)
@@ -2102,13 +2116,21 @@ class LintDriver
                 return
             }
 
+            val baseline = baseline
             if (baseline != null) {
-                val filtered = baseline!!.findAndMark(
+                val filtered = baseline.findAndMark(
                     issue, location, message, severity,
                     context.project
                 )
                 if (filtered) {
-                    return
+                    if (!allowSuppress && issue.suppressNames != null) {
+                        flagInvalidSuppress(
+                            context, issue, Location.create(baseline.file),
+                            issue.suppressNames
+                        )
+                    } else {
+                        return
+                    }
                 }
             }
 
@@ -2542,12 +2564,31 @@ class LintDriver
         issue: Issue,
         scope: UElement?
     ): Boolean {
+        val customSuppressNames = if (!allowSuppress) {
+            issue.suppressNames?.toSet()
+        } else {
+            null
+        }
+
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
         while (currentScope != null) {
             if (currentScope is UAnnotated) {
                 if (isSuppressed(issue, currentScope)) {
+                    if (customSuppressNames != null && context != null) {
+                        flagInvalidSuppress(
+                            context, issue, context.getLocation(currentScope),
+                            issue.suppressNames
+                        )
+                        return false
+                    }
+                    return true
+                }
+
+                if (customSuppressNames != null &&
+                    isAnnotatedWith(currentScope, customSuppressNames)
+                ) {
                     return true
                 }
             }
@@ -2555,6 +2596,13 @@ class LintDriver
             if (checkComments && context != null &&
                 context.isSuppressedWithComment(currentScope, issue)
             ) {
+                if (customSuppressNames != null) {
+                    flagInvalidSuppress(
+                        context, issue, context.getLocation(currentScope),
+                        issue.suppressNames
+                    )
+                    return false
+                }
                 return true
             }
 
@@ -2574,24 +2622,52 @@ class LintDriver
     ): Boolean {
         scope ?: return false
 
+        val customSuppressNames = if (!allowSuppress) {
+            issue.suppressNames?.toSet()
+        } else {
+            null
+        }
+
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
         while (currentScope != null) {
             if (currentScope is PsiModifierListOwner) {
-                if (isSuppressed(issue, currentScope.modifierList)) {
+                val modifierList = currentScope.modifierList
+                if (isSuppressed(issue, modifierList)) {
+                    if (customSuppressNames != null && context != null) {
+                        flagInvalidSuppress(
+                            context, issue, context.getLocation(currentScope),
+                            issue.suppressNames
+                        )
+                        return false
+                    }
+                    return true
+                }
+
+                if (customSuppressNames != null &&
+                    isAnnotatedWith(modifierList, customSuppressNames)
+                ) {
                     return true
                 }
             }
 
             if (checkComments && context!!.isSuppressedWithComment(currentScope, issue)) {
+                if (customSuppressNames != null) {
+                    flagInvalidSuppress(
+                        context, issue, context.getLocation(currentScope),
+                        issue.suppressNames
+                    )
+                    return false
+                }
                 return true
             }
 
-            currentScope = currentScope.parent
             if (currentScope is PsiFile) {
                 return false
             }
+
+            currentScope = currentScope.parent
         }
 
         return false
@@ -2604,15 +2680,41 @@ class LintDriver
     ): Boolean {
         scope ?: return false
 
+        val customSuppressNames = if (!allowSuppress) {
+            issue.suppressNames?.toSet()
+        } else {
+            null
+        }
+
         var currentScope: UAnnotated = scope
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
         while (true) {
             if (isSuppressed(issue, currentScope)) {
+                if (customSuppressNames != null && context != null) {
+                    flagInvalidSuppress(
+                        context, issue, context.getLocation(currentScope),
+                        issue.suppressNames
+                    )
+                    return false
+                }
+                return true
+            }
+
+            if (customSuppressNames != null &&
+                isAnnotatedWith(currentScope, customSuppressNames)
+            ) {
                 return true
             }
 
             if (checkComments && context!!.isSuppressedWithComment(currentScope, issue)) {
+                if (customSuppressNames != null) {
+                    flagInvalidSuppress(
+                        context, issue, context.getLocation(currentScope),
+                        issue.suppressNames
+                    )
+                    return false
+                }
                 return true
             }
             currentScope = currentScope.getParentOfType(UAnnotated::class.java) ?: return false
@@ -2620,6 +2722,26 @@ class LintDriver
                 return false
             }
         }
+    }
+
+    private fun flagInvalidSuppress(
+        context: Context,
+        issue: Issue,
+        location: Location,
+        names: Collection<String>?
+    ) {
+        var message = "Issue `${issue.id}` is not allowed to be suppressed"
+        if (names != null) {
+            message += " (but can be with ${
+            formatList(
+                names.map { "`@${it.substring(it.lastIndexOf('.') + 1)}`" }.toList(),
+                sort = false,
+                useConjunction = true
+            )
+            })"
+        }
+
+        context.report(IssueRegistry.LINT_ERROR, location, message)
     }
 
     /**
@@ -2719,6 +2841,16 @@ class LintDriver
 
         /** Prefix used by the comment suppress mechanism in Studio/IntelliJ  */
         private const val STUDIO_ID_PREFIX = "AndroidLint"
+
+        private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
+
+        private val DEFAULT_SUPPRESS_ANNOTATIONS = setOf(
+            FQCN_SUPPRESS_LINT,
+            SUPPRESS_WARNINGS_FQCN,
+            KOTLIN_SUPPRESS,
+            // When missing imports
+            SUPPRESS_LINT
+        )
 
         /**
          * For testing only: returns the number of exceptions thrown during Java AST analysis
@@ -2996,8 +3128,6 @@ class LintDriver
             return false
         }
 
-        private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
-
         /**
          * Returns true if the given AST modifier has a suppress annotation for the
          * given issue (which can be null to check for the "all" annotation)
@@ -3023,14 +3153,33 @@ class LintDriver
                 if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
                             fqcn == SUPPRESS_WARNINGS_FQCN ||
                             fqcn == KOTLIN_SUPPRESS ||
+                            // when missing imports
                             fqcn == SUPPRESS_LINT)
-                ) { // when missing imports
+                ) {
                     val parameterList = annotation.parameterList
                     for (pair in parameterList.attributes) {
                         if (isSuppressed(issue, pair.value)) {
                             return true
                         }
                     }
+                }
+            }
+
+            return false
+        }
+
+        private fun isAnnotatedWith(
+            modifierList: PsiModifierList?,
+            names: Set<String>
+        ): Boolean {
+            if (modifierList == null) {
+                return false
+            }
+
+            for (annotation in modifierList.annotations) {
+                val fqcn = annotation.qualifiedName
+                if (fqcn != null && names.contains(fqcn)) {
+                    return true
                 }
             }
 
@@ -3060,8 +3209,9 @@ class LintDriver
                 if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
                             fqcn == SUPPRESS_WARNINGS_FQCN ||
                             fqcn == KOTLIN_SUPPRESS ||
+                            // when missing imports
                             fqcn == SUPPRESS_LINT)
-                ) { // when missing imports
+                ) {
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {
                         if (isSuppressedExpression(issue, attribute.expression)) {
@@ -3103,6 +3253,25 @@ class LintDriver
                             }
                         }
                     }
+                }
+            }
+
+            return false
+        }
+
+        private fun isAnnotatedWith(
+            annotated: UAnnotated,
+            names: Set<String>
+        ): Boolean {
+            val annotations = annotated.annotations
+            if (annotations.isEmpty()) {
+                return false
+            }
+
+            for (annotation in annotations) {
+                val fqcn = annotation.qualifiedName
+                if (fqcn != null && names.contains(fqcn)) {
+                    return true
                 }
             }
 

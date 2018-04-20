@@ -49,18 +49,19 @@ public class CustomViewDetector extends Detector implements SourceCodeScanner {
     /** Mismatched style and class names */
     public static final Issue ISSUE =
             Issue.create(
-                    "CustomViewStyleable",
-                    "Mismatched Styleable/Custom View Name",
-                    "The convention for custom views is to use a `declare-styleable` whose name "
-                            + "matches the custom view class name. The IDE relies on this convention such that "
-                            + "for example code completion can be offered for attributes in a custom view "
-                            + "in layout XML resource files.\n"
-                            + "\n"
-                            + "(Similarly, layout parameter classes should use the suffix `_Layout`.)",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "CustomViewStyleable",
+                            "Mismatched Styleable/Custom View Name",
+                            "The convention for custom views is to use a `declare-styleable` whose name "
+                                    + "matches the custom view class name. The IDE relies on this convention such that "
+                                    + "for example code completion can be offered for attributes in a custom view "
+                                    + "in layout XML resource files.\n"
+                                    + "\n"
+                                    + "(Similarly, layout parameter classes should use the suffix `_Layout`.)",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     private static final String OBTAIN_STYLED_ATTRIBUTES = "obtainStyledAttributes";
 

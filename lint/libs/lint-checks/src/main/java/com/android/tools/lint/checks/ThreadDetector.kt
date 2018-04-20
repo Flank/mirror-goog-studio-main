@@ -344,6 +344,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
     }

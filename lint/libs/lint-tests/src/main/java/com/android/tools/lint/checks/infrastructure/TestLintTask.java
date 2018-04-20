@@ -106,6 +106,8 @@ public class TestLintTask {
     boolean allowNetworkAccess;
     boolean allowDuplicates = false;
     File rootDirectory;
+    private TestFile baseline;
+    File baselineFile;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -280,6 +282,18 @@ public class TestLintTask {
             }
         }
         checkedIssues = null; // force recompute
+        return this;
+    }
+
+    /**
+     * Configures the test task to run with the given baseline
+     *
+     * @param baseline the baseline XML contents
+     * @return this, for constructor chaining
+     */
+    public TestLintTask baseline(@NonNull TestFile baseline) {
+        ensurePreRun();
+        this.baseline = baseline;
         return this;
     }
 
@@ -607,7 +621,7 @@ public class TestLintTask {
         for (int i = 0; i < allProjects.size(); i++) {
             ProjectDescription project = allProjects.get(i);
             if (project.getName().isEmpty()) {
-                project.setName("project" + Integer.toString(i));
+                project.setName("project" + i);
             }
         }
 
@@ -642,6 +656,10 @@ public class TestLintTask {
                 dirToProjectDescription.put(projectDir, project);
                 populateProjectDirectory(project, projectDir, files);
                 projectDirs.add(projectDir);
+
+                if (baseline != null) {
+                    baselineFile = baseline.createFile(projectDir);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }

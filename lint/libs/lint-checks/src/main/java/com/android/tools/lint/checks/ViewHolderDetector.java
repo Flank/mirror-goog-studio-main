@@ -66,7 +66,8 @@ public class ViewHolderDetector extends Detector implements SourceCodeScanner {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder");
+                            "http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder")
+                    .setAndroidSpecific(true);
 
     private static final String GET_VIEW = "getView";
     static final String INFLATE = "inflate";

@@ -56,15 +56,16 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
     /** Using android.media.ExifInterface */
     public static final Issue ISSUE =
             Issue.create(
-                    "ExifInterface",
-                    "Using `android.media.ExifInterface`",
-                    "The `android.media.ExifInterface` implementation has some known security "
-                            + "bugs in older versions of Android. There is a new implementation available "
-                            + "of this library in the support library, which is preferable.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "ExifInterface",
+                            "Using `android.media.ExifInterface`",
+                            "The `android.media.ExifInterface` implementation has some known security "
+                                    + "bugs in older versions of Android. There is a new implementation available "
+                                    + "of this library in the support library, which is preferable.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link ExifInterfaceDetector} */
     public ExifInterfaceDetector() {}

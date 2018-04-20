@@ -70,49 +70,52 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
     /** Invalid cast to a type from the service constant */
     public static final Issue ISSUE =
             Issue.create(
-                    "ServiceCast",
-                    "Wrong system service casts",
-                    "When you call `Context#getSystemService()`, the result is typically cast to "
-                            + "a specific interface. This lint check ensures that the cast is compatible with "
-                            + "the expected type of the return value.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    IMPLEMENTATION);
+                            "ServiceCast",
+                            "Wrong system service casts",
+                            "When you call `Context#getSystemService()`, the result is typically cast to "
+                                    + "a specific interface. This lint check ensures that the cast is compatible with "
+                                    + "the expected type of the return value.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Using wifi manager from the wrong context */
     public static final Issue WIFI_MANAGER =
             Issue.create(
-                    "WifiManagerLeak",
-                    "WifiManager Leak",
-                    "On versions prior to Android N (24), initializing the `WifiManager` via "
-                            + "`Context#getSystemService` can cause a memory leak if the context is not "
-                            + "the application context. Change `context.getSystemService(...)` to "
-                            + "`context.getApplicationContext().getSystemService(...)`.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    IMPLEMENTATION);
+                            "WifiManagerLeak",
+                            "WifiManager Leak",
+                            "On versions prior to Android N (24), initializing the `WifiManager` via "
+                                    + "`Context#getSystemService` can cause a memory leak if the context is not "
+                                    + "the application context. Change `context.getSystemService(...)` to "
+                                    + "`context.getApplicationContext().getSystemService(...)`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Using wifi manager from the wrong context: unknown Context origin */
     public static final Issue WIFI_MANAGER_UNCERTAIN =
             Issue.create(
-                    "WifiManagerPotentialLeak",
-                    "WifiManager Potential Leak",
-                    "On versions prior to Android N (24), initializing the `WifiManager` via "
-                            + "`Context#getSystemService` can cause a memory leak if the context is not "
-                            + "the application context.\n"
-                            + "\n"
-                            + "In many cases, it's not obvious from the code where the `Context` is "
-                            + "coming from (e.g. it might be a parameter to a method, or a field initialized "
-                            + "from various method calls). It's possible that the context being passed in "
-                            + "is the application context, but to be on the safe side, you should consider "
-                            + "changing `context.getSystemService(...)` to "
-                            + "`context.getApplicationContext().getSystemService(...)`.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "WifiManagerPotentialLeak",
+                            "WifiManager Potential Leak",
+                            "On versions prior to Android N (24), initializing the `WifiManager` via "
+                                    + "`Context#getSystemService` can cause a memory leak if the context is not "
+                                    + "the application context.\n"
+                                    + "\n"
+                                    + "In many cases, it's not obvious from the code where the `Context` is "
+                                    + "coming from (e.g. it might be a parameter to a method, or a field initialized "
+                                    + "from various method calls). It's possible that the context being passed in "
+                                    + "is the application context, but to be on the safe side, you should consider "
+                                    + "changing `context.getSystemService(...)` to "
+                                    + "`context.getApplicationContext().getSystemService(...)`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     private static final String GET_APPLICATION_CONTEXT = "getApplicationContext";
     private static final String WIFI_SERVICE = "WIFI_SERVICE";

@@ -61,19 +61,21 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
 
     public static final Issue ISSUE =
             Issue.create(
-                    "ClickableViewAccessibility",
-                    "Accessibility in Custom Views",
-                    "If a `View` that overrides `onTouchEvent` or uses an `OnTouchListener` does not also "
-                            + "implement `performClick` and call it when clicks are detected, the `View` "
-                            + "may not handle accessibility actions properly. Logic handling the click "
-                            + "actions should ideally be placed in `View#performClick` as some "
-                            + "accessibility services invoke `performClick` when a click action "
-                            + "should occur.",
-                    Category.A11Y,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(
-                            ClickableViewAccessibilityDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "ClickableViewAccessibility",
+                            "Accessibility in Custom Views",
+                            "If a `View` that overrides `onTouchEvent` or uses an `OnTouchListener` does not also "
+                                    + "implement `performClick` and call it when clicks are detected, the `View` "
+                                    + "may not handle accessibility actions properly. Logic handling the click "
+                                    + "actions should ideally be placed in `View#performClick` as some "
+                                    + "accessibility services invoke `performClick` when a click action "
+                                    + "should occur.",
+                            Category.A11Y,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(
+                                    ClickableViewAccessibilityDetector.class,
+                                    Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     private static final String PERFORM_CLICK = "performClick";
     public static final String ON_TOUCH_EVENT = "onTouchEvent";

@@ -57,7 +57,8 @@ public class JavaScriptInterfaceDetector extends Detector implements SourceCodeS
                             new Implementation(
                                     JavaScriptInterfaceDetector.class, Scope.JAVA_FILE_SCOPE))
                     .addMoreInfo(
-                            "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)");
+                            "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)")
+                    .setAndroidSpecific(true);
 
     private static final String ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface";
     private static final String JAVASCRIPT_INTERFACE_CLS = "android.webkit.JavascriptInterface";

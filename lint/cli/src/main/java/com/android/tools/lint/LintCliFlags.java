@@ -76,6 +76,7 @@ public class LintCliFlags {
     private boolean writeBaselineIfMissing = true;
     private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
     private boolean includeXmlFixes;
+    private boolean allowSuppress;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -652,5 +653,21 @@ public class LintCliFlags {
     /** Sets whether XML reports should include descriptions of the quickfixes */
     public void setIncludeXmlFixes(boolean includeXmlFixes) {
         this.includeXmlFixes = includeXmlFixes;
+    }
+
+    /**
+     * Sets whether the user is allowed to suppress issues that have been explicitly restricted by
+     * the issue registration via {@link Issue#getSuppressNames()}.
+     */
+    public void setAllowSuppress(boolean allowSuppress) {
+        this.allowSuppress = allowSuppress;
+    }
+
+    /**
+     * Returns true if the user is allowed to suppress issues that have been explicitly restricted
+     * by the issue registration via {@link Issue#getSuppressNames()}.
+     */
+    public boolean getAllowSuppress() {
+        return allowSuppress;
     }
 }

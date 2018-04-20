@@ -37,16 +37,17 @@ public class NonInternationalizedSmsDetector extends Detector implements SourceC
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
             Issue.create(
-                    "UnlocalizedSms",
-                    "SMS phone number missing country code",
-                    "SMS destination numbers must start with a country code or the application code "
-                            + "must ensure that the SMS is only sent when the user is in the same country as "
-                            + "the receiver.",
-                    Category.CORRECTNESS,
-                    5,
-                    Severity.WARNING,
-                    new Implementation(
-                            NonInternationalizedSmsDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "UnlocalizedSms",
+                            "SMS phone number missing country code",
+                            "SMS destination numbers must start with a country code or the application code "
+                                    + "must ensure that the SMS is only sent when the user is in the same country as "
+                                    + "the receiver.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.WARNING,
+                            new Implementation(
+                                    NonInternationalizedSmsDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link NonInternationalizedSmsDetector} check */
     public NonInternationalizedSmsDetector() {}

@@ -20,6 +20,7 @@ import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.detector.api.TextFormat.RAW
 import com.google.common.annotations.Beta
 import java.util.ArrayList
+import java.util.EnumSet
 
 /**
  * An issue is a potential bug in an Android application. An issue is discovered
@@ -82,14 +83,91 @@ class Issue private constructor(
     val defaultSeverity: Severity,
 
     /**
+     * Set of platforms where this issue applies. For example, if the analysis
+     * is being run on an Android project, lint will include all checks that
+     * either don't specify any platforms, or includes the android scope.
+     */
+    platforms: EnumSet<Platform>,
+
+    /**
+     * If non-null, this issue can **only** be suppressed with one of the
+     * given annotations: not with @Suppress, not with @SuppressLint, not
+     * with lint.xml, not with lintOptions{} and not with baselines.
+     *
+     * These suppress names can take various forms:
+     *  * Valid qualified names in Kotlin and Java (identifier characters and
+     *    dots). Represents suppress annotation. Examples include
+     *        android.annotation.SuppressLint, java.lang.Suppress and
+     *        kotlin.Suppress (which all happen to be looked at by default by
+     *        lint.)
+     *  * Simple name (no dots): XML suppress attribute in the tools namespace
+     *  * HTTP URL followed by colon and then name: namespace and attribute
+     *    for XML suppress attribute. For example,
+     *        http://schemas.android.com/tools:ignore
+     *    represents "ignore" in the tools namespace (which happens to be the
+     *    default Lint already looks for.)
+     */
+    val suppressNames: Collection<String>?,
+
+    /**
      * The implementation for the given issue. This is typically done by
      * IDEs that can offer a replacement for a given issue which performs better
      * or in some other way works better within the IDE.
      */
     var implementation: Implementation
+
 ) : Comparable<Issue> {
     private var moreInfoUrls: Any? = null
     private var enabledByDefault = true
+
+    private var _platforms = platforms
+
+    /**
+     * Set of platforms where this issue applies. For example, if the analysis
+     * is being run on an Android project, lint will include all checks that
+     * either don't specify any platform scopes, or includes the android scope.
+     */
+    val platforms: EnumSet<Platform> get() = _platforms
+
+    /**
+     * Whether we're analyzing Android sources. Note that within an
+     * Android project there may be non-Android libraries, but this
+     * flag indicates whether there's *any* Android in this project.
+     *
+     * This is a convenience property around [platforms].
+     */
+    fun setAndroidSpecific(value: Boolean): Issue {
+        if (value) {
+            _platforms = if (_platforms.isEmpty()) {
+                Platform.ANDROID_SET
+            } else {
+                val new = EnumSet.copyOf(_platforms)
+                new.add(Platform.ANDROID)
+                new
+            }
+        } else {
+            _platforms = if (_platforms == Platform.ANDROID_SET) {
+                Platform.UNSPECIFIED
+            } else {
+                val new = EnumSet.copyOf(_platforms)
+                new.remove(Platform.ANDROID)
+                new
+            }
+        }
+
+        return this
+    }
+
+    /**
+     * Whether we're analyzing Android sources. Note that within an
+     * Android project there may be non-Android libraries, but this
+     * flag indicates whether there's *any* Android in this project.
+     *
+     * This is a convenience property around [platforms].
+     */
+    fun isAndroidSpecific(): Boolean {
+        return _platforms.contains(Platform.ANDROID)
+    }
 
     /**
      * A link (a URL string) to more information, or null
@@ -249,9 +327,10 @@ class Issue private constructor(
             severity: Severity,
             implementation: Implementation
         ): Issue {
+            val platforms = computePlatforms(null, implementation)
             return Issue(
                 id, briefDescription, explanation, category, priority,
-                severity, implementation
+                severity, platforms, null, implementation
             )
         }
 
@@ -272,6 +351,10 @@ class Issue private constructor(
          * @param priority the priority, a number from 1 to 10 with 10 being most
          * important/severe
          * @param severity the default severity of the issue
+         * @param androidSpecific true if this issue only applies to Android, false if it does
+         *     not apply to Android at all, and null if not specified or should run on all
+         *     platforms. Convenience for specifying platforms=[ANDROID].
+         *     @param platforms Set of platform scopes where this issue applies.
          * @return a new [Issue]
          */
         fun create(
@@ -283,11 +366,15 @@ class Issue private constructor(
             category: Category = Category.CORRECTNESS,
             priority: Int = 5,
             severity: Severity = Severity.WARNING,
-            enabledByDefault: Boolean = true
+            enabledByDefault: Boolean = true,
+            androidSpecific: Boolean? = null,
+            platforms: EnumSet<Platform>? = null,
+            suppressAnnotations: Collection<String>? = null
         ): Issue {
+            val applicablePlatforms = platforms ?: computePlatforms(androidSpecific, implementation)
             val issue = Issue(
                 id, briefDescription, explanation, category, priority,
-                severity, implementation
+                severity, applicablePlatforms, suppressAnnotations, implementation
             )
             if (moreInfo != null) {
                 issue.addMoreInfo(moreInfo)
@@ -297,6 +384,25 @@ class Issue private constructor(
             }
 
             return issue
+        }
+
+        private fun computePlatforms(
+            androidSpecific: Boolean?,
+            implementation: Implementation
+        ): EnumSet<Platform> {
+            val android = androidSpecific ?: scopeImpliesAndroid(implementation.scope)
+            return when {
+                android -> Platform.ANDROID_SET
+                androidSpecific == false -> Platform.JDK_SET
+                else -> Platform.UNSPECIFIED
+            }
+        }
+
+        private fun scopeImpliesAndroid(scope: EnumSet<Scope>): Boolean {
+            return scope.contains(Scope.MANIFEST) ||
+                    scope.contains(Scope.RESOURCE_FILE) ||
+                    scope.contains(Scope.BINARY_RESOURCE_FILE) ||
+                    scope.contains(Scope.ALL_RESOURCE_FILES)
         }
     }
 }

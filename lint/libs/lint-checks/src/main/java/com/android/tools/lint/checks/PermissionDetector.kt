@@ -482,6 +482,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             category = Category.SECURITY,
             priority = 6,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -502,6 +503,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 9,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
     }

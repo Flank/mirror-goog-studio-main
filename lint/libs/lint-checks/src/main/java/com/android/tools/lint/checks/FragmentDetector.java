@@ -63,7 +63,8 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
                             Severity.ERROR,
                             new Implementation(FragmentDetector.class, Scope.JAVA_FILE_SCOPE))
                     .addMoreInfo(
-                            "http://developer.android.com/reference/android/app/Fragment.html#Fragment()");
+                            "http://developer.android.com/reference/android/app/Fragment.html#Fragment()")
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link FragmentDetector} */
     public FragmentDetector() {}

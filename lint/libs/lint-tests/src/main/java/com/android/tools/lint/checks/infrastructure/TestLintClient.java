@@ -372,6 +372,9 @@ public class TestLintClient extends LintCliClient {
                 mocker.setVariantName(task.variantName);
             }
         }
+        if (task.baselineFile != null) {
+            flags.setBaselineFile(task.baselineFile);
+        }
         if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
             description.type(ProjectDescription.Type.JAVA);
         }

@@ -53,7 +53,8 @@ public class MathDetector extends Detector implements SourceCodeScanner {
                             Severity.WARNING,
                             new Implementation(MathDetector.class, Scope.JAVA_FILE_SCOPE))
                     .addMoreInfo(
-                            "http://developer.android.com/guide/practices/design/performance.html#avoidfloat");
+                            "http://developer.android.com/guide/practices/design/performance.html#avoidfloat")
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link MathDetector} check */
     public MathDetector() {}

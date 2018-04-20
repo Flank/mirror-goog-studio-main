@@ -86,51 +86,55 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
     /** Problems with missing recycle calls */
     public static final Issue RECYCLE_RESOURCE =
             Issue.create(
-                    "Recycle",
-                    "Missing `recycle()` calls",
-                    "Many resources, such as TypedArrays, VelocityTrackers, etc., "
-                            + "should be recycled (with a `recycle()` call) after use. This lint check looks "
-                            + "for missing `recycle()` calls.",
-                    Category.PERFORMANCE,
-                    7,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "Recycle",
+                            "Missing `recycle()` calls",
+                            "Many resources, such as TypedArrays, VelocityTrackers, etc., "
+                                    + "should be recycled (with a `recycle()` call) after use. This lint check looks "
+                                    + "for missing `recycle()` calls.",
+                            Category.PERFORMANCE,
+                            7,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Problems with missing commit calls. */
     public static final Issue COMMIT_FRAGMENT =
             Issue.create(
-                    "CommitTransaction",
-                    "Missing `commit()` calls",
-                    "After creating a `FragmentTransaction`, you typically need to commit it as well",
-                    Category.CORRECTNESS,
-                    7,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "CommitTransaction",
+                            "Missing `commit()` calls",
+                            "After creating a `FragmentTransaction`, you typically need to commit it as well",
+                            Category.CORRECTNESS,
+                            7,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Failing to commit a shared preference */
     public static final Issue SHARED_PREF =
             Issue.create(
-                    "CommitPrefEdits",
-                    "Missing `commit()` on `SharedPreference` editor",
-                    "After calling `edit()` on a `SharedPreference`, you must call `commit()` "
-                            + "or `apply()` on the editor to save the results.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "CommitPrefEdits",
+                            "Missing `commit()` on `SharedPreference` editor",
+                            "After calling `edit()` on a `SharedPreference`, you must call `commit()` "
+                                    + "or `apply()` on the editor to save the results.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Using commit instead of apply on a shared preference */
     public static final Issue APPLY_SHARED_PREF =
             Issue.create(
-                    "ApplySharedPref",
-                    "Use `apply()` on `SharedPreferences`",
-                    "Consider using `apply()` instead of `commit` on shared preferences. Whereas "
-                            + "`commit` blocks and writes its data to persistent storage immediately, "
-                            + "`apply` will handle it in the background.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "ApplySharedPref",
+                            "Use `apply()` on `SharedPreferences`",
+                            "Consider using `apply()` instead of `commit` on shared preferences. Whereas "
+                                    + "`commit` blocks and writes its data to persistent storage immediately, "
+                                    + "`apply` will handle it in the background.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(CleanupDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     // Target method names
     private static final String RECYCLE = "recycle";

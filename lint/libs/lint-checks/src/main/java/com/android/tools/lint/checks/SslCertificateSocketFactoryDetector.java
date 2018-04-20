@@ -40,36 +40,38 @@ public class SslCertificateSocketFactoryDetector extends Detector implements Sou
 
     public static final Issue CREATE_SOCKET =
             Issue.create(
-                    "SSLCertificateSocketFactoryCreateSocket",
-                    "Insecure call to `SSLCertificateSocketFactory.createSocket()`",
-                    "When `SSLCertificateSocketFactory.createSocket()` is called with an `InetAddress` "
-                            + "as the first parameter, TLS/SSL hostname verification is not performed, which "
-                            + "could result in insecure network traffic caused by trusting arbitrary "
-                            + "hostnames in TLS/SSL certificates presented by peers. In this case, developers "
-                            + "must ensure that the `InetAddress` is explicitly verified against the certificate "
-                            + "through other means, such as by calling "
-                            + "`SSLCertificateSocketFactory.getDefaultHostnameVerifier() to get a "
-                            + "`HostnameVerifier` and calling `HostnameVerifier.verify()`.",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION_JAVA);
+                            "SSLCertificateSocketFactoryCreateSocket",
+                            "Insecure call to `SSLCertificateSocketFactory.createSocket()`",
+                            "When `SSLCertificateSocketFactory.createSocket()` is called with an `InetAddress` "
+                                    + "as the first parameter, TLS/SSL hostname verification is not performed, which "
+                                    + "could result in insecure network traffic caused by trusting arbitrary "
+                                    + "hostnames in TLS/SSL certificates presented by peers. In this case, developers "
+                                    + "must ensure that the `InetAddress` is explicitly verified against the certificate "
+                                    + "through other means, such as by calling "
+                                    + "`SSLCertificateSocketFactory.getDefaultHostnameVerifier() to get a "
+                                    + "`HostnameVerifier` and calling `HostnameVerifier.verify()`.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION_JAVA)
+                    .setAndroidSpecific(true);
 
     public static final Issue GET_INSECURE =
             Issue.create(
-                    "SSLCertificateSocketFactoryGetInsecure",
-                    "Call to `SSLCertificateSocketFactory.getInsecure()`",
-                    "The `SSLCertificateSocketFactory.getInsecure()` method returns "
-                            + "an SSLSocketFactory with all TLS/SSL security checks disabled, which "
-                            + "could result in insecure network traffic caused by trusting arbitrary "
-                            + "TLS/SSL certificates presented by peers. This method should be "
-                            + "avoided unless needed for a special circumstance such as "
-                            + "debugging. Instead, `SSLCertificateSocketFactory.getDefault()` "
-                            + "should be used.",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION_JAVA);
+                            "SSLCertificateSocketFactoryGetInsecure",
+                            "Call to `SSLCertificateSocketFactory.getInsecure()`",
+                            "The `SSLCertificateSocketFactory.getInsecure()` method returns "
+                                    + "an SSLSocketFactory with all TLS/SSL security checks disabled, which "
+                                    + "could result in insecure network traffic caused by trusting arbitrary "
+                                    + "TLS/SSL certificates presented by peers. This method should be "
+                                    + "avoided unless needed for a special circumstance such as "
+                                    + "debugging. Instead, `SSLCertificateSocketFactory.getDefault()` "
+                                    + "should be used.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION_JAVA)
+                    .setAndroidSpecific(true);
 
     private static final String INET_ADDRESS_CLASS = "java.net.InetAddress";
 

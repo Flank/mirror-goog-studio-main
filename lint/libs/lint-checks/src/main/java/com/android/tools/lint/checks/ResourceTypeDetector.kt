@@ -573,6 +573,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 7,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -591,6 +592,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 7,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 
@@ -606,6 +608,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 7,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
     }

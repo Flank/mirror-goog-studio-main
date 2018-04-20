@@ -46,16 +46,17 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
 
     public static final Issue ISSUE =
             Issue.create(
-                    "AllowAllHostnameVerifier",
-                    "Insecure HostnameVerifier",
-                    "This check looks for use of HostnameVerifier implementations "
-                            + "whose `verify` method always returns true (thus trusting any hostname) "
-                            + "which could result in insecure network traffic caused by trusting arbitrary "
-                            + "hostnames in TLS/SSL certificates presented by peers.",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "AllowAllHostnameVerifier",
+                            "Insecure HostnameVerifier",
+                            "This check looks for use of HostnameVerifier implementations "
+                                    + "whose `verify` method always returns true (thus trusting any hostname) "
+                                    + "which could result in insecure network traffic caused by trusting arbitrary "
+                                    + "hostnames in TLS/SSL certificates presented by peers.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     // ---- implements SourceCodeScanner ----
 

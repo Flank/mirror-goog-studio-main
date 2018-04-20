@@ -76,6 +76,7 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
                             new Implementation(RegistrationDetector.class, Scope.JAVA_FILE_SCOPE))
                     .addMoreInfo(
                             "http://developer.android.com/guide/topics/manifest/manifest-intro.html")
+                    .setAndroidSpecific(true)
                     // Temporary workaround for https://code.google.com/p/android/issues/detail?id=227579
                     // The real solution is to have a merged manifest, which is coming
                     .setEnabledByDefault(false);

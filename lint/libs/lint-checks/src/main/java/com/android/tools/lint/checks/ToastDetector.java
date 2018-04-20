@@ -47,14 +47,15 @@ public class ToastDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
             Issue.create(
-                    "ShowToast",
-                    "Toast created but not shown",
-                    "`Toast.makeText()` creates a `Toast` but does **not** show it. You must call "
-                            + "`show()` on the resulting object to actually make the `Toast` appear.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(ToastDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "ShowToast",
+                            "Toast created but not shown",
+                            "`Toast.makeText()` creates a `Toast` but does **not** show it. You must call "
+                                    + "`show()` on the resulting object to actually make the `Toast` appear.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(ToastDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link ToastDetector} check */
     public ToastDetector() {}

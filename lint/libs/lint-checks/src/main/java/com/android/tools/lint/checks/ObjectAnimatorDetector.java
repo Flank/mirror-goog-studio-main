@@ -78,33 +78,35 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
     /** Missing @Keep */
     public static final Issue MISSING_KEEP =
             Issue.create(
-                    "AnimatorKeep",
-                    "Missing @Keep for Animated Properties",
-                    "When you use property animators, properties can be accessed via reflection. "
-                            + "Those methods should be annotated with @Keep to ensure that during "
-                            + "release builds, the methods are not potentially treated as unused "
-                            + "and removed, or treated as internal only and get renamed to something "
-                            + "shorter.\n"
-                            + "\n"
-                            + "This check will also flag other potential reflection problems it "
-                            + "encounters, such as a missing property, wrong argument types, etc.",
-                    Category.PERFORMANCE,
-                    4,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "AnimatorKeep",
+                            "Missing @Keep for Animated Properties",
+                            "When you use property animators, properties can be accessed via reflection. "
+                                    + "Those methods should be annotated with @Keep to ensure that during "
+                                    + "release builds, the methods are not potentially treated as unused "
+                                    + "and removed, or treated as internal only and get renamed to something "
+                                    + "shorter.\n"
+                                    + "\n"
+                                    + "This check will also flag other potential reflection problems it "
+                                    + "encounters, such as a missing property, wrong argument types, etc.",
+                            Category.PERFORMANCE,
+                            4,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Incorrect ObjectAnimator binding */
     public static final Issue BROKEN_PROPERTY =
             Issue.create(
-                    "ObjectAnimatorBinding",
-                    "Incorrect ObjectAnimator Property",
-                    "This check cross references properties referenced by String from `ObjectAnimator` "
-                            + "and `PropertyValuesHolder` method calls and ensures that the corresponding "
-                            + "setter methods exist and have the right signatures.",
-                    Category.CORRECTNESS,
-                    4,
-                    Severity.ERROR,
-                    IMPLEMENTATION);
+                            "ObjectAnimatorBinding",
+                            "Incorrect ObjectAnimator Property",
+                            "This check cross references properties referenced by String from `ObjectAnimator` "
+                                    + "and `PropertyValuesHolder` method calls and ensures that the corresponding "
+                                    + "setter methods exist and have the right signatures.",
+                            Category.CORRECTNESS,
+                            4,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /**
      * Multiple properties might all point back to the same setter; we don't want to highlight these

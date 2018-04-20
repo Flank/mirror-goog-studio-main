@@ -53,19 +53,20 @@ public class WrongImportDetector extends Detector implements SourceCodeScanner {
     /** Is android.R being imported? */
     public static final Issue ISSUE =
             Issue.create(
-                    "SuspiciousImport",
-                    "'`import android.R`' statement",
-                    "Importing `android.R` is usually not intentional; it sometimes happens when "
-                            + "you use an IDE and ask it to automatically add imports at a time when your "
-                            + "project's R class it not present.\n"
-                            + "\n"
-                            + "Once the import is there you might get a lot of \"confusing\" error messages "
-                            + "because of course the fields available on `android.R` are not the ones you'd "
-                            + "expect from just looking at your own `R` class.",
-                    Category.CORRECTNESS,
-                    9,
-                    Severity.WARNING,
-                    new Implementation(WrongImportDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "SuspiciousImport",
+                            "'`import android.R`' statement",
+                            "Importing `android.R` is usually not intentional; it sometimes happens when "
+                                    + "you use an IDE and ask it to automatically add imports at a time when your "
+                                    + "project's R class it not present.\n"
+                                    + "\n"
+                                    + "Once the import is there you might get a lot of \"confusing\" error messages "
+                                    + "because of course the fields available on `android.R` are not the ones you'd "
+                                    + "expect from just looking at your own `R` class.",
+                            Category.CORRECTNESS,
+                            9,
+                            Severity.WARNING,
+                            new Implementation(WrongImportDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link WrongImportDetector} check */
     public WrongImportDetector() {}

@@ -96,39 +96,42 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                                             Scope.RESOURCE_FILE)))
                     .addMoreInfo(
                             "http://developer.android.com/guide/topics/manifest/manifest-intro.html")
+                    .setAndroidSpecific(true)
                     // Until http://b.android.com/229868 is fixed
                     .setEnabledByDefault(false);
 
     /** Are activity, service, receiver etc subclasses instantiatable? */
     public static final Issue INSTANTIATABLE =
             Issue.create(
-                    "Instantiatable",
-                    "Registered class is not instantiatable",
-                    "Activities, services, broadcast receivers etc. registered in the manifest file "
-                            + "(or for custom views, in a layout file) "
-                            + "must be \"instantiatable\" by the system, which means that the class must be "
-                            + "public, it must have an empty public constructor, and if it's an inner class, "
-                            + "it must be a static inner class.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.FATAL,
-                    new Implementation(MissingClassDetector.class, Scope.CLASS_FILE_SCOPE));
+                            "Instantiatable",
+                            "Registered class is not instantiatable",
+                            "Activities, services, broadcast receivers etc. registered in the manifest file "
+                                    + "(or for custom views, in a layout file) "
+                                    + "must be \"instantiatable\" by the system, which means that the class must be "
+                                    + "public, it must have an empty public constructor, and if it's an inner class, "
+                                    + "it must be a static inner class.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.FATAL,
+                            new Implementation(MissingClassDetector.class, Scope.CLASS_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Is the right character used for inner class separators? */
     public static final Issue INNERCLASS =
             Issue.create(
-                    "InnerclassSeparator",
-                    "Inner classes should use `$` rather than `.`",
-                    "When you reference an inner class in a manifest file, you must use '$' instead of "
-                            + "'.' as the separator character, i.e. Outer$Inner instead of Outer.Inner.\n"
-                            + "\n"
-                            + "(If you get this warning for a class which is not actually an inner class, it's "
-                            + "because you are using uppercase characters in your package name, which is not "
-                            + "conventional.)",
-                    Category.CORRECTNESS,
-                    3,
-                    Severity.WARNING,
-                    new Implementation(MissingClassDetector.class, Scope.MANIFEST_SCOPE));
+                            "InnerclassSeparator",
+                            "Inner classes should use `$` rather than `.`",
+                            "When you reference an inner class in a manifest file, you must use '$' instead of "
+                                    + "'.' as the separator character, i.e. Outer$Inner instead of Outer.Inner.\n"
+                                    + "\n"
+                                    + "(If you get this warning for a class which is not actually an inner class, it's "
+                                    + "because you are using uppercase characters in your package name, which is not "
+                                    + "conventional.)",
+                            Category.CORRECTNESS,
+                            3,
+                            Severity.WARNING,
+                            new Implementation(MissingClassDetector.class, Scope.MANIFEST_SCOPE))
+                    .setAndroidSpecific(true);
 
     private Map<String, Location.Handle> mReferencedClasses;
     private Set<String> mCustomViews;

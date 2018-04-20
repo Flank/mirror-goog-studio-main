@@ -806,6 +806,52 @@ class ProjectInitializerTest {
         )
     }
 
+    @Test
+    fun testNonAndroidProject() {
+        val root = temp.newFolder()
+        val projects = lint().files(
+            java(
+                "C.java", """
+                    @SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+                    public class C {
+                      String path = "/sdcard/file";
+                    }"""
+            ).indented()
+        ).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor = """
+            <project incomplete="true">
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir" />
+            <module name="M" android="false" library="true">
+                <src file="C.java" />
+            </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "project.xml")
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            """
+            No issues found.
+            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
     companion object {
         @ClassRule
         @JvmField

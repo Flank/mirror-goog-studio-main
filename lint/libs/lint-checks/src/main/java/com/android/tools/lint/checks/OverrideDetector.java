@@ -50,22 +50,24 @@ public class OverrideDetector extends Detector implements ClassScanner {
     /** Accidental overrides */
     public static final Issue ISSUE =
             Issue.create(
-                    "DalvikOverride",
-                    "Method considered overridden by Dalvik",
-                    "The Android virtual machine will treat a package private method in one "
-                            + "class as overriding a package private method in its super class, even if "
-                            + "they are in separate packages. This may be surprising, but for compatibility "
-                            + "reasons the behavior has not been changed (yet).\n"
-                            + "\n"
-                            + "If you really did intend for this method to override the other, make the "
-                            + "method `protected` instead.\n"
-                            + "\n"
-                            + "If you did **not** intend the override, consider making the method private, or "
-                            + "changing its name or signature.",
-                    Category.CORRECTNESS,
-                    7,
-                    Severity.ERROR,
-                    new Implementation(OverrideDetector.class, EnumSet.of(Scope.ALL_CLASS_FILES)));
+                            "DalvikOverride",
+                            "Method considered overridden by Dalvik",
+                            "The Android virtual machine will treat a package private method in one "
+                                    + "class as overriding a package private method in its super class, even if "
+                                    + "they are in separate packages. This may be surprising, but for compatibility "
+                                    + "reasons the behavior has not been changed (yet).\n"
+                                    + "\n"
+                                    + "If you really did intend for this method to override the other, make the "
+                                    + "method `protected` instead.\n"
+                                    + "\n"
+                                    + "If you did **not** intend the override, consider making the method private, or "
+                                    + "changing its name or signature.",
+                            Category.CORRECTNESS,
+                            7,
+                            Severity.ERROR,
+                            new Implementation(
+                                    OverrideDetector.class, EnumSet.of(Scope.ALL_CLASS_FILES)))
+                    .setAndroidSpecific(true);
 
     /** map from owner class name to JVM signatures for its package private methods */
     private final Map<String, Set<String>> mPackagePrivateMethods = Maps.newHashMap();

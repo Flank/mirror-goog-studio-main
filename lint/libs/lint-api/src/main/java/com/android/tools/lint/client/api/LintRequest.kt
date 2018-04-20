@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.google.common.annotations.Beta
@@ -49,6 +50,9 @@ open class LintRequest(
     protected var scope: EnumSet<Scope>? = null
 
     @JvmField
+    protected var platform: EnumSet<Platform>? = null
+
+    @JvmField
     protected var releaseMode: Boolean? = null
 
     /**
@@ -63,7 +67,7 @@ open class LintRequest(
     protected var projects: Collection<Project>? = null
 
     /**
-     * Sets the scope to use; lint checks which require a wider scope set
+     * Gets the scope to use; lint checks which require a wider scope set
      * will be ignored
      *
      * @return the scope to use, or null to use the default
@@ -80,6 +84,23 @@ open class LintRequest(
      */
     fun setScope(scope: EnumSet<Scope>?): LintRequest {
         this.scope = scope
+        return this
+    }
+
+    /**
+     * Gets the platforms that apply to this lint analysis
+     *
+     * @return the platforms to use, or null to use the default
+     */
+    open fun getPlatform(): EnumSet<Platform>? = platform
+
+    /**
+     * Sets the platforms that apply to this lint analysis
+     *
+     * @return this, for constructor chaining
+     */
+    fun setPlatform(platform: EnumSet<Platform>?): LintRequest {
+        this.platform = platform
         return this
     }
 

@@ -16,14 +16,9 @@
 
 package com.android.tools.lint.gradle
 
-import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.BuiltinIssueRegistry
-import com.android.tools.lint.checks.InvalidPackageDetector
-import com.android.tools.lint.checks.PrivateApiDetector
 import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Scope
-import com.google.common.collect.Sets
 import java.util.ArrayList
 
 class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
@@ -34,7 +29,7 @@ class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
                 val sIssues = super.issues
                 val result = ArrayList<Issue>(sIssues.size)
                 for (issue in sIssues) {
-                    if (!isAndroidSpecific(issue)) {
+                    if (!issue.isAndroidSpecific()) {
                         result.add(issue)
                     }
                 }
@@ -48,23 +43,5 @@ class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
 
     companion object {
         private var ourFilteredIssues: List<Issue>? = null
-
-        private val ANDROID_SPECIFIC_CHECKS = Sets.newHashSet(
-            // Issues that don't include manifest or resource checking in their
-            // scope but nevertheless are Android specific
-            ApiDetector.INLINED,
-            ApiDetector.OVERRIDE,
-            ApiDetector.OBSOLETE_SDK,
-            InvalidPackageDetector.ISSUE,
-            PrivateApiDetector.ISSUE
-        )
-
-        private fun isAndroidSpecific(issue: Issue): Boolean {
-            val scope = issue.implementation.scope
-            return scope.contains(Scope.MANIFEST) ||
-                    scope.contains(Scope.RESOURCE_FILE) ||
-                    scope.contains(Scope.ALL_RESOURCE_FILES) ||
-                    ANDROID_SPECIFIC_CHECKS.contains(issue)
-        }
     }
 }

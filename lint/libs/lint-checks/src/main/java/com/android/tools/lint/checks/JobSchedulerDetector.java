@@ -74,7 +74,8 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("https://developer.android.com/topic/performance/scheduling.html");
+                    .addMoreInfo("https://developer.android.com/topic/performance/scheduling.html")
+                    .setAndroidSpecific(true);
 
     private static final String CLASS_JOB_SERVICE = "android.app.job.JobService";
 

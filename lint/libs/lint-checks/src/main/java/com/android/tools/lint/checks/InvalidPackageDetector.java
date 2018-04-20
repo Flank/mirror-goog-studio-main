@@ -47,25 +47,27 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
     /** Accessing an invalid package */
     public static final Issue ISSUE =
             Issue.create(
-                    "InvalidPackage",
-                    "Package not included in Android",
-                    "This check scans through libraries looking for calls to APIs that are not included "
-                            + "in Android.\n"
-                            + "\n"
-                            + "When you create Android projects, the classpath is set up such that you can only "
-                            + "access classes in the API packages that are included in Android. However, if you "
-                            + "add other projects to your libs/ folder, there is no guarantee that those .jar "
-                            + "files were built with an Android specific classpath, and in particular, they "
-                            + "could be accessing unsupported APIs such as java.applet.\n"
-                            + "\n"
-                            + "This check scans through library jars and looks for references to API packages "
-                            + "that are not included in Android and flags these. This is only an error if your "
-                            + "code calls one of the library classes which wind up referencing the unsupported "
-                            + "package.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    new Implementation(InvalidPackageDetector.class, Scope.JAVA_LIBRARY_SCOPE));
+                            "InvalidPackage",
+                            "Package not included in Android",
+                            "This check scans through libraries looking for calls to APIs that are not included "
+                                    + "in Android.\n"
+                                    + "\n"
+                                    + "When you create Android projects, the classpath is set up such that you can only "
+                                    + "access classes in the API packages that are included in Android. However, if you "
+                                    + "add other projects to your libs/ folder, there is no guarantee that those .jar "
+                                    + "files were built with an Android specific classpath, and in particular, they "
+                                    + "could be accessing unsupported APIs such as java.applet.\n"
+                                    + "\n"
+                                    + "This check scans through library jars and looks for references to API packages "
+                                    + "that are not included in Android and flags these. This is only an error if your "
+                                    + "code calls one of the library classes which wind up referencing the unsupported "
+                                    + "package.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(
+                                    InvalidPackageDetector.class, Scope.JAVA_LIBRARY_SCOPE))
+                    .setAndroidSpecific(true);
 
     private static final String JAVA_PKG_PREFIX = "java/";
     private static final String JAVAX_PKG_PREFIX = "javax/";

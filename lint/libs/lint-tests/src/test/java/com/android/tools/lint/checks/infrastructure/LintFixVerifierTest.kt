@@ -140,6 +140,7 @@ class LintFixVerifierTest {
             val ISSUE_ASSERTJ_IMPORT = Issue.create(
                 id = "_AssertjImport",
                 briefDescription = "Flags Java 6 incompatible imports.",
+                // Not great grammar but just a unit test, not an issue shown to users:
                 explanation = "Importing org.assertj.core.api.Assertions is not ideal. " +
                         "Since it can require Java 8. It's simple as " +
                         "instead org.assertj.core.api.Java6Assertions can be imported " +

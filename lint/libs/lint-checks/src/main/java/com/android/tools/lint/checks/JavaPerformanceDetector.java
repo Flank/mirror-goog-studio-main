@@ -86,42 +86,44 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
     /** Allocating objects during a paint method */
     public static final Issue PAINT_ALLOC =
             Issue.create(
-                    "DrawAllocation",
-                    "Memory allocations within drawing code",
-                    "You should avoid allocating objects during a drawing or layout operation. These "
-                            + "are called frequently, so a smooth UI can be interrupted by garbage collection "
-                            + "pauses caused by the object allocations.\n"
-                            + "\n"
-                            + "The way this is generally handled is to allocate the needed objects up front "
-                            + "and to reuse them for each drawing operation.\n"
-                            + "\n"
-                            + "Some methods allocate memory on your behalf (such as `Bitmap.create`), and these "
-                            + "should be handled in the same way.",
-                    Category.PERFORMANCE,
-                    9,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "DrawAllocation",
+                            "Memory allocations within drawing code",
+                            "You should avoid allocating objects during a drawing or layout operation. These "
+                                    + "are called frequently, so a smooth UI can be interrupted by garbage collection "
+                                    + "pauses caused by the object allocations.\n"
+                                    + "\n"
+                                    + "The way this is generally handled is to allocate the needed objects up front "
+                                    + "and to reuse them for each drawing operation.\n"
+                                    + "\n"
+                                    + "Some methods allocate memory on your behalf (such as `Bitmap.create`), and these "
+                                    + "should be handled in the same way.",
+                            Category.PERFORMANCE,
+                            9,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Using HashMaps where SparseArray would be better */
     public static final Issue USE_SPARSE_ARRAY =
             Issue.create(
-                    "UseSparseArrays",
-                    "HashMap can be replaced with SparseArray",
-                    "For maps where the keys are of type integer, it's typically more efficient to "
-                            + "use the Android `SparseArray` API. This check identifies scenarios where you might "
-                            + "want to consider using `SparseArray` instead of `HashMap` for better performance.\n"
-                            + "\n"
-                            + "This is **particularly** useful when the value types are primitives like ints, "
-                            + "where you can use `SparseIntArray` and avoid auto-boxing the values from `int` to "
-                            + "`Integer`.\n"
-                            + "\n"
-                            + "If you need to construct a `HashMap` because you need to call an API outside of "
-                            + "your control which requires a `Map`, you can suppress this warning using for "
-                            + "example the `@SuppressLint` annotation.",
-                    Category.PERFORMANCE,
-                    4,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "UseSparseArrays",
+                            "HashMap can be replaced with SparseArray",
+                            "For maps where the keys are of type integer, it's typically more efficient to "
+                                    + "use the Android `SparseArray` API. This check identifies scenarios where you might "
+                                    + "want to consider using `SparseArray` instead of `HashMap` for better performance.\n"
+                                    + "\n"
+                                    + "This is **particularly** useful when the value types are primitives like ints, "
+                                    + "where you can use `SparseIntArray` and avoid auto-boxing the values from `int` to "
+                                    + "`Integer`.\n"
+                                    + "\n"
+                                    + "If you need to construct a `HashMap` because you need to call an API outside of "
+                                    + "your control which requires a `Map`, you can suppress this warning using for "
+                                    + "example the `@SuppressLint` annotation.",
+                            Category.PERFORMANCE,
+                            4,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     /** Using {@code new Integer()} instead of the more efficient {@code Integer.valueOf} */
     public static final Issue USE_VALUE_OF =

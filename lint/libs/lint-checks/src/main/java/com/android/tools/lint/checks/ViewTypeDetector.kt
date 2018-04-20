@@ -611,6 +611,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 9,
             severity = Severity.ERROR,
+            androidSpecific = true,
             implementation = Implementation(
                 ViewTypeDetector::class.java,
                 EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES),
@@ -635,6 +636,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 9,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = Implementation(ViewTypeDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
 

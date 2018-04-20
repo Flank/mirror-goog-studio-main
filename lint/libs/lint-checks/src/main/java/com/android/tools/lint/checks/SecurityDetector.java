@@ -79,115 +79,123 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     /** Exported services */
     public static final Issue EXPORTED_SERVICE =
             Issue.create(
-                    "ExportedService",
-                    "Exported service does not require permission",
-                    "Exported services (services which either set `exported=true` or contain "
-                            + "an intent-filter and do not specify `exported=false`) should define a "
-                            + "permission that an entity must have in order to launch the service "
-                            + "or bind to it. Without this, any application can use this service.",
-                    Category.SECURITY,
-                    5,
-                    Severity.WARNING,
-                    IMPLEMENTATION_MANIFEST);
+                            "ExportedService",
+                            "Exported service does not require permission",
+                            "Exported services (services which either set `exported=true` or contain "
+                                    + "an intent-filter and do not specify `exported=false`) should define a "
+                                    + "permission that an entity must have in order to launch the service "
+                                    + "or bind to it. Without this, any application can use this service.",
+                            Category.SECURITY,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION_MANIFEST)
+                    .setAndroidSpecific(true);
 
     /** Exported content providers */
     public static final Issue EXPORTED_PROVIDER =
             Issue.create(
-                    "ExportedContentProvider",
-                    "Content provider does not require permission",
-                    "Content providers are exported by default and any application on the "
-                            + "system can potentially use them to read and write data. If the content "
-                            + "provider provides access to sensitive data, it should be protected by "
-                            + "specifying `export=false` in the manifest or by protecting it with a "
-                            + "permission that can be granted to other applications.",
-                    Category.SECURITY,
-                    5,
-                    Severity.WARNING,
-                    IMPLEMENTATION_MANIFEST);
+                            "ExportedContentProvider",
+                            "Content provider does not require permission",
+                            "Content providers are exported by default and any application on the "
+                                    + "system can potentially use them to read and write data. If the content "
+                                    + "provider provides access to sensitive data, it should be protected by "
+                                    + "specifying `export=false` in the manifest or by protecting it with a "
+                                    + "permission that can be granted to other applications.",
+                            Category.SECURITY,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION_MANIFEST)
+                    .setAndroidSpecific(true);
 
     /** Exported receivers */
     public static final Issue EXPORTED_RECEIVER =
             Issue.create(
-                    "ExportedReceiver",
-                    "Receiver does not require permission",
-                    "Exported receivers (receivers which either set `exported=true` or contain "
-                            + "an intent-filter and do not specify `exported=false`) should define a "
-                            + "permission that an entity must have in order to launch the receiver "
-                            + "or bind to it. Without this, any application can use this receiver.",
-                    Category.SECURITY,
-                    5,
-                    Severity.WARNING,
-                    IMPLEMENTATION_MANIFEST);
+                            "ExportedReceiver",
+                            "Receiver does not require permission",
+                            "Exported receivers (receivers which either set `exported=true` or contain "
+                                    + "an intent-filter and do not specify `exported=false`) should define a "
+                                    + "permission that an entity must have in order to launch the receiver "
+                                    + "or bind to it. Without this, any application can use this receiver.",
+                            Category.SECURITY,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION_MANIFEST)
+                    .setAndroidSpecific(true);
 
     /** Content provides which grant all URIs access */
     public static final Issue OPEN_PROVIDER =
             Issue.create(
-                    "GrantAllUris",
-                    "Content provider shares everything",
-                    "The `<grant-uri-permission>` element allows specific paths to be shared. "
-                            + "This detector checks for a path URL of just '/' (everything), which is "
-                            + "probably not what you want; you should limit access to a subset.",
-                    Category.SECURITY,
-                    7,
-                    Severity.WARNING,
-                    IMPLEMENTATION_MANIFEST);
+                            "GrantAllUris",
+                            "Content provider shares everything",
+                            "The `<grant-uri-permission>` element allows specific paths to be shared. "
+                                    + "This detector checks for a path URL of just '/' (everything), which is "
+                                    + "probably not what you want; you should limit access to a subset.",
+                            Category.SECURITY,
+                            7,
+                            Severity.WARNING,
+                            IMPLEMENTATION_MANIFEST)
+                    .setAndroidSpecific(true);
 
     /** Using java.io.File.setReadable(true, false) to set file world-readable */
     public static final Issue SET_READABLE =
             Issue.create(
-                    "SetWorldReadable",
-                    "`File.setReadable()` used to make file world-readable",
-                    "Setting files world-readable is very dangerous, and likely to cause security "
-                            + "holes in applications. It is strongly discouraged; instead, applications should "
-                            + "use more formal mechanisms for interactions such as `ContentProvider`, "
-                            + "`BroadcastReceiver`, and `Service`.",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION_JAVA);
+                            "SetWorldReadable",
+                            "`File.setReadable()` used to make file world-readable",
+                            "Setting files world-readable is very dangerous, and likely to cause security "
+                                    + "holes in applications. It is strongly discouraged; instead, applications should "
+                                    + "use more formal mechanisms for interactions such as `ContentProvider`, "
+                                    + "`BroadcastReceiver`, and `Service`.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION_JAVA)
+                    .setAndroidSpecific(true);
 
     /** Using java.io.File.setWritable(true, false) to set file world-writable */
     public static final Issue SET_WRITABLE =
             Issue.create(
-                    "SetWorldWritable",
-                    "`File.setWritable()` used to make file world-writable",
-                    "Setting files world-writable is very dangerous, and likely to cause security "
-                            + "holes in applications. It is strongly discouraged; instead, applications should "
-                            + "use more formal mechanisms for interactions such as `ContentProvider`, "
-                            + "`BroadcastReceiver`, and `Service`.",
-                    Category.SECURITY,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION_JAVA);
+                            "SetWorldWritable",
+                            "`File.setWritable()` used to make file world-writable",
+                            "Setting files world-writable is very dangerous, and likely to cause security "
+                                    + "holes in applications. It is strongly discouraged; instead, applications should "
+                                    + "use more formal mechanisms for interactions such as `ContentProvider`, "
+                                    + "`BroadcastReceiver`, and `Service`.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION_JAVA)
+                    .setAndroidSpecific(true);
 
     /** Using the world-writable flag */
     public static final Issue WORLD_WRITEABLE =
             Issue.create(
-                    "WorldWriteableFiles",
-                    "`openFileOutput()` or similar call passing `MODE_WORLD_WRITEABLE`",
-                    "There are cases where it is appropriate for an application to write "
-                            + "world writeable files, but these should be reviewed carefully to "
-                            + "ensure that they contain no private data, and that if the file is "
-                            + "modified by a malicious application it does not trick or compromise "
-                            + "your application.",
-                    Category.SECURITY,
-                    4,
-                    Severity.WARNING,
-                    IMPLEMENTATION_JAVA);
+                            "WorldWriteableFiles",
+                            "`openFileOutput()` or similar call passing `MODE_WORLD_WRITEABLE`",
+                            "There are cases where it is appropriate for an application to write "
+                                    + "world writeable files, but these should be reviewed carefully to "
+                                    + "ensure that they contain no private data, and that if the file is "
+                                    + "modified by a malicious application it does not trick or compromise "
+                                    + "your application.",
+                            Category.SECURITY,
+                            4,
+                            Severity.WARNING,
+                            IMPLEMENTATION_JAVA)
+                    .setAndroidSpecific(true);
 
     /** Using the world-readable flag */
     public static final Issue WORLD_READABLE =
             Issue.create(
-                    "WorldReadableFiles",
-                    "`openFileOutput()` or similar call passing `MODE_WORLD_READABLE`",
-                    "There are cases where it is appropriate for an application to write "
-                            + "world readable files, but these should be reviewed carefully to "
-                            + "ensure that they contain no private data that is leaked to other "
-                            + "applications.",
-                    Category.SECURITY,
-                    4,
-                    Severity.WARNING,
-                    IMPLEMENTATION_JAVA);
+                            "WorldReadableFiles",
+                            "`openFileOutput()` or similar call passing `MODE_WORLD_READABLE`",
+                            "There are cases where it is appropriate for an application to write "
+                                    + "world readable files, but these should be reviewed carefully to "
+                                    + "ensure that they contain no private data that is leaked to other "
+                                    + "applications.",
+                            Category.SECURITY,
+                            4,
+                            Severity.WARNING,
+                            IMPLEMENTATION_JAVA)
+                    .setAndroidSpecific(true);
 
     private static final String FILE_CLASS = "java.io.File";
 

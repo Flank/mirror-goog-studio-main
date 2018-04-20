@@ -65,6 +65,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = Implementation(
                 AssertDetector::class.java,
                 Scope.JAVA_FILE_SCOPE

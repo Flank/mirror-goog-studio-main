@@ -91,34 +91,36 @@ public class LocaleFolderDetector extends Detector
                             6,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://developer.android.com/reference/java/util/Locale.html");
+                    .addMoreInfo("http://developer.android.com/reference/java/util/Locale.html")
+                    .setAndroidSpecific(true);
 
     /** Using a region that might not be a match for the given language */
     public static final Issue WRONG_REGION =
             Issue.create(
-                    "WrongRegion",
-                    "Suspicious Language/Region Combination",
-                    "Android uses the letter codes ISO 639-1 for languages, and the letter codes "
-                            + "ISO 3166-1 for the region codes. In many cases, the language code and the "
-                            + "country where the language is spoken is the same, but it is also often not "
-                            + "the case. For example, while 'se' refers to Sweden, where Swedish is spoken, "
-                            + "the language code for Swedish is **not** `se` (which refers to the Northern "
-                            + "Sami language), the language code is `sv`. And similarly the region code for "
-                            + "`sv` is El Salvador.\n"
-                            + "\n"
-                            + "This lint check looks for suspicious language and region combinations, to help "
-                            + "catch cases where you've accidentally used the wrong language or region code. "
-                            + "Lint knows about the most common regions where a language is spoken, and if "
-                            + "a folder combination is not one of these, it is flagged as suspicious.\n"
-                            + "\n"
-                            + "Note however that it may not be an error: you can theoretically have speakers "
-                            + "of any language in any region and want to target that with your resources, so "
-                            + "this check is aimed at tracking down likely mistakes, not to enforce a specific "
-                            + "set of region and language combinations.",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.WARNING,
-                    IMPLEMENTATION);
+                            "WrongRegion",
+                            "Suspicious Language/Region Combination",
+                            "Android uses the letter codes ISO 639-1 for languages, and the letter codes "
+                                    + "ISO 3166-1 for the region codes. In many cases, the language code and the "
+                                    + "country where the language is spoken is the same, but it is also often not "
+                                    + "the case. For example, while 'se' refers to Sweden, where Swedish is spoken, "
+                                    + "the language code for Swedish is **not** `se` (which refers to the Northern "
+                                    + "Sami language), the language code is `sv`. And similarly the region code for "
+                                    + "`sv` is El Salvador.\n"
+                                    + "\n"
+                                    + "This lint check looks for suspicious language and region combinations, to help "
+                                    + "catch cases where you've accidentally used the wrong language or region code. "
+                                    + "Lint knows about the most common regions where a language is spoken, and if "
+                                    + "a folder combination is not one of these, it is flagged as suspicious.\n"
+                                    + "\n"
+                                    + "Note however that it may not be an error: you can theoretically have speakers "
+                                    + "of any language in any region and want to target that with your resources, so "
+                                    + "this check is aimed at tracking down likely mistakes, not to enforce a specific "
+                                    + "set of region and language combinations.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
 
     public static final Issue USE_ALPHA_2 =
             Issue.create(
@@ -130,7 +132,8 @@ public class LocaleFolderDetector extends Detector
                             6,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("https://tools.ietf.org/html/bcp47");
+                    .addMoreInfo("https://tools.ietf.org/html/bcp47")
+                    .setAndroidSpecific(true);
 
     public static final Issue INVALID_FOLDER =
             Issue.create(
@@ -152,7 +155,8 @@ public class LocaleFolderDetector extends Detector
                             IMPLEMENTATION)
                     .addMoreInfo(
                             "http://developer.android.com/guide/topics/resources/providing-resources.html")
-                    .addMoreInfo("https://tools.ietf.org/html/bcp47");
+                    .addMoreInfo("https://tools.ietf.org/html/bcp47")
+                    .setAndroidSpecific(true);
 
     /**
      * Crashes if using 3-letter resources in an app *and* calling AssetManager#getLocales()
@@ -160,18 +164,23 @@ public class LocaleFolderDetector extends Detector
      */
     public static final Issue GET_LOCALES =
             Issue.create(
-                    "GetLocales",
-                    "Locale crash",
-                    "TODO",
-                    Category.CORRECTNESS,
-                    6,
-                    Severity.ERROR,
-                    new Implementation(
-                            LocaleFolderDetector.class,
-                            EnumSet.of(
-                                    Scope.RESOURCE_FOLDER, Scope.JAVA_FILE, Scope.JAVA_LIBRARIES),
-                            // In IDE: won't have JAVA_LIBRARIES scope (no bytecode analysis)
-                            EnumSet.of(Scope.RESOURCE_FOLDER, Scope.JAVA_FILE)));
+                            "GetLocales",
+                            "Locale crash",
+                            "This check looks for usage of Lollipop-style locale folders "
+                                    + "(e.g. 3 letter language codes, or BCP 47 qualifiers) combined "
+                                    + "with an `AssetManager#getLocales()` call. This leads to crashes",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            new Implementation(
+                                    LocaleFolderDetector.class,
+                                    EnumSet.of(
+                                            Scope.RESOURCE_FOLDER,
+                                            Scope.JAVA_FILE,
+                                            Scope.JAVA_LIBRARIES),
+                                    // In IDE: won't have JAVA_LIBRARIES scope (no bytecode analysis)
+                                    EnumSet.of(Scope.RESOURCE_FOLDER, Scope.JAVA_FILE)))
+                    .setAndroidSpecific(true);
 
     private Map<String, File> mBcp47Folders;
 

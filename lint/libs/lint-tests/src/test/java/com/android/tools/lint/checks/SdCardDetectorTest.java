@@ -21,6 +21,7 @@ import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class SdCardDetectorTest extends AbstractCheckTest {
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String IDEA_MAX_INTELLISENSE_FILESIZE = "idea.max.intellisense.filesize";
 
     @Override

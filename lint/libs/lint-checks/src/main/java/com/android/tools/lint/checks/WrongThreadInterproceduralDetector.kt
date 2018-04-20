@@ -181,6 +181,7 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
             priority = 6,
             severity = Severity.ERROR,
             enabledByDefault = false,
+            androidSpecific = true,
             implementation = Implementation(
                 WrongThreadInterproceduralDetector::class.java,
                 EnumSet.of(Scope.ALL_JAVA_FILES)

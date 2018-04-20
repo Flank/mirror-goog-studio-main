@@ -66,7 +66,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                         Scope.ALL_JAVA_FILES,
                         Scope.BINARY_RESOURCE_FILE);
 
-        // Whether to includ etest sources in the scope. Currently true but controlleable
+        // Whether to include test sources in the scope. Currently true but controllable
         // with a couple of flags.
         if (VALUE_TRUE.equals(System.getProperty(INCLUDE_TESTS_PROPERTY))
                 || !VALUE_FALSE.equals(System.getProperty(EXCLUDE_TESTS_PROPERTY))) {

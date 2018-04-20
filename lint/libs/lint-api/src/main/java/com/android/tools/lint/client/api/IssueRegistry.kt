@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.google.common.annotations.Beta
@@ -118,6 +119,7 @@ protected constructor() {
      * @param client the client to report errors to
      * @param configuration the configuration to look up which issues are
      * enabled etc from
+     * @param platforms the platforms applying to this analysis
      * @param scope the scope for the analysis, to filter out detectors that
      * require wider analysis than is currently being performed
      * @param scopeToDetectors an optional map which (if not null) will be
@@ -129,6 +131,7 @@ protected constructor() {
         client: LintClient,
         configuration: Configuration,
         scope: EnumSet<Scope>,
+        platforms: EnumSet<Platform>,
         scopeToDetectors: MutableMap<Scope, MutableList<Detector>>?
     ): List<Detector> {
 
@@ -141,6 +144,13 @@ protected constructor() {
         val detectorToScope = HashMap<Class<out Detector>, EnumSet<Scope>>()
 
         for (issue in issues) {
+            if (!issue.platforms.isEmpty() && !issue.platforms.containsAll(platforms)) {
+                // This check does not apply in this context. For example, if we're
+                // analyzing an Android project, and the check does not specify Scope.ANDROID
+                // in its platforms, we skip it. As a special case, empty platforms is allowed.
+                continue
+            }
+
             val implementation = issue.implementation
             var detectorClass: Class<out Detector> = implementation.detectorClass
             val issueScope = implementation.scope

@@ -70,6 +70,7 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             category = Category.PERFORMANCE,
             priority = 2,
             severity = Severity.WARNING,
+            androidSpecific = true,
             enabledByDefault = false,
             implementation = IMPLEMENTATION
         )

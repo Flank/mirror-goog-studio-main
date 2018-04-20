@@ -214,6 +214,7 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
 

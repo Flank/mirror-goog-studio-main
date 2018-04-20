@@ -45,19 +45,20 @@ public class ViewTagDetector extends Detector implements SourceCodeScanner {
     /** Using setTag and leaking memory */
     public static final Issue ISSUE =
             Issue.create(
-                    "ViewTag",
-                    "Tagged object leaks",
-                    "Prior to Android 4.0, the implementation of `View.setTag(int, Object)` would "
-                            + "store the objects in a static map, where the values were strongly referenced. "
-                            + "This means that if the object contains any references pointing back to the "
-                            + "context, the context (which points to pretty much everything else) will leak. "
-                            + "If you pass a view, the view provides a reference to the context "
-                            + "that created it. Similarly, view holders typically contain a view, and cursors "
-                            + "are sometimes also associated with views.",
-                    Category.PERFORMANCE,
-                    6,
-                    Severity.WARNING,
-                    new Implementation(ViewTagDetector.class, Scope.JAVA_FILE_SCOPE));
+                            "ViewTag",
+                            "Tagged object leaks",
+                            "Prior to Android 4.0, the implementation of `View.setTag(int, Object)` would "
+                                    + "store the objects in a static map, where the values were strongly referenced. "
+                                    + "This means that if the object contains any references pointing back to the "
+                                    + "context, the context (which points to pretty much everything else) will leak. "
+                                    + "If you pass a view, the view provides a reference to the context "
+                                    + "that created it. Similarly, view holders typically contain a view, and cursors "
+                                    + "are sometimes also associated with views.",
+                            Category.PERFORMANCE,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(ViewTagDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .setAndroidSpecific(true);
 
     /** Constructs a new {@link ViewTagDetector} */
     public ViewTagDetector() {}

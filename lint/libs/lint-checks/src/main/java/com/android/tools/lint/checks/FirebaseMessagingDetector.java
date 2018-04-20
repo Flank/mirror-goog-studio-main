@@ -44,7 +44,7 @@ public class FirebaseMessagingDetector extends Detector implements SourceCodeSca
     private static final String ON_TOKEN_REFRESH_METHOD_NAME = "onTokenRefresh";
     private static final String GET_TOKEN_METHOD_NAME = "getToken";
     private static final Implementation IMPLEMENTATION =
-            new Implementation(FirebaseMessagingDetector.class, Scope.JAVA_FILE_SCOPE, Scope.ALL);
+            new Implementation(FirebaseMessagingDetector.class, Scope.JAVA_FILE_SCOPE);
 
     public static final Issue MISSING_TOKEN_REFRESH =
             Issue.create(
@@ -58,7 +58,8 @@ public class FirebaseMessagingDetector extends Detector implements SourceCodeSca
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "https://firebase.google.com/docs/cloud-messaging/android/client#monitor-token-generation");
+                            "https://firebase.google.com/docs/cloud-messaging/android/client#monitor-token-generation")
+                    .setAndroidSpecific(true);
 
     private boolean mIsOnTokenRefreshDefined;
     private UCallExpression mGetTokenCallSite;

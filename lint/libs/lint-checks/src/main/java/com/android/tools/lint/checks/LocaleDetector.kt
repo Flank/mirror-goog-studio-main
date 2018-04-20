@@ -216,6 +216,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
             category = Category.I18N,
             priority = 6,
             severity = Severity.WARNING,
+            androidSpecific = true,
             implementation = IMPLEMENTATION
         )
     }

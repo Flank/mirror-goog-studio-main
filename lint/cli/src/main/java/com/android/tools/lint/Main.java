@@ -61,6 +61,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +115,8 @@ public class Main {
     private static final String ARG_BUILD_API = "--compile-sdk-version";
     private static final String ARG_BASELINE = "--baseline";
     private static final String ARG_REMOVE_FIXED = "--remove-fixed";
+    private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
+    private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
 
     private static final String ARG_NO_WARN_2 = "--nowarn";
     // GCC style flag names for options
@@ -340,11 +343,15 @@ public class Main {
                                     flags.setBaselineFile(metadata.getBaseline());
                                 }
 
+                                EnumSet<Scope> scope = EnumSet.copyOf(Scope.ALL);
                                 if (metadata.getIncomplete()) {
-                                    request.setScope(null);
-                                } else {
-                                    request.setScope(Scope.ALL);
+                                    scope.remove(Scope.ALL_CLASS_FILES);
+                                    scope.remove(Scope.ALL_JAVA_FILES);
+                                    scope.remove(Scope.ALL_RESOURCE_FILES);
                                 }
+                                request.setScope(scope);
+
+                                request.setPlatform(metadata.getPlatforms());
                             }
                         }
 
@@ -903,6 +910,10 @@ public class Main {
                 flags.setBaselineFile(input);
             } else if (arg.equals(ARG_REMOVE_FIXED)) {
                 flags.setRemovedFixedBaselineIssues(true);
+            } else if (arg.equals(ARG_ALLOW_SUPPRESS)) {
+                flags.setAllowSuppress(true);
+            } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {
+                flags.setAllowSuppress(false);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -1351,6 +1362,9 @@ public class Main {
                             + "a lint.xml file, then this config file will be used as a fallback.",
                     ARG_BASELINE,
                     "Use (or create) the given baseline file to filter out known issues.",
+                    ARG_ALLOW_SUPPRESS,
+                    "Whether to allow suppressing issues that have been explicitly registered "
+                            + "as not suppressible.",
                     "",
                     "\nOutput Options:",
                     ARG_QUIET,

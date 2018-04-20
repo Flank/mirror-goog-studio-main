@@ -40,6 +40,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
@@ -124,6 +125,9 @@ public class LintGradleClient extends LintCliClient {
                     @NonNull
                     @Override
                     public Severity getSeverity(@NonNull Issue issue) {
+                        if (issue.getSuppressNames() != null) {
+                            return getDefaultSeverity(issue);
+                        }
                         Integer optionSeverity = overrides.get(issue.getId());
                         if (optionSeverity != null) {
                             Severity severity = SyncOptions.getSeverity(issue, optionSeverity);
@@ -213,6 +217,15 @@ public class LintGradleClient extends LintCliClient {
         }
 
         return lintRequest;
+    }
+
+    @NonNull
+    @Override
+    protected LintDriver createDriver(
+            @NonNull IssueRegistry registry, @NonNull LintRequest request) {
+        LintDriver driver = super.createDriver(registry, request);
+        driver.setPlatforms(isAndroid ? Platform.ANDROID_SET : Platform.JDK_SET);
+        return driver;
     }
 
     /** Whether lint should continue running after a baseline has been created */
