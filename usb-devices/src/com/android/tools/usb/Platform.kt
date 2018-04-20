@@ -19,12 +19,13 @@ import com.android.tools.usb.parser.EmptyParser
 import com.android.tools.usb.parser.LinuxParser
 import com.android.tools.usb.parser.MacParser
 import com.android.tools.usb.parser.OutputParser
+import com.android.tools.usb.parser.WindowsParser
 
 /**
  * Represents OS and holds information to support that platform.
  */
 enum class Platform(val supported: Boolean, val command: String?) {
-  Windows(false, null),
+  Windows(true, "${System.getenv("WINDIR")}\\system32\\wbem\\wmic path CIM_LogicalDevice where \"DeviceID like 'USB\\\\%'\" get /value"),
   Linux(true, "lsusb"),
   Mac(true, "system_profiler SPUSBDataType -detailLevel mini"),
   Unknown(false, null);
@@ -41,6 +42,7 @@ enum class Platform(val supported: Boolean, val command: String?) {
   }
 
   fun parser(): OutputParser = when (this) {
+    Windows -> WindowsParser()
     Linux -> LinuxParser()
     Mac -> MacParser()
     else -> EmptyParser()
