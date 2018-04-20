@@ -2,8 +2,8 @@
 # This file is copied to //tools/bazel.rc from
 # //tools/base/bazel/toplevel.bazel.rc by repo init.
 
-# Required for remote caching using hazelcast REST protocol.
-startup --host_jvm_args=-Dbazel.DigestFunction=SHA1
+# Remote Build Execution requires a strong hash function, such as SHA256.
+startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
 
 # Enforces UTF-8 encoding in bazel tests.
 test --test_env='LC_ALL=en_US.UTF-8'
@@ -51,8 +51,6 @@ build:remote --remote_instance_name=projects/google.com:android-studio-alphasour
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
 
-# Remote Build Execution requires a strong hash function, such as SHA256.
-startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
 
 # Depending on how many machines are in the remote execution instance, setting
 # this higher can make builds faster by allowing more jobs to run in parallel.
@@ -68,7 +66,6 @@ build:remote --host_javabase=@bazel_toolchains//configs/debian8_clang/0.2.0:jdk8
 build:remote --javabase=@bazel_toolchains//configs/debian8_clang/0.2.0:jdk8
 build:remote --crosstool_top=@bazel_toolchains//configs/debian8_clang/0.2.0/bazel_0.8.0:toolchain
 build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:f7e39d0a8e36e04d0161883be9b2c50a5f6b80e33917fb3d91628612cb0b93ca" }'
-
 
 # Set various strategies so that all actions execute remotely. Mixing remote
 # and local execution will lead to errors unless the toolchain and remote
@@ -101,3 +98,50 @@ build:remote --remote_timeout=3600
 # default. You can use --auth_credentials=some_file.json to use a service
 # account credential instead.
 build:remote --auth_enabled=true
+
+# Enable the remote cache so action results can be shared across machines,
+# developers, and workspaces.
+build:remote-cache --remote_cache=remotebuildexecution.googleapis.com
+
+# Enable encryption.
+build:remote-cache --tls_enabled=true
+
+# Enforce stricter environment rules, which eliminates some non-hermetic
+# behavior and therefore improves both the remote cache hit rate and the
+# correctness and repeatability of the build.
+build:remote-cache --experimental_strict_action_env=true
+
+# Set a higher timeout value, just in case.
+build:remote-cache --remote_timeout=3600
+
+# Enable authentication. This will pick up application default credentials by
+# default. You can use --auth_credentials=some_file.json to use a service
+# account credential instead.
+build:remote-cache --auth_enabled=true
+
+# Set various strategies so that all action results can be looked up from and
+# uploaded to the remote cache. You can use --experimental_remote_spawn_cache
+# instead of --spawn_strategy=remote to enable sandboxing.
+build:remote-cache --spawn_strategy=remote
+build:remote-cache --strategy=Javac=remote
+build:remote-cache --strategy=Closure=remote
+build:remote-cache --genrule_strategy=remote
+
+# Set flags for uploading to BES in order to view results in the Bazel Build
+# Results UI.
+build:results --bes_backend="buildeventservice.googleapis.com"
+build:results --bes_timeout=10s
+
+# If the upload to BES fails, the build will fail.
+build:results --bes_best_effort=false
+
+# Set flags for uploading to BES without Remote Cache.
+build:results-local --bes_backend="buildeventservice.googleapis.com"
+build:results-local --bes_timeout=10s
+build:results-local --bes_best_effort=false
+build:results-local --tls_enabled=true
+build:results-local --auth_enabled=true
+build:results-local --spawn_strategy=local
+build:results-local --experimental_remote_spawn_cache
+build:results-local --remote_cache=remotebuildexecution.googleapis.com
+build:results-local --remote_timeout=3600
