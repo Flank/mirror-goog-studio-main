@@ -110,6 +110,12 @@
   <migrate old-name="android.support.v4.media.VolumeProviderCompat" new-name="androidx.media.VolumeProviderCompat" type="CLASS"/>
   <migrate old-name="android.support.v4.widget.ResourceCursorAdapter" new-name="androidx.cursoradapter.widget.ResourceCursorAdapter" type="CLASS"/>
   <migrate old-name="android.support.design.widget.CoordinatorLayout" new-name="androidx.coordinatorlayout.widget.CoordinatorLayout" type="CLASS"/>
+  <migrate old-name="android.support.constraint.ConstraintLayout" new-name="androidx.constraintlayout.widget.ConstraintLayout" type="CLASS"/>
+  <migrate old-name="android.support.constraint.Guideline" new-name="androidx.constraintlayout.widget.Guideline" type="CLASS"/>
+  <migrate old-name="android.support.constraint.Barrier" new-name="androidx.constraintlayout.widget.Barrier" type="CLASS"/>
+  <migrate old-name="android.support.constraint.Group" new-name="androidx.constraintlayout.widget.Group" type="CLASS"/>
+  <migrate old-name="android.support.constraint.Placeholder" new-name="androidx.constraintlayout.widget.Placeholder" type="CLASS"/>
+  <migrate old-name="android.support.constraint.ConstraintHelper" new-name="androidx.constraintlayout.widget.ConstraintHelper" type="CLASS"/>
   <migrate old-name="android.support.v7.widget.LinearSmoothScroller" new-name="androidx.recyclerview.widget.LinearSmoothScroller" type="CLASS"/>
   <migrate old-name="android.support.customtabs.ICustomTabsCallback" new-name="android.support.customtabs.ICustomTabsCallback" type="CLASS"/>
   <migrate old-name="android.support.customtabs.IPostMessageService" new-name="android.support.customtabs.IPostMessageService" type="CLASS"/>
