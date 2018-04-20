@@ -45,20 +45,34 @@ public final class OkHttp2Interceptor implements Interceptor {
             tracker = trackRequest(request);
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp2 request", ex);
+        } catch (NoSuchMethodError error) {
+            StudioLog.e(
+                    "Could not track an OkHttp2 request due to a missing method, which could"
+                            + " happen if your project uses proguard to remove unused code",
+                    error);
         }
 
         Response response;
         try {
             response = chain.proceed(request);
         } catch (IOException ex) {
-            tracker.error(ex.toString());
+            if (tracker != null) {
+                tracker.error(ex.toString());
+            }
             throw ex;
         }
 
         try {
-            response = trackResponse(tracker, response);
+            if (tracker != null) {
+                response = trackResponse(tracker, response);
+            }
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp2 response", ex);
+        } catch (NoSuchMethodError error) {
+            StudioLog.e(
+                    "Could not track an OkHttp2 response due to a missing method, which could"
+                            + " happen if your project uses proguard to remove unused code",
+                    error);
         }
         return response;
     }
