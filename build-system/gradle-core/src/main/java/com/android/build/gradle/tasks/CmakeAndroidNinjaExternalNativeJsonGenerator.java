@@ -91,8 +91,12 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     public String executeProcessAndGetOutput(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
+        String logPrefix = "Variant=" + variantName + " ABI=" + abi + " :";
         return executeBuildProcessAndLogError(
-                androidBuilder, getProcessBuilder(abi, abiPlatformVersion, outputJsonDir), true);
+                androidBuilder,
+                getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
+                true,
+                logPrefix);
     }
 
 

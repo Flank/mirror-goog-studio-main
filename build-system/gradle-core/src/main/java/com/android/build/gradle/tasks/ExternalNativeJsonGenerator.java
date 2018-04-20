@@ -49,6 +49,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -72,10 +73,12 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.gradle.api.GradleException;
@@ -189,6 +192,37 @@ public abstract class ExternalNativeJsonGenerator {
         }
     }
 
+    public List<Callable<Void>> parallelBuild(boolean forceJsonGeneration) {
+        List<Callable<Void>> buildSteps = new ArrayList<>(abiConfigurations.size());
+        for (JsonGenerationAbiConfiguration configuration : abiConfigurations) {
+            buildSteps.add(
+                    () -> {
+                        EvalIssueReporter reporter = androidBuilder.getIssueReporter();
+                        try {
+                            buildForOneConfiguration(forceJsonGeneration, configuration);
+                        } catch (@NonNull IOException | GradleException e) {
+                            synchronized (reporter) {
+                                reporter.reportError(
+                                        Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                                        new EvalIssueException(e, variantName));
+                            }
+                        } catch (ProcessException e) {
+                            synchronized (reporter) {
+                                reporter.reportError(
+                                        Type.EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
+                                        new EvalIssueException(
+                                                String.format(
+                                                        "executing external native build for %s %s",
+                                                        getNativeBuildSystem().getName(), makefile),
+                                                e.getMessage()));
+                            }
+                        }
+                        return null;
+                    });
+        }
+        return buildSteps;
+    }
+
     @NonNull
     private static String getPreviousBuildCommand(@NonNull File commandFile) throws IOException {
         if (!commandFile.exists()) {
@@ -199,103 +233,135 @@ public abstract class ExternalNativeJsonGenerator {
 
     private void buildAndPropagateException(boolean forceJsonGeneration)
             throws IOException, ProcessException {
-        diagnostic("starting JSON generation");
         Exception firstException = null;
         for (JsonGenerationAbiConfiguration configuration : abiConfigurations) {
-            GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
-                    GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
-            variantStats.setAbi(AnalyticsUtil.getAbi(configuration.getAbiPresentationName()));
-            variantStats.setDebuggable(this.debuggable);
-            long startTime = System.currentTimeMillis();
-            variantStats.setGenerationStartMs(startTime);
             try {
-                diagnostic(
-                        "using platform version %s for ABI %s and min SDK version %s",
-                        configuration.getAbiPlatformVersion(),
-                        configuration.getAbiPresentationName(),
-                        configuration.getAbiPlatformVersion());
+                buildForOneConfiguration(forceJsonGeneration, configuration);
+            } catch (@NonNull GradleException | IOException | ProcessException e) {
+                if (firstException == null) {
+                    firstException = e;
+                }
+            }
+        }
 
-                ProcessInfoBuilder processBuilder =
-                        getProcessBuilder(
+        if (firstException != null) {
+            if (firstException instanceof GradleException) {
+                throw (GradleException) firstException;
+            }
+
+            if (firstException instanceof IOException) {
+                throw (IOException) firstException;
+            }
+
+            throw (ProcessException) firstException;
+        }
+    }
+
+    private void buildForOneConfiguration(
+            boolean forceJsonGeneration, JsonGenerationAbiConfiguration configuration)
+            throws GradleException, IOException, ProcessException {
+        String abi = configuration.getAbi().getName();
+        GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
+                GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
+        variantStats.setAbi(AnalyticsUtil.getAbi(configuration.getAbiPresentationName()));
+        variantStats.setDebuggable(this.debuggable);
+        long startTime = System.currentTimeMillis();
+        variantStats.setGenerationStartMs(startTime);
+        try {
+            diagnosticForAbi(
+                    abi,
+                    "Start JSON generation. Platform version: %s min SDK version: %s",
+                    configuration.getAbiPlatformVersion(),
+                    configuration.getAbiPresentationName(),
+                    configuration.getAbiPlatformVersion());
+
+            ProcessInfoBuilder processBuilder =
+                    getProcessBuilder(
+                            configuration.getAbiPresentationName(),
+                            configuration.getAbiPlatformVersion(),
+                            configuration.getExpectedJson());
+
+            // See whether the current build command matches a previously written build command.
+            String currentBuildCommand = processBuilder.toString();
+
+            JsonGenerationInvalidationState invalidationState =
+                    new JsonGenerationInvalidationState(
+                            forceJsonGeneration,
+                            configuration.getExpectedJson(),
+                            configuration.getCommandFile(),
+                            currentBuildCommand,
+                            getPreviousBuildCommand(configuration.getCommandFile()),
+                            getDependentBuildFiles(configuration.getExpectedJson()));
+
+            if (invalidationState.getRebuild()) {
+                diagnosticForAbi(
+                        abi, "rebuilding JSON %s due to:", configuration.getExpectedJson());
+                for (String reason : invalidationState.getRebuildReasons()) {
+                    diagnosticForAbi(abi, reason);
+                }
+
+                // Related to https://issuetracker.google.com/69408798
+                // Something has changed so we need to clean up some build intermediates and
+                // outputs.
+                // - If only a build file has changed then we try to keep .o files and,
+                // in the case of CMake, the generated Ninja project. In this case we must
+                // remove .so files because they are automatically packaged in the APK on a
+                // *.so basis.
+                // - If there is some other cause to recreate the JSon, such as command-line
+                // changed then wipe out the whole JSon folder.
+                if (jsonFolder.exists()) {
+                    if (invalidationState.getSoftRegeneration()) {
+                        diagnosticForAbi(
+                                abi,
+                                "keeping json folder '%s' but regenerating project",
+                                configuration.getExpectedJson().getParentFile());
+
+                    } else {
+                        diagnosticForAbi(
+                                abi,
+                                "removing stale contents from '%s'",
+                                configuration.getExpectedJson().getParentFile());
+                        FileUtils.deletePath(configuration.getExpectedJson().getParentFile());
+                    }
+                }
+
+                if (configuration.getExpectedJson().getParentFile().mkdirs()) {
+                    diagnosticForAbi(
+                            abi,
+                            "created folder '%s'",
+                            configuration.getExpectedJson().getParentFile());
+                }
+
+                diagnosticForAbi(
+                        abi, "executing %s %s", getNativeBuildSystem().getName(), processBuilder);
+                String buildOutput =
+                        executeProcess(
                                 configuration.getAbiPresentationName(),
                                 configuration.getAbiPlatformVersion(),
                                 configuration.getExpectedJson());
+                diagnosticForAbi(abi, "done executing %s", getNativeBuildSystem().getName());
 
+                // Write the captured process output to a file for diagnostic purposes.
+                diagnosticForAbi(
+                        abi,
+                        "write build output %s",
+                        configuration.getBuildOutputFile().getAbsolutePath());
+                Files.write(
+                        configuration.getBuildOutputFile().toPath(),
+                        buildOutput.getBytes(Charsets.UTF_8));
+                processBuildOutput(
+                        buildOutput,
+                        configuration.getAbiPresentationName(),
+                        configuration.getAbiPlatformVersion());
 
-                // See whether the current build command matches a previously written build command.
-                String currentBuildCommand = processBuilder.toString();
+                if (!configuration.getExpectedJson().exists()) {
+                    throw new GradleException(
+                            String.format(
+                                    "Expected json generation to create '%s' but it didn't",
+                                    configuration.getExpectedJson()));
+                }
 
-                JsonGenerationInvalidationState invalidationState =
-                        new JsonGenerationInvalidationState(
-                                forceJsonGeneration,
-                                configuration.getExpectedJson(),
-                                configuration.getCommandFile(),
-                                currentBuildCommand,
-                                getPreviousBuildCommand(configuration.getCommandFile()),
-                                getDependentBuildFiles(configuration.getExpectedJson()));
-
-                if (invalidationState.getRebuild()) {
-                    diagnostic("rebuilding JSON %s due to:", configuration.getExpectedJson());
-                    for (String reason : invalidationState.getRebuildReasons()) {
-                        diagnostic(reason);
-                    }
-
-                    // Related to https://issuetracker.google.com/69408798
-                    // Something has changed so we need to clean up some build intermediates and
-                    // outputs.
-                    // - If only a build file has changed then we try to keep .o files and,
-                    // in the case of CMake, the generated Ninja project. In this case we must
-                    // remove .so files because they are automatically packaged in the APK on a
-                    // *.so basis.
-                    // - If there is some other cause to recreate the JSon, such as command-line
-                    // changed then wipe out the whole JSon folder.
-                    if (jsonFolder.exists()) {
-                        if (invalidationState.getSoftRegeneration()) {
-                            diagnostic(
-                                    "keeping json folder '%s' but regenerating project",
-                                    configuration.getExpectedJson().getParentFile());
-
-                        } else {
-                            diagnostic(
-                                    "removing stale contents from '%s'",
-                                    configuration.getExpectedJson().getParentFile());
-                            FileUtils.deletePath(configuration.getExpectedJson().getParentFile());
-                        }
-                    }
-
-                    if (configuration.getExpectedJson().getParentFile().mkdirs()) {
-                        diagnostic(
-                                "created folder '%s'",
-                                configuration.getExpectedJson().getParentFile());
-                    }
-
-                    diagnostic("executing %s %s", getNativeBuildSystem().getName(), processBuilder);
-                    String buildOutput =
-                            executeProcess(
-                                    configuration.getAbiPresentationName(),
-                                    configuration.getAbiPlatformVersion(),
-                                    configuration.getExpectedJson());
-                    diagnostic("done executing %s", getNativeBuildSystem().getName());
-
-                    // Write the captured process output to a file for diagnostic purposes.
-                    diagnostic(
-                            "write build output %s",
-                            configuration.getBuildOutputFile().getAbsolutePath());
-                    Files.write(
-                            configuration.getBuildOutputFile().toPath(),
-                            buildOutput.getBytes(Charsets.UTF_8));
-                    processBuildOutput(
-                            buildOutput,
-                            configuration.getAbiPresentationName(),
-                            configuration.getAbiPlatformVersion());
-
-                    if (!configuration.getExpectedJson().exists()) {
-                        throw new GradleException(
-                                String.format(
-                                        "Expected json generation to create '%s' but it didn't",
-                                        configuration.getExpectedJson()));
-                    }
-
+                synchronized (stats) {
                     // Related to https://issuetracker.google.com/69408798
                     // Targets may have been removed or there could be other orphaned extra .so
                     // files. Remove these and rely on the build step to replace them if they are
@@ -304,57 +370,44 @@ public abstract class ExternalNativeJsonGenerator {
                     removeUnexpectedSoFiles(
                             configuration.getExpectedOutputFolder(),
                             AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                    configuration.getExpectedJson(), stats));
-
-                    // Write the ProcessInfo to a file, this has all the flags used to generate the
-                    // JSON. If any of these change later the JSON will be regenerated.
-                    diagnostic(
-                            "write command file %s",
-                            configuration.getCommandFile().getAbsolutePath());
-                    Files.write(
-                            configuration.getCommandFile().toPath(),
-                            currentBuildCommand.getBytes(Charsets.UTF_8));
-
-                    // Record the outcome. JSON was built.
-                    variantStats.setOutcome(
-                            GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
-                                    .SUCCESS_BUILT);
-                } else {
-                    diagnostic("JSON '%s' was up-to-date", configuration.getExpectedJson());
-                    variantStats.setOutcome(
-                            GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
-                                    .SUCCESS_UP_TO_DATE);
+                                    configuration.getExpectedJson(), stats),
+                            abi);
                 }
-            } catch (@NonNull GradleException | IOException | ProcessException e) {
+
+                // Write the ProcessInfo to a file, this has all the flags used to generate the
+                // JSON. If any of these change later the JSON will be regenerated.
+                diagnosticForAbi(
+                        abi,
+                        "write command file %s",
+                        configuration.getCommandFile().getAbsolutePath());
+                Files.write(
+                        configuration.getCommandFile().toPath(),
+                        currentBuildCommand.getBytes(Charsets.UTF_8));
+
+                // Record the outcome. JSON was built.
                 variantStats.setOutcome(
-                        GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.FAILED);
-                // If one ABI fails to build that doesn't mean others will. Continue processing
-                // all ABIs so that we can get some JSON so the user can still edit the project
-                // in Android Studio.
-                if (firstException == null) {
-                    firstException = e;
-                }
-            } finally {
-                variantStats.setGenerationDurationMs(System.currentTimeMillis() - startTime);
-                stats.addNativeBuildConfig(variantStats.build());
+                        GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.SUCCESS_BUILT);
+            } else {
+                diagnosticForAbi(abi, "JSON '%s' was up-to-date", configuration.getExpectedJson());
+                variantStats.setOutcome(
+                        GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
+                                .SUCCESS_UP_TO_DATE);
+            }
+            diagnosticForAbi(abi, "JSON generation for ABI: %s completed without problems");
+        } catch (@NonNull GradleException | IOException | ProcessException e) {
+            variantStats.setOutcome(
+                    GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.FAILED);
+            diagnosticForAbi(
+                    abi,
+                    "JSON generation for ABI: %s completed with problem. Exception: "
+                            + e.toString());
+            throw e;
+        } finally {
+            variantStats.setGenerationDurationMs(System.currentTimeMillis() - startTime);
+            synchronized (stats) {
+                stats.addNativeBuildConfig(variantStats);
             }
         }
-
-        if (firstException == null) {
-            diagnostic("JSON generation completed without problems");
-            return;
-        }
-
-        diagnostic("JSON generation completed with problems");
-        if (firstException instanceof GradleException) {
-            throw (GradleException) firstException;
-        }
-
-        if (firstException instanceof IOException) {
-            throw (IOException) firstException;
-        }
-
-        throw (ProcessException) firstException;
     }
 
     /**
@@ -367,11 +420,14 @@ public abstract class ExternalNativeJsonGenerator {
      *
      * @param expectedOutputFolder the expected location of output .so files
      * @param config the existing miniconfig
+     * @param abi name of ABI that these *.so files belong to
      * @throws IOException in the case that json is missing or can't be read or some other IO
      *     problem.
      */
     private void removeUnexpectedSoFiles(
-            @NonNull File expectedOutputFolder, @NonNull NativeBuildConfigValueMini config)
+            @NonNull File expectedOutputFolder,
+            @NonNull NativeBuildConfigValueMini config,
+            @NonNull String abi)
             throws IOException {
         if (!expectedOutputFolder.isDirectory()) {
             // Nothing to clean
@@ -392,7 +448,8 @@ public abstract class ExternalNativeJsonGenerator {
                     .forEach(
                             path -> {
                                 if (path.toFile().delete()) {
-                                    diagnostic(
+                                    diagnosticForAbi(
+                                            abi,
                                             "deleted unexpected build output %s in incremental "
                                                     + "regenerate",
                                             path);
@@ -443,8 +500,25 @@ public abstract class ExternalNativeJsonGenerator {
      * Log low level diagnostic information.
      */
     void diagnostic(String format, Object... args) {
-        androidBuilder.getLogger().info(
-                "External native generate JSON " + variantName + ": " + format, args);
+        androidBuilder
+                .getLogger()
+                .info(
+                        "External native JSON generation. Variant:" + variantName + " : " + format,
+                        args);
+    }
+
+    /** Log low level diagnostic information for a given ABI */
+    void diagnosticForAbi(String abi, String format, Object... args) {
+        androidBuilder
+                .getLogger()
+                .info(
+                        "External native JSON generation. Variant="
+                                + variantName
+                                + "ABI="
+                                + abi
+                                + " : "
+                                + format,
+                        args);
     }
 
     /**

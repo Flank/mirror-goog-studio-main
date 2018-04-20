@@ -90,7 +90,8 @@ enum class BooleanOption(
     ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
     USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE),
     ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", false),
-    DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false)
+    DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
+    ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
     ;
 
     constructor(

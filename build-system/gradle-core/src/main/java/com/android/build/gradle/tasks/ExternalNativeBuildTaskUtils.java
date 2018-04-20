@@ -223,11 +223,12 @@ public class ExternalNativeBuildTaskUtils {
     public static String executeBuildProcessAndLogError(
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ProcessInfoBuilder process,
-            boolean logStdioToInfo)
+            boolean logStdioToInfo,
+            @NonNull String logPrefix)
             throws BuildCommandException, IOException {
         ProgressiveLoggingProcessOutputHandler handler =
-                new ProgressiveLoggingProcessOutputHandler(androidBuilder.getLogger(),
-                        logStdioToInfo);
+                new ProgressiveLoggingProcessOutputHandler(
+                        androidBuilder.getLogger(), logStdioToInfo, logPrefix);
         try {
             // Log the command to execute but only in verbose (ie --info)
             androidBuilder.getLogger().verbose(process.toString());
@@ -448,12 +449,14 @@ public class ExternalNativeBuildTaskUtils {
         @NonNull private final FileBackedOutputStream combinedOutput;
         @NonNull
         private final ProgressiveLoggingProcessOutput loggingProcessOutput;
+        @NonNull private final String logPrefix;
         private final boolean logStdioToInfo;
 
         public ProgressiveLoggingProcessOutputHandler(
-                @NonNull ILogger logger, boolean logStdioToInfo) {
+                @NonNull ILogger logger, boolean logStdioToInfo, @NonNull String logPrefix) {
             this.logger = logger;
             this.logStdioToInfo = logStdioToInfo;
+            this.logPrefix = logPrefix;
             standardOutput = new FileBackedOutputStream(2048);
             combinedOutput = new FileBackedOutputStream(2048);
             loggingProcessOutput = new ProgressiveLoggingProcessOutput();
@@ -548,7 +551,7 @@ public class ExternalNativeBuildTaskUtils {
                     }
                     if (logToInfo) {
                         String line = new String(buffer, 0, nextByteIndex, "UTF-8");
-                        logger.lifecycle(line);
+                        logger.lifecycle(logPrefix + line);
                     }
                     nextByteIndex = 0;
                 }
