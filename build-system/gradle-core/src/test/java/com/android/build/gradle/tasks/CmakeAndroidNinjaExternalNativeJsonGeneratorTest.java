@@ -107,7 +107,6 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
                 new CmakeAndroidNinjaExternalNativeJsonGenerator(
                         ndkHandler,
-                        minSdkVersion,
                         variantName,
                         abis,
                         androidBuilder,

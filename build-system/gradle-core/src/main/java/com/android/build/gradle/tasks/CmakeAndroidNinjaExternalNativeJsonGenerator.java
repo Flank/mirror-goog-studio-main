@@ -37,7 +37,6 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
-            int minSdkVersion,
             @NonNull String variantName,
             @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
@@ -56,7 +55,6 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
             @NonNull GradleBuildVariant.Builder stats) {
         super(
                 ndkHandler,
-                minSdkVersion,
                 variantName,
                 abis,
                 androidBuilder,

@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
 import com.android.repository.Revision;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -473,8 +474,9 @@ public class NdkHandler {
         return ndkInfo.getStlNativeToolSpecification(stl, stlVersion, abi);
     }
 
-    public int findSuitablePlatformVersion(String abi, int minSdkVersion) {
+    public int findSuitablePlatformVersion(
+            @NonNull String abi, @Nullable AndroidVersion androidVersion) {
         checkNotNull(ndkInfo);
-        return ndkInfo.findSuitablePlatformVersion(abi, minSdkVersion);
+        return ndkInfo.findSuitablePlatformVersion(abi, androidVersion);
     }
 }

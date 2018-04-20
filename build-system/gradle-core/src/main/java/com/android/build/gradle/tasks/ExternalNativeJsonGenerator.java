@@ -58,6 +58,7 @@ import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -92,7 +93,6 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull protected final GradleBuildVariant.Builder stats;
     @NonNull private final NdkHandler ndkHandler;
-    private final int minSdkVersion;
     @NonNull private final File makefile;
     @NonNull private final File sdkFolder;
     @NonNull private final File ndkFolder;
@@ -108,7 +108,6 @@ public abstract class ExternalNativeJsonGenerator {
 
     ExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
-            int minSdkVersion,
             @NonNull String variantName,
             @NonNull List<JsonGenerationAbiConfiguration> abiConfigurations,
             @NonNull AndroidBuilder androidBuilder,
@@ -125,7 +124,6 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
         this.ndkHandler = ndkHandler;
-        this.minSdkVersion = minSdkVersion;
         this.variantName = variantName;
         this.androidBuilder = androidBuilder;
         this.sdkFolder = sdkFolder;
@@ -215,7 +213,7 @@ public abstract class ExternalNativeJsonGenerator {
                         "using platform version %s for ABI %s and min SDK version %s",
                         configuration.getAbiPlatformVersion(),
                         configuration.getAbiPresentationName(),
-                        minSdkVersion);
+                        configuration.getAbiPlatformVersion());
 
                 ProcessInfoBuilder processBuilder =
                         getProcessBuilder(
@@ -525,7 +523,6 @@ public abstract class ExternalNativeJsonGenerator {
 
         ApiVersion minSdkVersion =
                 variantData.getVariantConfiguration().getMergedFlavor().getMinSdkVersion();
-        int minSdkVersionApiLevel = minSdkVersion == null ? 1 : minSdkVersion.getApiLevel();
         NativeBuildSystemVariantConfig nativeBuildVariantConfig =
                 new NativeBuildSystemVariantConfig(
                         buildSystem, variantData.getVariantConfiguration());
@@ -570,14 +567,19 @@ public abstract class ExternalNativeJsonGenerator {
         }
         List<JsonGenerationAbiConfiguration> abiConfigurations = Lists.newArrayList();
         for (Abi abi : validAbis) {
+            AndroidVersion version =
+                    minSdkVersion == null
+                            ? null
+                            : new AndroidVersion(
+                                    minSdkVersion.getApiLevel(), minSdkVersion.getCodename());
+
             abiConfigurations.add(
                     new JsonGenerationAbiConfiguration(
                             abi,
                             externalNativeBuildFolder,
                             objFolder,
                             buildSystem,
-                            ndkHandler.findSuitablePlatformVersion(
-                                    abi.getName(), minSdkVersionApiLevel)));
+                            ndkHandler.findSuitablePlatformVersion(abi.getName(), version)));
         }
 
         switch (buildSystem) {
@@ -590,7 +592,6 @@ public abstract class ExternalNativeJsonGenerator {
                     checkNotNull(options, "NdkBuild options not found");
                     return new NdkBuildExternalNativeJsonGenerator(
                             ndkHandler,
-                            minSdkVersionApiLevel,
                             variantData.getName(),
                             abiConfigurations,
                             androidBuilder,
@@ -613,7 +614,6 @@ public abstract class ExternalNativeJsonGenerator {
                         variantData,
                         ndkHandler,
                         sdkHandler,
-                        minSdkVersionApiLevel,
                         abiConfigurations,
                         androidBuilder,
                         soFolder,
@@ -636,7 +636,6 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull BaseVariantData variantData,
             @NonNull NdkHandler ndkHandler,
             @NonNull SdkHandler sdkHandler,
-            int minSdkVersionApiLevel,
             @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File soFolder,
@@ -668,7 +667,6 @@ public abstract class ExternalNativeJsonGenerator {
         return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
                 cmakeVersion,
                 ndkHandler,
-                minSdkVersionApiLevel,
                 variantData.getName(),
                 abis,
                 androidBuilder,

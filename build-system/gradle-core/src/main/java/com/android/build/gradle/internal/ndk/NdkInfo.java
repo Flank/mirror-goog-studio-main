@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
+import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
 
@@ -52,7 +53,7 @@ public interface NdkInfo {
     @Nullable
     String findLatestPlatformVersion(@NonNull String targetPlatformString);
 
-    int findSuitablePlatformVersion(String abi, int minSdkVersion);
+    int findSuitablePlatformVersion(@NonNull String abi, @Nullable AndroidVersion androidVersion);
 
     /**
      * Return the executable for compiling C code.
