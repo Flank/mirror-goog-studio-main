@@ -1652,4 +1652,56 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "1 errors, 0 warnings"
         )
     }
+
+    fun testKotlinExtensionsFromJava() {
+        // Regression test for
+        // 78283842: False positive lint errors when calling Kotlin extension method from Java
+        //    with Android resource annotations on parameters
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName"})
+                public class R {
+                    @SuppressWarnings("FieldNamingConvention")
+                    public static final class drawable {
+                      public static int some_img=0x7f020000;
+                    }
+                    public static final class string {
+                      public static int some_string=0x7f020001;
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import android.app.Activity;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class ExtensionUsageFromJava {
+                    public void test(Activity activity) {
+                        ExtensionsKt.foobar(this, R.string.some_string, R.drawable.some_img);
+                    }
+                }
+                    """
+            ).indented(),
+            kotlin(
+                "src/test/pkg/Extensions.kt",
+                """
+                    package test.pkg
+
+                    import android.content.Context
+                    import android.support.annotation.DrawableRes
+                    import android.support.annotation.StringRes
+
+                    fun Context.foobar(@StringRes msgId: Int, @DrawableRes imgId: Int) {  }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
