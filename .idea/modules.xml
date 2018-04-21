@@ -24,9 +24,13 @@
       <module fileurl="file://$PROJECT_DIR$/draw9patch/android.sdktools.draw9patch.iml" filepath="$PROJECT_DIR$/draw9patch/android.sdktools.draw9patch.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/device_validator/dvlib/android.sdktools.dvlib.iml" filepath="$PROJECT_DIR$/device_validator/dvlib/android.sdktools.dvlib.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/fakeadbserver/android.sdktools.fakeadbserver.iml" filepath="$PROJECT_DIR$/fakeadbserver/android.sdktools.fakeadbserver.iml" group="base" />
+      <module fileurl="file://$PROJECT_DIR$/flags/android.sdktools.flags.iml" filepath="$PROJECT_DIR$/flags/android.sdktools.flags.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/instant-run/instant-run-annotations/android.sdktools.instant-run-annotations.iml" filepath="$PROJECT_DIR$/instant-run/instant-run-annotations/android.sdktools.instant-run-annotations.iml" group="base/build-system/instant-run" />
       <module fileurl="file://$PROJECT_DIR$/instant-run/instant-run-client/android.sdktools.instant-run-client.iml" filepath="$PROJECT_DIR$/instant-run/instant-run-client/android.sdktools.instant-run-client.iml" group="base/build-system/instant-run" />
       <module fileurl="file://$PROJECT_DIR$/instant-run/instant-run-common/android.sdktools.instant-run-common.iml" filepath="$PROJECT_DIR$/instant-run/instant-run-common/android.sdktools.instant-run-common.iml" group="base/build-system/instant-run" />
+      <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model/android.sdktools.java-lib-model.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model/android.sdktools.java-lib-model.iml" group="base/build-system/java-lib-plugin" />
+      <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/android.sdktools.java-lib-model-builder.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/android.sdktools.java-lib-model-builder.iml" group="base/build-system/java-lib-plugin" />
+      <module fileurl="file://$PROJECT_DIR$/layoutinspector/android.sdktools.layoutinspector.iml" filepath="$PROJECT_DIR$/layoutinspector/android.sdktools.layoutinspector.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/ninepatch/android.sdktools.ninepatch.iml" filepath="$PROJECT_DIR$/ninepatch/android.sdktools.ninepatch.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/pixelprobe/android.sdktools.pixelprobe.iml" filepath="$PROJECT_DIR$/pixelprobe/android.sdktools.pixelprobe.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/repository/android.sdktools.repository.iml" filepath="$PROJECT_DIR$/repository/android.sdktools.repository.iml" group="base" />
@@ -54,10 +58,6 @@
       <module fileurl="file://$PROJECT_DIR$/instant-run/instant-run-server/instant-run-server.iml" filepath="$PROJECT_DIR$/instant-run/instant-run-server/instant-run-server.iml" group="base/build-system/instant-run" />
       <module fileurl="file://$PROJECT_DIR$/instant-run-test-instrumenter/instant-run-test-instrumenter.iml" filepath="$PROJECT_DIR$/instant-run-test-instrumenter/instant-run-test-instrumenter.iml" group="base/build-system/instant-run" />
       <module fileurl="file://$PROJECT_DIR$/build-system/integration-test/integration-test.iml" filepath="$PROJECT_DIR$/build-system/integration-test/integration-test.iml" group="base/build-system" />
-      <module fileurl="file://$PROJECT_DIR$/flags/android.sdktools.flags.iml" filepath="$PROJECT_DIR$/flags/android.sdktools.flags.iml" group="base" />
-      <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model/android.sdktools.java-lib-model.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model/android.sdktools.java-lib-model.iml" group="base/build-system/java-lib-plugin" />
-      <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/android.sdktools.java-lib-model-builder.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/android.sdktools.java-lib-model-builder.iml" group="base/build-system/java-lib-plugin" />
-      <module fileurl="file://$PROJECT_DIR$/layoutinspector/android.sdktools.layoutinspector.iml" filepath="$PROJECT_DIR$/layoutinspector/android.sdktools.layoutinspector.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/build-system/integration-test/java-library-model-builder/java-library-model-builder.iml" filepath="$PROJECT_DIR$/build-system/integration-test/java-library-model-builder/java-library-model-builder.iml" />
       <module fileurl="file://$PROJECT_DIR$/jaxb-inheritance-plugin/jaxb-inheritance-plugin.iml" filepath="$PROJECT_DIR$/jaxb-inheritance-plugin/jaxb-inheritance-plugin.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/layoutinspector/layoutinspector-test.iml" filepath="$PROJECT_DIR$/layoutinspector/layoutinspector-test.iml" />
