@@ -40,7 +40,7 @@ android {
         versionName "1.0"
 
     <#if hasTests>
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "${getMaterialComponentName('android.support.test.runner.AndroidJUnitRunner', useAndroidX)}"
     </#if>
 
     <#if canHaveCpp && (includeCppSupport!false)>

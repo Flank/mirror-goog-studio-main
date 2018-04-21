@@ -1,8 +1,8 @@
 package ${packageName};
 
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import ${getMaterialComponentName('android.support.test.InstrumentationRegistry', useAndroidX)};
+import ${getMaterialComponentName('android.support.test.runner.AndroidJUnit4', useAndroidX)};
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
