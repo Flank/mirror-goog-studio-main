@@ -998,4 +998,38 @@ class PermissionDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
+
+    fun testSetPersisted() {
+        // Regression test for
+        // 68767657: Lint Warning on Valid setPersisted(false) Call
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.app.job.JobInfo;
+                import android.content.ComponentName;
+                import android.os.Build;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class PermissionTest {
+                    public void test(ComponentName componentName) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            JobInfo.Builder builder = new JobInfo.Builder(5, componentName);
+                            builder.setPersisted(false); // Does not require permission
+                            builder.setPersisted(true); // Requires permission
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/PermissionTest.java:13: Error: Missing permissions required by Builder.setPersisted: android.permission.RECEIVE_BOOT_COMPLETED [MissingPermission]
+                        builder.setPersisted(true); // Requires permission
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

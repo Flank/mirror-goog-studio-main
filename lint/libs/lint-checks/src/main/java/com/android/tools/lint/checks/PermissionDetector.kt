@@ -38,6 +38,7 @@ import com.android.tools.lint.checks.PermissionRequirement.ATTR_PROTECTION_LEVEL
 import com.android.tools.lint.checks.PermissionRequirement.VALUE_DANGEROUS
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -154,6 +155,15 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         containingClass.name + "." + method.name
                     } else {
                         method.name
+                    }
+
+                    if (name == "Builder.setPersisted" && node is UCallExpression &&
+                            node.valueArguments.size == 1 &&
+                            ConstantEvaluator.evaluate(context, node.valueArguments[0]) == false) {
+                        // Special case the JobInfo.Builder permission requirement: it only
+                        // applies if the argument is true. If we're not sure, default to
+                        // flagging it.
+                        return
                     }
                     operation = PermissionFinder.Operation.CALL
                 }
