@@ -193,6 +193,14 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             "field `${member.name}`"
         } else if (member is PsiMethod) {
             if (member.isConstructor) {
+                // Eventually we'll call evaluator.isSealed(member.containingClass) here,
+                // but it's not yet available (blocked on Kotlin PSI dependency reversal)
+                if (isKotlin(member) && member.modifierList.text.contains("sealed")) {
+                    return
+                }
+            if (context.evaluator.isStatic(member)) {
+                return
+            }
                 "constructor"
             } else {
                 "method `${member.name}`"

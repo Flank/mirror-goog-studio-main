@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiKeyword
 import com.intellij.psi.PsiMethod
@@ -293,7 +294,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 }
             }
 
-            if (getter != null) {
+            if (getter != null && getter !is PsiCompiledElement) {
                 @Suppress("NAME_SHADOWING") // compiler gets confused about getter nullness
                 val getter = getter
                 // enforce public and not static
@@ -370,9 +371,20 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         }
 
         private fun getPropertyLocation(
-            primary: PsiMethod,
-            secondary: PsiMethod
+            location1: PsiMethod,
+            location2: PsiMethod
         ): Location {
+            val primary: PsiMethod
+            val secondary: PsiMethod
+
+            if (location1 is PsiCompiledElement) {
+                primary = location2
+                secondary = location1
+            } else {
+                primary = location1
+                secondary = location2
+            }
+
             return context.getNameLocation(primary).withSecondary(
                 context.getNameLocation(secondary),
                 "${if (secondary.name.startsWith("set")) "Setter" else "Getter"} here"

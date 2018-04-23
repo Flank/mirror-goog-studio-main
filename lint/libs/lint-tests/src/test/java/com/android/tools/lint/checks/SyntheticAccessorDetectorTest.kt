@@ -400,4 +400,21 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testSealed() {
+        // Regression test for
+        // 78144888: SyntheticAccessor Kotlin false positive
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                private sealed class LoaderEvent {
+                    object ForceSync : LoaderEvent()
+                    data class LoadResult(val listing: String, val success: Boolean) : LoaderEvent()
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }

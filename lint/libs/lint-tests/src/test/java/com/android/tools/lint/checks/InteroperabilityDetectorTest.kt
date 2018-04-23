@@ -126,7 +126,7 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.support.annotation.NonNull;
-                import android.support.annotation.Nullable;import com.android.annotations.NonNull;
+                import android.support.annotation.Nullable;
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class Test {
                     public void ok(int x, float y, boolean z) { }
@@ -360,5 +360,28 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             0 errors, 7 warnings
             """
         )
+    }
+
+    fun testInflexibleGetter() {
+        // Regression test for
+        // 78097965: KotlinPropertyAccess lint rule wants me to change Activity.java
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.app.Activity;
+                import android.support.annotation.NonNull;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class MyActivity extends Activity {
+                    public void setTitle(@NonNull String title) {
+                    }
+                }
+            """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 }
