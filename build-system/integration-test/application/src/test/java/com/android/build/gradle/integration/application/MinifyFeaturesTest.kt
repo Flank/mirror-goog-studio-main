@@ -36,121 +36,187 @@ import org.junit.runners.Parameterized
  * <pre>
  *                  --->  library2  ------>
  *   otherFeature1  --->  library3           library1
- *                  --->  baseFeature  --->
+ *                  --->  baseModule  ---->
  *   otherFeature2
  *
  * More explicitly,
- *    instantApp  depends on  otherFeature1, otherFeature2, baseFeature  (not pictured)
- *           app  depends on  otherFeature1, otherFeature2, baseFeature  (not pictured)
- * otherFeature1  depends on  library2, library3, baseFeature
- * otherFeature2  depends on  baseFeature
- *   baseFeature  depends on  library1
+ *    instantApp  depends on  otherFeature1, otherFeature2, baseModule  (not pictured)
+ *           app  depends on  otherFeature1, otherFeature2, baseModule  (not pictured)
+ * otherFeature1  depends on  library2, library3, baseModule
+ * otherFeature2  depends on  baseModule
+ *    baseModule  depends on  library1
  *      library2  depends on  library1
  * </pre>
  */
 @RunWith(FilterableParameterized::class)
-class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean) {
+class MinifyFeaturesTest(
+        val codeShrinker: CodeShrinker,
+        val multiApkMode: MultiApkMode,
+        dexArchiveMode: DexArchiveMode) {
+
+    enum class MultiApkMode {
+        DYNAMIC_APP, INSTANT_APP
+    }
+
+    enum class DexArchiveMode {
+        ENABLED, DISABLED
+    }
 
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters(name = "codeShrinker {0}, useDexArchive={1}")
-        fun getConfigurations(): Collection<Array<Any>> =
+        @Parameterized.Parameters(name = "codeShrinker {0}, {1}, dexArchive {2}")
+        fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
-                arrayOf(CodeShrinker.PROGUARD, true),
-                arrayOf(CodeShrinker.PROGUARD, false),
-                arrayOf(CodeShrinker.R8, true),
-                arrayOf(CodeShrinker.R8, false),
-                arrayOf(CodeShrinker.ANDROID_GRADLE, true),
-                arrayOf(CodeShrinker.ANDROID_GRADLE, false)
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, DexArchiveMode.ENABLED),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, DexArchiveMode.DISABLED),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, DexArchiveMode.ENABLED),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, DexArchiveMode.DISABLED),
+                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, DexArchiveMode.ENABLED),
+                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, DexArchiveMode.DISABLED),
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, DexArchiveMode.ENABLED),
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, DexArchiveMode.DISABLED),
+                arrayOf(
+                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP, DexArchiveMode.ENABLED),
+                arrayOf(
+                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP, DexArchiveMode.DISABLED),
+                arrayOf(
+                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP, DexArchiveMode.ENABLED),
+                arrayOf(
+                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP, DexArchiveMode.DISABLED)
             )
     }
 
 
     private val lib1 =
-            MinimalSubProject.lib("com.example.lib1")
-                    .appendToBuild("""
-                            android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                    minified {
-                                        consumerProguardFiles "proguard-rules.pro"
-                                    }
-                                }
+        MinimalSubProject.lib("com.example.lib1")
+            .appendToBuild("""
+                android {
+                    buildTypes {
+                        minified.initWith(buildTypes.debug)
+                        minified {
+                            consumerProguardFiles "proguard-rules.pro"
+                        }
+                    }
+                }
+                """)
+            .withFile("src/main/resources/lib1_java_res.txt", "lib1")
+            .withFile(
+                "src/main/java/com/example/lib1/Lib1Class.java",
+                """package com.example.lib1;
+                    import java.io.InputStream;
+                    public class Lib1Class {
+                        public String getJavaRes() {
+                            InputStream inputStream =
+                                    Lib1Class.class
+                                            .getClassLoader()
+                                            .getResourceAsStream("lib1_java_res.txt");
+                            if (inputStream == null) {
+                                return "can't find lib1_java_res";
                             }
-                            """)
-                    .withFile(
-                            "src/main/java/com/example/lib1/Lib1Class.java",
-                            """package com.example.lib1;
-                            public class Lib1Class {
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/lib1/EmptyClassToKeep.java",
-                            """package com.example.lib1;
-                            public class EmptyClassToKeep {
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/lib1/EmptyClassToRemove.java",
-                            """package com.example.lib1;
-                            public class EmptyClassToRemove {
-                            }""")
-                    .withFile(
-                            "proguard-rules.pro",
-                            """-keep public class com.example.lib1.EmptyClassToKeep""")
+                            byte[] line = new byte[1024];
+                            try {
+                                inputStream.read(line);
+                                return new String(line, "UTF-8").trim();
+                            } catch (Exception ignore) {
+                            }
+                            return "something went wrong";
+                        }
+                    }""")
+            .withFile(
+                "src/main/java/com/example/lib1/EmptyClassToKeep.java",
+                """package com.example.lib1;
+                    public class EmptyClassToKeep {
+                    }""")
+            .withFile(
+                "src/main/java/com/example/lib1/EmptyClassToRemove.java",
+                """package com.example.lib1;
+                    public class EmptyClassToRemove {
+                    }""")
+            .withFile(
+                "proguard-rules.pro",
+                """-keep public class com.example.lib1.EmptyClassToKeep""")
 
     private val lib2 =
-            MinimalSubProject.lib("com.example.lib2")
-                    .appendToBuild("""
+        MinimalSubProject.lib("com.example.lib2")
+            .appendToBuild("""
+                android {
+                    buildTypes {
+                        minified.initWith(buildTypes.debug)
+                        minified {
+                            consumerProguardFiles "proguard-rules.pro"
+                        }
+                    }
+                }
+                """)
+            .withFile("src/main/resources/lib2_java_res.txt", "lib2")
+            .withFile(
+                "src/main/java/com/example/lib2/Lib2Class.java",
+                """package com.example.lib2;
+                    import java.io.InputStream;
+                    public class Lib2Class {
+                        public String getJavaRes() {
+                            InputStream inputStream =
+                                    Lib2Class.class
+                                            .getClassLoader()
+                                            .getResourceAsStream("lib2_java_res.txt");
+                            if (inputStream == null) {
+                                return "can't find lib2_java_res";
+                            }
+                            byte[] line = new byte[1024];
+                            try {
+                                inputStream.read(line);
+                                return new String(line, "UTF-8").trim();
+                            } catch (Exception ignore) {
+                            }
+                            return "something went wrong";
+                        }
+                    }""")
+            .withFile(
+                "src/main/java/com/example/lib2/EmptyClassToKeep.java",
+                """package com.example.lib2;
+                    public class EmptyClassToKeep {
+                    }""")
+            .withFile(
+                "src/main/java/com/example/lib2/EmptyClassToRemove.java",
+                """package com.example.lib2;
+                    public class EmptyClassToRemove {
+                    }""")
+            .withFile(
+                "proguard-rules.pro",
+                """-keep public class com.example.lib2.EmptyClassToKeep""")
+
+    private val lib3 =
+        MinimalSubProject.lib("com.example.lib3")
+            .appendToBuild("android { buildTypes { minified { initWith(buildTypes.debug) }}}")
+
+    private val baseModule =
+        when (multiApkMode) {
+            MultiApkMode.DYNAMIC_APP ->
+                MinimalSubProject.app("com.example.baseModule")
+                    .appendToBuild(
+                        """
                             android {
                                 defaultConfig {
                                     minSdkVersion 18
                                 }
+	                            dynamicFeatures = [':otherFeature1', ':otherFeature2']
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
                                     minified {
-                                        consumerProguardFiles "proguard-rules.pro"
+                                        minifyEnabled true
+                                        useProguard ${codeShrinker == CodeShrinker.PROGUARD}
+                                        proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                                                "proguard-rules.pro"
                                     }
                                 }
                             }
-                            """)
-                    .withFile(
-                            "src/main/java/com/example/lib2/Lib2Class.java",
-                            """package com.example.lib2;
-                            public class Lib2Class {
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/lib2/EmptyClassToKeep.java",
-                            """package com.example.lib2;
-                            public class EmptyClassToKeep {
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/lib2/EmptyClassToRemove.java",
-                            """package com.example.lib2;
-                            public class EmptyClassToRemove {
-                            }""")
-                    .withFile(
-                            "proguard-rules.pro",
-                            """-keep public class com.example.lib2.EmptyClassToKeep""")
-
-    private val lib3 =
-            MinimalSubProject.lib("com.example.lib3")
-                    .appendToBuild("""
-                            android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                }
-                            }
-                            """)
-
-    private val baseFeature =
-            MinimalSubProject.feature("com.example.baseFeature")
-                    .appendToBuild("""
+                            """
+                    )
+            MultiApkMode.INSTANT_APP ->
+                MinimalSubProject.feature("com.example.baseModule")
+                    .appendToBuild(
+                        """
                             android {
                                 defaultConfig {
                                     minSdkVersion 18
@@ -166,407 +232,467 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
                                     }
                                 }
                             }
-                            """)
-                    .withFile(
-                            "src/main/AndroidManifest.xml",
-                            """<?xml version="1.0" encoding="utf-8"?>
-                            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                                  package="com.example.baseFeature">
-                                <application android:label="app_name">
-                                    <activity android:name=".Main"
-                                              android:label="app_name">
-                                        <intent-filter>
-                                            <action android:name="android.intent.action.MAIN" />
-                                            <category android:name="android.intent.category.LAUNCHER" />
-                                        </intent-filter>
-                                    </activity>
-                                </application>
-                            </manifest>""")
-                    .withFile(
-                            "src/main/res/layout/base_main.xml",
-                            """<?xml version="1.0" encoding="utf-8"?>
-                            <LinearLayout
-                                    xmlns:android="http://schemas.android.com/apk/res/android"
-                                    android:orientation="vertical"
+                            """
+                    )
+        }.let {
+            it
+                .withFile(
+                    "src/main/AndroidManifest.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                              package="com.example.baseModule">
+                            <application android:label="app_name">
+                                <activity android:name=".Main"
+                                          android:label="app_name">
+                                    <intent-filter>
+                                        <action android:name="android.intent.action.MAIN" />
+                                        <category android:name="android.intent.category.LAUNCHER" />
+                                    </intent-filter>
+                                </activity>
+                            </application>
+                        </manifest>"""
+                )
+                .withFile(
+                    "src/main/res/layout/base_main.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <LinearLayout
+                                xmlns:android="http://schemas.android.com/apk/res/android"
+                                android:orientation="vertical"
+                                android:layout_width="fill_parent"
+                                android:layout_height="fill_parent" >
+                            <TextView
                                     android:layout_width="fill_parent"
-                                    android:layout_height="fill_parent" >
-                                <TextView
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="Test App - Basic"
-                                        android:id="@+id/text" />
-                                <TextView
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:id="@+id/dateText" />
-                            </LinearLayout>""")
-                    .withFile("src/main/resources/base_java_res.txt", "base")
-                    .withFile(
-                            "src/main/java/com/example/baseFeature/Main.java",
-                            """package com.example.baseFeature;
+                                    android:layout_height="wrap_content"
+                                    android:text="Base"
+                                    android:id="@+id/text" />
+                            <TextView
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text=""
+                                    android:id="@+id/extraText" />
+                        </LinearLayout>"""
+                )
+                .withFile("src/main/resources/base_java_res.txt", "base")
+                .withFile(
+                    "src/main/java/com/example/baseModule/Main.java",
+                    """package com.example.baseModule;
 
-                            import android.app.Activity;
-                            import android.os.Bundle;
-                            import android.widget.TextView;
+                        import android.app.Activity;
+                        import android.os.Bundle;
+                        import android.widget.TextView;
 
-                            import java.lang.Exception;
-                            import java.lang.RuntimeException;
+                        import java.lang.Exception;
+                        import java.lang.RuntimeException;
 
-                            import com.example.lib1.Lib1Class;
+                        import com.example.lib1.Lib1Class;
 
-                            public class Main extends Activity {
+                        public class Main extends Activity {
 
-                                private int foo = 1234;
+                            private int foo = 1234;
 
-                                private final StringProvider stringProvider = new StringProvider();
+                            private final StringProvider stringProvider = new StringProvider();
 
-                                private final Lib1Class lib1Class = new Lib1Class();
+                            private final Lib1Class lib1Class = new Lib1Class();
 
-                                /** Called when the activity is first created. */
-                                @Override
-                                public void onCreate(Bundle savedInstanceState) {
-                                    super.onCreate(savedInstanceState);
-                                    setContentView(R.layout.base_main);
+                            /** Called when the activity is first created. */
+                            @Override
+                            public void onCreate(Bundle savedInstanceState) {
+                                super.onCreate(savedInstanceState);
+                                setContentView(R.layout.base_main);
 
-                                    TextView tv = (TextView) findViewById(R.id.dateText);
-                                    tv.setText(getLib1Class().toString());
-                                    tv.setText(getStringProvider().getString(foo));
-                                }
+                                TextView tv = (TextView) findViewById(R.id.extraText);
+                                tv.setText(
+                                        ""
+                                                + getLib1Class().getJavaRes()
+                                                + " "
+                                                + getStringProvider().getString(foo));
+                            }
 
-                                public StringProvider getStringProvider() {
-                                    return stringProvider;
-                                }
+                            public StringProvider getStringProvider() {
+                                return stringProvider;
+                            }
 
-                                public Lib1Class getLib1Class() {
-                                    return lib1Class;
-                                }
+                            public Lib1Class getLib1Class() {
+                                return lib1Class;
+                            }
 
-                                public void handleOnClick(android.view.View view) {
-                                    // This method should be kept by the default ProGuard rules.
-                                }
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/baseFeature/StringProvider.java",
-                            """package com.example.baseFeature;
+                            public void handleOnClick(android.view.View view) {
+                                // This method should be kept by the default ProGuard rules.
+                            }
+                        }"""
+                )
+                .withFile(
+                    "src/main/java/com/example/baseModule/StringProvider.java",
+                    """package com.example.baseModule;
 
-                            public class StringProvider {
+                        public class StringProvider {
 
-                                public String getString(int foo) {
-                                    return Integer.toString(foo);
-                                }
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/baseFeature/EmptyClassToKeep.java",
-                            """package com.example.baseFeature;
-                            public class EmptyClassToKeep {
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/baseFeature/EmptyClassToRemove.java",
-                            """package com.example.baseFeature;
-                            public class EmptyClassToRemove {
-                            }""")
-                    .withFile(
-                            "proguard-rules.pro",
-                            """-keep public class com.example.baseFeature.EmptyClassToKeep""")
+                            public String getString(int foo) {
+                                return Integer.toString(foo);
+                            }
+                        }"""
+                )
+                .withFile(
+                    "src/main/java/com/example/baseModule/EmptyClassToKeep.java",
+                    """package com.example.baseModule;
+                        public class EmptyClassToKeep {
+                        }"""
+                )
+                .withFile(
+                    "src/main/java/com/example/baseModule/EmptyClassToRemove.java",
+                    """package com.example.baseModule;
+                        public class EmptyClassToRemove {
+                        }"""
+                )
+                .withFile(
+                    "proguard-rules.pro",
+                    """-keep public class com.example.baseModule.EmptyClassToKeep"""
+                )
+        }
 
     private val otherFeature1 =
-            MinimalSubProject.feature("com.example.otherFeature1")
-                    .appendToBuild("""
-                            android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                    minified {
-                                        consumerProguardFiles "proguard-rules.pro"
-                                    }
+        when (multiApkMode) {
+            MultiApkMode.DYNAMIC_APP ->
+                MinimalSubProject.dynamicFeature("com.example.otherFeature1")
+            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.otherFeature1")
+        }.let {
+            it
+                .appendToBuild(
+                    """
+                        android {
+                            defaultConfig {
+                                minSdkVersion 18
+                            }
+                            buildTypes {
+                                minified.initWith(buildTypes.debug)
+                                minified {
+                                    consumerProguardFiles "proguard-rules.pro"
                                 }
                             }
+                        }
 
-                            dependencies {
-                                implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-                            }
-                            """)
-                    .withFile(
-                            "src/main/AndroidManifest.xml",
-                            """<?xml version="1.0" encoding="utf-8"?>
-                            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                                  package="com.example.otherFeature1">
-                                <application android:label="app_name">
-                                    <activity android:name=".Main"
-                                              android:label="app_name">
-                                        <intent-filter>
-                                            <action android:name="android.intent.action.MAIN" />
-                                            <category android:name="android.intent.category.LAUNCHER" />
-                                        </intent-filter>
-                                    </activity>
-                                </application>
-                            </manifest>""")
-                    .withFile(
-                            "src/main/res/layout/other_main.xml",
-                            """<?xml version="1.0" encoding="utf-8"?>
-                            <LinearLayout
-                                    xmlns:android="http://schemas.android.com/apk/res/android"
-                                    android:orientation="vertical"
+                        dependencies {
+                            implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+                            implementation 'com.android.support:appcompat-v7:26.0.2'
+                        }
+                        """
+                )
+                .withFile(
+                    "src/main/AndroidManifest.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                              package="com.example.otherFeature1">
+                            <application android:label="app_name">
+                                <activity android:name=".Main"
+                                          android:label="app_name">
+                                    <intent-filter>
+                                        <action android:name="android.intent.action.MAIN" />
+                                        <category android:name="android.intent.category.LAUNCHER" />
+                                    </intent-filter>
+                                </activity>
+                            </application>
+                        </manifest>"""
+                )
+                .withFile(
+                    "src/main/res/layout/other_main.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <LinearLayout
+                                xmlns:android="http://schemas.android.com/apk/res/android"
+                                android:orientation="vertical"
+                                android:layout_width="fill_parent"
+                                android:layout_height="fill_parent" >
+                            <TextView
                                     android:layout_width="fill_parent"
-                                    android:layout_height="fill_parent" >
-                                <TextView
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="Test App - Basic"
-                                        android:id="@+id/text" />
-                                <TextView
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:id="@+id/dateText" />
-                            </LinearLayout>""")
-                    .withFile("src/main/resources/other_java_res_1.txt", "other")
-                    .withFile(
-                            "src/main/java/com/example/otherFeature1/Main.java",
-                            """package com.example.otherFeature1;
+                                    android:layout_height="wrap_content"
+                                    android:text="Other Feature 1"
+                                    android:id="@+id/text" />
+                            <TextView
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text=""
+                                    android:id="@+id/extraText" />
+                        </LinearLayout>"""
+                )
+                .withFile("src/main/resources/other_java_res_1.txt", "other")
+                .withFile(
+                    "src/main/java/com/example/otherFeature1/Main.java",
+                    """package com.example.otherFeature1;
 
-                            import android.app.Activity;
-                            import android.os.Bundle;
-                            import android.widget.TextView;
+                        import android.app.Activity;
+                        import android.os.Bundle;
+                        import android.widget.TextView;
 
-                            import java.lang.Exception;
-                            import java.lang.RuntimeException;
+                        import java.lang.Exception;
+                        import java.lang.RuntimeException;
 
-                            import com.example.baseFeature.StringProvider;
-                            import com.example.lib2.Lib2Class;
+                        import com.example.baseModule.StringProvider;
+                        import com.example.lib2.Lib2Class;
 
-                            public class Main extends Activity {
+                        public class Main extends Activity {
 
-                                private int foo = 1234;
+                            private int foo = 1234;
 
-                                private final StringProvider stringProvider = new StringProvider();
+                            private final StringProvider stringProvider = new StringProvider();
 
-                                private final Lib2Class lib2Class = new Lib2Class();
+                            private final Lib2Class lib2Class = new Lib2Class();
 
-                                /** Called when the activity is first created. */
-                                @Override
-                                public void onCreate(Bundle savedInstanceState) {
-                                    super.onCreate(savedInstanceState);
-                                    setContentView(R.layout.other_main);
+                            /** Called when the activity is first created. */
+                            @Override
+                            public void onCreate(Bundle savedInstanceState) {
+                                super.onCreate(savedInstanceState);
+                                setContentView(R.layout.other_main);
 
-                                    TextView tv = (TextView) findViewById(R.id.dateText);
-                                    tv.setText(getLib2Class().toString());
-                                    tv.setText(getStringProvider().getString(foo));
-                                }
+                                TextView tv = (TextView) findViewById(R.id.extraText);
+                                tv.setText(
+                                        ""
+                                                + getLib2Class().getJavaRes()
+                                                + " "
+                                                + getStringProvider().getString(foo));
+                            }
 
-                                public StringProvider getStringProvider() {
-                                    return stringProvider;
-                                }
+                            public StringProvider getStringProvider() {
+                                return stringProvider;
+                            }
 
-                                public Lib2Class getLib2Class() {
-                                    return lib2Class;
-                                }
+                            public Lib2Class getLib2Class() {
+                                return lib2Class;
+                            }
 
-                                public void handleOnClick(android.view.View view) {
-                                    // This method should be kept by the default ProGuard rules.
-                                }
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/otherFeature1/EmptyClassToKeep.java",
-                            """package com.example.otherFeature1;
-                            public class EmptyClassToKeep {
-                            }""")
-                    .withFile(
-                            "src/main/java/com/example/otherFeature1/EmptyClassToRemove.java",
-                            """package com.example.otherFeature1;
-                            public class EmptyClassToRemove {
-                            }""")
-                    .withFile(
-                            "proguard-rules.pro",
-                            """-keep public class com.example.otherFeature1.EmptyClassToKeep""")
+                            public void handleOnClick(android.view.View view) {
+                                // This method should be kept by the default ProGuard rules.
+                            }
+                        }"""
+                )
+                .withFile(
+                    "src/main/java/com/example/otherFeature1/EmptyClassToKeep.java",
+                    """package com.example.otherFeature1;
+                        public class EmptyClassToKeep {
+                        }"""
+                )
+                .withFile(
+                    "src/main/java/com/example/otherFeature1/EmptyClassToRemove.java",
+                    """package com.example.otherFeature1;
+                        public class EmptyClassToRemove {
+                        }"""
+                )
+                .withFile(
+                    "proguard-rules.pro",
+                    """-keep public class com.example.otherFeature1.EmptyClassToKeep"""
+                )
+        }
 
     private val otherFeature2 =
-        MinimalSubProject.feature("com.example.otherFeature2")
+        when (multiApkMode) {
+            MultiApkMode.DYNAMIC_APP ->
+                MinimalSubProject.dynamicFeature("com.example.otherFeature2")
+            MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.otherFeature2")
+        }.let {
+            it
             .appendToBuild("""
-                            android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                }
-                            }
-                            """)
-            .withFile(
-                "src/main/AndroidManifest.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-                            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                                  package="com.example.otherFeature2">
-                                <application android:label="app_name">
-                                    <activity android:name=".Main"
-                                              android:label="app_name">
-                                        <intent-filter>
-                                            <action android:name="android.intent.action.MAIN" />
-                                            <category android:name="android.intent.category.LAUNCHER" />
-                                        </intent-filter>
-                                    </activity>
-                                </application>
-                            </manifest>""")
-            .withFile(
-                "src/main/res/layout/other_main.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-                            <LinearLayout
-                                    xmlns:android="http://schemas.android.com/apk/res/android"
-                                    android:orientation="vertical"
+                android {
+                    defaultConfig {
+                        minSdkVersion 18
+                    }
+                    buildTypes {
+                        minified.initWith(buildTypes.debug)
+                    }
+                }
+                """)
+                .withFile(
+                    "src/main/AndroidManifest.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                              package="com.example.otherFeature2">
+                            <application android:label="app_name">
+                                <activity android:name=".Main"
+                                          android:label="app_name">
+                                    <intent-filter>
+                                        <action android:name="android.intent.action.MAIN" />
+                                        <category android:name="android.intent.category.LAUNCHER" />
+                                    </intent-filter>
+                                </activity>
+                            </application>
+                        </manifest>"""
+                )
+                .withFile(
+                    "src/main/res/layout/other_main.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <LinearLayout
+                                xmlns:android="http://schemas.android.com/apk/res/android"
+                                android:orientation="vertical"
+                                android:layout_width="fill_parent"
+                                android:layout_height="fill_parent" >
+                            <TextView
                                     android:layout_width="fill_parent"
-                                    android:layout_height="fill_parent" >
-                                <TextView
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="Test App - Basic"
-                                        android:id="@+id/text" />
-                                <TextView
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:id="@+id/dateText" />
-                            </LinearLayout>""")
-            .withFile("src/main/resources/other_java_res_2.txt", "other")
-            .withFile(
-                "src/main/java/com/example/otherFeature2/Main.java",
-                """package com.example.otherFeature2;
+                                    android:layout_height="wrap_content"
+                                    android:text="Other Feature 2"
+                                    android:id="@+id/text" />
+                            <TextView
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text=""
+                                    android:id="@+id/extraText" />
+                        </LinearLayout>"""
+                )
+                .withFile("src/main/resources/other_java_res_2.txt", "other")
+                .withFile(
+                    "src/main/java/com/example/otherFeature2/Main.java",
+                    """package com.example.otherFeature2;
 
-                            import android.app.Activity;
-                            import android.os.Bundle;
-                            import android.widget.TextView;
+                        import android.app.Activity;
+                        import android.os.Bundle;
+                        import android.widget.TextView;
 
-                            import java.lang.Exception;
-                            import java.lang.RuntimeException;
+                        import java.lang.Exception;
+                        import java.lang.RuntimeException;
 
-                            import com.example.baseFeature.StringProvider;
+                        import com.example.baseModule.StringProvider;
 
-                            public class Main extends Activity {
+                        public class Main extends Activity {
 
-                                private int foo = 1234;
+                            private int foo = 1234;
 
-                                private final StringProvider stringProvider = new StringProvider();
+                            private final StringProvider stringProvider = new StringProvider();
 
-                                /** Called when the activity is first created. */
-                                @Override
-                                public void onCreate(Bundle savedInstanceState) {
-                                    super.onCreate(savedInstanceState);
-                                    setContentView(R.layout.other_main);
+                            /** Called when the activity is first created. */
+                            @Override
+                            public void onCreate(Bundle savedInstanceState) {
+                                super.onCreate(savedInstanceState);
+                                setContentView(R.layout.other_main);
 
-                                    TextView tv = (TextView) findViewById(R.id.dateText);
-                                    tv.setText(getStringProvider().getString(foo));
-                                }
+                                TextView tv = (TextView) findViewById(R.id.extraText);
+                                tv.setText(getStringProvider().getString(foo));
+                            }
 
-                                public StringProvider getStringProvider() {
-                                    return stringProvider;
-                                }
+                            public StringProvider getStringProvider() {
+                                return stringProvider;
+                            }
 
-                                public void handleOnClick(android.view.View view) {
-                                    // This method should be kept by the default ProGuard rules.
-                                }
-                            }""")
+                            public void handleOnClick(android.view.View view) {
+                                // This method should be kept by the default ProGuard rules.
+                            }
+                        }"""
+                )
+        }
 
     private val app =
-            MinimalSubProject.app("com.example.app")
-                .appendToBuild("""
-                            android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
-                                buildTypes {
-                                    minified.initWith(buildTypes.debug)
-                                }
-                            }
-                            """)
+        MinimalSubProject.app("com.example.app")
+            .appendToBuild("""
+                android {
+                    defaultConfig {
+                        minSdkVersion 18
+                    }
+                    buildTypes {
+                        minified.initWith(buildTypes.debug)
+                    }
+                }
+                """)
 
     private val instantApp = MinimalSubProject.instantApp()
 
     private val testApp =
-            MultiModuleTestProject.builder()
-                    .subproject(":lib1", lib1)
-                    .subproject(":lib2", lib2)
-                    .subproject(":lib3", lib3)
-                    .subproject(":baseFeature", baseFeature)
-                    .subproject(":otherFeature1", otherFeature1)
-                    .subproject(":otherFeature2", otherFeature2)
-                    .subproject(":app", app)
-                    .subproject(":instantApp", instantApp)
-                    .dependency(app, baseFeature)
-                    .dependency(app, otherFeature1)
-                    .dependency(app, otherFeature2)
-                    .dependency(otherFeature1, lib2)
-                    // otherFeature1 depends on lib3 to test having multiple library module
-                    // dependencies, which is non-trivial because some of the full.jar files need to
-                    // be renamed when copied to avoid collision.
-                    .dependency(otherFeature1, lib3)
-                    .dependency(otherFeature1, baseFeature)
-                    .dependency(otherFeature2, baseFeature)
-                    .dependency(lib2, lib1)
-                    .dependency(baseFeature, lib1)
-                    .dependency(instantApp, baseFeature)
-                    .dependency(instantApp, otherFeature1)
-                    .dependency(instantApp, otherFeature2)
-                    // Reverse dependencies for the instant app.
-                    .dependency("application", baseFeature, app)
-                    .dependency("feature", baseFeature, otherFeature1)
-                    .dependency("feature", baseFeature, otherFeature2)
-                    .build()
+        MultiModuleTestProject.builder()
+            .subproject(":lib1", lib1)
+            .subproject(":lib2", lib2)
+            .subproject(":lib3", lib3)
+            .subproject(":baseModule", baseModule)
+            .subproject(":otherFeature1", otherFeature1)
+            .subproject(":otherFeature2", otherFeature2)
+            .dependency(otherFeature1, lib2)
+            // otherFeature1 depends on lib3 to test having multiple library module dependencies.
+            .dependency(otherFeature1, lib3)
+            .dependency(otherFeature1, baseModule)
+            .dependency(otherFeature2, baseModule)
+            .dependency("api", lib2, lib1)
+            .dependency(baseModule, lib1)
+            .let {
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> it
+                    MultiApkMode.INSTANT_APP ->
+                        it
+                            .subproject(":app", app)
+                            .subproject(":instantApp", instantApp)
+                            .dependency(app, baseModule)
+                            .dependency(app, otherFeature1)
+                            .dependency(app, otherFeature2)
+                            .dependency(instantApp, baseModule)
+                            .dependency(instantApp, otherFeature1)
+                            .dependency(instantApp, otherFeature2)
+                            .dependency("application", baseModule, app)
+                            .dependency("feature", baseModule, otherFeature1)
+                            .dependency("feature", baseModule, otherFeature2)
+                }
+            }
+            .build()
 
     @get:Rule
     val project =
-            GradleTestProject.builder()
-                    .fromTestApp(testApp)
-                    .addGradleProperties(
-                            "${BooleanOption.ENABLE_DEX_ARCHIVE.propertyName}=$useDexArchive")
-                    .create()
+        GradleTestProject.builder()
+            .fromTestApp(testApp)
+            .addGradleProperties(
+                "${BooleanOption.ENABLE_DEX_ARCHIVE.propertyName}="
+                        + "${dexArchiveMode == DexArchiveMode.ENABLED}")
+            .addGradleProperties(
+                "${BooleanOption.ENABLE_DYNAMIC_APPS.propertyName}="
+                        + "${multiApkMode == MultiApkMode.DYNAMIC_APP}")
+            .create()
 
     @Test
     fun testApksAreMinified() {
-        project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified")
 
-        val baseFeatureApk =
-                project.getSubproject("baseFeature")
-                        .getFeatureApk(object: GradleTestProject.ApkType {
-                            override fun getBuildType() = "minified"
-                            override fun getTestName(): String? = null
-                            override fun isSigned() = true
-                        })
-        assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/Main;")
+         val apkType = object : GradleTestProject.ApkType {
+                override fun getBuildType() = "minified"
+                override fun getTestName(): String? = null
+                override fun isSigned() = true
+         }
+
+        project.executor()
+            .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .run("assembleMinified")
+
+        val baseModuleApk =
+            project.getSubproject("baseModule")
+                .let {
+                    when (multiApkMode) {
+                        MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                        MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
+                    }
+                }
+        assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/Main;")
         if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/StringProvider;")
+            assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/StringProvider;")
         } else {
-            assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/a;")
+            assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/a;")
         }
-        assertThat(baseFeatureApk).containsClass("Lcom/example/baseFeature/EmptyClassToKeep;")
-        assertThat(baseFeatureApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
+        assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
+        assertThat(baseModuleApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
         if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            assertThat(baseFeatureApk).containsClass("Lcom/example/lib1/Lib1Class;")
+            assertThat(baseModuleApk).containsClass("Lcom/example/lib1/Lib1Class;")
         } else {
-            assertThat(baseFeatureApk).containsClass("Lcom/example/lib1/a;")
+            assertThat(baseModuleApk).containsClass("Lcom/example/lib1/a;")
         }
-        assertThat(baseFeatureApk).containsJavaResource("base_java_res.txt")
-        assertThat(baseFeatureApk).containsJavaResource("other_java_res_1.txt")
-        assertThat(baseFeatureApk).containsJavaResource("other_java_res_2.txt")
-        assertThat(baseFeatureApk).doesNotContainClass(
+        assertThat(baseModuleApk).containsJavaResource("base_java_res.txt")
+        assertThat(baseModuleApk).containsJavaResource("other_java_res_1.txt")
+        assertThat(baseModuleApk).containsJavaResource("other_java_res_2.txt")
+        assertThat(baseModuleApk).containsJavaResource("lib1_java_res.txt")
+        assertThat(baseModuleApk).containsJavaResource("lib2_java_res.txt")
+        assertThat(baseModuleApk).doesNotContainClass(
             "Lcom/example/baseFeature/EmptyClassToRemove;")
-        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
-        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
-        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
-        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/lib2/a;")
-        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
-        assertThat(baseFeatureApk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
+        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
+        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib2/a;")
+        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
 
         val otherFeature1Apk =
-                project.getSubproject("otherFeature1")
-                        .getFeatureApk(object: GradleTestProject.ApkType {
-                            override fun getBuildType() = "minified"
-                            override fun getTestName(): String? = null
-                            override fun isSigned() = true
-                        })
+            project.getSubproject("otherFeature1")
+                .let {
+                    when (multiApkMode) {
+                        MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                        MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
+                    }
+                }
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/Main;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
@@ -582,21 +708,22 @@ class MinifyFeaturesTest(val codeShrinker: CodeShrinker, useDexArchive: Boolean)
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/Lib1Class;")
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/a;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/baseFeature/Main;")
+        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/baseModule/Main;")
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
 
         val otherFeature2Apk =
-                project.getSubproject("otherFeature2")
-                        .getFeatureApk(object: GradleTestProject.ApkType {
-                            override fun getBuildType() = "minified"
-                            override fun getTestName(): String? = null
-                            override fun isSigned() = true
-                        })
+            project.getSubproject("otherFeature2")
+                .let {
+                    when (multiApkMode) {
+                        MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                        MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
+                    }
+                }
         assertThat(otherFeature2Apk).containsClass("Lcom/example/otherFeature2/Main;")
         assertThat(otherFeature2Apk).doesNotContainJavaResource("other_java_res_2.txt")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseFeature/Main;")
+        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseModule/Main;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
     }
 }
