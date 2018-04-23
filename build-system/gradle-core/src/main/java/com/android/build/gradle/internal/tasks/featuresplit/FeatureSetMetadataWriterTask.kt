@@ -22,11 +22,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.options.IntegerOption
 import com.google.common.base.Splitter
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -44,11 +46,18 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
     lateinit var outputFile: File
         internal set
 
+    @Input
+    var minSdkVersion: Int = 1
+        internal set
+
+    @Input
+    var maxNumberOfFeaturesBeforeOreo: Int = FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O
+        internal set
 
     @TaskAction
     @Throws(IOException::class)
     fun fullTaskAction() {
-        val featureMetadata = FeatureSetMetadata()
+        val featureMetadata = FeatureSetMetadata(maxNumberOfFeaturesBeforeOreo)
 
         val featureFiles = inputFiles.asFileTree.files
         val features = mutableListOf<FeatureSplitDeclaration>()
@@ -64,7 +73,8 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
         val featureNameMap = computeFeatureNames(features)
 
         for (feature in features) {
-            featureMetadata.addFeatureSplit(feature.modulePath, featureNameMap[feature.modulePath]!!)
+            featureMetadata.addFeatureSplit(
+                minSdkVersion, feature.modulePath, featureNameMap[feature.modulePath]!!)
         }
 
         // save the list.
@@ -113,6 +123,7 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
 
         override fun execute(task: FeatureSetMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName
+            task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
             task.outputFile = variantScope.artifacts.appendArtifact(
                     InternalArtifactType.FEATURE_SET_METADATA,
@@ -124,6 +135,12 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
                 AndroidArtifacts.ArtifactScope.MODULE,
                 AndroidArtifacts.ArtifactType.METADATA_FEATURE_DECLARATION
             )
+            val maxNumberOfFeaturesBeforeOreo = variantScope.globalScope.projectOptions
+                .get(IntegerOption.PRE_O_MAX_NUMBER_OF_FEATURES)
+            if (maxNumberOfFeaturesBeforeOreo != null) {
+                task.maxNumberOfFeaturesBeforeOreo =
+                        Integer.min(100, maxNumberOfFeaturesBeforeOreo)
+            }
         }
     }
 }

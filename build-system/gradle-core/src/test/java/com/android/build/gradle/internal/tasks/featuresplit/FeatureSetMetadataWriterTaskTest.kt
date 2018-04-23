@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
+import com.android.sdklib.AndroidVersion
 import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
@@ -28,14 +29,18 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import java.io.File
 import java.io.IOException
+import java.util.Arrays
 
 /** Tests for the [FeatureSetMetadataWriterTask] class  */
-class FeatureSetMetadataWriterTaskTest {
+@RunWith(Parameterized::class)
+class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
@@ -45,6 +50,17 @@ class FeatureSetMetadataWriterTaskTest {
     @Mock lateinit var fileCollection: FileCollection
     @Mock lateinit var fileTree: FileTree
     val files = mutableSetOf<File>()
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "minSdkVersion={0}")
+        fun getParameters(): Collection<Array<Any>> {
+            return Arrays.asList(
+                arrayOf<Any>(AndroidVersion.VersionCodes.LOLLIPOP),
+                arrayOf<Any>(AndroidVersion.VersionCodes.O)
+            )
+        }
+    }
 
     @get:Rule
     val exception = ExpectedException.none()
@@ -61,6 +77,7 @@ class FeatureSetMetadataWriterTaskTest {
         task = project.tasks.create("test", FeatureSetMetadataWriterTask::class.java)
         task.outputFile = File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME)
         task.inputFiles = fileCollection
+        task.minSdkVersion = minSdkVersion
 
         `when`(fileCollection.asFileTree).thenReturn(fileTree)
         `when`(fileTree.files).thenReturn(files)
@@ -80,7 +97,10 @@ class FeatureSetMetadataWriterTaskTest {
 
         val loaded = FeatureSetMetadata.load(task.outputFile)
         for (i in 0..4) {
-            assertThat(loaded.getResOffsetFor("id_" + i)).isEqualTo(FeatureSetMetadata.BASE_ID + i)
+            assertThat(loaded.getResOffsetFor("id_" + i)).isEqualTo(
+                if (minSdkVersion < AndroidVersion.VersionCodes.O)
+                        FeatureSetMetadata.BASE_ID - i - 1 else
+                        FeatureSetMetadata.BASE_ID + i + 1)
         }
     }
 

@@ -80,6 +80,7 @@ import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.symbols.SymbolIo;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -195,6 +196,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return applicationId.get();
     }
 
+    @Input
+    public int getMinSdkVersion() {
+        return minSdkVersion;
+    }
+
     BuildableArtifact splitListInput;
 
 
@@ -205,6 +211,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private Supplier<String> applicationId;
 
     private File supportDirectory;
+    private int minSdkVersion;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -493,6 +500,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setSplits(getSplits(splitList))
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(getResOffset())
+                                .setAllowReservedPackageId(
+                                        minSdkVersion < AndroidVersion.VersionCodes.O)
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setImports(imports)
                                 .setIntermediateDir(getIncrementalFolder())
@@ -828,6 +837,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         FeatureSetMetadata.getInstance()
                                 .getResOffsetSupplierForTask(variantScope, processResources);
             }
+            processResources.minSdkVersion = variantScope.getMinSdkVersion().getApiLevel();
         }
     }
 

@@ -25,6 +25,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -46,6 +47,9 @@ import org.gradle.api.file.FileCollection;
 /** Container for all the feature split metadata. */
 public class FeatureSetMetadata {
 
+    public static final Integer MAX_NUMBER_OF_SPLITS_BEFORE_O = 50;
+    public static final Integer MAX_NUMBER_OF_SPLITS_STARTING_IN_O = 127;
+
     public interface SupplierProvider {
         @NonNull
         Supplier<String> getFeatureNameSupplierForTask(
@@ -57,20 +61,46 @@ public class FeatureSetMetadata {
     }
 
     @VisibleForTesting static final String OUTPUT_FILE_NAME = "feature-metadata.json";
-    @VisibleForTesting public static final int BASE_ID = 0x80;
+    /** Base module or application module resource ID */
+    @VisibleForTesting public static final int BASE_ID = 0x7F;
 
     private final Set<FeatureInfo> featureSplits;
+    private final Integer maxNumberOfSplitsBeforeO;
 
-    public FeatureSetMetadata() {
+    public FeatureSetMetadata(Integer maxNumberOfSplitsBeforeO) {
+        this.maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO;
         featureSplits = new HashSet<>();
     }
 
     private FeatureSetMetadata(Set<FeatureInfo> featureSplits) {
+        this.maxNumberOfSplitsBeforeO =
+                Integer.max(MAX_NUMBER_OF_SPLITS_BEFORE_O, featureSplits.size());
         this.featureSplits = ImmutableSet.copyOf(featureSplits);
     }
 
-    public void addFeatureSplit(@NonNull String modulePath, @NonNull String featureName) {
-        featureSplits.add(new FeatureInfo(modulePath, featureName, BASE_ID + featureSplits.size()));
+    public void addFeatureSplit(
+            int minSdkVersion, @NonNull String modulePath, @NonNull String featureName) {
+
+        int id;
+        if (minSdkVersion < AndroidVersion.VersionCodes.O) {
+            if (featureSplits.size() >= maxNumberOfSplitsBeforeO) {
+                throw new RuntimeException(
+                        "You have reached the maximum number of feature splits : "
+                                + maxNumberOfSplitsBeforeO);
+            }
+            // allocate split ID backwards excluding BASE_ID.
+            id = BASE_ID - 1 - featureSplits.size();
+        } else {
+            if (featureSplits.size() >= MAX_NUMBER_OF_SPLITS_STARTING_IN_O) {
+                throw new RuntimeException(
+                        "You have reached the maximum number of feature splits : "
+                                + MAX_NUMBER_OF_SPLITS_STARTING_IN_O);
+            }
+            // allocated forward excluding BASE_ID
+            id = BASE_ID + 1 + featureSplits.size();
+        }
+
+        featureSplits.add(new FeatureInfo(modulePath, featureName, id));
     }
 
     @Nullable

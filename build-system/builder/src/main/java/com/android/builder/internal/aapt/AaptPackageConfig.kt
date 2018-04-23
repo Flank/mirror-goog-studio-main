@@ -49,6 +49,7 @@ data class AaptPackageConfig(
         val generateProtos: Boolean = false,
         val imports: ImmutableList<File> = ImmutableList.of(),
         val packageId: Int? = null,
+        val allowReservedPackageId: Boolean = false,
         val dependentFeatures: ImmutableCollection<File> = ImmutableList.of(),
         val listResourceFiles: Boolean = false,
         val staticLibrary: Boolean = false,
@@ -83,6 +84,7 @@ data class AaptPackageConfig(
         private var variantType: VariantType? = null
         private var imports: ImmutableList<File> = ImmutableList.of()
         private var packageId: Int? = null
+        private var allowReservedPackageId: Boolean = false
         private var dependentFeatures: ImmutableCollection<File> = ImmutableList.of()
         private var listResourceFiles: Boolean = false
         private var staticLibrary: Boolean = false
@@ -117,6 +119,7 @@ data class AaptPackageConfig(
                     variantType = variantType!!,
                     imports = imports,
                     packageId = packageId,
+                    allowReservedPackageId = allowReservedPackageId,
                     dependentFeatures = dependentFeatures,
                     listResourceFiles = listResourceFiles,
                     staticLibrary = staticLibrary,
@@ -253,6 +256,15 @@ data class AaptPackageConfig(
 
         fun setIntermediateDir(intermediateDir: File): Builder {
             this.intermediateDir = intermediateDir
+            return this
+        }
+
+        /**
+         * Allows the use of a reserved package ID. This should on be used for packages with a
+         * pre-O min-sdk
+         */
+        fun setAllowReservedPackageId(value: Boolean): Builder {
+            this.allowReservedPackageId = value
             return this
         }
     }
