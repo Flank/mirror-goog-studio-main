@@ -48,8 +48,10 @@ import static com.android.builder.core.DefaultManifestParser.Attribute.VERSION_N
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.manifmerger.PlaceholderHandler;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
@@ -80,9 +82,10 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @NonNull
     private final Map<Attribute, String> attributeValues = Maps.newEnumMap(Attribute.class);
 
+    private final EvalIssueReporter issueReporter;
     private boolean initialized = false;
 
-    private BooleanSupplier canParseManifest = () -> true;
+    @NonNull private BooleanSupplier canParseManifest;
 
     /**
      * Builds instance of the parser, and parses the supplied file. The manifest is lazily parsed
@@ -90,11 +93,15 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
      *
      * @param manifestFile manifest to be parsed.
      * @param canParseManifest whether the manifest can currently be parsed.
+     * @param issueReporter EvalIssueReporter
      */
     public DefaultManifestParser(
-            @NonNull File manifestFile, @NonNull BooleanSupplier canParseManifest) {
+            @NonNull File manifestFile,
+            @NonNull BooleanSupplier canParseManifest,
+            @Nullable EvalIssueReporter issueReporter) {
         this.manifestFile = manifestFile;
         this.canParseManifest = canParseManifest;
+        this.issueReporter = issueReporter;
     }
 
     /** Gets the package name for the manifest file processed by this parser. */
@@ -267,9 +274,17 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     /** Parse the file and store the result in a map. */
     private void init() {
         synchronized (lock) {
-            if (!canParseManifest.getAsBoolean()) {
-                // TODO: add a deprecation warning for any DSL APIs that access values directly vs
-                // using a supplier.
+            if (!canParseManifest.getAsBoolean() && issueReporter != null) {
+                // This is not an exception since we still want sync to succeed if this occurs.
+                // Instead print the stack trace so that the developer will know how this occurred.
+                String stackTrace = Joiner.on("\n").join(Thread.currentThread().getStackTrace());
+                issueReporter.reportWarning(
+                        EvalIssueReporter.Type.MANIFEST_PARSED_DURING_CONFIGURATION,
+                        "The manifest is being parsed during configuration. Please "
+                                + "either remove android.disableConfigurationManifestParsing "
+                                + "from build.gradle or remove any build configuration rules "
+                                + "that read the android manifest file.\n"
+                                + stackTrace);
             }
             if (!initialized && manifestFile.isFile()) {
                 DefaultHandler handler =

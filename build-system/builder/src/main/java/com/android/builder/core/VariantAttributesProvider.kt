@@ -16,6 +16,7 @@
 
 package com.android.builder.core
 
+import com.android.builder.errors.EvalIssueReporter
 import com.google.common.base.Preconditions.checkState
 
 import com.android.builder.model.BuildType
@@ -266,7 +267,7 @@ class VariantAttributesProvider(
             }
             cachedVersionName = versionName
             if (cachedVersionName == null && manifestFile != null) {
-                cachedVersionName = DefaultManifestParser(manifestFile) { true }.versionName
+                cachedVersionName = DefaultManifestParser(manifestFile, { true }, null).versionName
             }
 
             if (versionSuffix != null && !versionSuffix.isEmpty()) {
@@ -288,7 +289,7 @@ class VariantAttributesProvider(
                 return versionCode
             }
             if (versionCode == -1 && manifestFile != null) {
-                versionCode = DefaultManifestParser(manifestFile) { true }.versionCode
+                versionCode = DefaultManifestParser(manifestFile, { true }, null).versionCode
             }
             isCached = true
             return versionCode

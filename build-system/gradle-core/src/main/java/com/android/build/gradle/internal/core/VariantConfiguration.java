@@ -243,7 +243,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                 mainManifestAttributeSupplier != null
                         ? mainManifestAttributeSupplier
                         : new DefaultManifestParser(
-                                mDefaultSourceProvider.getManifestFile(), isInExecutionPhase);
+                                mDefaultSourceProvider.getManifestFile(),
+                                isInExecutionPhase,
+                                issueReporter);
         mVariantAttributesProvider =
                 new VariantAttributesProvider(
                         mMergedFlavor,

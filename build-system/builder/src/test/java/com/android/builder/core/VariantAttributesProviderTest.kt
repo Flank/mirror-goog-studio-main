@@ -16,6 +16,7 @@
 
 package com.android.builder.core
 
+import com.android.builder.errors.EvalIssueReporter
 import com.google.common.truth.Truth.assertThat
 import org.mockito.Mockito.`when`
 

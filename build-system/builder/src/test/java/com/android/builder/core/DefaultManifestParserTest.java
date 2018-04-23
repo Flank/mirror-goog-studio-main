@@ -17,7 +17,11 @@
 package com.android.builder.core;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.testutils.TestResources;
 import java.io.File;
@@ -25,6 +29,7 @@ import java.util.function.BooleanSupplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -35,10 +40,25 @@ public class DefaultManifestParserTest {
 
     private DefaultManifestParser defaultManifestParser;
 
+    @Mock private EvalIssueReporter issueReporter;
+    File manifestFile;
+
     @Before
     public void before() throws Exception {
-        File manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml");
-        defaultManifestParser = new DefaultManifestParser(manifestFile, canParseManifest);
+        manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml");
+        defaultManifestParser =
+                new DefaultManifestParser(manifestFile, canParseManifest, issueReporter);
+    }
+
+    @Test
+    public void parseManifestReportsWarning() {
+        DefaultManifestParser manifestParser =
+                new DefaultManifestParser(manifestFile, () -> false, issueReporter);
+        manifestParser.getPackage();
+        verify(issueReporter)
+                .reportWarning(
+                        eq(EvalIssueReporter.Type.MANIFEST_PARSED_DURING_CONFIGURATION),
+                        anyString());
     }
 
     @Test

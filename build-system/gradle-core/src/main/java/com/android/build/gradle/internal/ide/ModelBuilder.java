@@ -470,7 +470,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
         File manifest = variantConfiguration.getMainManifest();
         if (manifest != null) {
             ManifestAttributeSupplier attributeSupplier =
-                    new DefaultManifestParser(manifest, () -> true);
+                    new DefaultManifestParser(
+                            manifest, () -> true, extraModelInfo.getSyncIssueHandler());
             validateMinSdkVersion(attributeSupplier);
             validateTargetSdkVersion(attributeSupplier);
         }

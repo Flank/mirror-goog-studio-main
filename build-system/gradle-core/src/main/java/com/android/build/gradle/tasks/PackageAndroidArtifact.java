@@ -53,6 +53,7 @@ import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -85,6 +86,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -296,7 +298,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                 listBuilder.add(
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
                                                         manifest,
-                                                        () -> getProject().getState().getExecuted())
+                                                        () -> true,
+                                                        getBuilder().getIssueReporter())
                                                 .toString());
                             }
                         });
@@ -656,6 +659,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             + " associated manifest file");
         }
         FileUtils.mkdirs(outputFile.getParentFile());
+        EvalIssueReporter issueReporter = getBuilder().getIssueReporter();
+        // we are executing a task right now, so we can parse the manifest.
+        BooleanSupplier isInExecutionPhase = () -> true;
 
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder()
@@ -669,17 +675,20 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         .withNativeLibraryPackagingMode(
                                 PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
                                         manifestForSplit.getOutputFile(),
-                                        () -> getProject().getState().getExecuted()))
+                                        isInExecutionPhase,
+                                        issueReporter))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
                                         aaptOptionsNoCompress,
                                         manifestForSplit.getOutputFile(),
-                                        () -> getProject().getState().getExecuted()))
+                                        isInExecutionPhase,
+                                        issueReporter))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withProject(getProject())
                         .withDebuggableBuild(getDebugBuild())
                         .withAcceptedAbis(filter == null ? abiFilters : ImmutableSet.of(filter))
                         .withJniDebuggableBuild(getJniDebugBuild())
+                        .withIssueReporter(issueReporter)
                         .build()) {
             packager.updateDex(dexFilesToPackage);
             packager.updateJavaResources(changedJavaResources);
