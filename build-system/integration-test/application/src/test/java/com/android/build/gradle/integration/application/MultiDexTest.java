@@ -134,9 +134,8 @@ public class MultiDexTest {
                             mainDexListPath, "android.support.multidex.MultiDexApplication");
         }
 
-        //noinspection EmptyTryBlock TODO(b/74425653): Implement support in bundle tool.
-        try (Apk bundleBase = getBaseBundleApk()) {
-            // assertMainDexContains(bundleBase, mandatoryClasses);
+        try (Apk bundleBase = getStandaloneBundleApk()) {
+            assertMainDexContains(bundleBase, mandatoryClasses);
         }
 
         // manually inspect the apk to ensure that the classes.dex that was created is the same
@@ -174,8 +173,8 @@ public class MultiDexTest {
                 .containsClass("Lcom/android/tests/basic/DeadCode;");
     }
 
-    private Apk getBaseBundleApk() throws IOException {
-        Path extracted = temporaryFolder.newFile("base-master.apk").toPath();
+    private Apk getStandaloneBundleApk() throws IOException {
+        Path extracted = temporaryFolder.newFile("standalone-hdpi.apk").toPath();
 
         try (FileSystem apks =
                         FileUtils.createZipFilesystem(
@@ -187,7 +186,7 @@ public class MultiDexTest {
                                         .toPath());
                 BufferedOutputStream out =
                         new BufferedOutputStream(Files.newOutputStream(extracted))) {
-            Files.copy(apks.getPath("base-master.apk"), out);
+            Files.copy(apks.getPath("standalone-hdpi.apk"), out);
         }
         return new Apk(extracted);
     }

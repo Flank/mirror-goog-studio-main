@@ -110,7 +110,13 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             it.addJar(resFiles.single().toPath(), null, ResRelocator())
 
             // dex files
-            addHybridFolder(it, dexFiles.files, DexRelocator(FD_DEX), null)
+            if (dexFiles.files.size == 1) {
+                // Don't rename if there is only one input folder
+                // as this might be the legacy multidex case.
+                addHybridFolder(it, dexFiles.files.sortedBy { it.name }, Relocator(FD_DEX), null)
+            } else {
+                addHybridFolder(it, dexFiles.files.sortedBy { it.name }, DexRelocator(FD_DEX), null)
+            }
 
             addHybridFolder(it, javaResFiles.files,
                 Relocator("root"),
@@ -122,7 +128,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     private fun addHybridFolder(
         jarMerger: JarMerger,
-        files: Set<File>,
+        files: Iterable<File>,
         relocator: JarMerger.Relocator? = null,
         fileFilter: Predicate<String>? = null ) {
         // in this case the artifact is a folder containing things to add
