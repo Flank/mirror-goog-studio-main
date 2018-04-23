@@ -335,13 +335,26 @@ public class XmlUtils {
      */
     public static void appendXmlAttributeValue(@NonNull StringBuilder sb,
             @NonNull String attrValue) {
+        appendXmlAttributeValue(sb, attrValue, 0, attrValue.length());
+    }
+
+    /**
+     * Appends text to the given {@link StringBuilder} and escapes it as required for a
+     * DOM attribute node.
+     *
+     * @param sb the string builder
+     * @param attrValue the attribute value to be appended and escaped
+     * @param start the starting offset in the text string
+     * @param end the ending offset in the text string
+     */
+    public static void appendXmlAttributeValue(
+            @NonNull StringBuilder sb, @NonNull String attrValue, int start, int end) {
         // See https://www.w3.org/TR/2000/WD-xml-c14n-20000119.html#charescaping
-        int n = attrValue.length();
         // &, ", ' and < are illegal in attributes; see http://www.w3.org/TR/REC-xml/#NT-AttValue
         // (' legal in a " string and " is legal in a ' string but here we'll stay on the safe
         // side)
         char prev = 0;
-        for (int i = 0; i < n; i++) {
+        for (int i = start; i < end; i++) {
             char c = attrValue.charAt(i);
             if (c == '"') {
                 sb.append(QUOT_ENTITY);
@@ -380,9 +393,9 @@ public class XmlUtils {
      * node.
      *
      * @param sb the string builder
+     * @param textValue the text value to be appended and escaped
      * @param start the starting offset in the text string
      * @param end the ending offset in the text string
-     * @param textValue the text value to be appended and escaped
      */
     public static void appendXmlTextValue(
             @NonNull StringBuilder sb, @NonNull String textValue, int start, int end) {
