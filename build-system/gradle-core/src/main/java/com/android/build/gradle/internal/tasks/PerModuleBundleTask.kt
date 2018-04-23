@@ -37,6 +37,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
 import java.util.function.Supplier
@@ -189,20 +190,37 @@ private class Relocator(private val prefix: String): JarMerger.Relocator {
     override fun relocate(entryPath: String) = "$prefix/$entryPath"
 }
 
+/**
+ * Relocate the dex files into a single folder which might force renaming
+ * the dex files into a consistent scheme : classes.dex, classes2.dex, classes4.dex, ...
+ *
+ * <p>Note that classes1.dex is not a valid dex file name</p>
+ *
+ * When dealing with native multidex, we can have several folders each containing 1 to many
+ * dex files (with the same naming scheme). In that case, merge and rename accordingly, note
+ * that only one classes.dex can exist in the merged location so the others will be renamed.
+ *
+ * When dealing with a single feature (base) in legacy multidex, we must not rename the
+ * main dex file (classes.dex) as it contains the bootstrap code for the application.
+ */
 private class DexRelocator(private val prefix: String): JarMerger.Relocator {
-    val index = AtomicInteger(1)
+    // first valid classes.dex with an index starts at 2.
+    val index = AtomicInteger(2)
+    val classesDexNameUsed = AtomicBoolean(false)
     override fun relocate(entryPath: String): String {
-        val entryIndex = index.getAndIncrement()
         if (entryPath.startsWith("classes")) {
-            return if (entryIndex == 1) {
+            return if (entryPath == "classes.dex" && !classesDexNameUsed.get()) {
+                classesDexNameUsed.set(true)
                 "$prefix/classes.dex"
             } else {
+                val entryIndex = index.getAndIncrement()
                 "$prefix/classes$entryIndex.dex"
             }
         }
         return "$prefix/$entryPath"
     }
 }
+
 
 private class ResRelocator : JarMerger.Relocator {
     override fun relocate(entryPath: String) = when(entryPath) {
