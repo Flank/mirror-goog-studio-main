@@ -328,7 +328,7 @@ private fun parseDeclareStyleable(
                     attrValues.add((attrSymbol as Symbol.NormalSymbol).intValue)
                 } else {
                     throw ResourceValuesXmlParseException(
-                            String.format("Unknown android attribute '%s'", name))
+                            String.format("Unknown android attribute '%s'", attrName))
                 }
             }
         } else {

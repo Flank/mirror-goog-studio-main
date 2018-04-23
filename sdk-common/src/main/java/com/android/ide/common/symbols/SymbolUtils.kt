@@ -46,6 +46,8 @@ import javax.xml.parsers.ParserConfigurationException
 private val NORMALIZED_VALUE_NAME_CHARS =
     CharMatcher.anyOf(".:").precomputed()
 
+private const val ANDROID_UNDERSCORE_PREFIX = "android_"
+
 fun mergeAndRenumberSymbols(
     mainPackageName: String,
     librarySymbols: SymbolTable,
@@ -126,22 +128,31 @@ fun mergeAndRenumberSymbols(
         // now get the attributes values using the new symbol map
         val attributeValues = ImmutableList.builder<Int>()
         for (attribute in attributes) {
-            if (attribute.startsWith(SdkConstants.ANDROID_NS_NAME_PREFIX)) {
+            // Resources coming from this module might have the "android:" prefix, but the ones
+            // coming from dependencies might have the "android_" prefix.
+            if (attribute.startsWith(SdkConstants.ANDROID_NS_NAME_PREFIX)
+                    || attribute.startsWith(ANDROID_UNDERSCORE_PREFIX)) {
                 val name = attribute.substring(SdkConstants.ANDROID_NS_NAME_PREFIX_LEN)
 
                 val platformSymbol =
                     platformSymbols.symbols.get(ResourceType.ATTR, name) as Symbol.NormalSymbol?
                 if (platformSymbol != null) {
                     attributeValues.add(platformSymbol.intValue)
+                    continue
                 }
+            }
+
+            // If it's not a resource from the platform, try finding the ID in the attrToValue map
+            val symbol = attrToValue[attribute]
+            if (symbol != null) {
+                // symbol can be null if the symbol table is broken. This is possible
+                // some non-final AAR built with non final Gradle.
+                // e.g.  com.android.support:appcompat-v7:26.0.0-beta2
+                attributeValues.add(symbol.intValue)
             } else {
-                val symbol = attrToValue[attribute]
-                if (symbol != null) {
-                    // symbol can be null if the symbol table is broken. This is possible
-                    // some non-final AAR built with non final Gradle.
-                    // e.g.  com.android.support:appcompat-v7:26.0.0-beta2
-                    attributeValues.add(symbol.intValue)
-                }
+                // If we couldn't find the ID, add a non-valid ID of "0" so that the R.txt file is
+                // still parse-able.
+                attributeValues.add(0)
             }
         }
 
