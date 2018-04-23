@@ -33,5 +33,7 @@ dependencies {
     // Add this dependency as regression test for https://issuetracker.google.com/78144836
     // (Add it to implementation instead of androidTestImplementation so it's tested by the assemble
     // task.)
-    implementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
+    // TODO: Comment out for now to wait for the AndroidX version of Android testing support library
+    // to be available on GMaven. Once it is available, remove the comment.
+    //implementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
 }

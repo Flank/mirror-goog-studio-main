@@ -46,7 +46,7 @@ class AndroidXMapping {
                 "com.android.support:recyclerview-v7" to "androidx.recyclerview:recyclerview:1.0.0-alpha1",
                 "com.android.support:support-annotations" to "androidx.annotation:annotation:1.0.0-alpha1",
                 "com.android.support:support-compat" to "androidx.core:core:1.0.0-alpha1",
-                "com.android.support:support-content" to "androidx.contentpaging:contentpaging:1.0.0-alpha1",
+                "com.android.support:support-content" to "androidx.contentpager:contentpager:1.0.0-alpha1",
                 "com.android.support:support-core-ui" to "androidx.legacy:legacy-support-core-ui:1.0.0-alpha1",
                 "com.android.support:support-core-utils" to "androidx.legacy:legacy-support-core-utils:1.0.0-alpha1",
                 "com.android.support:support-dynamic-animation" to "androidx.dynamicanimation:dynamicanimation:1.0.0-alpha1",
@@ -102,16 +102,36 @@ class AndroidXMapping {
                 "android.arch.persistence.room:guava" to "androidx.room:room-guava:2.0.0-alpha1",
                 "com.android.support.constraint:constraint-layout" to "androidx.constraintlayout:constraintlayout:1.1.0",
                 "com.android.support.constraint:constraint-layout-solver" to "androidx.constraintlayout:constraintlayout-solver:1.1.0",
+                "com.android.support.test:orchestrator" to "androidx.test:orchestrator:1.1.0-alpha1",
+                "com.android.support.test:rules" to "androidx.test:rules:1.1.0-alpha1",
+                "com.android.support.test:runner" to "androidx.test:runner:1.1.0-alpha1",
+                "com.android.support.test:monitor" to "androidx.test:monitor:1.1.0-alpha1",
+                "com.android.support.test.espresso:espresso-accessibility" to "androidx.test.espresso:espresso-accessibility:3.1.0-alpha1",
+                "com.android.support.test.espresso:espresso-contrib" to "androidx.test.espresso:espresso-contrib:3.1.0-alpha1",
+                "com.android.support.test.espresso:espresso-core" to "androidx.test.espresso:espresso-core:3.1.0-alpha1",
+                "com.android.support.test.espresso:espresso-idling-resource" to "androidx.test.espresso:espresso-idling-resource:3.1.0-alpha1",
+                "com.android.support.test.espresso:espresso-intents" to "androidx.test.espresso:espresso-intents:3.1.0-alpha1",
+                "com.android.support.test.espresso:espresso-web" to "androidx.test.espresso:espresso-web:3.1.0-alpha1",
+                "com.android.support.test.espresso.idling:idling-concurrent" to "androidx.test.espresso.idling:idling-concurrent:3.1.0-alpha1",
+                "com.android.support.test.espresso.idling:idling-net" to "androidx.test.espresso.idling:idling-net:3.1.0-alpha1",
+                "com.android.support.test.janktesthelper:janktesthelper-v23" to "androidx.test.jank:janktesthelper-v23:1.0.1-alpha1",
+                "com.android.support.test.services:test-services" to "androidx.test:test-services:1.1.0-alpha1",
+                "com.android.support.test.uiautomator:uiautomator-v18" to "androidx.test.uiautomator:uiautomator-v18:2.2.0-alpha1",
                 "com.android.support:car" to "androidx.car:car:1.0.0-alpha1",
                 "com.android.support:slices-core" to "androidx.slice:slice-core:1.0.0-alpha1",
                 "com.android.support:slices-builders" to "androidx.slice:slice-builders:1.0.0-alpha1",
                 "com.android.support:slices-view" to "androidx.slice:slice-view:1.0.0-alpha1",
                 "com.android.support:heifwriter" to "androidx.heifwriter:heifwriter:1.0.0-alpha1",
                 "com.android.support:recyclerview-selection" to "androidx.recyclerview:recyclerview-selection:1.0.0-alpha1",
-                "com.android.support:webkit" to "androidx.webkit:webkit:1.0.0-alpha1"
-                // Adding the databinding mappings here somehow breaks databinding. We already
-                // handle databinding in JetifyTransform, so there is probably no need to handle it
-                // here.
-            )
+                "com.android.support:webkit" to "androidx.webkit:webkit:1.0.0-alpha1",
+                "com.android.databinding:adapters" to "androidx.databinding:databinding-adapters:${Version.ANDROID_GRADLE_PLUGIN_VERSION}",
+                // "com.android.databinding:baseLibrary" should not be replaced with
+                // "androidx.databinding:databinding-common" in some cases (see
+                // JetifyTransform.bypassDependencySubstitution()). Therefore, we don't have that
+                // mapping here.
+                "com.android.databinding:compiler" to "androidx.databinding:databinding-compiler:${Version.ANDROID_GRADLE_PLUGIN_VERSION}",
+                "com.android.databinding:compilerCommon" to "androidx.databinding:databinding-compiler-common:${Version.ANDROID_GRADLE_PLUGIN_VERSION}",
+                "com.android.databinding:library" to "androidx.databinding:databinding-runtime:${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+        )
     }
 }
