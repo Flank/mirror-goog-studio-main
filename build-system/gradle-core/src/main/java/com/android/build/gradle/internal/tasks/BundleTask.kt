@@ -231,7 +231,6 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
-            // The bundle uses the main dex list even if legacy multidex is not explicitly enabled.
             if (scope.needsMainDexList) {
                 task.mainDexList =
                         scope.artifacts.getFinalArtifactFiles(

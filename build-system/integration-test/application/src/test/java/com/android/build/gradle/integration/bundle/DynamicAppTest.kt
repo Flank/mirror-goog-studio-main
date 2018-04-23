@@ -48,7 +48,6 @@ class DynamicAppTest {
 
     private val bundleContent: Array<String> = arrayOf(
         "/BundleConfig.pb",
-        "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt",
         "/base/dex/classes.dex",
         "/base/manifest/AndroidManifest.xml",
         "/base/res/layout/base_layout.xml",
