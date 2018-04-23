@@ -26,7 +26,7 @@ import com.android.ide.common.symbols.SymbolTestUtils.createSymbol as symbol
 
 
 /**
- * these are tests for [SymbolUtils.mergeAndRenumberSymbols]
+ * these are tests for [mergeAndRenumberSymbols]
  */
 class SymbolTableMergeTest {
 
@@ -367,5 +367,62 @@ class SymbolTableMergeTest {
             .build()
 
         assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun testAndroidPrefixes() {
+        val androidSymbols = SymbolTable.builder()
+                .tablePackage("android")
+                .add(symbol("attr", "foo", "int", 0x10_04_002A))
+                .build()
+
+        val table1 = SymbolTable.builder()
+                .tablePackage("myModule")
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 12, 42 }",
+                                listOf("android:foo", "bar")))
+                .build()
+
+        // When we read a table from a dependency, we might store it keeping the "android_" prefix.
+        // We need to make sure we can handle these too. Also if a resource doesn't have an ID, we
+        // should use "0".
+        val table2 = SymbolTable.builder()
+                .tablePackage("lib1")
+                .add(symbol("attr", "bar", "int", 42))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style2",
+                                "int[]",
+                                "{ 12, 999, 42 }",
+                                listOf("android_foo", "android_not_found", "bar")))
+                .build()
+
+        val result = mergeAndRenumberSymbols("",
+                table1, ImmutableSet.of(table2), androidSymbols)
+
+        val expected = SymbolTable.builder()
+                .add(symbol("attr", "bar", "int", 0x7f_04_0001))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 0x1004002a, 0x7f040001 }",
+                                listOf("android:foo", "bar")))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style2",
+                                "int[]",
+                                "{ 0x1004002a, 0, 0x7f040001 }",
+                                listOf("android_foo", "android_not_found", "bar")))
+                .build()
+
+        Truth.assertThat(result).isEqualTo(expected)
     }
 }
