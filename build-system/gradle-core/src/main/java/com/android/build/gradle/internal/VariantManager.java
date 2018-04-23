@@ -378,10 +378,7 @@ public class VariantManager implements VariantModel {
     private void createAssembleTaskForVariantData(final BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
         VariantType variantType = variantData.getType();
-        boolean needBundleTask =
-                variantType.isBaseModule()
-                        && !variantType.isHybrid()
-                        && projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS);
+        boolean needBundleTask = variantType.isBaseModule() && !variantType.isHybrid();
         if (variantType.isTestComponent()) {
             variantScope.setAssembleTask(taskManager.createAssembleTask(variantData));
         } else {
@@ -502,9 +499,7 @@ public class VariantManager implements VariantModel {
                             task.dependsOn(buildTypeData.getAssembleTask().getName());
                         });
 
-        if (variantScope.getType().isBaseModule()
-                && !variantScope.getType().isHybrid()
-                && projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS)) {
+        if (variantScope.getType().isBaseModule() && !variantScope.getType().isHybrid()) {
             if (buildTypeData.getBundleTask() == null) {
                 buildTypeData.setBundleTask(taskManager.createBundleTask(buildTypeData));
             }

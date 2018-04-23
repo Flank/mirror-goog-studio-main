@@ -65,7 +65,7 @@ class NoCompressTest {
 
     @Test
     fun bundleNoCompressTest() {
-        project.executor().with(BooleanOption.ENABLE_DYNAMIC_APPS, true).run(":makeApkFromBundleForDebug")
+        project.executor().run(":makeApkFromBundleForDebug")
 
         val extracted = temporaryFolder.newFile("base-master.apk")
 

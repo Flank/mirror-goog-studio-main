@@ -72,7 +72,6 @@ class DynamicAppTest {
     fun `test model contains feature information`() {
         val rootBuildModelMap = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchAndroidProjects()
             .rootBuildModelMap
 
@@ -246,7 +245,6 @@ class DynamicAppTest {
         // query the model to get the task name
         val syncModels = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
@@ -259,7 +257,6 @@ class DynamicAppTest {
         // query the model to get the task name
         val syncModels = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
@@ -271,7 +268,6 @@ class DynamicAppTest {
     private fun getApkFolderOutput(variantName: String): AppBundleVariantBuildOutput {
         val outputModels = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchContainer(AppBundleProjectBuildOutput::class.java)
 
         val outputAppModel = outputModels.rootBuildModelMap[":app"]

@@ -113,7 +113,6 @@ public class MultiDexTest {
         }
 
         executor()
-                .with(BooleanOption.ENABLE_DYNAMIC_APPS, true)
                 .run("assembleDebug", "makeApkFromBundleForIcsDebug", "assembleAndroidTest");
 
         List<String> mandatoryClasses =

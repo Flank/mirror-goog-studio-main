@@ -70,7 +70,7 @@ class BundleOptionsTest {
 
 
     private fun generateApks(): Set<String> {
-        project.executor().with(BooleanOption.ENABLE_DYNAMIC_APPS, true).run(":makeApkFromBundleForDebug")
+        project.executor().run(":makeApkFromBundleForDebug")
         return FileUtils.createZipFilesystem(
             project.getIntermediateFile(
                 "apks_from_bundle",
