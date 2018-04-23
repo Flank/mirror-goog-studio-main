@@ -74,7 +74,7 @@ public class ResValueTypeConnectedTest {
                         + "        resValue \"declare-styleable\", \"resDeclareStyleable\", \"foo\"\n"
                         + "        resValue \"dimen\",             \"resDimen\",            \"42px\"\n"
                         + "        resValue \"fraction\",          \"resFraction\",         \"42%\"\n"
-                        + "        resValue \"id\",                \"resId\",               \"42\"\n"
+                        + "        resValue \"id\",                \"resId\",               \"\"\n // needs to be empty or a resource reference"
                         + "        resValue \"integer\",           \"resInteger\",          \"42\"\n"
                         + "        resValue \"plurals\",           \"resPlurals\",          \"s\"\n"
                         + "        resValue \"string\",            \"resString\",           \"00\"  // resString becomes \"0\" if it is incorrectly treated  as int.\n"
