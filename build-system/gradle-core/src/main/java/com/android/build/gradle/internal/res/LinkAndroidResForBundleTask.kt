@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
@@ -35,15 +34,9 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
-import com.android.builder.internal.aapt.Aapt
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.blame.MergingLog
-import com.android.ide.common.blame.MergingLogRewriter
-import com.android.ide.common.blame.ParsingProcessOutputHandler
-import com.android.ide.common.blame.SourceFilePosition
-import com.android.ide.common.blame.parser.ToolOutputParser
-import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.build.ApkInfo
+import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -62,7 +55,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
-import java.util.function.Function
 import java.util.function.Supplier
 import javax.inject.Inject
 
@@ -166,6 +158,7 @@ open class LinkAndroidResForBundleTask
                 variantType = VariantTypeImpl.BASE_APK,
                 debuggable = debuggable,
                 packageId =  resOffset,
+                allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
                 dependentFeatures = featurePackagesBuilder.build(),
                 pseudoLocalize = getPseudoLocalesEnabled(),
                 resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).single()))
@@ -183,28 +176,6 @@ open class LinkAndroidResForBundleTask
             it.submit(Aapt2ProcessResourcesRunnable::class.java,
                 Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config))
         }
-    }
-
-    /**
-     * Create an instance of AAPT. Whenever calling this method make sure the close() method is
-     * called on the instance once the work is done.
-     */
-    private fun makeAapt(): Aapt {
-        val builder = builder
-        val mergingLog = MergingLog(mergeBlameLogFolder!!)
-
-        val processOutputHandler = ParsingProcessOutputHandler(
-                ToolOutputParser(Aapt2OutputParser(), iLogger),
-                MergingLogRewriter(
-                        Function<SourceFilePosition, SourceFilePosition> { mergingLog.find(it) },
-                        builder.messageReceiver))
-
-        return AaptGradleFactory.make(
-            aaptGeneration!!,
-            builder,
-            processOutputHandler,
-            true,
-            aaptOptions.cruncherProcesses)
     }
 
     @get:InputFiles
@@ -235,6 +206,10 @@ open class LinkAndroidResForBundleTask
     fun getAaptOptions(): com.android.build.gradle.internal.dsl.AaptOptions? {
         return aaptOptions
     }
+
+    @get:Input
+    var minSdkVersion: Int = 1
+        private set
 
     class ConfigAction(private val variantScope: VariantScope)
         : TaskConfigAction<LinkAndroidResForBundleTask> {
@@ -297,6 +272,7 @@ open class LinkAndroidResForBundleTask
 
             processResources.mergeBlameLogFolder = variantScope.resourceBlameLogDir
             processResources.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            processResources.minSdkVersion = variantScope.minSdkVersion.apiLevel
         }
     }
 

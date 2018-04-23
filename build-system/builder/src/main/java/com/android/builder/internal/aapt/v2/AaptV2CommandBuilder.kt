@@ -289,6 +289,9 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     }
 
     if (config.packageId != null) {
+        if (config.allowReservedPackageId) {
+            builder.add("--allow-reserved-package-id")
+        }
         builder.add("--package-id", "0x" + Integer.toHexString(config.packageId))
         for (dependentFeature in config.dependentFeatures) {
             builder.add("-I", dependentFeature.absolutePath)

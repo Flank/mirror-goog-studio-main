@@ -18,34 +18,55 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Tests for {@link FeatureSetMetadata} class. */
+@RunWith(Parameterized.class)
 public class FeatureSetMetadataTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Parameterized.Parameters(name = "minSdkVersion={0}")
+    public static Collection<Object[]> getParameters() {
+        return Arrays.asList(
+                new Object[][] {
+                    {AndroidVersion.VersionCodes.LOLLIPOP}, {AndroidVersion.VersionCodes.O}
+                });
+    }
+
+    final int minSdkVersion;
+
+    public FeatureSetMetadataTest(int minSdkVersion) {
+        this.minSdkVersion = minSdkVersion;
+    }
 
     @Before
     public void setUp() {
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void testMissingPesistenceFile() throws IOException {
+    public void testMissingPersistenceFile() throws IOException {
         FeatureSetMetadata.load(new File(""));
     }
 
     @Test
     public void testPersistence() throws IOException {
-        FeatureSetMetadata featureSetMetadata = new FeatureSetMetadata();
-        featureSetMetadata.addFeatureSplit(":one", "one");
-        featureSetMetadata.addFeatureSplit(":two", "two");
-        featureSetMetadata.addFeatureSplit(":three", "three");
+        FeatureSetMetadata featureSetMetadata =
+                new FeatureSetMetadata(FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O);
+        featureSetMetadata.addFeatureSplit(minSdkVersion, ":one", "one");
+        featureSetMetadata.addFeatureSplit(minSdkVersion, ":two", "two");
+        featureSetMetadata.addFeatureSplit(minSdkVersion, ":three", "three");
         featureSetMetadata.save(
                 new File(temporaryFolder.getRoot(), FeatureSetMetadata.OUTPUT_FILE_NAME));
         File[] files = temporaryFolder.getRoot().listFiles();
@@ -59,21 +80,30 @@ public class FeatureSetMetadataTest {
 
         assertThat(loaded.getResOffsetFor(":one"))
                 .named("getResOffsetFor :one")
-                .isEqualTo(FeatureSetMetadata.BASE_ID);
+                .isEqualTo(
+                        minSdkVersion < 26
+                                ? FeatureSetMetadata.BASE_ID - 1
+                                : FeatureSetMetadata.BASE_ID + 1);
         assertThat(loaded.getFeatureNameFor(":one"))
                 .named("getFeatureNameFor :one")
                 .isEqualTo("one");
 
         assertThat(loaded.getResOffsetFor(":two"))
                 .named("getResOffsetFor :two")
-                .isEqualTo(FeatureSetMetadata.BASE_ID + 1);
+                .isEqualTo(
+                        minSdkVersion < 26
+                                ? FeatureSetMetadata.BASE_ID - 2
+                                : FeatureSetMetadata.BASE_ID + 2);
         assertThat(loaded.getFeatureNameFor(":two"))
                 .named("getFeatureNameFor :two")
                 .isEqualTo("two");
 
         assertThat(loaded.getResOffsetFor(":three"))
                 .named("getResOffsetFor :three")
-                .isEqualTo(FeatureSetMetadata.BASE_ID + 2);
+                .isEqualTo(
+                        minSdkVersion < 26
+                                ? FeatureSetMetadata.BASE_ID - 3
+                                : FeatureSetMetadata.BASE_ID + 3);
         assertThat(loaded.getFeatureNameFor(":three"))
                 .named("getFeatureNameFor :three")
                 .isEqualTo("three");
