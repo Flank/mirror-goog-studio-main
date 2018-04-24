@@ -24,6 +24,9 @@ dependencies {
     implementation 'android.arch.lifecycle:common:1.1.0'
     implementation 'android.arch.persistence.room:runtime:1.0.0'
 
+    // Add this dependency as regression test for https://issuetracker.google.com/78477288
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+
     // Add this dependency as regression test for https://issuetracker.google.com/78144836
     androidTestImplementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
 }
