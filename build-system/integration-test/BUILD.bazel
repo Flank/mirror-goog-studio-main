@@ -126,6 +126,18 @@ ANDROID_X_ARCH_JARS = [
     "androidx/room/room-common",
 ]
 
+LATEST_ANDROID_X_CONSTRAINTLAYOUT = "1.1.0"
+
+#keep sorted
+ANDROID_X_CONSTRAINTLAYOUT_AARS = [
+    "androidx/constraintlayout/constraintlayout",
+]
+
+#keep sorted
+ANDROID_X_CONSTRAINTLAYOUT_JARS = [
+    "androidx/constraintlayout/constraintlayout-solver",
+]
+
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 
 maven_repo(
@@ -149,6 +161,10 @@ maven_repo(
                 ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_ARCH +
                  ":aar" for name in ANDROID_X_ARCH_AARS] +
                 ["//prebuilts/tools/common/m2/repository/" + name + "/" + LATEST_ANDROID_X_ARCH +
-                 ":jar" for name in ANDROID_X_ARCH_JARS],
+                 ":jar" for name in ANDROID_X_ARCH_JARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" +
+                 LATEST_ANDROID_X_CONSTRAINTLAYOUT + ":aar" for name in ANDROID_X_CONSTRAINTLAYOUT_AARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name + "/" +
+                 LATEST_ANDROID_X_CONSTRAINTLAYOUT + ":jar" for name in ANDROID_X_CONSTRAINTLAYOUT_JARS],
     visibility = [":__subpackages__"],
 )

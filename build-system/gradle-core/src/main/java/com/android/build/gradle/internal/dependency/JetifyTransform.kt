@@ -138,6 +138,12 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
                 return "$group:$module:2.0.0-alpha1" // alpha1 since stable version is not available
             }
 
+            // TODO (jetifier-core): Need to map constraint-layout to 1.1.0. Right now jetifier-core
+            // is mapping it to 1.0.0, which is incorrect.
+            if (group == "androidx.constraintlayout" && module == "constraintlayout") {
+                return "$group:$module:1.1.0"
+            }
+
             // TODO (jetifier-core): Need to map databinding to the Android Gradle plugin version.
             // Right now jetifier-core is mapping it to versions such as 1.0.0, which is incorrect.
             if (group == "androidx.databinding") {
