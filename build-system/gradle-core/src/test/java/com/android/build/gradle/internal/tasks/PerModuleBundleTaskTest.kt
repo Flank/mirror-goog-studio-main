@@ -28,6 +28,7 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.bouncycastle.util.io.Streams
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -38,6 +39,8 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.io.File
+import java.nio.charset.Charset
+import java.util.zip.ZipFile
 
 class PerModuleBundleTaskTest {
 
@@ -140,24 +143,48 @@ class PerModuleBundleTaskTest {
                 createDex(dexFolder0, "classes.dex"),
                 createDex(dexFolder0, "classes2.dex"),
                 createDex(dexFolder0, "classes3.dex"),
-                createDex(dexFolder1, "classes0.dex"),
+                createDex(dexFolder1, "classes.dex"),
                 createDex(dexFolder1, "classes2.dex")))
         task.zip()
 
         // verify naming and shuffling of names.
         verifyOutputZip(task.outputDir.listFiles().single(), 5)
+    }
 
+    @Test
+    fun testMainDexNotRenamedFiles() {
+        val dexFolder0 = testFolder.newFolder("0")
+        Mockito.`when`(dexFiles.files).thenReturn(
+            setOf(
+                createDex(dexFolder0, "classes2.dex"),
+                createDex(dexFolder0, "classes.dex"),
+                createDex(dexFolder0, "classes3.dex")))
+        task.zip()
+
+        // verify classes.dex has not been renamed.
+        verifyOutputZip(task.outputDir.listFiles().single(), 3)
     }
 
     private fun verifyOutputZip(zipFile: File, expectedNumberOfDexFiles: Int) {
         assertThat(expectedNumberOfDexFiles).isGreaterThan(0)
         assertThat(zipFile.exists())
-        val thatZip = ZipFileSubject.assertThatZip(zipFile)
-        thatZip.contains("dex/classes.dex")
-        for (index in 2..expectedNumberOfDexFiles) {
-            thatZip.contains("dex/classes$index.dex")
+        ZipFileSubject.assertThatZip(zipFile).use {
+            it.contains("dex/classes.dex")
+            for (index in 2..expectedNumberOfDexFiles) {
+                it.contains("dex/classes$index.dex")
+            }
+            it.doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
         }
-        thatZip.doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
+        verifyClassesDexNotRenamed(zipFile)
+    }
+
+    private fun verifyClassesDexNotRenamed(zipFile: File) {
+        val outputZip = ZipFile(zipFile)
+        outputZip.getInputStream(outputZip.getEntry("dex/classes.dex")).use {
+            val bytes = ByteArray(128)
+            Streams.readFully(it, bytes)
+            assertThat(bytes.toString(Charset.defaultCharset())).startsWith("Dex classes.dex")
+        }
     }
 
     private fun createDex(folder: File, id: String): File {
