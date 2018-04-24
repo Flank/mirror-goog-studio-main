@@ -230,7 +230,6 @@ protected constructor() {
             this.categories = categories
             if (LintClient.isStudio) {
                 cachedCategories = categories
-
             }
         }
 

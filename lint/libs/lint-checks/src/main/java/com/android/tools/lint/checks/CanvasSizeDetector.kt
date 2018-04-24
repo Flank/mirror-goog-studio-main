@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.isKotlin
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -91,22 +92,97 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
         val drawable = context.evaluator.extendsClass(containingClass, CLASS_DRAWABLE, false)
         val calling = node is UCallExpression
         val verb = if (calling) "Calling" else "Referencing"
-        val container = if (drawable) "Drawable" else "Canvas"
-        val replacement = if (drawable) "getBounds()" else name
-        val message =
-            "$verb $container.$name is usually wrong; you should be calling $replacement instead"
-
+        val kotlin = isKotlin(node.sourcePsi)
+        val replacement = if (drawable) {
+            if (kotlin) "bounds.$name" else "getBounds().$name"
+        } else {
+            name
+        }
+        val message = computeErrorMessage(verb, name, calling, replacement)
         val range = context.getLocation(node)
-
         val fix =
             fix()
-                .name("${if (calling) "Call" else "Reference"} ${if (drawable) "getBounds" else name}${if (calling) "()" else ""} instead")
+                .name(computeQuickfixMessage(kotlin, calling, drawable, name))
                 .replace()
                 .range(range)
                 .pattern(if (drawable) "(.*)" else "(.*)$name")
-                .with(if (drawable) "getBounds().${if (name == GET_WIDTH) WIDTH else if (name == GET_HEIGHT) HEIGHT else name}()" else "")
+                .with(computeQuickfixReplacementString(kotlin, drawable, name))
                 .build()
         context.report(ISSUE, node, context.getLocation(node), message, fix)
+    }
+
+    private fun computeQuickfixReplacementString(
+        kotlin: Boolean,
+        drawable: Boolean,
+        name: String
+    ): String {
+        return if (drawable) {
+            with(StringBuilder()) {
+                if (kotlin) {
+                    append("bounds.")
+                } else {
+                    append("getBounds().")
+                }
+                append(if (name == GET_WIDTH) WIDTH else if (name == GET_HEIGHT) HEIGHT else name)
+                append("()")
+            }.toString()
+        } else {
+            ""
+        }
+    }
+
+    private fun computeErrorMessage(
+        verb: String,
+        name: String,
+        calling: Boolean,
+        replacement: String
+    ): String {
+        return with(StringBuilder()) {
+            append(verb)
+            append(" `Canvas.").append(name)
+            if (calling) {
+                append("()")
+            }
+            append("` is usually wrong; you should be ")
+            append(verb.decapitalize())
+            append(" `")
+            append(replacement)
+            if (calling) {
+                append("()")
+            }
+            append("` instead")
+        }.toString()
+    }
+
+    private fun computeQuickfixMessage(
+        kotlin: Boolean,
+        calling: Boolean,
+        drawable: Boolean,
+        name: String
+    ): String {
+        return with(StringBuilder()) {
+            if (calling || drawable) {
+                append("Call")
+            } else {
+                append("Reference")
+            }
+            append(" ")
+            if (drawable) {
+                if (kotlin) {
+                    append("bounds")
+                } else {
+                    append("getBounds()")
+                }
+                append(".")
+                append(if (name == GET_WIDTH) WIDTH else if (name == GET_HEIGHT) HEIGHT else name)
+            } else {
+                append(name)
+            }
+            if (calling || drawable) {
+                append("()")
+            }
+            append(" instead")
+        }.toString()
     }
 
     companion object {
@@ -132,7 +208,7 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
                 and otherwise remains the same `Canvas` object for every View's draw method.
 
                 You should only use Canvas state to adjust how much you draw, such as a \
-                quickReject for early work avoidance if it's going to be clipped away, but \
+                quick-reject for early work avoidance if it's going to be clipped away, but \
                 not what you draw.
                 """,
             category = Category.CORRECTNESS,
