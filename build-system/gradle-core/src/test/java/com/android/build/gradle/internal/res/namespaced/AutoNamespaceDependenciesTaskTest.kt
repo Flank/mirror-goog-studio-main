@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.testutils.TestResources
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -69,11 +69,11 @@ class AutoNamespaceDependenciesTaskTest {
         compileSources(ImmutableList.of(getFile("R.java"), getFile("Test.java")), javacOutput)
 
         val testClass = FileUtils.join(javacOutput, "com", "example", "mymodule", "Test.class")
-        FileSubject.assertThat(testClass).exists()
+        assertThat(testClass).exists()
         val testRClass = FileUtils.join(javacOutput, "com", "example", "mymodule", "R.class")
-        FileSubject.assertThat(testRClass).exists()
+        assertThat(testRClass).exists()
         val testRStringClass = FileUtils.join(testRClass.parentFile, "R\$string.class")
-        FileSubject.assertThat(testRStringClass).exists()
+        assertThat(testRStringClass).exists()
 
         val testClassesJar = File(tempFolder.newFolder("jars"), ("classes.jar"))
         ZFile(testClassesJar).use {
@@ -112,10 +112,10 @@ class AutoNamespaceDependenciesTaskTest {
         Truth.assertThat(log.warnings).isEmpty()
 
         val namespacedJar = File(outputRewrittenClasses, "namespaced-libA-classes.jar")
-        FileSubject.assertThat(namespacedJar).exists()
-        FileSubject.assertThat(File(outputRClasses, "namespaced-libA-R.jar")).exists()
-        FileSubject.assertThat(rJar).exists()
-        FileSubject.assertThat(classesJar).exists()
+        assertThat(namespacedJar).exists()
+        assertThat(File(outputRClasses, "namespaced-libA-R.jar")).exists()
+        assertThat(rJar).exists()
+        assertThat(classesJar).exists()
 
         ZFile(namespacedJar).use {
             it.add("com/example/mymodule/R.class", testRClass.inputStream())
@@ -128,6 +128,64 @@ class AutoNamespaceDependenciesTaskTest {
             val result = method.invoke(null) as Int
             Truth.assertThat(result).isEqualTo(2 * 3 * 5) // original values left
         }
+    }
+
+    @Test
+    fun collidingDependenciesNames() {
+        val log = MockLogger()
+
+        // Resource IDs don't matter for this test, we only want to check the colliding names.
+        val sources = ImmutableList.builder<File>()
+        sources.addAll(createSources("com.example.libA", 1))
+        sources.addAll(createSources("com.example.libB", 1))
+        sources.addAll(createSources("com.example.libC", 1))
+        compileSources(sources.build(), javacOutput)
+
+        val classes = HashMap<String, File>()
+        val rClasses = HashMap<String, File>()
+        val rStringClasses = HashMap<String, File>()
+        val classesJars = HashMap<String, File>()
+        val rFiles = HashMap<String, File>()
+        val s1 = SymbolTable.builder().add(symbol("string", "s1")).build()
+
+        // Three dependencies will have colliding identifiers that will later on be sanitized for
+        // the filenames of the rewritten jars.
+        setUpDependency(classes, rClasses, rStringClasses, classesJars, rFiles, "libA", s1, "lib*")
+        setUpDependency(classes, rClasses, rStringClasses, classesJars, rFiles, "libB", s1, "lib?")
+        setUpDependency(classes, rClasses, rStringClasses, classesJars, rFiles, "libC", s1, "lib_")
+
+        // Use the same identifiers as above so the graph is correct.
+        val nodeC = createDependency("lib*")
+        val nodeB = createDependency("lib?")
+        val nodeA = createDependency("lib_", set(nodeB, nodeC))
+
+        val dependencies = wrapDependencies(set(nodeA))
+        val outputRewrittenClasses = tempFolder.newFolder("output")
+        val outputRClasses = tempFolder.newFolder("rClasses")
+        val classesJar = tempFolder.newFile("namespaced-classes.jar")
+        val rJar = tempFolder.newFile("r.jar")
+        val rFilesArtifact = getArtifactCollection(rFiles)
+        val jarFiles = getArtifactCollection(classesJars)
+        task.log = log
+
+        task.namespaceDependencies(
+                dependencies,
+                rFilesArtifact,
+                jarFiles,
+                outputRewrittenClasses,
+                outputRClasses,
+                classesJar,
+                rJar)
+
+        // Check if the colliding names got the underscore characters appended.
+        assertThat(File(outputRewrittenClasses, "namespaced-lib_-classes.jar")).exists()
+        assertThat(File(outputRewrittenClasses, "namespaced-lib__-classes.jar")).exists()
+        assertThat(File(outputRewrittenClasses, "namespaced-lib___-classes.jar")).exists()
+
+        // Same but for R jar files.
+        assertThat(File(outputRClasses, "namespaced-lib_-R.jar")).exists()
+        assertThat(File(outputRClasses, "namespaced-lib__-R.jar")).exists()
+        assertThat(File(outputRClasses, "namespaced-lib___-R.jar")).exists()
     }
 
     /**
@@ -233,7 +291,7 @@ class AutoNamespaceDependenciesTaskTest {
         val urls = ArrayList<URL>()
         for (c in 'A'..'G') {
             val namespacedJar = File(outputRewrittenClasses, "namespaced-lib$c-classes.jar")
-            FileSubject.assertThat(namespacedJar).exists()
+            assertThat(namespacedJar).exists()
             // only add the R classes where the value was declared or overridden, so we can verify
             // that the other libraries are referencing the namespaced values.
             if (c == 'G' || c == 'F' || c == 'D' || c == 'B') {
@@ -314,27 +372,28 @@ class AutoNamespaceDependenciesTaskTest {
         classesJars: MutableMap<String, File>,
         rFiles: MutableMap<String, File>,
         name: String,
-        symbolTable: SymbolTable
+        symbolTable: SymbolTable,
+        identifier: String = name
     ) {
         val testClass = FileUtils.join(javacOutput, "com", "example", name, "Test.class")
-        FileSubject.assertThat(testClass).exists()
-        testClasses.put(name, testClass)
+        assertThat(testClass).exists()
+        testClasses.put(identifier, testClass)
         val rClass = FileUtils.join(javacOutput, "com", "example", name, "R.class")
-        FileSubject.assertThat(rClass).exists()
-        rClasses.put(name, rClass)
+        assertThat(rClass).exists()
+        rClasses.put(identifier, rClass)
         val rStringClass = FileUtils.join(rClass.parentFile, "R\$string.class")
-        FileSubject.assertThat(rStringClass).exists()
-        rStringClasses.put(name, rStringClass)
+        assertThat(rStringClass).exists()
+        rStringClasses.put(identifier, rStringClass)
 
         val classesJar = File(tempFolder.newFolder(name), ("classes.jar"))
         ZFile(classesJar).use {
             it.add("com/example/$name/Test.class", testClass.inputStream())
         }
-        classesJars.put(name, classesJar)
+        classesJars.put(identifier, classesJar)
 
         val rFile = tempFolder.newFile("com.example.$name-R-def.txt")
         SymbolIo.writeRDef(symbolTable.rename( "com.example.$name"), rFile.toPath())
-        rFiles.put(name, rFile)
+        rFiles.put(identifier, rFile)
     }
 
     private fun getFile(name: String): File {

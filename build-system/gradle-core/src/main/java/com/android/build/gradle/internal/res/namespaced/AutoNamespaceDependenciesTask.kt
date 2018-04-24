@@ -62,6 +62,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
 
     @VisibleForTesting var log: Logger? = null
     private var symbolTablesCache: HashMap<File, SymbolTable> = HashMap()
+    private var usedSanitizedDependencyNames: HashSet<String> = HashSet()
 
     @get:OutputDirectory lateinit var outputRewrittenClasses: File private set
     @get:OutputDirectory lateinit var outputRClasses: File private set
@@ -115,6 +116,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         }
 
         symbolTablesCache.clear()
+        usedSanitizedDependencyNames.clear()
 
         // Jar all the classes into two JAR files - one for namespaced classes, one for R classes.
         jarOutputs(outputClassesJar, outputDirectory)
@@ -149,7 +151,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
         if (dependency.id !is ProjectComponentIdentifier && input != null) {
             val dependencyName = dependency.id.displayName
-            val sanitizedDependencyName = FileUtils.sanitizeFileName(dependencyName)
+            val sanitizedDependencyName = getUniqueSanitizedDependencyName(dependencyName)
             val out = File(
                     outputDirectory,
                     "namespaced-$sanitizedDependencyName-${input.name}"
@@ -173,6 +175,18 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ).toPath()
             )
         }
+    }
+
+    private fun getUniqueSanitizedDependencyName(name: String): String {
+        var sanitizedName = FileUtils.sanitizeFileName(name)
+        // This should not happen, but in case we do run into a collision better to be safe and
+        // append an extra underscore character. And to be extremely cautious, keep checking until
+        // we're safe.
+        while (usedSanitizedDependencyNames.contains(sanitizedName)) {
+            sanitizedName += "_"
+        }
+        usedSanitizedDependencyNames.add(sanitizedName)
+        return sanitizedName
     }
 
     private fun getSymbolTables(node: DependenciesGraph.Node): ImmutableList<SymbolTable> {
