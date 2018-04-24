@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_APP_ID_DECLARATION
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -34,7 +34,8 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Task responsible for publishing the application ID for other modules to consume.
+ * Task responsible for publishing this module metadata (like its application ID) for other modules
+ * to consume.
  *
  * If the module is an application module, it publishes the value coming from the variant config.
  *
@@ -49,9 +50,18 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     @get:Internal lateinit var applicationIdSupplier: Supplier<String?> private set
     @get:Input val applicationId get() = applicationIdSupplier.get()
 
+    @get:Input
+    lateinit var versionCode: String
+        private set
+
+    @get:Input
+    @get:Optional
+    var versionName: String? = null
+        private set
+
     @get:InputFiles
     @get:Optional
-    var appIdFromBaseFeature: FileCollection? = null
+    var metadataFromInstalledModule: FileCollection? = null
         private set
 
     @get:OutputFile
@@ -61,12 +71,13 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     @TaskAction
     @Throws(IOException::class)
     fun fullTaskAction() {
-        val packageId = if (appIdFromBaseFeature != null && !appIdFromBaseFeature!!.isEmpty) {
-            ApplicationId.load(appIdFromBaseFeature!!.singleFile).applicationId
-        } else {
-            applicationId as String
-        }
-        val declaration = ApplicationId(packageId)
+        val declaration =
+            if (metadataFromInstalledModule != null && !metadataFromInstalledModule!!.isEmpty) {
+                ModuleMetadata.load(metadataFromInstalledModule!!.singleFile)
+            } else {
+                ModuleMetadata(applicationId as String, versionCode, versionName)
+            }
+
         declaration.save(outputFile)
     }
 
@@ -90,21 +101,24 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
                 variantScope.variantConfiguration.applicationId
             }
 
+            task.versionCode = variantScope.variantConfiguration.versionCode.toString()
+            task.versionName = variantScope.variantConfiguration.versionName
+
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             task.outputFile = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
+                InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
                 task,
-                ApplicationId.PERSISTED_FILE_NAME
+                ModuleMetadata.PERSISTED_FILE_NAME
             )
             if (variantScope.type.isHybrid) {
                 //if this is a feature, get the Application ID from the metadata config
-                task.appIdFromBaseFeature = variantScope.getArtifactFileCollection(
-                    METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION
+                task.metadataFromInstalledModule = variantScope.getArtifactFileCollection(
+                    METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION
                 )
             } else {
                 //if this is the base application, publish the feature to the metadata config
                 variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.METADATA_APP_ID_DECLARATION,
+                    InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION,
                     listOf(task.outputFile),
                     task
                 )

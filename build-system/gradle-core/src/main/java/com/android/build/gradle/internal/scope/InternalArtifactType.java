@@ -204,9 +204,9 @@ public enum InternalArtifactType implements ArtifactType {
     // the res ID offset, both tied to the feature module path. Published by the base for the
     // other features to consume and find their own metadata.
     FEATURE_SET_METADATA,
-    // file containing the application ID to synchronize all base + dynamic feature. This is
-    // published by the base feature and installed application module.
-    FEATURE_APPLICATION_ID_DECLARATION,
+    // file containing the module information (like its application ID) to synchronize all base
+    // and dynamic feature. This is published by the base feature and installed application module.
+    METADATA_BASE_MODULE_DECLARATION,
     FEATURE_RESOURCE_PKG,
     // File containing the list of transitive dependencies of a given feature. This is consumed
     // by other features to avoid repackaging the same thing.
@@ -227,7 +227,7 @@ public enum InternalArtifactType implements ArtifactType {
     // Project metadata
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
-    METADATA_APP_ID_DECLARATION;
+    METADATA_INSTALLED_BASE_DECLARATION;
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

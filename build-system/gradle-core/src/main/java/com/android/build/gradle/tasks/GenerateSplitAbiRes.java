@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_APP_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 
@@ -43,7 +43,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.ApplicationId;
+import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
@@ -283,7 +283,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         String manifestAppId;
         if (applicationIdOverride != null && !applicationIdOverride.isEmpty()) {
             manifestAppId =
-                    ApplicationId.load(applicationIdOverride.getSingleFile()).getApplicationId();
+                    ModuleMetadata.load(applicationIdOverride.getSingleFile()).getApplicationId();
         } else {
             manifestAppId = applicationId.get();
         }
@@ -400,7 +400,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             if (variantType.isBaseModule() && variantType.isHybrid()) {
                 generateSplitAbiRes.applicationIdOverride =
                         scope.getArtifactFileCollection(
-                                METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+                                METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION);
             } else if (variantType.isFeatureSplit()) {
                 // if feature split, get it from the base module
                 generateSplitAbiRes.applicationIdOverride =

@@ -141,6 +141,17 @@ class DynamicAppTest {
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
         FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
+
+        // check that the feature1 source manifest has not been changed so we can verify that
+        // it is automatically reset to the base module value.
+        val originalManifestFile = FileUtils.join(
+            project.getSubproject("feature1").getMainSrcDir(""),
+            "AndroidManifest.xml")
+        FileSubject.assertThat(originalManifestFile).doesNotContain("android:versionCode=\"11\"")
+
+        // and finally check that the resulting manifest has had its versionCode changed from the
+        // base module value
+        FileSubject.assertThat(manifestFile).contains("android:versionCode=\"11\"")
     }
 
     @Test

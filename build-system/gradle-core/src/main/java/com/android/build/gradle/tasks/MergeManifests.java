@@ -19,7 +19,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_APP_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
@@ -43,7 +43,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.ApplicationId;
+import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -117,12 +117,9 @@ public class MergeManifests extends ManifestProcessorTask {
                 ExistingBuildElements.from(
                         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, compatibleScreensManifest);
 
-        String packageOverride;
+        ModuleMetadata moduleMetadata = null;
         if (packageManifest != null && !packageManifest.isEmpty()) {
-            packageOverride =
-                    ApplicationId.load(packageManifest.getSingleFile()).getApplicationId();
-        } else {
-            packageOverride = getPackageOverride();
+            moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
         }
 
         @Nullable BuildOutput compatibleScreenManifestForSplit;
@@ -153,9 +150,15 @@ public class MergeManifests extends ManifestProcessorTask {
                                     computeFullProviderList(compatibleScreenManifestForSplit),
                                     getNavigationFiles(),
                                     getFeatureName(),
-                                    packageOverride,
-                                    apkData.getVersionCode(),
-                                    apkData.getVersionName(),
+                                    moduleMetadata == null
+                                            ? getPackageOverride()
+                                            : moduleMetadata.getApplicationId(),
+                                    moduleMetadata == null
+                                            ? apkData.getVersionCode()
+                                            : Integer.parseInt(moduleMetadata.getVersionCode()),
+                                    moduleMetadata == null
+                                            ? apkData.getVersionName()
+                                            : moduleMetadata.getVersionName(),
                                     getMinSdkVersion(),
                                     getTargetSdkVersion(),
                                     getMaxSdkVersion(),
@@ -543,7 +546,7 @@ public class MergeManifests extends ManifestProcessorTask {
             if (variantType.isBaseModule()) {
                 processManifestTask.packageManifest =
                         variantScope.getArtifactFileCollection(
-                                METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+                                METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION);
 
                 // This includes the other features.
                 processManifestTask.featureManifests =
