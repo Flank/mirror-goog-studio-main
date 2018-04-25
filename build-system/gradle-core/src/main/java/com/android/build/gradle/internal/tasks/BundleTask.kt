@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
@@ -213,10 +214,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         override fun execute(task: BundleTask) {
             task.variantName = scope.fullVariantName
 
-            task.bundleFile = scope.artifacts.setArtifactFile(
-                InternalArtifactType.BUNDLE,
-                task,
-                "bundle.aab")
+            val apkLocationOverride =
+                scope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
+
+            task.bundleFile = if (apkLocationOverride == null)
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, "bundle.aab")
+            else
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task,
+                    File(apkLocationOverride, "bundle.aab"))
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 

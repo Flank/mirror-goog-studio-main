@@ -35,6 +35,7 @@ import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -42,6 +43,9 @@ import java.nio.file.Path
 import kotlin.test.fail
 
 class DynamicAppTest {
+
+    @get:Rule
+    val tmpFile= TemporaryFolder()
 
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
@@ -281,6 +285,31 @@ class DynamicAppTest {
         apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 18")
             .containsExactly("standalone-xxhdpi.apk")
+    }
+
+
+    @Test
+    fun `test overriding bundle output location`() {
+        val apkFromBundleTaskName = getBundleTaskName("debug")
+
+        // use a relative path to the project build dir.
+        project
+            .executor()
+            .with(StringOption.IDE_APK_LOCATION, "out/test/my-bundle")
+            .run("app:$apkFromBundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(File(project.getSubproject(":app").buildDir,
+            FileUtils.join("out", "test", "my-bundle", bundleFile.name))).exists()
+
+        // redo the test with an absolute output path this time.
+        val absolutePath = tmpFile.newFolder("my-bundle").absolutePath
+        project
+            .executor()
+            .with(StringOption.IDE_APK_LOCATION, absolutePath)
+            .run("app:$apkFromBundleTaskName")
+
+        FileSubject.assertThat(File(absolutePath, bundleFile.name)).exists()
     }
 
     private fun getBundleTaskName(name: String): String {
