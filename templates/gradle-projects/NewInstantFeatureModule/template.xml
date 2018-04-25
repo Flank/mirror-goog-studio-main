@@ -2,8 +2,8 @@
 <template
     format="5"
     revision="5"
-    name="Feature Module"
-    description="Creates a new Android Instant Feature module.">
+    name="Instant App Feature Module"
+    description="Creates a new Android Instant App Feature module.">
 
     <category value="Application" />
 
