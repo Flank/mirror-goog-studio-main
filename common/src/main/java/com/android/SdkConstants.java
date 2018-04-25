@@ -1665,7 +1665,7 @@ public final class SdkConstants {
     // Material BottomAppBar Attributes
     public static final String ATTR_FAB_ALIGNMENT_MODE = "fabAlignmentMode";
     public static final String ATTR_FAB_ATTACHED = "fabAttached";
-    public static final String ATTR_FAB_CRADLE_DIAMETER = "fabCradleDiameter";
+    public static final String ATTR_FAB_CRADLE_MARGIN = "fabCradleMargin";
     public static final String ATTR_FAB_CRADLE_ROUNDED_CORNER_RADIUS =
             "fabCradleRoundedCornerRadius";
     public static final String ATTR_FAB_CRADLE_VERTICAL_OFFSET = "fabCradleVerticalOffset";
