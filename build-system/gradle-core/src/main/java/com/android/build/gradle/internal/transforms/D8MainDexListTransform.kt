@@ -26,6 +26,7 @@ import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.MainDexListTransform.ProguardInput.INPUT_JAR
@@ -47,15 +48,18 @@ class D8MainDexListTransform(
         private val manifestProguardRules: BuildableArtifact,
         private val userProguardRules: Path? = null,
         private val userClasses: Path? = null,
+        private val includeDynamicFeatures: Boolean = false,
         private val bootClasspath: Supplier<List<Path>>) : Transform(), MainDexListWriter {
 
     private val logger = LoggerWrapper.getLogger(D8MainDexListTransform::class.java)
     private lateinit var outputMainDexList: Path
-    constructor(variantScope: VariantScope) :
+    @JvmOverloads
+    constructor(variantScope: VariantScope, includeDynamicFeatures: Boolean = false) :
             this(
                     variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES),
                     variantScope.variantConfiguration.multiDexKeepProguard?.toPath(),
                     variantScope.variantConfiguration.multiDexKeepFile?.toPath(),
+                    includeDynamicFeatures,
                     Supplier {
                         variantScope
                                 .globalScope
@@ -67,20 +71,27 @@ class D8MainDexListTransform(
         this.outputMainDexList = mainDexListFile.toPath()
     }
 
-    override fun getName(): String = "multidexlist"
+    override fun getName(): String = if (includeDynamicFeatures) "bundleMultiDexList" else "multidexlist"
 
     override fun getInputTypes(): ImmutableSet<out ContentType> =
             Sets.immutableEnumSet(QualifiedContent.DefaultContentType.CLASSES)
 
     override fun getScopes(): ImmutableSet<in Scope> = ImmutableSet.of()
 
-    override fun getReferencedScopes(): ImmutableSet<in Scope> =
-            Sets.immutableEnumSet(
-                    Scope.PROJECT,
-                    Scope.SUB_PROJECTS,
-                    Scope.EXTERNAL_LIBRARIES,
-                    Scope.PROVIDED_ONLY,
-                    Scope.TESTED_CODE)
+    override fun getReferencedScopes(): MutableSet<in Scope> {
+        val referenced = Sets.immutableEnumSet(
+            Scope.PROJECT,
+            Scope.SUB_PROJECTS,
+            Scope.EXTERNAL_LIBRARIES,
+            Scope.PROVIDED_ONLY,
+            Scope.TESTED_CODE
+        )
+        if (!includeDynamicFeatures) {
+            return referenced
+        }
+
+        return Sets.union(referenced, TransformManager.SCOPE_FEATURES)
+    }
 
     override fun isIncremental(): Boolean = false
 

@@ -472,6 +472,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 && globalScope.hasDynamicFeatures();
     }
 
+    @Override
+    public boolean getNeedsMainDexListForBundle() {
+        return getVariantData().getType().isBaseModule()
+                && globalScope.hasDynamicFeatures()
+                && getVariantConfiguration().getDexingType().getNeedsMainDexList();
+    }
+
     @Nullable
     @Override
     public CodeShrinker getCodeShrinker() {

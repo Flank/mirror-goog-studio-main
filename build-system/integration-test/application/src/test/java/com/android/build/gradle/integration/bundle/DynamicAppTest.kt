@@ -26,10 +26,13 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
+import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
+import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -47,6 +50,7 @@ class DynamicAppTest {
         .create()
 
     private val bundleContent: Array<String> = arrayOf(
+        "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt",
         "/BundleConfig.pb",
         "/base/dex/classes.dex",
         "/base/manifest/AndroidManifest.xml",
@@ -61,11 +65,28 @@ class DynamicAppTest {
         "/feature2/res/layout/feature2_layout.xml",
         "/feature2/resources.pb")
 
-    private val signedContent: Array<String> = bundleContent.plus(arrayOf(
+    private val debugSignedContent: Array<String> = bundleContent.plus(arrayOf(
+        "/base/dex/classes2.dex", // Legacy multidex has minimal main dex in debug mode.
         "/META-INF/ANDROIDD.RSA",
         "/META-INF/ANDROIDD.SF",
         "/META-INF/MANIFEST.MF"))
+    
+    private val mainDexClasses: List<String> = listOf(
+        "Landroid/support/multidex/MultiDex;",
+        "Landroid/support/multidex/MultiDexApplication;",
+        "Landroid/support/multidex/MultiDexExtractor;",
+        "Landroid/support/multidex/MultiDexExtractor\$1;",
+        "Landroid/support/multidex/MultiDexExtractor\$ExtractedDex;",
+        "Landroid/support/multidex/MultiDex\$V14;",
+        "Landroid/support/multidex/MultiDex\$V19;",
+        "Landroid/support/multidex/MultiDex\$V4;",
+        "Landroid/support/multidex/ZipUtil;",
+        "Landroid/support/multidex/ZipUtil\$CentralDirectory;",
+        "Lcom/example/app/AppClassNeededInMainDexList;")
 
+    private val mainDexListClassesInBundle: List<String> =
+        mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
+    
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
@@ -96,7 +117,18 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
+            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
+            // Legacy multidex is applied to the dex of the base directly for the case
+            // when the build author has excluded all the features from fusing.
+            assertThat(dex).containsExactlyClassesIn(mainDexClasses)
+
+            // The main dex list must also analyze the classes from features.
+            val mainDexListInBundle =
+                Files.readAllLines(it.getEntry("/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt")).map { "L" + it.removeSuffix(".class") + ";" }
+
+            assertThat(mainDexListInBundle).containsExactlyElementsIn(mainDexListClassesInBundle)
+
         }
 
         // also test that the feature manifest contains the feature name.
@@ -142,7 +174,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
         }
     }
 
@@ -176,7 +208,7 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val bundleContentWithAbis = signedContent.plus(listOf(
+        val bundleContentWithAbis = debugSignedContent.plus(listOf(
                 "/base/native.pb",
                 "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
                 "/feature1/native.pb",

@@ -683,7 +683,9 @@ public abstract class TaskManager {
 
         // if variantScope.consumesFeatureJars(), add streams of classes and java resources from
         // features or dynamic-features.
-        if (variantScope.consumesFeatureJars()) {
+        // The main dex list calculation for the bundle also needs the feature classes for reference
+        // only
+        if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
             transformManager.addStream(
                     OriginalStream.builder(project, "feature-classes")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -692,6 +694,8 @@ public abstract class TaskManager {
                                     variantScope.getArtifactCollection(
                                             METADATA_VALUES, MODULE, METADATA_CLASSES))
                             .build());
+        }
+        if (variantScope.consumesFeatureJars()) {
             transformManager.addStream(
                     OriginalStream.builder(project, "feature-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
@@ -2253,6 +2257,26 @@ public abstract class TaskManager {
                                                         "mainDexList.txt");
                                 ((MainDexListWriter) multiDexTransform)
                                         .setMainDexListOutputFile(mainDexListFile);
+                            });
+        }
+
+        if (variantScope.getNeedsMainDexListForBundle()) {
+            D8MainDexListTransform bundleMultiDexTransform =
+                    new D8MainDexListTransform(variantScope, true);
+            variantScope
+                    .getTransformManager()
+                    .addTransform(taskFactory, variantScope, bundleMultiDexTransform)
+                    .ifPresent(
+                            task -> {
+                                File mainDexListFile =
+                                        variantScope
+                                                .getArtifacts()
+                                                .appendArtifact(
+                                                        InternalArtifactType
+                                                                .MAIN_DEX_LIST_FOR_BUNDLE,
+                                                        task,
+                                                        "mainDexList.txt");
+                                bundleMultiDexTransform.setMainDexListOutputFile(mainDexListFile);
                             });
         }
 

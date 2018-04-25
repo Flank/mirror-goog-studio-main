@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
-import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -33,7 +32,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -122,16 +120,6 @@ public class MultiDexTest {
         }
 
         assertMainDexContains("debug", mandatoryClasses);
-
-        try (Zip bundle = new Zip(project.getOutputFile("bundle", "icsDebug", "bundle.aab"))) {
-            String mainDexListPath =
-                    "BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt";
-            assertThat(bundle)
-                    .containsFileWithMatch(mainDexListPath, "com.android.tests.basic.MyAnnotation");
-            assertThat(bundle)
-                    .containsFileWithMatch(
-                            mainDexListPath, "android.support.multidex.MultiDexApplication");
-        }
 
         try (Apk bundleBase = getStandaloneBundleApk()) {
             assertMainDexContains(bundleBase, mandatoryClasses);

@@ -231,11 +231,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
-            if (scope.needsMainDexList) {
+            if (scope.needsMainDexListForBundle) {
                 task.mainDexList =
                         scope.artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
+                            InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE
                         )
+                // The dex files from this application are still processed for legacy multidex
+                // in this case, as if none of the dynamic features are fused the bundle tool will
+                // not reprocess the dex files.
             }
 
             scope.variantConfiguration.signingConfig?.let {

@@ -190,6 +190,9 @@ public enum InternalArtifactType implements ArtifactType {
 
     // an intermediate bundle that contains only the current module
     MODULE_BUNDLE,
+    // The main dex list for the bundle, unlike the main dex list for a monolithic application, this
+    // analyzes all of the dynamic feature classes too.
+    MAIN_DEX_LIST_FOR_BUNDLE,
     // the full bundle, including feature module. This is only valid for the base module.
     BUNDLE(Category.OUTPUTS),
     // APK Set archive with APKs generated from a bundle.
