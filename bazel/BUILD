@@ -246,11 +246,14 @@ java_binary(
 
 java_binary(
     name = "gradlew",
-    srcs = ["src/com/android/tools/gradle/GradleW.java"],
-    # Don't load the native implementation on the tooling API side to allow the gradle home
-    # directory to be cleaned up.
-    jvm_flags = ["-Dorg.gradle.native=false"],
     main_class = "com.android.tools.gradle.GradleW",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":gradle"],
+)
+
+java_library(
+    name = "gradle",
+    srcs = glob(["src/com/android/tools/gradle/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

@@ -13,37 +13,35 @@ def _gradle_build_impl(ctx):
   for task in ctx.attr.tasks:
     args += ["--task", task]
 
-  # Needs to be set as an environment variable to use DefaultGradleConnector.close();
-  gradle_user_home = output_file.path + ".temp2/_home"
-
   ctx.action(
     inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, distribution],
     outputs = [output_file],
     mnemonic = "gradlew",
     arguments = args,
-    env = {"GRADLE_USER_HOME": gradle_user_home},
     executable = ctx.executable._gradlew,
   )
 
 gradle_build = rule(
     attrs = {
-        "data" : attr.label_list(allow_files = True),
-        "output_file" : attr.output(),
-        "output_file_source" : attr.string(),
-        "tasks" : attr.string_list(),
-        "build_file": attr.label(allow_files = True, single_file = True),
+        "data": attr.label_list(allow_files = True),
+        "output_file": attr.output(),
+        "output_file_source": attr.string(),
+        "tasks": attr.string_list(),
+        "build_file": attr.label(
+            allow_files = True,
+            single_file = True,
+        ),
         "repos": attr.label_list(allow_files = True),
-        "_distribution" : attr.label(
-                          default = Label("//tools/base/build-system:gradle-distrib"),
-                          allow_files = True,
+        "_distribution": attr.label(
+            default = Label("//tools/base/build-system:gradle-distrib"),
+            allow_files = True,
         ),
         "_gradlew": attr.label(
-                    executable = True,
-                    cfg = "host",
-                    default = Label("//tools/base/bazel:gradlew"),
-                    allow_files = True
-        )
-
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:gradlew"),
+            allow_files = True,
+        ),
     },
     implementation = _gradle_build_impl,
 )
