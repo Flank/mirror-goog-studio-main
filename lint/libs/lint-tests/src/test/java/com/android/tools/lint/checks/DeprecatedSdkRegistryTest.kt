@@ -32,19 +32,6 @@ private class StubDeprecatedSdkRegistry @JvmOverloads constructor(
 }
 
 class DeprecatedSdkRegistryTest : TestCase() {
-    val x = """
-<sdk_metadata>
- <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17+" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
-  <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
-   <vulnerability description="Specifics and developer actions go here." cve="CVE-4313" />
-  </versions>
-  <versions from="1.2.4" to="1.2.13" status="insecure" description="Bad security bug CVE-4311" />
-   <vulnerability description="Buffer overflow vulnerability in this version." cve="CVE-4311" />
-  <versions to="1.2.0" status="obsolete" description="Library is obsolete." />
- </library>
-</sdk_metadata>
-        """
-
     fun testBasic() {
         @Language("XML")
         val xml = """
