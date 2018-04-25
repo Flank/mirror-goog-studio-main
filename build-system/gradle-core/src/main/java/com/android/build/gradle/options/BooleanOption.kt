@@ -89,8 +89,8 @@ enum class BooleanOption(
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
     ENABLE_SEPARATE_R_CLASS_COMPILATION("android.enableSeparateRClassCompilation"),
-    ENABLE_JETIFIER("android.enableJetifier", false),
-    USE_ANDROID_X("android.useAndroidX", false)
+    ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
+    USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE)
     ;
 
     constructor(
