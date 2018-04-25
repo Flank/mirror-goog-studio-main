@@ -463,7 +463,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/external/gnumake/",
                 "com/android/build/gradle/internal/",
                 "com/android/build/gradle/internal/aapt/",
-                "com/android/build/gradle/internal/actions/",
                 "com/android/build/gradle/internal/annotations/",
                 "com/android/build/gradle/internal/api/",
                 "com/android/build/gradle/internal/api/artifact/",

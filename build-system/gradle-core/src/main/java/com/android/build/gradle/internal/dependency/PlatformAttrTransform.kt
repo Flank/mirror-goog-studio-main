@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,43 +14,36 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.actions
+package com.android.build.gradle.internal.dependency
 
 import com.google.common.collect.Lists
+import org.gradle.api.artifacts.transform.ArtifactTransform
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.Opcodes
 import java.io.File
 import java.io.FileWriter
-import java.io.Serializable
 import java.util.zip.ZipFile
-import javax.inject.Inject
 
 /**
  * Extract attr IDs from a jar file and puts it in a R.txt
  */
-class AttrExtractor @Inject constructor(val inputFile: File, val outputFile: File) : Runnable, Serializable {
+class PlatformAttrTransform : ArtifactTransform() {
 
-    override fun run() {
+    override fun transform(inputFile: File): MutableList<File> {
+        val outputFile = File(outputDirectory, "R.txt")
+
         val attributes = ZipFile(inputFile).use { zip ->
-            val entry = zip.getEntry("android/R\$attr.class")
-
-            val result : MutableList<AttributeValue>?
-
-            if (entry != null) {
-                val stream = zip.getInputStream(entry)!! // this method does not return null.
+            // return from let{} is passed as return for use{}
+            zip.getEntry("android/R\$attr.class")?.let {
+                val stream = zip.getInputStream(it)!! // this method does not return null.
 
                 val customClassVisitor = CustomClassVisitor()
                 ClassReader(stream).accept(customClassVisitor, 0)
 
-                result = customClassVisitor.attributes
-            } else {
-                result = null
+                customClassVisitor.attributes
             }
-
-            // "return" this to assign it to the attributes outside of 'use'
-            result
         }
 
         if (attributes == null || attributes.isEmpty()) {
@@ -62,6 +55,8 @@ class AttrExtractor @Inject constructor(val inputFile: File, val outputFile: Fil
                 }
             }
         }
+
+        return mutableListOf(outputFile)
     }
 }
 
@@ -71,7 +66,13 @@ class CustomClassVisitor : ClassVisitor(Opcodes.ASM5) {
 
     val attributes: MutableList<AttributeValue> = Lists.newArrayList()
 
-    override fun visitField(access: Int, name: String?, desc: String?, signature: String?, value: Any?): FieldVisitor? {
+    override fun visitField(
+        access: Int,
+        name: String?,
+        desc: String?,
+        signature: String?,
+        value: Any?
+    ): FieldVisitor? {
         if (value is Int) {
             attributes.add(AttributeValue(name!!, value))
         }

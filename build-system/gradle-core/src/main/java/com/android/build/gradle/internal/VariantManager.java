@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.MockableJarTransform;
+import com.android.build.gradle.internal.dependency.PlatformAttrTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -733,6 +734,14 @@ public class VariantManager implements VariantModel {
                     reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
                     reg.artifactTransform(
                             MockableJarTransform.class, config -> config.params(false));
+                });
+
+        // transform to extract attr info from android.jar
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_PLATFORM_ATTR);
+                    reg.artifactTransform(PlatformAttrTransform.class);
                 });
 
         boolean sharedLibSupport =

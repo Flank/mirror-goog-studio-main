@@ -112,7 +112,6 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
-import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -1952,7 +1951,6 @@ public abstract class TaskManager {
 
     public void createTopLevelTestTasks(boolean hasFlavors) {
         createMockableJarTask();
-        taskFactory.create(new PlatformAttrExtractorTask.ConfigAction(globalScope));
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
 

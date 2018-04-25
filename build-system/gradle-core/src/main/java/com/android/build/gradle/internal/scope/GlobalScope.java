@@ -249,6 +249,19 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
+    public FileCollection getPlatformAttrs() {
+        Action<AttributeContainer> attributes =
+                container ->
+                        container.attribute(ARTIFACT_TYPE, AndroidArtifacts.TYPE_PLATFORM_ATTR);
+
+        return androidJarConfig
+                .getIncoming()
+                .artifactView(config -> config.attributes(attributes))
+                .getArtifacts()
+                .getArtifactFiles();
+    }
+
+    @NonNull
     public SyncIssueHandler getErrorHandler() {
         return (SyncIssueHandler) androidBuilder.getIssueReporter();
     }

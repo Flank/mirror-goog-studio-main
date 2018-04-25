@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.actions
+package com.android.build.gradle.internal.dependency
 
 import com.android.testutils.TestResources
 import com.google.common.io.Files
@@ -22,18 +22,21 @@ import com.google.common.truth.Truth
 import org.junit.Test
 import java.io.File
 
-class AttrExtractorTest {
+class PlatformAttrTransformTest {
 
     @Test
     fun testExtraction() {
         val inputJar = TestResources.getFile(
-                AttrExtractorTest::class.java, "AttrExtractor.jar")
+                PlatformAttrTransformTest::class.java, "PlatformAttrTransform.jar")
 
-        val outputFile = File.createTempFile("AttrExtractorTest", "")
+        val outputDir = Files.createTempDir()
 
-        AttrExtractor(inputJar, outputFile).run()
+        val transform = PlatformAttrTransform()
+        transform.outputDirectory = outputDir
+        val outputFiles = transform.transform(inputJar)
 
-        val lines = Files.readLines(outputFile, Charsets.UTF_8)
+
+        val lines = Files.readLines(outputFiles.single(), Charsets.UTF_8)
 
         Truth.assertThat(lines).containsExactly("int attr one 0x00000001", "int attr two 0x00000002")
     }
