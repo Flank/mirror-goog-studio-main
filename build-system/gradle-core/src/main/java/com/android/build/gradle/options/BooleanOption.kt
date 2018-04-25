@@ -62,8 +62,6 @@ enum class BooleanOption(
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
 
-    ENABLE_DYNAMIC_APPS("android.enable.dynamic.apps", false),
-
     // Marked as stable to avoid reporting deprecation twice.
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk", status = Option.Status.STABLE),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
