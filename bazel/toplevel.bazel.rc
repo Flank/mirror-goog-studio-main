@@ -122,10 +122,11 @@ build:remote-cache --auth_enabled=true
 # Set various strategies so that all action results can be looked up from and
 # uploaded to the remote cache. You can use --experimental_remote_spawn_cache
 # instead of --spawn_strategy=remote to enable sandboxing.
-build:remote-cache --spawn_strategy=remote
-build:remote-cache --strategy=Javac=remote
-build:remote-cache --strategy=Closure=remote
-build:remote-cache --genrule_strategy=remote
+build:remote-cache --experimental_remote_spawn_cache
+build:remote-cache --spawn_strategy=sandboxed
+build:remote-cache --strategy=Javac=sandboxed
+build:remote-cache --strategy=Closure=sandboxed
+build:remote-cache --genrule_strategy=sandboxed
 
 # Set flags for uploading to BES in order to view results in the Bazel Build
 # Results UI.
