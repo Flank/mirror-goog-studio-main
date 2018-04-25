@@ -140,6 +140,7 @@ grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
     info->set_from_timestamp(datum.start_timestamp);
     info->set_to_timestamp(datum.end_timestamp);
     info->set_trace_id(datum.trace_id);
+    info->set_trace_file_path(datum.trace_path);
   }
   return Status::OK;
 }

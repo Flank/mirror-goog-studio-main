@@ -44,13 +44,22 @@ class JByteArrayWrapper {
   std::string byte_str_;
 };
 
-// Wrap a jstring, exposing it as a std::string
+// Wrap a jstring, exposing it as a std::string.
+// If the jstring comes from a null object, it will be exposed as "".
 class JStringWrapper {
  public:
   JStringWrapper(JNIEnv *env, const jstring &jstr) {
-    const char *c_str = env->GetStringUTFChars(jstr, NULL);
-    str_ = c_str;
-    env->ReleaseStringUTFChars(jstr, c_str);
+    if (jstr == nullptr) {
+      str_ = "";
+    } else {
+      const char *c_str = env->GetStringUTFChars(jstr, NULL);
+      if (c_str == nullptr) {
+        str_ = "";
+      } else {
+        str_ = c_str;
+      }
+      env->ReleaseStringUTFChars(jstr, c_str);
+    }
   }
 
   const std::string &get() const { return str_; }
