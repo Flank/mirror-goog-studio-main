@@ -132,8 +132,16 @@ class GradleW {
             File source = new File(buildDir, outPath);
             Files.copy(source.toPath(), outFile.toPath());
         } finally {
-            // TODO: Maybe allow this to fail, as it will be cleaned up by the next
-            FileUtils.cleanOutputDir(outDir);
+            try {
+                FileUtils.cleanOutputDir(outDir);
+            } catch (IOException e) {
+                // Allow this to fail, as it will be cleaned up by the next run (b/77804450)
+                // This is an issue on windows without the sandbox and with stricter file locking
+                new IOException(
+                                "Failed to cleanup output directory. Will be cleaned up at next invocation",
+                                e)
+                        .printStackTrace();
+            }
         }
     }
 
