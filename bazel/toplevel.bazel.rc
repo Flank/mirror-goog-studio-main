@@ -146,3 +146,11 @@ build:results-local --spawn_strategy=local
 build:results-local --experimental_remote_spawn_cache
 build:results-local --remote_cache=remotebuildexecution.googleapis.com
 build:results-local --remote_timeout=3600
+
+# Top level config group for remote cache local execution.
+build:mac-experimental --remote_instance_name=projects/google.com:android-studio-alphasource
+build:mac-experimental --project_id=908081808034
+build:mac-experimental --config=remote-cache
+build:mac-experimental --config=results
+build:mac-experimental --experimental_remote_platform_override='properties:{name:"platform"
+value:"mac"}'
