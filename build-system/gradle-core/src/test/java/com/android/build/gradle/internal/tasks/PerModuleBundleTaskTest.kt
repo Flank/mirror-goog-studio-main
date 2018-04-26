@@ -21,7 +21,9 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
@@ -29,6 +31,7 @@ import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.bouncycastle.util.io.Streams
+import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -54,6 +57,8 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var featureSetMetadata: FileCollection
     @Mock private lateinit var transformManager: TransformManager
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
+    @Mock private lateinit var globalScope: GlobalScope
+    @Mock private lateinit var project: Project
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -92,6 +97,17 @@ class PerModuleBundleTaskTest {
             AndroidArtifacts.ArtifactScope.MODULE,
             AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA))
             .thenReturn(featureSetMetadata)
+
+
+        Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
+        Mockito.`when`(globalScope.project).thenReturn(project)
+        Mockito.`when`(project.path).thenReturn(":foo:bar")
+        Mockito.`when`(variantScope.getArtifactFileCollection(
+            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.MODULE,
+            AndroidArtifacts.ArtifactType.FEATURE_DEX,
+            mapOf(MODULE_PATH to ":foo:bar")))
+            .thenReturn(dexFiles)
 
 
         val testFiles = testFolder.newFolder("test_files")

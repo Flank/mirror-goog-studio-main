@@ -21,6 +21,8 @@ import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.pipeline.StreamFilter
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
@@ -57,6 +59,11 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var dexFiles: FileCollection
+        private set
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var featureDexFiles: FileCollection
         private set
 
     @get:InputFiles
@@ -110,15 +117,17 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             it.addJar(resFiles.single().toPath(), null, ResRelocator())
 
             // dex files
-            if (dexFiles.files.size == 1) {
+            val dexFilesSet = if (hasFeatureDexFiles()) featureDexFiles.files else dexFiles.files
+            if (dexFilesSet.size == 1) {
                 // Don't rename if there is only one input folder
                 // as this might be the legacy multidex case.
-                addHybridFolder(it, dexFiles.files.sortedBy { it.name }, Relocator(FD_DEX), null)
+                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, Relocator(FD_DEX), null)
             } else {
-                addHybridFolder(it, dexFiles.files.sortedBy { it.name }, DexRelocator(FD_DEX), null)
+                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, DexRelocator(FD_DEX), null)
             }
 
-            addHybridFolder(it, javaResFiles.files,
+            val javaResFilesSet = if (hasFeatureDexFiles()) setOf<File>() else javaResFiles.files
+            addHybridFolder(it, javaResFilesSet,
                 Relocator("root"),
                 JarMerger.EXCLUDE_CLASSES)
 
@@ -155,6 +164,8 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         }
     }
 
+    private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
+
     class ConfigAction(
             private val variantScope: VariantScope
     ) : TaskConfigAction<PerModuleBundleTask> {
@@ -182,6 +193,13 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE)
             task.dexFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.DEX)
+            task.featureDexFiles =
+                variantScope.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.MODULE,
+                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                    mapOf(MODULE_PATH to variantScope.globalScope.project.path)
+                )
             task.javaResFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.RESOURCES)
             task.nativeLibsFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
