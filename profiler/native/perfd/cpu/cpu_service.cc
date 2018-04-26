@@ -281,6 +281,7 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
   } else {  // Profiler is ART
     ActivityManager* manager = ActivityManager::Instance();
     success = manager->StopProfiling(app->app_pkg_name, need_trace, &error,
+                                     cpu_config_.art_stop_timeout_sec(),
                                      app->is_startup_profiling);
   }
 

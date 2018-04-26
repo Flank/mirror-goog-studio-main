@@ -27,6 +27,7 @@
 #include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
 #include "perfd/termination_service.h"
+#include "proto/agent_service.grpc.pb.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -38,11 +39,13 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
+                 const proto::AgentConfig::CpuConfig& cpu_config,
                  TerminationService* termination_service)
       : cache_(*cpu_cache),
         clock_(clock),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
+        cpu_config_(cpu_config),
         simpleperf_manager_(clock, simpleperf_),
         // Number of millis to wait between atrace dumps when profiling.
         // The average user will run a capture around 20 seconds, however to
@@ -124,6 +127,8 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
+
+  const proto::AgentConfig::CpuConfig& cpu_config_;
   const Simpleperf simpleperf_{CurrentProcess::dir(),
                                DeviceInfo::is_emulator()};
   SimpleperfManager simpleperf_manager_;

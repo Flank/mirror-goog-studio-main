@@ -82,8 +82,8 @@ int main(int argc, char** argv) {
                                                daemon.sessions());
   daemon.RegisterComponent(&generic_component);
 
-  profiler::CpuProfilerComponent cpu_component(&clock, &file_cache,
-                                               termination_service);
+  profiler::CpuProfilerComponent cpu_component(
+      &clock, &file_cache, agent_config.cpu_config(), termination_service);
   daemon.RegisterComponent(&cpu_component);
 
   profiler::MemoryProfilerComponent memory_component(&clock, &file_cache);

@@ -79,6 +79,7 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
 
 bool ActivityManager::StopProfiling(const string &app_package_name,
                                     bool need_result, string *error_string,
+                                    int32_t timeout_sec,
                                     bool is_startup_profiling) {
   Trace trace("CPU:StopProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
@@ -107,7 +108,7 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   }
 
   if (need_result) {
-    const int64_t timeout_ms = 5000;
+    const int64_t timeout_ms = Clock::s_to_ms(timeout_sec);
     // Because of an issue in the android platform, it is unreliable to
     // monitor the file close event for a trace which started by "am start
     // --start-profiler" (http://b/73891014). So working around the issue by
