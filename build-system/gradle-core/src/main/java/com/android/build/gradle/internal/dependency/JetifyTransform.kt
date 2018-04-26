@@ -26,6 +26,7 @@ import com.google.common.base.Verify
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.DependencySubstitution
+import org.gradle.api.artifacts.DirectDependencyMetadata
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.transform.ArtifactTransform
 import java.io.File
@@ -49,6 +50,33 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
          */
         @JvmStatic
         fun replaceOldSupportLibraries(project: Project) {
+            // TODO (AGP): This is a quick fix to work around Gradle bug with dependency
+            // substitution (https://github.com/gradle/gradle/issues/5174). Once Gradle has fixed
+            // this issue, this should be removed.
+            project.dependencies.components.all { component ->
+                component.allVariants { variant ->
+                    variant.withDependencies { metadata ->
+                        val oldDeps = mutableSetOf<DirectDependencyMetadata>()
+                        val newDeps = mutableListOf<String>()
+                        metadata.forEach { it ->
+                            val newDep = AndroidXMapping.MAPPINGS["${it.group}:${it.name}"]
+                            if (newDep != null) {
+                                oldDeps.add(it)
+                                newDeps.add(newDep)
+                            }
+                        }
+                        // Using metadata.removeAll(oldDeps) doesn't work for some reason, we need
+                        // to use this for loop.
+                        for (oldDep in oldDeps.map { it -> "${it.group}:${it.name}" }) {
+                            metadata.removeIf { it -> "${it.group}:${it.name}" == oldDep }
+                        }
+                        for (newDep in newDeps) {
+                            metadata.add(newDep)
+                        }
+                    }
+                }
+            }
+
             project.configurations.all { config ->
                 // Only consider resolvable configurations
                 if (config.isCanBeResolved) {
@@ -146,6 +174,7 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
 
             // TODO (jetifier-core): Need to map databinding to the Android Gradle plugin version.
             // Right now jetifier-core is mapping it to versions such as 1.0.0, which is incorrect.
+            // Also see AndroidXMapping.MAPPINGS.
             if (group == "androidx.databinding") {
                 return "$group:$module:${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
             }

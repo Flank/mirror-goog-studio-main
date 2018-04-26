@@ -27,6 +27,11 @@ dependencies {
     // Add this dependency as regression test for https://issuetracker.google.com/78477288
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 
+    // Add this dependency as regression test for https://issuetracker.google.com/78552861
+    implementation 'com.google.android.gms:play-services-basement:15.0.0'
+
     // Add this dependency as regression test for https://issuetracker.google.com/78144836
-    androidTestImplementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
+    // (Add it to implementation instead of androidTestImplementation so it's tested by the assemble
+    // task.)
+    implementation "com.android.support.test:runner:${rootProject.testSupportLibVersion}"
 }
