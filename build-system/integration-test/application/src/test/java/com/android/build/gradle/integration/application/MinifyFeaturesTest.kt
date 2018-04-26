@@ -632,9 +632,6 @@ class MinifyFeaturesTest(
             .addGradleProperties(
                 "${BooleanOption.ENABLE_DEX_ARCHIVE.propertyName}="
                         + "${dexArchiveMode == DexArchiveMode.ENABLED}")
-            .addGradleProperties(
-                "${BooleanOption.ENABLE_DYNAMIC_APPS.propertyName}="
-                        + "${multiApkMode == MultiApkMode.DYNAMIC_APP}")
             .create()
 
     @Test
