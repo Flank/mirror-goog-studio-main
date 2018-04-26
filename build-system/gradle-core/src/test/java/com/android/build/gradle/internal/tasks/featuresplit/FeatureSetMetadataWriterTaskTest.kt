@@ -26,6 +26,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ExpectedException
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
@@ -44,6 +45,9 @@ class FeatureSetMetadataWriterTaskTest {
     @Mock lateinit var fileCollection: FileCollection
     @Mock lateinit var fileTree: FileTree
     val files = mutableSetOf<File>()
+
+    @get:Rule
+    val exception = ExpectedException.none()
 
     @Before
     @Throws(IOException::class)
@@ -85,10 +89,21 @@ class FeatureSetMetadataWriterTaskTest {
         val features =
                 listOf(
                         FeatureSplitDeclaration(":A", "id"),
-                        FeatureSplitDeclaration(":foo:A", "id"),
-                        FeatureSplitDeclaration(":AA", "id"))
+                        FeatureSplitDeclaration(":foo:B", "id"),
+                        FeatureSplitDeclaration(":C", "id"))
 
-        assertThat(task.computeFeatureNames(features).values).containsExactly("A1", "A2", "AA")
+        assertThat(task.computeFeatureNames(features).values).containsExactly("A", "B", "C")
+    }
+
+    @Test
+    fun testDuplicatedFeatureNames() {
+        val features =
+            listOf(
+                FeatureSplitDeclaration(":A", "id"),
+                FeatureSplitDeclaration(":foo:A", "id"))
+
+        exception.expect(RuntimeException::class.java)
+        task.computeFeatureNames(features)
     }
 
     @Throws(IOException::class)
