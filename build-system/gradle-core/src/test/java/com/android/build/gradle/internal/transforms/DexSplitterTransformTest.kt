@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
@@ -37,7 +39,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -59,8 +63,11 @@ class DexSplitterTransformTest {
     private lateinit var baseClasses: File
     private lateinit var featureClasses: File
 
+    @Mock private lateinit var mappingFileSrc: BuildableArtifact
+
     @Before
     fun setUp() {
+        MockitoAnnotations.initMocks(this)
         r8OutputProviderDir = tmp.newFolder()
         r8OutputProvider = TestTransformOutputProvider(r8OutputProviderDir.toPath())
         r8Context = Mockito.mock(Context::class.java)
@@ -107,7 +114,37 @@ class DexSplitterTransformTest {
         Truth.assertThat(dexSplitterOutputDir.listFiles().map {it.name} ).doesNotContain("base")
     }
 
-    private fun runDexSplitter(dexDir: File, featureJars: List<File>) {
+    @Test
+    fun testNonExistentMappingFile() {
+
+        Mockito.`when`(mappingFileSrc.iterator())
+            .thenReturn(listOf(File("/path/to/nowhere")).iterator())
+
+        // We run R8 first to generate dex file from jar files.
+        runR8(listOf(baseClasses, featureClasses), "class **")
+
+        // Check that r8 ran as expected before running dexSplitter
+        val r8Dex = getDex(r8OutputProviderDir.toPath())
+        assertThat(r8Dex).containsClasses("Lbase/A;", "Lbase/B;", "Lfeature/A;", "Lfeature/B;")
+
+        runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses), mappingFileSrc)
+
+        val baseDex = getDex(dexSplitterOutputProviderDir.toPath())
+        assertThat(baseDex).containsClasses("Lbase/A;", "Lbase/B;")
+        assertThat(baseDex).doesNotContainClasses("Lfeature/A;", "Lfeature/B;")
+
+        val featureDex = getDex(File(dexSplitterOutputDir, "foo/feature").toPath())
+        assertThat(featureDex).containsClasses("Lfeature/A;", "Lfeature/B;")
+        assertThat(featureDex).doesNotContainClasses("Lbase/A;", "Lbase/B;")
+
+        Truth.assertThat(dexSplitterOutputDir.listFiles().map {it.name} ).doesNotContain("base")
+    }
+
+    private fun runDexSplitter(
+        dexDir: File,
+        featureJars: List<File>,
+        mappingFileSrc: BuildableArtifact? = null
+    ) {
         val dexSplitterInput = TransformTestHelper.directoryBuilder(dexDir).build()
         val dexSplitterInvocation =
                 TransformTestHelper
@@ -121,7 +158,7 @@ class DexSplitterTransformTest {
                 DexSplitterTransform(
                         dexSplitterOutputDir,
                         FakeFileCollection(featureJars),
-                        mappingFileSrc = null)
+                        mappingFileSrc = mappingFileSrc)
 
         dexSplitterTransform.transform(dexSplitterInvocation)
     }

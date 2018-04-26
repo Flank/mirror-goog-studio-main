@@ -69,7 +69,13 @@ class DexSplitterTransform(
     override fun transform(transformInvocation: TransformInvocation) {
 
         try {
-            val mappingFile = mappingFileSrc?.singleFile()
+            val mappingFile =
+                if (mappingFileSrc?.singleFile()?.exists() == true
+                    && !mappingFileSrc.singleFile().isDirectory) {
+                mappingFileSrc.singleFile()
+            } else {
+                null
+            }
 
             val outputProvider = requireNotNull(
                 transformInvocation.outputProvider,
