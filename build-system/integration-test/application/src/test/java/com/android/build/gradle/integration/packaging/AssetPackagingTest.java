@@ -570,11 +570,14 @@ public class AssetPackagingTest {
 
         execute("app:assembleDebug");
 
-        TruthHelper.assertThat(appProject.getApk("debug")).doesNotContain("assets/aa");
-        TruthHelper.assertThat(appProject.getApk("debug"))
+        TruthHelper.assertThat(appProject.getApk(GradleTestProject.ApkType.DEBUG))
+                .doesNotContain("assets/aa");
+        TruthHelper.assertThat(appProject.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsFileWithContent("assets/ab", abData);
-        TruthHelper.assertThat(appProject.getApk("debug")).doesNotContain("assets/ba");
-        TruthHelper.assertThat(appProject.getApk("debug")).doesNotContain("assets/bb");
+        TruthHelper.assertThat(appProject.getApk(GradleTestProject.ApkType.DEBUG))
+                .doesNotContain("assets/ba");
+        TruthHelper.assertThat(appProject.getApk(GradleTestProject.ApkType.DEBUG))
+                .doesNotContain("assets/bb");
     }
 
     /**
@@ -590,7 +593,10 @@ public class AssetPackagingTest {
     private static void checkApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getApk("debug")), filename, content);
+        check(
+                TruthHelper.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)),
+                filename,
+                content);
     }
 
     /**
