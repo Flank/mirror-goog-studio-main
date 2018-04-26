@@ -72,8 +72,9 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
     }
 
     /**
-     * Returns a map of (module-path -> feature name) where the feature names are guaranteed to be
-     * unique.
+     * Converts from a list of [FeatureSplitDeclaration] to a map of (module-path -> feature name)
+     *
+     * This also performs validation to ensure all feature name are unique.
      */
     @VisibleForTesting
     fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<String, String> {
@@ -81,27 +82,18 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
 
         // first go through all the module path, and search for duplicates in the last segment
         // we're going to create a map of (leaf -> list(full paths)).
-        // we sort features to ensure deterministic feature naming.
-        val leafMap =
-                features
-                        .sortedBy { it.modulePath }
-                        .groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
-
-        val usedNames = mutableSetOf<String>()
+        val leafMap = features.groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
 
         for ((leaf, modules) in leafMap) {
-            if (modules.size == 1 && leaf !in usedNames) {
+            if (modules.size == 1) {
                 result[modules[0]] = leaf
-                usedNames.add(leaf)
             } else {
-                var index = 1
+                val message = StringBuilder(
+                    "Module name '$leaf' is used by multiple modules. All dynamic features must have a unique name.")
                 for (module in modules) {
-                    while ("$leaf$index" in usedNames) {
-                        index ++
-                    }
-                    result[module] = "$leaf$index"
-                    usedNames.add("$leaf$index")
+                    message.append("\n\t-> $module")
                 }
+                throw RuntimeException(message.toString())
             }
         }
 
