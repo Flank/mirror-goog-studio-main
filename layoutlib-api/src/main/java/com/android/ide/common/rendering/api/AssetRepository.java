@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.rendering.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -37,5 +38,12 @@ public class AssetRepository {
 
     public InputStream openNonAsset(int cookie, String path, int mode) throws IOException {
         return null;
+    }
+
+    /**
+     * Checks if the given path points to a file resource.
+     */
+    public boolean isFileResource(String path) {
+        return new File(path).isFile();
     }
 }
