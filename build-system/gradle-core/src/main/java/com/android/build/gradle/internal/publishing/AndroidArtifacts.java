@@ -71,7 +71,8 @@ public class AndroidArtifacts {
     private static final String TYPE_SYMBOL = "android-symbol";
     private static final String TYPE_SYMBOL_WITH_PACKAGE_NAME = "android-symbol-with-package-name";
     private static final String TYPE_DEFINED_ONLY_SYMBOL = "defined-only-android-symbol";
-    private static final String TYPE_PROGUARD_RULES = "android-proguad";
+    private static final String TYPE_CONSUMER_PROGUARD_RULES = "android-consumer-proguard-rules";
+    private static final String TYPE_AAPT_PROGUARD_RULES = "android-aapt-proguard-rules";
     private static final String TYPE_DATA_BINDING_ARTIFACT = "android-databinding";
     private static final String TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT =
             "android-databinding-class-log";
@@ -197,7 +198,8 @@ public class AndroidArtifacts {
         SHARED_JNI(TYPE_SHARED_JNI),
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS),
         PUBLIC_RES(TYPE_PUBLIC_RES),
-        PROGUARD_RULES(TYPE_PROGUARD_RULES),
+        CONSUMER_PROGUARD_RULES(TYPE_CONSUMER_PROGUARD_RULES),
+        AAPT_PROGUARD_RULES(TYPE_AAPT_PROGUARD_RULES),
 
         LINT(TYPE_LINT_JAR),
 

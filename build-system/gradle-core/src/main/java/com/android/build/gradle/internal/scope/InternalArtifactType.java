@@ -154,6 +154,10 @@ public enum InternalArtifactType implements ArtifactType {
 
     // the file that consumers of an AAR can use for additional proguard rules.
     CONSUMER_PROGUARD_FILE,
+    // the proguard rules produced by aapt.
+    AAPT_PROGUARD_FILE,
+    // the merger of a module's AAPT_PROGUARD_FILE and those of its feature(s)
+    MERGED_AAPT_PROGUARD_FILE,
 
     // the data binding artifact for a library that gets published with the aar
     DATA_BINDING_ARTIFACT,

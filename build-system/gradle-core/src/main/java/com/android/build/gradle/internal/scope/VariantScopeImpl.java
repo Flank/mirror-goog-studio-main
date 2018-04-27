@@ -1461,8 +1461,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getProcessAndroidResourcesProguardOutputFile() {
-        return new File(globalScope.getIntermediatesDir(),
-                "/proguard-rules/" + getVariantConfiguration().getDirName() + "/aapt_rules.txt");
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "proguard-rules",
+                getVariantConfiguration().getDirName(),
+                SdkConstants.FN_AAPT_RULES);
     }
 
     @Override

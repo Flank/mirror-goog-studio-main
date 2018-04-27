@@ -83,7 +83,7 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.SHARED_JNI,
             ArtifactType.AIDL,
             ArtifactType.RENDERSCRIPT,
-            ArtifactType.PROGUARD_RULES,
+            ArtifactType.CONSUMER_PROGUARD_RULES,
             ArtifactType.LINT,
             ArtifactType.ANNOTATIONS,
             ArtifactType.PUBLIC_RES,
@@ -147,7 +147,7 @@ public class AarTransform extends ArtifactTransform {
                 return listIfExists(new File(input, FD_AIDL));
             case RENDERSCRIPT:
                 return listIfExists(new File(input, FD_RENDERSCRIPT));
-            case PROGUARD_RULES:
+            case CONSUMER_PROGUARD_RULES:
                 return listIfExists(new File(input, FN_PROGUARD_TXT));
             case ANNOTATIONS:
                 return listIfExists(new File(input, FN_ANNOTATIONS_ZIP));

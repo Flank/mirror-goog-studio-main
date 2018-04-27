@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -23,6 +24,8 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.FileSubject
+import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -372,8 +375,7 @@ class MinifyFeaturesTest(
                         }
 
                         dependencies {
-                            implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-                            implementation 'com.android.support:appcompat-v7:26.0.2'
+                            implementation 'com.android.support:appcompat-v7:' + rootProject.supportLibVersion
                         }
                         """
                 )
@@ -646,6 +648,34 @@ class MinifyFeaturesTest(
         project.executor()
             .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
             .run("assembleMinified")
+
+        // check aapt_rules.txt merging
+        val aaptProguardFile =
+            FileUtils.join(
+                project.getSubproject("baseModule").intermediatesDir,
+                "proguard-rules",
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> "minified"
+                    MultiApkMode.INSTANT_APP -> FileUtils.join("feature", "minified")
+                },
+                SdkConstants.FN_AAPT_RULES)
+        FileSubject.assertThat(aaptProguardFile).exists()
+        FileSubject.assertThat(aaptProguardFile).doesNotContain("-keep class android.support")
+        val mergedAaptProguardFile =
+            FileUtils.join(
+                project.getSubproject("baseModule").intermediatesDir,
+                "merged_aapt_proguard_file",
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> "minified"
+                    MultiApkMode.INSTANT_APP -> "minifiedFeature"
+                },
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> "mergeMinifiedAaptProguardFiles"
+                    MultiApkMode.INSTANT_APP -> "mergeMinifiedFeatureAaptProguardFiles"
+                },
+                SdkConstants.FN_MERGED_AAPT_RULES)
+        FileSubject.assertThat(mergedAaptProguardFile).exists()
+        FileSubject.assertThat(mergedAaptProguardFile).contains("-keep class android.support")
 
         val baseModuleApk =
             project.getSubproject("baseModule")
