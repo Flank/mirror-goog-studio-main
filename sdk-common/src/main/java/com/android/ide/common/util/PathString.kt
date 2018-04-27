@@ -81,7 +81,13 @@ class PathString private constructor(
      * The original, unmodified, path string.
      */
     val rawPath: String
-        get() = path.substring(0, prefixEndIndex) + path.substring(startIndex, suffixEndIndex)
+        get() {
+            return if (startIndex == prefixEndIndex) {
+                path.substring(0, suffixEndIndex)
+            } else {
+                path.substring(0, prefixEndIndex) + path.substring(startIndex, suffixEndIndex)
+            }
+        }
 
     /**
      * Returns the path string in a platform-independent format (using '/' separators).
