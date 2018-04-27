@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -35,7 +34,7 @@ public class JacocoTransformConnectedTest {
     @Rule
     public final GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
     @Rule public Adb adb = new Adb();
@@ -54,5 +53,9 @@ public class JacocoTransformConnectedTest {
         adb.exclusiveAccess();
         project.executor().run("connectedCheck");
         assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
+        assertThat(
+                        project.file(
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                .exists();
     }
 }
