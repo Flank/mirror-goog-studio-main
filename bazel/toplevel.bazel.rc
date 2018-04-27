@@ -152,5 +152,4 @@ build:mac-experimental --remote_instance_name=projects/google.com:android-studio
 build:mac-experimental --project_id=908081808034
 build:mac-experimental --config=remote-cache
 build:mac-experimental --config=results
-build:mac-experimental --experimental_remote_platform_override='properties:{name:"platform"
-value:"mac"}'
+build:mac-experimental --experimental_remote_platform_override='properties:{name:"platform" value:"mac"}'
