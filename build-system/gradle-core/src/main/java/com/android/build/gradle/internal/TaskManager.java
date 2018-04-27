@@ -24,13 +24,13 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_JAVA_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -110,6 +110,7 @@ import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
+import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
@@ -229,7 +230,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -1133,6 +1133,10 @@ public abstract class TaskManager {
                 (variantType.isApk() && !variantType.isForTesting()) ? FEATURE_RESOURCE_PKG : null;
 
         createApkProcessResTask(scope, packageOutputType);
+
+        if (scope.consumesFeatureJars()) {
+            taskFactory.create(new MergeAaptProguardFilesConfigAction(scope));
+        }
     }
 
     private void createApkProcessResTask(@NonNull VariantScope scope,
@@ -3331,7 +3335,7 @@ public abstract class TaskManager {
                     project.files(
                             (Callable<Collection<File>>) testedScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES));
+                                    RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
             maybeAddFeatureProguardRules(variantScope, configurationFiles);
             transform.setConfigurationFiles(configurationFiles);
         } else if (isTestedAppObfuscated(variantScope)) {
@@ -3343,7 +3347,7 @@ public abstract class TaskManager {
                     project.files(
                             (Callable<Collection<File>>) variantScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES));
+                                    RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
             maybeAddFeatureProguardRules(variantScope, configurationFiles);
             transform.setConfigurationFiles(configurationFiles);
         } else {
@@ -3399,21 +3403,19 @@ public abstract class TaskManager {
             transform.setActions(postprocessingFeatures);
         }
 
-        Callable<Collection<File>> proguardConfigFiles =
-                () -> {
-                    List<File> proguardFiles = new ArrayList<>(scope.getProguardFiles());
+        Callable<Collection<File>> proguardConfigFiles = scope::getProguardFiles;
 
-                    // Use the first output when looking for the proguard rule output of
-                    // the aapt task. The different outputs are not different in a way that
-                    // makes this rule file different per output.
-                    proguardFiles.add(scope.getProcessAndroidResourcesProguardOutputFile());
-                    return proguardFiles;
-                };
+        final InternalArtifactType aaptProguardFileType =
+                scope.consumesFeatureJars()
+                        ? InternalArtifactType.MERGED_AAPT_PROGUARD_FILE
+                        : InternalArtifactType.AAPT_PROGUARD_FILE;
 
         final ConfigurableFileCollection configurationFiles =
                 project.files(
                         proguardConfigFiles,
-                        scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES));
+                        scope.getArtifacts().getFinalArtifactFiles(aaptProguardFileType),
+                        scope.getArtifactFileCollection(
+                                RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
         maybeAddFeatureProguardRules(scope, configurationFiles);
         transform.setConfigurationFiles(configurationFiles);
 
@@ -3437,7 +3439,7 @@ public abstract class TaskManager {
         if (variantScope.consumesFeatureJars()) {
             configurationFiles.from(
                     variantScope.getArtifactFileCollection(
-                            METADATA_VALUES, MODULE, PROGUARD_RULES));
+                            METADATA_VALUES, MODULE, CONSUMER_PROGUARD_RULES));
         }
     }
 

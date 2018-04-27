@@ -171,8 +171,14 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 
-            if (variantScope.codeShrinker != null) {
+            if (generatesProguardOutputFile(variantScope)) {
                 task.proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
+                variantScope
+                    .artifacts
+                    .appendArtifact(
+                        InternalArtifactType.AAPT_PROGUARD_FILE,
+                        listOf(variantScope.processAndroidResourcesProguardOutputFile),
+                        task)
             }
 
             task.packageForRSupplier = TaskInputHelper.memoize {

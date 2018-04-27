@@ -763,9 +763,17 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.textSymbolOutputDir = symbolLocation;
             processResources.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
 
-            if (variantScope.getCodeShrinker() != null) {
+            if (generatesProguardOutputFile(variantScope)) {
                 processResources.setProguardOutputFile(
                         variantScope.getProcessAndroidResourcesProguardOutputFile());
+                variantScope
+                        .getArtifacts()
+                        .appendArtifact(
+                                InternalArtifactType.AAPT_PROGUARD_FILE,
+                                ImmutableList.of(
+                                        variantScope
+                                                .getProcessAndroidResourcesProguardOutputFile()),
+                                processResources);
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
@@ -909,9 +917,17 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             .appendArtifact(
                                     InternalArtifactType.RUNTIME_R_CLASS_SOURCES, task, "out");
 
-            if (variantScope.getCodeShrinker() != null) {
+            if (generatesProguardOutputFile(variantScope)) {
                 task.setProguardOutputFile(
                         variantScope.getProcessAndroidResourcesProguardOutputFile());
+                variantScope
+                        .getArtifacts()
+                        .appendArtifact(
+                                InternalArtifactType.AAPT_PROGUARD_FILE,
+                                ImmutableList.of(
+                                        variantScope
+                                                .getProcessAndroidResourcesProguardOutputFile()),
+                                task);
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
