@@ -5,7 +5,7 @@
     name="Watch Face"
     minApi="23"
     minBuildApi="25"
-    description="Creates a watch face for Android Wear">
+    description="Creates a watch face for Wear OS">
 
     <category value="Wear" />
     <formfactor value="Wear" />
