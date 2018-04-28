@@ -274,7 +274,8 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                 .incremental()
                 .run()
                 .expect(
-                        "src/test/pkg/MissingParcelable1a.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        ""
+                                + "src/test/pkg/MissingParcelable1a.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
                                 + "class MissingParcelable1a : Parcelable {\n"
                                 + "      ~~~~~~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings\n");
@@ -370,7 +371,8 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                         + "}"))
                 .run()
                 .expect(
-                        "src/test/pkg/MyClass.kt:19: Error: Field should be annotated with @JvmField [ParcelCreator]\n"
+                        ""
+                                + "src/test/pkg/MyClass.kt:19: Error: Field should be annotated with @JvmField [ParcelCreator]\n"
                                 + "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n"
                                 + "            ~~~~~~~\n"
                                 + "1 errors, 0 warnings")
@@ -408,12 +410,74 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                         + "annotation class Parcelize"))
                 .run()
                 .expect(
-                        "src/test/Test.kt:11: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        ""
+                                + "src/test/Test.kt:11: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
                                 + "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n"
                                 + "      ~~~~~\n"
                                 + "src/test/Test.kt:13: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
                                 + "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n"
                                 + "           ~~~~~\n"
                                 + "2 errors, 0 warnings");
+    }
+
+    public void testNoJvmFieldWarning() {
+        // Regression test for
+        // 78197859: Misleading "Missing Parcelable CREATOR field"
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "class ExtendedParcelable(\n"
+                                        + "        value: String,\n"
+                                        + "        private val value2: Int\n"
+                                        + ") : BaseParcelable(value)\n"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "import android.support.annotation.NonNull;\n"
+                                        + "\n"
+                                        + "/** @noinspection ClassNameDiffersFromFileName, MethodMayBeStatic */ "
+                                        + "public class BaseParcelable implements Parcelable {\n"
+                                        + "    @NonNull\n"
+                                        + "    protected final String mValue;\n"
+                                        + "\n"
+                                        + "    public BaseParcelable(@NonNull String value) {\n"
+                                        + "        mValue = value;\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    protected BaseParcelable(@NonNull Parcel in) {\n"
+                                        + "        mValue = in.readString();\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public static final Creator<BaseParcelable> CREATOR = new Creator<BaseParcelable>() {\n"
+                                        + "        @NonNull\n"
+                                        + "        @Override\n"
+                                        + "        public BaseParcelable createFromParcel(@NonNull Parcel in) {\n"
+                                        + "            return new BaseParcelable(in);\n"
+                                        + "        }\n"
+                                        + "\n"
+                                        + "        @NonNull\n"
+                                        + "        @Override\n"
+                                        + "        public BaseParcelable[] newArray(int size) {\n"
+                                        + "            return new BaseParcelable[size];\n"
+                                        + "        }\n"
+                                        + "    };\n"
+                                        + "\n"
+                                        + "    @Override\n"
+                                        + "    public int describeContents() {\n"
+                                        + "        return 0;\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @Override\n"
+                                        + "    public void writeToParcel(@NonNull Parcel dest, int flags) {\n"
+                                        + "        dest.writeString(mValue);\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
     }
 }

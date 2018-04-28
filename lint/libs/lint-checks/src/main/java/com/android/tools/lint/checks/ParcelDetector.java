@@ -107,7 +107,7 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
                     "This class implements `Parcelable` but does not "
                             + "provide a `CREATOR` field";
             context.report(ISSUE, declaration, location, message, null);
-        } else if (isKotlin && !hasCreatorInnerClass(declaration)) {
+        } else if (Lint.isKotlin(field) && !hasCreatorInnerClass(declaration)) {
             // Make sure fields in Kotlin are marked @JvmField
             PsiModifierList modifierList = field.getModifierList();
             if (modifierList != null
