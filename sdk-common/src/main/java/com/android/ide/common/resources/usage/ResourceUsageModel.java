@@ -155,7 +155,7 @@ public class ResourceUsageModel {
     }
 
     @Nullable
-    Resource getResourceFromUrl(@NonNull String possibleUrlReference) {
+    public Resource getResourceFromUrl(@NonNull String possibleUrlReference) {
         ResourceUrl url = ResourceUrl.parse(possibleUrlReference);
         if (url != null && !url.isFramework()) {
             return addResource(url.type, SdkUtils.getResourceFieldName(url.name), null);

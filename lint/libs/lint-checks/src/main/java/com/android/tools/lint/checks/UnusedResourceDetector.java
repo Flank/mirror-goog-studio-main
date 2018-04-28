@@ -37,6 +37,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
@@ -182,14 +183,28 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         if (model != null) {
             Variant selectedVariant = project.getCurrentVariant();
             if (selectedVariant != null) {
+                ProductFlavor mergedProductFlavor = selectedVariant.getMergedFlavor();
+                recordManifestPlaceHolderUsages(mergedProductFlavor.getManifestPlaceholders());
                 for (BuildTypeContainer container : model.getBuildTypes()) {
-                    if (selectedVariant.getBuildType().equals(container.getBuildType().getName())) {
-                        addDynamicResources(project, container.getBuildType().getResValues());
+                    BuildType buildType = container.getBuildType();
+                    if (selectedVariant.getBuildType().equals(buildType.getName())) {
+                        addDynamicResources(project, buildType.getResValues());
+                        recordManifestPlaceHolderUsages(buildType.getManifestPlaceholders());
                     }
                 }
             }
             ProductFlavor flavor = model.getDefaultConfig().getProductFlavor();
             addDynamicResources(project, flavor.getResValues());
+        }
+    }
+
+    private void recordManifestPlaceHolderUsages(Map<String, Object> manifestPlaceholders) {
+        for (Object value : manifestPlaceholders.values()) {
+            if (value instanceof String) {
+                String string = (String) value;
+                Resource resource = model.getResourceFromUrl(string);
+                ResourceUsageModel.markReachable(resource);
+            }
         }
     }
 
