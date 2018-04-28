@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.InteroperabilityDetector.Issues.KOTLIN_PROPERTY
 import com.android.tools.lint.detector.api.Detector
 
 class InteroperabilityDetectorTest : AbstractCheckTest() {
@@ -383,5 +384,114 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun testNonPropertyAccess1() {
+        // Regression test for
+        // 78650191: KotlinPropertyAccess should ignore void methods when attempting to make matches
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import java.io.FileDescriptor;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class PropertyAccess1 {
+                    public Object setDataSource(FileDescriptor fd) {
+                        return null;
+                    }
+
+                    private void resetDataSource() {
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess2() {
+        // Regression test for
+        // 78649678: KotlinPropertyAccess should ignore private methods when matching
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class PropertyAccess2 {
+                    private boolean hasName() { return false; }
+                    public void setName(boolean name) {}
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess3() {
+        // Regression test for
+        // 78644287: KotlinPropertyAccess not resolving/comparing generic type parameters correctly
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class PropertyAccess3 {
+                    class LoaderInfo<D> extends MutableLiveData<D> {
+                        @Override
+                        public void setValue(D value) { }
+                    }
+
+                    public class MutableLiveData<T> extends LiveData<T> {
+                        @Override
+                        public void setValue(T value) {
+                        }
+                    }
+
+                    public abstract class LiveData<T> {
+                        public T getValue() {
+                            return null;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess4() {
+        // Regression test for
+        // 78632440: KotlinPropertyAccess false positive with overloaded setter
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.res.ColorStateList;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class PropertyAccess {
+                    public void setCardBackgroundColor(int color) {
+                    }
+
+                    public void setCardBackgroundColor(ColorStateList color) {
+                    }
+
+                    public ColorStateList getCardBackgroundColor() {
+                        return null;
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
 }
