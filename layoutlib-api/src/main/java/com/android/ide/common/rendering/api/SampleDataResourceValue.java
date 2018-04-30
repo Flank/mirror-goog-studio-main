@@ -35,10 +35,12 @@ public class SampleDataResourceValue extends ResourceValue {
             Splitter.on(Pattern.compile("\r?\n")).omitEmptyStrings();
 
     private final ImmutableList<String> myLines;
+    private final ResourceReference myReference;
 
     public SampleDataResourceValue(@NonNull ResourceReference reference, @Nullable byte[] content) {
         super(reference, null);
 
+        myReference = reference;
         myLines =
                 content != null
                         ? ImmutableList.copyOf(
@@ -49,12 +51,18 @@ public class SampleDataResourceValue extends ResourceValue {
     @Nullable
     @Override
     public String getValue() {
-        throw new UnsupportedOperationException(
-                "SampleDataResourceValue values are returned via getValueAsLines");
+        // SampleDataResourceValue are just references. Values are returned via getValueAsLines
+        return myReference.getResourceUrl().toString();
     }
 
     @NonNull
     public ImmutableList<String> getValueAsLines() {
         return myLines;
+    }
+
+    @Nullable
+    @Override
+    public ResourceReference getReference() {
+        return myReference;
     }
 }

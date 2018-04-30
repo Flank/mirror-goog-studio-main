@@ -424,9 +424,9 @@
   <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="extensions" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-extensions" base-version="2.0.0-alpha1"/>
   <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="reactivestreams" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-reactivestreams" base-version="2.0.0-alpha1"/>
   <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="runtime" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-runtime" base-version="2.0.0-alpha1"/>
-  <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="viewmodel" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-viewmodel" base-version="1.0.0-alpha1"/>
-  <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="livedata" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-livedata" base-version="1.0.0-alpha1"/>
-  <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="livedata-core" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-livedata-core" base-version="1.0.0-alpha1"/>
+  <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="viewmodel" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-viewmodel" base-version="2.0.0-alpha1"/>
+  <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="livedata" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-livedata" base-version="2.0.0-alpha1"/>
+  <migrate-dependency old-group-name="android.arch.lifecycle" old-artifact-name="livedata-core" new-group-name="androidx.lifecycle" new-artifact-name="lifecycle-livedata-core" base-version="2.0.0-alpha1"/>
   <migrate-dependency old-group-name="android.arch.paging" old-artifact-name="common" new-group-name="androidx.paging" new-artifact-name="paging-common" base-version="2.0.0-alpha1"/>
   <migrate-dependency old-group-name="android.arch.paging" old-artifact-name="runtime" new-group-name="androidx.paging" new-artifact-name="paging-runtime" base-version="2.0.0-alpha1"/>
   <migrate-dependency old-group-name="android.arch.persistence" old-artifact-name="db" new-group-name="androidx.sqlite" new-artifact-name="sqlite" base-version="2.0.0-alpha1"/>
