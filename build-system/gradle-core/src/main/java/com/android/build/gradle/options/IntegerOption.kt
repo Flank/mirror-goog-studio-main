@@ -57,6 +57,11 @@ enum class IntegerOption(
     DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size"),
     DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size"),
     DEXING_NUMBER_OF_BUCKETS("android.dexingNumberOfBuckets"),
+
+    /**
+     * Maximum number of dynamic features that can be allocated before Oreo platforms.
+     */
+    PRE_O_MAX_NUMBER_OF_FEATURES("android.maxNumberOfFeaturesBeforeOreo"),
     ;
 
     override fun parse(value: Any): Int {

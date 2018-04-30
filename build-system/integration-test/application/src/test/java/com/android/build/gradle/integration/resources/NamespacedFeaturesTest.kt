@@ -406,8 +406,8 @@ class NamespacedFeaturesTest {
         assertThat(featureSetMetadata).isNotNull()
         val otherFeature1PackageId = featureSetMetadata.getResOffsetFor(":otherFeature1")
         val otherFeature2PackageId = featureSetMetadata.getResOffsetFor(":otherFeature2")
-        assertThat(otherFeature1PackageId).isAtLeast(FeatureSetMetadata.BASE_ID)
-        assertThat(otherFeature2PackageId).isAtLeast(FeatureSetMetadata.BASE_ID)
+        assertThat(otherFeature1PackageId).isAtMost(FeatureSetMetadata.BASE_ID)
+        assertThat(otherFeature2PackageId).isAtMost(FeatureSetMetadata.BASE_ID)
         assertThat(otherFeature1PackageId).isNotEqualTo(otherFeature2PackageId)
 
         // TODO: check that resourceIds use correct packageIds - manually tested this.
