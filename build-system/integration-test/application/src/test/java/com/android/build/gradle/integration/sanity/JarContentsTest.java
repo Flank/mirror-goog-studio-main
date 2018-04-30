@@ -598,6 +598,8 @@ public class JarContentsTest {
                 "versions-offline/android/arch/core/group-index.xml",
                 "versions-offline/android/arch/lifecycle/",
                 "versions-offline/android/arch/lifecycle/group-index.xml",
+                "versions-offline/android/arch/navigation/",
+                "versions-offline/android/arch/navigation/group-index.xml",
                 "versions-offline/android/arch/paging/",
                 "versions-offline/android/arch/paging/group-index.xml",
                 "versions-offline/android/arch/persistence/",
