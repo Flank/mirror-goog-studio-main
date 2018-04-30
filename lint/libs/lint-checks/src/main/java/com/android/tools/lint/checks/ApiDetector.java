@@ -1887,22 +1887,6 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            if (name.equals("forEach")) {
-                List<UExpression> arguments = expression.getValueArguments();
-                if (arguments.size() == 1) {
-                    PsiType expressionType = arguments.get(0).getExpressionType();
-                    if (expressionType != null
-                            && expressionType.getCanonicalText().startsWith("kotlin.")) {
-                        // Workaround for 69534659: The resolve method returns the wrong call.
-                        // See if it looks like this is the case: the error is on
-                        // a forEach call on java.lang.Iterable (which takes a
-                        // java.util.function.Consumer as an argument), but here we're
-                        // passing in a kotlin.jvm.functions.Function1
-                        return;
-                    }
-                }
-            }
-
             String signature;
             if (CONSTRUCTOR_NAME.equals(name)) {
                 signature = "new " + fqcn;

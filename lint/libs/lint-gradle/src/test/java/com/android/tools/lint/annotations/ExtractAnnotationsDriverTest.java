@@ -20,16 +20,19 @@ import static com.android.testutils.TestUtils.deleteFile;
 import static com.android.tools.lint.checks.infrastructure.LintDetectorTest.base64gzip;
 import static com.android.utils.SdkUtils.fileToUrlString;
 import static java.io.File.pathSeparator;
+import static java.io.File.pathSeparatorChar;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.checks.infrastructure.KotlinClasspathKt;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -283,20 +286,26 @@ public class ExtractAnnotationsDriverTest {
 
         File output = temporaryFolder.newFile("annotations.zip");
         File proguard = temporaryFolder.newFile("proguard.cfg");
+        Joiner pathJoiner = Joiner.on(pathSeparatorChar);
+        String kotlinLibraries = pathJoiner.join(KotlinClasspathKt.findKotlinStdlibPath());
 
         List<String> list =
                 java.util.Arrays.asList(
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar.getPath()
+                                + pathSeparator
+                                + supportLib
+                                + pathSeparator
+                                + kotlinLibraries,
                         "--quiet",
                         //"--skip-class-retention",
                         "--output",
                         output.getPath(),
                         "--proguard",
                         proguard.getPath());
-        String[] args = list.toArray(new String[list.size()]);
+        String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
         new ExtractAnnotationsDriver().run(args);
