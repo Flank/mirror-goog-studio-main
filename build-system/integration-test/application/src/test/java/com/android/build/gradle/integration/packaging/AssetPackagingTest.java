@@ -71,14 +71,18 @@ public class AssetPackagingTest {
                         "include 'test'"));
 
         // setup dependencies.
-        TestFileUtils.appendToFile(appProject.getBuildFile(), "\n"
-                + "android {\n"
-                + "    publishNonDefault true\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "}");
+        TestFileUtils.appendToFile(
+                appProject.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    publishNonDefault true\n"
+                        + "\n"
+                        + "    aaptOptions {}\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile project(':library')\n"
+                        + "}");
 
         TestFileUtils.appendToFile(libProject.getBuildFile(), "\n"
                 + "dependencies {\n"
@@ -95,6 +99,7 @@ public class AssetPackagingTest {
         File appDir = appProject.getTestDir();
         createOriginalAsset(createAssetFile(appDir, "main", "file.txt"), "app:abcd");
         createOriginalAsset(createAssetFile(appDir, "main", "subdir", "file.txt"), "app:defg");
+        createOriginalAsset(createAssetFile(appDir, "main", "_anotherdir", "file.txt"), "app:hijk");
         createOriginalAsset(createAssetFile(appDir, "androidTest", "filetest.txt"), "appTest:abcd");
 
         File testDir = testProject.getTestDir();
@@ -159,7 +164,7 @@ public class AssetPackagingTest {
     public void testNonIncrementalPackaging() throws Exception {
         execute("clean", "assembleDebug", "assembleAndroidTest");
 
-        // chek the files are there. Start from the bottom of the dependency graph
+        // check the files are there. Start from the bottom of the dependency graph
         checkAar(libProject2, "filelib2.txt", "library2:abcd");
         checkTestApk(libProject2, "filelib2.txt", "library2:abcd");
         checkTestApk(libProject2, "filelib2test.txt", "library2Test:abcd");
@@ -179,6 +184,8 @@ public class AssetPackagingTest {
         checkApk(appProject, "subdir/file.txt", "app:defg");
         checkApk(appProject, "filelib.txt", "library:abcd");
         checkApk(appProject, "filelib2.txt", "library2:abcd");
+        // This should be null because of the default AaptOptions.ignoreAssetsPattern
+        checkApk(appProject, "_anotherdir/file.txt", null);
         checkTestApk(appProject, "filetest.txt", "appTest:abcd");
         // app test does not contain dependencies' own test assets.
         checkTestApk(appProject, "filelibtest.txt", null);
@@ -305,6 +312,35 @@ public class AssetPackagingTest {
 
             checkApk(appProject, "filelib.txt", null);
         });
+    }
+
+    @Test
+    public void testAppProjectWithAddedAssetThatOverrideAaptOptions() throws Exception {
+        execute("clean");
+
+        TemporaryProjectModification.doTest(
+                appProject,
+                it -> {
+                    it.replaceInFile(
+                            appProject.getBuildFile().getPath(),
+                            "aaptOptions \\{\\}",
+                            "aaptOptions \\{ ignoreAssetsPattern \"!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~\" \\}");
+
+                    // Override AaptOptions and check that the file has been included.
+                    execute("app:assembleDebug");
+                    checkApk(appProject, "_anotherdir/file.txt", "app:hijk");
+
+                    // Another run with more files and they all should be included too as part of
+                    // incremental build.
+                    it.addFile("src/main/assets/_file.txt", "app:1234");
+                    it.addFile("src/main/assets/_anotherdir/_file.txt", "app:5678");
+                    it.addFile("src/main/assets/_onemoredir/file.txt", "app:9012");
+                    execute("app:assembleDebug");
+                    checkApk(appProject, "_anotherdir/file.txt", "app:hijk");
+                    checkApk(appProject, "_file.txt", "app:1234");
+                    checkApk(appProject, "_anotherdir/_file.txt", "app:5678");
+                    checkApk(appProject, "_onemoredir/file.txt", "app:9012");
+                });
     }
 
     @Test

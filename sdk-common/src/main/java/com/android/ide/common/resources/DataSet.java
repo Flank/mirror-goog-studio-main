@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.blame.Message;
 import com.android.utils.ILogger;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
@@ -63,6 +64,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     static final String ATTR_PATH = "path";
     static final String ATTR_NAME = "name";
     static final String ATTR_TIMESTAMP = "timestamp";
+    static final String ATTR_IGNORE_PATTERN = "ignore_pattern";
 
     private final String mConfigName;
 
@@ -282,6 +284,8 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
                      @NonNull MergeConsumer<I> consumer, boolean includeTimestamps) {
         // add the config name attribute
         NodeUtils.addAttribute(document, setNode, null, ATTR_CONFIG, mConfigName);
+        NodeUtils.addAttribute(
+                document, setNode, null, ATTR_IGNORE_PATTERN, getAaptStyleIgnoredPattern());
 
         // add the source files.
         // we need to loop on the source files themselves and not the map to ensure we
@@ -384,6 +388,12 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
 
         // create the DataSet that will be filled with the content of the XML.
         DataSet<I, F> dataSet = createSet(configNameAttr.getValue());
+
+        Attr ignoredPatternAttr =
+                (Attr) dataSetNode.getAttributes().getNamedItem(ATTR_IGNORE_PATTERN);
+        if (ignoredPatternAttr != null) {
+            dataSet.setIgnoredPatterns(ignoredPatternAttr.getValue());
+        }
 
         // loop on the source nodes
         NodeList sourceNodes = dataSetNode.getChildNodes();
@@ -632,6 +642,10 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         // don't keep the result of split and put it in a new list instead.
         // This is because the custom iterable returned by Splitter does not implement equals.
         sIgnoredPatterns = Splitter.on(':').splitToList(aaptStylePattern);
+    }
+
+    private String getAaptStyleIgnoredPattern() {
+        return Joiner.on(':').join(sIgnoredPatterns);
     }
 
     /**
