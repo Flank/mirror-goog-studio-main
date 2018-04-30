@@ -73,4 +73,9 @@ public class AndroidArtifact implements Archive {
         short code = Shorts.fromBytes(content[1], content[0]);
         return code == 0x0003; // Chunk.Type.XML
     }
+
+    @Override
+    public boolean isProtoXml(@NonNull Path p, @NonNull byte[] content) {
+        return false;
+    }
 }

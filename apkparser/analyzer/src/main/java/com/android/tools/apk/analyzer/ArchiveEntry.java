@@ -35,7 +35,7 @@ public class ArchiveEntry {
     public ArchiveEntry(
             @NonNull Archive archive, @NonNull Path path, @NonNull String fullPathString) {
         this.archive = archive;
-        this.path = path;
+        this.path = path.normalize();
         this.fullPathString = fullPathString;
     }
 

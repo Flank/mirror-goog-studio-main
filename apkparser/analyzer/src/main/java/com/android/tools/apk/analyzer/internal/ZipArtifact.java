@@ -66,6 +66,11 @@ public class ZipArtifact implements Archive {
         return false;
     }
 
+    @Override
+    public boolean isProtoXml(@NonNull Path p, @NonNull byte[] content) {
+        return false;
+    }
+
     private static class CopyPathFileVisitor implements FileVisitor<Path> {
         private final Path source;
         private final Path destination;
