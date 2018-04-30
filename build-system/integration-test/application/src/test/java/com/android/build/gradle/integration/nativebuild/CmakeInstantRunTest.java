@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.instant;
+package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;

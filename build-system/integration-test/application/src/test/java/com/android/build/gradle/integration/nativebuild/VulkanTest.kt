@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkC;
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkCpp;
@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -70,6 +71,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** General Model tests */
+@Ignore
 @RunWith(Parameterized.class)
 public class NativeModelTest {
     private enum Compiler {

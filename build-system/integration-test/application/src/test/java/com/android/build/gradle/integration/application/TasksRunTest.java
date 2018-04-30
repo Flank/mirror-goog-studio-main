@@ -68,7 +68,6 @@ public class TasksRunTest {
                         ":transformDexArchiveWithDexMergerForDebug",
                         ":mergeDebugJniLibFolders",
                         ":transformNativeLibsWithMergeJniLibsForDebug",
-                        ":transformNativeLibsWithStripDebugSymbolForDebug",
                         ":processDebugJavaRes",
                         ":transformResourcesWithMergeJavaResForDebug",
                         ":validateSigningDebug",
