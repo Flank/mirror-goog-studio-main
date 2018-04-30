@@ -17,13 +17,15 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Callback used by LayoutLib to create {@link XmlPullParser}s.
+ *
+ * @deprecated Use {@link XmlParserFactory} interface instead
  */
+@Deprecated
 public abstract class ParserFactory {
     /**
      * Creates a new XmlPullParser with an optional display name.

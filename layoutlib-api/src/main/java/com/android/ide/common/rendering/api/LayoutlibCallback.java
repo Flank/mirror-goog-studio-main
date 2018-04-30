@@ -21,15 +21,15 @@ import org.intellij.lang.annotations.MagicConstant;
 import org.xmlpull.v1.XmlPullParser;
 
 /**
- * Intermediary class implementing parts of both the old and new ProjectCallback from the
- * LayoutLib API.
- * <p>
- * Even newer LayoutLibs use this directly instead of the the interface. This allows the flexibility
- * to add newer methods without having to update {@link Bridge#API_CURRENT LayoutLib API version}.
+ * Intermediary class implementing parts of both the old and new ProjectCallback from the LayoutLib
+ * API.
+ *
+ * <p>Even newer LayoutLibs use this directly instead of the the interface. This allows the
+ * flexibility to add newer methods without having to update {@link Bridge#API_CURRENT LayoutLib API
+ * version}.
  */
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
-public abstract class LayoutlibCallback implements IProjectCallback {
-
+public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFactory {
     /**
      * Like {@link #loadView(String, Class[], Object[])}, but intended for loading classes that may
      * not be custom views.
@@ -37,11 +37,14 @@ public abstract class LayoutlibCallback implements IProjectCallback {
      * @param name className in binary format (see {@link ClassLoader})
      * @return an new instance created by calling the given constructor.
      * @throws ClassNotFoundException any exceptions thrown when creating the instance is wrapped in
-     * ClassNotFoundException.
+     *     ClassNotFoundException.
      * @since API 15
      */
-    public Object loadClass(@NonNull String name, @Nullable Class[] constructorSignature,
-      @Nullable Object[] constructorArgs) throws ClassNotFoundException {
+    public Object loadClass(
+            @NonNull String name,
+            @Nullable Class[] constructorSignature,
+            @Nullable Object[] constructorArgs)
+            throws ClassNotFoundException {
         try {
             return loadView(name, constructorSignature, constructorArgs);
         }
@@ -72,10 +75,8 @@ public abstract class LayoutlibCallback implements IProjectCallback {
         return null;
     }
 
-    /**
-     * Get a ParserFactory which can be used to create XmlPullParsers.
-     * @since API 15
-     */
+    /** @deprecated Use {@link #createXmlParserForFile}. */
+    @Deprecated
     @NonNull
     public ParserFactory getParserFactory() {
         throw new UnsupportedOperationException("getParserFactory not supported.");
@@ -94,18 +95,11 @@ public abstract class LayoutlibCallback implements IProjectCallback {
         throw new ClassNotFoundException(name + " not found.");
     }
 
-    /**
-     * Returns an {@link XmlPullParser} for the psi version of an xml file.
-     *
-     * The call to the method should be guarded by a check for
-     * {@code RenderParamsFlag.FLAG_KEY_XML_FILE_PARSER_SUPPORT}.
-     *
-     * @param fileName name of the file to parse
-     * @since API 16
-     */
+    /** @deprecated Use {@link XmlParserFactory#createXmlParserForPsiFile}. */
+    @Deprecated
     @Nullable
     public XmlPullParser getXmlFileParser(String fileName) {
-        return null;
+        return createXmlParserForPsiFile(fileName);
     }
 
     /**
