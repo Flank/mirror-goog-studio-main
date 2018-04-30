@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
@@ -58,7 +59,6 @@ import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBui
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
@@ -195,6 +195,7 @@ public class ApplicationTaskManager extends TaskManager {
                 // file which is passed into the Data Binding annotation processor.
                 taskFactory.create(new DataBindingExportFeatureInfoTask.ConfigAction(variantScope));
             }
+            taskFactory.create(new MergeConsumerProguardFilesConfigAction(variantScope));
         }
 
         // Add data binding tasks if enabled
@@ -467,7 +468,7 @@ public class ApplicationTaskManager extends TaskManager {
             return;
         }
 
-        if (!scope.getType().isHybrid() && projectOptions.get(BooleanOption.ENABLE_DYNAMIC_APPS)) {
+        if (!scope.getType().isHybrid()) {
             taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
 
             if (scope.getType().isBaseModule()) {

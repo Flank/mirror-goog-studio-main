@@ -38,7 +38,7 @@ import com.android.builder.model.Variant;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
 import com.android.utils.XmlUtils;
@@ -251,7 +251,7 @@ public class LintGradleProject extends Project {
 
         private List<SourceProvider> getSourceProviders() {
             if (mProviders == null) {
-                mProviders = LintUtils.getSourceProviders(mProject, mVariant);
+                mProviders = Lint.getSourceProviders(mProject, mVariant);
             }
 
             return mProviders;
@@ -259,7 +259,7 @@ public class LintGradleProject extends Project {
 
         private List<SourceProvider> getTestSourceProviders() {
             if (mTestProviders == null) {
-                mTestProviders = LintUtils.getTestSourceProviders(mProject, mVariant);
+                mTestProviders = Lint.getTestSourceProviders(mProject, mVariant);
             }
 
             return mTestProviders;
@@ -543,7 +543,7 @@ public class LintGradleProject extends Project {
                     minSdk = flavor.getMinSdkVersion();
                 }
                 if (minSdk != null) {
-                    minSdkVersion = LintUtils.convertVersion(minSdk, client.getTargets());
+                    minSdkVersion = Lint.convertVersion(minSdk, client.getTargets());
                 } else {
                     minSdkVersion = super.getMinSdkVersion(); // from manifest
                 }
@@ -562,7 +562,7 @@ public class LintGradleProject extends Project {
                     targetSdk = flavor.getTargetSdkVersion();
                 }
                 if (targetSdk != null) {
-                    targetSdkVersion = LintUtils.convertVersion(targetSdk, client.getTargets());
+                    targetSdkVersion = Lint.convertVersion(targetSdk, client.getTargets());
                 } else {
                     targetSdkVersion = super.getTargetSdkVersion(); // from manifest
                 }

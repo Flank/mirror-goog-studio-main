@@ -31,9 +31,8 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 
-/**
- * DSL object for configuring lint options.
- */
+/** DSL object for configuring lint options. */
+@SuppressWarnings("unused")
 public class LintOptions implements com.android.builder.model.LintOptions, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -51,6 +50,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     private boolean checkReleaseBuilds = true;
     private boolean explainIssues = true;
     private boolean checkTestSources;
+    private boolean ignoreTestSources = false;
     private boolean checkGeneratedSources;
     private boolean checkDependencies;
     @Nullable
@@ -93,6 +93,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             boolean explainIssues,
             boolean checkReleaseBuilds,
             boolean checkTestSources,
+            boolean ignoreTestSources,
             boolean checkGeneratedSources,
             boolean checkDependencies,
             @Nullable File baselineFile,
@@ -118,6 +119,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         this.explainIssues = explainIssues;
         this.checkReleaseBuilds = checkReleaseBuilds;
         this.checkTestSources = checkTestSources;
+        this.ignoreTestSources = ignoreTestSources;
         this.checkGeneratedSources = checkGeneratedSources;
         this.checkDependencies = checkDependencies;
         this.baselineFile = baselineFile;
@@ -153,11 +155,11 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
                 source.isExplainIssues(),
                 source.isCheckReleaseBuilds(),
                 source.isCheckTestSources(),
+                source.isIgnoreTestSources(),
                 source.isCheckGeneratedSources(),
                 source.isCheckDependencies(),
                 source.getBaselineFile(),
-                source.getSeverityOverrides()
-        );
+                source.getSeverityOverrides());
     }
 
     /**
@@ -175,7 +177,9 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Note that these ids add to rather than replace the given set of ids.
      */
     public void setDisable(@Nullable Set<String> ids) {
-        disable.addAll(ids);
+        if (ids != null) {
+            disable.addAll(ids);
+        }
     }
 
     /**
@@ -194,7 +198,9 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Note that these ids add to rather than replace the given set of ids.
      */
     public void setEnable(@Nullable Set<String> ids) {
-        enable.addAll(ids);
+        if (ids != null) {
+            enable.addAll(ids);
+        }
     }
 
     /**
@@ -325,9 +331,25 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         return checkTestSources;
     }
 
+    @Override
+    public boolean isIgnoreTestSources() {
+        return ignoreTestSources;
+    }
+
     /** Sets whether lint should check test sources */
     public void setCheckTestSources(boolean checkTestSources) {
         this.checkTestSources = checkTestSources;
+        if (checkTestSources) {
+            ignoreTestSources = false;
+        }
+    }
+
+    /** Sets whether lint should ignore all test sources */
+    public void setIgnoreTestSources(boolean ignoreTestSources) {
+        this.ignoreTestSources = ignoreTestSources;
+        if (ignoreTestSources) {
+            checkTestSources = false;
+        }
     }
 
     @Override

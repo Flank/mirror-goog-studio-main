@@ -18,7 +18,6 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.utils.FileUtils
 import java.io.File
 
 /**
@@ -31,9 +30,9 @@ import java.io.File
 fun ArtifactType.getOutputDir(parentFile: File)=
     File(
         if (this is InternalArtifactType) {
-            kind.getOutputDir(parentFile)
+            category.getOutputDir(parentFile)
         } else {
-            InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(parentFile)
+            InternalArtifactType.Category.INTERMEDIATES.getOutputDir(parentFile)
         },
         name().toLowerCase()
     )
@@ -45,7 +44,7 @@ fun ArtifactType.getOutputDir(parentFile: File)=
  */
 fun ArtifactType.getOutputPath() =
     if (this is InternalArtifactType) {
-        kind.outputPath
+        category.outputPath
     } else {
-        InternalArtifactType.Kind.INTERMEDIATES.outputPath
+        InternalArtifactType.Category.INTERMEDIATES.outputPath
     }

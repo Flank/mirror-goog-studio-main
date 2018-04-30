@@ -36,7 +36,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceFolderScanner;
@@ -577,8 +577,7 @@ public class LocaleFolderDetector extends Detector
                                                     + "on v21 or later with that call present in the app",
                                             context.getMainProject().getMinSdk(),
                                             jarFile != null
-                                                    ? LintUtils.getFileNameWithParent(
-                                                            client, jarFile)
+                                                    ? Lint.getFileNameWithParent(client, jarFile)
                                                     : "?");
                             Location location = Location.create(file);
                             context.report(GET_LOCALES, location, message);

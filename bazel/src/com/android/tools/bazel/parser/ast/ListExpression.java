@@ -119,7 +119,7 @@ public class ListExpression extends Expression {
         return false;
     }
 
-    public boolean contains(String managed) {
-        return contains(LiteralExpression.string(managed));
+    public boolean contains(String s) {
+        return contains(LiteralExpression.string(s));
     }
 }

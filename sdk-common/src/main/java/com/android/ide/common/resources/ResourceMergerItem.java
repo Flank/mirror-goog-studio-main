@@ -56,7 +56,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-
 import java.io.File;
 import java.nio.file.Paths;
 import org.jetbrains.annotations.NotNull;
@@ -461,7 +460,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             case TRANSITION:
                 value =
                         parseFileName(
-                                new ResourceValue(mNamespace, mType, getName(), mLibraryName));
+                                new ResourceValue(
+                                        mNamespace, mType, getName(), null, mLibraryName));
                 break;
             default:
                 value =

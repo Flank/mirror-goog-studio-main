@@ -90,6 +90,11 @@ service ProfilerService {
   // recency (most recent first).
   rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse) {
   }
+
+  // Delete a session by ID. If it is currently running, |EndSession| will
+  // automatically be called on it.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
+  }
 }
 
 message TimeRequest {
@@ -213,6 +218,13 @@ message GetSessionsRequest {
 
 message GetSessionsResponse {
   repeated Session sessions = 1;
+}
+
+message DeleteSessionRequest {
+  int64 session_id = 1;
+}
+
+message DeleteSessionResponse {
 }
 
 message BytesRequest {

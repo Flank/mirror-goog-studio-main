@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.common",
     srcs = ["src/main/java"],
@@ -11,7 +12,6 @@ iml_module(
     ],
     iml_files = ["android.sdktools.common.iml"],
     resources = ["src/main/resources"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -68,10 +68,10 @@ kotlin_test(
     ],
 )
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.common.tests",
     iml_files = ["android.sdktools.common.tests.iml"],
-    tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

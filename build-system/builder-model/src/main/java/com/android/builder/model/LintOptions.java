@@ -85,9 +85,14 @@ import java.util.Set;
  *          // Use (or create) a baseline file for issues that should not be reported
  *          baseline file("lint-baseline.xml")
  *          // Normally most lint checks are not run on test sources (except the checks
- *          // dedicated to looking for mistakes in unit or instrumentation tests.) You can
- *          // turn on normal lint checking in all sources with the following:
+ *          // dedicated to looking for mistakes in unit or instrumentation tests, unless
+ *          // ignoreTestSources is true). You can turn on normal lint checking in all
+ *          // sources with the following flag, false by default:
  *          checkTestSources true
+ *          // Like checkTestSources, but always skips analyzing tests -- meaning that it
+ *          // also ignores checks that have explicitly asked to look at test sources, such
+ *          // as the unused resource check.
+ *          ignoreTestSources true
  *          // Normally lint will skip generated sources, but you can turn it on with this flag
  *          checkGeneratedSources true
  *          // Normally lint will analyze all dependencies along with each module; this ensures
@@ -163,6 +168,15 @@ public interface LintOptions {
      * @since 2.4
      */
     boolean isCheckTestSources();
+
+    /**
+     * Like {@link #isCheckTestSources()}, but always skips analyzing tests -- meaning that it also
+     * ignores checks that have explicitly asked to look at test sources, such as the unused
+     * resource check.
+     *
+     * @since 3.2.0-alpha14
+     */
+    boolean isIgnoreTestSources();
 
     /**
      * Returns whether lint should run checks on generated sources.

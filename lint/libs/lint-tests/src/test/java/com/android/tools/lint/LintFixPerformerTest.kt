@@ -64,7 +64,8 @@ class LintFixPerformerTest : TestCase() {
         if (expectedOutput != null) {
             assertEquals(
                 StringHelper.toSystemLineSeparator(expectedOutput.trimIndent().trim()),
-                output.trim())
+                output.trim()
+            )
         }
     }
 

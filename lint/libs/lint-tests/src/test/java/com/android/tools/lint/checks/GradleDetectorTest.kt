@@ -2269,7 +2269,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY).sdkHome(mockSupportLibraryInstallation)
+        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY)
+            .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
                 build.gradle:10: Warning: A newer version of log4j:log4j than 1.2.3 is available: 1.2.17 [GradleDependency]

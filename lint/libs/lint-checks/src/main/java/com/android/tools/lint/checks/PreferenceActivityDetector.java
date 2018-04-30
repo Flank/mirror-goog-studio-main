@@ -30,7 +30,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -90,7 +90,7 @@ public class PreferenceActivityDetector extends Detector implements XmlScanner, 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (SecurityDetector.getExported(element)) {
-            String fqcn = LintUtils.resolveManifestName(element);
+            String fqcn = Lint.resolveManifestName(element);
             if (fqcn.equals(PREFERENCE_ACTIVITY)
                     && !context.getDriver().isSuppressed(context, ISSUE, element)) {
                 String message = "`PreferenceActivity` should not be exported";
@@ -165,7 +165,7 @@ public class PreferenceActivityDetector extends Detector implements XmlScanner, 
                 if (TAG_ACTIVITY.equals(element.getTagName())) {
                     String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
                     if (className.endsWith(name)) {
-                        String fqn = LintUtils.resolveManifestName(element);
+                        String fqn = Lint.resolveManifestName(element);
                         if (fqn.equals(className)) {
                             return SecurityDetector.getExported(element);
                         }

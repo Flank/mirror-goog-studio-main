@@ -45,11 +45,11 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintUtils.endsWith
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.endsWith
 import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.utils.CharSequences
 import com.android.utils.Pair
@@ -1587,6 +1587,7 @@ abstract class LintClient {
          * The client name returned by [.getClientName] when running in
          * Android Studio/IntelliJ IDEA
          */
+        @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_STUDIO = "studio"
 
         /**
@@ -1605,6 +1606,7 @@ abstract class LintClient {
          * The client name returned by [.getClientName] when running in
          * some unknown client
          */
+        @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_UNKNOWN = "unknown"
 
         /** The client name.  */

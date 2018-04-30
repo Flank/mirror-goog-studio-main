@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
@@ -213,10 +214,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         override fun execute(task: BundleTask) {
             task.variantName = scope.fullVariantName
 
-            task.bundleFile = scope.artifacts.setArtifactFile(
-                InternalArtifactType.BUNDLE,
-                task,
-                "bundle.aab")
+            val apkLocationOverride =
+                scope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
+
+            task.bundleFile = if (apkLocationOverride == null)
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, "bundle.aab")
+            else
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task,
+                    File(apkLocationOverride, "bundle.aab"))
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
@@ -231,12 +236,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
-            // The bundle uses the main dex list even if legacy multidex is not explicitly enabled.
-            if (scope.needsMainDexList) {
+            if (scope.needsMainDexListForBundle) {
                 task.mainDexList =
                         scope.artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
+                            InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE
                         )
+                // The dex files from this application are still processed for legacy multidex
+                // in this case, as if none of the dynamic features are fused the bundle tool will
+                // not reprocess the dex files.
             }
 
             scope.variantConfiguration.signingConfig?.let {

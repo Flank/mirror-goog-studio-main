@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -31,11 +32,11 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
-import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -108,13 +109,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
-    // Path sensitivity here and below is absolute due to http://b/72085541
+    // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public BuildableArtifact getManifests() {
         return manifests;
     }
 
+    // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public BuildableArtifact getResourceFiles() {
@@ -140,6 +142,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return manifestType;
     }
 
+    // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.ABSOLUTE)
@@ -147,6 +150,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return javaResourceFiles;
     }
 
+    // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.ABSOLUTE)
@@ -158,8 +162,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected FileCollection dexFolders;
 
+    @Nullable protected FileCollection featureDexFolder;
+
     protected BuildableArtifact assets;
 
+    // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.ABSOLUTE)
@@ -167,6 +174,16 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return dexFolders;
     }
 
+    // Path sensitivity here is absolute due to http://b/72085541
+    @InputFiles
+    @Optional
+    @Nullable
+    @PathSensitive(PathSensitivity.ABSOLUTE)
+    public FileCollection getFeatureDexFolder() {
+        return featureDexFolder;
+    }
+
+    // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public BuildableArtifact getAssets() {
@@ -471,9 +488,20 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
          */
         FileUtils.deleteIfExists(outputFile);
 
-        ImmutableMap<RelativeFile, FileStatus> updatedDex =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
-        ImmutableMap<RelativeFile, FileStatus> updatedJavaResources = getJavaResourcesChanges();
+        final ImmutableMap<RelativeFile, FileStatus> updatedDex;
+        final ImmutableMap<RelativeFile, FileStatus> updatedJavaResources;
+        if (!hasFeatureDexFiles()) {
+            updatedDex = IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
+            updatedJavaResources = getJavaResourcesChanges();
+        } else {
+            // We reach this code if we're in a feature module and minification is enabled in the
+            // base module. In this case, we want to use the classes.dex file from the base
+            // module's DexSplitterTransform.
+            checkNotNull(getFeatureDexFolder());
+            updatedDex = IncrementalRelativeFileSets.fromZipsAndDirectories(getFeatureDexFolder());
+            // For now, java resources are in the base apk, so we exclude them here (b/77546738)
+            updatedJavaResources = ImmutableMap.of();
+        }
         ImmutableMap<RelativeFile, FileStatus> updatedAssets =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(assets.getFiles());
         ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
@@ -732,14 +760,25 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         final Set<File> assetsFiles = assets.getFiles();
 
         Set<Runnable> cacheUpdates = new HashSet<>();
+
+        final Set<File> dexFiles;
+        final Set<File> javaResourceFiles;
+        if (!hasFeatureDexFiles()) {
+            dexFiles = getDexFolders().getFiles();
+            javaResourceFiles = getJavaResourceFiles().getFiles();
+        } else {
+            // We reach this code if we're in a feature module and minification is enabled in the
+            // base module. In this case, we want to use the classes.dex file from the base
+            // module's DexSplitterTransform.
+            checkNotNull(getFeatureDexFolder());
+            dexFiles = getFeatureDexFolder().getFiles();
+            // For now, java resources are in the base apk, so we exclude them here (b/77546738)
+            javaResourceFiles = ImmutableSet.of();
+        }
+
         ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
                 KnownFilesSaveData.getChangedInputs(
-                        changedInputs,
-                        saveData,
-                        InputSet.DEX,
-                        getDexFolders().getFiles(),
-                        cacheByPath,
-                        cacheUpdates);
+                        changedInputs, saveData, InputSet.DEX, dexFiles, cacheByPath, cacheUpdates);
 
         ImmutableMap<RelativeFile, FileStatus> changedJavaResources;
         try {
@@ -748,7 +787,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             changedInputs,
                             saveData,
                             InputSet.JAVA_RESOURCE,
-                            getJavaResourceFiles().getFiles(),
+                            javaResourceFiles,
                             cacheByPath,
                             cacheUpdates);
         } catch (Zip64NotSupportedException e) {
@@ -841,6 +880,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return outputFile;
     }
 
+    /** true if variant type is a feature split and minification is enabled in the base module. */
+    private boolean hasFeatureDexFiles() {
+        return (getFeatureDexFolder() != null && !getFeatureDexFolder().getFiles().isEmpty());
+    }
+
     // ----- ConfigAction -----
 
     public abstract static class ConfigAction<T extends PackageAndroidArtifact>
@@ -909,6 +953,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.manifests = manifests;
 
             packageAndroidArtifact.dexFolders = getDexFolders();
+            packageAndroidArtifact.featureDexFolder = getFeatureDexFolder();
             packageAndroidArtifact.javaResourceFiles = getJavaResources();
 
             packageAndroidArtifact.assets =
@@ -948,6 +993,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             task.instantRunFileType = FileType.MAIN;
 
             task.dexFolders = getDexFolders();
+            task.featureDexFolder = getFeatureDexFolder();
             task.javaResourceFiles = getJavaResources();
 
             if (variantScope.getVariantData().getMultiOutputPolicy()
@@ -989,6 +1035,18 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             return variantScope
                     .getTransformManager()
                     .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
+        }
+
+        @Nullable
+        public FileCollection getFeatureDexFolder() {
+            if (!variantScope.getType().isFeatureSplit()) {
+                return null;
+            }
+            return variantScope.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.MODULE,
+                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                    ImmutableMap.of(MODULE_PATH, project.getPath()));
         }
     }
 }

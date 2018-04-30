@@ -2,13 +2,13 @@ load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.dvlib",
     # do not sort: must match IML order
     srcs = ["dvlib/src/main/java"],
     iml_files = ["dvlib/android.sdktools.dvlib.iml"],
     resources = ["dvlib/src/main/resources"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.android.sdktools.common"],
     # do not sort: must match IML order

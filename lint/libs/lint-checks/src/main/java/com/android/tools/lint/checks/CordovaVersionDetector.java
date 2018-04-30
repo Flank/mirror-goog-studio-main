@@ -25,7 +25,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -232,7 +232,7 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
         if (node.getOpcode() == Opcodes.PUTSTATIC
                 && node.owner.equals(FQN_CORDOVA_DEVICE)
                 && node.name.equals(FIELD_NAME_CORDOVA_VERSION)) {
-            AbstractInsnNode prevInstruction = LintUtils.getPrevInstruction(node);
+            AbstractInsnNode prevInstruction = Lint.getPrevInstruction(node);
             if (prevInstruction == null || prevInstruction.getOpcode() != Opcodes.LDC) {
                 return;
             }

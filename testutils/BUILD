@@ -2,10 +2,10 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.testutils",
     iml_files = ["android.sdktools.testutils.iml"],
-    tags = ["managed"],
     test_srcs = ["src/main/java"],
     test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
     visibility = ["//visibility:public"],
@@ -21,10 +21,10 @@ iml_module(
     ],
 )
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.testutils-tests",
     iml_files = ["testutils-tests.iml"],
-    tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:dist="http://schemas.android.com/apk/distribution"
-    package="com.example.feature1"
-    android:versionCode="1">
+    package="com.example.feature1" android:versionCode="1">
+<!-- do not change the versionCode above, as it is overridden by the one from the base manifest -->
 
     <dist:module>
       <dist:fusing include="true" />

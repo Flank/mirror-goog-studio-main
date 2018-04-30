@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.ApplicationId;
+import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -74,7 +74,7 @@ public class BundleInstantApp extends AndroidVariantTask {
         // Write the json output.
         InstantAppOutputScope instantAppOutputScope =
                 new InstantAppOutputScope(
-                        ApplicationId.load(applicationId.getSingleFile()).getApplicationId(),
+                        ModuleMetadata.load(applicationId.getSingleFile()).getApplicationId(),
                         bundleFile,
                         new ArrayList<>(apkDirectories.getFiles()));
         instantAppOutputScope.save(bundleDirectory);

@@ -143,7 +143,10 @@ class HardcodedValuesDetector : LayoutDetector() {
             category = Category.I18N,
             priority = 5,
             severity = Severity.WARNING,
-            implementation = Implementation(HardcodedValuesDetector::class.java, Scope.RESOURCE_FILE_SCOPE)
+            implementation = Implementation(
+                HardcodedValuesDetector::class.java,
+                Scope.RESOURCE_FILE_SCOPE
+            )
         )
     }
 }

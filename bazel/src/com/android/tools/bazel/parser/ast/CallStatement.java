@@ -50,4 +50,14 @@ public class CallStatement extends Statement {
     public CallExpression getCall() {
         return call;
     }
+
+    boolean isManaged() {
+        return preComments.stream().anyMatch(s -> s.toLowerCase().contains("iml_to_build"));
+    }
+
+    public void setIsManaged() {
+        if (!isManaged()) {
+            preComments.add("# managed by go/iml_to_build\n");
+        }
+    }
 }

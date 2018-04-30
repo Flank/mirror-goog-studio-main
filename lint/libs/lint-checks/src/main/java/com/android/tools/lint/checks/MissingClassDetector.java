@@ -45,8 +45,8 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Project;
@@ -431,7 +431,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 return;
             }
 
-            if (classNode.name.indexOf('$') != -1 && !LintUtils.isStaticInnerClass(classNode)) {
+            if (classNode.name.indexOf('$') != -1 && !Lint.isStaticInnerClass(classNode)) {
                 context.report(
                         INSTANTIATABLE,
                         context.getLocation(classNode),

@@ -432,6 +432,7 @@ public class LintCliClient extends LintClient {
         driver = new LintDriver(registry, this, request);
         driver.setAbbreviating(!flags.isShowEverything());
         driver.setCheckTestSources(flags.isCheckTestSources());
+        driver.setIgnoreTestSources(flags.isIgnoreTestSources());
         driver.setCheckGeneratedSources(flags.isCheckGeneratedSources());
         driver.setFatalOnlyMode(flags.isFatalOnly());
         driver.setCheckDependencies(flags.isCheckDependencies());
@@ -1207,6 +1208,8 @@ public class LintCliClient extends LintClient {
         MockProject mockProject = projectEnvironment.getProject();
         ideaProject = mockProject;
 
+        boolean includeTests = !flags.isIgnoreTestSources();
+
         // knownProject only lists root projects, not dependencies
         Set<Project> allProjects = Sets.newIdentityHashSet();
         for (Project project : knownProjects) {
@@ -1221,10 +1224,14 @@ public class LintCliClient extends LintClient {
             // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
             // referencing guava.jar)
             files.addAll(project.getJavaSourceFolders());
-            files.addAll(project.getTestSourceFolders());
+            if (includeTests) {
+                files.addAll(project.getTestSourceFolders());
+            }
             files.addAll(project.getGeneratedSourceFolders());
             files.addAll(project.getJavaLibraries(true));
-            files.addAll(project.getTestLibraries());
+            if (includeTests) {
+                files.addAll(project.getTestLibraries());
+            }
 
             // Don't include the class folders:
             //  files.addAll(project.getJavaClassFolders());
@@ -1348,6 +1355,10 @@ public class LintCliClient extends LintClient {
             Boolean checkTestSources = config.getCheckTestSources();
             if (checkTestSources != null) {
                 flags.setCheckTestSources(checkTestSources);
+            }
+            Boolean ignoreTestSources = config.getIgnoreTestSources();
+            if (ignoreTestSources != null) {
+                flags.setIgnoreTestSources(ignoreTestSources);
             }
             Boolean checkGeneratedSources = config.getCheckGeneratedSources();
             if (checkGeneratedSources != null) {

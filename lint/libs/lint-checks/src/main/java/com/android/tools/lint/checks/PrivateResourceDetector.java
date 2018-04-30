@@ -32,8 +32,8 @@ import static com.android.SdkConstants.TAG_STRING_ARRAY;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_TRUE;
-import static com.android.tools.lint.detector.api.LintUtils.getBaseName;
-import static com.android.tools.lint.detector.api.LintUtils.isXmlFile;
+import static com.android.tools.lint.detector.api.Lint.getBaseName;
+import static com.android.tools.lint.detector.api.Lint.isXmlFile;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 import static com.android.utils.SdkUtils.isBitmapFile;
 

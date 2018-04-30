@@ -30,7 +30,7 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
@@ -879,7 +879,7 @@ public class HtmlReporter extends Reporter {
                         + "      <span class=\"mdl-layout-title\">"
                         + title
                         + ": "
-                        + LintUtils.describeCounts(
+                        + Lint.describeCounts(
                                 stats.getErrorCount(), stats.getWarningCount(), false, true)
                         + "</span>\n"
                         + "      <div class=\"mdl-layout-spacer\"></div>\n"

@@ -31,7 +31,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -163,7 +163,7 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
         Element service = XmlUtils.getFirstSubTagByName(application, TAG_SERVICE);
 
         while (service != null) {
-            String name = LintUtils.resolveManifestName(service).replace('$', '.');
+            String name = Lint.resolveManifestName(service).replace('$', '.');
             if (fqcn.equals(name)) {
                 // Check that it has the desired permission
                 String permission = service.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);

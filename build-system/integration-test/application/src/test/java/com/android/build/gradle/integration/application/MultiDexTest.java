@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
-import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -33,7 +32,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -113,7 +111,6 @@ public class MultiDexTest {
         }
 
         executor()
-                .with(BooleanOption.ENABLE_DYNAMIC_APPS, true)
                 .run("assembleDebug", "makeApkFromBundleForIcsDebug", "assembleAndroidTest");
 
         List<String> mandatoryClasses =
@@ -124,19 +121,8 @@ public class MultiDexTest {
 
         assertMainDexContains("debug", mandatoryClasses);
 
-        try (Zip bundle = new Zip(project.getOutputFile("bundle", "icsDebug", "bundle.aab"))) {
-            String mainDexListPath =
-                    "BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt";
-            assertThat(bundle)
-                    .containsFileWithMatch(mainDexListPath, "com.android.tests.basic.MyAnnotation");
-            assertThat(bundle)
-                    .containsFileWithMatch(
-                            mainDexListPath, "android.support.multidex.MultiDexApplication");
-        }
-
-        //noinspection EmptyTryBlock TODO(b/74425653): Implement support in bundle tool.
-        try (Apk bundleBase = getBaseBundleApk()) {
-            // assertMainDexContains(bundleBase, mandatoryClasses);
+        try (Apk bundleBase = getStandaloneBundleApk()) {
+            assertMainDexContains(bundleBase, mandatoryClasses);
         }
 
         // manually inspect the apk to ensure that the classes.dex that was created is the same
@@ -174,8 +160,8 @@ public class MultiDexTest {
                 .containsClass("Lcom/android/tests/basic/DeadCode;");
     }
 
-    private Apk getBaseBundleApk() throws IOException {
-        Path extracted = temporaryFolder.newFile("base-master.apk").toPath();
+    private Apk getStandaloneBundleApk() throws IOException {
+        Path extracted = temporaryFolder.newFile("standalone-hdpi.apk").toPath();
 
         try (FileSystem apks =
                         FileUtils.createZipFilesystem(
@@ -187,7 +173,7 @@ public class MultiDexTest {
                                         .toPath());
                 BufferedOutputStream out =
                         new BufferedOutputStream(Files.newOutputStream(extracted))) {
-            Files.copy(apks.getPath("base-master.apk"), out);
+            Files.copy(apks.getPath("standalone-hdpi.apk"), out);
         }
         return new Apk(extracted);
     }

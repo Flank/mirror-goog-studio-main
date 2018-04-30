@@ -53,6 +53,13 @@ interface VariantType {
     val isHybrid: Boolean
 
     /**
+     * Returns true if the variant is a dynamic feature i.e. an optional apk. [isFeatureSplit]
+     * differs from this property as it will be true for feature splits, while this property will
+     * be false for those.
+     */
+    val isDynamicFeature: Boolean
+
+    /**
      * Returns true if the variant publishes artifacts to meta-data.
      */
     val publishToMetadata: Boolean
@@ -137,6 +144,7 @@ enum class VariantTypeImpl(
     override val isBaseModule: Boolean = false,
     override val isFeatureSplit:Boolean = false,
     override val isHybrid: Boolean = false,
+    override val isDynamicFeature: Boolean = false,
     override val publishToMetadata: Boolean = false,
     override val isForTesting: Boolean = false,
     override val prefix: String,
@@ -167,6 +175,7 @@ enum class VariantTypeImpl(
     OPTIONAL_APK(
         isApk = true,
         isFeatureSplit = true,
+        isDynamicFeature = true,
         publishToMetadata = true,
         prefix = "",
         suffix = "",

@@ -35,7 +35,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -128,7 +128,7 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
                     if (mLayoutsWithRootLayoutParams == null) {
                         mLayoutsWithRootLayoutParams = Sets.newHashSetWithExpectedSize(20);
                     }
-                    mLayoutsWithRootLayoutParams.add(LintUtils.getBaseName(context.file.getName()));
+                    mLayoutsWithRootLayoutParams.add(Lint.getBaseName(context.file.getName()));
                     break;
                 }
             }

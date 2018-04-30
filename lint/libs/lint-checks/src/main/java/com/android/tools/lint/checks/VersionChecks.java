@@ -1,8 +1,8 @@
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
-import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
-import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getNextInstruction;
+import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
@@ -11,7 +11,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -372,7 +372,7 @@ public class VersionChecks {
                                 new AbstractUastVisitor() {
                                     @Override
                                     public boolean visitCallExpression(UCallExpression node) {
-                                        String callName = LintUtils.getMethodName(node);
+                                        String callName = Lint.getMethodName(node);
                                         if (Objects.equals(callName, parameterName)) {
                                             // Potentially not correct due to scopes, but these lambda
                                             // utility methods tend to be short and for lambda function

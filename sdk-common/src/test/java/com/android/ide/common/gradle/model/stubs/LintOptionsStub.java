@@ -43,6 +43,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     private final boolean myIgnoreWarnings;
     private final boolean myWarningsAsErrors;
     private final boolean myCheckTestSources;
+    private final boolean myIgnoreTestSources;
     private final boolean myCheckGeneratedSources;
     private final boolean myExplainIssues;
     private final boolean myShowAll;
@@ -65,16 +66,17 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 ImmutableMap.of("key", 1),
                 true,
                 true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
                 true,
-                true,
-                true,
-                true,
-                true,
-                true,
-                true,
-                true,
-                true,
-                true,
+                false,
+                false,
                 true,
                 true,
                 true,
@@ -99,6 +101,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
             boolean ignoreWarnings,
             boolean warningsAsErrors,
             boolean checkTestSources,
+            boolean ignoreTestSources,
             boolean checkGeneratedSources,
             boolean explainIssues,
             boolean showAll,
@@ -124,6 +127,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
         myIgnoreWarnings = ignoreWarnings;
         myWarningsAsErrors = warningsAsErrors;
         myCheckTestSources = checkTestSources;
+        myIgnoreTestSources = ignoreTestSources;
         myCheckGeneratedSources = checkGeneratedSources;
         myExplainIssues = explainIssues;
         myShowAll = showAll;
@@ -226,6 +230,11 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     @Override
     public boolean isCheckTestSources() {
         return myCheckTestSources;
+    }
+
+    @Override
+    public boolean isIgnoreTestSources() {
+        return myIgnoreTestSources;
     }
 
     @Override

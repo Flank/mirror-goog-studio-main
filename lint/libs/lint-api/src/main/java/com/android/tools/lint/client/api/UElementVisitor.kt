@@ -234,10 +234,10 @@ internal class UElementVisitor constructor(
             val uastParser = context.uastParser
 
             val uFile =
-                uastParser.parse(context) ?: // No need to log this; the parser should be reporting
-                // a full warning (such as IssueRegistry#PARSER_ERROR)
-                // with details, location, etc.
-                return
+                uastParser.parse(context) ?: return
+
+            // (Immediate return if null: No need to log this; the parser should be reporting
+            // a full warning (such as IssueRegistry#PARSER_ERROR) with details, location, etc.)
 
             val client = context.client
             try {

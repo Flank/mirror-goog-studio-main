@@ -39,6 +39,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.internal.testing.SimpleTestCallable;
+import com.android.builder.model.TestOptions;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.OnDeviceOrchestratorTestRunner;
@@ -396,11 +397,18 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
             boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
 
-            switch (scope.getGlobalScope().getExtension().getTestOptions().getExecutionEnum()) {
+            final TestOptions.Execution executionEnum =
+                    scope.getGlobalScope().getExtension().getTestOptions().getExecutionEnum();
+            switch (executionEnum) {
                 case ANDROID_TEST_ORCHESTRATOR:
+                case ANDROIDX_TEST_ORCHESTRATOR:
                     Preconditions.checkArgument(
-                            !shardBetweenDevices, "Sharding is not supported with Odo.");
-                    task.testRunnerFactory = OnDeviceOrchestratorTestRunner::new;
+                            !shardBetweenDevices,
+                            "Sharding is not supported with Android Test Orchestrator.");
+                    task.testRunnerFactory =
+                            (splitSelect, processExecutor) ->
+                                    new OnDeviceOrchestratorTestRunner(
+                                            splitSelect, processExecutor, executionEnum);
                     break;
                 case HOST:
                     if (shardBetweenDevices) {
@@ -415,12 +423,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                     }
                     break;
                 default:
-                    throw new AssertionError(
-                            "Unknown value "
-                                    + scope.getGlobalScope()
-                                            .getExtension()
-                                            .getTestOptions()
-                                            .getExecutionEnum());
+                    throw new AssertionError("Unknown value " + executionEnum);
             }
 
             String flavorFolder = testData.getFlavorName();

@@ -311,7 +311,8 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             // See if any parameter in the action defines an entity reference. We can't just
             // keep track of this during iteration and pass it in here, we have to search up
             // from here since the parameter can be defined before or after the fulfillment tag.
-            hasEntitySetReference(fulfillment.parentNode as Element)) {
+            hasEntitySetReference(fulfillment.parentNode as Element)
+        ) {
             urlParameters.add(VAR_URL)
         }
 

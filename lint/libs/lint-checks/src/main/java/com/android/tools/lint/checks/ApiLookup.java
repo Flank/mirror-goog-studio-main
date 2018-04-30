@@ -26,7 +26,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.utils.Pair;
 import com.google.common.io.Files;
 import java.io.File;
@@ -194,7 +194,7 @@ public class ApiLookup {
     @VisibleForTesting
     @NonNull
     static String getCacheFileName(@NonNull String xmlFileName, @Nullable String platformVersion) {
-        if (LintUtils.endsWith(xmlFileName, DOT_XML)) {
+        if (Lint.endsWith(xmlFileName, DOT_XML)) {
             xmlFileName = xmlFileName.substring(0, xmlFileName.length() - DOT_XML.length());
         }
 

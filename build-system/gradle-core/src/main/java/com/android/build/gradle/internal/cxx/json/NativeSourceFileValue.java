@@ -25,8 +25,18 @@ import java.io.File;
 public class NativeSourceFileValue {
     @Nullable
     public File src;
+
     @Nullable
     public String flags;
+
+    // This is equivalent to flags except that it refers to a string in the top-level stringTable
+    // field.
+    public Integer flagsOrdinal;
+
     @Nullable
     public File workingDirectory;
+
+    // This is equivalent to workingDirectory except that it refers to a string in the top-level
+    // stringTable field.
+    public Integer workingDirectoryOrdinal;
 }

@@ -13,11 +13,15 @@ def _gradle_build_impl(ctx):
   for task in ctx.attr.tasks:
     args += ["--task", task]
 
+  # Needs to be set as an environment variable to use DefaultGradleConnector.close();
+  gradle_user_home = output_file.path + ".temp2/_home"
+
   ctx.action(
     inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, distribution],
     outputs = [output_file],
     mnemonic = "gradlew",
     arguments = args,
+    env = {"GRADLE_USER_HOME": gradle_user_home},
     executable = ctx.executable._gradlew,
   )
 

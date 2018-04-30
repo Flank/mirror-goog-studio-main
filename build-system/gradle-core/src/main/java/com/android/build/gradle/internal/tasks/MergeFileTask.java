@@ -19,7 +19,10 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -27,18 +30,22 @@ import org.gradle.api.tasks.TaskAction;
 /** Task to merge files. This appends all the files together into an output file. */
 public class MergeFileTask extends AndroidVariantTask {
 
-    private Set<File> mInputFiles;
+    private FileCollection mInputFiles;
 
     private File mOutputFile;
 
     @TaskAction
     public void mergeFiles() throws IOException {
 
-        Set<File> files = getInputFiles();
+        Set<File> inputFiles = getInputFiles().getFiles();
         File output = getOutputFile();
 
-        if (files.size() == 1) {
-            Files.copy(files.iterator().next(), output);
+        // filter out any non-existent files
+        List<File> existingFiles =
+                inputFiles.stream().filter(File::isFile).collect(Collectors.toList());
+
+        if (existingFiles.size() == 1) {
+            Files.copy(existingFiles.iterator().next(), output);
             return;
         }
 
@@ -46,12 +53,12 @@ public class MergeFileTask extends AndroidVariantTask {
         output.delete();
 
         // no input? done.
-        if (files.isEmpty()) {
+        if (existingFiles.isEmpty()) {
             return;
         }
 
         // otherwise put the all the files together
-        for (File file : files) {
+        for (File file : existingFiles) {
             String content = Files.toString(file, Charsets.UTF_8);
             Files.append(content, output, Charsets.UTF_8);
             Files.append("\n", output, Charsets.UTF_8);
@@ -59,11 +66,11 @@ public class MergeFileTask extends AndroidVariantTask {
     }
 
     @InputFiles
-    public Set<File> getInputFiles() {
+    public FileCollection getInputFiles() {
         return mInputFiles;
     }
 
-    public void setInputFiles(Set<File> inputFiles) {
+    public void setInputFiles(FileCollection inputFiles) {
         mInputFiles = inputFiles;
     }
 

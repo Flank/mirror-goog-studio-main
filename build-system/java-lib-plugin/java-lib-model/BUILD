@@ -1,11 +1,11 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.java-lib-model",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.java-lib-model.iml"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [

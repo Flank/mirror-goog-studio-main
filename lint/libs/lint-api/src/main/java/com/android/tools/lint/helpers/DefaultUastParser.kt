@@ -153,11 +153,7 @@ open class DefaultUastParser(
             return null
         }
 
-        return uast.convertElementWithParent(psiFile, UFile::class.java) as? UFile
-                ?: // No need to log this; the parser should be reporting
-                // a full warning (such as IssueRegistry#PARSER_ERROR)
-                // with details, location, etc.
-                return null
+        return uast.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?: return null
     }
 
     /**

@@ -27,7 +27,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -179,7 +179,7 @@ public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScan
 
     private static void checkFile(@NonNull Context context, @NonNull File file) {
         if (isNativeCode(file)) {
-            if (LintUtils.endsWith(file.getPath(), DOT_NATIVE_LIBS)) {
+            if (Lint.endsWith(file.getPath(), DOT_NATIVE_LIBS)) {
                 context.report(
                         UNSAFE_NATIVE_CODE_LOCATION,
                         Location.create(file),

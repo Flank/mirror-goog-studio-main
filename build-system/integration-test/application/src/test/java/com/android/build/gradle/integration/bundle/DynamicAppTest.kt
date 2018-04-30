@@ -26,12 +26,16 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
+import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
+import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -41,14 +45,17 @@ import kotlin.test.fail
 class DynamicAppTest {
 
     @get:Rule
+    val tmpFile= TemporaryFolder()
+
+    @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
         .withoutNdk()
         .create()
 
     private val bundleContent: Array<String> = arrayOf(
-        "/BundleConfig.pb",
         "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt",
+        "/BundleConfig.pb",
         "/base/dex/classes.dex",
         "/base/manifest/AndroidManifest.xml",
         "/base/res/layout/base_layout.xml",
@@ -62,17 +69,33 @@ class DynamicAppTest {
         "/feature2/res/layout/feature2_layout.xml",
         "/feature2/resources.pb")
 
-    private val signedContent: Array<String> = bundleContent.plus(arrayOf(
+    private val debugSignedContent: Array<String> = bundleContent.plus(arrayOf(
+        "/base/dex/classes2.dex", // Legacy multidex has minimal main dex in debug mode.
         "/META-INF/ANDROIDD.RSA",
         "/META-INF/ANDROIDD.SF",
         "/META-INF/MANIFEST.MF"))
+    
+    private val mainDexClasses: List<String> = listOf(
+        "Landroid/support/multidex/MultiDex;",
+        "Landroid/support/multidex/MultiDexApplication;",
+        "Landroid/support/multidex/MultiDexExtractor;",
+        "Landroid/support/multidex/MultiDexExtractor\$1;",
+        "Landroid/support/multidex/MultiDexExtractor\$ExtractedDex;",
+        "Landroid/support/multidex/MultiDex\$V14;",
+        "Landroid/support/multidex/MultiDex\$V19;",
+        "Landroid/support/multidex/MultiDex\$V4;",
+        "Landroid/support/multidex/ZipUtil;",
+        "Landroid/support/multidex/ZipUtil\$CentralDirectory;",
+        "Lcom/example/app/AppClassNeededInMainDexList;")
 
+    private val mainDexListClassesInBundle: List<String> =
+        mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
+    
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
         val rootBuildModelMap = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchAndroidProjects()
             .rootBuildModelMap
 
@@ -98,7 +121,18 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
+            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
+            // Legacy multidex is applied to the dex of the base directly for the case
+            // when the build author has excluded all the features from fusing.
+            assertThat(dex).containsExactlyClassesIn(mainDexClasses)
+
+            // The main dex list must also analyze the classes from features.
+            val mainDexListInBundle =
+                Files.readAllLines(it.getEntry("/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt")).map { "L" + it.removeSuffix(".class") + ";" }
+
+            assertThat(mainDexListInBundle).containsExactlyElementsIn(mainDexListClassesInBundle)
+
         }
 
         // also test that the feature manifest contains the feature name.
@@ -111,6 +145,17 @@ class DynamicAppTest {
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
         FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
+
+        // check that the feature1 source manifest has not been changed so we can verify that
+        // it is automatically reset to the base module value.
+        val originalManifestFile = FileUtils.join(
+            project.getSubproject("feature1").getMainSrcDir(""),
+            "AndroidManifest.xml")
+        FileSubject.assertThat(originalManifestFile).doesNotContain("android:versionCode=\"11\"")
+
+        // and finally check that the resulting manifest has had its versionCode changed from the
+        // base module value
+        FileSubject.assertThat(manifestFile).contains("android:versionCode=\"11\"")
     }
 
     @Test
@@ -144,7 +189,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*signedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
         }
     }
 
@@ -178,7 +223,7 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val bundleContentWithAbis = signedContent.plus(listOf(
+        val bundleContentWithAbis = debugSignedContent.plus(listOf(
                 "/base/native.pb",
                 "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
                 "/feature1/native.pb",
@@ -242,11 +287,35 @@ class DynamicAppTest {
             .containsExactly("standalone-xxhdpi.apk")
     }
 
+
+    @Test
+    fun `test overriding bundle output location`() {
+        val apkFromBundleTaskName = getBundleTaskName("debug")
+
+        // use a relative path to the project build dir.
+        project
+            .executor()
+            .with(StringOption.IDE_APK_LOCATION, "out/test/my-bundle")
+            .run("app:$apkFromBundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(File(project.getSubproject(":app").buildDir,
+            FileUtils.join("out", "test", "my-bundle", bundleFile.name))).exists()
+
+        // redo the test with an absolute output path this time.
+        val absolutePath = tmpFile.newFolder("my-bundle").absolutePath
+        project
+            .executor()
+            .with(StringOption.IDE_APK_LOCATION, absolutePath)
+            .run("app:$apkFromBundleTaskName")
+
+        FileSubject.assertThat(File(absolutePath, bundleFile.name)).exists()
+    }
+
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
@@ -259,7 +328,6 @@ class DynamicAppTest {
         // query the model to get the task name
         val syncModels = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
@@ -271,7 +339,6 @@ class DynamicAppTest {
     private fun getApkFolderOutput(variantName: String): AppBundleVariantBuildOutput {
         val outputModels = project.model()
             .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
-            .allowOptionWarning(BooleanOption.ENABLE_DYNAMIC_APPS)
             .fetchContainer(AppBundleProjectBuildOutput::class.java)
 
         val outputAppModel = outputModels.rootBuildModelMap[":app"]

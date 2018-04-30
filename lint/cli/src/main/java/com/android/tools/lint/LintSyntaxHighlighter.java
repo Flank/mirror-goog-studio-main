@@ -21,12 +21,12 @@ import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.tools.lint.HtmlReporter.CODE_WINDOW_SIZE;
-import static com.android.tools.lint.detector.api.LintUtils.isJavaKeyword;
+import static com.android.tools.lint.detector.api.Lint.isJavaKeyword;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.utils.HtmlBuilder;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
@@ -88,7 +88,7 @@ public class LintSyntaxHighlighter {
         if (endsWithIgnoreCase(fileName, DOT_XML)) {
             tokenizeXml();
         } else if (endsWithIgnoreCase(fileName, DOT_JAVA)) {
-            tokenizeJavaLikeLanguage(LintUtils::isJavaKeyword);
+            tokenizeJavaLikeLanguage(Lint::isJavaKeyword);
         } else if (endsWithIgnoreCase(fileName, DOT_GRADLE)) {
             tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isGroovyKeyword);
         } else if (endsWithIgnoreCase(fileName, ".kt")) {

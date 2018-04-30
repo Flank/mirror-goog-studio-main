@@ -159,8 +159,7 @@ public abstract class AbstractShrinker<T> {
     }
 
     /**
-     * Determines all directories where class files can be found in the given {@link
-     * TransformInput}.
+     * Returns a collection of jar files from the given {@link TransformInput}'s {@link JarInput}s.
      */
     @NonNull
     protected static Collection<File> getAllJars(@NonNull TransformInput input) {

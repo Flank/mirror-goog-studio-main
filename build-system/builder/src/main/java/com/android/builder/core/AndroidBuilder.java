@@ -1147,6 +1147,7 @@ public class AndroidBuilder {
      * @param optimLevel the optimization level
      * @param ndkMode whether the renderscript code should be compiled to generate C/C++ bindings
      * @param supportMode support mode flag to generate .so files.
+     * @param useAndroidX whether to use AndroidX dependencies
      * @param abiFilters ABI filters in case of support mode
      * @throws IOException failed
      * @throws InterruptedException failed
@@ -1163,6 +1164,7 @@ public class AndroidBuilder {
             int optimLevel,
             boolean ndkMode,
             boolean supportMode,
+            boolean useAndroidX,
             @Nullable Set<String> abiFilters,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws InterruptedException, ProcessException, IOException {
@@ -1180,21 +1182,23 @@ public class AndroidBuilder {
             throw new IllegalStateException("llvm-rs-cc is missing");
         }
 
-        RenderScriptProcessor processor = new RenderScriptProcessor(
-                sourceFolders,
-                importFolders,
-                sourceOutputDir,
-                resOutputDir,
-                objOutputDir,
-                libOutputDir,
-                buildToolInfo,
-                targetApi,
-                debugBuild,
-                optimLevel,
-                ndkMode,
-                supportMode,
-                abiFilters,
-                mLogger);
+        RenderScriptProcessor processor =
+                new RenderScriptProcessor(
+                        sourceFolders,
+                        importFolders,
+                        sourceOutputDir,
+                        resOutputDir,
+                        objOutputDir,
+                        libOutputDir,
+                        buildToolInfo,
+                        targetApi,
+                        debugBuild,
+                        optimLevel,
+                        ndkMode,
+                        supportMode,
+                        useAndroidX,
+                        abiFilters,
+                        mLogger);
         processor.build(mProcessExecutor, processOutputHandler);
     }
 

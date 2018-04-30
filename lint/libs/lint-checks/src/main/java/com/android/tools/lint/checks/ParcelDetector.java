@@ -24,8 +24,8 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -89,7 +89,7 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
             return;
         }
 
-        boolean isKotlin = LintUtils.isKotlin(declaration);
+        boolean isKotlin = Lint.isKotlin(declaration);
         if (isKotlin) {
             PsiModifierList modifierList = declaration.getModifierList();
             if (modifierList != null

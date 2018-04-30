@@ -31,7 +31,6 @@ import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskDependency
@@ -287,12 +286,32 @@ abstract class BuildArtifactsHolder(
     fun setArtifactFile(
         artifactType: ArtifactType,
         task : Task,
-        fileName: String = "out") : Provider<RegularFile> {
+        fileName: String = "out") : Provider<RegularFile> =
+        setArtifactFile(artifactType, task, File(FileUtils.join(
+            artifactType.getOutputPath(),
+            artifactType.name().toLowerCase(),
+            getIdentifier(),
+            fileName)))
+
+    /**
+     * set a new file to a specified artifact type. The new content will be added
+     * after any existing content.
+     *
+     * @param artifactType [ArtifactType] the new file will be classified under.
+     * @param task [Task] producing the file.
+     * @param requestedFileLocation expected location for the file
+     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
+     * location to write the [task] output to.
+     */
+    fun setArtifactFile(
+        artifactType: ArtifactType,
+        task : Task,
+        requestedFileLocation: File) : Provider<RegularFile> {
 
         // TODO : split this method in 2, replaceArtifactFile, and setArtifactFile.
 
         val artifactRecord = artifactRecordMap[artifactType]
-        val intermediatesOutput = InternalArtifactType.Kind.INTERMEDIATES.outputPath
+        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
 
         val lastProducer = artifactRecord?.lastProducer
         lastProducer?.fileOrDirProperty?.set(project.layout.buildDirectory.file(
@@ -305,22 +324,17 @@ abstract class BuildArtifactsHolder(
         )
 
         val provider = project.layout.buildDirectory.file(
-                if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
-                    FileUtils.join(
-                        artifactType.getOutputPath(),
-                        artifactType.name().toLowerCase(),
-                        getIdentifier(),
-                        fileName
-                    )
-                } else {
-                    FileUtils.join(
-                        intermediatesOutput,
-                        artifactType.name().toLowerCase(),
-                        getIdentifier(),
-                        task.name,
-                        fileName
-                    )
-                })
+            if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
+                requestedFileLocation.path
+            } else {
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    task.name,
+                    requestedFileLocation.name
+                )
+            })
 
 
         val fileProperty = project.layout.fileProperty(provider)
@@ -332,7 +346,7 @@ abstract class BuildArtifactsHolder(
             BuildableProducer(
                 fileProperty as Property<in FileSystemLocation>,
                 task,
-                fileName))
+                requestedFileLocation.name))
         return fileProperty
     }
 
@@ -394,7 +408,7 @@ abstract class BuildArtifactsHolder(
      */
     internal fun createFile(task: Task, filename : String) =
             FileUtils.join(
-                InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(rootOutputDir()),
+                InternalArtifactType.Category.INTERMEDIATES.getOutputDir(rootOutputDir()),
                 MULTI_TYPES,
                 task.name,
                 filename)

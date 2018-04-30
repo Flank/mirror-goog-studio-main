@@ -78,7 +78,7 @@ public class ImlModule extends BazelRule {
         call.setDoNotSort("runtime_deps", reason);
         call.setDoNotSort("test_runtime_deps", reason);
 
-        call.addElementToList("tags", "managed");
+        statement.setIsManaged();
     }
 
     private List<String> tagDependencies(Set<BazelRule> dependencies) {

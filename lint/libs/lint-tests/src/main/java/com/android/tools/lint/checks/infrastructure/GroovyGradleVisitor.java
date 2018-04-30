@@ -52,6 +52,7 @@ import org.jetbrains.annotations.NotNull;
 // a groovy dependency in lint-cli, so instead there's a copy in tests and a copy
 // in the Gradle module.
 //
+
 /**
  * Implementation of the {@link GradleDetector} using a real Groovy AST, which the Gradle plugin has
  * access to.

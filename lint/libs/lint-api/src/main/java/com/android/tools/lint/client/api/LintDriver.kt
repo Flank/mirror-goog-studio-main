@@ -208,11 +208,16 @@ class LintDriver
 
     private var parserErrors: Boolean = false
     /** Whether we should run all normal checks on test sources  */
-    var isCheckTestSources: Boolean = false
+    var checkTestSources: Boolean = false
+    /**
+     * Whether we should run any checks (including tests marked with [Scope.TEST_SOURCES]
+     * on test sources
+     */
+    var ignoreTestSources: Boolean = false
     /** Whether we should include generated sources in the analysis  */
-    var isCheckGeneratedSources: Boolean = false
+    var checkGeneratedSources: Boolean = false
     /** Whether we're only analyzing fatal-severity issues  */
-    var isFatalOnlyMode: Boolean = false
+    var fatalOnlyMode: Boolean = false
     /** Baseline to apply to the analysis */
     var baseline: LintBaseline? = null
     /** Whether dependent projects should be checked */
@@ -962,7 +967,7 @@ class LintDriver
                                 )
                             }
                         }
-                        if (isCheckGeneratedSources) {
+                        if (checkGeneratedSources) {
                             val generatedResourceFolders = project.generatedResourceFolders
                             if (!generatedResourceFolders.isEmpty()) {
                                 for (res in generatedResourceFolders) {
@@ -997,7 +1002,7 @@ class LintDriver
                         project.testSourceFolders
                     else emptyList<File>()
 
-                    val generatedFolders = if (isCheckGeneratedSources)
+                    val generatedFolders = if (checkGeneratedSources)
                         project.generatedSourceFolders
                     else emptyList<File>()
                     checkJava(project, main, sourceFolders, testFolders, generatedFolders, checks)
@@ -1509,15 +1514,22 @@ class LintDriver
         }
 
         // Test sources
-        sources.clear()
-        for (folder in testSourceFolders) {
-            gatherJavaFiles(folder, sources)
-        }
-        val testContexts = ArrayList<JavaContext>(sources.size)
-        for (file in sources) {
-            val context = JavaContext(this, project, main, file)
-            context.isTestSource = true
-            testContexts.add(context)
+        val testContexts: List<JavaContext>
+        if (ignoreTestSources) {
+            testContexts = emptyList()
+        } else {
+            sources.clear()
+            for (folder in testSourceFolders) {
+                gatherJavaFiles(folder, sources)
+            }
+            testContexts = ArrayList(sources.size)
+            if (!ignoreTestSources) {
+                for (file in sources) {
+                    val context = JavaContext(this, project, main, file)
+                    context.isTestSource = true
+                    testContexts.add(context)
+                }
+            }
         }
 
         // Visit all contexts
@@ -1543,7 +1555,7 @@ class LintDriver
         }
 
         // Force all test sources into the normal source check (where all checks apply) ?
-        if (isCheckTestSources) {
+        if (checkTestSources) {
             visitJavaFiles(checks, project, main, allContexts, allContexts, emptyList())
         } else {
             visitJavaFiles(checks, project, main, allContexts, contexts, testContexts)

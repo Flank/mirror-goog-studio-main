@@ -1,10 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.layoutinspector",
     srcs = ["src"],
     iml_files = ["android.sdktools.layoutinspector.iml"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.android.sdktools.common"],
     # do not sort: must match IML order

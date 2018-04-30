@@ -153,6 +153,11 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
     }
 
     @Override
+    public boolean isIgnoreTestSources() {
+        throw new UnusedModelMethodException("isIgnoreTestSources");
+    }
+
+    @Override
     public boolean isCheckGeneratedSources() {
         throw new UnusedModelMethodException("isCheckGeneratedSources");
     }

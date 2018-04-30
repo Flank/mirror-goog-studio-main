@@ -616,7 +616,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 Iterables.getOnlyElement(scope.getArtifacts().getArtifactFiles(JAVAC)),
                 additionalTestClasses,
                 variantData.getJavaResourcesForUnitTesting(),
-                globalScope.getMockableAndroidJarFile(),
+                globalScope.getMockableJarArtifact().getSingleFile(),
                 result.getFirst(),
                 result.getSecond(),
                 sourceProviders.variantSourceProvider,

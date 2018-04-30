@@ -20,6 +20,11 @@ import com.android.annotations.NonNull;
 
 /** Abstract base class that defines the visitor called by AndroidBuildGradleJsonStreamingParser. */
 public abstract class AndroidBuildGradleJsonStreamingVisitor {
+
+    protected void beginStringTable() {}
+
+    protected void endStringTable() {}
+
     protected void beginLibrary(@NonNull String libraryName) {}
 
     protected void endLibrary() {}
@@ -31,6 +36,8 @@ public abstract class AndroidBuildGradleJsonStreamingVisitor {
     protected void beginToolchain(@NonNull String toolchain) {}
 
     protected void endToolchain() {}
+
+    protected void visitStringTableEntry(int index, @NonNull String value) {}
 
     protected void visitBuildFile(@NonNull String buildFile) {}
 
@@ -54,9 +61,14 @@ public abstract class AndroidBuildGradleJsonStreamingVisitor {
 
     protected void visitLibraryFileFlags(@NonNull String flags) {}
 
+    protected void visitLibraryFileFlagsOrdinal(@NonNull Integer flagsOrdinal) {}
+
     protected void visitLibraryFileSrc(@NonNull String src) {}
 
     protected void visitLibraryFileWorkingDirectory(@NonNull String workingDirectory) {}
+
+    protected void visitLibraryFileWorkingDirectoryOrdinal(
+            @NonNull Integer workingDirectoryOrdinal) {}
 
     protected void visitCleanCommands(@NonNull String cleanCommand) {}
 
@@ -65,4 +77,5 @@ public abstract class AndroidBuildGradleJsonStreamingVisitor {
     protected void visitCppFileExtensions(@NonNull String buildFile) {}
 
     protected void visitLibraryRuntimeFile(@NonNull String runtimeFile) {}
+
 }

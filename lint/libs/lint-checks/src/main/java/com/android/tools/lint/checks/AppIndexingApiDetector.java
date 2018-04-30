@@ -35,7 +35,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
@@ -411,7 +411,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
                         for (Element intent : getSubTagsByName(act, NODE_INTENT)) {
                             boolean hasData = getFirstSubTagByName(intent, NODE_DATA) != null;
                             if (hasData && act.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                                String activityName = LintUtils.resolveManifestName(act);
+                                String activityName = Lint.resolveManifestName(act);
                                 activitiesToCheck.add(activityName);
                             }
                         }

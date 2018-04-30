@@ -1492,7 +1492,20 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     public DexingType getDexingType() {
-        if (isMultiDexEnabled()) {
+        if (getType().isDynamicFeature()) {
+            if (getBuildType().getMultiDexEnabled() != null
+                    || getMergedFlavor().getMultiDexEnabled() != null) {
+                getIssueReporter()
+                        .reportWarning(
+                                EvalIssueReporter.Type.GENERIC,
+                                "Native multidex is always used for dynamic features. Please "
+                                        + "remove 'multiDexEnabled true|false' from your "
+                                        + "build.gradle file.");
+            }
+
+            // dynamic features can always be build in native multidex mode
+            return DexingType.NATIVE_MULTIDEX;
+        } else if (isMultiDexEnabled()) {
             return getMinSdkVersion().getFeatureLevel() < 21
                     ? DexingType.LEGACY_MULTIDEX
                     : DexingType.NATIVE_MULTIDEX;

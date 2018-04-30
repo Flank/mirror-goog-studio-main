@@ -35,7 +35,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -154,9 +154,9 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                         }
                         mLocations.put(name, null);
 
-                        String thisName = LintUtils.getFileNameWithParent(client, file);
+                        String thisName = Lint.getFileNameWithParent(client, file);
                         File otherFile = fileMap.get(name);
-                        String otherName = LintUtils.getFileNameWithParent(client, otherFile);
+                        String otherName = Lint.getFileNameWithParent(client, otherFile);
                         String message =
                                 String.format(
                                         "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",
@@ -199,7 +199,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                             if (driver.isSuppressed(null, INCONSISTENT, node)) {
                                 continue;
                             }
-                            int newCount = LintUtils.getChildCount(node);
+                            int newCount = Lint.getChildCount(node);
                             if (newCount != count) {
                                 if (count == -1) {
                                     count = newCount; // first number encountered
@@ -249,7 +249,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             String name = attribute.getValue();
             if (phase == 1) {
                 if (context.getProject().getReportIssues()) {
-                    int childCount = LintUtils.getChildCount(element);
+                    int childCount = Lint.getChildCount(element);
 
                     if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)
                             && context.getClient().supportsProjectResources()) {
@@ -270,7 +270,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                     location.setMessage(
                             String.format(
                                     "Declaration with array size (%1$d)",
-                                    LintUtils.getChildCount(element)));
+                                    Lint.getChildCount(element)));
                     location.setSecondary(mLocations.get(name));
                     mLocations.put(name, location);
                 }
@@ -293,16 +293,16 @@ public class ArraySizeDetector extends ResourceXmlDetector {
         if (items != null) {
             for (ResourceItem item : items) {
                 PathString source = item.getSource();
-                if (source != null && LintUtils.isSameResourceFile(context.file, source.toFile())) {
+                if (source != null && Lint.isSameResourceFile(context.file, source.toFile())) {
                     continue;
                 }
                 ResourceValue rv = item.getResourceValue();
                 if (rv instanceof ArrayResourceValue) {
                     ArrayResourceValue arv = (ArrayResourceValue) rv;
                     if (childCount != arv.getElementCount()) {
-                        String thisName = LintUtils.getFileNameWithParent(client, context.file);
+                        String thisName = Lint.getFileNameWithParent(client, context.file);
                         assert source != null;
-                        String otherName = LintUtils.getFileNameWithParent(client, source);
+                        String otherName = Lint.getFileNameWithParent(client, source);
                         String message =
                                 String.format(
                                         "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",

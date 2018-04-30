@@ -70,8 +70,8 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -1226,7 +1226,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             Element element = (Element) node;
             String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (id != null && !id.isEmpty()) {
-                ids.add(LintUtils.stripIdPrefix(id));
+                ids.add(Lint.stripIdPrefix(id));
             }
 
             NamedNodeMap attributes = element.getAttributes();

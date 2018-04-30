@@ -92,9 +92,14 @@ public class AndroidArtifacts {
     private static final String TYPE_METADATA_FEATURE_DECLARATION = "android-metadata-feature-decl";
     private static final String TYPE_METADATA_FEATURE_MANIFEST =
             "android-metadata-feature-manifest";
-    private static final String TYPE_METADATA_APP_ID_DECLARATION = "android-metadata-app-id-decl";
+    private static final String TYPE_METADATA_BASE_DECLARATION =
+            "android-metadata-base-module-decl";
     private static final String TYPE_METADATA_CLASSES = "android-metadata-classes";
     private static final String TYPE_METADATA_JAVA_RES = "android-metadata-java-res";
+
+    public static final String TYPE_MOCKABLE_JAR = "android-mockable-jar";
+    public static final Attribute MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
+            Attribute.of("returnDefaultValues", Boolean.class);
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -227,7 +232,7 @@ public class AndroidArtifacts {
         // Metadata artifacts
         METADATA_FEATURE_DECLARATION(TYPE_METADATA_FEATURE_DECLARATION),
         METADATA_FEATURE_MANIFEST(TYPE_METADATA_FEATURE_MANIFEST),
-        METADATA_APP_ID_DECLARATION(TYPE_METADATA_APP_ID_DECLARATION),
+        METADATA_BASE_MODULE_DECLARATION(TYPE_METADATA_BASE_DECLARATION),
         METADATA_CLASSES(TYPE_METADATA_CLASSES),
         METADATA_JAVA_RES(TYPE_METADATA_JAVA_RES),
 

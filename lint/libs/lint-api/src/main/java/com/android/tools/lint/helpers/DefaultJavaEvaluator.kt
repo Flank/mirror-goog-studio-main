@@ -19,6 +19,7 @@ package com.android.tools.lint.helpers
 import com.android.builder.model.Dependencies
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.isKotlin
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.JavaDirectoryService
@@ -304,10 +305,10 @@ open class DefaultJavaEvaluator(
         val parameters = parameterList.parameters
 
         var j = 0
-        if (parameters.isNotEmpty() && "\$receiver" == parameters[0].name) {
+        if (parameters.isNotEmpty() && "\$receiver" == parameters[0].name &&
+            isKotlin(call.sourcePsi)
+        ) {
             // Kotlin extension method.
-            // TODO: Find out if there's a better way to look this up!
-            // (and more importantly, handle named parameters, *args, etc.
             j++
         }
 

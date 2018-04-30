@@ -24,7 +24,7 @@ import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.SdkConstants.CLS_TYPED_ARRAY;
 import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

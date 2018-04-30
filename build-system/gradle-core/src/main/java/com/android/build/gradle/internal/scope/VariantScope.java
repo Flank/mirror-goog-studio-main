@@ -102,6 +102,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean consumesFeatureJars();
 
+    boolean getNeedsMainDexListForBundle();
+
     @Override
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();

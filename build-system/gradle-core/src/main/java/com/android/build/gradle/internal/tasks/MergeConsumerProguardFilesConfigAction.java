@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -26,9 +27,11 @@ import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 
 /** Configuration action for a merge-Proguard-files task. */
 public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<MergeFileTask> {
@@ -62,26 +65,39 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
                                 InternalArtifactType.CONSUMER_PROGUARD_FILE,
                                 mergeProguardFiles,
                                 SdkConstants.FN_PROGUARD_TXT));
-        mergeProguardFiles.setInputFiles(
-                project.files(variantScope.getConsumerProguardFiles()).getFiles());
+        Collection<File> consumerProguardFiles = variantScope.getConsumerProguardFiles();
+        checkForDefaultFiles(consumerProguardFiles);
+        ConfigurableFileCollection inputFiles = project.files(consumerProguardFiles);
+        if (variantScope.getType().isFeatureSplit()) {
+            inputFiles.from(
+                    variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.PROGUARD_RULES));
+        }
+        mergeProguardFiles.setInputFiles(inputFiles);
+    }
 
-        // Check that the library is not trying to ship one of the default files as a consumer file.
+    /** Check that we're not trying to ship one of the default files as a consumer file. */
+    private void checkForDefaultFiles(@NonNull Collection<File> consumerProguardFiles) {
         Map<File, String> defaultFiles = new HashMap<>();
         for (String knownFileName : ProguardFiles.KNOWN_FILE_NAMES) {
             defaultFiles.put(
-                    ProguardFiles.getDefaultProguardFile(knownFileName, project), knownFileName);
+                    ProguardFiles.getDefaultProguardFile(
+                            knownFileName, variantScope.getGlobalScope().getProject()),
+                    knownFileName);
         }
 
         EvalIssueReporter issueReporter = variantScope.getGlobalScope().getErrorHandler();
 
-        for (File consumerFile : mergeProguardFiles.getInputFiles()) {
-            if (defaultFiles.containsKey(consumerFile)) {
+        for (File consumerProguardFile : consumerProguardFiles) {
+            if (defaultFiles.containsKey(consumerProguardFile)) {
                 issueReporter.reportError(
                         Type.GENERIC,
                         new EvalIssueException(
                                 String.format(
                                         "Default file %s should not be used as a consumer configuration file.",
-                                        defaultFiles.get(consumerFile))));
+                                        defaultFiles.get(consumerProguardFile))));
             }
         }
     }

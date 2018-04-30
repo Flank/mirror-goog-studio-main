@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.build;
 
 import static org.mockito.Mockito.when;
@@ -26,7 +25,6 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
@@ -74,9 +72,7 @@ public class SplitOutputMatcherTest extends TestCase {
     /**
      * Fake implementation of FilteredOutput
      */
-
     private static final class FakeSplitOutput implements OutputFile {
-
         private final String densityFilter;
         private final String abiFilter;
         private final File file;
@@ -187,7 +183,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testSingleOutput() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
 
@@ -199,7 +195,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testDensityOnlyWithMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
         list.add(match = getDensityOutput(160, 2));
@@ -213,7 +209,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testDensityOnlyWithUniversalMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(3));
         list.add(getDensityOutput(320, 2));
@@ -226,7 +222,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testDensityOnlyWithNoMatch() throws ProcessException {
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getDensityOutput(320, 1));
         list.add(getDensityOutput(480, 2));
@@ -238,7 +234,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testDensityOnlyWithCustomDeviceDensity() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
         list.add(getDensityOutput(320, 2));
@@ -250,10 +246,24 @@ public class SplitOutputMatcherTest extends TestCase {
         assertEquals(match.getOutputFile(), result.get(0));
     }
 
+    public void testDensityWithAnydpi() throws ProcessException {
+        OutputFile match;
+        List<OutputFile> list = new ArrayList<>();
+
+        list.add(match = getUniversalOutput(1));
+        list.add(getDensityOutput(320, 2));
+        list.add(getDensityOutput(0xFFFE, 3));
+
+        List<File> result = computeBestOutput(list, 400, "foo");
+
+        assertEquals(1, result.size());
+        assertEquals(match.getOutputFile(), result.get(0));
+    }
+
 
     public void testAbiOnlyWithMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
         list.add(match = getAbiOutput("foo", 2));
@@ -267,7 +277,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testAbiOnlyWithMultiMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         // test where the versionCode match the abi order
         list.add(getUniversalOutput(1));
@@ -283,7 +293,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testAbiPreference() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         // test where the versionCode match the abi order
         list.add(getUniversalOutput(1));
@@ -300,7 +310,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testAbiPreferenceForUniveralApk() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         // test where the versionCode match the abi order
         list.add(match = getUniversalOutput(1));
@@ -317,7 +327,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testAbiOnlyWithMultiMatch2() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         // test where the versionCode does not match the abi order
         list.add(getUniversalOutput(1));
@@ -333,7 +343,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testAbiOnlyWithUniversalMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
         list.add(getAbiOutput("foo", 2));
@@ -346,7 +356,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testAbiOnlyWithNoMatch() throws ProcessException {
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getAbiOutput("foo", 1));
         list.add(getAbiOutput("bar", 2));
@@ -358,7 +368,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testMultiFilterWithMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
         list.add(getOutput(160, "zzz",2));
@@ -373,7 +383,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testMultiFilterWithUniversalMatch() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(4));
         list.add(getOutput(320, "zzz", 3));
@@ -387,7 +397,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testMultiFilterWithNoMatch() throws ProcessException {
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getOutput(320, "zzz", 1));
         list.add(getOutput(160, "bar", 2));
@@ -400,7 +410,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testVariantLevelAbiFilter() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(match = getUniversalOutput(1));
         List<File> result = computeBestOutput(list, Sets.newHashSet("bar", "foo"), 160, "foo",
@@ -411,7 +421,7 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     public void testWrongVariantLevelAbiFilter() throws ProcessException {
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
 
@@ -422,7 +432,7 @@ public class SplitOutputMatcherTest extends TestCase {
 
     public void testDensitySplitPlugVariantLevelAbiFilter() throws ProcessException {
         OutputFile match;
-        List<OutputFile> list = Lists.newArrayList();
+        List<OutputFile> list = new ArrayList<>();
 
         list.add(getUniversalOutput(1));
         list.add(getDensityOutput(240, 2));

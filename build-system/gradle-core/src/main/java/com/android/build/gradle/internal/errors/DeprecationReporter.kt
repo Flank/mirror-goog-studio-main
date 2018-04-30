@@ -40,7 +40,9 @@ interface DeprecationReporter {
         // Deprecation of AAPT, replaced by AAPT2.
         AAPT("at the end of 2018."),
         // When legacy dexer will be removed and fully replaced by D8.
-        LEGACY_DEXER("in AGP version 3.3."),
+        LEGACY_DEXER(
+            "in the future AGP versions. For more details, see " +
+                    "https://d.android.com/r/studio-ui/d8-overview.html"),
         // Deprecation of disabling core lambda stubs
         CORE_LAMBDA_STUBS("in AGP version 3.3."),
         // Deprecation of disabling Desugar

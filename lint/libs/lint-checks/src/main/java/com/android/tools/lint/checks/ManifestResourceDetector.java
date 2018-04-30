@@ -43,7 +43,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -305,7 +305,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                 }
             }
         } else if (folderType != null) {
-            String name = LintUtils.getBaseName(context.file.getName());
+            String name = Lint.getBaseName(context.file.getName());
             if (mManifestLocations.containsKey(name)) {
                 List<ResourceType> types =
                         FolderTypeRelationship.getRelatedResourceTypes(folderType);

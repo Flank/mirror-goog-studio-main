@@ -11,4 +11,5 @@ lintOptions {
     textReport true
     textOutput file("lint-results.txt")
     absolutePaths false
+    ignoreTestSources true
 }

@@ -60,7 +60,7 @@ import static com.android.tools.lint.checks.VersionChecks.isPrecededByVersionChe
 import static com.android.tools.lint.checks.VersionChecks.isVersionCheckConditional;
 import static com.android.tools.lint.checks.VersionChecks.isWithinVersionCheckConditional;
 import static com.android.tools.lint.detector.api.ClassContext.getFqcn;
-import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 import static com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 import static com.intellij.pom.java.LanguageLevel.JDK_1_7;
@@ -78,7 +78,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxName;
-import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UElementHandler;
@@ -88,8 +87,8 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
@@ -320,7 +319,6 @@ public class ApiDetector extends ResourceXmlDetector
     private static final String TAG_ANIMATED_SELECTOR = "animated-selector";
 
     protected ApiLookup mApiDatabase;
-    private boolean mWarnedMissingDb;
     private int mMinApi = -1;
 
     /** Constructs a new API check */
@@ -335,14 +333,6 @@ public class ApiDetector extends ResourceXmlDetector
             // The manifest file hasn't been processed yet in the -before- project hook.
             // For now it's initialized lazily in getMinSdk(Context), but the
             // lint infrastructure should be fixed to parse manifest file up front.
-
-            if (mApiDatabase == null && !mWarnedMissingDb) {
-                mWarnedMissingDb = true;
-                context.report(
-                        IssueRegistry.LINT_ERROR,
-                        Location.create(context.file),
-                        "Can't find API database; API check not performed");
-            }
         }
     }
 
@@ -1112,7 +1102,7 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            String name = LintUtils.getInternalMethodName(method);
+            String name = Lint.getInternalMethodName(method);
             String desc = evaluator.getMethodDescription(method, false, false);
             if (desc == null) {
                 // Couldn't compute description of method for some reason; probably
@@ -1620,7 +1610,7 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            String name = LintUtils.getInternalMethodName(method);
+            String name = Lint.getInternalMethodName(method);
             String desc = evaluator.getMethodDescription(method, false, false);
             if (desc == null) {
                 // Couldn't compute description of method for some reason; probably
@@ -2232,7 +2222,7 @@ public class ApiDetector extends ResourceXmlDetector
                 if (api > minSdk && api > getTargetApi(node)) {
                     // Only look for compile time constants. See JLS 15.28 and JLS 13.4.9.
                     Issue issue = INLINED;
-                    if (!(type instanceof PsiPrimitiveType) && !LintUtils.isString(type)) {
+                    if (!(type instanceof PsiPrimitiveType) && !Lint.isString(type)) {
                         issue = UNSUPPORTED;
 
                         // Declaring enum constants are safe; they won't be called on older
@@ -2364,7 +2354,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         // ... *and* the language level is at least 1.8
-        return LintUtils.getLanguageLevel(element, JDK_1_7).isAtLeast(JDK_1_8);
+        return Lint.getLanguageLevel(element, JDK_1_7).isAtLeast(JDK_1_8);
     }
 
     public static int getTargetApi(@Nullable UElement scope) {

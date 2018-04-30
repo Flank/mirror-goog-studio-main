@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;

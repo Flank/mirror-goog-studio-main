@@ -36,7 +36,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Project;
@@ -135,7 +135,7 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
 
     @Nullable
     private static String validateJavaIdentifier(@NonNull String text) {
-        if (LintUtils.isJavaKeyword(text)) {
+        if (Lint.isJavaKeyword(text)) {
             return "cannot be a Java keyword";
         }
 
@@ -297,7 +297,7 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                 if (rightArguments) {
                     // See if there's a possible typo instead
                     for (String n : names.keySet()) {
-                        if (LintUtils.isEditableTo(n, methodName, 2)) {
+                        if (Lint.isEditableTo(n, methodName, 2)) {
                             recordSimilar(n, declaration, method);
                             break;
                         }

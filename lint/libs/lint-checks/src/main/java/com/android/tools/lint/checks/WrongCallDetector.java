@@ -20,7 +20,7 @@ import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.ON_DRAW;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.ON_LAYOUT;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.ON_MEASURE;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

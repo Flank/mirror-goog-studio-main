@@ -17,13 +17,13 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
+import static com.android.tools.lint.detector.api.Lint.assertionsEnabled;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteSink;
@@ -147,7 +147,7 @@ public class TypoLookup {
         }
 
         String name = xmlFile.getName();
-        if (LintUtils.endsWith(name, DOT_XML)) {
+        if (Lint.endsWith(name, DOT_XML)) {
             name = name.substring(0, name.length() - DOT_XML.length());
         }
         File cacheDir = client.getCacheDir(null, true);

@@ -18,8 +18,8 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.tools.lint.checks.CleanupDetector.MOTION_EVENT_CLS;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
-import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

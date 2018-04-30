@@ -27,7 +27,7 @@ import com.android.tools.lint.checks.PluralsDatabase.Quantity;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -132,7 +132,7 @@ public class PluralsDetector extends ResourceXmlDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        int count = LintUtils.getChildCount(element);
+        int count = Lint.getChildCount(element);
         if (count == 0) {
             context.report(
                     MISSING,
@@ -142,7 +142,7 @@ public class PluralsDetector extends ResourceXmlDetector {
             return;
         }
 
-        LocaleQualifier locale = LintUtils.getLocale(context);
+        LocaleQualifier locale = Lint.getLocale(context);
         if (locale == null || !locale.hasLanguage()) {
             return;
         }

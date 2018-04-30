@@ -31,9 +31,9 @@ import static com.android.SdkConstants.RELATIVE_LAYOUT;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.VALUE_ID;
 import static com.android.tools.lint.checks.RequiredAttributeDetector.PERCENT_RELATIVE_LAYOUT;
-import static com.android.tools.lint.detector.api.LintUtils.editDistance;
-import static com.android.tools.lint.detector.api.LintUtils.isSameResourceFile;
-import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
+import static com.android.tools.lint.detector.api.Lint.editDistance;
+import static com.android.tools.lint.detector.api.Lint.isSameResourceFile;
+import static com.android.tools.lint.detector.api.Lint.stripIdPrefix;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;

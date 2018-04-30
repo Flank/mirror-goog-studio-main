@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.model.Variant;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,30 +38,37 @@ public class TestOptionsExecutionTest {
                     .create();
 
     @Test
-    public void returnsOdo() throws Exception {
+    public void returnsAto() throws Exception {
         //noinspection SpellCheckingInspection
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android { testOptions.execution \"android_test_orchestrator\" }");
 
+        check(Execution.ANDROID_TEST_ORCHESTRATOR);
+    }
+
+    @Test
+    public void returnsAto_androidx() throws Exception {
+        //noinspection SpellCheckingInspection
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android { testOptions.execution \"androidx_test_orchestrator\" }");
+
+        check(Execution.ANDROIDX_TEST_ORCHESTRATOR);
+    }
+
+    @Test
+    public void returnsHostByDefault() throws Exception {
+        check(Execution.HOST);
+    }
+
+    private void check(Execution androidTestOrchestrator) throws IOException {
         AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
 
         Execution execution =
                 VariantUtils.getAndroidTestArtifact(debugVariant).getTestOptions().getExecution();
 
-        assertEquals(execution, Execution.ANDROID_TEST_ORCHESTRATOR);
-    }
-
-    @Test
-    public void returnsHost() throws Exception {
-
-        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
-        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
-
-        Execution executionEnum =
-                VariantUtils.getAndroidTestArtifact(debugVariant).getTestOptions().getExecution();
-
-        assertEquals(executionEnum, Execution.HOST);
+        assertEquals(execution, androidTestOrchestrator);
     }
 }

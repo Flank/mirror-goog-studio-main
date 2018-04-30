@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.resources;
 
-
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.google.common.collect.Maps;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
- * Density enum.
- * <p>This is used in the manifest in the uses-configuration node and in the resource folder names
- * as well as other places needing to know the density values.
+ * Allowed values of screen density.
+ *
+ * <p>This enum is used in the manifest in the uses-configuration node and in the resource folder
+ * names as well as in other places that need to know the density values.
  */
 public enum Density implements ResourceEnum {
     XXXHIGH("xxxhdpi", "XXX-High Density", 640, 18), //$NON-NLS-1$
@@ -41,60 +44,67 @@ public enum Density implements ResourceEnum {
     TV(     "tvdpi",   "TV Density",       213, 13), //$NON-NLS-1$
     MEDIUM( "mdpi",    "Medium Density",   160,  4), //$NON-NLS-1$
     LOW(    "ldpi",    "Low Density",      120,  4), //$NON-NLS-1$
-    ANYDPI( "anydpi",  "Any Density",        0, 21), //$NON-NLS-1$
-    NODPI(  "nodpi",   "No Density",         0,  4); //$NON-NLS-1$
+    ANYDPI( "anydpi",  "Any Density",   0xFFFE, 21), // 0xFFFE is the value used by the framework.
+    NODPI(  "nodpi",   "No Density",    0xFFFF,  4); // 0xFFFF is the value used by the framework.
 
-    public static final int DEFAULT_DENSITY = 160;
+    public static final int DEFAULT_DENSITY = MEDIUM.getDpiValue();
+    private static final Map<String, Density> densityByValue =
+            Maps.newHashMapWithExpectedSize(values().length);
 
-    private final String mValue;
-    private final String mDisplayValue;
-    private final int mDensity;
+    static {
+        for (Density density : values()) {
+            densityByValue.put(density.mValue, density);
+        }
+    }
+
+    @NonNull private final String mValue;
+    @NonNull private final String mDisplayValue;
+    private final int mDpi;
     private final int mSince;
 
-    Density(String value, String displayValue, int density, int since) {
+    Density(@NonNull String value, @NonNull String displayValue, int density, int since) {
         mValue = value;
         mDisplayValue = displayValue;
-        mDensity = density;
+        mDpi = density;
         mSince = since;
     }
 
     /**
      * Returns the enum matching the provided qualifier value.
+     *
      * @param value The qualifier value.
      * @return the enum for the qualifier value or null if no match was found.
      */
-    public static Density getEnum(String value) {
-        for (Density orient : values()) {
-            if (orient.mValue.equals(value)) {
-                return orient;
-            }
-        }
-
-        return null;
+    @Nullable
+    public static Density getEnum(@Nullable String value) {
+        return densityByValue.get(value);
     }
 
     /**
-     * Returns the enum matching the given density value
-     * @param value The density value.
+     * Returns the enum matching the given DPI value.
+     *
+     * @param dpiValue The density value.
      * @return the enum for the density value or null if no match was found.
      */
-    public static Density getEnum(int value) {
-        for (Density d : values()) {
-            if (d.mDensity == value) {
-                return d;
+    @Nullable
+    public static Density getEnum(int dpiValue) {
+        Density[] densities = values();
+        for (Density density : densities) {
+            if (density.mDpi == dpiValue) {
+                return density;
             }
         }
-
         return null;
     }
 
     @Override
+    @NonNull
     public String getResourceValue() {
         return mValue;
     }
 
     public int getDpiValue() {
-        return mDensity;
+        return mDpi;
     }
 
     public int since() {
@@ -102,25 +112,28 @@ public enum Density implements ResourceEnum {
     }
 
     @Override
+    @NonNull
     public String getShortDisplayValue() {
         return mDisplayValue;
     }
 
     @Override
+    @NonNull
     public String getLongDisplayValue() {
         return mDisplayValue;
     }
 
-    public static int getIndex(Density value) {
+    public static int getIndex(@Nullable Density value) {
         return value == null ? -1 : value.ordinal();
     }
 
+    @Nullable
     public static Density getByIndex(int index) {
-        Density[] values = values();
-        if (index >=0 && index < values.length) {
-            return values[index];
+        try {
+            return values()[index];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return null;
         }
-        return null;
     }
 
     /**
@@ -129,11 +142,12 @@ public enum Density implements ResourceEnum {
      * @see #isRecommended()
      * @see #isValidValueForDevice()
      */
+    @NonNull
     public static Set<Density> getRecommendedValuesForDevice() {
-        EnumSet<Density> result = EnumSet.allOf(Density.class);
+        EnumSet<Density> result = EnumSet.noneOf(Density.class);
         for (Density value : values()) {
-            if (!value.isRecommended() || !value.isValidValueForDevice()) {
-                result.remove(value);
+            if (value.isRecommended() && value.isValidValueForDevice()) {
+                result.add(value);
             }
         }
 

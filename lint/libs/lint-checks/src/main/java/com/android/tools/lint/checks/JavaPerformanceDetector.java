@@ -26,8 +26,8 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT_WRAPP
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG_WRAPPER;
-import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
-import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

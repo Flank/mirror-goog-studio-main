@@ -2,11 +2,11 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
     iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -81,12 +81,12 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
     iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
     resources = ["libs/lint-checks/src/main/resources"],
-    tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
     # do not sort: must match IML order

@@ -235,12 +235,15 @@ abstract class Detector {
      *  [beforeCheckEachProject] but just reusing that name would have been
      *  an incompatible change.
      */
-    @Deprecated("If you want to override the event that each root project is about " +
-            "to be analyzed, override beforeCheckRootProject; if you want to override the event " +
-            "that each project (both root projects and their dependencies, override " +
-            "beforeCheckEachProject", replaceWith = ReplaceWith("beforeCheckRootProject(context)")
+    @Deprecated(
+        "If you want to override the event that each root project is about " +
+                "to be analyzed, override beforeCheckRootProject; if you want to override the event " +
+                "that each project (both root projects and their dependencies, override " +
+                "beforeCheckEachProject",
+        replaceWith = ReplaceWith("beforeCheckRootProject(context)")
     )
-    open fun beforeCheckProject(context: Context) {}
+    open fun beforeCheckProject(context: Context) {
+    }
 
     /**
      * Analysis has just been finished for the whole project, perform any
@@ -258,11 +261,14 @@ abstract class Detector {
      *  [afterCheckEachProject] but just reusing that name would have been
      *  an incompatible change.
      */
-    @Deprecated("If you want to override the event that each root project is about " +
-            "to be analyzed, override afterCheckRootProject; if you want to override the event " +
-            "that each project (both root projects and their dependencies, override " +
-            "afterCheckEachProject", replaceWith = ReplaceWith("afterCheckRootProject(context)"))
-    open fun afterCheckProject(context: Context) {}
+    @Deprecated(
+        "If you want to override the event that each root project is about " +
+                "to be analyzed, override afterCheckRootProject; if you want to override the event " +
+                "that each project (both root projects and their dependencies, override " +
+                "afterCheckEachProject", replaceWith = ReplaceWith("afterCheckRootProject(context)")
+    )
+    open fun afterCheckProject(context: Context) {
+    }
 
     /**
      * Analysis is about to begin for the given library project, perform any setup steps.
@@ -279,8 +285,10 @@ abstract class Detector {
      *  [beforeCheckEachProject] but just reusing that name would have been
      *  an incompatible change.
      */
-    @Deprecated("Use beforeCheckEachProject instead (which now includes the root projects too)",
-        replaceWith = ReplaceWith("beforeCheckEachProject(context)"))
+    @Deprecated(
+        "Use beforeCheckEachProject instead (which now includes the root projects too)",
+        replaceWith = ReplaceWith("beforeCheckEachProject(context)")
+    )
     open fun beforeCheckLibraryProject(context: Context) {
     }
 
@@ -300,9 +308,12 @@ abstract class Detector {
      *  [afterCheckEachProject] but just reusing that name would have been
      *  an incompatible change.
      */
-    @Deprecated("Use afterCheckEachProject instead (which now includes the root projects too)",
-        replaceWith = ReplaceWith("afterCheckEachProject(context)"))
-    open fun afterCheckLibraryProject(context: Context) {}
+    @Deprecated(
+        "Use afterCheckEachProject instead (which now includes the root projects too)",
+        replaceWith = ReplaceWith("afterCheckEachProject(context)")
+    )
+    open fun afterCheckLibraryProject(context: Context) {
+    }
 
     /**
      * Analysis is about to be performed on a specific file, perform any setup
@@ -394,7 +405,7 @@ abstract class Detector {
 
     open val customVisitor: Boolean = false
 
-    open fun visitBuildScript(context: Context) { }
+    open fun visitBuildScript(context: Context) {}
 
     open fun checkDslPropertyAssignment(
         context: GradleContext,
@@ -404,7 +415,8 @@ abstract class Detector {
         parentParent: String?,
         valueCookie: Any,
         statementCookie: Any
-    ) { }
+    ) {
+    }
 
     open fun checkMethodCall(
         context: GradleContext,
@@ -413,7 +425,8 @@ abstract class Detector {
         namedArguments: Map<String, String>,
         unnamedArguments: List<String>,
         cookie: Any
-    ) { }
+    ) {
+    }
 
     // ---- Dummy implementations to make implementing a resource folder scanner easier: ----
 

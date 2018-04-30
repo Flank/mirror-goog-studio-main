@@ -27,10 +27,10 @@
 
     <parameter
         id="isThingsLauncher"
-        name="Android Things launcher Activity"
+        name="Launch activity automatically on boot"
         type="boolean"
         default="false"
-        help="If true, the activity will have an IOT_LAUNCHER intent filter, making it the one activity launched when the Android Things device initiates. Only one activity on the device can have this intent filter." />
+        help="This is the home activity, that is the first activity that is displayed when the device boots." />
 
     <parameter
             id="peripheralType"

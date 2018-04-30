@@ -19,7 +19,7 @@ import static com.android.SdkConstants.DOT_XML;
 import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.KEY_TEXT_ANTIALIASING;
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
-import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HBGR;
+import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.util.AssetUtil;
@@ -218,7 +218,7 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
             if (map != null) {
                 g.addRenderingHints(map);
             } else {
-                g.setRenderingHint(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_LCD_HBGR);
+                g.setRenderingHint(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_LCD_HRGB);
             }
             g.drawString(displayName, textX, textY);
             g.setClip(prevClip);

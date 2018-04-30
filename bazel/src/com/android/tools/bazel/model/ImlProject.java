@@ -19,7 +19,7 @@ public class ImlProject extends BazelRule {
 
         CallExpression call = statement.getCall();
         call.setArgument("modules", dependencies);
-        call.addElementToList("tags", "managed");
+        statement.setIsManaged();
     }
 
     public void addModule(ImlModule rule) {

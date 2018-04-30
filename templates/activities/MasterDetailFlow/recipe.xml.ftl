@@ -19,7 +19,7 @@
                to="${escapeXmlAttribute(resOut)}/values-w900dp/refs.xml" />
     </#if>
 
-    <#if isInstantApp!false>
+    <#if (isInstantApp!false) || (isDynamicFeature!false)>
       <merge from="root/res/values/strings.xml.ftl"
                to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
     <#else>

@@ -11,7 +11,7 @@
     <instantiate from="root/res/layout/activity_map.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
-    <#if isInstantApp>
+    <#if isInstantApp || isDynamicFeature>
         <#assign finalResOut="${escapeXmlAttribute(baseFeatureResOut)}">
         <#assign finalDebugResOut="${escapeXmlAttribute(baseFeatureOut)}/src/debug/res">
         <#assign finalReleaseResOut="${escapeXmlAttribute(baseFeatureOut)}/src/release/res">

@@ -33,7 +33,7 @@ data class BuildArtifactSpec(
                 spec(BuildArtifactType.JAVAC_CLASSES,          true,       true),
                 spec(BuildArtifactType.JAVA_COMPILE_CLASSPATH, true,       false),
                 spec(SourceArtifactType.ANDROID_RESOURCES,     true,       true),
-                spec(InternalArtifactType.METADATA_APP_ID_DECLARATION, false, true))
+                spec(InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION, false, true))
 
         fun spec(type : ArtifactType, appendable : Boolean, replaceable: Boolean) =
             type to BuildArtifactSpec(type, appendable, replaceable)
