@@ -170,12 +170,12 @@ object NavGraphExpander {
             }
             val path = deepLink.path
             when {
-                path.endsWith(".*") ->
+                path.substringBefore(".*").length == path.length - 2 ->
                     childElementDataList.add(
-                            ChildElementData(TAG_DATA, ATTR_PATH_PREFIX, path))
+                        ChildElementData(TAG_DATA, ATTR_PATH_PREFIX, path.substringBefore(".*")))
                 path.contains(".*") ->
                     childElementDataList.add(
-                            ChildElementData(TAG_DATA, ATTR_PATH_PATTERN, path))
+                        ChildElementData(TAG_DATA, ATTR_PATH_PATTERN, path))
                 else -> childElementDataList.add(ChildElementData(TAG_DATA, ATTR_PATH, path))
             }
             childElementDataList.forEach {
