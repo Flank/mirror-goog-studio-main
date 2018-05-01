@@ -162,7 +162,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testNonIncrementalPackaging() throws Exception {
-        execute("clean", "assembleDebug", "assembleAndroidTest");
+        execute("assembleDebug", "assembleAndroidTest");
 
         // check the files are there. Start from the bottom of the dependency graph
         checkAar(libProject2, "filelib2.txt", "library2:abcd");
@@ -196,7 +196,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithNewAssetFile() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.addFile("src/main/assets/newfile.txt", "newfile content");
@@ -208,7 +208,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithRemovedAssetFile() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.removeFile("src/main/assets/file.txt");
@@ -220,7 +220,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithModifiedAssetFile() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.replaceFile("src/main/assets/file.txt", "new content");
@@ -232,7 +232,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithNewDebugAssetFileOverridingMain() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.addFile("src/debug/assets/file.txt", "new content");
@@ -248,7 +248,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithNewAssetFileOverridingDependency() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.addFile("src/main/assets/filelib.txt", "new content");
@@ -264,7 +264,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithNewAssetFileInDebugSourceSet() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.addFile("src/debug/assets/file.txt", "new content");
@@ -280,7 +280,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithModifiedAssetInDependency() throws Exception {
-        execute("app:clean", "library:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.replaceFile("src/main/assets/filelib.txt", "new content");
@@ -292,7 +292,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithAddedAssetInDependency() throws Exception {
-        execute("app:clean", "library:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.addFile("src/main/assets/new_lib_file.txt", "new content");
@@ -304,7 +304,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithRemovedAssetInDependency() throws Exception {
-        execute("app:clean", "library:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.removeFile("src/main/assets/filelib.txt");
@@ -316,8 +316,6 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectWithAddedAssetThatOverrideAaptOptions() throws Exception {
-        execute("clean");
-
         TemporaryProjectModification.doTest(
                 appProject,
                 it -> {
@@ -346,7 +344,7 @@ public class AssetPackagingTest {
     @Test
     @Ignore("http://b.android.com/238185")
     public void testAppProjectWithAddedAndRemovedAsset() throws Exception {
-        execute("clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(
                 appProject,
@@ -366,7 +364,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectTestWithNewAssetFile() throws Exception {
-        execute("app:clean", "app:assembleAT");
+        execute("app:assembleAT");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.addFile("src/androidTest/assets/newfile.txt", "new file content");
@@ -378,7 +376,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectTestWithRemovedAssetFile() throws Exception {
-        execute("app:clean", "app:assembleAT");
+        execute("app:assembleAT");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.removeFile("src/androidTest/assets/filetest.txt");
@@ -390,7 +388,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testAppProjectTestWithModifiedAssetFile() throws Exception {
-        execute("app:clean", "app:assembleAT");
+        execute("app:assembleAT");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.replaceFile("src/androidTest/assets/filetest.txt", "new content");
@@ -404,7 +402,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectWithNewAssetFile() throws Exception {
-        execute("library:clean", "library:assembleDebug");
+        execute("library:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.addFile("src/main/assets/newfile.txt", "newfile content");
@@ -416,7 +414,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectWithRemovedAssetFile() throws Exception {
-        execute("library:clean", "library:assembleDebug");
+        execute("library:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.removeFile("src/main/assets/filelib.txt");
@@ -428,7 +426,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectWithModifiedAssetFile() throws Exception {
-        execute("library:clean", "library:assembleDebug");
+        execute("library:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.replaceFile("src/main/assets/filelib.txt", "new content");
@@ -440,7 +438,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectWithNewAssetFileInDebugSourceSet() throws Exception {
-        execute("library:clean", "library:assembleDebug");
+        execute("library:assembleDebug");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.addFile("src/debug/assets/filelib.txt", "new content");
@@ -458,7 +456,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectTestWithNewAssetFile() throws Exception {
-        execute("library:clean", "library:assembleAT");
+        execute("library:assembleAT");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.addFile("src/androidTest/assets/newfile.txt", "new file content");
@@ -470,7 +468,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectTestWithRemovedAssetFile() throws Exception {
-        execute("library:clean", "library:assembleAT");
+        execute("library:assembleAT");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.removeFile("src/androidTest/assets/filelibtest.txt");
@@ -482,7 +480,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectTestWithModifiedAssetFile() throws Exception {
-        execute("library:clean", "library:assembleAT");
+        execute("library:assembleAT");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.replaceFile("src/androidTest/assets/filelibtest.txt", "new content");
@@ -494,7 +492,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectTestWithNewAssetFileOverridingTestedLib() throws Exception {
-        execute("library:clean", "library:assembleAT");
+        execute("library:assembleAT");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.addFile("src/androidTest/assets/filelib.txt", "new content");
@@ -511,7 +509,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testLibProjectTestWithNewAssetFileOverridingDependency() throws Exception {
-        execute("library:clean", "library:assembleAT");
+        execute("library:assembleAT");
 
         TemporaryProjectModification.doTest(libProject, it -> {
             it.addFile("src/androidTest/assets/filelib2.txt", "new content");
@@ -529,7 +527,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testTestProjectWithNewAssetFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        execute("test:assembleDebug");
 
         TemporaryProjectModification.doTest(testProject, it -> {
             it.addFile("src/main/assets/newfile.txt", "newfile content");
@@ -541,7 +539,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testTestProjectWithRemovedAssetFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        execute("test:assembleDebug");
 
         TemporaryProjectModification.doTest(testProject, it -> {
             it.removeFile("src/main/assets/file.txt");
@@ -553,7 +551,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testTestProjectWithModifiedAssetFile() throws Exception {
-        execute("test:clean", "test:assembleDebug");
+        execute("test:assembleDebug");
 
         TemporaryProjectModification.doTest(testProject, it -> {
             it.replaceFile("src/main/assets/file.txt", "new content");
@@ -567,7 +565,7 @@ public class AssetPackagingTest {
 
     @Test
     public void testPackageAssetsWithUnderscoreRegression() throws Exception {
-        execute("app:clean", "app:assembleDebug");
+        execute("app:assembleDebug");
 
         TemporaryProjectModification.doTest(appProject, it -> {
             it.addFile("src/main/assets/_newfile.txt", "newfile content");
