@@ -269,7 +269,8 @@ class NamespaceRewriterTest {
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
                 .rewriteManifest(originalManifest, outputManifest)
 
-        FileSubject.assertThat(outputManifest).contains("""<?xml version="1.0" encoding="utf-8"?>
+        assertThat(FileUtils.loadFileWithUnixLineSeparators(outputManifest)).contains(
+            """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.module"
     android:versionCode="@com.example.module:integer/version_code"

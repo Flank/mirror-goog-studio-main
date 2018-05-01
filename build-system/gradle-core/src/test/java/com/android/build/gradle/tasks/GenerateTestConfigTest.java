@@ -92,8 +92,8 @@ public class GenerateTestConfigTest {
             expected.put("android_merged_resources", "/project/build/mergedResources");
             expected.put("android_custom_package", "com.example.app");
             expected.put("android_merged_assets", "/project/build/mergedAssets");
-            expected.put("android_merged_manifest", FileUtils.join("", "project", "build", "mergedManifest.xml"));
-            expected.put("android_resource_apk", "/app.ap_");
+            expected.put("android_merged_manifest", "/project/build/mergedManifest.xml");
+            expected.put("android_resource_apk", File.separator + "app.ap_");
             Truth.assertThat(result).containsExactlyEntriesIn(expected);
         }
     }

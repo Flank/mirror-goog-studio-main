@@ -140,7 +140,10 @@ class AutoNamespaceDependenciesTaskTest {
 
         val namespacedManifest = File(outputRewrittenManifests, "libA_AndroidManifest.xml")
         assertThat(namespacedManifest).exists()
-        assertThat(namespacedManifest).contains("""<?xml version="1.0" encoding="utf-8"?>
+        val loadManifestFileContent =
+            FileUtils.loadFileWithUnixLineSeparators(namespacedManifest)
+        com.google.common.truth.Truth.assertThat(loadManifestFileContent).isEqualTo(
+            """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mymodule"
     android:versionCode="1"
