@@ -97,4 +97,38 @@ public class VerifyLibraryResourcesTaskTest {
                         new CompileResourceRequest(directory, outputDir, mergedDir.getName()));
         assertFalse(dirOut.exists());
     }
+
+    @Test
+    public void manifestShouldNotBeCompiled()
+            throws IOException, InterruptedException, ExecutionException, AaptException {
+        Map<File, FileStatus> inputs = new HashMap<>();
+        File mergedDir = new File(mTemporaryFolder.newFolder("merged"), "release");
+        FileUtils.mkdirs(mergedDir);
+
+        File file = new File(new File(mergedDir, "values"), "file.xml");
+        FileUtils.createFile(file, "content");
+        assertTrue(file.exists());
+        inputs.put(file, FileStatus.NEW);
+
+        File manifest =
+                new File(mTemporaryFolder.newFolder("merged_manifest"), "AndroidManifest.xml");
+        FileUtils.createFile(manifest, "manifest content");
+        assertTrue(manifest.exists());
+        inputs.put(manifest, FileStatus.NEW);
+
+        File outputDir = mTemporaryFolder.newFolder("output");
+        QueueableResourceCompiler aapt = new FakeAapt();
+
+        VerifyLibraryResourcesTask.compileResources(inputs, outputDir, aapt, null, null, mergedDir);
+
+        File fileOut = aapt.compileOutputFor(new CompileResourceRequest(file, outputDir, "values"));
+        assertTrue(fileOut.exists());
+
+        // Real AAPT would fail trying to compile the manifest, but the fake one would just copy it
+        // so we need to check that it wasn't copied into the output directory.
+        File manifestOut =
+                aapt.compileOutputFor(
+                        new CompileResourceRequest(manifest, outputDir, "merged_manifest"));
+        assertFalse(manifestOut.exists());
+    }
 }

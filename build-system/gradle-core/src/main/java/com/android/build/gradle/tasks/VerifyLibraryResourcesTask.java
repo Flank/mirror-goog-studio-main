@@ -233,8 +233,9 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
         List<Future<File>> compiling = new ArrayList<>();
 
         for (Map.Entry<File, FileStatus> input : inputs.entrySet()) {
+            // Accept only files in subdirectories of the merged resources directory.
             // Ignore files and directories directly under the merged resources directory.
-            if (input.getKey().getParentFile().equals(mergedResDirectory)) {
+            if (!input.getKey().getParentFile().getParentFile().equals(mergedResDirectory)) {
                 continue;
             }
             switch (input.getValue()) {
