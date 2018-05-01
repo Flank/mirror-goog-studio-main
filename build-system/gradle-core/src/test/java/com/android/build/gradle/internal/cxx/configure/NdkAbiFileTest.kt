@@ -19,13 +19,17 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class NdkAbiFileTest {
 
+    @get:Rule val temporaryFolder = TemporaryFolder()
+
     private fun ndkAbiInfosNdk14() : List<AbiInfo> {
-        val file = ndkMetaAbisFile(File("./ndk-14"))
+        val file = ndkMetaAbisFile(File(temporaryFolder.root, "./ndk-14"))
         file.parentFile.mkdirs()
         return NdkAbiFile(file).abiInfoList
     }
@@ -69,7 +73,7 @@ class NdkAbiFileTest {
                 "  }\n" +
                 "}"
 
-        val file = ndkMetaAbisFile(File("./ndk-16"))
+        val file = ndkMetaAbisFile(File(temporaryFolder.root, "./ndk-16"))
         file.parentFile.mkdirs()
         file.writeText(contents)
         return NdkAbiFile(file).abiInfoList
@@ -99,7 +103,7 @@ class NdkAbiFileTest {
                 "  }\n" +
                 "}"
 
-        val file = ndkMetaAbisFile(File("./ndk-16"))
+        val file = ndkMetaAbisFile(File(temporaryFolder.root, "./ndk-17"))
         file.parentFile.mkdirs()
         file.writeText(contents)
         return NdkAbiFile(file).abiInfoList
