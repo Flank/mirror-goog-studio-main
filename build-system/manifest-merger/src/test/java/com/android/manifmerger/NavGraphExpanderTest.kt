@@ -67,7 +67,7 @@ class NavGraphExpanderTest {
                     |<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
-                    |    <deepLink app:uri="https://.*.example.com/.*/bar" />
+                    |    <deepLink app:uri="https://.*.example.com/.*/{placeholder}" />
                     |</navigation>""".trimMargin()
 
         val inputManifestString =
@@ -104,7 +104,7 @@ class NavGraphExpanderTest {
                     |                <data android:scheme="http" />
                     |                <data android:host="www.example.com" />
                     |                <data android:port="120" />
-                    |                <data android:pathPrefix="/foo/.*" />
+                    |                <data android:pathPrefix="/foo/" />
                     |            </intent-filter>
                     |            <intent-filter>
                     |                <action android:name="android.intent.action.VIEW" />
@@ -112,7 +112,7 @@ class NavGraphExpanderTest {
                     |                <category android:name="android.intent.category.BROWSABLE" />
                     |                <data android:scheme="https" />
                     |                <data android:host="*.example.com" />
-                    |                <data android:pathPattern="/.*/bar" />
+                    |                <data android:pathPattern="/.*/.*" />
                     |            </intent-filter>
                     |        </activity>
                     |    </application>

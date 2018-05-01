@@ -77,7 +77,7 @@
                 <data android:scheme="http" />
                 <data android:host="www.example.com" />
                 <data android:port="120" />
-                <data android:pathPrefix="/foo/.*" />
+                <data android:pathPrefix="/foo/" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
