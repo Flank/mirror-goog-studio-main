@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Apk
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,20 +68,11 @@ public class VariantApiPropertiesTest {
         project.executor().run("help");
     }
 
-    @Ignore("b/76091429")
     @Test
     public void checkOutputFileName() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
-                        + "    buildTypes {\n"
-                        + "        debug {\n"
-                        + "            javaCompileOptions.annotationProcessorOptions {\n"
-                        + "                className 'Foo'\n"
-                        + "                argument 'value', 'debugArg'\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "    }\n"
                         + "    flavorDimensions 'dimension'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
