@@ -82,4 +82,14 @@ public class AndroidTestOrchestratorRemoteAndroidTestRunner extends RemoteAndroi
     private String getClassName(@NonNull AndroidxName name) {
         return useAndroidx ? name.newName() : name.oldName();
     }
+
+    @Override
+    public void setCoverageReportLocation(String reportPath) {
+        addInstrumentationArg("coverageFilePath", reportPath);
+    }
+
+    @Override
+    public CoverageOutput getCoverageOutputType() {
+        return CoverageOutput.DIR;
+    }
 }

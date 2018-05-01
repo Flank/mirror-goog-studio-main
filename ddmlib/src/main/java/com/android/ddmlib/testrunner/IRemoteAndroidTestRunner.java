@@ -74,6 +74,11 @@ public interface IRemoteAndroidTestRunner {
         }
     }
 
+    enum CoverageOutput {
+        DIR,
+        FILE,
+    }
+
     /**
      * Returns the application package name.
      */
@@ -171,6 +176,12 @@ public interface IRemoteAndroidTestRunner {
      * Sets this code coverage mode of this test run.
      */
     void setCoverage(boolean coverage);
+
+    /** Sets the location of the generated coverage reports. */
+    void setCoverageReportLocation(String reportPath);
+
+    /** Returns the type of the test coverage produces by the runner. See {@link CoverageOutput}. */
+    CoverageOutput getCoverageOutputType();
 
     /**
      * Sets this test to enforce expecting a final time stamp from the instrumentation otherwise the
