@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELA
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_FILE
@@ -189,7 +190,8 @@ class PublishingSpecs {
                 metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
                 metadata(FEATURE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.METADATA_CLASSES)
                 metadata(FEATURE_AND_RUNTIME_DEPS_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
-                metadata(CONSUMER_PROGUARD_FILE, ArtifactType.PROGUARD_RULES)
+                metadata(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
+                metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
 
                 // ----
 
@@ -233,7 +235,7 @@ class PublishingSpecs {
                 runtime(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
                 runtime(DEFINED_ONLY_SYMBOL_LIST, ArtifactType.DEFINED_ONLY_SYMBOL_LIST)
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
-                runtime(CONSUMER_PROGUARD_FILE, ArtifactType.PROGUARD_RULES)
+                runtime(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 runtime(LIBRARY_JNI, ArtifactType.JNI)
                 runtime(LINT_JAR, ArtifactType.LINT)
 
@@ -269,7 +271,8 @@ class PublishingSpecs {
                 metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
                 metadata(FEATURE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.METADATA_CLASSES)
                 metadata(FEATURE_AND_RUNTIME_DEPS_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
-                metadata(CONSUMER_PROGUARD_FILE, ArtifactType.PROGUARD_RULES)
+                metadata(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
+                metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(FEATURE_CLASSES, ArtifactType.CLASSES)

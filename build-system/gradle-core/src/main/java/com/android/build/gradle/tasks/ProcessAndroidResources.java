@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
@@ -56,5 +57,9 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
                 manifestDirectory,
                 outputScope.getMainSplit().getDirName(),
                 SdkConstants.ANDROID_MANIFEST_XML);
+    }
+
+    protected static boolean generatesProguardOutputFile(VariantScope variantScope) {
+        return variantScope.getCodeShrinker() != null || variantScope.getType().isFeatureSplit();
     }
 }

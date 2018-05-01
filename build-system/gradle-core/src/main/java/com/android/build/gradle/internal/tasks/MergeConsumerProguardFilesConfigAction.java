@@ -73,7 +73,7 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.PROGUARD_RULES));
+                            AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES));
         }
         mergeProguardFiles.setInputFiles(inputFiles);
     }
