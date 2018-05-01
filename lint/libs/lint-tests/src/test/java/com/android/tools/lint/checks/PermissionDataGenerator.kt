@@ -451,7 +451,7 @@ class PermissionDataGenerator {
 
     /** Returns the android.jar file for the given API level, or null if not found/valid */
     private fun findSdkJar(top: String, apiLevel: Int): File? {
-        var jar = File(top, "prebuilts/sdk/$apiLevel/android.jar")
+        var jar = File(top, "prebuilts/sdk/$apiLevel/current/android.jar")
         if (!jar.exists()) {
             jar = File(
                 top, // API levels 1, 2 and 3
