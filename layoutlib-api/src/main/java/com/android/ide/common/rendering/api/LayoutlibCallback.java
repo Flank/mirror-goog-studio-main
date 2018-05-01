@@ -75,13 +75,6 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
         return null;
     }
 
-    /** @deprecated Use {@link #createXmlParserForFile}. */
-    @Deprecated
-    @NonNull
-    public ParserFactory getParserFactory() {
-        throw new UnsupportedOperationException("getParserFactory not supported.");
-    }
-
     /**
      * Find a custom class in the project.
      * <p>
@@ -93,13 +86,6 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
     @NonNull
     public Class<?> findClass(@NonNull String name) throws ClassNotFoundException {
         throw new ClassNotFoundException(name + " not found.");
-    }
-
-    /** @deprecated Use {@link XmlParserFactory#createXmlParserForPsiFile}. */
-    @Deprecated
-    @Nullable
-    public XmlPullParser getXmlFileParser(String fileName) {
-        return createXmlParserForPsiFile(fileName);
     }
 
     /**
