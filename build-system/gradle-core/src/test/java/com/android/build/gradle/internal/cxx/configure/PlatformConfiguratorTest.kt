@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.builder.core.DefaultApiVersion
 import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -23,7 +24,7 @@ import java.io.File
 import java.io.StringReader
 
 class PlatformConfiguratorTest {
-
+    private val defaultApiLevelFromDsl = AndroidVersion.DEFAULT.apiLevel
     private val expectedNdkR17MetaPlatforms = "{\n" +
             "  \"min\": 16,\n" +
             "  \"max\": 28,\n" +
@@ -109,6 +110,14 @@ class PlatformConfiguratorTest {
         return PlatformConfigurator(root)
     }
 
+    private fun platformConfiguratorMissingSomePlatforms() : PlatformConfigurator {
+        val root = File("./17-incomplete").absoluteFile
+        root.deleteRecursively()
+        File(root, "platforms/android-19/arch-x86").mkdirs()
+        File(root, "platforms/android-21/arch-x86").mkdirs()
+        File(root, "platforms/android-24/arch-x86").mkdirs()
+        return PlatformConfigurator(root)
+    }
 
     data class FindSuitablePlatformVersionInteraction(
         val version : Int,
@@ -130,6 +139,7 @@ class PlatformConfiguratorTest {
             abiName,
             androidVersion,
             ndkMetaPlatforms,
+            "debug",
             error = { message -> messages += "ERROR: $message"},
             warn = { message -> messages += "WARN: $message"},
             info = { message -> messages += "INFO: $message"})
@@ -161,7 +171,7 @@ class PlatformConfiguratorTest {
             null)
         assertThat(platform.version).isEqualTo(27)
         assertThat(platform.messages).containsExactly("ERROR: Platform version " +
-                "'28' is too high.")
+                "'28' is beyond '27', the maximum API level supported by this NDK.")
     }
 
     @Test
@@ -197,8 +207,8 @@ class PlatformConfiguratorTest {
             29,
             null)
         assertThat(platform.version).isEqualTo(28)
-        assertThat(platform.messages).containsExactly("ERROR: Platform version " +
-                "'29' is too high.")
+        assertThat(platform.messages).containsExactly("ERROR: Platform version '29' " +
+                "is beyond '28', the maximum API level supported by this NDK.")
     }
 
     @Test
@@ -219,10 +229,11 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "P")
         assertThat(platform.version).isEqualTo(28)
-        assertThat(platform.messages).hasSize(0)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.")
     }
 
     @Test
@@ -244,7 +255,7 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "O-MR2" // <- doesn't exist
            )
         assertThat(platform.version).isEqualTo(28)
@@ -259,7 +270,7 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            0,
+            defaultApiLevelFromDsl,
             null,
             expectedNdkR17MetaPlatforms())
         assertThat(platform.version).isEqualTo(16)
@@ -291,7 +302,7 @@ class PlatformConfiguratorTest {
             expectedNdkR17MetaPlatforms())
         assertThat(platform.version).isEqualTo(28)
         assertThat(platform.messages).containsExactly("ERROR: Platform version '29' " +
-                "is too high.")
+                "is beyond '28', the maximum API level supported by this NDK.")
     }
 
     @Test
@@ -313,11 +324,12 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "P",
             expectedNdkR17MetaPlatforms())
         assertThat(platform.version).isEqualTo(28)
-        assertThat(platform.messages).hasSize(0)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.")
     }
 
     @Test
@@ -340,11 +352,12 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "O-MR1",
             expectedNdkR17MetaPlatforms())
         assertThat(platform.version).isEqualTo(27)
-        assertThat(platform.messages).hasSize(0)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='O-MR1' is mapped to '27'.")
     }
 
     @Test
@@ -353,7 +366,7 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "O-MR2", // <- doesn't exist
             expectedNdkR17MetaPlatforms())
         assertThat(platform.version).isEqualTo(28)
@@ -385,8 +398,10 @@ class PlatformConfiguratorTest {
             28,
             "P")
         assertThat(platform.version).isEqualTo(28)
-        assertThat(platform.messages).containsExactly("WARN: Both codeName and " +
-                "minSdkVersion specified. They agree but only one should be specified.")
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.",
+            "WARN: Both codeName and minSdkVersion specified. They agree but only " +
+                    "one should be specified.")
     }
 
     @Test
@@ -397,8 +412,10 @@ class PlatformConfiguratorTest {
             "x86",
             27,
             "P")
-        assertThat(platform.messages).containsExactly("ERROR: Disagreement between " +
-                "codeName='P' and minSdkVersion='27'. Only one should be specified.")
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.",
+            "ERROR: Disagreement between codeName='P' and minSdkVersion='27'. " +
+                    "Only one should be specified.")
         assertThat(platform.version).isEqualTo(27)
     }
 
@@ -411,7 +428,7 @@ class PlatformConfiguratorTest {
             27,
             "P")
         assertThat(platform.version).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
-        val message = platform.messages.single()
+        val message = platform.messages.first()
         assertThat(message).contains("does not contain 'platforms'.")
     }
 
@@ -434,10 +451,11 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "J")
         assertThat(platform.version).isEqualTo(16)
-        assertThat(platform.messages).hasSize(0)
+        assertThat(platform.messages).containsExactly("INFO: Version " +
+                "minSdkVersion='J' is mapped to '16'.")
     }
 
     @Test
@@ -446,9 +464,34 @@ class PlatformConfiguratorTest {
         val platform = findSuitablePlatformVersion(
             configurator,
             "x86",
-            null,
+            defaultApiLevelFromDsl,
             "Z")
         assertThat(platform.version).isEqualTo(28)
         assertThat(platform.messages).containsExactly("ERROR: API codeName 'Z' is not recognized.")
+    }
+
+    @Test
+    fun testEmptyVersionInfoInBuildGradle() {
+        val configurator = platformConfiguratorNdk17()
+        val platform = findSuitablePlatformVersion(
+            configurator,
+            "x86",
+            null,
+            null)
+        assertThat(platform.version).isEqualTo(22)
+        assertThat(platform.messages).isEmpty()
+    }
+
+    @Test
+    fun testAgainstIncompletePlatformsFolder() {
+        val configurator = platformConfiguratorMissingSomePlatforms()
+        val platform = findSuitablePlatformVersion(
+            configurator,
+            "x86",
+            null,
+            null)
+        assertThat(platform.version).isEqualTo(19)
+        assertThat(platform.messages).containsExactly("ERROR: Expected platform " +
+                "folder platforms/android-22, using platform API 19 instead.")
     }
 }

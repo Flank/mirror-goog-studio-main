@@ -475,8 +475,10 @@ public class NdkHandler {
     }
 
     public int findSuitablePlatformVersion(
-            @NonNull String abi, @Nullable AndroidVersion androidVersion) {
+            @NonNull String abi,
+            @NonNull String variantName,
+            @Nullable AndroidVersion androidVersion) {
         checkNotNull(ndkInfo);
-        return ndkInfo.findSuitablePlatformVersion(abi, androidVersion);
+        return ndkInfo.findSuitablePlatformVersion(abi, variantName, androidVersion);
     }
 }

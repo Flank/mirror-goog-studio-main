@@ -653,7 +653,8 @@ public abstract class ExternalNativeJsonGenerator {
                             externalNativeBuildFolder,
                             objFolder,
                             buildSystem,
-                            ndkHandler.findSuitablePlatformVersion(abi.getName(), version)));
+                            ndkHandler.findSuitablePlatformVersion(
+                                    abi.getName(), variantData.getName(), version)));
         }
 
         switch (buildSystem) {

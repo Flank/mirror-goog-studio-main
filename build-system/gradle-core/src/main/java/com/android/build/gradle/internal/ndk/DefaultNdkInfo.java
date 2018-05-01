@@ -118,8 +118,11 @@ public class DefaultNdkInfo implements NdkInfo {
 
     @Override
     public int findSuitablePlatformVersion(
-            @NonNull String abiName, @Nullable AndroidVersion androidVersion) {
-        return platformConfigurator.findSuitablePlatformVersion(abiName, androidVersion);
+            @NonNull String abiName,
+            @NonNull String variantName,
+            @Nullable AndroidVersion androidVersion) {
+        return platformConfigurator.findSuitablePlatformVersion(
+                abiName, variantName, androidVersion);
     }
 
     // Will return 0 if no platform found
@@ -130,7 +133,7 @@ public class DefaultNdkInfo implements NdkInfo {
         } else {
             File[] platformSubDirs = platformDir.listFiles(File::isDirectory);
             int highestVersion = 0;
-            for(File platform : platformSubDirs) {
+            for (File platform : platformSubDirs) {
                 if (platform.getName().startsWith("android-")) {
                     try {
                         int version = Integer.parseInt(
@@ -138,7 +141,7 @@ public class DefaultNdkInfo implements NdkInfo {
                         if (version > highestVersion && version < targetVersion) {
                             highestVersion = version;
                         }
-                    } catch(NumberFormatException ignore) {
+                    } catch (NumberFormatException ignore) {
                         // Ignore unrecognized directories.
                     }
                 }
@@ -166,9 +169,7 @@ public class DefaultNdkInfo implements NdkInfo {
     @Override
     @NonNull
     public File getToolchainPath(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
+            @NonNull Toolchain toolchain, @NonNull String toolchainVersion, @NonNull Abi abi) {
         abi = getToolchainAbi(abi);
         String version = toolchainVersion.isEmpty()
                 ? getDefaultToolchainVersion(toolchain, abi)
@@ -232,7 +233,8 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
         abi = getToolchainAbi(abi);
-        String compiler = toolchain == Toolchain.CLANG ? "clang" : abi.getGccExecutablePrefix() + "-gcc";
+        String compiler =
+                toolchain == Toolchain.CLANG ? "clang" : abi.getGccExecutablePrefix() + "-gcc";
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
     }
 
@@ -246,7 +248,8 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
         abi = getToolchainAbi(abi);
-        String compiler = toolchain == Toolchain.CLANG ? "clang++" : abi.getGccExecutablePrefix() + "-g++";
+        String compiler =
+                toolchain == Toolchain.CLANG ? "clang++" : abi.getGccExecutablePrefix() + "-g++";
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
     }
 
@@ -285,7 +288,8 @@ public class DefaultNdkInfo implements NdkInfo {
         String ar = abi.getGccExecutablePrefix()
                 + (toolchain == Toolchain.CLANG ? "-ar" : "-gcc-ar");
         return new File(
-                getToolchainPath(Toolchain.GCC, getDefaultToolchainVersion(Toolchain.GCC, abi), abi),
+                getToolchainPath(
+                        Toolchain.GCC, getDefaultToolchainVersion(Toolchain.GCC, abi), abi),
                 "bin/" + ar);
     }
 

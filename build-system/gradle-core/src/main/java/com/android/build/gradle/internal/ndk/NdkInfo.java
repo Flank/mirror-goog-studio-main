@@ -53,7 +53,10 @@ public interface NdkInfo {
     @Nullable
     String findLatestPlatformVersion(@NonNull String targetPlatformString);
 
-    int findSuitablePlatformVersion(@NonNull String abi, @Nullable AndroidVersion androidVersion);
+    int findSuitablePlatformVersion(
+            @NonNull String abi,
+            @NonNull String variantName,
+            @Nullable AndroidVersion androidVersion);
 
     /**
      * Return the executable for compiling C code.
