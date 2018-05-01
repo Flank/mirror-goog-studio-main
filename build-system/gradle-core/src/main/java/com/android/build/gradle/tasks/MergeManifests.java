@@ -627,7 +627,7 @@ public class MergeManifests extends ManifestProcessorTask {
             features.add(Feature.TARGET_SANDBOX_VERSION);
         }
 
-        if (variantType.isInstantAppFeatureSplit()) {
+        if (variantType.isFeatureSplit()) {
             features.add(Feature.ADD_FEATURE_SPLIT_INFO);
         }
 
