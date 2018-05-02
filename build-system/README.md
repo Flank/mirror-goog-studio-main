@@ -103,6 +103,13 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.0.0'
     }
 }
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
 ```
 
 You need to point to your own repository instead.
@@ -122,6 +129,14 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.0-dev'
+    }
+}
+
+allprojects {
+    repositories {
+        maven { url '/my/aosp/work/out/repo' }
+        google()
+        jcenter()
     }
 }
 ```
