@@ -16,6 +16,8 @@
 
 package com.android.builder.dexing
 
+import com.android.builder.core.NoOpMessageReceiver
+import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.MoreTruth.assertThatDex
@@ -25,6 +27,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.test.fail
 
 /**
  * Sanity test that make sure we can invoke R8 with some basic configurations.
@@ -51,7 +54,7 @@ class R8ToolTest {
         TestInputsGenerator.dirWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
         val output = tmp.newFolder().toPath()
-        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
+        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
 
         assertThat(getDexFileCount(output)).isEqualTo(1)
     }
@@ -73,7 +76,7 @@ class R8ToolTest {
         TestInputsGenerator.dirWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
         val output = tmp.newFolder().toPath()
-        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
+        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
         assertThat(getDexFileCount(output)).isEqualTo(1)
     }
 
@@ -100,7 +103,7 @@ class R8ToolTest {
                 mainDexRules = listOf())
 
         val output = tmp.newFolder().toPath()
-        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
+        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
         assertThat(getDexFileCount(output)).isEqualTo(2)
     }
 
@@ -124,7 +127,7 @@ class R8ToolTest {
         val mainDexConfig = MainDexListConfig(listOf(mainDexRules), listOf())
 
         val output = tmp.newFolder().toPath()
-        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
+        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
         assertThat(getDexFileCount(output)).isEqualTo(2)
     }
 
@@ -148,7 +151,7 @@ class R8ToolTest {
         val proguardConfig = ProguardConfig(listOf(proguardRules), null, null, listOf())
 
         val output = tmp.newFolder().toPath()
-        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
+        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatDex(output.resolve("classes.dex").toFile()).containsClass("Ltest/A;")
         assertThatDex(output.resolve("classes.dex").toFile()).doesNotContainClasses("Ltest/B;")
@@ -180,10 +183,47 @@ class R8ToolTest {
                 )
 
         val output = tmp.newFolder().toPath()
-        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
+        runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatDex(output.resolve("classes.dex").toFile()).containsClass("La/Changed;")
         assertThat(Files.exists(proguardConfig.proguardMapOutput)).isTrue()
+    }
+
+    @Test
+    fun testErrorReporting() {
+        val mainDexConfig = MainDexListConfig(listOf(), listOf())
+        val toolConfig = ToolConfig(
+            minSdkVersion = 21,
+            isDebuggable = true,
+            disableTreeShaking = false,
+            disableDesugaring = true,
+            disableMinification = false,
+            r8OutputType = R8OutputType.DEX
+        )
+
+        val proguardRules = tmp.newFile().toPath()
+        Files.write(proguardRules, listOf("wrongRuleExample"))
+        val proguardConfig = ProguardConfig(listOf(proguardRules), null, null, listOf())
+
+        val output = tmp.newFolder().toPath()
+        val messages = mutableListOf<String>()
+
+        try {
+            runR8(
+                listOf(),
+                output,
+                bootClasspath,
+                toolConfig,
+                proguardConfig,
+                mainDexConfig,
+                MessageReceiver { message -> messages.add(message.text) }
+            )
+            fail("Parsing proguard configuration should fail.")
+        } catch (e: Throwable){
+            assertThat(messages.single()).contains("Expected char '-' at")
+            assertThat(messages.single()).contains("1:1")
+            assertThat(messages.single()).contains("wrongRuleExample")
+        }
     }
 
     private fun getDexFileCount(dir: Path): Long =

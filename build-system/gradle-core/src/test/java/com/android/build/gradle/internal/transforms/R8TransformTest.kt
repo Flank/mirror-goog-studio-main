@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
+import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -365,7 +366,8 @@ class R8TransformTest {
                 typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
                 variantType = VariantTypeImpl.BASE_APK,
-                includeFeaturesInScopes = false
+                includeFeaturesInScopes = false,
+                messageReceiver = NoOpMessageReceiver()
         )
     }
 

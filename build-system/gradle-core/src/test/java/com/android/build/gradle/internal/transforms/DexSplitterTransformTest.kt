@@ -20,13 +20,13 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformOutputProvider
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.JarMerger.MODULE_PATH
+import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -209,7 +209,8 @@ class DexSplitterTransformTest {
                 typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
                 variantType = VariantTypeImpl.BASE_APK,
-                includeFeaturesInScopes = false
+                includeFeaturesInScopes = false,
+                messageReceiver= NoOpMessageReceiver()
         )
     }
 

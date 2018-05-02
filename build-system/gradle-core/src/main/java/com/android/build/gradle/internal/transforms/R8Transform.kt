@@ -36,6 +36,7 @@ import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.runR8
 import com.android.builder.packaging.JarMerger
+import com.android.ide.common.blame.MessageReceiver
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -63,7 +64,8 @@ class R8Transform(
     private val typesToOutput: MutableSet<out QualifiedContent.ContentType>,
     proguardConfigurationFiles: ConfigurableFileCollection,
     variantType: VariantType,
-    includeFeaturesInScopes: Boolean
+    includeFeaturesInScopes: Boolean,
+    private val messageReceiver: MessageReceiver
 ) :
         ProguardConfigurable(proguardConfigurationFiles, variantType, includeFeaturesInScopes) {
 
@@ -78,20 +80,21 @@ class R8Transform(
         outputProguardMapping: File
     ) :
             this(
-                    lazy { scope.globalScope.androidBuilder.getBootClasspath(true) },
-                    scope.minSdkVersion.featureLevel,
-                    scope.variantConfiguration.buildType.isDebuggable,
-                    scope.java8LangSupportType,
-                    false,
-                    false,
-                    mainDexListFiles,
-                    mainDexRulesFiles,
-                    inputProguardMapping,
-                    outputProguardMapping,
-                    if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX_WITH_RESOURCES,
-                    scope.globalScope.project.files(),
-                    scope.variantData.type,
-                    scope.consumesFeatureJars()
+                lazy { scope.globalScope.androidBuilder.getBootClasspath(true) },
+                scope.minSdkVersion.featureLevel,
+                scope.variantConfiguration.buildType.isDebuggable,
+                scope.java8LangSupportType,
+                false,
+                false,
+                mainDexListFiles,
+                mainDexRulesFiles,
+                inputProguardMapping,
+                outputProguardMapping,
+                if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX_WITH_RESOURCES,
+                scope.globalScope.project.files(),
+                scope.variantData.type,
+                scope.consumesFeatureJars(),
+                scope.globalScope.messageReceiver
             )
 
     override fun getName(): String = "r8"
@@ -202,7 +205,8 @@ class R8Transform(
                 bootClasspathInputs.map { it.toPath() },
                 toolConfig,
                 proguardConfig,
-                mainDexListConfig
+                mainDexListConfig,
+                messageReceiver
         )
     }
 
