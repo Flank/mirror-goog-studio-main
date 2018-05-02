@@ -23,9 +23,9 @@ import javax.inject.Inject;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
-public class OptionalApkPlugin extends AbstractAppPlugin {
+public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @Inject
-    public OptionalApkPlugin(ToolingModelBuilderRegistry registry) {
+    public DynamicFeaturePlugin(ToolingModelBuilderRegistry registry) {
         super(registry, false /*isBaseApplication*/);
     }
 
