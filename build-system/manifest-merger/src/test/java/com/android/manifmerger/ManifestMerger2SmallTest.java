@@ -960,7 +960,7 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
-    public void testFeatureSplitOption() throws Exception {
+    public void testInstantAppFeatureSplitOption() throws Exception {
         String xml =
                 ""
                         + "<manifest\n"
@@ -976,7 +976,9 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
+                        .withFeatures(
+                                ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
                         .setFeatureName("feature")
                         .merge();
 
@@ -994,6 +996,42 @@ public class ManifestMerger2SmallTest {
                         .getAttributes()
                         .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
                         .getNodeValue());
+    }
+
+    @Test
+    public void testDynamicAppFeatureSplitOption() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application t:name=\".applicationOne\">\n"
+                        + "        <activity t:name=\"activityOne\"/>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testFeatureSplitOption", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
+                        .setFeatureName("feature")
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals(
+                "feature",
+                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
+
+        assertNull(
+                "splitName should not be supplied",
+                xmlDocument
+                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME));
     }
 
     @Test

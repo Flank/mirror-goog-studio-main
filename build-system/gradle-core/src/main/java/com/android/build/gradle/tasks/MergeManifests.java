@@ -665,7 +665,11 @@ public class MergeManifests extends ManifestProcessorTask {
         }
 
         if (variantType.isFeatureSplit()) {
-            features.add(Feature.ADD_FEATURE_SPLIT_INFO);
+            features.add(Feature.ADD_FEATURE_SPLIT_ATTRIBUTE);
+        }
+
+        if (variantType.isInstantAppFeatureSplit()) {
+            features.add(Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO);
         }
 
         if (variantScope.isTestOnly()) {
