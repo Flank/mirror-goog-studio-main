@@ -520,6 +520,38 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testAutoSize() {
+        // Regression test for 78486045: Handle autoSize attributes
+        lint().files(
+                        manifest().minSdk(1),
+                        xml(
+                                "res/layout/foo.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:id=\"@+id/LinearLayout1\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    android:orientation=\"vertical\" >\n"
+                                        + "\n"
+                                        + "      <TextView\n"
+                                        + "         android:layout_width=\"match_parent\"\n"
+                                        + "         android:layout_height=\"200dp\"\n"
+                                        + "         app:autoSizeTextType=\"uniform\"\n"
+                                        + "         app:autoSizeMinTextSize=\"12sp\"\n"
+                                        + "         app:autoSizeMaxTextSize=\"100sp\"\n"
+                                        + "         app:autoSizeStepGranularity=\"2sp\" />\n"
+                                        + "      <TextView\n"
+                                        + "         android:layout_width=\"match_parent\"\n"
+                                        + "         android:layout_height=\"200dp\"\n"
+                                        + "         app:autoSizeTextType=\"uniform\"\n"
+                                        + "         app:autoSizePresetSizes=\"@array/autosize_text_sizes\" />\n\n"
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected List<Issue> getIssues() {
         List<Issue> combined = Lists.newArrayList(super.getIssues());
