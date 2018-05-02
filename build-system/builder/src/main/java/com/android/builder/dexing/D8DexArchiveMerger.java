@@ -47,6 +47,9 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
             "Cannot fit requested classes in a single dex file";
 
     private static final String ERROR_DUPLICATE = "Program type already present";
+    private static final String ERROR_DUPLICATE_HELP_PAGE =
+            "Learn how to resolve the issue at "
+                    + "https://developer.android.com/studio/build/dependencies#duplicate_classes.";
 
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;
@@ -141,6 +144,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
 
             if (diagnostic.getDiagnosticMessage().startsWith(ERROR_DUPLICATE)) {
                 addHint(diagnostic.getDiagnosticMessage());
+                addHint(ERROR_DUPLICATE_HELP_PAGE);
             }
 
             return super.convertToMessage(kind, diagnostic);
