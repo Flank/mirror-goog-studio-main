@@ -182,6 +182,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/build/",
                 "com/android/tools/build/apkzlib/",
+                "com/android/tools/build/apkzlib/bytestorage/",
                 "com/android/tools/build/apkzlib/sign/",
                 "com/android/tools/build/apkzlib/utils/",
                 "com/android/tools/build/apkzlib/zfile/",
