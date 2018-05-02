@@ -131,11 +131,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -261,11 +260,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -391,11 +389,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -520,11 +517,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -647,11 +643,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -776,11 +771,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -915,11 +909,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -995,12 +988,11 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addContentTypes(ExtendedContentType.CLASSES_ENHANCED)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1108,11 +1100,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT, Scope.SUB_PROJECTS)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1287,11 +1278,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1366,12 +1356,11 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // this represents the output of the "previous" transform.
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(
                                 DefaultContentType.CLASSES, ExtendedContentType.CLASSES_ENHANCED)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1465,12 +1454,11 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // this represents the output of the "previous" transform.
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .addScopes(Scope.SUB_PROJECTS)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1620,11 +1608,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1760,11 +1747,10 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
         IntermediateStream projectClass =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(projectClass);
 
@@ -1860,11 +1846,10 @@ public class TransformTaskTest extends TaskTestUtils {
 
         File scope2Root = temporaryFolder.newFolder();
         IntermediateStream scope2 =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT_LOCAL_DEPS)
                         .setRootLocation(scope2Root)
-                        .setTaskName("my dependency")
                         .build();
 
         // use the output version of this stream to create some content.
@@ -1893,11 +1878,10 @@ public class TransformTaskTest extends TaskTestUtils {
 
         File scope4Root = temporaryFolder.newFolder();
         IntermediateStream scope4 =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.EXTERNAL_LIBRARIES)
                         .setRootLocation(scope4Root)
-                        .setTaskName("my dependency")
                         .build();
 
         // use the output version of this stream to create some content.
@@ -2394,11 +2378,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         IntermediateStream stream =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", "my dependency")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
                         .setRootLocation(rootFolder)
-                        .setTaskName("my dependency")
                         .build();
         transformManager.addStream(stream);
 
