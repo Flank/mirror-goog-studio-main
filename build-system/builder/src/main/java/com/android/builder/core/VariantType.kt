@@ -60,6 +60,16 @@ interface VariantType {
     val isDynamicFeature: Boolean
 
     /**
+     * Returns true if the variant is a instant app feature split.
+     *
+     * This does not include instant app base features.
+     *
+     * [isFeatureSplit] differs from this property as it will be true for dynamic app features,
+     * while this property will be false for those.
+     */
+    val isInstantAppFeatureSplit: Boolean
+
+    /**
      * Returns true if the variant publishes artifacts to meta-data.
      */
     val publishToMetadata: Boolean
@@ -142,9 +152,9 @@ enum class VariantTypeImpl(
     override val isAar: Boolean = false,
     override val isApk: Boolean = false,
     override val isBaseModule: Boolean = false,
-    override val isFeatureSplit:Boolean = false,
     override val isHybrid: Boolean = false,
     override val isDynamicFeature: Boolean = false,
+    override val isInstantAppFeatureSplit: Boolean = false,
     override val publishToMetadata: Boolean = false,
     override val isForTesting: Boolean = false,
     override val prefix: String,
@@ -174,7 +184,6 @@ enum class VariantTypeImpl(
     ),
     OPTIONAL_APK(
         isApk = true,
-        isFeatureSplit = true,
         isDynamicFeature = true,
         publishToMetadata = true,
         prefix = "",
@@ -200,7 +209,7 @@ enum class VariantTypeImpl(
     ),
     FEATURE(
         isApk = true,
-        isFeatureSplit = true,
+        isInstantAppFeatureSplit = true,
         isHybrid = true,
         publishToMetadata = true,
         prefix = "",
@@ -263,6 +272,9 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST,
         consumeTypeOptional = null,
         publishType = null);
+
+    override val isFeatureSplit: Boolean
+        get() = isInstantAppFeatureSplit || isDynamicFeature
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK

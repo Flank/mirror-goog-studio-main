@@ -424,8 +424,14 @@ public class ManifestMerger2 {
                     MergingReport.MergedManifestKind.INSTANT_RUN, prettyPrint(document));
         }
 
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
-            addFeatureSplitAttributes(document, mFeatureName);
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)) {
+            addFeatureSplitAttribute(document, mFeatureName);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+        }
+
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)) {
+            addInstantAppFeatureSplitInfo(document, mFeatureName);
             mergingReport.setMergedDocument(
                     MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
@@ -489,15 +495,13 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Set "android:splitName" attributes to <code>featureName</code> for every activity, service
-     * and provider elements. Set "featureSplit" attribute to <code>featureName</code> for the
-     * manifest element.
+     * Set the {@code featureSplit} attribute to {@code featureName} for the manifest element.
      *
      * @param document the document whose attributes are changed
-     * @param featureName the value all of the changed attributes are set to
+     * @param featureName the feature name of this feature subproject.
      */
-    private static void addFeatureSplitAttributes(Document document, String featureName) {
-        // first update attribute in manifest element
+    private static void addFeatureSplitAttribute(
+            @NonNull Document document, @NonNull String featureName) {
         Element manifest = document.getDocumentElement();
         if (manifest == null) {
             return;
@@ -505,6 +509,21 @@ public class ManifestMerger2 {
 
         String attributeName = SdkConstants.ATTR_FEATURE_SPLIT;
         manifest.setAttribute(attributeName, featureName);
+    }
+
+    /**
+     * Set the "android:splitName" attribute to {@code featureName} for every {@code activity},
+     * {@code service} and {@code provider} element.
+     *
+     * @param document the document whose attributes are changed
+     * @param featureName the value all of the changed attributes are set to
+     */
+    private static void addInstantAppFeatureSplitInfo(
+            @NonNull Document document, @NonNull String featureName) {
+        Element manifest = document.getDocumentElement();
+        if (manifest == null) {
+            return;
+        }
 
         // then update attributes in the application element's child elements
         ImmutableList<Element> applicationElements =
@@ -1219,8 +1238,11 @@ public class ManifestMerger2 {
             /** Perform Studio advanced profiling manifest modifications */
             ADVANCED_PROFILING,
 
-            /** Add feature split information */
-            ADD_FEATURE_SPLIT_INFO,
+            /** Mark this application as a feature split */
+            ADD_FEATURE_SPLIT_ATTRIBUTE,
+
+            /** Mark the entry points to the application with splitName */
+            ADD_INSTANT_APP_FEATURE_SPLIT_INFO,
 
             /** Set the android:debuggable flag to the application. */
             DEBUGGABLE,
