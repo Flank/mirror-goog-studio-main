@@ -515,6 +515,16 @@ public class ApiLookupTest extends AbstractCheckTest {
         }
     }
 
+    public void testApi27() {
+        // Regression test for 73514594; the following two attributes were added
+        // *after* the prebuilt android.jar was checked into the source tree, which
+        // is how the api-since data is computed. We're manually correcting for this
+        // in the XML-to-binary database computation instead (and I plan to fix
+        // metalava to also correct for this in the XML generation code.)
+        assertEquals(27, mDb.getFieldVersion("android.R$attr", "navigationBarDividerColor"));
+        assertEquals(27, mDb.getFieldVersion("android.R$attr", "windowLightNavigationBar"));
+    }
+
     public void testLookUpContractSettings() {
         assertEquals(
                 14, mDb.getFieldVersion("android/provider/ContactsContract$Settings", "DATA_SET"));

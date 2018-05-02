@@ -64,8 +64,8 @@ class Api {
     private Api(
             @NonNull Map<String, ApiClass> classes,
             @NonNull Map<String, ApiClassOwner> containers) {
-        mClasses = Collections.unmodifiableMap(new MyHashMap(classes));
-        mContainers = Collections.unmodifiableMap(new MyHashMap(containers));
+        mClasses = Collections.unmodifiableMap(new MyHashMap<>(classes));
+        mContainers = Collections.unmodifiableMap(new MyHashMap<>(containers));
     }
 
     ApiClass getClass(String fqcn) {
