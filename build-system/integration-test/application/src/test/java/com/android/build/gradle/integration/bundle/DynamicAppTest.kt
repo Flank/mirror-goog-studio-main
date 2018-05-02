@@ -144,7 +144,7 @@ class DynamicAppTest {
             "merged",
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
-        FileSubject.assertThat(manifestFile).doesNotContain("android:splitName")
+        FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
 
         // check that the feature1 source manifest has not been changed so we can verify that
         // it is automatically reset to the base module value.
