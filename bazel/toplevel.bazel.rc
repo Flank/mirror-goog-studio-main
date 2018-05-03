@@ -146,6 +146,8 @@ build:results-local --spawn_strategy=local
 build:results-local --experimental_remote_spawn_cache
 build:results-local --remote_cache=remotebuildexecution.googleapis.com
 build:results-local --remote_timeout=3600
+build:results-local --remote_instance_name=projects/google.com:android-studio-alphasource
+build:results-local --project_id=908081808034
 
 # Top level config group for remote cache local execution.
 build:mac-experimental --remote_instance_name=projects/google.com:android-studio-alphasource
