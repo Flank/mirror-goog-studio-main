@@ -65,7 +65,7 @@ build:remote --show_timestamps
 build:remote --host_javabase=@bazel_toolchains//configs/debian8_clang/0.2.0:jdk8
 build:remote --javabase=@bazel_toolchains//configs/debian8_clang/0.2.0:jdk8
 build:remote --crosstool_top=@bazel_toolchains//configs/debian8_clang/0.2.0/bazel_0.8.0:toolchain
-build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:f7e39d0a8e36e04d0161883be9b2c50a5f6b80e33917fb3d91628612cb0b93ca" }'
+build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:4fbf8dd1ccbf60cb5fbc5c00604db1189f63e44fe8c4fa4c2280d624a9f344c8" }'
 
 # Set various strategies so that all actions execute remotely. Mixing remote
 # and local execution will lead to errors unless the toolchain and remote
