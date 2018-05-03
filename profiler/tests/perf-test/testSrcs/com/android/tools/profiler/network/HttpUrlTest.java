@@ -37,30 +37,30 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class HttpUrlTest {
     @Parameterized.Parameters
-    public static Collection<Boolean> data() {
-        return Arrays.asList(new Boolean[] {false, true});
+    public static Collection<Integer> data() {
+        return Arrays.asList(24, 26, 28);
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.HttpUrlActivity";
 
-    private boolean myIsOPlusDevice;
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private Session mySession;
 
-    public HttpUrlTest(boolean isOPlusDevice) {
-        myIsOPlusDevice = isOPlusDevice;
+    public HttpUrlTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
     }
 
     @Before
     public void setup() throws Exception {
-        myPerfDriver = new PerfDriver(myIsOPlusDevice);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start(ACTIVITY_CLASS);
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
         mySession =
-                myIsOPlusDevice
+                TestUtils.isOPlusDevice(mySdkLevel)
                         ? myGrpc.beginSessionWithAgent(
                                 myPerfDriver.getPid(), myPerfDriver.getCommunicationPort())
                         : myGrpc.beginSession(myPerfDriver.getPid());

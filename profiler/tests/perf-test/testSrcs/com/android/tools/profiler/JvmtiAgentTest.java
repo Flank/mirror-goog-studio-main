@@ -34,7 +34,7 @@ public class JvmtiAgentTest {
     @Test
     public void attachAgentOnInvalidApi_ThrowsRuntimeException() throws Exception {
         // Try triggering the jvmti agent on a pre-O device should fail.
-        PerfDriver perfDriver = new PerfDriver(false);
+        PerfDriver perfDriver = new PerfDriver(24);
         perfDriver.start("com.activity.MyActivity");
         GrpcUtils grpc = perfDriver.getGrpc();
 

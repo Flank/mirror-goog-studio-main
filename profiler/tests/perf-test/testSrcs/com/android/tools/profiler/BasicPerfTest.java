@@ -31,28 +31,28 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class BasicPerfTest {
     @Parameterized.Parameters
-    public static Collection<Boolean> data() {
-        return Arrays.asList(new Boolean[] {false, true});
+    public static Collection<Integer> data() {
+        return Arrays.asList(24, 26);
     }
 
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private Session mySession;
-    private boolean myIsOPlusDevice;
+    private int mySdkLevel;
 
-    public BasicPerfTest(boolean isOPlusDevice) {
-        myIsOPlusDevice = isOPlusDevice;
+    public BasicPerfTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
     }
 
     @Before
     public void setup() throws Exception {
-        myPerfDriver = new PerfDriver(myIsOPlusDevice);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start("com.activity.MyActivity");
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
         mySession =
-                myIsOPlusDevice
+                TestUtils.isOPlusDevice(mySdkLevel)
                         ? myGrpc.beginSessionWithAgent(
                                 myPerfDriver.getPid(), myPerfDriver.getCommunicationPort())
                         : myGrpc.beginSession(myPerfDriver.getPid());

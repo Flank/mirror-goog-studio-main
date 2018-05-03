@@ -29,26 +29,26 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class EventProfilerTest {
     @Parameterized.Parameters
-    public static Collection<Boolean> data() {
-        return Arrays.asList(new Boolean[] {false, true});
+    public static Collection<Integer> data() {
+        return Arrays.asList(24, 26);
     }
 
-    private boolean myIsOPlusDevice;
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
 
-    public EventProfilerTest(boolean isOPlusDevice) {
-        myIsOPlusDevice = isOPlusDevice;
+    public EventProfilerTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
     }
 
     @Before
     public void setup() throws Exception {
-        myPerfDriver = new PerfDriver(myIsOPlusDevice);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start("com.activity.event.EventActivity");
         myGrpc = myPerfDriver.getGrpc();
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
-        if (myIsOPlusDevice) {
+        if (TestUtils.isOPlusDevice(mySdkLevel)) {
             myGrpc.beginSessionWithAgent(
                     myPerfDriver.getPid(), myPerfDriver.getCommunicationPort());
         } else {

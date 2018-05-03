@@ -28,22 +28,38 @@ import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class WakeLockTest {
+    @Parameters
+    public static Collection<Integer> data() {
+        return Arrays.asList(26, 28);
+    }
+
     private static final String ACTIVITY_CLASS = "com.activity.energy.WakeLockActivity";
 
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
 
+    public WakeLockTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
+    }
+
     @Before
     public void setUp() throws Exception {
-        myPerfDriver = new PerfDriver(true);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();

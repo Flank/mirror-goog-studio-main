@@ -17,6 +17,7 @@
 package com.android.tools.profiler.energy;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
@@ -35,22 +36,39 @@ import com.android.tools.profiler.proto.EnergyProfiler.JobScheduled;
 import com.android.tools.profiler.proto.EnergyProfiler.JobScheduled.Result;
 import com.android.tools.profiler.proto.EnergyProfiler.JobStarted;
 import com.android.tools.profiler.proto.EnergyProfiler.JobStopped;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class JobTest {
+    @Parameters
+    public static Collection<Integer> data() {
+        return Arrays.asList(26, 28);
+    }
+
     private static final String ACTIVITY_CLASS = "com.activity.energy.JobActivity";
 
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
 
+    public JobTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
+    }
+
     @Before
     public void setUp() throws Exception {
-        myPerfDriver = new PerfDriver(true);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
@@ -79,7 +97,14 @@ public class JobTest {
                 TestUtils.waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 3);
-        assertThat(response.getEventsCount()).isEqualTo(3);
+        assertWithMessage(
+                        "Actual events: (%s)",
+                        response.getEventsList()
+                                .stream()
+                                .map(event -> String.valueOf(event.getMetadataCase()))
+                                .collect(Collectors.joining(", ")))
+                .that(response.getEventsCount())
+                .isEqualTo(3);
 
         final EnergyEvent scheduleEvent = response.getEvents(0);
         assertThat(scheduleEvent.getTimestamp()).isGreaterThan(0L);
@@ -158,7 +183,14 @@ public class JobTest {
                 TestUtils.waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 3);
-        assertThat(response.getEventsCount()).isEqualTo(3);
+        assertWithMessage(
+                        "Actual events: (%s).",
+                        response.getEventsList()
+                                .stream()
+                                .map(event -> String.valueOf(event.getMetadataCase()))
+                                .collect(Collectors.joining(", ")))
+                .that(response.getEventsCount())
+                .isEqualTo(3);
 
         final EnergyEvent scheduleEvent = response.getEvents(0);
         final EnergyEvent startEvent = response.getEvents(1);
