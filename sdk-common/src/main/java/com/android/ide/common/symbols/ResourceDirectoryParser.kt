@@ -147,15 +147,7 @@ private fun parseResourceDirectory(
                 domTree = documentBuilder.parse(maybeResourceFile)
                 val parsedXml = parseValuesResource(domTree, idProvider, platformAttrSymbols)
                 parsedXml.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
-            } catch (e: SAXException) {
-                throw ResourceDirectoryParseException(
-                        "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'",
-                        e)
-            } catch (e: IOException) {
-                throw ResourceDirectoryParseException(
-                        "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'",
-                        e)
-            } catch (e: IllegalArgumentException) {
+            } catch (e: Exception) {
                 throw ResourceDirectoryParseException(
                         "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'",
                         e)
@@ -168,7 +160,8 @@ private fun parseResourceDirectory(
             try {
                 FileResourceNameValidator.validate(maybeResourceFile, folderResourceType!!)
             } catch (e: MergingException) {
-                throw ResourceDirectoryParseException("Failed file name validation", e)
+                throw ResourceDirectoryParseException(
+                        "Failed file name validation for file ${maybeResourceFile.absolutePath}", e)
             }
 
             val fileName = maybeResourceFile.name
@@ -188,10 +181,7 @@ private fun parseResourceDirectory(
                 // search of lazy constructions like `@+id/name` that also declare resources.
                 val domTree = try {
                     documentBuilder.parse(maybeResourceFile)
-                } catch (e: SAXException) {
-                    throw ResourceDirectoryParseException(
-                            "Failed to parse XML file '${maybeResourceFile.absolutePath}'", e)
-                } catch (e: IOException) {
+                } catch (e: Exception) {
                     throw ResourceDirectoryParseException(
                             "Failed to parse XML file '${maybeResourceFile.absolutePath}'", e)
                 }

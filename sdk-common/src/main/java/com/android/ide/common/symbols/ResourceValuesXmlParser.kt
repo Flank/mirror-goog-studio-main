@@ -270,7 +270,7 @@ private fun parseChild(
  *
  * @param declareStyleable the declare styleable element we are parsing
  * @param idProvider the provider for IDs to assign to the resources
- * @param name name of the declare styleable element
+ * @param styleableName name of the declare styleable element
  * @param builder the builder for the SymbolTable
  * @param enumSymbols out list of enum symbols discovered in declare-styleable
  * @param platformAttrSymbols the platform attr symbols
@@ -278,7 +278,7 @@ private fun parseChild(
 private fun parseDeclareStyleable(
         declareStyleable: Element,
         idProvider: IdProvider,
-        name: String,
+        styleableName: String,
         builder: SymbolTable.Builder,
         enumSymbols: MutableList<Symbol>,
         platformAttrSymbols: SymbolTable?) {
@@ -328,7 +328,7 @@ private fun parseDeclareStyleable(
                     attrValues.add((attrSymbol as Symbol.NormalSymbol).intValue)
                 } else {
                     throw ResourceValuesXmlParseException(
-                            String.format("Unknown android attribute '%s'", attrName))
+                            "Unknown android attribute '$attrName' under '$styleableName")
                 }
             }
         } else {
@@ -340,7 +340,8 @@ private fun parseDeclareStyleable(
 
         attrNode = attrNode.nextSibling
     }
-    builder.add(Symbol.createAndValidateStyleableSymbol(name, attrValues.build(), attrNames))
+    builder.add(
+            Symbol.createAndValidateStyleableSymbol(styleableName, attrValues.build(), attrNames))
 }
 
 /**
