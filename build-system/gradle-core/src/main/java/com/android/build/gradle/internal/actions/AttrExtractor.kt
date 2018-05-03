@@ -53,8 +53,10 @@ class AttrExtractor @Inject constructor(val inputFile: File, val outputFile: Fil
             result
         }
 
-        FileWriter(outputFile).use { writer ->
-            if (attributes != null) {
+        if (attributes == null || attributes.isEmpty()) {
+            error("Missing attr resources in android.jar, the file might be corrupted: $inputFile")
+        } else {
+            FileWriter(outputFile).use { writer ->
                 for ((name, value) in attributes) {
                     writer.write("int attr $name 0x${String.format("%08x", value)}\n")
                 }
