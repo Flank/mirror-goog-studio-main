@@ -16,27 +16,33 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.options.IntegerOption
-import com.google.common.base.Splitter
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.IOException
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
+import org.gradle.workers.WorkerExecutor
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.Serializable
 import java.util.regex.Pattern
+import javax.inject.Inject
 
 /** Task to write the FeatureSetMetadata file.  */
-open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
+@CacheableTask
+open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: WorkerExecutor): AndroidVariantTask() {
+
+    private val workers = Workers.getWorker(workerExecutor)
 
     @get:InputFiles
     lateinit var inputFiles: FileCollection
@@ -46,68 +52,61 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
     lateinit var outputFile: File
         internal set
 
-    @Input
+    @get:Input
     var minSdkVersion: Int = 1
         internal set
 
-    @Input
+    @get:Input
     var maxNumberOfFeaturesBeforeOreo: Int = FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O
         internal set
 
     @TaskAction
     @Throws(IOException::class)
     fun fullTaskAction() {
-        val featureMetadata = FeatureSetMetadata(maxNumberOfFeaturesBeforeOreo)
 
-        val featureFiles = inputFiles.asFileTree.files
-        val features = mutableListOf<FeatureSplitDeclaration>()
-
-        for (file in featureFiles) {
-            try {
-                features.add(FeatureSplitDeclaration.load(file))
-            } catch (e: FileNotFoundException) {
-                throw BuildException("Cannot read features split declaration file", e)
-            }
+        workers.use {
+            it.submit(
+                FeatureSetRunnable::class.java,
+                Params(inputFiles.asFileTree.files,
+                    minSdkVersion,
+                    maxNumberOfFeaturesBeforeOreo,
+                    outputFile
+                )
+            )
         }
-
-        val featureNameMap = computeFeatureNames(features)
-
-        for (feature in features) {
-            featureMetadata.addFeatureSplit(
-                minSdkVersion, feature.modulePath, featureNameMap[feature.modulePath]!!)
-        }
-
-        // save the list.
-        featureMetadata.save(outputFile)
     }
 
-    /**
-     * Converts from a list of [FeatureSplitDeclaration] to a map of (module-path -> feature name)
-     *
-     * This also performs validation to ensure all feature name are unique.
-     */
-    @VisibleForTesting
-    fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<String, String> {
-        val result = mutableMapOf<String, String>()
+    private data class Params(
+        val featureFiles: Set<File>,
+        val minSdkVersion: Int,
+        val maxNumberOfFeaturesBeforeOreo: Int,
+        val outputFile: File
+    ) : Serializable
 
-        // first go through all the module path, and search for duplicates in the last segment
-        // we're going to create a map of (leaf -> list(full paths)).
-        val leafMap = features.groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
+    private class FeatureSetRunnable @Inject constructor(private val params: Params): Runnable {
+        override fun run() {
+            val features = mutableListOf<FeatureSplitDeclaration>()
 
-        for ((leaf, modules) in leafMap) {
-            if (modules.size == 1) {
-                result[modules[0]] = leaf
-            } else {
-                val message = StringBuilder(
-                    "Module name '$leaf' is used by multiple modules. All dynamic features must have a unique name.")
-                for (module in modules) {
-                    message.append("\n\t-> $module")
+            val featureMetadata = FeatureSetMetadata(params.maxNumberOfFeaturesBeforeOreo)
+
+            for (file in params.featureFiles) {
+                try {
+                    features.add(FeatureSplitDeclaration.load(file))
+                } catch (e: FileNotFoundException) {
+                    throw BuildException("Cannot read features split declaration file", e)
                 }
-                throw RuntimeException(message.toString())
             }
-        }
 
-        return result
+            val featureNameMap = computeFeatureNames(features)
+
+            for (feature in features) {
+                featureMetadata.addFeatureSplit(
+                    params.minSdkVersion, feature.modulePath, featureNameMap[feature.modulePath]!!)
+            }
+
+            // save the list.
+            featureMetadata.save(params.outputFile)
+        }
     }
 
     class ConfigAction(private val variantScope: VariantScope) :
@@ -145,21 +144,54 @@ open class FeatureSetMetadataWriterTask : AndroidVariantTask() {
     }
 }
 
-/** Regular expression defining the character to be replaced in the split name.  */
-private val FEATURE_REPLACEMENT = Pattern.compile("-")
+/** Regular expression defining invalid characters for split names  */
+private val FEATURE_NAME_CHARS = Pattern.compile("[a-zA-Z0-9_]+")
 
-/** Regular expression defining the characters to be excluded from the split name.  */
-private val FEATURE_EXCLUSION = Pattern.compile("[^a-zA-Z0-9_]")
+private fun String.getLeaf(): String =
+    if (this == ":") this else substring(lastIndexOf(':') + 1)
 
-private fun String.getLeaf(): String {
-    val baseName: String = Splitter.on(':').split(this).last()!!
-    if (baseName.isEmpty()) {
-        return "root"
+
+/**
+ * Converts from a list of [FeatureSplitDeclaration] to a map of (module-path -> feature name)
+ *
+ * This also performs validation to ensure all feature name are unique.
+ */
+internal fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<String, String> {
+    val result = mutableMapOf<String, String>()
+
+    // build a map of (leaf -> list(full paths)). This will allow us to detect duplicates
+    // and properly display error messages with all the paths containing the same leaf.
+    val leafMap = features.groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
+
+    // check for root module name (root module)
+    if (leafMap.keys.contains(":")) {
+        throw RuntimeException("Root module ':' is used as a feature module. This is not supported.")
     }
 
-    // Compute the split value name for the manifest.
-    val splitName = FEATURE_REPLACEMENT
-        .matcher(baseName)
-        .replaceAll("_")
-    return FEATURE_EXCLUSION.matcher(splitName).replaceAll("")
+    // check all the leaves for invalid characters.
+    val invalidNames = leafMap.keys.filter { name -> !FEATURE_NAME_CHARS.matcher(name).matches() }
+    if (!invalidNames.isEmpty()) {
+        throw RuntimeException(
+            invalidNames.joinTo(
+                StringBuilder(
+                    "The following module names contain invalid characters. Names can only contain letters, digits and underscores."
+                ), separator = "\n\t-> ", prefix = "\n\t-> "
+            ).toString()
+        )
+    }
+
+    // check for duplicate names while building the final (path, leaf) map.
+    for ((leaf, modules) in leafMap) {
+        val module = modules.singleOrNull() ?: throw RuntimeException(
+            modules.joinTo(
+                StringBuilder(
+                    "Module name '$leaf' is used by multiple modules. All dynamic features must have a unique name."
+                ), separator = "\n\t-> ", prefix = "\n\t-> "
+            ).toString()
+        )
+
+       result[module] = leaf
+    }
+
+    return result
 }
