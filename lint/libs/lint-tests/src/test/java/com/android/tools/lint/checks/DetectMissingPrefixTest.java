@@ -31,7 +31,7 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
         return new DetectMissingPrefix();
     }
 
-    public void test() throws Exception {
+    public void testBasic() throws Exception {
         //noinspection all // Sample code
         assertEquals(
                 ""
@@ -41,10 +41,7 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                         + "res/layout/namespace.xml:3: Error: Attribute is missing the Android namespace prefix [MissingPrefix]\n"
                         + "    <Button style=\"@style/setupWizardOuterFrame\" android.text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
                         + "                                                 ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/namespace.xml:5: Error: Unexpected namespace prefix \"other\" found for tag LinearLayout [MissingPrefix]\n"
-                        + "    <LinearLayout other:orientation=\"horizontal\"/>\n"
-                        + "                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n",
+                        + "2 errors, 0 warnings\n",
                 lintFiles(
                         xml(
                                 "res/layout/namespace.xml",
@@ -148,8 +145,8 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
                                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    package=\"foo.bar2\"\n"
                                         + "    versionCode=\"1\"\n"
+                                        + "    split=\"mysplit\"\n"
                                         + "    android:versionName=\"1.0\" >\n"
-                                        + "\n"
                                         + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
                                         + "\n"
                                         + "    <application\n"

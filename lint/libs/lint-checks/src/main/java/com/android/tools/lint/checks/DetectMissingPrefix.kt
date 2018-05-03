@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.ANDROIDX_MATERIAL_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_SUPPORT_PKG_PREFIX
@@ -30,7 +29,6 @@ import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.ATTR_SRC_COMPAT
 import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.BUTTON
 import com.android.SdkConstants.CONSTRAINT_LAYOUT
 import com.android.SdkConstants.CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.TAG_LAYOUT
@@ -100,7 +98,7 @@ class DetectMissingPrefix : LayoutDetector() {
 
     private fun isNoPrefixAttribute(attribute: String): Boolean =
         when (attribute) {
-            ATTR_CLASS, ATTR_STYLE, ATTR_LAYOUT, ATTR_PACKAGE, ATTR_CORE_APP -> true
+            ATTR_CLASS, ATTR_STYLE, ATTR_LAYOUT, ATTR_PACKAGE, ATTR_CORE_APP, "split" -> true
             else -> false
         }
 
@@ -152,16 +150,35 @@ class DetectMissingPrefix : LayoutDetector() {
             !isCustomView(attribute.ownerElement) &&
             !isFragment(attribute.ownerElement) &&
             !attribute.localName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) &&
-            // Support library auto-size attribute?
-            // See https://developer.android.com/guide/topics/ui/look-and-feel/autosizing-textview
-            !attribute.localName.startsWith("autoSize") &&
-            // TODO: Consider not enforcing that the parent is a custom view
-            // too, though in that case we should filter out views that are
-            // layout params for the custom view parent:
-            // ... !attribute.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) &&
-            attribute.ownerElement.parentNode.nodeType == Node.ELEMENT_NODE &&
-            !isCustomView(attribute.ownerElement.parentNode as Element)
+            attribute.ownerElement.parentNode.nodeType == Node.ELEMENT_NODE
         ) {
+            // A namespace declaration?
+            val prefix = attribute.prefix
+            if (XMLNS == prefix) {
+                val name = attribute.nodeName
+                // See if it's already reported on the root
+                val root = attribute.ownerDocument.documentElement
+                val attributes = root.attributes
+                var i = 0
+                val n = attributes.length
+                while (i < n) {
+                    val item = attributes.item(i)
+                    if (name == item.nodeName && attribute.value == item.nodeValue) {
+                        context.report(
+                            NamespaceDetector.UNUSED, attribute,
+                            context.getLocation(attribute),
+                            String.format(
+                                "Unused namespace declaration %1\$s; already " +
+                                        "declared on the root element",
+                                name
+                            )
+                        )
+                    }
+                    i++
+                }
+
+                return
+            }
 
             if (context.resourceFolderType == LAYOUT && AUTO_URI == uri) {
                 // Data binding: Can add attributes like onClickListener to buttons etc.
@@ -193,53 +210,20 @@ class DetectMissingPrefix : LayoutDetector() {
                     )
                     if (items != null && !items.isEmpty()) {
                         for (item in items) {
-                            val libraryName = item.libraryName
-                            if (libraryName != null && libraryName.startsWith("appcompat-")) {
-                                return
-                            }
-                            if (attribute.ownerElement.tagName == BUTTON &&
-                                libraryName?.startsWith(ANDROIDX_MATERIAL_ARTIFACT) == true) {
-                                // Button is inflated as a MaterialButton with extra
+                            val libraryName = item.libraryName ?: continue
+                            if (libraryName.contains("appcompat") || libraryName.contains("material")) {
                                 return
                             }
                         }
                     }
+
+                    context.report(
+                        MISSING_NAMESPACE, attribute,
+                        context.getLocation(attribute),
+                        "Unexpected namespace prefix \"$prefix\" found for tag `${attribute.ownerElement.tagName}`"
+                    )
                 }
             }
-
-            // A namespace declaration?
-            val prefix = attribute.prefix
-            if (XMLNS == prefix) {
-                val name = attribute.nodeName
-                // See if it's already reported on the root
-                val root = attribute.ownerDocument.documentElement
-                val attributes = root.attributes
-                var i = 0
-                val n = attributes.length
-                while (i < n) {
-                    val item = attributes.item(i)
-                    if (name == item.nodeName && attribute.value == item.nodeValue) {
-                        context.report(
-                            NamespaceDetector.UNUSED, attribute,
-                            context.getLocation(attribute),
-                            String.format(
-                                "Unused namespace declaration %1\$s; already " +
-                                        "declared on the root element",
-                                name
-                            )
-                        )
-                    }
-                    i++
-                }
-
-                return
-            }
-
-            context.report(
-                MISSING_NAMESPACE, attribute,
-                context.getLocation(attribute),
-                "Unexpected namespace prefix \"$prefix\" found for tag `${attribute.ownerElement.tagName}`"
-            )
         }
     }
 
