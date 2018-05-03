@@ -30,6 +30,7 @@ import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
@@ -144,7 +145,8 @@ class DynamicAppTest {
             "merged",
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
-        FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
+        FileSubject.assertThat(manifestFile).doesNotContain("splitName")
+        FileSubject.assertThat(manifestFile).contains("featureSplit=\"feature1\"")
 
         // check that the feature1 source manifest has not been changed so we can verify that
         // it is automatically reset to the base module value.
@@ -156,6 +158,19 @@ class DynamicAppTest {
         // and finally check that the resulting manifest has had its versionCode changed from the
         // base module value
         FileSubject.assertThat(manifestFile).contains("android:versionCode=\"11\"")
+
+        // Check that neither splitName or featureSplit are merged back to the base.
+        val baseManifest = FileUtils.join(project.getSubproject("app").buildDir,
+            "intermediates",
+            "merged_manifests",
+            "debug",
+            "processDebugManifest",
+            "merged",
+            "AndroidManifest.xml")
+        assertThat(baseManifest).isFile()
+        assertThat(baseManifest).doesNotContain("splitName")
+        assertThat(baseManifest).doesNotContain("featureSplit")
+
     }
 
     @Test
