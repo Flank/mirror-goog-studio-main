@@ -10,6 +10,7 @@
   <android.arch.persistence.room/>
   <android.arch.lifecycle/>
   <android.arch.core/>
+  <android.arch.navigation/>
   <com.google.android.instantapps/>
   <com.google.android.instantapps.thirdpartycompat/>
   <com.android.java.tools.build/>
