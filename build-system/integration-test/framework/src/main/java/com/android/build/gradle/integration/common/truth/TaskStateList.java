@@ -67,7 +67,8 @@ public class TaskStateList {
                 @NonNull ExecutionState executionState,
                 boolean inputChanged,
                 @NonNull TaskStateList taskStateList) {
-            Preconditions.checkArgument(!inputChanged || executionState == ExecutionState.DID_WORK);
+            Preconditions.checkArgument(
+                    !inputChanged || executionState != ExecutionState.UP_TO_DATE);
             this.taskName = taskName;
             this.executionState = executionState;
             this.inputChanged = inputChanged;
@@ -178,12 +179,14 @@ public class TaskStateList {
             }
         }
 
+        taskList = taskListBuilder.build();
+
         // Among the tasks that did work, detect those that were skipped and correct their state to
         // SKIPPED. (For "anchor" tasks such as "build", "check", Gradle does not report them with
         // TaskSkippedResult, so we need to detect them in the Gradle output.)
         ImmutableSet<String> noActionsTasks =
                 getTasksByPatternFromGradleOutput(gradleOutput, NO_ACTIONS_PATTERN);
-        Preconditions.checkState(taskListBuilder.build().containsAll(noActionsTasks));
+        Preconditions.checkState(taskList.containsAll(noActionsTasks));
         for (String noActionTask : noActionsTasks) {
             if (taskMap.get(ExecutionState.DID_WORK).contains(noActionTask)) {
                 taskMap.get(ExecutionState.DID_WORK).remove(noActionTask);
@@ -191,13 +194,15 @@ public class TaskStateList {
             }
         }
 
-        // Among the tasks that did work, detect those whose inputs have changed. This information
-        // is not provided by the tooling API, so we need to detect them in the Gradle output.
+        // Among the tasks that were not UP-TO-DATE, detect those whose inputs have changed. This
+        // information is not provided by the tooling API, so we need to detect them in the Gradle
+        // output.
         inputChangedTasks = getTasksByPatternFromGradleOutput(gradleOutput, INPUT_CHANGED_PATTERN);
-        Preconditions.checkState(
-                taskMap.get(ExecutionState.DID_WORK).containsAll(inputChangedTasks));
-
-        taskList = taskListBuilder.build();
+        Preconditions.checkState(taskList.containsAll(noActionsTasks));
+        for (String inputChangedTask : inputChangedTasks) {
+            Preconditions.checkState(
+                    !taskMap.get(ExecutionState.UP_TO_DATE).contains(inputChangedTask));
+        }
 
         ImmutableMap.Builder<String, TaskInfo> taskInfoMapBuilder = ImmutableMap.builder();
         for (ExecutionState state : taskMap.keySet()) {

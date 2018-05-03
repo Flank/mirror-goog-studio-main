@@ -80,6 +80,18 @@ public class TestFileUtils {
         searchAndReplace(file, search, replace, 0);
     }
 
+    public static void searchVerbatimAndReplace(
+            @NonNull File file, @NonNull String search, @NonNull String replace)
+            throws IOException {
+        searchAndReplace(file.toPath(), search, replace, Pattern.LITERAL);
+    }
+
+    public static void searchVerbatimAndReplace(
+            @NonNull Path path, @NonNull String search, @NonNull String replace)
+            throws IOException {
+        searchAndReplace(path, search, replace, Pattern.LITERAL);
+    }
+
     public static void searchAndReplace(
             @NonNull Path file, @NonNull String search, @NonNull String replace, int flags)
             throws IOException {

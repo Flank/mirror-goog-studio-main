@@ -268,7 +268,7 @@ public class SdkHandler {
     }
 
     @NonNull
-    public File getAndCheckSdkFolder() {
+    public File checkAndGetSdkFolder() {
         if (sdkFolder == null) {
             throw new RuntimeException(
                     "SDK location not found. Define location with sdk.dir in the local.properties file or with an ANDROID_HOME environment variable.");
@@ -280,7 +280,7 @@ public class SdkHandler {
     public synchronized SdkLoader getSdkLoader() {
         if (sdkLoader == null) {
             if (isRegularSdk) {
-                getAndCheckSdkFolder();
+                checkAndGetSdkFolder();
 
                 // check if the SDK folder actually exist.
                 // For internal test we provide a fake SDK location through
