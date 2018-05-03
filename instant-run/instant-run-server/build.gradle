@@ -19,7 +19,19 @@ apply plugin: 'java'
 sourceCompatibility = JavaVersion.VERSION_1_6
 targetCompatibility = JavaVersion.VERSION_1_6
 
-File androidJar = file('../../../../prebuilts/sdk/25/public/android.jar');
+static String getSdkPlatformPath() {
+    String os = System.getProperty("os.name")
+    if (os.startsWith("Mac OS")) {
+        return "darwin"
+    } else if (os.startsWith("Windows")) {
+        return "windows"
+    } else if (os.startsWith("Linux")) {
+        return "linux"
+    }
+    throw RuntimeException("Unexpected platform " + os)
+}
+File androidJar =
+        file('../../../../prebuilts/studio/sdk/' + getSdkPlatformPath() + '/platforms/android-27/android.jar')
 if (!androidJar.exists()) {
     // If not there, we're in one of the AOSP release branches where the
     // repo configuration does not include the whole prebuilts repository.
@@ -60,3 +72,4 @@ jar {
 tasks.withType(Javadoc) {
     classpath += files(androidJar)
 }
+
