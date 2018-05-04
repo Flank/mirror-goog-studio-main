@@ -142,7 +142,7 @@ public class ExtractAnnotationTest {
 
         GradleBuildResult result = project.executor().run("assembleDebug");
 
-        Truth.assertThat(result.getNotUpToDateTasks()).isEmpty();
+        Truth.assertThat(result.getDidWorkTasks()).isEmpty();
 
         // Make sure that annotations.zip contains no timestamps (for making it binary identical on every build)
         assertThat(

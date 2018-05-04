@@ -29,8 +29,6 @@ import com.google.common.truth.SubjectFactory;
  */
 public class GradleTaskSubject extends Subject<GradleTaskSubject, TaskInfo> {
 
-    public static final String UP_TO_DATE = "UP-TO-DATE";
-
     public static final SubjectFactory<GradleTaskSubject, TaskInfo> FACTORY =
             new SubjectFactory<GradleTaskSubject, TaskInfo>() {
                 @Override
@@ -57,63 +55,109 @@ public class GradleTaskSubject extends Subject<GradleTaskSubject, TaskInfo> {
         return getSubject().getTaskName();
     }
 
-    public void wasExecuted() {
-        if (!getSubject().isWasExecuted()) {
+    /**
+     * Asserts that the task was planned for execution (but it may or may not have actually run as
+     * it may have been skipped for some reason).
+     *
+     * <p>To check that the task actually ran and completed successfully, use {@link #didWork()}.
+     */
+    public void wasPlannedForExecution() {
+        if (!actual().wasPlannedForExecution()) {
             failWithRawMessage("Not true that %s was executed", getDisplaySubject());
         }
     }
 
-    public void wasNotExecuted() {
-        if (getSubject().isWasExecuted()) {
+    /**
+     * Use {@link #wasPlannedForExecution()} or {@link #didWork()} instead for clearer semantics.
+     */
+    public void wasExecuted() {
+        wasPlannedForExecution();
+    }
+
+    public void wasNotPlannedForExecution() {
+        if (actual().wasPlannedForExecution()) {
             failWithRawMessage("Not true that %s was not executed", getDisplaySubject());
         }
     }
 
+    /**
+     * Use {@link #wasNotPlannedForExecution()} or {@link #didNoWork()} instead for clearer
+     * semantics.
+     */
+    public void wasNotExecuted() {
+        wasNotPlannedForExecution();
+    }
+
     public void wasUpToDate() {
-        if (!getSubject().isUpToDate()) {
-            failWithRawMessage("Not true that %s was " + UP_TO_DATE, getDisplaySubject());
+        if (!actual().wasUpToDate()) {
+            failWithRawMessage("Not true that %s was UP-TO-DATE", getDisplaySubject());
         }
     }
 
+    /** Use {@link #didWork()} instead for clearer semantics. */
     public void wasNotUpToDate() {
-        if (getSubject().isUpToDate()) {
-            failWithRawMessage("Not true that %s was not " + UP_TO_DATE, getDisplaySubject());
+        if (actual().wasUpToDate()) {
+            failWithRawMessage("Not true that %s was not UP-TO-DATE", getDisplaySubject());
         }
     }
 
-    public void failed() {
-        if (!getSubject().failed()) {
-            failWithRawMessage("Not true that %s failed ", getDisplaySubject());
+    public void wasFromCache() {
+        if (!actual().wasFromCache()) {
+            failWithRawMessage("Not true that %s was FROM-CACHE", getDisplaySubject());
         }
     }
 
-    public void didNotFail() {
-        if (getSubject().failed()) {
-            failWithRawMessage("Not true that %s did not fail", getDisplaySubject());
+    public void wasNotFromCache() {
+        if (actual().wasFromCache()) {
+            failWithRawMessage("Not true that %s was not FROM-CACHE", getDisplaySubject());
+        }
+    }
+
+    public void didWork() {
+        if (!actual().didWork()) {
+            failWithRawMessage("Not true that %s did work", getDisplaySubject());
+        }
+    }
+
+    public void didNoWork() {
+        if (actual().didWork()) {
+            failWithRawMessage("Not true that %s did no work", getDisplaySubject());
         }
     }
 
     public void wasSkipped() {
-        if (!getSubject().isSkipped()) {
+        if (!actual().wasSkipped()) {
             failWithRawMessage("Not true that %s was skipped", getDisplaySubject());
         }
     }
 
     public void wasNotSkipped() {
-        if (getSubject().failed()) {
+        if (actual().wasSkipped()) {
             failWithRawMessage("Not true that %s was not skipped", getDisplaySubject());
         }
     }
 
+    public void failed() {
+        if (!actual().failed()) {
+            failWithRawMessage("Not true that %s failed ", getDisplaySubject());
+        }
+    }
+
+    public void didNotFail() {
+        if (actual().failed()) {
+            failWithRawMessage("Not true that %s did not fail", getDisplaySubject());
+        }
+    }
+
     public void hadChangedInputs() {
-        if (!getSubject().isInputChanged()) {
-            failWithRawMessage("Not true that %s has changed inputs", getDisplaySubject());
+        if (!actual().hadChangedInputs()) {
+            failWithRawMessage("Not true that %s had changed inputs", getDisplaySubject());
         }
     }
 
     public void hadNoChangedInputs() {
-        if (getSubject().isInputChanged()) {
-            failWithRawMessage("Not true that %s has no changed inputs", getDisplaySubject());
+        if (actual().hadChangedInputs()) {
+            failWithRawMessage("Not true that %s had no changed inputs", getDisplaySubject());
         }
     }
 

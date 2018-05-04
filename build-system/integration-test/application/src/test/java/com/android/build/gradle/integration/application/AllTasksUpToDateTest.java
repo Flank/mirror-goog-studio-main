@@ -21,8 +21,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.truth.Truth;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,13 +49,8 @@ public class AllTasksUpToDateTest {
 
         project.execute(tasksToRun);
         GradleBuildResult result = project.executor().run(tasksToRun);
-        Set<String> executedTasks =
-                result.getNotUpToDateTasks()
-                        .stream()
-                        .filter(task -> !result.getTask(task).isSkipped())
-                        .collect(Collectors.toSet());
 
-        Truth.assertThat(executedTasks)
+        Truth.assertThat(result.getDidWorkTasks())
                 // Known exceptions:
                 .containsExactly(
                         // Lint declares no outputs, so it's never up-to-date. It's probably for the
