@@ -18,11 +18,13 @@ package com.android.build.gradle.integration.packaging;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,6 +64,8 @@ public class AccentCharacterAndProguardTest {
 
     @Test
     public void assemble() throws Exception {
+        // FIXME: b/79189049
+        Assume.assumeFalse(TestUtils.runningFromBazel());
         GradleBuildResult result =
                 project.executor().run("assembleMinified");
     }
