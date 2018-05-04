@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +25,6 @@ import java.io.InputStream;
  * Represents the interface for dealing with assets.
  */
 public class AssetRepository {
-
     /**
      * Returns whether the IDE supports assets. This is used to determine if error messages should
      * be thrown.
@@ -32,18 +33,20 @@ public class AssetRepository {
         return false;
     }
 
-    public InputStream openAsset(String path, int mode) throws IOException {
+    @Nullable
+    public InputStream openAsset(@NonNull String path, int mode) throws IOException {
         return null;
     }
 
-    public InputStream openNonAsset(int cookie, String path, int mode) throws IOException {
+    @Nullable
+    public InputStream openNonAsset(int cookie, @NonNull String path, int mode) throws IOException {
         return null;
     }
 
     /**
      * Checks if the given path points to a file resource.
      */
-    public boolean isFileResource(String path) {
+    public boolean isFileResource(@NonNull String path) {
         return new File(path).isFile();
     }
 }
