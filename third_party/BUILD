@@ -652,7 +652,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.sf.proguard_proguard-base",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/6.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/6.0.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -660,7 +660,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.sf.proguard_proguard-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/6.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/6.0.3:jar",
     visibility = ["//visibility:public"],
     exports = [":net.sf.proguard_proguard-base"],
 )
