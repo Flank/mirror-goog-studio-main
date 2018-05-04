@@ -1104,14 +1104,25 @@ class AvdManagerCli extends CommandLineParser {
                     i++; // valid reply, move to next property
                     break;
                 case INTEGER_ENUM:
-                    // We will need to implement this if an INTEGER_ENUM field is
-                    // added to SdkConstants.FN_HARDWARE_INI
-                    errorAndExit("Program error: INTEGER_ENUM is not supported");
-                    break;
                 case STRING_ENUM:
-                    // We will need to implement this if a STRING_ENUM field is
-                    // added to SdkConstants.FN_HARDWARE_INI
-                    errorAndExit("Program error: STRING_ENUM is not supported");
+                    // Verify that the input is one of the enumerated values
+                    boolean isValidEnum = false;
+                    for (String enumString : property.getEnum()) {
+                        if (result.equals(enumString)) {
+                            map.put(property.getName(), result);
+                            isValidEnum = true;
+                            i++; // valid reply, move to next property
+                            break;
+                        }
+                    }
+                    if (!isValidEnum) {
+                        // display error, and do not increment i to redo this property
+                        mSdkLog.info("\nInvalid entry. Allowed values are:");
+                        for (String enumString : property.getEnum()) {
+                            mSdkLog.info(" \"%s\"", enumString);
+                        }
+                        mSdkLog.info("\n");
+                    }
                     break;
             }
 
