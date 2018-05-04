@@ -80,6 +80,7 @@
   <migrate old-name="android.support.design.widget.ViewOffsetHelper" new-name="com.google.android.material.appbar.ViewOffsetHelper" type="CLASS"/>
   <migrate old-name="android.support.design.widget.ViewUtilsLollipop" new-name="com.google.android.material.appbar.ViewUtilsLollipop" type="CLASS"/>
   <migrate old-name="android.support.design.widget.VisibilityAwareImageButton" new-name="com.google.android.material.internal.VisibilityAwareImageButton" type="CLASS"/>
+
   <!-- Support Library Classes and Packages -->
   <migrate old-name="android.support.v17.internal.widget.OutlineOnlyWithChildrenFrameLayout" new-name="androidx.leanback.preference.internal.OutlineOnlyWithChildrenFrameLayout" type="CLASS"/>
   <migrate old-name="android.support.v7.widget.RecyclerViewAccessibilityDelegate" new-name="androidx.recyclerview.widget.RecyclerViewAccessibilityDelegate" type="CLASS"/>
@@ -263,6 +264,7 @@
   <migrate old-name="android.support.v17.preference" new-name="androidx.leanback.preference" type="PACKAGE"/>
   <migrate old-name="android.support.text.emoji.R" new-name="androidx.emoji.R" type="CLASS"/>
   <migrate old-name="android.support.customtabs.R" new-name="androidx.browser.R" type="CLASS"/>
+  <migrate old-name="android.support.v4.app.SupportActivity" new-name="androidx.core.app.ComponentActivity" type="CLASS"/>
   <migrate old-name="android.support.v7.preference.internal" new-name="androidx.preference.internal" type="PACKAGE"/>
   <migrate old-name="android.support.v7.preference" new-name="androidx.preference" type="PACKAGE"/>
   <migrate old-name="android.arch.persistence.room" new-name="androidx.room" type="PACKAGE"/>
