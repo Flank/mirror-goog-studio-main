@@ -22,11 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A Resource value representing an attr resource.
+ * A resource value representing an attr resource.
  *
- * {@link #getValue()} will return null, instead use {@link #getAttributeValues()} to
+ * <p>{@link #getValue()} will return null, instead use {@link #getAttributeValues()} to
  * get the enum/flag value associated with an attribute defined in the declare-styleable.
- *
  */
 public class AttrResourceValue extends ResourceValue {
     @Nullable private Map<String, Integer> mValueMap;
@@ -53,7 +52,7 @@ public class AttrResourceValue extends ResourceValue {
         return mValueMap;
     }
 
-    public void addValue(String name, Integer value) {
+    public void addValue(@NonNull String name, @NonNull Integer value) {
         if (mValueMap == null) {
             mValueMap = new HashMap<>();
         }
