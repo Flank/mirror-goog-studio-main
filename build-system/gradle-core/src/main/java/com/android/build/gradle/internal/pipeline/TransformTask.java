@@ -83,6 +83,24 @@ public class TransformTask extends StreamBasedTask implements Context {
         this.workerExecutor = workerExecutor;
     }
 
+    @Input
+    @NonNull
+    public Set<? super QualifiedContent.Scope> getScopes() {
+        return transform.getScopes();
+    }
+
+    @Input
+    @NonNull
+    public Set<? super QualifiedContent.Scope> getReferencedScopes() {
+        return transform.getReferencedScopes();
+    }
+
+    @Input
+    @NonNull
+    public Set<QualifiedContent.ContentType> getInputTypes() {
+        return transform.getInputTypes();
+    }
+
     @InputFiles
     @Optional
     public Collection<File> getOldSecondaryInputs() {
@@ -195,7 +213,7 @@ public class TransformTask extends StreamBasedTask implements Context {
                                     computeNonIncTransformInput(consumedInputStreams));
                             referencedInputs.setValue(
                                     computeNonIncTransformInput(referencedInputStreams));
-                            changedSecondaryInputs.setValue(ImmutableList.<SecondaryInput>of());
+                            changedSecondaryInputs.setValue(ImmutableList.of());
                         } else {
                             // gather all secondary input changes.
                             changedSecondaryInputs.setValue(
@@ -225,7 +243,8 @@ public class TransformTask extends StreamBasedTask implements Context {
                                         .addSecondaryInputs(changedSecondaryInputs.getValue())
                                         .addOutputProvider(
                                                 outputStream != null
-                                                        ? outputStream.asOutput()
+                                                        ? outputStream.asOutput(
+                                                                isIncremental.getValue())
                                                         : null)
                                         .setIncrementalMode(isIncremental.getValue())
                                         .build());
