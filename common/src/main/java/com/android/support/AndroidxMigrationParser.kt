@@ -41,9 +41,12 @@ interface MigrationParserVisitor {
     fun visitClass(old: String, new: String)
     fun visitPackage(old: String, new: String)
     fun visitGradleCoordinate(
-        oldGroupName: String, oldArtifactName: String,
-        newGroupName: String, newArtifactName: String, newBaseVersion: String
+      oldGroupName: String, oldArtifactName: String,
+      newGroupName: String, newArtifactName: String, newBaseVersion: String
     )
+
+    /** Called for coordinate upgrades where the artifact name and group do not need to be refactored */
+    fun visitGradleCoordinateUpgrade(groupName: String, artifactName: String, newBaseVersion: String)
 }
 
 /**
