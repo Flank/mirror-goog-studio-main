@@ -152,6 +152,26 @@ class MinifyFeaturesTest(
                     }
                 }
                 """)
+            // include foo_view.xml and FooView.java below to generate aapt proguard rules to be
+            // merged in the base.
+            .withFile(
+                "src/main/res/layout/foo_view.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
+                    <view
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        class="com.example.lib2.FooView"
+                        android:id="@+id/foo_view" />"""
+            )
+            .withFile(
+                "src/main/java/com/example/lib2/FooView.java",
+                """package com.example.lib2;
+                    import android.content.Context;
+                    import android.view.View;
+                    public class FooView extends View {
+                        public FooView(Context context) {
+                            super(context);
+                        }
+                    }""")
             .withFile("src/main/resources/lib2_java_res.txt", "lib2")
             .withFile(
                 "src/main/java/com/example/lib2/Lib2Class.java",
@@ -200,9 +220,6 @@ class MinifyFeaturesTest(
                     .appendToBuild(
                         """
                             android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
 	                            dynamicFeatures = [':otherFeature1', ':otherFeature2']
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
@@ -221,9 +238,6 @@ class MinifyFeaturesTest(
                     .appendToBuild(
                         """
                             android {
-                                defaultConfig {
-                                    minSdkVersion 18
-                                }
                                 baseFeature true
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
@@ -363,19 +377,12 @@ class MinifyFeaturesTest(
                 .appendToBuild(
                     """
                         android {
-                            defaultConfig {
-                                minSdkVersion 18
-                            }
                             buildTypes {
                                 minified.initWith(buildTypes.debug)
                                 minified {
                                     consumerProguardFiles "proguard-rules.pro"
                                 }
                             }
-                        }
-
-                        dependencies {
-                            implementation 'com.android.support:appcompat-v7:' + rootProject.supportLibVersion
                         }
                         """
                 )
@@ -492,9 +499,6 @@ class MinifyFeaturesTest(
             it
             .appendToBuild("""
                 android {
-                    defaultConfig {
-                        minSdkVersion 18
-                    }
                     buildTypes {
                         minified.initWith(buildTypes.debug)
                     }
@@ -581,9 +585,6 @@ class MinifyFeaturesTest(
         MinimalSubProject.app("com.example.app")
             .appendToBuild("""
                 android {
-                    defaultConfig {
-                        minSdkVersion 18
-                    }
                     buildTypes {
                         minified.initWith(buildTypes.debug)
                     }
@@ -660,7 +661,8 @@ class MinifyFeaturesTest(
                 },
                 SdkConstants.FN_AAPT_RULES)
         FileSubject.assertThat(aaptProguardFile).exists()
-        FileSubject.assertThat(aaptProguardFile).doesNotContain("-keep class android.support")
+        FileSubject.assertThat(aaptProguardFile)
+            .doesNotContain("-keep class com.example.lib2.FooView")
         val mergedAaptProguardFile =
             FileUtils.join(
                 project.getSubproject("baseModule").intermediatesDir,
@@ -675,7 +677,8 @@ class MinifyFeaturesTest(
                 },
                 SdkConstants.FN_MERGED_AAPT_RULES)
         FileSubject.assertThat(mergedAaptProguardFile).exists()
-        FileSubject.assertThat(mergedAaptProguardFile).contains("-keep class android.support")
+        FileSubject.assertThat(mergedAaptProguardFile)
+            .contains("-keep class com.example.lib2.FooView")
 
         val baseModuleApk =
             project.getSubproject("baseModule")
@@ -723,6 +726,7 @@ class MinifyFeaturesTest(
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/Main;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
+        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/FooView;")
         if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
             assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/Lib2Class;")
         } else {
