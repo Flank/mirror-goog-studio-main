@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 
 /**
- * Utility class used for logging and outputing benchmark which can be consumed by our dashboard
+ * Utility class used for logging and outputting benchmark which can be consumed by our dashboard
  * systems. e.g. buildbots gather the output data and upload to bigstore/perfgate for regression
  * tracking and analysis.
  *
