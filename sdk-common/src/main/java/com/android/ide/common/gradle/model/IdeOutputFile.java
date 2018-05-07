@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Objects;
 
 /** Creates a deep copy of an {@link OutputFile}. */
@@ -133,8 +134,33 @@ public final class IdeOutputFile extends IdeModel implements OutputFile {
                 && Objects.equals(myFilterTypes, file.myFilterTypes)
                 && Objects.equals(myFilters, file.myFilters)
                 && Objects.equals(myOutputFile, file.myOutputFile)
-                && Objects.equals(myOutputs, file.myOutputs)
+                && areOutputsEqual(file)
                 && mainOutputFileEquals(file);
+    }
+
+    private boolean areOutputsEqual(@NonNull IdeOutputFile other) {
+        if (myOutputs == other.myOutputs) {
+            return true;
+        }
+        Iterator<? extends OutputFile> iterator1 = myOutputs.iterator();
+        Iterator<? extends OutputFile> iterator2 = other.myOutputs.iterator();
+        while (iterator1.hasNext()) {
+            if (!iterator2.hasNext()) {
+                return false;
+            }
+            Object o1 = iterator1.next();
+            Object o2 = iterator2.next();
+            if (o1 == this) {
+                if (o2 != other) {
+                    return false;
+                }
+                continue;
+            }
+            if (!Objects.equals(o1, o2)) {
+                return false;
+            }
+        }
+        return !iterator2.hasNext();
     }
 
     private boolean mainOutputFileEquals(@NonNull IdeOutputFile file) {
