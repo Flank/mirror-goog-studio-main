@@ -1678,10 +1678,9 @@ public final class SdkConstants {
     public static final String ATTR_ICON_PADDING = "iconPadding";
     public static final String ATTR_ICON_TINT = "iconTint";
     public static final String ATTR_ICON_TINT_MODE = "iconTintMode";
-    public static final String ATTR_ADDITIONAL_PADDING_LEFT_FOR_ICON =
-            "additionalPaddingLeftForIcon";
-    public static final String ATTR_ADDITIONAL_PADDING_RIGHT_FOR_ICON =
-            "additionalPaddingRightForIcon";
+    public static final String ATTR_ADDITIONAL_PADDING_START_FOR_ICON =
+            "additionalPaddingStartForIcon";
+    public static final String ATTR_ADDITIONAL_PADDING_END_FOR_ICON = "additionalPaddingEndForIcon";
     public static final String ATTR_STROKE_COLOR = "strokeColor";
     public static final String ATTR_STROKE_WIDTH = "strokeWidth";
     public static final String ATTR_CORNER_RADIUS = "cornerRadius";
