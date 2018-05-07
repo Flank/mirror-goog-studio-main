@@ -1707,6 +1707,15 @@ public final class SdkConstants {
     public static final String ATTR_SINGLE_SELECTION = "singleSelection";
     public static final String ATTR_CHECKED_CHIP = "checkedChip";
 
+    // Material Chip (ChipDrawable) Attributes
+    public static final String ATTR_CHIP_TEXT = "chipText";
+    public static final String ATTR_CHIP_ICON = "chipIcon";
+    public static final String ATTR_CHIP_ICON_ENABLED = "chipIconEnabled";
+    public static final String ATTR_CHECKED_ICON = "checkedIcon";
+    public static final String ATTR_CHECKED_ICON_ENABLED = "checkedIconEnabled";
+    public static final String ATTR_CLOSE_ICON = "closeIcon";
+    public static final String ATTR_CLOSE_ICON_ENABLED = "closeIconEnabled";
+
     // Material TabLayout Attributes
     public static final String ATTR_TAB_INDICATOR_HEIGHT = "tabIndicatorHeight";
     public static final String ATTR_TAB_BACKGROUND = "tabBackground";
