@@ -85,11 +85,8 @@
   <migrate old-name="android.support.v17.internal.widget.OutlineOnlyWithChildrenFrameLayout" new-name="androidx.leanback.preference.internal.OutlineOnlyWithChildrenFrameLayout" type="CLASS"/>
   <migrate old-name="android.support.v7.widget.RecyclerViewAccessibilityDelegate" new-name="androidx.recyclerview.widget.RecyclerViewAccessibilityDelegate" type="CLASS"/>
   <migrate old-name="android.support.text.emoji.bundled.BundledEmojiCompatConfig" new-name="androidx.emoji.bundled.BundledEmojiCompatConfig" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.session.MediaControllerCompatApi21" new-name="androidx.media.session.MediaControllerCompatApi21" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.session.MediaControllerCompatApi23" new-name="androidx.media.session.MediaControllerCompatApi23" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.session.MediaControllerCompatApi24" new-name="androidx.media.session.MediaControllerCompatApi24" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.session.MediaControllerCompat" new-name="androidx.media.session.MediaControllerCompat" type="CLASS"/>
   <migrate old-name="android.support.v4.view.animation.PathInterpolatorApi14" new-name="androidx.core.view.animation.PathInterpolatorApi14" type="CLASS"/>
+  <migrate old-name="android.support.v4.view.animation.PathInterpolatorCompat" new-name="androidx.core.view.animation.PathInterpolatorCompat" type="CLASS"/>
   <migrate old-name="android.support.v7.internal.widget.PreferenceImageView" new-name="androidx.preference.internal.PreferenceImageView" type="CLASS"/>
   <migrate old-name="android.support.v7.widget.RoundRectDrawableWithShadow" new-name="androidx.cardview.widget.RoundRectDrawableWithShadow" type="CLASS"/>
   <migrate old-name="android.support.v7.widget.StaggeredGridLayoutManager" new-name="androidx.recyclerview.widget.StaggeredGridLayoutManager" type="CLASS"/>
@@ -129,11 +126,7 @@
   <migrate old-name="android.support.v7.graphics.ColorCutQuantizer" new-name="androidx.palette.graphics.ColorCutQuantizer" type="CLASS"/>
   <migrate old-name="android.support.customtabs.ICustomTabsService" new-name="android.support.customtabs.ICustomTabsService" type="CLASS"/>
   <migrate old-name="android.support.v4.app.OneShotPreDrawListener" new-name="androidx.fragment.app.OneShotPreDrawListener" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.MediaBrowserCompatApi21" new-name="androidx.media.MediaBrowserCompatApi21" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.MediaBrowserCompatApi23" new-name="androidx.media.MediaBrowserCompatApi23" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.MediaBrowserCompatApi26" new-name="androidx.media.MediaBrowserCompatApi26" type="CLASS"/>
   <migrate old-name="android.support.v4.media.MediaBrowserCompatUtils" new-name="androidx.media.MediaBrowserCompatUtils" type="CLASS"/>
-  <migrate old-name="android.support.v4.media.MediaBrowserCompat" new-name="androidx.media.MediaBrowserCompat" type="CLASS"/>
   <migrate old-name="android.support.v4.media.MediaBrowserProtocol" new-name="androidx.media.MediaBrowserProtocol" type="CLASS"/>
   <migrate old-name="android.support.v4.widget.SimpleCursorAdapter" new-name="androidx.cursoradapter.widget.SimpleCursorAdapter" type="CLASS"/>
   <migrate old-name="android.support.v4.app.ActionBarDrawerToggle" new-name="androidx.legacy.app.ActionBarDrawerToggle" type="CLASS"/>
