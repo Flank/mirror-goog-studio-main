@@ -2257,6 +2257,9 @@ public final class SdkConstants {
     public static final String ANDROID_SUPPORT_DESIGN_PKG =
             ANDROID_SUPPORT_PKG_PREFIX + "design."; //$NON-NLS-1$
 
+    /** The com.google.android.material. package prefix */
+    public static final String ANDROID_MATERIAL_PKG = "com.google.android.material.";
+
     /** The android.support.v17.leanback. package prefix */
     public static final String ANDROID_SUPPORT_LEANBACK_V17_PKG =
             ANDROID_SUPPORT_PKG_PREFIX + "v17.leanback."; //$NON-NLS-1$
