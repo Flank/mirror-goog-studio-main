@@ -36,7 +36,7 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:gson",
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api[module]",
-        "//tools/idea/.idea/libraries:easymock-tools[test]",
+        "//tools/idea/.idea/libraries:Mocks[test]",
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.56:jar",
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.56:jar",
         "//tools/idea/.idea/libraries:truth[test]",

@@ -20,7 +20,7 @@ iml_module(
     deps = [
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:kxml2",
-        "//tools/idea/.idea/libraries:easymock-tools[test]",
+        "//tools/idea/.idea/libraries:Mocks[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
