@@ -1344,23 +1344,34 @@ public class AvdManager {
      * @return A new {@link AvdInfo} with an {@link AvdStatus} indicating whether this AVD is
      *         valid or not.
      */
-    private AvdInfo parseAvdInfo(File iniPath, ILogger log) {
+    @NonNull
+    private AvdInfo parseAvdInfo(@NonNull File iniPath, @NonNull ILogger log) {
         Map<String, String> map = parseIniFile(
                 new FileOpFileWrapper(iniPath, mFop, false),
                 log);
 
-        String avdPath = map.get(AVD_INFO_ABS_PATH);
-
-        if (avdPath == null || !(mFop.isDirectory(new File(avdPath)))) {
-            // Try to fallback on the relative path, if present.
-            String relPath = map.get(AVD_INFO_REL_PATH);
-            if (relPath != null) {
-                File androidFolder = mSdkHandler.getAndroidFolder();
-                File f = new File(androidFolder, relPath);
-                if (mFop.isDirectory(f)) {
-                    avdPath = f.getAbsolutePath();
+        String avdPath = null;
+        if (map != null) {
+            avdPath = map.get(AVD_INFO_ABS_PATH);
+            if (avdPath == null || !(mFop.isDirectory(new File(avdPath)))) {
+                // Try to fallback on the relative path, if present.
+                String relPath = map.get(AVD_INFO_REL_PATH);
+                if (relPath != null) {
+                    File androidFolder = mSdkHandler.getAndroidFolder();
+                    File f = new File(androidFolder, relPath);
+                    if (mFop.isDirectory(f)) {
+                        avdPath = f.getAbsolutePath();
+                    }
                 }
             }
+        }
+        if (avdPath == null || !(mFop.isDirectory(new File(avdPath)))) {
+            // Corrupted .ini file
+            String avdName = iniPath.getName();
+            if (avdName.endsWith(".ini")) {
+                avdName = avdName.substring(0, avdName.length() - 4);
+            }
+            return new AvdInfo(avdName, iniPath, iniPath.getPath(), null, null, AvdStatus.ERROR_CORRUPTED_INI);
         }
 
         FileOpFileWrapper configIniFile = null;
