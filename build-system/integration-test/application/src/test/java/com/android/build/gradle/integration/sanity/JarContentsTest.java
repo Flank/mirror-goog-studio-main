@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -387,6 +386,8 @@ public class JarContentsTest {
                 "desugar_deploy.jar:com/google/devtools/build/",
                 "desugar_deploy.jar:com/google/devtools/build/android/",
                 "desugar_deploy.jar:com/google/devtools/build/android/desugar/",
+                "desugar_deploy.jar:com/google/devtools/build/android/desugar/io/",
+                "desugar_deploy.jar:com/google/devtools/build/android/desugar/scan/",
                 "desugar_deploy.jar:com/google/devtools/common/",
                 "desugar_deploy.jar:com/google/devtools/common/options/",
                 "desugar_deploy.jar:com/google/devtools/common/options/processor/",
@@ -1158,7 +1159,6 @@ public class JarContentsTest {
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
 
-    @Ignore("b/79417734")
     @Test
     public void checkTools() throws Exception {
         checkGroup("com/android/tools", GMAVEN_ZIP);
