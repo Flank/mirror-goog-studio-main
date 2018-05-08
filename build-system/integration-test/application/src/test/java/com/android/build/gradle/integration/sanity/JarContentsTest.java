@@ -475,6 +475,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/api/sourcesets/",
                 "com/android/build/gradle/internal/core/",
                 "com/android/build/gradle/internal/coverage/",
+                "com/android/build/gradle/internal/crash/",
                 "com/android/build/gradle/internal/cxx/",
                 "com/android/build/gradle/internal/cxx/json/",
                 "com/android/build/gradle/internal/cxx/configure/",
@@ -686,6 +687,16 @@ public class JarContentsTest {
                 "wireless/android/",
                 "wireless/android/instantapps/",
                 "wireless/android/instantapps/sdk/");
+        expected.putAll(
+                "com/android/tools/analytics-library/crash",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/analytics/",
+                "com/android/tools/analytics/crash/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
         expected.putAll(
                 "com/android/tools/analytics-library/shared",
                 "com/",

@@ -74,5 +74,8 @@
     <orderEntry type="library" name="bundletool" level="project" />
     <orderEntry type="library" name="jetifier-core" level="project" />
     <orderEntry type="library" name="jetifier-processor" level="project" />
+    <orderEntry type="module" module-name="analytics-shared-base" />
+    <orderEntry type="module" module-name="analytics-crash-base" />
+    <orderEntry type="library" name="http-client" level="project" />
   </component>
 </module>

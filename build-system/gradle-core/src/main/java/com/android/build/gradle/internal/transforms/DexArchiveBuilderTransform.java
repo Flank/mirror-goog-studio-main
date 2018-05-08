@@ -36,6 +36,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.crash.PluginCrashReporter;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -412,6 +413,7 @@ public class DexArchiveBuilderTransform extends Transform {
             Thread.currentThread().interrupt();
             throw new TransformException(e);
         } catch (Exception e) {
+            PluginCrashReporter.maybeReportException(e);
             logger.error(null, Throwables.getStackTraceAsString(e));
             throw new TransformException(e);
         } finally {

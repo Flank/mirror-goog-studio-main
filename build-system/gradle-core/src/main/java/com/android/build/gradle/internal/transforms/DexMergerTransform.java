@@ -34,6 +34,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
+import com.android.build.gradle.internal.crash.PluginCrashReporter;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.dexing.DexMergerTool;
@@ -227,6 +228,7 @@ public class DexMergerTransform extends Transform {
             // now wait for all merge tasks completion
             mergeTasks.forEach(ForkJoinTask::join);
         } catch (Exception e) {
+            PluginCrashReporter.maybeReportException(e);
             // Print the error always, even without --stacktrace
             logger.error(null, Throwables.getStackTraceAsString(e));
             throw new TransformException(e);
