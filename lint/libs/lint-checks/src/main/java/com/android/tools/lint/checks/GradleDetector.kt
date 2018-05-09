@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.ANDROIDX_PKG_PREFIX
 import com.android.SdkConstants.FD_BUILD_TOOLS
 import com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION
 import com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION
@@ -1058,11 +1059,52 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
+    private fun MavenCoordinates.isSupportLibArtifact() =
+        isSupportLibraryDependentOnCompileSdk(groupId, artifactId)
+
+    /**
+     * Returns if the given group id belongs to an AndroidX artifact. This usually means that it
+     * starts with "androidx." but there is an special case for the navigation artifact which does
+     * start with "androidx." but links to non-androidx classes
+     */
+    private fun MavenCoordinates.isAndroidxArtifact() =
+      groupId.startsWith(ANDROIDX_PKG_PREFIX) && groupId != "androidx.navigation"
+
     private fun checkConsistentSupportLibraries(
         context: Context,
         cookie: Any?
     ) {
         checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID, null)
+
+        val androidLibraries = getAndroidLibraries(context.project)
+        var usesOldSupportLib: MavenCoordinates? = null
+        var usesAndroidX: MavenCoordinates? = null
+        for (library in androidLibraries) {
+            val coordinates = library.resolvedCoordinates
+            if (usesOldSupportLib == null && coordinates.isSupportLibArtifact()) {
+                usesOldSupportLib = coordinates
+            }
+            if (usesAndroidX == null && coordinates.isAndroidxArtifact()) {
+                usesAndroidX = coordinates
+            }
+
+            if (usesOldSupportLib != null && usesAndroidX != null) {
+                break
+            }
+        }
+
+        if (usesOldSupportLib != null && usesAndroidX != null) {
+            val message = "Dependencies using groupId " +
+                    "`$SUPPORT_LIB_GROUP_ID` and `$ANDROIDX_PKG_PREFIX*` " +
+                    "can not be combined but " +
+                    "found `$usesOldSupportLib` and `$usesAndroidX` incompatible dependencies"
+            if (cookie != null) {
+                reportNonFatalCompatibilityIssue(context, cookie, message)
+            }
+            else {
+                reportNonFatalCompatibilityIssue(context, guessGradleLocation(context.project), message)
+            }
+        }
     }
 
     private fun checkConsistentPlayServices(context: Context, cookie: Any?) {
