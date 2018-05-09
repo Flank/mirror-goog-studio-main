@@ -19,6 +19,8 @@ package com.android.tools.profiler.support.energy;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import com.android.tools.profiler.support.util.StackTrace;
+import com.android.tools.profiler.support.util.StudioLog;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -123,16 +125,32 @@ public final class WakeLockWrapper {
         if (!eventIdMap.containsKey(wakeLock)) {
             eventIdMap.put(wakeLock, EventIdGenerator.nextId());
         }
+        CreationParams creationParams = new CreationParams(1, "UNKNOWN");
         if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
-            CreationParams creationParams = wakeLockCreationParamsMap.get(wakeLock);
-            sendWakeLockAcquired(
-                    eventIdMap.get(wakeLock),
-                    creationParams.myLevelAndFlags,
-                    creationParams.myTag,
-                    timeout,
-                    // API acquire is one level down of user code or 3rd party code.
-                    StackTrace.getStackTrace(1));
+            creationParams = wakeLockCreationParamsMap.get(wakeLock);
+        } else {
+            try {
+                Class<?> wakeLockClass = wakeLock.getClass();
+                Field flagsField = wakeLockClass.getDeclaredField("mFlags");
+                Field tagField = wakeLockClass.getDeclaredField("mTag");
+                flagsField.setAccessible(true);
+                tagField.setAccessible(true);
+                int flags = flagsField.getInt(wakeLock);
+                String tag = (String) tagField.get(wakeLock);
+                creationParams = new CreationParams(flags, tag);
+            } catch (NoSuchFieldException e) {
+                StudioLog.e("Failed to retrieve wake lock parameters: ", e);
+            } catch (IllegalAccessException e) {
+                StudioLog.e("Failed to retrieve wake lock parameters: ", e);
+            }
         }
+        sendWakeLockAcquired(
+                eventIdMap.get(wakeLock),
+                creationParams.myLevelAndFlags,
+                creationParams.myTag,
+                timeout,
+                // API acquire is one level down of user code or 3rd party code.
+                StackTrace.getStackTrace(1));
     }
 
     /**

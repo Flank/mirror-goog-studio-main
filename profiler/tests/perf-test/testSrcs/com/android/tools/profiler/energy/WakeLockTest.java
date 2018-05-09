@@ -114,4 +114,32 @@ public class WakeLockTest {
         String stack = TestUtils.getBytes(myGrpc, releasedEvent.getTraceId());
         assertThat(stack).contains(ACTIVITY_CLASS);
     }
+
+    /**
+     * If wake lock creation happens before profiler is attached, verify that we still get
+     * WakeLockAcquired events.
+     */
+    @Test
+    public void testAcquireWithoutNewWakeLock() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquireWithoutNewWakeLock");
+        assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 1);
+        assertThat(response.getEventsCount()).isEqualTo(1);
+
+        EnergyEvent acquiredEvent = response.getEvents(0);
+        assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
+        assertThat(acquiredEvent.getIsTerminal()).isFalse();
+        assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
+        assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
+                .isEqualTo(Level.PARTIAL_WAKE_LOCK);
+        assertThat(acquiredEvent.getWakeLockAcquired().getFlagsCount()).isEqualTo(0);
+        assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
+        assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
+    }
 }

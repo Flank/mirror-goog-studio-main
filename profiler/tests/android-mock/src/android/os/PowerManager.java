@@ -56,4 +56,12 @@ public final class PowerManager {
     public WakeLock newWakeLock(int levelAndFlags, String tag) {
         return new WakeLock(levelAndFlags, tag);
     }
+
+    /**
+     * Same as {@link #newWakeLock(int, String)} but for testing. Different signature so this
+     * doesn't trigger instrumentation.
+     */
+    public WakeLock newWakeLockForTesting(int levelAndFlags, String tag) {
+        return newWakeLock(levelAndFlags, tag);
+    }
 }
