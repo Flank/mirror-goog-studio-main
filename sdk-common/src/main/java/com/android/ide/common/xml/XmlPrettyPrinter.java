@@ -461,15 +461,13 @@ public class XmlPrettyPrinter {
                     // right if we're next to a markup string on the given side
                     if (lastPrefixNewline != -1) {
                         Node left = node.getPreviousSibling();
-                        if (left != null && left.getNodeType() == Node.ELEMENT_NODE
-                                && isMarkupElement((Element) left)) {
+                        if (isMarkupNode(left)) {
                             text = ' ' + text;
                         }
                     }
                     if (stripSuffix) {
                         Node right = node.getNextSibling();
-                        if (right != null && right.getNodeType() == Node.ELEMENT_NODE
-                                && isMarkupElement((Element) right)) {
+                        if (isMarkupNode(right)) {
                             text += ' ';
                         }
                     }
@@ -492,13 +490,20 @@ public class XmlPrettyPrinter {
             // space to disappear, but we do want repeated spaces to collapse into one.
             Node left = node.getPreviousSibling();
             Node right = node.getNextSibling();
-            if (left != null && right != null
-                    && left.getNodeType() == Node.ELEMENT_NODE
-                    && right.getNodeType() == Node.ELEMENT_NODE
-                    && isMarkupElement((Element)left)) {
+            if (isMarkupNode(left) && isMarkupNode(right)) {
                 mOut.append(' ');
             }
         }
+    }
+
+    private boolean isMarkupNode(@Nullable Node node) {
+        if (node == null) {
+            return false;
+        }
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            return isMarkupElement((Element) node);
+        }
+        return node.getNodeType() == Node.CDATA_SECTION_NODE;
     }
 
     private void printComment(int depth, Node node) {
