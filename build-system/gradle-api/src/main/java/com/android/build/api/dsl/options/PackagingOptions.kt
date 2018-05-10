@@ -136,7 +136,9 @@ import org.gradle.api.Incubating
  * merge "/LICENSE.txt" // Same as: merges += ["/LICENSE.txt"]
  * excludes -= ["/LICENSE.txt"] // Not really needed because merges take precedence over excludes.
  * }
-</pre> *
+</pre>* *
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface PackagingOptions : Initializable<PackagingOptions> {

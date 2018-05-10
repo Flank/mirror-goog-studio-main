@@ -27,6 +27,8 @@ import org.gradle.api.Named
  *
  * See [Signing Your
  * Applications](http://developer.android.com/tools/publishing/app-signing.html)
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface SigningConfig : Named, Initializable<SigningConfig> {

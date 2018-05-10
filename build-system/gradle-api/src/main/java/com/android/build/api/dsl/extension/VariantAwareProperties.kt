@@ -28,6 +28,8 @@ import org.gradle.api.NamedDomainObjectContainer
 
 /** Partial extension properties for modules that have variants made of [ProductFlavor] and
  * [BuildType]
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface VariantAwareProperties : DefaultConfig {

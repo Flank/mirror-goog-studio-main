@@ -23,6 +23,8 @@ import org.gradle.api.Named
 /**
  * An AndroidSourceSet represents a logical group of Java, aidl and RenderScript sources as well as
  * Android and non-Android (Java-style) resources.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface AndroidSourceSet : Named {

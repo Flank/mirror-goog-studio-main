@@ -19,6 +19,9 @@ package com.android.build.api.dsl.options
 import com.android.build.api.dsl.Initializable
 import org.gradle.api.Incubating
 
+/**
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface DexOptions : Initializable<DexOptions> {
 

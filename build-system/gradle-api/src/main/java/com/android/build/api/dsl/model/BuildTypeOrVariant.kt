@@ -20,7 +20,10 @@ import com.android.build.api.dsl.options.PostProcessingOptions
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** properties common to build types and variants  */
+/** properties common to build types and variants
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface BuildTypeOrVariant {
 

@@ -18,7 +18,10 @@ package com.android.build.api.artifact
 
 import org.gradle.api.Incubating
 
-/** Represents a type of build artifact.  */
+/** Represents a type of build artifact.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface ArtifactType {
     fun name(): String

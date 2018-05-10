@@ -20,7 +20,10 @@ import com.android.build.api.dsl.Initializable
 import com.google.common.collect.ListMultimap
 import org.gradle.api.Incubating
 
-/** Options for configuring scoped shader options.  */
+/** Options for configuring scoped shader options.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface ShaderOptions : Initializable<ShaderOptions> {
 

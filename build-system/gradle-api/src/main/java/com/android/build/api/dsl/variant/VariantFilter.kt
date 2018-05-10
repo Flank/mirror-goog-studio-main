@@ -27,6 +27,8 @@ import org.gradle.api.Incubating
  * variants.
  *
  * It is possible to disable all or just specific ones.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface VariantFilter {

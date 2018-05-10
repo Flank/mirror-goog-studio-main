@@ -20,6 +20,9 @@ import com.android.build.api.dsl.variant.Variant
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
+/**
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface VariantCallbackHandler<T: Variant> {
 

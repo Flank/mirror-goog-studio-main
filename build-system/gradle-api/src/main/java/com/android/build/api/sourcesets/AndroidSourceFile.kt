@@ -20,7 +20,10 @@ import org.gradle.api.Incubating
 import java.io.File
 import org.gradle.api.Named
 
-/** An AndroidSourceFile represents a single file input for an Android project.  */
+/** An AndroidSourceFile represents a single file input for an Android project.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface AndroidSourceFile : Named {
 

@@ -18,7 +18,10 @@ package com.android.build.api.artifact
 
 import org.gradle.api.Incubating
 
-/** A provider of [BuildableArtifact] created via [BuildArtifactTransformBuilder].  */
+/** A provider of [BuildableArtifact] created via [BuildArtifactTransformBuilder].
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface InputArtifactProvider {
     /**

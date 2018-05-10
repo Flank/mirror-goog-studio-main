@@ -22,7 +22,10 @@ import com.android.builder.testing.api.TestServer
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** Partial extension properties for modules that contain on-device tests  */
+/** Partial extension properties for modules that contain on-device tests
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface OnDeviceTestProperties {
     /**

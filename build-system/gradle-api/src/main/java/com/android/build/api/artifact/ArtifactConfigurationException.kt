@@ -18,5 +18,8 @@ package com.android.build.api.artifact
 
 import org.gradle.api.Incubating
 
+/**
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 class ArtifactConfigurationException(msg: String) : RuntimeException(msg)

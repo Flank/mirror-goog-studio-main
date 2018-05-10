@@ -25,6 +25,8 @@ import org.gradle.api.Incubating
  * those that don't (com.android.reporting).
  *
  * this can be used to verify that an extension called 'android' is in fact an Android extension.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface AndroidExtension

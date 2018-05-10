@@ -22,7 +22,10 @@ import com.android.build.api.dsl.options.VectorDrawablesOptions
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** properties common to product flavors and variants  */
+/** properties common to product flavors and variants.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface ProductFlavorOrVariant {
 

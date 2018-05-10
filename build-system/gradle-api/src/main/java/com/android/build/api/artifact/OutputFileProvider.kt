@@ -19,7 +19,10 @@ package com.android.build.api.artifact
 import org.gradle.api.Incubating
 import java.io.File
 
-/** A provider of File defined in [BuildArtifactTransformBuilder].  */
+/** A provider of File defined in [BuildArtifactTransformBuilder].
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface OutputFileProvider {
     /**

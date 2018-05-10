@@ -53,6 +53,8 @@ import org.gradle.api.Task
  *             BuildableArtifactType.JAVAC_CLASSES,
  *             BuildableArtifactType.JAVA_COMPILE_CLASSPATH)
  *     }
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface BuildArtifactTransformBuilder<out T : Task> {

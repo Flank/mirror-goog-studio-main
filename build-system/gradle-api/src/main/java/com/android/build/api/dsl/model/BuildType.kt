@@ -27,6 +27,8 @@ import org.gradle.api.Named
  *
  * It does not include the sources or the dependencies. Those are available on the container or
  * in the artifact info.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantProperties, FallbackStrategy, Initializable<BuildType>, Named {

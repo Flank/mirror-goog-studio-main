@@ -23,7 +23,10 @@ import com.android.builder.model.DataBindingOptions
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** properties common to the extension and the generated variants */
+/** properties common to the extension and the generated variants.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface VariantOrExtensionProperties {
     fun aaptOptions(action: Action<AaptOptions>)

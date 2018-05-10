@@ -24,7 +24,10 @@ import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
 
-/** Partial extension properties for modules that build a variant aware android artifact  */
+/** Partial extension properties for modules that build a variant aware android artifact
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface BuildProperties {
     /**

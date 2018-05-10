@@ -26,6 +26,8 @@ import java.util.function.Supplier
  * A Iterable<File> that implements [Buildable]
  *
  * [BuildableArtifact] can be used as Task inputs.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface BuildableArtifact : Iterable<File>, Buildable, Supplier<FileCollection> {

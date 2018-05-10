@@ -21,7 +21,10 @@ import org.gradle.api.Incubating
 import java.io.File
 import org.gradle.api.tasks.Input
 
-/** DSL object for configuring lint options.  */
+/** DSL object for configuring lint options.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface LintOptions : Initializable<LintOptions> {
 

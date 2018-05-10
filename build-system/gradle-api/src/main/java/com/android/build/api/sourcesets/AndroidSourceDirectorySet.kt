@@ -23,7 +23,10 @@ import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.util.PatternFilterable
 
-/** An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.  */
+/** An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface AndroidSourceDirectorySet : PatternFilterable, Named {
 

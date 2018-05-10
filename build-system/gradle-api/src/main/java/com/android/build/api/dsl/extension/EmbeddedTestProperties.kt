@@ -23,7 +23,10 @@ import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Incubating
 
-/** Partial extension properties for modules that contain tests  */
+/** Partial extension properties for modules that contain tests
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface EmbeddedTestProperties {
     /** Return the name of the BuildType used when running connectedCheck. If null, runs the
