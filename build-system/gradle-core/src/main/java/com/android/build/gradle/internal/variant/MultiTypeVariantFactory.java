@@ -21,6 +21,7 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -32,6 +33,9 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.errors.EvalIssueException;
+import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -98,6 +102,25 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
     public void validateModel(@NonNull VariantModel model) {
         for (BaseVariantFactory variantFactory : delegates.values()) {
             variantFactory.validateModel(model);
+        }
+
+        if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isFeatureSplit)) {
+            return;
+        }
+
+        EvalIssueReporter issueReporter = androidBuilder.getIssueReporter();
+
+        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+            if (buildType.getBuildType().isMinifyEnabled()) {
+                issueReporter.reportError(
+                        Type.GENERIC,
+                        new EvalIssueException(
+                                "Feature modules cannot set minifyEnabled to true. "
+                                        + "minifyEnabled is set to true in build type '"
+                                        + buildType.getBuildType().getName()
+                                        + "'.\nTo enable minification for a feature module, "
+                                        + "set minifyEnabled to true in the base module."));
+            }
         }
     }
 
