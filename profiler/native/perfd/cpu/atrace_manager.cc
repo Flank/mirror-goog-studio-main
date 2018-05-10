@@ -25,19 +25,28 @@
 #include <unistd.h>
 #include <sstream>
 
+#include "proto/profiler.grpc.pb.h"
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
+#include "utils/device_info.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
 #include "utils/tokenizer.h"
 #include "utils/trace.h"
+#include "utils/fs/disk_file_system.h"
 
 using std::string;
+using profiler::proto::Device;
 
 namespace profiler {
 
 const char *AtraceManager::kAtraceExecutable = "/system/bin/atrace";
+const char *kTracingFileNames[] = {"/sys/kernel/debug/tracing/tracing_on",
+                                   // Legacy tracing file name.
+                                   "/sys/kernel/tracing/tracing_on"};
 const int kBufferSize = 1024 * 4;  // About the size of a page.
+// Number of times we attempt to run the same atrace command.
+const int kRetryAttempts = 5;
 const char *kCategories[] = {"gfx", "input",  "view", "wm",   "am",
                              "sm",  "camera", "hal",  "app",  "res",
                              "pm",  "sched",  "freq", "idle", "load"};
@@ -55,6 +64,7 @@ AtraceManager::~AtraceManager() {}
 
 bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
                                    int sampling_interval_us,
+                                   int buffer_size_in_mb,
                                    std::string *trace_path,
                                    std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
@@ -65,31 +75,56 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   dumps_created_ = 0;
   Trace trace("CPU: StartProfiling atrace");
   Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
-
+  std::ostringstream buffer_size_arg;
+  buffer_size_arg << "-b " << (buffer_size_in_mb * 1024);
   // Build entry to keep track of what is being profiled.
   profiled_app_.trace_path = GetTracePath(app_pkg_name);
   profiled_app_.app_pkg_name = app_pkg_name;
   // Point trace path to entry's trace path so the trace can be pulled later.
   *trace_path = profiled_app_.trace_path;
-
-  RunAtrace(app_pkg_name, profiled_app_.trace_path, "--async_start");
-  is_profiling_ = true;
-  atrace_thread_ = std::thread(&AtraceManager::DumpData, this);
-  return true;
+  // Check if atrace is already running, if it is its okay to use that instance.
+  bool isRunning = IsAtraceRunning();
+  for (int i = 0; i < kRetryAttempts && !isRunning; i++) {
+    RunAtrace(app_pkg_name, profiled_app_.trace_path, "--async_start",
+              buffer_size_arg.str());
+    isRunning = IsAtraceRunning();
+  }
+  if (!isRunning) {
+    assert(error != nullptr);
+    error->append("Failed to run atrace start.");
+  } else {
+    atrace_thread_ = std::thread(&AtraceManager::DumpData, this);
+  }
+  is_profiling_ = isRunning;
+  return isRunning;
 }
 
 void AtraceManager::RunAtrace(const string &app_pkg_name, const string &path,
-                              const string &command) {
+                              const string &command,
+                              const string &additional_arguments) {
   std::ostringstream args;
-  args << "-z -b 32768"  // 32mb buffer should be large enough for all 30sec
-                         // captures.
-       << " -a " << app_pkg_name << " -o " << path << " " << command << " "
-       << categories_;
+  args << "-z " << additional_arguments << " -a " << app_pkg_name << " -o "
+       << path << " " << command << " " << categories_;
   profiler::BashCommandRunner atrace(kAtraceExecutable);
   // Log when we run an atrace command, this will help in the future if we have
   // any errors.
-  Log::D("Atrace Args: %s", args.str().c_str());
+  Log::D("Running Atrace with the following args: %s", args.str().c_str());
   atrace.Run(args.str(), nullptr);
+}
+
+bool AtraceManager::IsAtraceRunning() {
+  DiskFileSystem fs;
+  int fileNameCount = sizeof(kTracingFileNames) / sizeof(kTracingFileNames[0]);
+  bool isRunning = false;
+  for (int i = 0; i < fileNameCount; i++) {
+    string contents = fs.GetFileContents(kTracingFileNames[i]);
+    // Only need to test the value of the first file with a value.
+    if (!contents.empty()) {
+      isRunning = contents[0] == '1';
+      break;
+    }
+  }
+  return isRunning;
 }
 
 std::string AtraceManager::BuildSupportedCategoriesString() {
@@ -167,13 +202,29 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
   // Should occur after is_profiling is set to false to stop our polling thread.
   dump_data_condition_.notify_all();
   atrace_thread_.join();
-  RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_stop");
+  bool isRunning = IsAtraceRunning();
+  string path = GetNextDumpPath();
+  for (int i = 0; i < kRetryAttempts && isRunning; i++) {
+    // For pre O devices, simply stopping atrace doesn't always write a file.
+    // As such we need to create the file first. This allows atrace to properly
+    // modify the contents of the file.
+    if (DeviceInfo::feature_level() < Device::O) {
+      DiskFileSystem fs;
+      fs.CreateFile(path);
+    }
+    RunAtrace(profiled_app_.app_pkg_name, path, "--async_stop");
+    isRunning = IsAtraceRunning();
+  }
+  if (isRunning) {
+    assert(error != nullptr);
+    error->append("Failed to stop atrace.");
+    return false;
+  }
   if (need_result) {
     return CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
                         profiled_app_.trace_path.c_str());
-  } else {
-    return true;
   }
+  return !isRunning;
 }
 
 void AtraceManager::Shutdown() {

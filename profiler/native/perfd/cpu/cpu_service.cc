@@ -218,8 +218,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
         configuration.sampling_interval_us(), &trace_path, &error);
   } else if (configuration.profiler_type() == CpuProfilerType::ATRACE) {
     success = atrace_manager_.StartProfiling(
-        app_pkg_name, configuration.sampling_interval_us(), &trace_path,
-        &error);
+        app_pkg_name, configuration.sampling_interval_us(),
+        configuration.buffer_size_in_mb(), &trace_path, &error);
   } else {
     // TODO: Move the activity manager to the daemon.
     // It should be shared with everything in perfd.
@@ -360,9 +360,9 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
                                        app.configuration.sampling_interval_us(),
                                        &app.trace_path, &error, true);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
-    atrace_manager_.StartProfiling(app.app_pkg_name,
-                                   app.configuration.sampling_interval_us(),
-                                   &app.trace_path, &error);
+    atrace_manager_.StartProfiling(
+        app.app_pkg_name, app.configuration.sampling_interval_us(),
+        app.configuration.buffer_size_in_mb(), &app.trace_path, &error);
   }
 
   cache_.AddStartupProfilingStart(app.app_pkg_name, app);

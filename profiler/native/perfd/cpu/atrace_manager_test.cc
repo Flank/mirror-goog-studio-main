@@ -23,6 +23,7 @@
 
 using std::string;
 using testing::EndsWith;
+using testing::Eq;
 using testing::Ge;
 using testing::Lt;
 
@@ -46,15 +47,22 @@ class FakeAtraceManager final : public AtraceManager {
   // The order of the calls, and run a function that allows each test to
   // determine the behavior of the atrace call.
   virtual void RunAtrace(const std::string& app_name, const std::string& path,
-                         const std::string& command) override {
+                         const std::string& command,
+                         const std::string& additional_args) override {
     std::unique_lock<std::mutex> lock(block_mutex_);
     block_var_.notify_one();
+    if (forced_running_state_ != -1) {
+      // If we are forcing the running state to emulate errors, then we don't
+      // need the test to validate the internal state.
+      return;
+    }
 
     // Each time we get a new command verify the state is the expected state.
     if (command.compare("--async_start") == 0) {
       EXPECT_FALSE(start_profiling_captured_);
       EXPECT_FALSE(stop_profiling_captured_);
       EXPECT_THAT(profiling_dumps_captured_, 0);
+      EXPECT_THAT(additional_args, testing::Eq("-b 8192"));
       start_profiling_captured_ = true;
     } else if (command.compare("--async_stop") == 0) {
       EXPECT_TRUE(start_profiling_captured_);
@@ -70,6 +78,13 @@ class FakeAtraceManager final : public AtraceManager {
       write_data_callback_(path, profiling_dumps_captured_);
       profiling_dumps_captured_++;
     }
+  }
+
+  virtual bool IsAtraceRunning() override {
+    if (forced_running_state_ == -1) {
+      return start_profiling_captured_ && !stop_profiling_captured_;
+    }
+    return forced_running_state_;
   }
 
   virtual std::string BuildSupportedCategoriesString() override {
@@ -117,6 +132,11 @@ class FakeAtraceManager final : public AtraceManager {
     stop_profiling_captured_ = false;
     start_profiling_captured_ = false;
     profiling_dumps_captured_ = 0;
+    forced_running_state_ = -1;
+  }
+
+  void ForceRunningState(bool isRunning) {
+    forced_running_state_ = isRunning ? 1 : 0;
   }
 
  private:
@@ -125,6 +145,8 @@ class FakeAtraceManager final : public AtraceManager {
   std::function<void(const std::string&, int)> write_data_callback_;
   bool start_profiling_captured_;
   bool stop_profiling_captured_;
+  // -1 is not set, 0, is false, 1 is true.
+  int forced_running_state_;
   int profiling_dumps_captured_;
 };
 
@@ -142,7 +164,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
   TestInitializer test_data;
   int dump_count = 3;
   FakeAtraceManager atrace(&test_data.fake_clock);
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
+  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
                                     &test_data.trace_path, &test_data.error));
   EXPECT_TRUE(atrace.IsProfiling());
   atrace.BlockForXTraces(dump_count);
@@ -156,7 +178,7 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
   int dump_count = 3;
   FakeAtraceManager atrace(&test_data.fake_clock);
   for (int i = 0; i < 3; i++) {
-    EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
+    EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
                                       &test_data.trace_path, &test_data.error));
     EXPECT_THAT(atrace.GetDumpCount(), Lt(dump_count));
     EXPECT_TRUE(atrace.IsProfiling());
@@ -172,16 +194,48 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
 TEST(AtraceManagerTest, ProfilingStartTwice) {
   TestInitializer test_data;
   FakeAtraceManager atrace(&test_data.fake_clock);
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
+  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
                                     &test_data.trace_path, &test_data.error));
   atrace.BlockForXTraces(1);
   EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
   EXPECT_TRUE(atrace.IsProfiling());
-  EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000,
+  EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000, 8,
                                      &test_data.trace_path, &test_data.error));
 
   EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
   EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
+}
+
+TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
+  TestInitializer test_data;
+  FakeAtraceManager atrace(&test_data.fake_clock);
+  atrace.ForceRunningState(false);
+  EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000, 8,
+                                     &test_data.trace_path, &test_data.error));
+  EXPECT_THAT(test_data.error, Eq("Failed to run atrace start."));
+
+  test_data.error.clear();
+  atrace.ResetState();
+  // Start profiling
+  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
+                                    &test_data.trace_path, &test_data.error));
+  // Fail to stop profiling
+  atrace.ForceRunningState(true);
+  EXPECT_FALSE(
+      atrace.StopProfiling(test_data.app_name, false, &test_data.error));
+  EXPECT_THAT(test_data.error, Eq("Failed to stop atrace."));
+
+  test_data.error.clear();
+  atrace.ResetState();
+  // Start profiling
+  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
+                                    &test_data.trace_path, &test_data.error));
+  // Fail to stop profiling, this time we expect a result however the error
+  // should be the same.
+  atrace.ForceRunningState(true);
+  EXPECT_FALSE(
+      atrace.StopProfiling(test_data.app_name, true, &test_data.error));
+  EXPECT_THAT(test_data.error, Eq("Failed to stop atrace."));
 }
 
 TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
@@ -195,7 +249,7 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
     fwrite(&count, sizeof(int), 1, file);
     fclose(file);
   });
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
+  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
                                     &test_data.trace_path, &test_data.error));
   EXPECT_THAT(atrace.GetDumpCount(), Ge(0));
   atrace.BlockForXTraces(dump_count);
