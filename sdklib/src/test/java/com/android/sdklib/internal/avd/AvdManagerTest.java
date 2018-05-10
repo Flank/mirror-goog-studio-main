@@ -29,7 +29,8 @@ import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
 import com.android.utils.NullLogger;
 import com.google.common.collect.Maps;
-import java.io.File;
+
+import java.io.*;
 import java.util.*;
 import junit.framework.TestCase;
 
@@ -579,6 +580,60 @@ public class AvdManagerTest extends TestCase {
         assertEquals("1920", updatedHardwareProperties.get("hw.lcd.height"));
         assertEquals("yes", updatedHardwareProperties.get("hw.keyboard"));
     }
+
+    public void testParseAvdInfo() throws Exception {
+        MockLog log = new MockLog();
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageAosp,
+          null,
+          null,
+          null,
+          null,
+          null,
+          false,
+          false,
+          false,
+          false,
+          log);
+
+        // Check a valid AVD .ini file
+        String parentFolder = mAvdFolder.getParent();
+        String avdIniName = this.getName() + ".ini";
+        File avdIniFile = new File(parentFolder, avdIniName);
+        assertTrue("Expected AVD .ini in " + parentFolder, mFileOp.exists(avdIniFile));
+        AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
+        assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);
+        assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder.getAbsolutePath());
+
+        // Check a bad AVD .ini file.
+        // Append garbage to make the file invalid.
+        try (OutputStream corruptedStream = mFileOp.newFileOutputStream(avdIniFile, true);
+             BufferedWriter corruptedWriter = new BufferedWriter(new OutputStreamWriter(corruptedStream))) {
+            corruptedWriter.write("[invalid syntax]\n");
+        }
+        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
+        assertThat(corruptedInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
+
+        // Check a non-existent AVD .ini file
+        String noSuchIniName = "noSuch.ini";
+        File noSuchIniFile = new File(parentFolder, noSuchIniName);
+        assertFalse("Found unexpected noSuch.ini in " + parentFolder, mFileOp.exists(noSuchIniFile));
+        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(noSuchIniFile, log);
+        assertThat(noSuchInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
+
+        // Check an empty AVD .ini file
+        File emptyIniFile = new File(parentFolder, "empty.ini");
+        try (OutputStream unusedOStream = mFileOp.newFileOutputStream(emptyIniFile, true)) {
+            ; // Don't write anything
+        }
+        assertTrue("Expected empty AVD .ini in " + parentFolder, mFileOp.exists(emptyIniFile));
+        assertThat(emptyIniFile.length()).isEqualTo(0);
+        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(emptyIniFile, log);
+        assertThat(emptyInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
+    }
+
 
 
     private static void recordSysImg23(MockFileOp fop) {
