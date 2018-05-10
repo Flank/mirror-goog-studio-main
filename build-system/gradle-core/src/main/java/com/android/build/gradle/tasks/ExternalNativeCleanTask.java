@@ -124,9 +124,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             }
             diagnostic("%s", processBuilder);
             ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
-                    getBuilder(),
-                    processBuilder,
-                    true /* logStdioToInfo */);
+                    getBuilder(), processBuilder, true /* logStdioToInfo */, "" /* logPrefix */);
         }
     }
 

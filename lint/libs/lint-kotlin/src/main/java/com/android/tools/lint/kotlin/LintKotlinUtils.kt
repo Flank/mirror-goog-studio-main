@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.kotlin.KotlinUastBindingContextProviderService
+import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 
 /**
  * Computes argument mapping from arguments to parameters (or returns
@@ -44,7 +44,7 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
 
     val service = ServiceManager.getService(
         receiver.project,
-        KotlinUastBindingContextProviderService::class.java
+        KotlinUastResolveProviderService::class.java
     ) ?: return null
     val bindingContext = service.getBindingContext(receiver)
     val parameters = method.parameterList.parameters

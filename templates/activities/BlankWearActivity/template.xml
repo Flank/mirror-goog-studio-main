@@ -5,7 +5,7 @@
     name="Blank Wear Activity"
     minApi="23"
     minBuildApi="23"
-    description="Creates a blank activity for Android Wear">
+    description="Creates a blank activity for Wear OS">
 
     <category value="Activity" />
     <formfactor value="Wear" />

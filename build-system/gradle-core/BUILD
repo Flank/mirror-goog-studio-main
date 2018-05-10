@@ -103,6 +103,8 @@ maven_pom(
 
 kotlin_test(
     name = "tests",
+    size = "large",
+    timeout = "long",
     srcs = ["src/test/java"],
     data = [
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
@@ -119,7 +121,6 @@ kotlin_test(
     ],
     resources = glob(["src/test/resources/**"]),
     tags = [
-        "no_test_mac",
         "no_test_windows",  # b/72972266 for mac, b/73306170 for win
         "slow",
     ],

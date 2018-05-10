@@ -731,6 +731,36 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testManifestPlaceholders() {
+        // Regression test for 78678414
+        //noinspection all // Sample code
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\"\n"
+                                        + "    android:versionCode=\"1\"\n"
+                                        + "    android:versionName=\"1.0\" >\n"
+                                        + "\n"
+                                        + "    <meta-data android:name=\"account_type\" android:value=\"${account_type}\" />\n"
+                                        + "</manifest>\n"),
+                        manifest().minSdk(14),
+                        gradle(
+                                ""
+                                        + "android {\n"
+                                        + "  defaultConfig {\n"
+                                        + "    resValue \"string\", \"account_type\", \"com.google\"\n"
+                                        + "\n"
+                                        + "    manifestPlaceholders = [ \"account_type\": \"@string/account_type\" ]\n"
+                                        + "  }\n"
+                                        + "}\n"))
+                .variant("debug")
+                .issues(UnusedResourceDetector.ISSUE) // skip UnusedResourceDetector.ISSUE_IDS
+                .allowCompilationErrors()
+                .run()
+                .expectClean();
+    }
+
     public void testStaticImport() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=40293
         // 40293: Lint reports resource as unused when referenced via "import static"

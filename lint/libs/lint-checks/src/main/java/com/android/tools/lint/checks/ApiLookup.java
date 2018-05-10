@@ -78,7 +78,7 @@ public class ApiLookup {
     public static final int SDK_DATABASE_MIN_VERSION = 26;
 
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 14;
+    private static final int BINARY_FORMAT_VERSION = 15;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
 

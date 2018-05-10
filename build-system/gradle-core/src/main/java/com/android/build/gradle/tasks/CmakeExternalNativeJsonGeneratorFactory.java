@@ -35,7 +35,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
     public static ExternalNativeJsonGenerator createCmakeStrategy(
             @NonNull Revision cmakeRevision,
             @NonNull NdkHandler ndkHandler,
-            int minSdkVersion,
             @NonNull String variantName,
             @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
@@ -63,7 +62,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
                         Revision.Precision.MICRO))) {
             return new CmakeAndroidNinjaExternalNativeJsonGenerator(
                     ndkHandler,
-                    minSdkVersion,
                     variantName,
                     abis,
                     androidBuilder,
@@ -92,7 +90,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
 
         return new CmakeServerExternalNativeJsonGenerator(
                 ndkHandler,
-                minSdkVersion,
                 variantName,
                 abis,
                 androidBuilder,

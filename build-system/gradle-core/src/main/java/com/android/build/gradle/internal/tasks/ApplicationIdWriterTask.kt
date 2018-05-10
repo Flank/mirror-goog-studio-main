@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import java.io.File
 import java.io.IOException
+import java.util.function.IntSupplier
 import java.util.function.Supplier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -50,14 +51,12 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     @get:Internal lateinit var applicationIdSupplier: Supplier<String?> private set
     @get:Input val applicationId get() = applicationIdSupplier.get()
 
-    @get:Input
-    lateinit var versionCode: String
-        private set
+    @get:Internal lateinit var versionCodeSupplier: Supplier<Int> private set
+    @get:Input val versionCode get() = versionCodeSupplier.get().toString()
 
-    @get:Input
-    @get:Optional
-    var versionName: String? = null
-        private set
+    @get:Internal lateinit var versionNameSupplier: Supplier<String?> private set
+    @get:Input @get:Optional val versionName get() = versionNameSupplier.get()
+
 
     @get:InputFiles
     @get:Optional
@@ -101,8 +100,12 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
                 variantScope.variantConfiguration.applicationId
             }
 
-            task.versionCode = variantScope.variantConfiguration.versionCode.toString()
-            task.versionName = variantScope.variantConfiguration.versionName
+            task.versionCodeSupplier = TaskInputHelper.memoize {
+                variantScope.variantConfiguration.versionCode
+            }
+            task.versionNameSupplier = TaskInputHelper.memoize {
+                variantScope.variantConfiguration.versionName
+            }
 
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             task.outputFile = variantScope.artifacts.appendArtifact(

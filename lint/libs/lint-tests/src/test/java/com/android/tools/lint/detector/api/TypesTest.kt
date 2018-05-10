@@ -229,7 +229,7 @@ class TypesTest : TestCase() {
             "" +
                     "public final class TestKt {\n" +
                     "    public static final fun sideeffect(@org.jetbrains.annotations.NotNull number: int) : void {\n" +
-                    "        <anonymous class>(number)\n" +
+                    "        println(number)\n" +
                     "    }\n" +
                     "    public static final fun main(@org.jetbrains.annotations.NotNull args: java.lang.String[]) : void {\n" +
                     "        <init>()\n" +

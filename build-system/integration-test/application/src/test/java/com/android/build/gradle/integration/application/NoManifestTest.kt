@@ -19,10 +19,14 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
+import com.android.builder.model.SyncIssue
 import com.google.common.collect.Iterables
 import org.junit.Rule
 import org.junit.Test
+import java.util.stream.Collectors
 import kotlin.test.assertEquals
 
 class NoManifestTest {
@@ -36,15 +40,28 @@ class NoManifestTest {
 
     @Test
     fun noManifestConfigurationPassesTest() {
-        project.execute("tasks")
+        project.executor().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).run("tasks")
         // we should be able to create task list, without a valid manifest.
     }
 
     @Test
     fun noManifestSyncNoApplicationIdTest() {
-        val issues = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
-        // there should only be a sync issue relating to the applicationId being unavailable.
-        assertEquals(1, issues.size)
+        val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+        assertEquals(2, issues.size)
+        val errors = issues.stream()
+            .filter { syncIssue -> syncIssue.severity === SyncIssue.SEVERITY_ERROR }
+            .collect(Collectors.toList<SyncIssue>())
+
+        assertThat<SyncIssue, Iterable<SyncIssue>>(errors).hasSize(1)
+        val error = Iterables.getOnlyElement<SyncIssue>(errors)
+        assertThat(error.type).isEqualTo(SyncIssue.TYPE_GENERIC)
+
+        val warnings = issues.stream()
+            .filter { syncIssue -> syncIssue.severity === SyncIssue.SEVERITY_WARNING }
+            .collect(Collectors.toList<SyncIssue>())
+        assertThat<SyncIssue, Iterable<SyncIssue>>(warnings).hasSize(1)
+        val warning = Iterables.getOnlyElement<SyncIssue>(warnings)
+        assertThat(warning).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
     }
 
     @Test
@@ -53,9 +70,12 @@ class NoManifestTest {
             project.getSubproject(":app").buildFile,
             "\nandroid.defaultConfig.applicationId \"com.example.app\"\n"
         )
-        val issues = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+        val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
 
-        assertEquals(0, issues.size)
+        assertEquals(1, issues.size)
+        val issue = Iterables.getOnlyElement(issues)
+        assertThat(issue).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
+        assertThat(issue).hasSeverity(SyncIssue.SEVERITY_WARNING)
     }
 
 }

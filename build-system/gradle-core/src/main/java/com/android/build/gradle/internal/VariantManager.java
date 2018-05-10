@@ -1025,7 +1025,7 @@ public class VariantManager implements VariantModel {
                                 variantType,
                                 signingOverride,
                                 globalScope.getErrorHandler(),
-                                this::getHasCreatedTasks);
+                                this::canParseManifest);
 
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
@@ -1199,7 +1199,7 @@ public class VariantManager implements VariantModel {
                         testSourceSet != null ? getParser(testSourceSet.getManifestFile()) : null,
                         buildTypeData.getTestSourceSet(type),
                         type,
-                        this::getHasCreatedTasks);
+                        this::canParseManifest);
 
 
         for (CoreProductFlavor productFlavor : productFlavorList) {
@@ -1449,11 +1449,14 @@ public class VariantManager implements VariantModel {
     @NonNull
     private ManifestAttributeSupplier getParser(@NonNull File file) {
         return manifestParserMap.computeIfAbsent(
-                file, f -> new DefaultManifestParser(f, this::getHasCreatedTasks));
+                file,
+                f ->
+                        new DefaultManifestParser(
+                                f, this::canParseManifest, androidBuilder.getIssueReporter()));
     }
 
-    private boolean getHasCreatedTasks() {
-        return hasCreatedTasks;
+    private boolean canParseManifest() {
+        return hasCreatedTasks || !projectOptions.get(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING);
     }
 
     public void setHasCreatedTasks(boolean hasCreatedTasks) {

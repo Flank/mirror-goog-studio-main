@@ -75,6 +75,7 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.SHARED_JAVA_RES,
             ArtifactType.JAR,
             ArtifactType.MANIFEST,
+            ArtifactType.NON_NAMESPACED_MANIFEST,
             ArtifactType.ANDROID_RES,
             ArtifactType.ASSETS,
             ArtifactType.SHARED_ASSETS,
@@ -118,6 +119,9 @@ public class AarTransform extends ArtifactTransform {
             case LINT:
                 return listIfExists(FileUtils.join(input, FD_JARS, FN_LINT_JAR));
             case MANIFEST:
+                if (shouldBeAutoNamespaced(input)) {
+                    return Collections.emptyList();
+                }
                 if (isShared(input)) {
                     // Return both the manifest and the extra snippet for the shared library.
                     return listIfExists(
@@ -127,6 +131,12 @@ public class AarTransform extends ArtifactTransform {
                 } else {
                     return listIfExists(new File(input, FN_ANDROID_MANIFEST_XML));
                 }
+            case NON_NAMESPACED_MANIFEST:
+                // Non-namespaced libraries cannot be shared, so if it needs rewriting return only
+                // the manifest.
+                return (shouldBeAutoNamespaced(input))
+                        ? listIfExists(new File(input, FN_ANDROID_MANIFEST_XML))
+                        : Collections.emptyList();
             case ANDROID_RES:
                 return listIfExists(new File(input, FD_RES));
             case ASSETS:

@@ -140,6 +140,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                                             .withJniDebuggableBuild(isJniDebuggable())
                                             .withAcceptedAbis(
                                                     ImmutableSet.of(split.getFilterName()))
+                                            .withIssueReporter(getBuilder().getIssueReporter())
                                             .build()) {
                                 ImmutableMap<RelativeFile, FileStatus> nativeLibs =
                                         IncrementalRelativeFileSets.fromZipsAndDirectories(

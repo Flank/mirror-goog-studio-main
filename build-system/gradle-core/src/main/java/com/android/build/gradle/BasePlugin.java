@@ -114,10 +114,15 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
@@ -178,6 +183,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
     private Recorder threadRecorder;
 
     private boolean hasCreatedTasks = false;
+
+    private ExecutorService nativeJsonGenExecutor = null;
 
     BasePlugin(@NonNull ToolingModelBuilderRegistry registry) {
         ClasspathVerifier.checkClasspathSanity();
@@ -844,12 +851,44 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
 
         checkSplitConfiguration();
+
         if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(projectOptions)) {
-            threadRecorder.record(
-                    ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
-                    project.getPath(),
-                    null,
-                    () -> {
+            regenerateNativeJson(forceRegeneration);
+        }
+        BuildableArtifactImpl.Companion.enableResolution();
+        variantManager.setHasCreatedTasks(true);
+    }
+
+    private void regenerateNativeJson(boolean forceRegeneration) {
+        threadRecorder.record(
+                ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
+                project.getPath(),
+                null,
+                () -> {
+                    if (projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)) {
+                        if (nativeJsonGenExecutor == null) {
+                            nativeJsonGenExecutor = createNativeJsonGenExecutor();
+                        }
+                        List<Callable<Void>> buildSteps = new ArrayList<>();
+                        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+                            ExternalNativeJsonGenerator generator =
+                                    variantScope.getExternalNativeJsonGenerator();
+                            if (generator != null) {
+                                // This will generate any out-of-date or non-existent JSONs.
+                                // When refreshExternalNativeModel() is true it will also
+                                // force update all JSONs.
+                                buildSteps.addAll(generator.parallelBuild(forceRegeneration));
+                            }
+                        }
+                        try {
+                            nativeJsonGenExecutor.invokeAll(buildSteps);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(
+                                    "Thread was interrupted while native build JSON generation"
+                                            + " was in progress.",
+                                    e);
+                        }
+                    } else {
                         for (VariantScope variantScope : variantManager.getVariantScopes()) {
                             ExternalNativeJsonGenerator generator =
                                     variantScope.getExternalNativeJsonGenerator();
@@ -860,10 +899,14 @@ public abstract class BasePlugin<E extends BaseExtension2>
                                 generator.build(forceRegeneration);
                             }
                         }
-                    });
-        }
-        BuildableArtifactImpl.Companion.enableResolution();
-        variantManager.setHasCreatedTasks(true);
+                    }
+                });
+    }
+
+    private static ExecutorService createNativeJsonGenExecutor() {
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        int threadNumber = Math.min(cpuCores, 8);
+        return Executors.newFixedThreadPool(threadNumber);
     }
 
     private void checkSplitConfiguration() {

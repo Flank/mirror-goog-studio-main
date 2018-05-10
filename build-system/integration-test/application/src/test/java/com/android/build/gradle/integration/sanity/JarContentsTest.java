@@ -386,6 +386,8 @@ public class JarContentsTest {
                 "desugar_deploy.jar:com/google/devtools/build/",
                 "desugar_deploy.jar:com/google/devtools/build/android/",
                 "desugar_deploy.jar:com/google/devtools/build/android/desugar/",
+                "desugar_deploy.jar:com/google/devtools/build/android/desugar/io/",
+                "desugar_deploy.jar:com/google/devtools/build/android/desugar/scan/",
                 "desugar_deploy.jar:com/google/devtools/common/",
                 "desugar_deploy.jar:com/google/devtools/common/options/",
                 "desugar_deploy.jar:com/google/devtools/common/options/processor/",

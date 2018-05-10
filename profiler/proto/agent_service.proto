@@ -53,6 +53,11 @@ message AgentConfig {
     string app_dir = 4;
   }
 
+  message CpuConfig {
+    // Waiting time in Seconds for ART when stopping the ongoing ART profiling.
+    int32 art_stop_timeout_sec = 1;
+  }
+
   // equivalent to profiler.jvmti flag in Studio
   bool use_jvmti = 1;
   MemoryConfig mem_config = 2;
@@ -73,4 +78,5 @@ message AgentConfig {
   bool cpu_api_tracing_enabled = 9;
   // Android API level as defined in com.android.sdklib.AndroidVersion.
   int32 android_feature_level = 10;
+  CpuConfig cpu_config = 11;
 }

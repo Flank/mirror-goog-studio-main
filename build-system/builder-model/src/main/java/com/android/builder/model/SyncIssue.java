@@ -160,10 +160,16 @@ public interface SyncIssue {
     /** Indicated that an experimental gradle project option is used. */
     int TYPE_UNSUPPORTED_PROJECT_OPTION_USE = 32;
 
+    /**
+     * Indicates that building the configuration rules for this project requires parsing the
+     * manifest file.
+     */
+    int TYPE_MANIFEST_PARSED_DURING_CONFIGURATION = 33;
+
     // WHEN ADDING NEW VALUES HERE, UPDATE EvalIssueReporter.Type
 
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 33; // increment when adding new types.
+    int TYPE_MAX = 34; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

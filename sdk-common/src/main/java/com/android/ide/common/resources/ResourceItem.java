@@ -9,7 +9,6 @@ import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
-import java.io.File;
 import java.util.Comparator;
 
 /**

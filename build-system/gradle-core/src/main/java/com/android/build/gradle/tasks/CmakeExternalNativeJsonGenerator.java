@@ -54,7 +54,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     CmakeExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
-            int minSdkVersion,
             @NonNull String variantName,
             @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
@@ -73,7 +72,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             @NonNull GradleBuildVariant.Builder stats) {
         super(
                 ndkHandler,
-                minSdkVersion,
                 variantName,
                 abis,
                 androidBuilder,

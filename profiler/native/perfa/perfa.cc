@@ -19,6 +19,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <algorithm>
+#include <cassert>
 #include <string>
 
 #include "agent/agent.h"
@@ -93,18 +94,23 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
                   "FusedLocationProviderClient;") == 0));
 }
 
-// ClassPrepare event callback to invoke transformation of selected
-// classes, saves expensive OnClassFileLoaded calls for other classes.
+// ClassPrepare event callback to invoke transformation of selected classes.
+// In pre-P, this saves expensive OnClassFileLoaded calls for other classes.
 void JNICALL OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                             jthread thread, jclass klass) {
+  // In P+ we keep OnClassFileLoaded always enabled and thus disable
+  // ClassPrepare events.
+  assert(agent_config.android_feature_level() <= 27);
   char* sig_mutf8;
   jvmti_env->GetClassSignature(klass, &sig_mutf8, nullptr);
   if (IsRetransformClassSignature(sig_mutf8)) {
-    jvmti_env->SetEventNotificationMode(
-        JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    CheckJvmtiError(
+        jvmti_env, jvmti_env->SetEventNotificationMode(
+                       JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
     CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, &klass));
-    jvmti_env->SetEventNotificationMode(
-        JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    CheckJvmtiError(jvmti_env, jvmti_env->SetEventNotificationMode(
+                                   JVMTI_DISABLE,
+                                   JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
   }
   if (sig_mutf8 != nullptr) {
     jvmti_env->Deallocate((unsigned char*)sig_mutf8);
@@ -200,7 +206,8 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
         "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
         "onFixTracePathEntry"));
     if (!mi_fix_entry.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "fixTracePath", "(Ljava/lang/String;)Ljava/lang/String;"))) {
+            ir::MethodId(desc.c_str(), "fixTracePath",
+                         "(Ljava/lang/String;)Ljava/lang/String;"))) {
       Log::E("Error instrumenting Debug.fixTracePath entry");
     }
 
@@ -210,7 +217,8 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
         "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
         "onFixTracePathExit"));
     if (!mi_fix_exit.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "fixTracePath", "(Ljava/lang/String;)Ljava/lang/String;"))) {
+            ir::MethodId(desc.c_str(), "fixTracePath",
+                         "(Ljava/lang/String;)Ljava/lang/String;"))) {
       Log::E("Error instrumenting Debug.fixTracePath exit");
     }
   } else if (strcmp(name, "android/os/PowerManager") == 0) {
@@ -846,6 +854,19 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   CheckJvmtiError(jvmti_env,
                   jvmti_env->SetEventCallbacks(&callbacks, sizeof(callbacks)));
 
+  // Before P ClassFileLoadHook has significant performance overhead so we
+  // only enable the hook during retransformation (on agent attach and class
+  // prepare). For P+ we want to keep the hook events always on to support
+  // multiple retransforming agents (and therefore don't need to perform
+  // retransformation on class prepare).
+  bool filter_class_load_hook = agent_config.android_feature_level() <= 27;
+  SetEventNotification(jvmti_env,
+                       filter_class_load_hook ? JVMTI_ENABLE : JVMTI_DISABLE,
+                       JVMTI_EVENT_CLASS_PREPARE);
+  SetEventNotification(jvmti_env,
+                       filter_class_load_hook ? JVMTI_DISABLE : JVMTI_ENABLE,
+                       JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+
   // Sample instrumentation
   std::vector<jclass> classes;
   jint class_count;
@@ -865,19 +886,22 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   if (classes.size() > 0) {
     jthread thread = nullptr;
     jvmti_env->GetCurrentThread(&thread);
-    jvmti_env->SetEventNotificationMode(
-        JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    if (filter_class_load_hook) {
+      CheckJvmtiError(jvmti_env, jvmti_env->SetEventNotificationMode(
+                                     JVMTI_ENABLE,
+                                     JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
+    }
     CheckJvmtiError(jvmti_env,
                     jvmti_env->RetransformClasses(classes.size(), &classes[0]));
-    jvmti_env->SetEventNotificationMode(
-        JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    if (filter_class_load_hook) {
+      CheckJvmtiError(jvmti_env, jvmti_env->SetEventNotificationMode(
+                                     JVMTI_DISABLE,
+                                     JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
+    }
     if (thread != nullptr) {
       jni_env->DeleteLocalRef(thread);
     }
   }
-
-  jvmti_env->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE,
-                                      nullptr);
 
   for (int i = 0; i < class_count; ++i) {
     jni_env->DeleteLocalRef(loaded_classes[i]);

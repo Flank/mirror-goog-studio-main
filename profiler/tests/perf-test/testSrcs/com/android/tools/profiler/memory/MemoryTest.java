@@ -39,7 +39,7 @@ public class MemoryTest {
     @Before
     public void setup() throws Exception {
         // We currently only test O+ test scenarios.
-        myPerfDriver = new PerfDriver(true);
+        myPerfDriver = new PerfDriver(26);
         myPerfDriver.start(ACTIVITY_CLASS);
         myGrpc = myPerfDriver.getGrpc();
 

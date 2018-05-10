@@ -48,12 +48,12 @@ class ActivityManager {
                       bool is_startup_profiling = false);
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
-  // no-op. If |need_result|, waits ART for finishing writing the trace file.
-  // Returns true is profiling stopped successfully. Otherwise false
-  // and populate error_string.
+  // no-op. If |need_result|, waits ART for |timeout_sec| Seconds for finishing
+  // writing the trace file. Returns true is profiling stopped successfully.
+  // Otherwise false and populate error_string.
   bool StopProfiling(const std::string &app_package_name, bool need_result,
-                     std::string *error_string,
-                     bool is_startup_profiling = false);
+                     std::string *error_string, int32_t timeout_sec,
+                     bool is_startup_profiling);
 
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;

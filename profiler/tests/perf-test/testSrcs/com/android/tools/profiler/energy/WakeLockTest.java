@@ -28,22 +28,38 @@ import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class WakeLockTest {
+    @Parameters
+    public static Collection<Integer> data() {
+        return Arrays.asList(26, 28);
+    }
+
     private static final String ACTIVITY_CLASS = "com.activity.energy.WakeLockActivity";
 
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
 
+    public WakeLockTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
+    }
+
     @Before
     public void setUp() throws Exception {
-        myPerfDriver = new PerfDriver(true);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
@@ -97,5 +113,33 @@ public class WakeLockTest {
 
         String stack = TestUtils.getBytes(myGrpc, releasedEvent.getTraceId());
         assertThat(stack).contains(ACTIVITY_CLASS);
+    }
+
+    /**
+     * If wake lock creation happens before profiler is attached, verify that we still get
+     * WakeLockAcquired events.
+     */
+    @Test
+    public void testAcquireWithoutNewWakeLock() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquireWithoutNewWakeLock");
+        assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 1);
+        assertThat(response.getEventsCount()).isEqualTo(1);
+
+        EnergyEvent acquiredEvent = response.getEvents(0);
+        assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
+        assertThat(acquiredEvent.getIsTerminal()).isFalse();
+        assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
+        assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
+                .isEqualTo(Level.PARTIAL_WAKE_LOCK);
+        assertThat(acquiredEvent.getWakeLockAcquired().getFlagsCount()).isEqualTo(0);
+        assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
+        assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
     }
 }

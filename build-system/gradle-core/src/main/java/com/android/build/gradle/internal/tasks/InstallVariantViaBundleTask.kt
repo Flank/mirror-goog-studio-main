@@ -230,7 +230,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
         }
      }
 
-    class ConfigAction(private val scope: VariantScope) :
+    internal class ConfigAction(private val scope: VariantScope) :
         TaskConfigAction<InstallVariantViaBundleTask> {
 
         override fun getName(): String {

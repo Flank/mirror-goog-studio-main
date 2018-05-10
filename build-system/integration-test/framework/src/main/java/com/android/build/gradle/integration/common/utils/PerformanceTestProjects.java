@@ -300,6 +300,8 @@ public class PerformanceTestProjects {
                     file,
                     "buildToolsVersion \"[^\"]+\"",
                     String.format("buildToolsVersion \"%s\"", AndroidBuilder.MIN_BUILD_TOOLS_REV));
+
+            TestFileUtils.searchAndReplace(file, "compileSdkVersion \\d+", "compileSdkVersion 27");
         }
 
 

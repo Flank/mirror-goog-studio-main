@@ -112,7 +112,7 @@ class ClientWindow(val title: String, private val client: Client) {
             mData.set(b)
         }
 
-        fun getData(timeout: Long, unit: TimeUnit): ByteArray {
+        fun getData(timeout: Long, unit: TimeUnit): ByteArray? {
             waitForResult(timeout, unit)
             return mData.get()
         }

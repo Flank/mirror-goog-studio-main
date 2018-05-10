@@ -33,7 +33,7 @@ import org.gradle.api.tasks.PathSensitivity;
  * A base task with stream fields that properly use Gradle's input/output annotations to return the
  * stream's content as input/output.
  */
-public class StreamBasedTask extends AndroidBuilderTask {
+public abstract class StreamBasedTask extends AndroidBuilderTask {
 
     /** Registered as task input in {@link #registerConsumedAndReferencedStreamInputs()}. */
     protected Collection<TransformStream> consumedInputStreams;

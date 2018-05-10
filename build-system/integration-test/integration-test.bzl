@@ -11,7 +11,7 @@ load('//tools/base/bazel:kotlin.bzl', 'kotlin_library', 'kotlin_jar')
 #     maven_repos = Absolute targets for maven repos containing the plugin(s) under test
 #     shard_count = 8)
 def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test/java"], resources=[],
-                            runtime_deps=[], shard_count=1, tags=[], **kwargs):
+                            runtime_deps=[], shard_count=1, tags=[], timeout='eternal', **kwargs):
 
   kotlin_srcs = [src for src in srcs if src.endswith('.kt')]
   java_srcs = [src for src in srcs if src.endswith('.java')]
@@ -58,7 +58,7 @@ def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test
 
   native.java_test(
       name = name,
-      timeout = 'eternal',
+      timeout = timeout,
       data = data + zip_targets,
       jvm_flags = [
           '-Dtest.suite.jar=.gradle_integration_test.jar',

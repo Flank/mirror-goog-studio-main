@@ -57,7 +57,9 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         /** The {@link Device} this AVD is based on is no longer available */
         ERROR_DEVICE_MISSING,
         /** the {@link SystemImage} this AVD is based on is no longer available */
-        ERROR_IMAGE_MISSING
+        ERROR_IMAGE_MISSING,
+        /** The AVD's .ini file is corrupted */
+        ERROR_CORRUPTED_INI
     }
 
     private final String mName;
@@ -117,7 +119,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         mProperties = properties == null ? Collections.<String, String>emptyMap()
                 : Collections.unmodifiableMap(properties);
         mStatus = status;
-        String psString = properties.get(AvdManager.AVD_INI_PLAYSTORE_ENABLED);
+        String psString = mProperties.get(AvdManager.AVD_INI_PLAYSTORE_ENABLED);
         mHasPlayStore = "true".equalsIgnoreCase(psString) || "yes".equalsIgnoreCase(psString);
     }
 
@@ -356,6 +358,8 @@ public final class AvdInfo implements Comparable<AvdInfo> {
                 return String.format("%1$s %2$s no longer exists as a device",
                         mProperties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER),
                         mProperties.get(AvdManager.AVD_INI_DEVICE_NAME));
+            case ERROR_CORRUPTED_INI:
+                return String.format("Corrupted AVD ini file: %1$s", getIniFile());
             case OK:
                 return null;
         }

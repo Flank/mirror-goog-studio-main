@@ -52,8 +52,8 @@ import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import android.databinding.tool.CompilerArguments;
 import android.databinding.tool.DataBindingBuilder;
-import android.databinding.tool.DataBindingCompilerArgs;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -119,6 +119,7 @@ import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
@@ -2875,14 +2876,14 @@ public abstract class TaskManager {
                 javaCompileOptions.getAnnotationProcessorOptions();
         if (processorOptions
                 instanceof com.android.build.gradle.internal.dsl.AnnotationProcessorOptions) {
-            com.android.build.gradle.internal.dsl.AnnotationProcessorOptions ots =
+            com.android.build.gradle.internal.dsl.AnnotationProcessorOptions options =
                     (com.android.build.gradle.internal.dsl.AnnotationProcessorOptions)
                             processorOptions;
             // Specify data binding only if another class is specified. Doing so disables discovery
             // so we must explicitly list data binding.
-            if (!ots.getClassNames().isEmpty()
-                    && !ots.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
-                ots.className(DataBindingBuilder.PROCESSOR_NAME);
+            if (!options.getClassNames().isEmpty()
+                    && !options.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
+                options.className(DataBindingBuilder.PROCESSOR_NAME);
             }
 
             final BaseVariantData artifactVariantData;
@@ -2895,16 +2896,16 @@ public abstract class TaskManager {
                 isTest = false;
             }
 
-            final DataBindingCompilerArgs.Type type;
+            final CompilerArguments.Type type;
             final VariantType variantType = artifactVariantData.getType();
 
             if (variantType.isAar()) {
-                type = DataBindingCompilerArgs.Type.LIBRARY;
+                type = CompilerArguments.Type.LIBRARY;
             } else {
                 if (variantType.isBaseModule()) {
-                    type = DataBindingCompilerArgs.Type.APPLICATION;
+                    type = CompilerArguments.Type.APPLICATION;
                 } else {
-                    type = DataBindingCompilerArgs.Type.FEATURE;
+                    type = CompilerArguments.Type.FEATURE;
                 }
             }
 
@@ -2938,34 +2939,40 @@ public abstract class TaskManager {
             // TODO: find a way to not pass the packageName if possible, as this may force us to
             // parse the manifest for data binding during configuration.
             String packageName = variantConfiguration.getOriginalApplicationId();
-            // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
-            DataBindingCompilerArgs args =
-                    DataBindingCompilerArgs.builder()
-                            .bundleFolder(scope.getBundleArtifactFolderForDataBinding())
-                            .enabledForTests(extension.getDataBinding().isEnabledForTests())
-                            .enableDebugLogs(getLogger().isDebugEnabled())
-                            .buildFolder(scope.getBuildFolderForDataBindingCompiler())
-                            .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
-                            .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
-                            .baseFeatureInfoFolder(baseFeatureInfoFolder)
-                            .featureInfoFolder(featureInfoFile)
-                            .classLogDir(classLogDir)
-                            .exportClassListTo(
-                                    variantData.getType().isExportDataBindingClassList()
-                                            ? scope.getGeneratedClassListOutputFileForDataBinding()
-                                            : null)
-                            .printEncodedErrorLogs(
-                                    dataBindingBuilder.getPrintMachineReadableOutput())
-                            .modulePackage(packageName)
-                            .minApi(minApi)
-                            .testVariant(isTest)
-                            .type(type)
-                            .enableV2(
-                                    scope.getGlobalScope()
-                                            .getProjectOptions()
-                                            .get(BooleanOption.ENABLE_DATA_BINDING_V2))
-                            .build();
-            ots.arguments(args.toMap());
+            DataBindingCompilerArguments args =
+                    new DataBindingCompilerArguments(
+                            /* artifactType */ type,
+                            /* modulePackage */ packageName,
+                            /* minApi */ minApi,
+                            /* sdkDir */
+                            scope.getGlobalScope().getSdkHandler().getAndCheckSdkFolder(),
+                            /* buildDir */ scope.getBuildFolderForDataBindingCompiler(),
+                            /* layoutInfoDir */ scope.getLayoutInfoOutputForDataBinding(),
+                            /* classLogDir */ classLogDir,
+                            /* baseFeatureInfoDir */ baseFeatureInfoFolder,
+                            /* featureInfoDir */ featureInfoFile,
+                            /* aarOutDir */ scope.getBundleArtifactFolderForDataBinding(),
+                            /* exportClassListOutFile */
+                            variantData.getType().isExportDataBindingClassList()
+                                    ? scope.getGeneratedClassListOutputFileForDataBinding()
+                                    : null,
+                            /* enableDebugLogs */ getLogger().isDebugEnabled(),
+                            /* printEncodedErrorLogs */
+                            dataBindingBuilder.getPrintMachineReadableOutput(),
+                            /* isTestVariant */ isTest,
+                            /* isEnabledForTests */ extension.getDataBinding().isEnabledForTests(),
+                            /* isEnableV2 */ scope.getGlobalScope()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_DATA_BINDING_V2));
+            options.compilerArgumentProvider(args);
+            // HACK ALERT:
+            // Workaround for https://youtrack.jetbrains.com/issue/KT-23866. Remove this when Kapt
+            // is fixed (and also enforce a minimum version of Kapt that has the fix).
+            // Normally, we don't need to call the method below. However, because Kapt is not yet
+            // aware of the new compilerArgumentProvider API, we need to provide the arguments via
+            // the arguments() method. JavaCompiler will see duplicate arguments, but it won't
+            // break, and it will pass a unique list of arguments to the annotation processors.
+            options.arguments(args.toMap());
         } else {
             getLogger().error("Cannot setup data binding for %s because java compiler options"
                     + " is not an instance of AnnotationProcessorOptions", processorOptions);
@@ -3932,6 +3939,11 @@ public abstract class TaskManager {
 
     // TODO we should merge this w/ JavaCompileConfigAction
     private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
+        // HACK ALERT:
+        // Workaround for https://youtrack.jetbrains.com/issue/KT-23964. Remove this when Kapt is
+        // fixed (and also enforce a minimum version of Kapt that has the fix).
+        // In the following, we need to add all inputs and outputs annotated in
+        // DataBindingCompilerArguments to the Kapt task.
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         if (artifacts.hasArtifact(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
             // if data binding is enabled and this variant has merged dependency artifacts, then
@@ -3959,6 +3971,12 @@ public abstract class TaskManager {
                     ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
                     kaptTask);
         }
+        kaptTask.getOutputs()
+                .files(
+                        scope.getVariantData().getType().isExportDataBindingClassList()
+                                ? scope.getGeneratedClassListOutputFileForDataBinding()
+                                : null)
+                .withPropertyName("exportClassListOutFile");
 
         final VariantType variantType = scope.getType();
         if (variantType.isApk() && !variantType.isForTesting()) {

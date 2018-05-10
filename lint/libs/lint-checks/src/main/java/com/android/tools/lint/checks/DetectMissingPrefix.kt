@@ -152,6 +152,9 @@ class DetectMissingPrefix : LayoutDetector() {
             !isCustomView(attribute.ownerElement) &&
             !isFragment(attribute.ownerElement) &&
             !attribute.localName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) &&
+            // Support library auto-size attribute?
+            // See https://developer.android.com/guide/topics/ui/look-and-feel/autosizing-textview
+            !attribute.localName.startsWith("autoSize") &&
             // TODO: Consider not enforcing that the parent is a custom view
             // too, though in that case we should filter out views that are
             // layout params for the custom view parent:

@@ -17,9 +17,14 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.canonicalizeValueResourceName
+import com.android.ide.common.xml.XmlFormatPreferences
+import com.android.ide.common.xml.XmlFormatStyle
+import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.resources.ResourceType
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.utils.PositionXmlParser
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import org.gradle.api.logging.Logger
@@ -31,6 +36,8 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ASM5
+import org.w3c.dom.Node
+import java.io.BufferedInputStream
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -89,6 +96,72 @@ class NamespaceRewriter(
                 }
             }
         }
+    }
+
+    /**
+     * Rewrites the AndroidManifest.xml file to be fully resource namespace aware. Finds all
+     * resource references (e.g. '@string/app_name') and makes them namespace aware (e.g.
+     * '@com.foo.bar:string/app_name').
+     * This will also append the package to the references to resources from this library - it is
+     * not necessary, but saves us from comparing the package names.
+     */
+    fun rewriteManifest(inputManifest: File, outputManifest: File) {
+        BufferedInputStream(Files.newInputStream(inputManifest.toPath())).use {
+            // Read the manifest.
+            val doc = PositionXmlParser.parse(it)
+
+            // Fix namespaces.
+            rewriteNode(doc)
+
+            // Write the new manifest.
+            Files.write(
+                    outputManifest.toPath(),
+                    XmlPrettyPrinter
+                            .prettyPrint(
+                                    doc,
+                                    XmlFormatPreferences.defaults(),
+                                    XmlFormatStyle.get(doc),
+                                    System.lineSeparator(),
+                                    false)
+                            .toByteArray())
+        }
+    }
+
+    private fun rewriteNode(node: Node) {
+        if (node.nodeType == Node.ATTRIBUTE_NODE) {
+            // The content could be a resource reference. If it is not, do not update the content.
+            val content = node.nodeValue
+            val namespacedContent = rewritePossibleReference(content)
+            if (content != namespacedContent) {
+                node.nodeValue = namespacedContent
+            }
+        }
+
+        // First fix the attributes.
+        node.attributes?.let {
+            for (i in 0 until it.length) rewriteNode(it.item(i))
+        }
+
+        // Now fix the children.
+        node.childNodes?.let {
+            for (i in 0 until it.length) rewriteNode(it.item(i))
+        }
+    }
+
+    private fun rewritePossibleReference(content: String): String {
+        // We're not dealing with a reference or we already have a namespace, just let it go.
+        if (!content.startsWith("@") || !content.contains('/') || content.contains(':')) {
+            return content
+        }
+        val trimmedContent = content.trim()
+        val slashIndex = trimmedContent.indexOf('/')
+        val type = trimmedContent.substring(1, slashIndex)
+        val name = trimmedContent.substring(slashIndex + 1, trimmedContent.length)
+
+        val pckg = findPackage(type, canonicalizeValueResourceName(name), logger, symbolTables)
+
+        // Rewrite the reference using the package and the un-canonicalized name.
+        return "@$pckg:$type/$name"
     }
 
     /**
@@ -154,37 +227,7 @@ class NamespaceRewriter(
          * name.
          */
         fun findPackage(type: String, name: String): String {
-            var packages:ArrayList<String>? = null
-            var result:String? = null
-
-            // Go through R.txt files and find the proper package.
-            for (table in symbolTables) {
-                if (table.containsSymbol(ResourceType.getEnum(type)!!, name)) {
-                    if (result == null) {
-                        result = table.tablePackage
-                    }
-                    else {
-                        if (packages == null) {
-                            packages = ArrayList()
-                        }
-                        packages.add(table.tablePackage)
-                    }
-                }
-            }
-            if (result == null) {
-                // Error out if we cannot find the symbol.
-                error("In package ${symbolTables[0].tablePackage} found unknown symbol of type " +
-                                "$type and name $name.")
-            }
-            if (packages != null && !packages.isEmpty()) {
-                // If we have found more than one fitting package, log a warning about which one we
-                // chose (the closest one in the dependencies graph).
-                logger.warn("In package ${symbolTables[0].tablePackage} multiple options found " +
-                        "in its dependencies for resource $type $name. " +
-                        "Using $result, other available: ${Joiner.on(", ").join(packages)}")
-            }
-            // Return the first found reference.
-            return result
+            return findPackage(type, name, logger, symbolTables)
         }
 
         fun addInnerClass(innerClass: String) {
@@ -219,4 +262,47 @@ class NamespaceRewriter(
             }
         }
     }
+}
+
+/**
+ * Finds the first package in which the R file contains a symbol with the given type and
+ * name.
+ */
+private fun findPackage(
+        type: String,
+        name: String,
+        logger: Logger,
+        symbolTables: ImmutableList<SymbolTable>
+): String {
+    var packages:ArrayList<String>? = null
+    var result:String? = null
+
+    // Go through R.txt files and find the proper package.
+    for (table in symbolTables) {
+        if (table.containsSymbol(ResourceType.getEnum(type)!!, name)) {
+            if (result == null) {
+                result = table.tablePackage
+            }
+            else {
+                if (packages == null) {
+                    packages = ArrayList()
+                }
+                packages.add(table.tablePackage)
+            }
+        }
+    }
+    if (result == null) {
+        // Error out if we cannot find the symbol.
+        error("In package ${symbolTables[0].tablePackage} found unknown symbol of type " +
+                "$type and name $name.")
+    }
+    if (packages != null && !packages.isEmpty()) {
+        // If we have found more than one fitting package, log a warning about which one we
+        // chose (the closest one in the dependencies graph).
+        logger.warn("In package ${symbolTables[0].tablePackage} multiple options found " +
+                "in its dependencies for resource $type $name. " +
+                "Using $result, other available: ${Joiner.on(", ").join(packages)}")
+    }
+    // Return the first found reference.
+    return result
 }

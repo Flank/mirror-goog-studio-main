@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -179,11 +180,13 @@ public class PackagingUtils {
     public static Predicate<String> getNoCompressPredicate(
             @Nullable Collection<String> aaptOptionsNoCompress,
             @NonNull File manifest,
-            @NonNull BooleanSupplier isInExecutionPhase) {
+            @NonNull BooleanSupplier isInExecutionPhase,
+            @NonNull EvalIssueReporter issueReporter) {
         checkState(manifest.exists());
 
         NativeLibrariesPackagingMode packagingMode =
-                getNativeLibrariesLibrariesPackagingMode(manifest, isInExecutionPhase);
+                getNativeLibrariesLibrariesPackagingMode(
+                        manifest, isInExecutionPhase, issueReporter);
 
         return getNoCompressPredicateForExtensions(
                 getAllNoCompressExtensions(aaptOptionsNoCompress, packagingMode));
@@ -202,9 +205,12 @@ public class PackagingUtils {
 
     @NonNull
     public static NativeLibrariesPackagingMode getNativeLibrariesLibrariesPackagingMode(
-            @NonNull File manifest, @NonNull BooleanSupplier isInExecutionPhase) {
+            @NonNull File manifest,
+            @NonNull BooleanSupplier isInExecutionPhase,
+            @NonNull EvalIssueReporter issueReporter) {
         checkState(manifest.exists());
-        DefaultManifestParser parser = new DefaultManifestParser(manifest, isInExecutionPhase);
+        DefaultManifestParser parser =
+                new DefaultManifestParser(manifest, isInExecutionPhase, issueReporter);
         Boolean extractNativeLibs = parser.getExtractNativeLibs();
 
         // The default is "true", so we only package *.so files differently if the user explicitly

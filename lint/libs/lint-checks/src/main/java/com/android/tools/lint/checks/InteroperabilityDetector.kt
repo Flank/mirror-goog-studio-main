@@ -36,6 +36,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
@@ -264,12 +265,14 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             var badGetter: UMethod? = null
             cls.methods.forEach {
                 if (it.parameters.isEmpty()) {
-                    when (it.name) {
-                        getterName1, getterName2 -> getter = it
-                        badGetterName, propertyName -> badGetter = it
-                        else -> if (it.name.endsWith(propertySuffix) && badGetter == null) {
-                            badGetter = it
-                        }
+                    val name = it.name
+                    if (name == getterName1 || name == getterName2) {
+                        getter = it
+                    } else if ((name == badGetterName || name == propertyName ||
+                                name.endsWith(propertySuffix)) &&
+                        !context.evaluator.isPrivate(it) && it.returnType != PsiType.VOID
+                    ) {
+                        badGetter = it
                     }
                 }
             }
@@ -296,19 +299,20 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
             if (getter != null && getter !is PsiCompiledElement) {
                 @Suppress("NAME_SHADOWING") // compiler gets confused about getter nullness
-                val getter = getter
+                val getter: PsiMethod = getter!!
+
                 // enforce public and not static
                 if (!context.evaluator.isPublic(getter)) {
                     val message = "This getter should be public such that `$propertyName` can " +
                             "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                    val location = context.getNameLocation(getter!!)
+                    val location = context.getNameLocation(getter)
                     context.report(KOTLIN_PROPERTY, setter, location, message)
                     return
                 }
 
                 if (context.evaluator.isStatic(getter)) {
                     var staticElement: PsiElement? = null
-                    val modifierList = getter!!.modifierList
+                    val modifierList = getter.modifierList
                     // Try to find the static modifier itself
                     if (modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
                         var child: PsiElement? = modifierList.firstChild
@@ -332,11 +336,15 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     return
                 }
 
-                if (setter.uastParameters.first().type != getter?.returnType) {
+                val setterParameterType = setter.uastParameters.first().type
+                if (setterParameterType != getter.returnType &&
+                    !hasSetter(cls, getter.returnType, setter.name) &&
+                    !isTypeVariableReference(setterParameterType)
+                ) {
                     val message =
-                        "The getter return type (`${getter?.returnType?.presentableText}`) and setter parameter type (`${setter.uastParameters.first().type.presentableText}`) getter and setter methods for property `$propertyName` should have exactly the same type to allow " +
+                        "The getter return type (`${getter.returnType?.presentableText}`) and setter parameter type (`${setterParameterType.presentableText}`) getter and setter methods for property `$propertyName` should have exactly the same type to allow " +
                                 "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                    val location = getPropertyLocation(getter!!, setter)
+                    val location = getPropertyLocation(getter, setter)
                     context.report(KOTLIN_PROPERTY, setter, location, message)
                     return
                 }
@@ -368,6 +376,28 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                             "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                 context.report(KOTLIN_PROPERTY, setter, location, message)
             }
+        }
+
+        private fun isTypeVariableReference(type: PsiType): Boolean {
+            if (type is PsiClassType) {
+                val cls = type.resolve() ?: return false
+                return cls is PsiTypeParameter
+            } else {
+                return false
+            }
+        }
+
+        /** Returns true if the given class has a (possibly inherited) setter of the given type */
+        private fun hasSetter(cls: UClass, type: PsiType?, setterName: String): Boolean {
+            for (method in cls.findMethodsByName(setterName, true)) {
+                val parameterList = method.parameterList
+                val parameters = parameterList.parameters
+                if (parameters.size == 1 && parameters[0].type == type) {
+                    return true
+                }
+            }
+
+            return false
         }
 
         private fun getPropertyLocation(

@@ -24,12 +24,20 @@ public class WakeLockActivity extends PerfdTestActivity {
         super("WakeLock Activity");
     }
 
-    public void runAcquireAndRelease() throws Exception {
+    public void runAcquireAndRelease() {
         PowerManager.WakeLock wakeLock = getPowerManager().newWakeLock(0x00000001, "Bar");
         wakeLock.setHeld(true);
         wakeLock.acquire(1000);
         wakeLock.setHeld(false);
         wakeLock.release(0x00000001);
         System.out.println("WAKE LOCK RELEASED");
+    }
+
+    public void runAcquireWithoutNewWakeLock() {
+        PowerManager powerManager = getPowerManager();
+        // Use non-public constructor to skip newWakeLock call.
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLockForTesting(1, "Foo");
+        wakeLock.acquire();
+        System.out.println("WAKE LOCK ACQUIRED");
     }
 }

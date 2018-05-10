@@ -34,5 +34,10 @@ interface Option<out T> {
 
     val status: Status
 
+    val additionalInfo: String
+        get() {
+            return ""
+        }
+
     fun parse(value: Any): T
 }

@@ -6,7 +6,6 @@ gradle_build(
     data = [
         "//tools/base/build-system:gradle-distrib",
         "//prebuilts/studio/sdk:platforms/latest",
-        "//prebuilts/studio/sdk:support_latest",
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//tools/buildSrc/base:version.properties",

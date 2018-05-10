@@ -77,4 +77,9 @@ public final class TestUtils {
                 Profiler.BytesRequest.newBuilder().setId(traceId).build();
         return grpcUtils.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
     }
+
+    /** @return True if the given SDK level is newer than Android O. */
+    public static boolean isOPlusDevice(int sdkLevel) {
+        return sdkLevel >= 26;
+    }
 }

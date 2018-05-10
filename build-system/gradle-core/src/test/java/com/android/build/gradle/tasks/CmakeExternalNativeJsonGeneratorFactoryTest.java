@@ -123,7 +123,6 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
                 CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
                         cmakeRevision,
                         ndkHandler,
-                        minSdkVersion,
                         variantName,
                         abis,
                         androidBuilder,

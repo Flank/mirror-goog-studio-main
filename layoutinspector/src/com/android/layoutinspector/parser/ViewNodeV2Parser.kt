@@ -149,7 +149,7 @@ class ViewNodeV2Parser {
         // no children if there is no matching prop
         val childCountProp = metaProps.find { it.name == CHILD_COUNT_KEY } ?: return
         val childCount = childCountProp.value.toInt()
-        val children = Lists.newArrayListWithCapacity<ViewNode>(childCount)
+        val children = ArrayList<ViewNode>(childCount)
         childrenProps.entries.sortedBy { it.key }.forEach {
             val childIndex = getChildIndex(it.key)
             val childNode = createViewNode(it.value as Map<Short, Any>, parent)

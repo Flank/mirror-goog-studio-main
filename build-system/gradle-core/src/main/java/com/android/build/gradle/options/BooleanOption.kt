@@ -22,7 +22,8 @@ import com.android.builder.model.AndroidProject
 enum class BooleanOption(
     override val propertyName: String,
     override val defaultValue: Boolean = false,
-    override val status: Option.Status = Option.Status.EXPERIMENTAL
+    override val status: Option.Status = Option.Status.EXPERIMENTAL,
+    override val additionalInfo: String = ""
 ) : Option<Boolean> {
     ENABLE_AAPT2("android.enableAapt2", true, DeprecationReporter.DeprecationTarget.AAPT),
 
@@ -58,11 +59,13 @@ enum class BooleanOption(
             true,
             DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
 
-    ENABLE_R8("android.enableR8", false),
+    ENABLE_R8(
+        "android.enableR8",
+        false,
+        additionalInfo = "Consider disabling R8 by removing 'android.enableR8=true' from your " +
+                "gradle.properties before publishing your app."),
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
-
-    ENABLE_DYNAMIC_APPS("android.enable.dynamic.apps", false),
 
     // Marked as stable to avoid reporting deprecation twice.
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk", status = Option.Status.STABLE),
@@ -91,8 +94,9 @@ enum class BooleanOption(
     ENABLE_SEPARATE_R_CLASS_COMPILATION("android.enableSeparateRClassCompilation"),
     ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
     USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE),
-
-    ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", false)
+    ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", false),
+    DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
+    ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
     ;
 
     constructor(

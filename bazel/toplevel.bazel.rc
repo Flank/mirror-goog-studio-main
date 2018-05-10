@@ -65,7 +65,7 @@ build:remote --show_timestamps
 build:remote --host_javabase=@bazel_toolchains//configs/debian8_clang/0.2.0:jdk8
 build:remote --javabase=@bazel_toolchains//configs/debian8_clang/0.2.0:jdk8
 build:remote --crosstool_top=@bazel_toolchains//configs/debian8_clang/0.2.0/bazel_0.8.0:toolchain
-build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:f7e39d0a8e36e04d0161883be9b2c50a5f6b80e33917fb3d91628612cb0b93ca" }'
+build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:4fbf8dd1ccbf60cb5fbc5c00604db1189f63e44fe8c4fa4c2280d624a9f344c8" }'
 
 # Set various strategies so that all actions execute remotely. Mixing remote
 # and local execution will lead to errors unless the toolchain and remote
@@ -130,11 +130,15 @@ build:remote-cache --genrule_strategy=sandboxed
 
 # Set flags for uploading to BES in order to view results in the Bazel Build
 # Results UI.
-build:results --bes_backend="buildeventservice.googleapis.com"
-build:results --bes_timeout=10s
+build:remote-cache --bes_backend="buildeventservice.googleapis.com"
+build:remote-cache --bes_timeout=10s
+
+# Cloud project info
+build:remote-cache --remote_instance_name=projects/google.com:android-studio-alphasource
+build:remote-cache --project_id=908081808034
 
 # If the upload to BES fails, the build will fail.
-build:results --bes_best_effort=false
+build:remote-cache --bes_best_effort=false
 
 # Set flags for uploading to BES without Remote Cache.
 build:results-local --bes_backend="buildeventservice.googleapis.com"
@@ -146,3 +150,13 @@ build:results-local --spawn_strategy=local
 build:results-local --experimental_remote_spawn_cache
 build:results-local --remote_cache=remotebuildexecution.googleapis.com
 build:results-local --remote_timeout=3600
+build:results-local --remote_instance_name=projects/google.com:android-studio-alphasource
+build:results-local --project_id=908081808034
+
+# Top level config group for remote cache local execution on Mac.
+build:mac-experimental --config=remote-cache
+build:mac-experimental --experimental_remote_platform_override='properties:{name:"platform" value:"mac"}'
+
+# Top level config group for remote cache local execution on Linux.
+build:linux-experimental --config=remote-cache
+build:linux-experimental --experimental_remote_platform_override='properties:{name:"platform" value:"linux"}'

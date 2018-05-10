@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing;
+package com.android.build.gradle.integration.testing.unit;
 
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED;
+import static com.android.build.gradle.integration.testing.unit.JUnitResults.Outcome.PASSED;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 

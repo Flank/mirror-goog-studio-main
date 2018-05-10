@@ -54,7 +54,6 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     NdkBuildExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
-            int minSdkVersion,
             @NonNull String variantName,
             @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
@@ -73,7 +72,6 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             @NonNull GradleBuildVariant.Builder stats) {
         super(
                 ndkHandler,
-                minSdkVersion,
                 variantName,
                 abis,
                 androidBuilder,
@@ -103,7 +101,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         File applicationMk = new File(getMakeFile().getParent(), "Application.mk");
 
         // Write the captured ndk-build output to a file for diagnostic purposes.
-        diagnostic("parse and convert ndk-build output to build configuration JSON");
+        diagnosticForAbi(abi, "parse and convert ndk-build output to build configuration JSON");
 
         // Tasks, including the Exec task used to execute ndk-build, will execute in the same folder
         // as the module build.gradle. However, parsing of ndk-build output doesn't necessarily
@@ -147,7 +145,8 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                         .build();
 
         if (applicationMk.exists()) {
-            diagnostic("found application make file %s", applicationMk.getAbsolutePath());
+            diagnosticForAbi(
+                    abi, "found application make file %s", applicationMk.getAbsolutePath());
             Preconditions.checkNotNull(buildConfig.buildFiles);
             buildConfig.buildFiles.add(applicationMk);
         }
@@ -195,7 +194,8 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         return ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
                 androidBuilder,
                 getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
-                false /* logStdioToInfo */);
+                false /* logStdioToInfo */,
+                "" /* logPrefix */);
     }
 
     @NonNull

@@ -19,7 +19,7 @@ apply plugin: 'java'
 sourceCompatibility = JavaVersion.VERSION_1_6
 targetCompatibility = JavaVersion.VERSION_1_6
 
-File androidJar = file('../../../../prebuilts/sdk/25/android.jar');
+File androidJar = file('../../../../prebuilts/sdk/25/public/android.jar');
 if (!androidJar.exists()) {
     // If not there, we're in one of the AOSP release branches where the
     // repo configuration does not include the whole prebuilts repository.

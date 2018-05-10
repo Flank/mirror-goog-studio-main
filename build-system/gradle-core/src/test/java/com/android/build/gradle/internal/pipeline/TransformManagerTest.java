@@ -261,11 +261,10 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         IntermediateStream projectAndLibsClasses =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", MY_FAKE_DEPENDENCY_TASK_NAME)
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
                         .setRootLocation(temporaryFolder.newFolder("folder"))
-                        .setTaskName(MY_FAKE_DEPENDENCY_TASK_NAME)
                         .build();
 
         transformManager.addStream(projectAndLibsClasses);
@@ -374,11 +373,10 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         IntermediateStream projectAndLibsClasses =
-                IntermediateStream.builder(project, "")
+                IntermediateStream.builder(project, "", MY_FAKE_DEPENDENCY_TASK_NAME)
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
                         .setRootLocation(temporaryFolder.newFolder("folder"))
-                        .setTaskName(MY_FAKE_DEPENDENCY_TASK_NAME)
                         .build();
 
         transformManager.addStream(projectAndLibsClasses);

@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
+import org.gradle.process.CommandLineArgumentProvider;
 
 /** Options for configuring Java annotation processor. */
 public interface AnnotationProcessorOptions {
@@ -33,10 +34,20 @@ public interface AnnotationProcessorOptions {
     List<String> getClassNames();
 
     /**
-     * Options for the annotation processors.
+     * Options for the annotation processors provided via key-value pairs.
+     *
+     * @see #getCompilerArgumentProviders()
      */
     @NonNull
     Map<String, String> getArguments();
+
+    /**
+     * Options for the annotation processors provided via {@link CommandLineArgumentProvider}.
+     *
+     * @see #getArguments()
+     */
+    @NonNull
+    List<CommandLineArgumentProvider> getCompilerArgumentProviders();
 
     /**
      * Whether to include compile classpath in the processors path.

@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.ProjectConfigurationException;
@@ -153,8 +154,31 @@ public class GradleBuildResult {
     }
 
     @NonNull
+    public List<String> getTasks() {
+        return initTaskStates().getPlannedForExecutionTasks();
+    }
+
+    @NonNull
     public Set<String> getUpToDateTasks() {
         return initTaskStates().getUpToDateTasks();
+    }
+
+    /** Use {@link #getDidWorkTasks()} instead for clearer semantics. */
+    @NonNull
+    public Set<String> getNotUpToDateTasks() {
+        Set<String> notUpToDateTasks = new HashSet<>(getTasks());
+        notUpToDateTasks.removeAll(getUpToDateTasks());
+        return notUpToDateTasks;
+    }
+
+    @NonNull
+    public Set<String> getFromCacheTasks() {
+        return initTaskStates().getFromCacheTasks();
+    }
+
+    @NonNull
+    public Set<String> getDidWorkTasks() {
+        return initTaskStates().getDidWorkTasks();
     }
 
     @NonNull
@@ -163,23 +187,16 @@ public class GradleBuildResult {
     }
 
     @NonNull
-    public Set<String> getCachedTasks() {
-        return initTaskStates().getCachedTasks();
-    }
-
-    @NonNull
     public Set<String> getSkippedTasks() {
         return initTaskStates().getSkippedTasks();
     }
 
-    public Set<String> getNotUpToDateTasks() {
-        return initTaskStates().getNotUpToDateTasks();
+    @NonNull
+    public Set<String> getFailedTasks() {
+        return initTaskStates().getFailedTasks();
     }
 
-    public List<String> getTasks() {
-        return initTaskStates().getAllTasks();
-    }
-
+    @NonNull
     private TaskStateList initTaskStates() {
         if (taskStateList == null) {
             taskStateList = new TaskStateList(taskEvents, stdout);

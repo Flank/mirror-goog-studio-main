@@ -24,6 +24,8 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
+import org.hamcrest.BaseMatcher
+import org.hamcrest.Description
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -62,9 +64,6 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         }
     }
 
-    @get:Rule
-    val exception = ExpectedException.none()
-
     @Before
     @Throws(IOException::class)
     fun setUp() {
@@ -88,7 +87,7 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
     fun testTask() {
         val inputDirs = ImmutableSet.builder<File>()
         for (i in 0..4) {
-            inputDirs.add(generateInputDir("id_" + i, "foo.bar.baz" + i))
+            inputDirs.add(generateInputDir("id_$i", "foo.bar.baz$i"))
         }
         files.addAll(inputDirs.build())
 
@@ -97,33 +96,11 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
 
         val loaded = FeatureSetMetadata.load(task.outputFile)
         for (i in 0..4) {
-            assertThat(loaded.getResOffsetFor("id_" + i)).isEqualTo(
+            assertThat(loaded.getResOffsetFor("id_$i")).isEqualTo(
                 if (minSdkVersion < AndroidVersion.VersionCodes.O)
                         FeatureSetMetadata.BASE_ID - i - 1 else
                         FeatureSetMetadata.BASE_ID + i + 1)
         }
-    }
-
-    @Test
-    fun testComputeFeatureNames() {
-        val features =
-                listOf(
-                        FeatureSplitDeclaration(":A", "id"),
-                        FeatureSplitDeclaration(":foo:B", "id"),
-                        FeatureSplitDeclaration(":C", "id"))
-
-        assertThat(task.computeFeatureNames(features).values).containsExactly("A", "B", "C")
-    }
-
-    @Test
-    fun testDuplicatedFeatureNames() {
-        val features =
-            listOf(
-                FeatureSplitDeclaration(":A", "id"),
-                FeatureSplitDeclaration(":foo:A", "id"))
-
-        exception.expect(RuntimeException::class.java)
-        task.computeFeatureNames(features)
     }
 
     @Throws(IOException::class)

@@ -267,7 +267,7 @@ public class SdkHandler {
         return cmakePathInLocalProp;
     }
 
-    @Nullable
+    @NonNull
     public File getAndCheckSdkFolder() {
         if (sdkFolder == null) {
             throw new RuntimeException(

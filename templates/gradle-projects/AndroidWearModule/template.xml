@@ -2,8 +2,8 @@
 <template
     format="5"
     revision="3"
-    name="Android Wear Module"
-    description="Creates a new Android Wear Module."
+    name="Wear OS Module"
+    description="Creates a new Wear OS module."
     minApi="23"
     minBuildApi="23">
 

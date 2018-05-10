@@ -138,7 +138,7 @@ class DeprecationReporterImpl(
             Severity.WARNING,
             "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
                     (if (option.defaultValue != null)"The current default is '${option.defaultValue.toString()}'\n" else "") +
-                    "Consider removing '${option.propertyName}=$value' from your gradle.properties.",
+                    option.additionalInfo,
             option.propertyName)
     }
 }

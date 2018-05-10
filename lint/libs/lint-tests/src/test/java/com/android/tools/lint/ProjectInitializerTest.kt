@@ -286,6 +286,10 @@ public class Test {
 
         MainTest.checkDriver(
             """
+Classpath entry points to a non-existent location: ROOT/test.jar
+Classpath entry points to a non-existent location: ROOT/test.jar
+Classpath entry points to a non-existent location: ROOT/test.jar
+Classpath entry points to a non-existent location: ROOT/test.jar
 baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, baseline.xml
  [LintBaseline]
 project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]

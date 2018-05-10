@@ -5,7 +5,7 @@
     name="Google Maps Wear Activity"
     minApi="23"
     minBuildApi="25"
-    description="Creates an new activity with a Google Map for Android Wear">
+    description="Creates an new activity with a Google Map for Wear OS">
 
     <category value="Google" />
     <formfactor value="Wear" />

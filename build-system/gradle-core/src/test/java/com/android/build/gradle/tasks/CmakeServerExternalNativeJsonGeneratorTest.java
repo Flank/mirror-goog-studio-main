@@ -522,7 +522,6 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
         return new CmakeServerExternalNativeJsonGenerator(
                 ndkHandler,
-                minSdkVersion,
                 variantName,
                 abis,
                 androidBuilder,

@@ -37,7 +37,6 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
-            int minSdkVersion,
             @NonNull String variantName,
             @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
@@ -56,7 +55,6 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
             @NonNull GradleBuildVariant.Builder stats) {
         super(
                 ndkHandler,
-                minSdkVersion,
                 variantName,
                 abis,
                 androidBuilder,
@@ -93,8 +91,12 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     public String executeProcessAndGetOutput(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
+        String logPrefix = "Variant=" + variantName + " ABI=" + abi + " :";
         return executeBuildProcessAndLogError(
-                androidBuilder, getProcessBuilder(abi, abiPlatformVersion, outputJsonDir), true);
+                androidBuilder,
+                getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
+                true,
+                logPrefix);
     }
 
 

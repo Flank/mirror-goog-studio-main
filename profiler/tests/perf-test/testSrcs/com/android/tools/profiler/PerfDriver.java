@@ -47,16 +47,20 @@ public class PerfDriver {
     private boolean myIsOPlusDevice;
     private DeviceProperties myPropertiesFile;
 
-    public PerfDriver(boolean isOPlusDevice) {
-        if (isOPlusDevice) {
-            buildAndSaveConfig(26);
-            myPropertiesFile = new DeviceProperties("O+", "26", "26");
+    public PerfDriver(int sdkLevel) {
+        buildAndSaveConfig(sdkLevel);
+        String codeName;
+        if (sdkLevel >= 28) {
+            codeName = "P+";
+        } else if (sdkLevel >= 26) {
+            codeName = "O";
         } else {
-            buildAndSaveConfig(24);
-            myPropertiesFile = new DeviceProperties("Pre-O", "24", "24");
+            codeName = "Pre-O";
         }
+        myPropertiesFile =
+                new DeviceProperties(codeName, String.valueOf(sdkLevel), String.valueOf(sdkLevel));
         myPropertiesFile.writeFile();
-        myIsOPlusDevice = isOPlusDevice;
+        myIsOPlusDevice = sdkLevel >= 26;
         myMockApp = new FakeAndroidDriver(LOCAL_HOST, myPort);
         myPerfdDriver = new PerfdDriver(myConfigFile.getAbsolutePath());
         myGrpc = new GrpcUtils(LOCAL_HOST, myPort, myMockApp);

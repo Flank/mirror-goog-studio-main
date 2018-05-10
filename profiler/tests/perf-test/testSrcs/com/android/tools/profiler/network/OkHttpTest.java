@@ -40,32 +40,32 @@ import org.junit.runners.Parameterized;
 public class OkHttpTest {
 
     @Parameterized.Parameters
-    public static Collection<Boolean> data() {
-        return Arrays.asList(new Boolean[] {false, true});
+    public static Collection<Integer> data() {
+        return Arrays.asList(24, 26, 28);
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
 
-    private boolean myIsOPlusDevice;
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private FakeAndroidDriver myAndroidDriver;
     private GrpcUtils myGrpc;
     private Session mySession;
 
-    public OkHttpTest(boolean isOPlusDevice) {
-        myIsOPlusDevice = isOPlusDevice;
+    public OkHttpTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
     }
 
     @Before
     public void before() throws IOException {
-        myPerfDriver = new PerfDriver(myIsOPlusDevice);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
         mySession =
-                myIsOPlusDevice
+                TestUtils.isOPlusDevice(mySdkLevel)
                         ? myGrpc.beginSessionWithAgent(
                                 myPerfDriver.getPid(), myPerfDriver.getCommunicationPort())
                         : myGrpc.beginSession(myPerfDriver.getPid());

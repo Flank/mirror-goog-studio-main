@@ -390,11 +390,12 @@ public class TransformManager extends FilterableStreamCollection {
         // create the output
         IntermediateStream outputStream =
                 IntermediateStream.builder(
-                                project, transform.getName() + "-" + scope.getFullVariantName())
+                                project,
+                                transform.getName() + "-" + scope.getFullVariantName(),
+                                taskName)
                         .addContentTypes(outputTypes)
                         .addScopes(requestedScopes)
                         .setRootLocation(outRootFolder)
-                        .setTaskName(taskName)
                         .build();
         // and add it to the list of available streams for next transforms.
         streams.add(outputStream);

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
@@ -37,6 +38,7 @@ import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import org.gradle.api.Project;
 
@@ -139,6 +141,9 @@ public class IncrementalPackagerBuilder {
 
     /** aapt options no compress config. */
     @Nullable private Collection<String> aaptOptionsNoCompress;
+
+    @Nullable private EvalIssueReporter issueReporter;
+    @Nullable private BooleanSupplier canParseManifest;
 
     /**
      * Creates a new builder.
@@ -334,6 +339,17 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
+     * Sets the issueReporter to report errors/warnings.
+     *
+     * @param issueReporter the EvalIssueReporter to use.
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withIssueReporter(@NonNull EvalIssueReporter issueReporter) {
+        this.issueReporter = issueReporter;
+        return this;
+    }
+
+    /**
      * Creates the packager, verifying that all the minimum data has been provided. The required
      * information are:
      *
@@ -355,9 +371,7 @@ public class IncrementalPackagerBuilder {
             if (manifest != null) {
                 noCompressPredicate =
                         PackagingUtils.getNoCompressPredicate(
-                                aaptOptionsNoCompress,
-                                manifest,
-                                () -> project.getState().getExecuted());
+                                aaptOptionsNoCompress, manifest, () -> true, issueReporter);
             } else {
                 noCompressPredicate = path -> false;
             }
@@ -367,7 +381,7 @@ public class IncrementalPackagerBuilder {
             if (manifest != null) {
                 nativeLibrariesPackagingMode =
                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                manifest, () -> project.getState().getExecuted());
+                                manifest, canParseManifest, issueReporter);
             } else {
                 nativeLibrariesPackagingMode = NativeLibrariesPackagingMode.COMPRESSED;
             }

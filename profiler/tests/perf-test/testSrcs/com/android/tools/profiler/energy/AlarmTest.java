@@ -30,22 +30,38 @@ import com.android.tools.profiler.proto.EnergyProfiler.AlarmSet.Type;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class AlarmTest {
+    @Parameters
+    public static Collection<Integer> data() {
+        return Arrays.asList(26, 28);
+    }
+
     private static final String ACTIVITY_CLASS = "com.activity.energy.AlarmActivity";
 
+    private int mySdkLevel;
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
 
+    public AlarmTest(int sdkLevel) {
+        mySdkLevel = sdkLevel;
+    }
+
     @Before
     public void setUp() throws Exception {
-        myPerfDriver = new PerfDriver(true);
+        myPerfDriver = new PerfDriver(mySdkLevel);
         myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();

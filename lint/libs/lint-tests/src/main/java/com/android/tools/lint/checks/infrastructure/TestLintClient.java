@@ -18,7 +18,9 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
@@ -828,6 +830,49 @@ public class TestLintClient extends LintCliClient {
     @Override
     public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
         return new TestConfiguration(task, this, project, null);
+    }
+
+    @Override
+    protected boolean addBootClassPath(
+            @NonNull Collection<? extends Project> knownProjects, List<File> files) {
+        boolean ok = super.addBootClassPath(knownProjects, files);
+
+        // Also add in the kotlin standard libraries if applicable
+        if (ok && hasKotlin(knownProjects)) {
+            for (String path : findKotlinStdlibPath()) {
+                files.add(new File(path));
+            }
+        }
+
+        return ok;
+    }
+
+    private static boolean hasKotlin(Collection<? extends Project> projects) {
+        for (Project project : projects) {
+            for (File dir : project.getJavaSourceFolders()) {
+                if (hasKotlin(dir)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasKotlin(File dir) {
+        if (dir.getPath().endsWith(DOT_KT)) {
+            return true;
+        } else if (dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File sub : files) {
+                    if (hasKotlin(sub)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override

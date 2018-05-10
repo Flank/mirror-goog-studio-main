@@ -482,6 +482,35 @@ public class LabelForDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testLabelForCustomViews() {
+        // Regression test for issue 78661918
+        lint().files(
+                        manifest().minSdk(17),
+                        xml(
+                                        "res/layout/main.xml",
+                                        ""
+                                                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                                + "              android:layout_width=\"match_parent\"\n"
+                                                + "              android:layout_height=\"match_parent\"\n"
+                                                + "              android:orientation=\"vertical\">\n"
+                                                + "        <com.pany.ui.widget.TypefacesTextView\n"
+                                                + "                android:id=\"@+id/debug_description\"\n"
+                                                + "                android:labelFor=\"@+id/debug_config\"\n"
+                                                + "                android:layout_width=\"match_parent\"\n"
+                                                + "                android:layout_height=\"wrap_content\"\n"
+                                                + "                android:layout_marginStart=\"40dp\"/>\n"
+                                                + "        <EditText android:id=\"@+id/debug_config\"\n"
+                                                + "                  android:layout_height=\"60sp\"\n"
+                                                + "                  android:layout_width=\"match_parent\"\n"
+                                                + "                  android:layout_marginStart=\"40dp\"\n"
+                                                + "                  android:inputType=\"textUri\"\n"
+                                                + "                  android:enabled=\"false\"/>"
+                                                + "</LinearLayout>")
+                                .indented())
+                .run()
+                .expectClean();
+    }
+
     //noinspection all // Sample code
     private TestFile withHint =
             xml(

@@ -16,30 +16,22 @@
 
 package com.android.build.gradle.internal.ndk;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.android.build.gradle.internal.cxx.configure.NdkAbiFileKt.ndkMetaAbisFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
+import com.android.build.gradle.internal.cxx.configure.NdkAbiFile;
+import com.android.build.gradle.internal.cxx.configure.PlatformConfigurator;
 import com.android.repository.Revision;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.android.utils.ImmutableCollectors;
 import com.android.utils.Pair;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -53,9 +45,9 @@ import org.gradle.api.logging.Logging;
  */
 public class DefaultNdkInfo implements NdkInfo {
 
-    private static final String ABI_LIST_FILE = "meta/abis.json";
-
     private final File root;
+
+    private final PlatformConfigurator platformConfigurator;
 
     private final List<AbiInfo> abiInfoList;
 
@@ -63,57 +55,8 @@ public class DefaultNdkInfo implements NdkInfo {
 
     public DefaultNdkInfo(@NonNull File root) {
         this.root = root;
-        File abiFile = new File(root, ABI_LIST_FILE);
-        if (abiFile.isFile()) {
-            Map<String, AbiInfo> infoMap;
-            try (FileReader reader = new FileReader(abiFile)) {
-                infoMap =
-                        new Gson()
-                                .fromJson(
-                                        reader, new TypeToken<Map<String, AbiInfo>>() {}.getType());
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException("Unreachable. Unable to find abi list file: " + abiFile);
-            } catch (JsonParseException e) {
-                Logging.getLogger(this.getClass())
-                        .warn(
-                                "WARNING: Error parsing ABI metadata file '"
-                                        + abiFile
-                                        + "'.  Using "
-                                        + "default ABI list.");
-                abiInfoList = getDefaultAbiInfoList();
-                return;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            ImmutableList.Builder<AbiInfo> builder = ImmutableList.builder();
-            for (Map.Entry<String, AbiInfo> entry : infoMap.entrySet()) {
-                Abi abi = Abi.getByName(entry.getKey());
-                if (abi == null) {
-                    Logging.getLogger(this.getClass())
-                            .warn(
-                                    "WARNING: Ignoring invalid ABI '"
-                                            + entry.getKey()
-                                            + "' found in ABI metadata file '"
-                                            + abiFile
-                                            + "'.");
-                    continue;
-                }
-                builder.add(
-                        new AbiInfo(
-                                abi,
-                                entry.getValue().isDeprecated(),
-                                entry.getValue().isDefault()));
-            }
-            abiInfoList = builder.build();
-        } else {
-            abiInfoList = getDefaultAbiInfoList();
-        }
-    }
-
-    private static List<AbiInfo> getDefaultAbiInfoList() {
-        return Arrays.stream(Abi.values())
-                .map(abi -> new AbiInfo(abi, false, true))
-                .collect(ImmutableCollectors.toImmutableList());
+        this.platformConfigurator = new PlatformConfigurator(root);
+        this.abiInfoList = new NdkAbiFile(ndkMetaAbisFile(root)).getAbiInfoList();
     }
 
     @Override
@@ -172,67 +115,14 @@ public class DefaultNdkInfo implements NdkInfo {
         return "android-" + targetVersion;
     }
 
-    /**
-     *  Find suitable platform for the given ABI.
-     *
-     *  (1) If platforms/android-[min sdk]/arch-[ABI] exists, then use the min sdk as platform for
-     *      that ABI
-     *
-     *  (2) If there exists platforms/android-[platform]/arch-[ABI] such that platform greater-than
-     *      min sdk, use max(platform where platform less than min sdk)
-     *
-     *  (3) Use min(platform where platforms/android-[platform]/arch-[ABI] exists)
-     */
+
     @Override
-    public int findSuitablePlatformVersion(@NonNull String abiName, int minSdkVersion) {
-        Abi abi = Abi.getByName(abiName);
-        if (abi == null) {
-            // This ABI is not recognized
-            return 0;
-        }
-
-        // If platforms/android-[min sdk]/arch-[ABI] exists, then use the min sdk as platform for
-        // that ABI
-        File platformDir = FileUtils.join(root, "platforms");
-        checkState(platformDir.isDirectory());
-        if (new File(getLinkerSysrootPath(abi, "android-" + minSdkVersion)).isDirectory()) {
-            return minSdkVersion;
-        }
-
-        // Walk over the platform folders that contain this ABI
-        File[] platformSubDirs = platformDir.listFiles(File::isDirectory);
-
-        int highestVersionBelowMinSdk = 0;
-        int lowestVersionOverall = 0;
-        for(File platform : platformSubDirs) {
-            if (platform.getName().startsWith("android-")) {
-                if (FileUtils.join(platform, "arch-" + abi.getArchitecture()).isDirectory()) {
-                    try {
-                        int version = Integer.parseInt(
-                                platform.getName().substring("android-".length()));
-                        if (version > highestVersionBelowMinSdk && version < minSdkVersion) {
-                            highestVersionBelowMinSdk = version;
-                        }
-                        if (lowestVersionOverall == 0 || version < lowestVersionOverall) {
-                            lowestVersionOverall = version;
-                        }
-                    } catch (NumberFormatException ignore) {
-                        // Ignore unrecognized directories.
-                    }
-                }
-            }
-        }
-
-        // If there exists platforms/android-[platform]/arch-[ABI] such that platform < min sdk,
-        // use max(platform where platform < min sdk)
-        if (highestVersionBelowMinSdk > 0) {
-            return highestVersionBelowMinSdk;
-        }
-
-        // Use min(platform where platforms/android-[platform]/arch-[ABI] exists)
-        checkState(lowestVersionOverall > 0,
-                String.format("Expected caller to ensure valid ABI: %s", abi));
-        return lowestVersionOverall;
+    public int findSuitablePlatformVersion(
+            @NonNull String abiName,
+            @NonNull String variantName,
+            @Nullable AndroidVersion androidVersion) {
+        return platformConfigurator.findSuitablePlatformVersion(
+                abiName, variantName, androidVersion);
     }
 
     // Will return 0 if no platform found
@@ -243,7 +133,7 @@ public class DefaultNdkInfo implements NdkInfo {
         } else {
             File[] platformSubDirs = platformDir.listFiles(File::isDirectory);
             int highestVersion = 0;
-            for(File platform : platformSubDirs) {
+            for (File platform : platformSubDirs) {
                 if (platform.getName().startsWith("android-")) {
                     try {
                         int version = Integer.parseInt(
@@ -251,7 +141,7 @@ public class DefaultNdkInfo implements NdkInfo {
                         if (version > highestVersion && version < targetVersion) {
                             highestVersion = version;
                         }
-                    } catch(NumberFormatException ignore) {
+                    } catch (NumberFormatException ignore) {
                         // Ignore unrecognized directories.
                     }
                 }
@@ -279,9 +169,7 @@ public class DefaultNdkInfo implements NdkInfo {
     @Override
     @NonNull
     public File getToolchainPath(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
+            @NonNull Toolchain toolchain, @NonNull String toolchainVersion, @NonNull Abi abi) {
         abi = getToolchainAbi(abi);
         String version = toolchainVersion.isEmpty()
                 ? getDefaultToolchainVersion(toolchain, abi)
@@ -345,7 +233,8 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
         abi = getToolchainAbi(abi);
-        String compiler = toolchain == Toolchain.CLANG ? "clang" : abi.getGccExecutablePrefix() + "-gcc";
+        String compiler =
+                toolchain == Toolchain.CLANG ? "clang" : abi.getGccExecutablePrefix() + "-gcc";
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
     }
 
@@ -359,7 +248,8 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull String toolchainVersion,
             @NonNull Abi abi) {
         abi = getToolchainAbi(abi);
-        String compiler = toolchain == Toolchain.CLANG ? "clang++" : abi.getGccExecutablePrefix() + "-g++";
+        String compiler =
+                toolchain == Toolchain.CLANG ? "clang++" : abi.getGccExecutablePrefix() + "-g++";
         return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
     }
 
@@ -398,7 +288,8 @@ public class DefaultNdkInfo implements NdkInfo {
         String ar = abi.getGccExecutablePrefix()
                 + (toolchain == Toolchain.CLANG ? "-ar" : "-gcc-ar");
         return new File(
-                getToolchainPath(Toolchain.GCC, getDefaultToolchainVersion(Toolchain.GCC, abi), abi),
+                getToolchainPath(
+                        Toolchain.GCC, getDefaultToolchainVersion(Toolchain.GCC, abi), abi),
                 "bin/" + ar);
     }
 
@@ -477,9 +368,7 @@ public class DefaultNdkInfo implements NdkInfo {
     @Override
     @NonNull
     public StlNativeToolSpecification getStlNativeToolSpecification(
-            @NonNull Stl stl,
-            @NonNull String stlVersion,
-            @NonNull Abi abi) {
+            @NonNull Stl stl, @Nullable String stlVersion, @NonNull Abi abi) {
         StlSpecification spec =
                 new DefaultStlSpecificationFactory()
                         .create(

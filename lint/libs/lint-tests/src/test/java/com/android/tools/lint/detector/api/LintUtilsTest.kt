@@ -32,6 +32,7 @@ import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFiles
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.checks.infrastructure.findKotlinStdlibPath
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.client.api.TYPE_BOOLEAN
@@ -793,6 +794,13 @@ class LintUtilsTest : TestCase() {
 
                 override fun getSdkHome(): File {
                     return TestUtils.getSdk()
+                }
+
+                override fun getJavaLibraries(
+                    project: Project,
+                    includeProvided: Boolean
+                ): List<File> {
+                    return findKotlinStdlibPath().map { File(it) }
                 }
             }
             val project = client.getProject(dir, dir)

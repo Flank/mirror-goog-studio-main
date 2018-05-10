@@ -70,6 +70,15 @@ class ApiParser extends DefaultHandler {
                 int since = getSince(attributes);
                 int deprecatedIn = getDeprecatedIn(attributes);
                 int removedIn = getRemovedIn(attributes);
+
+                // Perform a few API corrections; see issue 73514594
+                if (since == 28
+                        && (name.equals("navigationBarDividerColor")
+                                || name.equals("windowLightNavigationBar")
+                                        && mCurrentClass.getName().equals("android/R$attr"))) {
+                    since = 27;
+                }
+
                 mCurrentClass.addField(name, since, deprecatedIn, removedIn);
             } else if (NODE_IMPLEMENTS.equals(localName)) {
                 String name = attributes.getValue(ATTR_NAME);

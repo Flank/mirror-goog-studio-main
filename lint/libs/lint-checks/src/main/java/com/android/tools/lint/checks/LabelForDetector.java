@@ -163,6 +163,11 @@ public class LabelForDetector extends LayoutDetector {
 
         Element element = attribute.getOwnerElement();
 
+        if (mLabels == null) {
+            mLabels = Sets.newHashSet();
+        }
+        mLabels.add(attribute.getValue());
+
         // Unlikely this is anything other than a TextView. If it is, bail.
         if (!element.getLocalName().equals(TEXT_VIEW)) {
             return;
@@ -191,11 +196,6 @@ public class LabelForDetector extends LayoutDetector {
                                     + "`android:text` or an `android:contentDescription`"),
                     fix);
         }
-
-        if (mLabels == null) {
-            mLabels = Sets.newHashSet();
-        }
-        mLabels.add(attribute.getValue());
     }
 
     @Override
@@ -216,7 +216,7 @@ public class LabelForDetector extends LayoutDetector {
         mEditableTextFields.add(element);
     }
 
-    private String messageWithPrefix(String message) {
+    private static String messageWithPrefix(String message) {
         return PREFIX + ": " + message;
     }
 }

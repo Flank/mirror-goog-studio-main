@@ -162,7 +162,12 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                         Field activityField = activityRecordClass.getDeclaredField("activity");
                         activityField.setAccessible(true);
                         Object activityObject = activityField.get(activityRecord);
-                        if (activitiesObject != null && activityObject instanceof Activity) {
+                        if (activitiesObject != null
+                                && activityObject instanceof Activity
+                                // Due to a race condition where we add the events then check the start up state,
+                                // an activity could be added before we get to this point. We are not able to put this
+                                // in a lock as the activity add/remove events happen on the system thread.
+                                && !myActivities.contains(activityObject)) {
                             onActivityResumed((Activity) activityObject);
                         }
                     }
@@ -194,8 +199,9 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
     @Override
     public void onActivityStarted(Activity activity) {
-        // The user can override any of these functions and call setCallback, as such we need to update the callback
-        // at each entry point.
+        // The user can override any of these functions and call setCallback, as such we need
+        // update the callback at each entry point. We do not need add this activity to
+        // {@link myActivities} as the activity started is not displayed.
         updateCallback(activity);
         sendActivityStarted(activity.getLocalClassName(), activity.hashCode());
     }
@@ -355,6 +361,9 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                         StudioLog.v("Acquiring Application for Events");
                         myInitialized = true;
                         app.registerActivityLifecycleCallbacks(myProfiler);
+                        // The activity could have started before the callback is added. If this happens, the activity
+                        // and touch events are not shown in the events bar.
+                        myProfiler.captureCurrentActivityState();
                     } else if (!logErrorOnce) {
                         StudioLog.e("Failed to capture application");
                         logErrorOnce = true;

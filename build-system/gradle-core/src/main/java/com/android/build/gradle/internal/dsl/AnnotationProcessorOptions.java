@@ -21,17 +21,23 @@ import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.gradle.process.CommandLineArgumentProvider;
 
 /** DSL object for configuring APT options. */
 @SuppressWarnings("UnnecessaryInheritDoc")
 public class AnnotationProcessorOptions
         implements com.android.build.gradle.api.AnnotationProcessorOptions {
 
-    private final List<String> classNames = Lists.newArrayList();
-    private final Map<String, String> arguments = Maps.newHashMap();
+    @NonNull private final List<String> classNames = Lists.newArrayList();
+
+    @NonNull private final Map<String, String> arguments = Maps.newHashMap();
+
+    @NonNull
+    private final List<CommandLineArgumentProvider> compilerArgumentProviders = new ArrayList<>();
 
     @Nullable
     private Boolean includeCompileClasspath = null;
@@ -85,6 +91,29 @@ public class AnnotationProcessorOptions
     }
 
     /** {@inheritDoc} */
+    @NonNull
+    @Override
+    public List<CommandLineArgumentProvider> getCompilerArgumentProviders() {
+        return compilerArgumentProviders;
+    }
+
+    public void setCompilerArgumentProviders(
+            @NonNull List<CommandLineArgumentProvider> compilerArgumentProviders) {
+        this.compilerArgumentProviders.clear();
+        this.compilerArgumentProviders.addAll(compilerArgumentProviders);
+    }
+
+    public void compilerArgumentProvider(
+            @NonNull CommandLineArgumentProvider compilerArgumentProvider) {
+        this.compilerArgumentProviders.add(compilerArgumentProvider);
+    }
+
+    public void compilerArgumentProviders(
+            @NonNull List<CommandLineArgumentProvider> compilerArgumentProviders) {
+        this.compilerArgumentProviders.addAll(compilerArgumentProviders);
+    }
+
+    /** {@inheritDoc} */
     @Override
     @Nullable
     public Boolean getIncludeCompileClasspath() {
@@ -98,6 +127,7 @@ public class AnnotationProcessorOptions
     public void _initWith(com.android.build.gradle.api.AnnotationProcessorOptions aptOptions) {
         setClassNames(aptOptions.getClassNames());
         setArguments(aptOptions.getArguments());
+        setCompilerArgumentProviders(aptOptions.getCompilerArgumentProviders());
         setIncludeCompileClasspath(aptOptions.getIncludeCompileClasspath());
     }
 
@@ -106,6 +136,7 @@ public class AnnotationProcessorOptions
         return MoreObjects.toStringHelper(this)
                 .add("classNames", classNames)
                 .add("arguments", arguments)
+                .add("compilerArgumentProviders", compilerArgumentProviders)
                 .add("includeCompileClasspath", includeCompileClasspath)
                 .toString();
     }

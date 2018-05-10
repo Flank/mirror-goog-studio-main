@@ -19,6 +19,7 @@
 package com.android.builder.dexing
 
 import com.android.SdkConstants
+import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.CompatProguardCommandBuilder
 import com.android.tools.r8.CompilationMode
 import com.android.tools.r8.OutputMode
@@ -40,9 +41,10 @@ fun runR8(
     libraries: Collection<Path>,
     toolConfig: ToolConfig,
     proguardConfig: ProguardConfig,
-    mainDexListConfig: MainDexListConfig
+    mainDexListConfig: MainDexListConfig,
+    messageReceiver: MessageReceiver
 ) {
-    val r8CommandBuilder = CompatProguardCommandBuilder()
+    val r8CommandBuilder = CompatProguardCommandBuilder(true, D8DiagnosticsHandler(messageReceiver))
 
     if (toolConfig.minSdkVersion < 21) {
         // specify main dex related options only when minSdkVersion is below 21
