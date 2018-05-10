@@ -54,7 +54,7 @@ public class ProcessProfileWriterTest {
     public void testBasicRecord() throws Exception {
         threadRecorder.record(ExecutionType.SOME_RANDOM_PROCESSING,
                 ":projectName", null, () -> 10);
-        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile).get();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(1);
         assertThat(profile.getSpan(0).getType()).isEqualTo(ExecutionType.SOME_RANDOM_PROCESSING);
@@ -67,7 +67,7 @@ public class ProcessProfileWriterTest {
     public void testRecordWithAttributes() throws Exception {
         threadRecorder.record(
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", "foo", () -> 10);
-        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile).get();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(1);
         assertThat(profile.getSpan(0).getType()).isEqualTo(ExecutionType.SOME_RANDOM_PROCESSING);
@@ -81,7 +81,7 @@ public class ProcessProfileWriterTest {
                 ExecutionType.SOME_RANDOM_PROCESSING, ":projectName", null, () ->
                         threadRecorder.record(ExecutionType.SOME_RANDOM_PROCESSING,
                                 ":projectName", null, () -> 10));
-        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile).get();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(2);
         GradleBuildProfileSpan parent = profile.getSpan(1);
@@ -126,7 +126,7 @@ public class ProcessProfileWriterTest {
 
         assertNotNull(value);
         assertEquals(16, value.intValue());
-        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile).get();
         GradleBuildProfile profile = loadProfile();
         assertThat(profile.getSpanList()).hasSize(6);
 
@@ -208,6 +208,18 @@ public class ProcessProfileWriterTest {
                         .collect(Collectors.toList());
         assertThat(threadValues).hasSize(20);
         assertThat(threadValues).containsNoDuplicates();
+    }
+
+    @Test
+    public void checkApplicationIdStorage() throws Exception {
+        ProcessProfileWriter.get().recordApplicationId(() -> "com.example.app.a");
+        ProcessProfileWriter.get().recordApplicationId(() -> "com.example.app.b");
+        // Duplicates should be ignored.
+        ProcessProfileWriter.get().recordApplicationId(() -> "com.example.app.a");
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(outputFile).get();
+        GradleBuildProfile profile = loadProfile();
+        assertThat(profile.getRawProjectIdList())
+                .containsExactly("com.example.app.a", "com.example.app.b");
     }
 
     private GradleBuildProfile loadProfile() throws IOException {

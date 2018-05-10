@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent;
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample;
@@ -39,6 +40,10 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
@@ -70,6 +75,9 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
     private final AtomicLong lastRecordId = new AtomicLong(1);
 
     private final ConcurrentLinkedQueue<GradleBuildProfileSpan> spans;
+
+    private final List<java.util.function.Supplier<String>> applicationIdSuppliers =
+            Collections.synchronizedList(new ArrayList<>());
 
     @Override
     public long allocateRecordId() {
@@ -117,7 +125,7 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
      *
      * <p>Should be called exactly once.
      */
-    synchronized void finishAndMaybeWrite(@Nullable Path outputFile) throws InterruptedException {
+    synchronized void finishAndMaybeWrite(@Nullable Path outputFile) {
         checkState(!finished, "Already finished");
         finished = true;
 
@@ -140,6 +148,8 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
                 mBuild.addProject(project.properties);
             }
         }
+
+        mBuild.addAllRawProjectId(getApplicationIds());
 
         // Write benchmark file into build directory, if set.
         if (outputFile != null) {
@@ -169,6 +179,15 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
                                 .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
                                 .setJvmDetails(CommonMetricsData.getJvmDetails()));
 
+    }
+
+    @NonNull
+    private synchronized List<String> getApplicationIds() {
+        HashSet<String> applicationIds = new HashSet<>(applicationIdSuppliers.size());
+        for (java.util.function.Supplier<String> applicationIdSupplier : applicationIdSuppliers) {
+            applicationIds.add(applicationIdSupplier.get());
+        }
+        return applicationIds.stream().sorted().collect(ImmutableList.toImmutableList());
     }
 
     /** Properties and statistics global to this build invocation. */
@@ -220,6 +239,10 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
 
     public static void recordMemorySample() {
         get().createAndRecordMemorySample();
+    }
+
+    public void recordApplicationId(@NonNull java.util.function.Supplier<String> applicationId) {
+        applicationIdSuppliers.add(applicationId);
     }
 
     private static class ProjectCacheLoader extends CacheLoader<String, Project> {
