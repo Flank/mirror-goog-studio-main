@@ -46,8 +46,15 @@ public class AetherUtils {
                             "https://repo.gradle.org/gradle/libs-releases-local/")
                     .build();
 
+    static final RemoteRepository INTELLIJ =
+            new RemoteRepository.Builder(
+                            "IntelliJ deps",
+                            "default",
+                            "https://jetbrains.bintray.com/intellij-third-party-dependencies")
+                    .build();
+
     public static final ImmutableList<RemoteRepository> REPOSITORIES =
-            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE);
+            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE, INTELLIJ);
 
     private AetherUtils() {}
 

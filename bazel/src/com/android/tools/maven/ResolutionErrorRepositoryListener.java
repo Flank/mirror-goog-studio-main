@@ -1,6 +1,5 @@
 package com.android.tools.maven;
 
-import com.google.common.base.Throwables;
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
 
@@ -15,7 +14,10 @@ class ResolutionErrorRepositoryListener extends AbstractRepositoryListener {
     @Override
     public void artifactResolved(RepositoryEvent event) {
         if (!event.getExceptions().isEmpty()) {
-            System.err.println(Throwables.getStackTraceAsString(event.getException()));
+            for (Exception exception : event.getExceptions()) {
+                System.err.println(exception.getMessage());
+            }
+            System.err.println("Aether failed to resolve some artifacts, aborting.");
             System.exit(1);
         }
     }
