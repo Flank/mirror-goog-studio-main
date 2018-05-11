@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <android.arch.persistence>
-  <db-framework versions="1.0.0"/>
-  <db versions="1.0.0"/>
+  <db-framework versions="1.1.0"/>
+  <db versions="1.1.0"/>
 </android.arch.persistence>
 
