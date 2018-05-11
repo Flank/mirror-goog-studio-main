@@ -13,7 +13,7 @@ apply plugin: 'com.android.application'
 </#if>
 <@kt.addKotlinPlugins />
 
-<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseFeature=isBaseFeature hasTests=true canHaveCpp=true/>
+<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseFeature=isBaseFeature hasTests=true canHaveCpp=true canUseProguard=isApplicationProject||isBaseFeature/>
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
