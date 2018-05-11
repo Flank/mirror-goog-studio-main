@@ -1,7 +1,7 @@
 <#-- Some common elements used in multiple files -->
 <#macro commonActivityBody>
-    <#-- If isInstantApp is true, we assume we also have values for instantAppActivityHost and instantAppActivityRoute -->
-    <#if isInstantApp!false>
+    <#-- If isInstantApp is true and includeInstantAppUrl is true, add a BROWSABLE category so that instant app is reachable via URL -->
+    <#if (isInstantApp!false) && (includeInstantAppUrl!false)>
         <intent-filter android:order="${instantAppActivityOrder}">
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.BROWSABLE" />
