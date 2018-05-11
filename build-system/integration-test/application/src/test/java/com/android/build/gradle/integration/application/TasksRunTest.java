@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,6 +35,7 @@ public class TasksRunTest {
                     .create();
 
     @Test
+    @Ignore("b/79563107")
     public void checkTasksRun() throws Exception {
         GradleBuildResult result = project.executor().run("assembleDebug");
 

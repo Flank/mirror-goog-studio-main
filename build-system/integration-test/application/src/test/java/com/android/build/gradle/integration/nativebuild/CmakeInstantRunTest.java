@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -45,6 +46,7 @@ import org.junit.rules.TemporaryFolder;
 /**
  * Test to ensure CMake project works with instant run.
  */
+@Ignore("b/79563107")
 public class CmakeInstantRunTest {
 
     @ClassRule
