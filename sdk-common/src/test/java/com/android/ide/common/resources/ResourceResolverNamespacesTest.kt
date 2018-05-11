@@ -15,11 +15,21 @@
  */
 package com.android.ide.common.resources
 
-import com.android.ide.common.rendering.api.*
+import com.android.ide.common.rendering.api.AttrResourceValueImpl
+import com.android.ide.common.rendering.api.ItemResourceValue
+import com.android.ide.common.rendering.api.StyleItemResourceValueImpl
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceNamespace.ANDROID
 import com.android.ide.common.rendering.api.ResourceNamespace.Resolver
+import com.android.ide.common.rendering.api.ResourceReference
+import com.android.ide.common.rendering.api.ResourceValueImpl
+import com.android.ide.common.rendering.api.StyleResourceValue
+import com.android.ide.common.rendering.api.StyleResourceValueImpl
 import com.android.resources.ResourceType
-import com.android.resources.ResourceType.*
+import com.android.resources.ResourceType.ATTR
+import com.android.resources.ResourceType.COLOR
+import com.android.resources.ResourceType.STRING
+import com.android.resources.ResourceType.STYLE
 import com.google.common.collect.ImmutableBiMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -48,37 +58,37 @@ class ResourceResolverNamespacesTest {
     @Before
     fun createRes() {
         val androidRes = listOf(
-            ResourceValue(ANDROID, COLOR, "black", "#000000"),
-            ResourceValue(ANDROID, COLOR, "white", "#ffffff"),
-            AttrResourceValue(ResourceReference(ANDROID, ATTR, "colorPrimary"), null)
+            ResourceValueImpl(ANDROID, COLOR, "black", "#000000"),
+            ResourceValueImpl(ANDROID, COLOR, "white", "#ffffff"),
+            AttrResourceValueImpl(ResourceReference(ANDROID, ATTR, "colorPrimary"), null)
         )
 
         val supportRes = listOf(
-            ResourceValue(supportLib, COLOR, "material_blue", "#0000ff"),
-            AttrResourceValue(ResourceReference(supportLib, ATTR, "fabColor"), null),
-            AttrResourceValue(ResourceReference(supportLib, ATTR, "actionBarColor"), null)
+            ResourceValueImpl(supportLib, COLOR, "material_blue", "#0000ff"),
+            AttrResourceValueImpl(ResourceReference(supportLib, ATTR, "fabColor"), null),
+            AttrResourceValueImpl(ResourceReference(supportLib, ATTR, "actionBarColor"), null)
         )
 
         val libRes = listOf(
-            ResourceValue(localLib, COLOR, "logo_color", "@android:color/black"),
-            ResourceValue(localLib, COLOR, "missing_ns", "@support:color/material_blue"),
-            ResourceValue(localLib, STRING, "company_name", "Example"),
-            ResourceValue(localLib, STRING, "header", "@string/company_name"),
-            ResourceValue(localLib, STRING, "wrong_ref", "@string/made_up"),
-            ResourceValue(
+            ResourceValueImpl(localLib, COLOR, "logo_color", "@android:color/black"),
+            ResourceValueImpl(localLib, COLOR, "missing_ns", "@support:color/material_blue"),
+            ResourceValueImpl(localLib, STRING, "company_name", "Example"),
+            ResourceValueImpl(localLib, STRING, "header", "@string/company_name"),
+            ResourceValueImpl(localLib, STRING, "wrong_ref", "@string/made_up"),
+            ResourceValueImpl(
                 localLib,
                 STRING,
                 "header_explicit",
                 "@com.example.common:string/company_name"
             ),
 
-            StyleResourceValue(
+            StyleResourceValueImpl(
                 ResourceReference(localLib, STYLE, "Theme.Base"),
                 "android:Theme",
                 null
             ).withItems(
                 Resolver.EMPTY_RESOLVER,
-                ItemResourceValue(app, "com.android.support:actionBarColor", "#00ff00", null)
+                StyleItemResourceValueImpl(app, "com.android.support:actionBarColor", "#00ff00", null)
             )
         )
 
@@ -90,30 +100,30 @@ class ResourceResolverNamespacesTest {
         )
 
         val appRes = listOf(
-            ResourceValue(app, COLOR, "image_color", "@common:color/logo_color"),
-            ResourceValue(app, COLOR, "title_bar_color", "@support:color/material_blue"),
-            ResourceValue(app, COLOR, "broken_chain_color", "@common:color/missing_ns"),
+            ResourceValueImpl(app, COLOR, "image_color", "@common:color/logo_color"),
+            ResourceValueImpl(app, COLOR, "title_bar_color", "@support:color/material_blue"),
+            ResourceValueImpl(app, COLOR, "broken_chain_color", "@common:color/missing_ns"),
 
-            ResourceValue(app, COLOR, "from_theme_1", "?android:colorPrimary"),
-            ResourceValue(app, COLOR, "from_theme_2", "?support:fabColor"),
-            ResourceValue(app, COLOR, "from_theme_3", "?support:actionBarColor"),
+            ResourceValueImpl(app, COLOR, "from_theme_1", "?android:colorPrimary"),
+            ResourceValueImpl(app, COLOR, "from_theme_2", "?support:fabColor"),
+            ResourceValueImpl(app, COLOR, "from_theme_3", "?support:actionBarColor"),
 
-            ResourceValue(app, STRING, "title_text", "@com.example.common:string/header"),
-            ResourceValue(
+            ResourceValueImpl(app, STRING, "title_text", "@com.example.common:string/header"),
+            ResourceValueImpl(
                 app,
                 STRING,
                 "title_text_explicit",
                 "@com.example.common:string/header_explicit"
             ),
 
-            StyleResourceValue(
+            StyleResourceValueImpl(
                 ResourceReference(app, STYLE, "AppTheme"),
                 "common:Theme.Base",
                 null
             ).withItems(
-                appPrefixes,
-                ItemResourceValue(app, "android:colorPrimary", "@android:color/white", null),
-                ItemResourceValue(app, "support:fabColor", "@color/image_color", null)
+              appPrefixes,
+              StyleItemResourceValueImpl(app, "android:colorPrimary", "@android:color/white", null),
+              StyleItemResourceValueImpl(app, "support:fabColor", "@color/image_color", null)
             )
         )
         appRes.forEach { it.setNamespaceResolver(appPrefixes) }

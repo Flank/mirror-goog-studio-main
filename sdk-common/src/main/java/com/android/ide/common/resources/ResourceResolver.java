@@ -30,8 +30,10 @@ import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.rendering.api.SampleDataResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValueImpl;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -257,7 +259,7 @@ public class ResourceResolver extends RenderResources {
 
             if (from != null && to != null) {
                 StyleResourceValue newStyle =
-                        new StyleResourceValue(
+                        new StyleResourceValueImpl(
                                 from.asReference(), parentName, from.getLibraryName());
                 newStyle.replaceWith(from);
                 mStyleInheritanceMap.put(newStyle, to);
@@ -489,7 +491,7 @@ public class ResourceResolver extends RenderResources {
 
                 if (idExists) {
                     // TODO(namespaces): Cache these?
-                    return new ResourceValue(reference, null);
+                    return new ResourceValueImpl(reference, null);
                 }
             }
 
@@ -563,7 +565,7 @@ public class ResourceResolver extends RenderResources {
                 .map(content -> mSampleDataManager.getSampleDataLine(name, content))
                 .map(
                         lineContent ->
-                                new ResourceValue(
+                                new ResourceValueImpl(
                                         value.getNamespace(),
                                         ResourceType.SAMPLE_DATA,
                                         name,

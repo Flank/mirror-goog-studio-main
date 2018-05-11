@@ -205,11 +205,11 @@ public class RenderResources {
 
         // Type is ignored. We don't call setNamespaceResolver, because this method is called from code that's not namespace aware anyway.
         return dereference(
-                new ResourceValue(
+                new ResourceValueImpl(
+                        ResourceNamespace.fromBoolean(forceFrameworkOnly),
                         ResourceType.ID,
                         "com.android.ide.common.rendering.api.RenderResources",
-                        reference,
-                        forceFrameworkOnly));
+                        reference));
     }
 
     /**

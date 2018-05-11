@@ -21,7 +21,7 @@ import com.android.resources.ResourceUrl;
 import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.Nullable;
 
-public class ItemResourceValue extends ResourceValue {
+public class ItemResourceValue extends ResourceValue implements StyleItemResourceValue {
     @NonNull private final String attributeName;
 
     public ItemResourceValue(
@@ -37,6 +37,7 @@ public class ItemResourceValue extends ResourceValue {
      * Returns contents of the {@code name} XML attribute that defined this style item. This is
      * supposed to be a reference to an {@code attr} resource.
      */
+    @Override
     @NonNull
     public String getAttrName() {
         return attributeName;
@@ -46,6 +47,7 @@ public class ItemResourceValue extends ResourceValue {
      * Returns a {@link ResourceReference} to the {@code attr} resource this item is defined for, if
      * the name was specified using the correct syntax.
      */
+    @Override
     @Nullable
     public ResourceReference getAttr() {
         ResourceUrl url = ResourceUrl.parseAttrReference(attributeName);

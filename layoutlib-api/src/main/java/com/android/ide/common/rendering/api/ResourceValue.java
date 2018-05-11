@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
@@ -24,8 +23,8 @@ import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
-/** Represents an android resource with a name and a string value. */
-public class ResourceValue {
+/** Represents an Android resource with a name and a string value. */
+public class ResourceValue implements ResourceValueTemp {
     @NonNull private final ResourceType resourceType;
     @NonNull private final ResourceNamespace namespace;
     @NonNull private final String name;
@@ -40,7 +39,7 @@ public class ResourceValue {
     /**
      * Constructor still used by layoutlib. Remove ASAP.
      *
-     * @deprecated Use {@link #ResourceValue(ResourceType, String, String, boolean)}
+     * @deprecated Use {@link #ResourceValue(ResourceNamespace, ResourceType, String, String)}
      */
     @Deprecated
     public ResourceValue(
@@ -88,16 +87,19 @@ public class ResourceValue {
         this.libraryName = libraryName;
     }
 
+    @Override
     @NonNull
     public ResourceType getResourceType() {
         return resourceType;
     }
 
+    @Override
     @NonNull
     public ResourceNamespace getNamespace() {
         return namespace;
     }
 
+    @Override
     @NonNull
     public String getName() {
         return name;
@@ -107,37 +109,41 @@ public class ResourceValue {
      * Returns the name of the library where this resource was found or null if it is not from a
      * library.
      */
+    @Override
     @Nullable
     public String getLibraryName() {
         return libraryName;
     }
 
-    /**
-     * Returns true if the resource is user defined.
-     */
+    /** Returns true if the resource is user defined. */
+    @Override
     public boolean isUserDefined() {
         // TODO: namespaces
         return !isFramework() && libraryName == null;
     }
 
+    @Override
     public boolean isFramework() {
         return namespace == ResourceNamespace.ANDROID;
     }
 
     /**
-     * Returns the value of the resource, as defined in the XML. This can be <code>null</code>,
-     * for example for instances of {@link StyleResourceValue}.
+     * Returns the value of the resource, as defined in the XML. This can be <code>null</code>, for
+     * example for instances of {@link StyleResourceValue}.
      */
+    @Override
     @Nullable
     public String getValue() {
         return value;
     }
 
+    @Override
     @NonNull
     public ResourceReference asReference() {
         return new ResourceReference(namespace, resourceType, name);
     }
 
+    @Override
     @NonNull
     public ResourceUrl getResourceUrl() {
         return asReference().getResourceUrl();
@@ -150,6 +156,7 @@ public class ResourceValue {
      * <p>This method should be called before inspecting the textual value ({@link #getValue}), as
      * it handles namespaces correctly.
      */
+    @Override
     @Nullable
     public ResourceReference getReference() {
         if (value == null) {
@@ -165,13 +172,13 @@ public class ResourceValue {
     }
 
     /**
-     * Similar to {@link #getValue()}, but returns the raw XML value. This is <b>usually</b>
-     * the same as getValue, but with a few exceptions. For example, for markup strings,
-     * you can have * {@code <string name="markup">This is <b>bold</b></string>}.
-     * Here, {@link #getValue()} will return "{@code This is bold}" -- e.g. just
-     * the plain text flattened. However, this method will return "{@code This is <b>bold</b>}",
-     * which preserves the XML markup elements.
+     * Similar to {@link #getValue()}, but returns the raw XML value. This is <b>usually</b> the
+     * same as getValue, but with a few exceptions. For example, for markup strings, you can have
+     * {@code <string name="markup">This is <b>bold</b></string>}. Here, {@link #getValue()} will
+     * return "{@code This is bold}" -- e.g. just the plain text flattened. However, this method
+     * will return "{@code This is <b>bold</b>}", which preserves the XML markup elements.
      */
+    @Override
     public String getRawXmlValue() {
         return getValue();
     }
@@ -181,6 +188,7 @@ public class ResourceValue {
      *
      * @param value the new value
      */
+    @Override
     public void setValue(@Nullable String value) {
         this.value = value;
     }
@@ -190,10 +198,12 @@ public class ResourceValue {
      *
      * @param value the resource value
      */
+    @Override
     public void replaceWith(@NonNull ResourceValue value) {
         this.value = value.value;
     }
 
+    @Override
     @NonNull
     public ResourceNamespace.Resolver getNamespaceResolver() {
         return mNamespaceResolver;
@@ -205,10 +215,12 @@ public class ResourceValue {
      * <p>This method is meant to be called by the XML parser that created this {@link
      * ResourceValue}.
      */
+    @Override
     public void setNamespaceResolver(@NonNull ResourceNamespace.Resolver resolver) {
         this.mNamespaceResolver = resolver;
     }
 
+    @Override
     @Deprecated // TODO(namespaces): Called by layoutlib.
     public void setNamespaceLookup(@NonNull ResourceNamespace.Resolver resolver) {
         setNamespaceResolver(

@@ -35,16 +35,24 @@ import static com.android.SdkConstants.TOOLS_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.ArrayResourceValueImpl;
 import com.android.ide.common.rendering.api.AttrResourceValue;
+import com.android.ide.common.rendering.api.AttrResourceValueImpl;
 import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
-import com.android.ide.common.rendering.api.DensityBasedResourceValue;
+import com.android.ide.common.rendering.api.DeclareStyleableResourceValueImpl;
+import com.android.ide.common.rendering.api.DensityBasedResourceValueImpl;
 import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.PluralsResourceValue;
+import com.android.ide.common.rendering.api.PluralsResourceValueImpl;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
+import com.android.ide.common.rendering.api.StyleItemResourceValueImpl;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValueImpl;
 import com.android.ide.common.rendering.api.TextResourceValue;
+import com.android.ide.common.rendering.api.TextResourceValueImpl;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -268,7 +276,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
                 if (density != null) {
                     mResourceValue =
-                            new DensityBasedResourceValue(
+                            new DensityBasedResourceValueImpl(
                                     mNamespace,
                                     mType,
                                     getName(),
@@ -277,7 +285,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                                     mLibraryName);
                 } else {
                     mResourceValue =
-                            new ResourceValue(
+                            new ResourceValueImpl(
                                     mNamespace,
                                     mType,
                                     getName(),
@@ -392,18 +400,18 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 String parent = getAttributeValue(attributes, ATTR_PARENT);
                 value =
                         parseStyleValue(
-                                new StyleResourceValue(
+                                new StyleResourceValueImpl(
                                         mNamespace, mType, getName(), parent, mLibraryName));
                 break;
             case DECLARE_STYLEABLE:
                 value =
                         parseDeclareStyleable(
-                                new DeclareStyleableResourceValue(
+                                new DeclareStyleableResourceValueImpl(
                                         mNamespace, mType, getName(), null, mLibraryName));
                 break;
             case ARRAY:
                 ArrayResourceValue arrayValue =
-                        new ArrayResourceValue(mNamespace, mType, getName(), mLibraryName) {
+                        new ArrayResourceValueImpl(mNamespace, mType, getName(), mLibraryName) {
                             @Override
                             protected int getDefaultIndex() {
                                 // Allow the user to specify a specific element to use via tools:index
@@ -423,7 +431,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 break;
             case PLURALS:
                 PluralsResourceValue pluralsResourceValue =
-                        new PluralsResourceValue(mNamespace, mType, getName(), null, mLibraryName) {
+                        new PluralsResourceValueImpl(
+                                mNamespace, mType, getName(), null, mLibraryName) {
                             @Override
                             public String getValue() {
                                 // Allow the user to specify tools:quantity.
@@ -443,12 +452,13 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             case ATTR:
                 value =
                         parseAttrValue(
-                                new AttrResourceValue(mNamespace, mType, getName(), mLibraryName));
+                                new AttrResourceValueImpl(
+                                        mNamespace, mType, getName(), mLibraryName));
                 break;
             case STRING:
                 value =
                         parseTextValue(
-                                new TextResourceValue(
+                                new TextResourceValueImpl(
                                         mNamespace, mType, getName(), null, null, mLibraryName));
                 break;
             case ANIMATOR:
@@ -460,13 +470,13 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             case TRANSITION:
                 value =
                         parseFileName(
-                                new ResourceValue(
+                                new ResourceValueImpl(
                                         mNamespace, mType, getName(), null, mLibraryName));
                 break;
             default:
                 value =
                         parseValue(
-                                new ResourceValue(
+                                new ResourceValueImpl(
                                         mNamespace, mType, getName(), null, mLibraryName));
                 break;
         }
@@ -525,7 +535,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 String attributeUrl = getAttributeValue(attributes, ATTR_NAME);
                 if (!Strings.isNullOrEmpty(attributeUrl)) {
                     ItemResourceValue resValue =
-                            new ItemResourceValue(
+                            new StyleItemResourceValueImpl(
                                     styleValue.getNamespace(),
                                     attributeUrl,
                                     ValueXmlHelper.unescapeResourceString(
@@ -628,7 +638,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                     AttrResourceValue attr =
                             parseAttrValue(
                                     child,
-                                    new AttrResourceValue(
+                                    new AttrResourceValueImpl(
                                             namespace, ResourceType.ATTR, name, mLibraryName));
                     attr.setNamespaceResolver(getNamespaceResolver(child));
                     declareStyleable.addValue(attr);

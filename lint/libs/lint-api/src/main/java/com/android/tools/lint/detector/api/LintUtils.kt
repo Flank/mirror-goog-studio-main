@@ -42,6 +42,7 @@ import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceValue
+import com.android.ide.common.rendering.api.ResourceValueImpl
 import com.android.ide.common.rendering.api.StyleResourceValue
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
@@ -1004,7 +1005,7 @@ fun getStyleAttributes(
     var result: MutableList<ResourceValue>? = null
 
     val queue = ArrayDeque<ResourceValue>()
-    queue.add(ResourceValue(ResourceNamespace.RES_AUTO, style.type, style.name, null))
+    queue.add(ResourceValueImpl(ResourceNamespace.RES_AUTO, style.type, style.name, null))
     val seen = HashSet<String>()
     var count = 0
     while (count < 30 && !queue.isEmpty()) {
@@ -1038,7 +1039,7 @@ fun getStyleAttributes(
                         if (p != null && !p.isFramework && !seen.contains(p.name)) {
                             seen.add(p.name)
                             queue.add(
-                                ResourceValue(
+                                ResourceValueImpl(
                                     ResourceNamespace.RES_AUTO,
                                     ResourceType.STYLE,
                                     p.name, null
@@ -1053,7 +1054,7 @@ fun getStyleAttributes(
                         if (!seen.contains(parentName)) {
                             seen.add(parentName)
                             queue.add(
-                                ResourceValue(
+                                ResourceValueImpl(
                                     ResourceNamespace.RES_AUTO,
                                     ResourceType.STYLE,
                                     parentName, null
@@ -1090,7 +1091,7 @@ fun getInheritedStyles(
     var result: MutableList<StyleResourceValue>? = null
 
     val queue = ArrayDeque<ResourceValue>()
-    queue.add(ResourceValue(ResourceNamespace.RES_AUTO, style.type, style.name, null))
+    queue.add(ResourceValueImpl(ResourceNamespace.RES_AUTO, style.type, style.name, null))
     val seen = HashSet<String>()
     var count = 0
     while (count < 30 && !queue.isEmpty()) {
@@ -1114,7 +1115,7 @@ fun getInheritedStyles(
                         if (p != null && !p.isFramework && !seen.contains(p.name)) {
                             seen.add(p.name)
                             queue.add(
-                                ResourceValue(
+                                ResourceValueImpl(
                                     ResourceNamespace.RES_AUTO,
                                     ResourceType.STYLE,
                                     p.name, null
@@ -1129,7 +1130,7 @@ fun getInheritedStyles(
                         if (!seen.contains(parentName)) {
                             seen.add(parentName)
                             queue.add(
-                                ResourceValue(
+                                ResourceValueImpl(
                                     ResourceNamespace.RES_AUTO,
                                     ResourceType.STYLE,
                                     parentName, null
