@@ -45,8 +45,11 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -881,16 +884,22 @@ public abstract class TaskManager {
     }
 
     public MergeResources createMergeResourcesTask(
-            @NonNull VariantScope scope, boolean processResources) {
+            @NonNull VariantScope scope,
+            boolean processResources,
+            ImmutableSet<MergeResources.Flag> flags) {
+
+        boolean unitTestRawResources =
+                globalScope
+                                .getExtension()
+                                .getTestOptions()
+                                .getUnitTests()
+                                .isIncludeAndroidResources()
+                        && !projectOptions.get(BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
 
         boolean alsoOutputNotCompiledResources =
-                scope.useResourceShrinker()
-                        || (scope.getTestedVariantData() == null
-                                && globalScope
-                                        .getExtension()
-                                        .getTestOptions()
-                                        .getUnitTests()
-                                        .isIncludeAndroidResources());
+                scope.getType().isApk()
+                        && !scope.getType().isForTesting()
+                        && (scope.useResourceShrinker() || unitTestRawResources);
 
         return basicCreateMergeResourcesTask(
                 scope,
@@ -899,7 +908,7 @@ public abstract class TaskManager {
                 true /*includeDependencies*/,
                 processResources,
                 alsoOutputNotCompiledResources,
-                ImmutableSet.of());
+                flags);
     }
 
     /** Defines the merge type for {@link #basicCreateMergeResourcesTask} */
@@ -957,7 +966,6 @@ public abstract class TaskManager {
                                 mergedNotCompiledDir,
                                 includeDependencies,
                                 processResources,
-                                true,
                                 flags));
 
         scope.getArtifacts().appendArtifact(mergeType.getOutputType(),
@@ -1721,12 +1729,7 @@ public abstract class TaskManager {
                 && globalScope.getProjectOptions().get(
                         BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
 
-        if (enableBinaryResources) {
-            createAnchorTasks(variantScope);
-        } else {
-            createPreBuildTasks(variantScope);
-            createCompileAnchorTask(variantScope);
-        }
+        createAnchorTasks(variantScope);
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
@@ -1734,28 +1737,63 @@ public abstract class TaskManager {
         // process java resources
         createProcessJavaResTask(variantScope);
 
-        PackageForUnitTest packageForUnitTest = null;
         if (includeAndroidResources) {
-            if (enableBinaryResources) {
+            if (testedVariantScope.getType().isAar()) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(variantScope, testedVariantData.getScope());
 
                 // Add a task to create the res values
                 createGenerateResValuesTask(variantScope);
 
-                // Add a task to merge the resource folders
-                createMergeResourcesTask(variantScope, true);
-
-                if (isLibrary()) {
-                    // Add a task to process the Android Resources and generate source files
-                    createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
-                }
-
                 // Add a task to merge the assets folders
                 createMergeAssetsTask(variantScope);
 
-                packageForUnitTest = createPackagingTaskForUnitTest(variantScope,
-                        testedVariantData.getScope());
+                if (enableBinaryResources) {
+                    createMergeResourcesTask(variantScope, true, ImmutableSet.of());
+                    // Add a task to process the Android Resources and generate source files
+                    createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
+                    taskFactory.create(new PackageForUnitTest.ConfigAction(variantScope));
+                } else {
+                    createMergeResourcesTask(variantScope, false, ImmutableSet.of());
+                }
+            } else if (testedVariantScope.getType().isApk()) {
+                if (enableBinaryResources) {
+                    // The IDs will have been inlined for an non-namespaced application
+                    // so just re-export the artifacts here.
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.PROCESSED_RES,
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(PROCESSED_RES));
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    MERGED_ASSETS,
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(MERGED_ASSETS));
+                    taskFactory.create(new PackageForUnitTest.ConfigAction(variantScope));
+                } else {
+                    // TODO: don't implicitly subtract tested component in APKs, as that only
+                    // makes sense for instrumentation tests. For now, rely on the production
+                    // merged resources.
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.MERGED_RES,
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(MERGED_NOT_COMPILED_RES));
+                }
+            } else {
+                throw new IllegalStateException(
+                        "Tested variant "
+                                + testedVariantScope.getFullVariantName()
+                                + " in "
+                                + globalScope.getProject().getPath()
+                                + " must be a library or an application to have unit tests.");
             }
 
             GenerateTestConfig generateTestConfig =
@@ -1785,22 +1823,8 @@ public abstract class TaskManager {
 
         createRunUnitTestTask(variantScope);
 
-        DefaultTask assembleUnitTests = variantScope.getAssembleTask();
-        if (packageForUnitTest != null) {
-            assembleUnitTests.dependsOn(packageForUnitTest);
-        }
-
         // This hides the assemble unit test task from the task list.
-        assembleUnitTests.setGroup(null);
-    }
-
-    private PackageForUnitTest createPackagingTaskForUnitTest(VariantScope scope,
-            VariantScope testedScope) {
-        PackageForUnitTest packageForUnitTest =
-                taskFactory.create(new PackageForUnitTest.ConfigAction(scope));
-        packageForUnitTest.dependsOn(testedScope.getProcessResourcesTask());
-        packageForUnitTest.dependsOn(testedScope.getMergeAssetsTask());
-        return packageForUnitTest;
+        variantScope.getAssembleTask().setGroup(null);
     }
 
     protected void createSplitsDiscovery(VariantScope variantScope) {
@@ -1835,7 +1859,7 @@ public abstract class TaskManager {
         createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(variantScope, true);
+        createMergeResourcesTask(variantScope, true, ImmutableSet.of());
 
         // Add tasks to compile shader
         createShaderTask(variantScope);

@@ -633,6 +633,7 @@ public class MergeResources extends IncrementalTask {
         this.blameLogFolder = blameLogFolder;
     }
 
+    @Optional
     @OutputDirectory
     public File getGeneratedPngsOutputDir() {
         return generatedPngsOutputDir;
@@ -786,7 +787,6 @@ public class MergeResources extends IncrementalTask {
                 @Nullable File mergedNotCompiledOutputDirectory,
                 boolean includeDependencies,
                 boolean processResources,
-                boolean processVectorDrawables,
                 @NonNull ImmutableSet<Flag> flags) {
             this.scope = scope;
             this.taskNamePrefix = taskNamePrefix;
@@ -794,7 +794,7 @@ public class MergeResources extends IncrementalTask {
             this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
             this.includeDependencies = includeDependencies;
             this.processResources = processResources;
-            this.processVectorDrawables = processVectorDrawables;
+            this.processVectorDrawables = flags.contains(Flag.PROCESS_VECTOR_DRAWABLES);
             this.flags = flags;
         }
 
@@ -887,8 +887,9 @@ public class MergeResources extends IncrementalTask {
             }
 
             mergeResourcesTask.outputDir = outputLocation;
-            mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
-
+            if (!mergeResourcesTask.disableVectorDrawables) {
+                mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
+            }
             variantData.mergeResourcesTask = mergeResourcesTask;
 
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
@@ -942,5 +943,6 @@ public class MergeResources extends IncrementalTask {
 
     public enum Flag {
         REMOVE_RESOURCE_NAMESPACES,
+        PROCESS_VECTOR_DRAWABLES,
     }
 }

@@ -60,9 +60,11 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
+import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
@@ -131,7 +133,10 @@ public class ApplicationTaskManager extends TaskManager {
         createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(variantScope, true);
+        createMergeResourcesTask(
+                variantScope,
+                true,
+                Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
         // Add tasks to compile shader
         createShaderTask(variantScope);

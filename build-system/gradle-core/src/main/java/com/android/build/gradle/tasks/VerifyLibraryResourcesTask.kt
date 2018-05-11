@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.api.artifact.singleFile
@@ -220,8 +219,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     }
 
     class ConfigAction(
-            private val scope: VariantScope,
-            private val sourceArtifactType: TaskManager.MergeType
+        private val scope: VariantScope
     ) : TaskConfigAction<VerifyLibraryResourcesTask> {
 
         /** Return the name of the task to be configured.  */
@@ -244,11 +242,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             verifyLibraryResources.aapt2FromMaven = getAapt2FromMavenIfEnabled(scope.globalScope)
             verifyLibraryResources.incrementalFolder = scope.getIncrementalDir(name)
 
-            Preconditions.checkState(
-                    sourceArtifactType === TaskManager.MergeType.MERGE,
-                    "Support for not merging resources in libraries not implemented yet.")
             verifyLibraryResources.inputDirectory =
-                    scope.artifacts.getFinalArtifactFiles(sourceArtifactType.outputType)
+                    scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
             verifyLibraryResources.compiledDirectory = scope.compiledResourcesOutputDir
             verifyLibraryResources.mergeBlameLogFolder = scope.resourceBlameLogDir

@@ -27,9 +27,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -103,14 +101,9 @@ public class PackageForUnitTest extends DefaultTask {
 
     public static class ConfigAction implements TaskConfigAction<PackageForUnitTest> {
         @NonNull private final VariantScope scope;
-        @NonNull private final VariantScope testedScope;
 
         public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
-            this.testedScope =
-                    Preconditions.checkNotNull(
-                            scope.getTestedVariantData(), "Not a unit test variant.")
-                            .getScope();
         }
 
         @NonNull
@@ -127,13 +120,8 @@ public class PackageForUnitTest extends DefaultTask {
 
         @Override
         public void execute(@NonNull PackageForUnitTest task) {
-            if (testedScope.getType().isAar()) {
-                task.resApk = scope.getArtifacts().getArtifactFiles(PROCESSED_RES);
-                task.mergedAssets = scope.getArtifacts().getArtifactFiles(MERGED_ASSETS);
-            } else {
-                task.resApk = testedScope.getArtifacts().getArtifactFiles(PROCESSED_RES);
-                task.mergedAssets = testedScope.getArtifacts().getArtifactFiles(MERGED_ASSETS);
-            }
+            task.resApk = scope.getArtifacts().getArtifactFiles(PROCESSED_RES);
+            task.mergedAssets = scope.getArtifacts().getArtifactFiles(MERGED_ASSETS);
 
             task.apkForUnitTest = scope.getArtifacts()
                     .appendArtifact(APK_FOR_LOCAL_TEST, task, "apk-for-local-test.ap_");
