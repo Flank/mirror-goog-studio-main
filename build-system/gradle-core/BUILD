@@ -136,7 +136,6 @@ kotlin_test(
     deps = [
         ":gradle-core",
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
-        "//tools/analytics-library/protos:analytics-protos",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apkzlib",
         "//tools/base/annotations",
