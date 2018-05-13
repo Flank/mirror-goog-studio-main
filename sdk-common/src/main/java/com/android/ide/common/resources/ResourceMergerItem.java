@@ -34,24 +34,18 @@ import static com.android.SdkConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.ArrayResourceValueImpl;
-import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.AttrResourceValueImpl;
-import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
 import com.android.ide.common.rendering.api.DeclareStyleableResourceValueImpl;
 import com.android.ide.common.rendering.api.DensityBasedResourceValueImpl;
-import com.android.ide.common.rendering.api.ItemResourceValue;
-import com.android.ide.common.rendering.api.PluralsResourceValue;
 import com.android.ide.common.rendering.api.PluralsResourceValueImpl;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.ResourceValueImpl;
+import com.android.ide.common.rendering.api.StyleItemResourceValue;
 import com.android.ide.common.rendering.api.StyleItemResourceValueImpl;
-import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValueImpl;
-import com.android.ide.common.rendering.api.TextResourceValue;
 import com.android.ide.common.rendering.api.TextResourceValueImpl;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -410,7 +404,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                                         mNamespace, mType, getName(), null, mLibraryName));
                 break;
             case ARRAY:
-                ArrayResourceValue arrayValue =
+                ArrayResourceValueImpl arrayValue =
                         new ArrayResourceValueImpl(mNamespace, mType, getName(), mLibraryName) {
                             @Override
                             protected int getDefaultIndex() {
@@ -430,7 +424,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 value = parseArrayValue(arrayValue);
                 break;
             case PLURALS:
-                PluralsResourceValue pluralsResourceValue =
+                PluralsResourceValueImpl pluralsResourceValue =
                         new PluralsResourceValueImpl(
                                 mNamespace, mType, getName(), null, mLibraryName) {
                             @Override
@@ -525,7 +519,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private ResourceValue parseStyleValue(@NonNull StyleResourceValue styleValue) {
+    private StyleResourceValueImpl parseStyleValue(@NonNull StyleResourceValueImpl styleValue) {
         NodeList children = mValue.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
@@ -534,7 +528,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 NamedNodeMap attributes = child.getAttributes();
                 String attributeUrl = getAttributeValue(attributes, ATTR_NAME);
                 if (!Strings.isNullOrEmpty(attributeUrl)) {
-                    ItemResourceValue resValue =
+                    StyleItemResourceValue resValue =
                             new StyleItemResourceValueImpl(
                                     styleValue.getNamespace(),
                                     attributeUrl,
@@ -551,13 +545,13 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private AttrResourceValue parseAttrValue(@NonNull AttrResourceValue attrValue) {
+    private AttrResourceValueImpl parseAttrValue(@NonNull AttrResourceValueImpl attrValue) {
         return parseAttrValue(mValue, attrValue);
     }
 
     @NonNull
-    private static AttrResourceValue parseAttrValue(
-            @NonNull Node valueNode, @NonNull AttrResourceValue attrValue) {
+    private static AttrResourceValueImpl parseAttrValue(
+            @NonNull Node valueNode, @NonNull AttrResourceValueImpl attrValue) {
         NodeList children = valueNode.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
@@ -583,7 +577,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
         return attrValue;
     }
 
-    private ResourceValue parseArrayValue(ArrayResourceValue arrayValue) {
+    private ArrayResourceValueImpl parseArrayValue(ArrayResourceValueImpl arrayValue) {
         NodeList children = mValue.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
@@ -591,14 +585,16 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 String text = getTextNode(child.getChildNodes());
                 text = ValueXmlHelper.unescapeResourceString(text, false, true);
-                arrayValue.addElement(text);
+                if (text != null) {
+                    arrayValue.addElement(text);
+                }
             }
         }
 
         return arrayValue;
     }
 
-    private ResourceValue parsePluralsValue(PluralsResourceValue value) {
+    private PluralsResourceValueImpl parsePluralsValue(PluralsResourceValueImpl value) {
         NodeList children = mValue.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
@@ -618,8 +614,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private ResourceValue parseDeclareStyleable(
-            @NonNull DeclareStyleableResourceValue declareStyleable) {
+    private DeclareStyleableResourceValueImpl parseDeclareStyleable(
+            @NonNull DeclareStyleableResourceValueImpl declareStyleable) {
         NodeList children = mValue.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
@@ -635,7 +631,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                         namespace = ResourceNamespace.ANDROID;
                     }
 
-                    AttrResourceValue attr =
+                    AttrResourceValueImpl attr =
                             parseAttrValue(
                                     child,
                                     new AttrResourceValueImpl(
@@ -650,7 +646,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private ResourceValue parseValue(@NonNull ResourceValue value) {
+    private ResourceValueImpl parseValue(@NonNull ResourceValueImpl value) {
         String text = getTextNode(mValue.getChildNodes());
         value.setValue(ValueXmlHelper.unescapeResourceString(text, false, true));
 
@@ -658,7 +654,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private ResourceValue parseFileName(@NonNull ResourceValue value) {
+    private ResourceValueImpl parseFileName(@NonNull ResourceValueImpl value) {
         String text = getTextNode(mValue.getChildNodes()).trim();
         if (!text.isEmpty()
                 && !text.startsWith(PREFIX_RESOURCE_REF)
@@ -723,7 +719,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private TextResourceValue parseTextValue(@NonNull TextResourceValue value) {
+    private TextResourceValueImpl parseTextValue(@NonNull TextResourceValueImpl value) {
         NodeList children = mValue.getChildNodes();
         String text = getTextNode(children);
         value.setValue(ValueXmlHelper.unescapeResourceString(text, false, true));

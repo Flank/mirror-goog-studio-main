@@ -16,7 +16,7 @@
 package com.android.ide.common.resources
 
 import com.android.ide.common.rendering.api.AttrResourceValueImpl
-import com.android.ide.common.rendering.api.ItemResourceValue
+import com.android.ide.common.rendering.api.StyleItemResourceValue
 import com.android.ide.common.rendering.api.StyleItemResourceValueImpl
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceNamespace.ANDROID
@@ -46,7 +46,7 @@ class ResourceResolverNamespacesTest {
 
     private fun StyleResourceValue.withItems(
         resolver: Resolver,
-        vararg items: ItemResourceValue
+        vararg items: StyleItemResourceValueImpl
     ): StyleResourceValue {
         for (item in items) {
             item.setNamespaceResolver(resolver)
@@ -60,13 +60,13 @@ class ResourceResolverNamespacesTest {
         val androidRes = listOf(
             ResourceValueImpl(ANDROID, COLOR, "black", "#000000"),
             ResourceValueImpl(ANDROID, COLOR, "white", "#ffffff"),
-            AttrResourceValueImpl(ResourceReference(ANDROID, ATTR, "colorPrimary"), null)
+            AttrResourceValueImpl(ANDROID, ATTR, "colorPrimary", null)
         )
 
         val supportRes = listOf(
             ResourceValueImpl(supportLib, COLOR, "material_blue", "#0000ff"),
-            AttrResourceValueImpl(ResourceReference(supportLib, ATTR, "fabColor"), null),
-            AttrResourceValueImpl(ResourceReference(supportLib, ATTR, "actionBarColor"), null)
+            AttrResourceValueImpl(supportLib, ATTR, "fabColor", null),
+            AttrResourceValueImpl(supportLib, ATTR, "actionBarColor", null)
         )
 
         val libRes = listOf(

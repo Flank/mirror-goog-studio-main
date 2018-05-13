@@ -26,7 +26,7 @@ import java.util.Collection;
 /**
  * Represents an android style resource with a name and a list of children {@link ResourceValue}.
  */
-public class StyleResourceValue extends ResourceValue {
+public class StyleResourceValue extends ResourceValueImpl {
     /**
      * Contents of the {@code parent} XML attribute. May be empty or null.
      *
@@ -37,7 +37,7 @@ public class StyleResourceValue extends ResourceValue {
     /**
      * Items defined in this style, indexed by the namespace and name of the attribute they define.
      */
-    private final Table<ResourceNamespace, String, ItemResourceValue> mItems =
+    private final Table<ResourceNamespace, String, StyleItemResourceValue> mItems =
             HashBasedTable.create();
 
     /**
@@ -115,19 +115,21 @@ public class StyleResourceValue extends ResourceValue {
      * Finds the item for the given qualified attr name in this style (if it's defined in this
      * style).
      */
+    // TODO: Remove the type argument and return StyleItemResourceValue
     @Nullable
-    public ItemResourceValue getItem(@NonNull ResourceNamespace namespace, @NonNull String name) {
-        return mItems.get(namespace, name);
+    public StyleItemResourceValueImpl getItem(
+            @NonNull ResourceNamespace namespace, @NonNull String name) {
+        return (StyleItemResourceValueImpl) mItems.get(namespace, name);
     }
 
     /** Finds the item for the given attr in this style (if it's defined in this style). */
     @Nullable
-    public ItemResourceValue getItem(@NonNull ResourceReference attr) {
+    public StyleItemResourceValueImpl getItem(@NonNull ResourceReference attr) {
         assert attr.getResourceType() == ResourceType.ATTR;
-        return mItems.get(attr.getNamespace(), attr.getName());
+        return (StyleItemResourceValueImpl) mItems.get(attr.getNamespace(), attr.getName());
     }
 
-    public void addItem(ItemResourceValue item) {
+    public void addItem(StyleItemResourceValue item) {
         ResourceReference attr = item.getAttr();
         if (attr == null) {
             return;
@@ -152,7 +154,7 @@ public class StyleResourceValue extends ResourceValue {
      * Returns a list of all items defined in this Style. This doesn't return items inherited from
      * the parent.
      */
-    public Collection<ItemResourceValue> getDefinedItems() {
+    public Collection<StyleItemResourceValue> getDefinedItems() {
         return mItems.values();
     }
 }

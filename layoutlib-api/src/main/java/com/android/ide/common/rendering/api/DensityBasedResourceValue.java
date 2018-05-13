@@ -20,7 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
 
-public class DensityBasedResourceValue extends ResourceValue {
+public class DensityBasedResourceValue extends ResourceValueImpl {
     private final Density mDensity;
 
     public DensityBasedResourceValue(

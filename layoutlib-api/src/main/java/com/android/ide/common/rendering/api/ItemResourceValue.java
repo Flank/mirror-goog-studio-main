@@ -21,7 +21,7 @@ import com.android.resources.ResourceUrl;
 import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.Nullable;
 
-public class ItemResourceValue extends ResourceValue implements StyleItemResourceValue {
+public class ItemResourceValue extends ResourceValueImpl implements StyleItemResourceValue {
     @NonNull private final String attributeName;
 
     public ItemResourceValue(

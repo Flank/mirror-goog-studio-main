@@ -23,17 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.ItemResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
-import com.android.ide.common.rendering.api.RenderResources;
-import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.ResourceValueImpl;
-import com.android.ide.common.rendering.api.SampleDataResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValueImpl;
+import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -345,17 +335,19 @@ public class ResourceResolver extends RenderResources {
         } while (true);
     }
 
+    // TODO: Change return type to StyleItemResourceValue.
     @Override
     @Nullable
-    public ItemResourceValue findItemInStyle(
+    public StyleItemResourceValueImpl findItemInStyle(
             @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
         return findItemInStyle(style, attr, 0);
     }
 
+    // TODO: Change return type to StyleItemResourceValue.
     @Nullable
-    private ItemResourceValue findItemInStyle(
+    private StyleItemResourceValueImpl findItemInStyle(
             @NonNull StyleResourceValue style, @NonNull ResourceReference attr, int depth) {
-        ItemResourceValue item = style.getItem(attr);
+        StyleItemResourceValueImpl item = style.getItem(attr);
 
         // if we didn't find it, we look in the parent style (if applicable)
         //noinspection VariableNotUsedInsideIf
@@ -793,10 +785,11 @@ public class ResourceResolver extends RenderResources {
             return resValue;
         }
 
+        // TODO: Change return type to StyleItemResourceValue.
         @Override
-        public ItemResourceValue findItemInStyle(
+        public StyleItemResourceValueImpl findItemInStyle(
                 @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
-            ItemResourceValue value = super.findItemInStyle(style, attr);
+            StyleItemResourceValueImpl value = super.findItemInStyle(style, attr);
             if (value != null) {
                 mLookupChain.add(value);
             }

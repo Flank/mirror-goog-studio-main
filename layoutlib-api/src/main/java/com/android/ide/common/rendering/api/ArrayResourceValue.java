@@ -26,7 +26,7 @@ import java.util.List;
  * Represents an android array resource with a name and a list of children {@link ResourceValue}
  * items, one for array element.
  */
-public class ArrayResourceValue extends ResourceValue implements Iterable<String> {
+public class ArrayResourceValue extends ResourceValueImpl implements Iterable<String> {
     private final List<String> mItems = new ArrayList<>();
 
     public ArrayResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {

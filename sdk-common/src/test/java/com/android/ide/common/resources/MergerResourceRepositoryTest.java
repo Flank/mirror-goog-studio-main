@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.ide.common.rendering.api.AttrResourceValue;
-import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.StyleItemResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -225,7 +225,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
         assertEquals("@android:style/Holo.Light", styleResourceValue.getParentStyleName());
 
-        ItemResourceValue styleValue = styleResourceValue.getItem(ANDROID, "singleLine");
+        StyleItemResourceValue styleValue = styleResourceValue.getItem(ANDROID, "singleLine");
         assertNotNull(styleValue);
         assertEquals("true", styleValue.getValue());
 

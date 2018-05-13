@@ -25,19 +25,7 @@ import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_RESOURCES;
 
-import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.ArrayResourceValueImpl;
-import com.android.ide.common.rendering.api.AttrResourceValue;
-import com.android.ide.common.rendering.api.AttrResourceValueImpl;
-import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
-import com.android.ide.common.rendering.api.DeclareStyleableResourceValueImpl;
-import com.android.ide.common.rendering.api.ItemResourceValue;
-import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.ResourceValueImpl;
-import com.android.ide.common.rendering.api.StyleItemResourceValueImpl;
-import com.android.ide.common.rendering.api.StyleResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValueImpl;
+import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.ValueXmlHelper;
 import com.android.resources.ResourceType;
 import com.google.common.base.Strings;
@@ -62,10 +50,10 @@ public final class ValueResourceParser extends DefaultHandler {
     private boolean inResources;
     private int mDepth;
     private ResourceValue mCurrentValue;
-    private ArrayResourceValue mArrayResourceValue;
-    private StyleResourceValue mCurrentStyle;
-    private DeclareStyleableResourceValue mCurrentDeclareStyleable;
-    private AttrResourceValue mCurrentAttr;
+    private ArrayResourceValueImpl mArrayResourceValue;
+    private StyleResourceValueImpl mCurrentStyle;
+    private DeclareStyleableResourceValueImpl mCurrentDeclareStyleable;
+    private AttrResourceValueImpl mCurrentAttr;
     private IValueResourceRepository mRepository;
     private final boolean mIsFramework;
     private final String mLibraryName;
@@ -111,6 +99,7 @@ public final class ValueResourceParser extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
         try {
+            ResourceNamespace namespace = ResourceNamespace.fromBoolean(mIsFramework);
             mDepth++;
             if (!inResources && mDepth == 1) {
                 if (qName.equals(TAG_RESOURCES)) {
@@ -123,34 +112,36 @@ public final class ValueResourceParser extends DefaultHandler {
                     // get the resource name
                     String name = attributes.getValue(ATTR_NAME);
                     if (name != null) {
-                        ResourceReference newResource =
-                                new ResourceReference(type, name, mIsFramework);
                         switch (type) {
                             case STYLE:
                                 String parent = attributes.getValue(ATTR_PARENT);
                                 mCurrentStyle =
                                         new StyleResourceValueImpl(
-                                                newResource, parent, mLibraryName);
+                                                namespace, type, name, parent, mLibraryName);
                                 mRepository.addResourceValue(mCurrentStyle);
                                 break;
                             case DECLARE_STYLEABLE:
                                 mCurrentDeclareStyleable =
                                         new DeclareStyleableResourceValueImpl(
-                                                newResource, null, mLibraryName);
+                                                namespace, type, name, null, mLibraryName);
                                 mRepository.addResourceValue(mCurrentDeclareStyleable);
                                 break;
                             case ATTR:
-                                mCurrentAttr = new AttrResourceValueImpl(newResource, mLibraryName);
+                                mCurrentAttr =
+                                        new AttrResourceValueImpl(
+                                                namespace, type, name, mLibraryName);
                                 mRepository.addResourceValue(mCurrentAttr);
                                 break;
                             case ARRAY:
                                 mArrayResourceValue =
-                                        new ArrayResourceValueImpl(newResource, mLibraryName);
+                                        new ArrayResourceValueImpl(
+                                                namespace, type, name, mLibraryName);
                                 mRepository.addResourceValue(mArrayResourceValue);
                                 break;
                             default:
                                 mCurrentValue =
-                                        new ResourceValueImpl(newResource, null, mLibraryName);
+                                        new ResourceValueImpl(
+                                                namespace, type, name, null, mLibraryName);
                                 mRepository.addResourceValue(mCurrentValue);
                                 break;
                         }
@@ -164,7 +155,7 @@ public final class ValueResourceParser extends DefaultHandler {
                         mCurrentValue =
                                 new StyleItemResourceValueImpl(
                                         mCurrentStyle.getNamespace(), name, null, mLibraryName);
-                        mCurrentStyle.addItem((ItemResourceValue)mCurrentValue);
+                        mCurrentStyle.addItem((StyleItemResourceValue) mCurrentValue);
                     } else if (mCurrentDeclareStyleable != null) {
                         // is the attribute in the android namespace?
                         boolean isFramework = mIsFramework;
@@ -175,8 +166,7 @@ public final class ValueResourceParser extends DefaultHandler {
 
                         mCurrentAttr =
                                 new AttrResourceValueImpl(
-                                        new ResourceReference(ResourceType.ATTR, name, isFramework),
-                                        mLibraryName);
+                                        namespace, ResourceType.ATTR, name, mLibraryName);
                         mCurrentDeclareStyleable.addValue(mCurrentAttr);
 
                         // also add it to the repository.
