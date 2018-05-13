@@ -168,20 +168,20 @@ public abstract class AbstractResourceRepository {
      *
      * @param namespace the namespace of the resources to return
      * @param resourceType the type of the resources to return
-     * @param nameFilter the predicate for checking resource names
+     * @param filter the predicate for checking resource items
      * @return the resources matching the namespace, type, and satisfying the name filter
      */
     @NonNull
     public List<ResourceItem> getResourceItems(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
-            @NonNull Predicate<String> nameFilter) {
+            @NonNull Predicate<ResourceItem> filter) {
         List<ResourceItem> result = null;
         synchronized (ITEM_MAP_LOCK) {
             ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
             if (map != null) {
                 for (ResourceItem item : map.values()) {
-                    if (nameFilter.test(item.getName())) {
+                    if (filter.test(item)) {
                         if (result == null) {
                             result = new ArrayList<>();
                         }
