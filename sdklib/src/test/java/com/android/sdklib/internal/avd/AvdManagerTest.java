@@ -625,9 +625,7 @@ public class AvdManagerTest extends TestCase {
 
         // Check an empty AVD .ini file
         File emptyIniFile = new File(parentFolder, "empty.ini");
-        try (OutputStream unusedOStream = mFileOp.newFileOutputStream(emptyIniFile, true)) {
-            ; // Don't write anything
-        }
+        assertTrue("Empty .ini file already exists in " + parentFolder, mFileOp.createNewFile(emptyIniFile));
         assertTrue("Expected empty AVD .ini in " + parentFolder, mFileOp.exists(emptyIniFile));
         assertThat(emptyIniFile.length()).isEqualTo(0);
         AvdInfo emptyInfo = mAvdManager.parseAvdInfo(emptyIniFile, log);
