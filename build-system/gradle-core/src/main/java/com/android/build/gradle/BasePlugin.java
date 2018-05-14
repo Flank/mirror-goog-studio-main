@@ -25,8 +25,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.plugin.AndroidBasePlugin;
 import com.android.build.api.transform.Transform;
-import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
@@ -230,6 +230,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     protected abstract int getProjectType();
 
+    @NonNull
+    abstract Class<? extends Plugin<Project>> getApiPluginClass();
+
     @VisibleForTesting
     public VariantManager getVariantManager() {
         return variantManager;
@@ -261,6 +264,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
         this.projectOptions = new ProjectOptions(project);
         checkGradleVersion(project, getLogger(), projectOptions);
 
+        project.getPluginManager().apply(getApiPluginClass());
+        //noinspection deprecation
+        project.getPluginManager().apply(com.android.build.gradle.api.AndroidBasePlugin.class);
         project.getPluginManager().apply(AndroidBasePlugin.class);
 
         checkPathForErrors();

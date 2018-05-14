@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.api;
+package com.android.build.api.plugin
 
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
+import org.gradle.api.Incubating
+import org.gradle.api.Plugin
+import org.gradle.api.Project
 
-/**
- * Common plugin applied by all plugins.
- *
- * <p>The purpose of this no-op plugin is to allow other plugin authors to determine if an Android
- * plugin was applied.
- *
- * @deprecated Use {@link com.android.build.api.plugin.AndroidBasePlugin} instead.
- */
-@Deprecated
-public class AndroidBasePlugin implements Plugin<Project> {
-
-    @Override
-    public void apply(Project project) {}
+/** Gradle plugin class for 'application' projects. */
+@Incubating
+class AppPlugin : Plugin<Project> {
+    override fun apply(project: Project) {
+        // Warning: the internal plugin is not stable API.
+        project.pluginManager.apply("com.android.tools.internal.application")
+    }
 }

@@ -1,5 +1,6 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:bazel.bzl", "fileset")
 
 kotlin_library(
     name = "gradle-api",
@@ -8,6 +9,7 @@ kotlin_library(
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
+    resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -17,6 +19,12 @@ kotlin_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
+)
+
+fileset(
+    name = "resources",
+    srcs = glob(["src/main/resources/**"]),
+    mappings = {"src/main/resources/": ""},
 )
 
 maven_pom(

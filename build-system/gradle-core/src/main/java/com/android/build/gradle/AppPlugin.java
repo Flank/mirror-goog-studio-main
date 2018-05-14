@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
 import org.gradle.api.Action;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -90,6 +91,12 @@ public class AppPlugin extends AbstractAppPlugin {
     @NonNull
     protected Class<? extends AppExtension> getExtensionClass() {
         return BaseAppModuleExtension.class;
+    }
+
+    @NonNull
+    @Override
+    Class<? extends Plugin<Project>> getApiPluginClass() {
+        return com.android.build.api.plugin.AppPlugin.class;
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {
