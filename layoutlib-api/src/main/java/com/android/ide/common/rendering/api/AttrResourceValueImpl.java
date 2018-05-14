@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,21 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import java.util.HashMap;
+import java.util.Map;
 
-/** This class will replace {@link AttrResourceValue} when the latter becomes an interface. */
-public class AttrResourceValueImpl extends AttrResourceValue {
+/**
+ * A resource value representing an attr resource.
+ *
+ * <p>{@link #getValue()} will return null, instead use {@link #getAttributeValues()} to get the
+ * enum/flag value associated with an attribute defined in the declare-styleable.
+ */
+public class AttrResourceValueImpl extends ResourceValueImpl implements AttrResourceValue {
+    @Nullable private Map<String, Integer> mValueMap;
+
     public AttrResourceValueImpl(
             @NonNull ResourceReference reference, @Nullable String libraryName) {
-        super(reference, libraryName);
+        super(reference, null, libraryName);
     }
 
     public AttrResourceValueImpl(
@@ -31,6 +40,25 @@ public class AttrResourceValueImpl extends AttrResourceValue {
             @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String libraryName) {
-        super(namespace, type, name, libraryName);
+        super(namespace, type, name, null, libraryName);
+    }
+
+    /**
+     * Return the enum/flag integer values.
+     *
+     * @return the map of (name, integer) values. Can be null.
+     */
+    @Override
+    @Nullable
+    public Map<String, Integer> getAttributeValues() {
+        return mValueMap;
+    }
+
+    public void addValue(@NonNull String name, @NonNull Integer value) {
+        if (mValueMap == null) {
+            mValueMap = new HashMap<>();
+        }
+
+        mValueMap.put(name, value);
     }
 }

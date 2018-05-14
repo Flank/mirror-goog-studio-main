@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,21 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-/** This class will replace {@link ArrayResourceValue} when the latter becomes an interface. */
-public class ArrayResourceValueImpl extends ArrayResourceValue {
+/**
+ * Represents an Android array resource with a name and a list of children {@link ResourceValue}
+ * items, one for array element.
+ */
+public class ArrayResourceValueImpl extends ResourceValueImpl implements ArrayResourceValue {
+    private final List<String> mItems = new ArrayList<>();
+
     public ArrayResourceValueImpl(
             @NonNull ResourceReference reference, @Nullable String libraryName) {
-        super(reference, libraryName);
+        super(reference, null, libraryName);
+        assert reference.getResourceType() == ResourceType.ARRAY;
     }
 
     public ArrayResourceValueImpl(
@@ -31,6 +40,55 @@ public class ArrayResourceValueImpl extends ArrayResourceValue {
             @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String libraryName) {
-        super(namespace, type, name, libraryName);
+        super(namespace, type, name, null, libraryName);
+        assert type == ResourceType.ARRAY;
+    }
+
+    @Override
+    public int getElementCount() {
+        return mItems.size();
+    }
+
+    @Override
+    @NonNull
+    public String getElement(int index) {
+        return mItems.get(index);
+    }
+
+    /** Adds an element into the array. */
+    public void addElement(@NonNull String value) {
+        mItems.add(value);
+    }
+
+    /** Returns an iterator over the resource values. */
+    @Override
+    public Iterator<String> iterator() {
+        return mItems.iterator();
+    }
+
+    /**
+     * Returns the index of the element to pick by default if a client of layoutlib asks for the
+     * {@link #getValue()} rather than the more specific {@linkplain ArrayResourceValue} iteration
+     * methods
+     */
+    protected int getDefaultIndex() {
+        return 0;
+    }
+
+    @Override
+    @Nullable
+    public String getValue() {
+        // Clients should normally not call this method on ArrayResourceValues; they should
+        // pick the specific array element they want. However, for compatibility with older
+        // layout libs, return the first array element's value instead.
+
+        //noinspection VariableNotUsedInsideIf
+        if (super.getValue() == null) {
+            if (!mItems.isEmpty()) {
+                return mItems.get(getDefaultIndex());
+            }
+        }
+
+        return super.getValue();
     }
 }

@@ -338,13 +338,12 @@ public class ResourceResolver extends RenderResources {
         } while (true);
     }
 
-    // TODO: Change return type to StyleItemResourceValue.
     @Override
     @Nullable
-    public StyleItemResourceValueImpl findItemInStyle(
+    public StyleItemResourceValue findItemInStyle(
             @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
         for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
-            StyleItemResourceValueImpl item = style.getItem(attr);
+            StyleItemResourceValue item = style.getItem(attr);
 
             if (item != null) {
                 return item;
@@ -372,7 +371,7 @@ public class ResourceResolver extends RenderResources {
     }
 
     @NonNull
-    private String computeCyclicStyleChain(StyleResourceValue style) {
+    private String computeCyclicStyleChain(@NonNull StyleResourceValue style) {
         StringBuilder result = new StringBuilder(100);
         Set<StyleResourceValue> seen = new HashSet<>();
         for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION + 1; depth++) {
@@ -780,11 +779,10 @@ public class ResourceResolver extends RenderResources {
             return resValue;
         }
 
-        // TODO: Change return type to StyleItemResourceValue.
         @Override
-        public StyleItemResourceValueImpl findItemInStyle(
+        public StyleItemResourceValue findItemInStyle(
                 @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
-            StyleItemResourceValueImpl value = super.findItemInStyle(style, attr);
+            StyleItemResourceValue value = super.findItemInStyle(style, attr);
             if (value != null) {
                 mLookupChain.add(value);
             }

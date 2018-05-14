@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,19 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
+import com.android.utils.HashCodes;
+import java.util.Objects;
 
-/**
- * This class will replace {@link DensityBasedResourceValue} when the latter becomes an interface.
- */
-public class DensityBasedResourceValueImpl extends DensityBasedResourceValue {
+public class DensityBasedResourceValueImpl extends ResourceValueImpl
+        implements DensityBasedResourceValue {
+    private final Density mDensity;
+
     public DensityBasedResourceValueImpl(
             @NonNull ResourceReference reference,
             @Nullable String value,
             @NonNull Density mDensity) {
-        super(reference, value, mDensity);
-    }
-
-    public DensityBasedResourceValueImpl(
-            @NonNull ResourceReference reference,
-            @Nullable String value,
-            @NonNull Density mDensity,
-            @Nullable String libraryName) {
-        super(reference, value, mDensity, libraryName);
+        super(reference, value);
+        this.mDensity = mDensity;
     }
 
     public DensityBasedResourceValueImpl(
@@ -46,6 +41,35 @@ public class DensityBasedResourceValueImpl extends DensityBasedResourceValue {
             @Nullable String value,
             @NonNull Density mDensity,
             @Nullable String libraryName) {
-        super(namespace, type, name, value, mDensity, libraryName);
+        super(namespace, type, name, value, libraryName);
+        this.mDensity = mDensity;
+    }
+
+    @Override
+    @NonNull
+    public final Density getResourceDensity() {
+        return mDensity;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "DensityBasedResourceValue ["
+               + getResourceType() + "/" + getName() + " = " + getValue()
+               + " (density:" + mDensity +", framework:" + isFramework() + ")]";
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodes.mix(super.hashCode(), Objects.hashCode(mDensity));
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (this == obj) return true;
+        if (!super.equals(obj)) return false;
+        if (getClass() != obj.getClass()) return false;
+        DensityBasedResourceValueImpl other = (DensityBasedResourceValueImpl) obj;
+        return Objects.equals(mDensity, other.mDensity);
     }
 }

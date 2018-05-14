@@ -15,10 +15,7 @@
  */
 package com.android.ide.common.rendering.api;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,36 +24,12 @@ import java.util.Map;
  * <p>{@link #getValue()} will return null, instead use {@link #getAttributeValues()} to get the
  * enum/flag value associated with an attribute defined in the declare-styleable.
  */
-public abstract class AttrResourceValue extends ResourceValueImpl {
-    @Nullable private Map<String, Integer> mValueMap;
-
-    public AttrResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {
-        super(reference, null, libraryName);
-    }
-
-    public AttrResourceValue(
-            @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
-            @NonNull String name,
-            @Nullable String libraryName) {
-        super(namespace, type, name, null, libraryName);
-    }
-
+public interface AttrResourceValue extends ResourceValue {
     /**
-     * Return the enum/flag integer values.
+     * Returns the enum/flag integer values.
      *
-     * @return the map of (name, integer) values. Can be null.
+     * @return the map of (name, integer) values
      */
     @Nullable
-    public Map<String, Integer> getAttributeValues() {
-        return mValueMap;
-    }
-
-    public void addValue(@NonNull String name, @NonNull Integer value) {
-        if (mValueMap == null) {
-            mValueMap = new HashMap<>();
-        }
-
-        mValueMap.put(name, value);
-    }
+    Map<String, Integer> getAttributeValues();
 }

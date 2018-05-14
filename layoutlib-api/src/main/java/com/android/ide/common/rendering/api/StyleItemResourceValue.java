@@ -16,9 +16,9 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.annotations.Nullable;
+import com.android.annotations.Nullable;
 
-public interface StyleItemResourceValue extends ResourceValueTemp {
+public interface StyleItemResourceValue extends ResourceValue {
     /**
      * Returns contents of the {@code name} XML attribute that defined this style item. This is
      * supposed to be a reference to an {@code attr} resource.

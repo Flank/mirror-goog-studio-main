@@ -16,10 +16,10 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.base.MoreObjects;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * A straightforward implementation of the {@link StyleItemResourceValue} interface.

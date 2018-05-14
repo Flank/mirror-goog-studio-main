@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2014 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,20 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import com.android.utils.HashCodes;
+import java.util.Objects;
 
-/** This class will replace {@link TextResourceValue} when the latter becomes an interface. */
-public class TextResourceValueImpl extends TextResourceValue {
+/** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text. */
+public class TextResourceValueImpl extends ResourceValueImpl implements TextResourceValue {
+    private String mRawXmlValue;
+
     public TextResourceValueImpl(
             @NonNull ResourceReference reference,
             @Nullable String textValue,
             @Nullable String rawXmlValue,
             @Nullable String libraryName) {
-        super(reference, textValue, rawXmlValue, libraryName);
+        super(reference, textValue, libraryName);
+        mRawXmlValue = rawXmlValue;
     }
 
     public TextResourceValueImpl(
@@ -36,6 +41,40 @@ public class TextResourceValueImpl extends TextResourceValue {
             @Nullable String textValue,
             @Nullable String rawXmlValue,
             @Nullable String libraryName) {
-        super(namespace, type, name, textValue, rawXmlValue, libraryName);
+        super(namespace, type, name, textValue, libraryName);
+        mRawXmlValue = rawXmlValue;
+    }
+
+    @Override
+    @Nullable
+    public String getRawXmlValue() {
+        if (mRawXmlValue != null) {
+            return mRawXmlValue;
+        }
+        return super.getValue();
+    }
+
+    /**
+     * Sets the raw XML text.
+     *
+     * @param value the text to set
+     *
+     * @see #getRawXmlValue()
+     */
+    public void setRawXmlValue(@Nullable String value) {
+        mRawXmlValue = value;
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodes.mix(super.hashCode(), Objects.hashCode(mRawXmlValue));
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (this == obj) return true;
+        if (!super.equals(obj)) return false;
+        TextResourceValueImpl other = (TextResourceValueImpl) obj;
+        return Objects.equals(mRawXmlValue, other.mRawXmlValue);
     }
 }

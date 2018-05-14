@@ -44,7 +44,7 @@ class ResourceResolverNamespacesTest {
 
     private lateinit var resolver: ResourceResolver
 
-    private fun StyleResourceValue.withItems(
+    private fun StyleResourceValueImpl.withItems(
         resolver: Resolver,
         vararg items: StyleItemResourceValueImpl
     ): StyleResourceValue {

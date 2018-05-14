@@ -17,69 +17,29 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
-import java.util.ArrayList;
-import java.util.List;
 
-/** Represents an android plurals resource. */
-public abstract class PluralsResourceValue extends ResourceValueImpl {
-    private final List<String> mQuantities = new ArrayList<>();
-    private final List<String> mValues = new ArrayList<>();
-
-    public PluralsResourceValue(
-            @NonNull ResourceReference reference,
-            @Nullable String value,
-            @Nullable String libraryName) {
-        super(reference, value, libraryName);
-        assert reference.getResourceType() == ResourceType.PLURALS;
-    }
-
-    public PluralsResourceValue(
-            @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
-            @NonNull String name,
-            @Nullable String value,
-            @Nullable String libraryName) {
-        super(namespace, type, name, value, libraryName);
-        assert type == ResourceType.PLURALS;
-    }
-
-    /**
-     * Adds an element into the array
-     */
-    public void addPlural(String quantity, String value) {
-        mQuantities.add(quantity);
-        mValues.add(value);
-    }
-
-    /**
-     * Returns the number of plural string
-     *
-     * @return the element count
-     */
-    public int getPluralsCount() {
-        return mQuantities.size();
-    }
+/** Represents an Android plurals resource. */
+public interface PluralsResourceValue extends ResourceValue {
+    /** Returns the number of plural strings. */
+    int getPluralsCount();
 
     /**
      * Returns the quantity at the given index, such as "one", "two", "few", etc.
      *
-     * @param index the index, which must be in the range [0..getPluralsCount()].
+     * @param index the index, which must be in the range 0..getPluralsCount()-1.
      * @return the corresponding quantity string
      */
-    public String getQuantity(int index) {
-        return mQuantities.get(index);
-    }
+    @NonNull
+    String getQuantity(int index);
 
     /**
      * Returns the string element at the given index position.
      *
-     * @param index index, which must be in the range [0..getPluralsCount()].
+     * @param index index, which must be in the range 0..getPluralsCount()-1.
      * @return the corresponding element
      */
-    public String getValue(int index) {
-        return mValues.get(index);
-    }
+    @NonNull
+    String getValue(int index);
 
     /**
      * Returns the string element for the given quantity
@@ -87,31 +47,6 @@ public abstract class PluralsResourceValue extends ResourceValueImpl {
      * @param quantity the quantity string, such as "one", "two", "few", etc.
      * @return the corresponding string value, or null if not defined
      */
-    public String getValue(String quantity) {
-        assert mQuantities.size() == mValues.size();
-        for (int i = 0, n = mQuantities.size(); i < n; i++) {
-            if (quantity.equals(mQuantities.get(i))) {
-                return mValues.get(i);
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public String getValue() {
-        // Clients should normally not call this method on PluralsResourceValues; they should
-        // pick the specific quantity element they want. However, for compatibility with older
-        // layout libs, return the first plurals element's value instead.
-
-        //noinspection VariableNotUsedInsideIf
-        if (super.getValue() == null) {
-            if (!mValues.isEmpty()) {
-                return getValue(0);
-            }
-
-        }
-
-        return super.getValue();
-    }
+    @Nullable
+    String getValue(@NonNull String quantity);
 }
