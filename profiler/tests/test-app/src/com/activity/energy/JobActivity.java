@@ -67,6 +67,12 @@ public class JobActivity extends PerfdTestActivity {
         engine.stopJob(jobParams);
     }
 
+    public void startWithoutScheduling() {
+        JobServiceEngine engine = new JobServiceEngine(new MyJobService());
+        JobParameters jobParams = createJobParams(3);
+        engine.startJob(jobParams);
+    }
+
     private JobParameters createJobParams(int jobId) {
         return new JobParameters(
                 jobId,

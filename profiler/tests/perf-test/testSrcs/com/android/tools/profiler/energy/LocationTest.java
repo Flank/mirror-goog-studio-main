@@ -270,4 +270,20 @@ public class LocationTest {
         String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
         assertThat(removeStack).contains(methodName);
     }
+
+    @Test
+    public void testMissingRequestStarted() {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "updateLocationWithoutStartingRequest");
+        assertThat(myAndroidDriver.waitForInput("LISTENER LOCATION UPDATES")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 1);
+        assertThat(response.getEventsCount()).isEqualTo(1);
+
+        EnergyEvent locationChangeEvent = response.getEvents(0);
+        assertThat(locationChangeEvent.getEventId()).isGreaterThan(0);
+        assertThat(locationChangeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_CHANGED);
+    }
 }
