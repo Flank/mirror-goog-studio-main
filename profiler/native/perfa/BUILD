@@ -36,6 +36,7 @@ android_cc_binary(
     name = "android",
     abis = [
         "x86",
+        "x86_64",
         "armeabi-v7a",
         "arm64-v8a",
     ],
