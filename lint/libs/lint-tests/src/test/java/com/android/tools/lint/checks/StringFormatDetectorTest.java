@@ -264,9 +264,9 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources>\n"
                                         + "    <string name=\"formattest1\">\"%1$s, %2$tF %3$tR\"</string>\n"
-                                        + "    <string name=\"formattest2\">%1$s, %2$tF %3$tR</string>\n"
+                                        + "    <string name=\"formattest2\">%1$s %2$tF %3$tR</string>\n"
                                         + "    <string name=\"formattest3\">\"Note: Start point RPM differs by %d%%.\\n\\n\"</string>\n"
-                                        + "    <string name=\"formattest4\">Note: Start point RPM differs by %d%%.\\n\\n</string>\n"
+                                        + "    <string name=\"formattest4\">Note- Start point RPM differs by %d%%.\\n\\n</string>\n"
                                         + "    <string name=\"formattest5\">%s%% c</string>\n"
                                         + "    <string name=\"formattest6\">%s%% </string>\n"
                                         + "    <string name=\"formattest7\">%1$s%%</string>\n"
@@ -436,7 +436,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"menu_settings\">Settings</string>\n"
                                         + "    <string name=\"title_activity_demo\">DemoActivity</string>\n"
                                         + "    <string name=\"message1\">The total of %1$s is %2$d</string>\n"
-                                        + "    <string name=\"message2\">Add %1$s is %2$d</string>\n"
+                                        + "    <string name=\"message2\">Add %1$s is %2$d.</string>\n"
                                         + "    <string name=\"error_and_source\">Add %1$s is %2$d</string>\n"
                                         + "    <string name=\"data_source\">Foo</string>\n"
                                         + "    <string name=\"preferences_about_app_title\">%1$s version %2$s</string>\n"
@@ -940,8 +940,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"not_plural6\">Ends with unit: %d MiB.</string>\n"
                                         + "    <string name=\"not_plural7\">Ends with unit: Elevation gain: %1$d m (%2$d ft)</string>\n"
                                         + "    <string name=\"not_plural8\">Uses floating point: %.2f entries.</string>\n"
-                                        + "    <string name=\"not_plural9\">Uses floating point: %.2f entries.</string>\n"
-                                        + "    <string name=\"not_plural10\">Uses string: %s entries.</string>\n"
+                                        + "    <string name=\"not_plural9\">Uses string: %s entries.</string>\n"
                                         + "</resources>\n"),
                         // Should not flag on anything but English strings
                         xml(
@@ -975,8 +974,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"not_plural6\">Ends with unit: %d MiB.</string>\n"
                                         + "    <string name=\"not_plural7\">Ends with unit: Elevation gain: %1$d m (%2$d ft)</string>\n"
                                         + "    <string name=\"not_plural8\">Uses floating point: %.2f entries.</string>\n"
-                                        + "    <string name=\"not_plural9\">Uses floating point: %.2f entries.</string>\n"
-                                        + "    <string name=\"not_plural10\">Uses string: %s entries.</string>\n"
+                                        + "    <string name=\"not_plural9\">Uses string: %s entries.</string>\n"
                                         + "</resources>\n"))
                 .run()
                 .expect(expected);
@@ -1092,7 +1090,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources>\n"
-                                        + "    <string name=\"hello\">Hello %1$s</string>\n"
+                                        + "    <string name=\"hello\">Hello World</string>\n"
                                         + "    <string name=\"zero_args\">Hello</string>\n"
                                         + "    <string name=\"one_arg\">Hello %1$s</string>\n"
                                         + "    <string name=\"two_args\">Hello %1$s %2$s</string>\n"

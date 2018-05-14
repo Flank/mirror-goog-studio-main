@@ -252,7 +252,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         }
     }
 
-    private static void addText(StringBuilder sb, Node node) {
+    static void addText(StringBuilder sb, Node node) {
         if (node.getNodeType() == Node.TEXT_NODE) {
             sb.append(stripQuotes(node.getNodeValue().trim()));
         } else {
@@ -268,7 +268,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
      * href="http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling">Escaping
      * apostrophes and quotes</a>
      */
-    @VisibleForTesting
     static String stripQuotes(String s) {
         StringBuilder sb = new StringBuilder();
         boolean isEscaped = false;

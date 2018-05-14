@@ -187,5 +187,9 @@ constructor(
         /** Issues related to right to left and bidirectional text support  */
         @JvmField
         val RTL = create(I18N, "Bidirectional Text", 40)
+
+        /** Issues related to increased application size  */
+        @JvmField
+        val APP_SIZE = create(PERFORMANCE, "Application Size", 79)
     }
 }

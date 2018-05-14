@@ -45,6 +45,7 @@ class CategoryTest : TestCase() {
                     "Security\n" +
                     "Compliance\n" +
                     "Performance\n" +
+                    "Performance:Application Size\n" +
                     "Usability:Typography\n" +
                     "Usability:Icons\n" +
                     "Usability\n" +
