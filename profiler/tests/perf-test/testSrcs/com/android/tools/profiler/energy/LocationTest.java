@@ -113,7 +113,7 @@ public class LocationTest {
         assertThat(request.getPriority()).isEqualTo(Priority.HIGH_ACCURACY);
 
         EnergyEvent locationChangeEvent = response.getEvents(1);
-        assertThat(locationChangeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(locationChangeEvent.getTimestamp()).isAtLeast(requestEvent.getTimestamp());
         assertThat(locationChangeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(locationChangeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
         assertThat(locationChangeEvent.getIsTerminal()).isFalse();
@@ -127,7 +127,7 @@ public class LocationTest {
         assertThat(location.getLongitude()).isWithin(EPSILON).of(60.0f);
 
         EnergyEvent removeEvent = response.getEvents(2);
-        assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(removeEvent.getTimestamp()).isAtLeast(locationChangeEvent.getTimestamp());
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
         assertThat(removeEvent.getIsTerminal()).isTrue();
@@ -174,7 +174,7 @@ public class LocationTest {
         assertThat(request.getPriority()).isEqualTo(Priority.BALANCED);
 
         EnergyEvent locationChangeEvent = response.getEvents(1);
-        assertThat(locationChangeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(locationChangeEvent.getTimestamp()).isAtLeast(requestEvent.getTimestamp());
         assertThat(locationChangeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(locationChangeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
         assertThat(locationChangeEvent.getIsTerminal()).isFalse();
@@ -192,7 +192,7 @@ public class LocationTest {
         assertThat(location.getLongitude()).isWithin(EPSILON).of(30.0);
 
         EnergyEvent removeEvent = response.getEvents(2);
-        assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(removeEvent.getTimestamp()).isAtLeast(locationChangeEvent.getTimestamp());
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
         assertThat(removeEvent.getIsTerminal()).isTrue();
@@ -239,7 +239,7 @@ public class LocationTest {
         assertThat(request.getPriority()).isEqualTo(Priority.HIGH_ACCURACY);
 
         EnergyEvent locationChangeEvent = response.getEvents(1);
-        assertThat(locationChangeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(locationChangeEvent.getTimestamp()).isAtLeast(requestEvent.getTimestamp());
         assertThat(locationChangeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(locationChangeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
         assertThat(locationChangeEvent.getIsTerminal()).isFalse();
@@ -257,7 +257,7 @@ public class LocationTest {
         assertThat(location.getLongitude()).isWithin(EPSILON).of(45.0);
 
         EnergyEvent removeEvent = response.getEvents(2);
-        assertThat(removeEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(removeEvent.getTimestamp()).isAtLeast(locationChangeEvent.getTimestamp());
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getEventId()).isEqualTo(requestEvent.getEventId());
         assertThat(removeEvent.getIsTerminal()).isTrue();

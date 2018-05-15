@@ -96,13 +96,15 @@ public final class AlarmManagerWrapper {
             // Only instrument wakeup alarms.
             return;
         }
+        long timestamp = EnergyUtils.getCurrentTime();
         if (operation != null) {
             if (!operationIdMap.containsKey(operation)) {
                 operationIdMap.put(
                         operation,
-                        new PendingIntentParams(EventIdGenerator.nextId(), intervalMillis != 0L));
+                        new PendingIntentParams(EnergyUtils.nextId(), intervalMillis != 0L));
             }
             sendIntentAlarmScheduled(
+                    timestamp,
                     operationIdMap.get(operation).id,
                     type,
                     triggerAtMillis,
@@ -114,10 +116,10 @@ public final class AlarmManagerWrapper {
                     StackTrace.getStackTrace(2));
         } else if (listener != null) {
             if (!listenerMap.containsKey(listener)) {
-                listenerMap.put(
-                        listener, new ListenerParams(EventIdGenerator.nextId(), listenerTag));
+                listenerMap.put(listener, new ListenerParams(EnergyUtils.nextId(), listenerTag));
             }
             sendListenerAlarmScheduled(
+                    timestamp,
                     listenerMap.get(listener).id,
                     type,
                     triggerAtMillis,
@@ -140,6 +142,7 @@ public final class AlarmManagerWrapper {
     public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
         if (operationIdMap.containsKey(operation)) {
             sendIntentAlarmCancelled(
+                    EnergyUtils.getCurrentTime(),
                     operationIdMap.get(operation).id,
                     operation.getCreatorPackage(),
                     operation.getCreatorUid(),
@@ -158,7 +161,11 @@ public final class AlarmManagerWrapper {
         if (listenerMap.containsKey(listener)) {
             ListenerParams params = listenerMap.get(listener);
             // API cancel is one level down of user code.
-            sendListenerAlarmCancelled(params.id, params.tag, StackTrace.getStackTrace(1));
+            sendListenerAlarmCancelled(
+                    EnergyUtils.getCurrentTime(),
+                    params.id,
+                    params.tag,
+                    StackTrace.getStackTrace(1));
         }
     }
 
@@ -170,7 +177,7 @@ public final class AlarmManagerWrapper {
     public static void wrapListenerOnAlarm(OnAlarmListener listener) {
         if (listenerMap.containsKey(listener)) {
             ListenerParams params = listenerMap.get(listener);
-            sendListenerAlarmFired(params.id, params.tag);
+            sendListenerAlarmFired(EnergyUtils.getCurrentTime(), params.id, params.tag);
         }
         listener.onAlarm();
     }
@@ -187,6 +194,7 @@ public final class AlarmManagerWrapper {
         if (operationIdMap.containsKey(pendingIntent)) {
             AlarmManagerWrapper.PendingIntentParams params = operationIdMap.get(pendingIntent);
             sendIntentAlarmFired(
+                    EnergyUtils.getCurrentTime(),
                     params.id,
                     pendingIntent.getCreatorPackage(),
                     pendingIntent.getCreatorUid(),
@@ -196,6 +204,7 @@ public final class AlarmManagerWrapper {
 
     // Native functions to send alarm events to perfd.
     private static native void sendIntentAlarmScheduled(
+            long timestamp,
             int eventId,
             int type,
             long triggerMs,
@@ -206,6 +215,7 @@ public final class AlarmManagerWrapper {
             String stack);
 
     private static native void sendListenerAlarmScheduled(
+            long timestamp,
             int eventId,
             int type,
             long triggerMs,
@@ -215,13 +225,18 @@ public final class AlarmManagerWrapper {
             String stack);
 
     private static native void sendIntentAlarmCancelled(
-            int eventId, String creatorPackage, int creatorUid, String stack);
+            long timestamp, int eventId, String creatorPackage, int creatorUid, String stack);
 
     private static native void sendListenerAlarmCancelled(
-            int eventId, String listenerTag, String stack);
+            long timestamp, int eventId, String listenerTag, String stack);
 
-    private static native void sendListenerAlarmFired(int eventId, String listenerTag);
+    private static native void sendListenerAlarmFired(
+            long timestamp, int eventId, String listenerTag);
 
     private static native void sendIntentAlarmFired(
-            int eventId, String creatorPackage, int creatorUid, boolean isRepeating);
+            long timestamp,
+            int eventId,
+            String creatorPackage,
+            int creatorUid,
+            boolean isRepeating);
 }

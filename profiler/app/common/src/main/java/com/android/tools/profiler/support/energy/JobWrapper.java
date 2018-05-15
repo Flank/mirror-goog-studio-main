@@ -33,6 +33,13 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class JobWrapper {
+
+    /**
+     * Use a thread-local to store the timestamp upon entering {@link
+     * JobScheduler#schedule(JobInfo)}.
+     */
+    private static final ThreadLocal<Long> scheduleTimestamp = new ThreadLocal<Long>();
+
     /**
      * Use a thread-local variable for schedule job parameters, so a value can be temporarily stored
      * when we enter {@link JobScheduler#schedule(JobInfo)} and retrieved when we exit it. Using a
@@ -54,6 +61,7 @@ public final class JobWrapper {
      * @param job the job parameter passed to the original method.
      */
     public static void onScheduleJobEntry(Object jobScheduler, JobInfo job) {
+        scheduleTimestamp.set(EnergyUtils.getCurrentTime());
         scheduleJobInfo.set(job);
     }
 
@@ -66,9 +74,10 @@ public final class JobWrapper {
     public static int onScheduleJobExit(int scheduleResult) {
         JobInfo jobInfo = scheduleJobInfo.get();
         if (!jobIdToEventId.containsKey(jobInfo.getId())) {
-            jobIdToEventId.put(jobInfo.getId(), EventIdGenerator.nextId());
+            jobIdToEventId.put(jobInfo.getId(), EnergyUtils.nextId());
         }
         sendJobScheduled(
+                scheduleTimestamp.get(),
                 jobIdToEventId.get(jobInfo.getId()),
                 jobInfo.getId(),
                 jobInfo.getService().getClassName(),
@@ -106,10 +115,12 @@ public final class JobWrapper {
      */
     public static void wrapOnStartJob(
             Object jobHandler, JobParameters params, boolean workOngoing) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!jobIdToEventId.containsKey(params.getJobId())) {
-            jobIdToEventId.put(params.getJobId(), EventIdGenerator.nextId());
+            jobIdToEventId.put(params.getJobId(), EnergyUtils.nextId());
         }
         sendJobStarted(
+                timestamp,
                 jobIdToEventId.get(params.getJobId()),
                 params.getJobId(),
                 params.getTriggeredContentAuthorities(),
@@ -129,10 +140,12 @@ public final class JobWrapper {
      * @param reschedule the reschedule parameter passed to the original method.
      */
     public static void wrapOnStopJob(Object jobHandler, JobParameters params, boolean reschedule) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!jobIdToEventId.containsKey(params.getJobId())) {
-            jobIdToEventId.put(params.getJobId(), EventIdGenerator.nextId());
+            jobIdToEventId.put(params.getJobId(), EnergyUtils.nextId());
         }
         sendJobStopped(
+                timestamp,
                 jobIdToEventId.get(params.getJobId()),
                 params.getJobId(),
                 params.getTriggeredContentAuthorities(),
@@ -152,10 +165,12 @@ public final class JobWrapper {
      */
     public static void wrapJobFinished(
             JobService jobService, JobParameters params, boolean wantsReschedule) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!jobIdToEventId.containsKey(params.getJobId())) {
-            jobIdToEventId.put(params.getJobId(), EventIdGenerator.nextId());
+            jobIdToEventId.put(params.getJobId(), EnergyUtils.nextId());
         }
         sendJobFinished(
+                timestamp,
                 jobIdToEventId.get(params.getJobId()),
                 params.getJobId(),
                 params.getTriggeredContentAuthorities(),
@@ -192,6 +207,7 @@ public final class JobWrapper {
 
     // Native functions to send job events to perfd.
     private static native void sendJobScheduled(
+            long timestamp,
             int eventId,
             int jobId,
             String serviceName,
@@ -217,6 +233,7 @@ public final class JobWrapper {
             String stack);
 
     private static native void sendJobStarted(
+            long timestamp,
             int eventId,
             int jobId,
             String[] triggerContentAuthorities,
@@ -227,6 +244,7 @@ public final class JobWrapper {
             boolean workOngoing);
 
     private static native void sendJobStopped(
+            long timestamp,
             int eventId,
             int jobId,
             String[] triggerContentAuthorities,
@@ -237,6 +255,7 @@ public final class JobWrapper {
             boolean reschedule);
 
     private static native void sendJobFinished(
+            long timestamp,
             int eventId,
             int jobId,
             String[] triggerContentAuthorities,

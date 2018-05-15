@@ -103,7 +103,7 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(1000);
 
         EnergyEvent releasedEvent = response.getEvents(1);
-        assertThat(releasedEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(releasedEvent.getTimestamp()).isAtLeast(acquiredEvent.getTimestamp());
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
         assertThat(releasedEvent.getIsTerminal()).isTrue();

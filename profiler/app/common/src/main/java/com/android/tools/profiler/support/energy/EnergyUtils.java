@@ -18,11 +18,15 @@ package com.android.tools.profiler.support.energy;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** For generating unique energy event ids. */
-public final class EventIdGenerator {
+/** Utility class for energy events. */
+public final class EnergyUtils {
     private static final AtomicInteger atomicInteger = new AtomicInteger();
 
+    /** Generates a unique energy event ID. */
     public static int nextId() {
         return atomicInteger.incrementAndGet();
     }
+
+    /** JNI method to return the current time in nanoseconds. */
+    public static native long getCurrentTime();
 }

@@ -19,7 +19,7 @@ package com.android.tools.profiler.support.energy.gms;
 import android.app.PendingIntent;
 import android.location.Location;
 import android.os.Looper;
-import com.android.tools.profiler.support.energy.EventIdGenerator;
+import com.android.tools.profiler.support.energy.EnergyUtils;
 import com.android.tools.profiler.support.energy.LocationManagerWrapper;
 import com.android.tools.profiler.support.energy.PendingIntentWrapper;
 import com.android.tools.profiler.support.util.StackTrace;
@@ -69,6 +69,7 @@ public final class FusedLocationProviderClientWrapper {
             LocationRequest request,
             LocationCallback callback,
             PendingIntent pendingIntent) {
+        long timestamp = EnergyUtils.getCurrentTime();
         try {
             Class<?> requestClass =
                     client.getClass()
@@ -82,9 +83,10 @@ public final class FusedLocationProviderClientWrapper {
             int priority = (Integer) requestClass.getMethod("getPriority").invoke(request);
             if (callback != null) {
                 if (!callbackIdMap.containsKey(callback)) {
-                    callbackIdMap.put(callback, EventIdGenerator.nextId());
+                    callbackIdMap.put(callback, EnergyUtils.nextId());
                 }
                 LocationManagerWrapper.sendListenerLocationUpdateRequested(
+                        timestamp,
                         callbackIdMap.get(callback),
                         LOCATION_PROVIDER_NAME,
                         interval,
@@ -97,9 +99,10 @@ public final class FusedLocationProviderClientWrapper {
                         StackTrace.getStackTrace(1));
             } else if (pendingIntent != null) {
                 if (!intentIdMap.containsKey(pendingIntent)) {
-                    intentIdMap.put(pendingIntent, EventIdGenerator.nextId());
+                    intentIdMap.put(pendingIntent, EnergyUtils.nextId());
                 }
                 LocationManagerWrapper.sendIntentLocationUpdateRequested(
+                        timestamp,
                         intentIdMap.get(pendingIntent),
                         "fused",
                         interval,
@@ -125,10 +128,12 @@ public final class FusedLocationProviderClientWrapper {
      * @param callback the callback parameter passed to the original method.
      */
     public static void wrapRemoveLocationUpdates(Object client, LocationCallback callback) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!callbackIdMap.containsKey(callback)) {
-            callbackIdMap.put(callback, EventIdGenerator.nextId());
+            callbackIdMap.put(callback, EnergyUtils.nextId());
         }
         LocationManagerWrapper.sendListenerLocationUpdateRemoved(
+                timestamp,
                 callbackIdMap.get(callback),
                 // API removeUpdates is one level down of user code.
                 StackTrace.getStackTrace(1));
@@ -142,10 +147,12 @@ public final class FusedLocationProviderClientWrapper {
      * @param callbackIntent the callbackIntent parameter passed to the original method.
      */
     public static void wrapRemoveLocationUpdates(Object client, PendingIntent callbackIntent) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!intentIdMap.containsKey(callbackIntent)) {
-            intentIdMap.put(callbackIntent, EventIdGenerator.nextId());
+            intentIdMap.put(callbackIntent, EnergyUtils.nextId());
         }
         LocationManagerWrapper.sendIntentLocationUpdateRemoved(
+                timestamp,
                 intentIdMap.get(callbackIntent),
                 callbackIntent.getCreatorPackage(),
                 callbackIntent.getCreatorUid(),
@@ -166,6 +173,7 @@ public final class FusedLocationProviderClientWrapper {
             PendingIntent pendingIntent, Location location) {
         if (intentIdMap.containsKey(pendingIntent)) {
             LocationManagerWrapper.sendIntentLocationChanged(
+                    EnergyUtils.getCurrentTime(),
                     intentIdMap.get(pendingIntent),
                     location.getProvider(),
                     location.getAccuracy(),

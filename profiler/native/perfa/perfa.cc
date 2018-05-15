@@ -636,72 +636,74 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
   // TODO: Removed these once the auto-JNI-binding feature becomes
   // available in all published O system images.
   if (agent_config->energy_profiler_enabled()) {
+    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/EnergyUtils",
+                  "getCurrentTime", "()J");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
-        "sendWakeLockAcquired", "(IILjava/lang/String;JLjava/lang/String;)V");
+        "sendWakeLockAcquired", "(JIILjava/lang/String;JLjava/lang/String;)V");
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
+                  "sendWakeLockReleased", "(JIIZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendIntentAlarmScheduled",
-        "(IIJJJLjava/lang/String;ILjava/lang/String;)V");
+        "(JIIJJJLjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmScheduled",
-        "(IIJJJLjava/lang/String;Ljava/lang/String;)V");
+        "(JIIJJJLjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendIntentAlarmCancelled",
-        "(ILjava/lang/String;ILjava/lang/String;)V");
+        "(JILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmCancelled",
-        "(ILjava/lang/String;Ljava/lang/String;)V");
+        "(JILjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmFired", "(ILjava/lang/String;IZ)V");
+        "sendIntentAlarmFired", "(JILjava/lang/String;IZ)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmFired", "(ILjava/lang/String;)V");
+        "sendListenerAlarmFired", "(JILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobScheduled",
-                  "(IILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
+                  "(JIILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
                   "Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobStarted",
-                  "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
-                  "Ljava/lang/String;Z)V");
+                  "(JII[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/"
+                  "String;Ljava/lang/String;Z)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobStopped",
-                  "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
-                  "Ljava/lang/String;Z)V");
+                  "(JII[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/"
+                  "String;Ljava/lang/String;Z)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobFinished",
-                  "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
-                  "Ljava/lang/String;ZLjava/lang/String;)V");
+                  "(JII[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/"
+                  "String;Ljava/lang/String;ZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationUpdateRequested",
-        "(ILjava/lang/String;JJFIIILjava/lang/String;)V");
+        "(JILjava/lang/String;JJFIIILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendIntentLocationUpdateRequested",
-        "(ILjava/lang/String;JJFIIILjava/lang/String;ILjava/lang/String;)V");
+        "(JILjava/lang/String;JJFIIILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationUpdateRemoved", "(ILjava/lang/String;)V");
+        "sendListenerLocationUpdateRemoved", "(JILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendIntentLocationUpdateRemoved",
-        "(ILjava/lang/String;ILjava/lang/String;)V");
+        "(JILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationChanged", "(ILjava/lang/String;FDD)V");
+        "sendListenerLocationChanged", "(JILjava/lang/String;FDD)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendIntentLocationChanged",
-        "(ILjava/lang/String;FDDLjava/lang/String;I)V");
+        "(JILjava/lang/String;FDDLjava/lang/String;I)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {
