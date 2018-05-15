@@ -22,6 +22,7 @@ import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.HighestVersionSelector;
 import com.android.tools.maven.MavenCoordinates;
 import com.android.tools.maven.MavenRepository;
+import com.android.tools.utils.Buildifier;
 import com.android.tools.utils.WorkspaceUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -190,6 +191,7 @@ public class ThirdPartyBuildGenerator {
                 fileWriter.append(")\n");
             }
         }
+        Buildifier.runBuildifier(mBuildFile);
     }
 
     private static String formatAsBazelList(List<String> deps) {

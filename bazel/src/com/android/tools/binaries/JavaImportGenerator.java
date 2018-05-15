@@ -17,6 +17,7 @@
 package com.android.tools.binaries;
 
 import com.android.tools.maven.MavenRepository;
+import com.android.tools.utils.Buildifier;
 import com.android.tools.utils.WorkspaceUtils;
 import com.google.common.collect.ImmutableSet;
 import java.io.FileWriter;
@@ -234,5 +235,6 @@ public class JavaImportGenerator {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        Buildifier.runBuildifier(buildFile);
     }
 }
