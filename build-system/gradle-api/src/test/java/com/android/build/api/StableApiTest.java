@@ -16,12 +16,12 @@
 
 package com.android.build.api;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -65,23 +65,17 @@ public class StableApiTest {
     public void stableApiElements() throws Exception {
         List<String> apiElements = getStableApiElements();
 
-        // Compare the two as strings, to get a nice diff UI in the IDE.
-        Iterable<String> expectedApiElements =
+        List<String> expectedApiElements =
                 Splitter.on("\n")
                         .omitEmptyStrings()
-                        .split(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
+                        .splitToList(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
 
-        try {
-            assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
-        } catch (AssertionError e) {
-            throw new AssertionError(
-                    "Stable API has changed, either revert the API change or re-run StableApiUpdater from the IDE to update the API file.",
-                    e);
-        }
+        failOnApiChange("stable", expectedApiElements, apiElements);
     }
 
     static List<String> getStableApiElements() throws IOException {
         return getApiElements(
+                "Stable",
                 incubatingClass -> !incubatingClass,
                 (incubatingClass, incubatingMember) -> !incubatingClass && !incubatingMember);
     }
@@ -90,42 +84,43 @@ public class StableApiTest {
     public void incubatingApiElements() throws Exception {
         List<String> apiElements = getIncubatingApiElements();
 
-        // Compare the two as strings, to get a nice diff UI in the IDE.
-        Iterable<String> expectedApiElements =
+        List<String> expectedApiElements =
                 Splitter.on("\n")
                         .omitEmptyStrings()
-                        .split(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
+                        .splitToList(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
 
-        try {
-            assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
-        } catch (AssertionError e) {
-            throw new AssertionError(
-                    "Incubating API has changed, either revert the API change or re-run StableApiUpdater from the IDE to update the API file.",
-                    e);
+        failOnApiChange("incubating", expectedApiElements, apiElements);
+    }
+
+    private static void failOnApiChange(
+            String type, List<String> expectedApiElements, List<String> apiElements) {
+        if (apiElements.equals(expectedApiElements)) {
+            return;
         }
+        String diff =
+                TestUtils.getDiff(
+                        expectedApiElements.toArray(new String[0]),
+                        apiElements.toArray(new String[0]));
+        throw new AssertionError(
+                "The "
+                        + type
+                        + " API has changed, either revert "
+                        + "the api change or re-run StableApiUpdater.main[] from the IDE "
+                        + "to update the API file.\n"
+                        + "StableApiUpdater will apply the following changes if run:\n"
+                        + ""
+                        + diff);
     }
 
     static List<String> getIncubatingApiElements() throws IOException {
         return getApiElements(
+                "Incubating",
                 incubatingClass -> incubatingClass,
                 (incubatingClass, incubatingMember) -> incubatingClass || incubatingMember);
     }
 
-    @Test
-    public void apiListHash() throws Exception {
-        // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
-        // are backwards compatible.
-        assertEquals(
-                "37de2b6a3e8907d266459e4825325fa7de39256f22bfa27d6da701da67d829e9",
-                Hashing.sha256()
-                        .hashString(
-                                Resources.toString(STABLE_API_URL, Charsets.UTF_8)
-                                        .replace(System.lineSeparator(), "\n"),
-                                Charsets.UTF_8)
-                        .toString());
-    }
-
     private static List<String> getApiElements(
+            @NonNull String description,
             @NonNull Predicate<Boolean> classFilter,
             @NonNull BiFunction<Boolean, Boolean, Boolean> memberFilter)
             throws IOException {
@@ -133,15 +128,35 @@ public class StableApiTest {
                 ClassPath.from(Transform.class.getClassLoader())
                         .getTopLevelClassesRecursive("com.android.build.api");
 
-        return allClasses
-                .stream()
-                .filter(
-                        classInfo ->
-                                !classInfo.getSimpleName().endsWith("Test")
-                                        && !classInfo.getSimpleName().equals("StableApiUpdater"))
-                .flatMap(classInfo -> getApiElements(classInfo.load(), classFilter, memberFilter))
-                .sorted()
-                .collect(Collectors.toList());
+        List<String> stableClasses =
+                allClasses
+                        .stream()
+                        .filter(
+                                classInfo ->
+                                        !classInfo.getSimpleName().endsWith("Test")
+                                                && !classInfo
+                                                        .getSimpleName()
+                                                        .equals("StableApiUpdater"))
+                        .flatMap(
+                                classInfo ->
+                                        getApiElements(classInfo.load(), classFilter, memberFilter))
+                        .sorted()
+                        .collect(Collectors.toList());
+
+        ImmutableList.Builder<String> lines = ImmutableList.builder();
+        lines.add(description + " Android Gradle Plugin API.");
+        lines.add("-------------------------------------------------------------------------");
+        lines.add("ATTENTION REVIEWER: If this needs to be changed, please make sure changes");
+        lines.add("below are backwards compatible.");
+        lines.add("-------------------------------------------------------------------------");
+        lines.add("Sha256 of below classes:");
+        lines.add(
+                Hashing.sha256()
+                        .hashString(Joiner.on("\n").join(stableClasses), Charsets.UTF_8)
+                        .toString());
+        lines.add("-------------------------------------------------------------------------");
+        lines.addAll(stableClasses);
+        return lines.build();
     }
 
     private static Stream<String> getApiElements(
