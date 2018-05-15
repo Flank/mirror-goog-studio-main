@@ -22,11 +22,13 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.dex.Dex;
 import com.android.testutils.TestClassesGenerator;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterators;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -108,9 +110,11 @@ public class ReferenceCountMergingStrategyTest {
         Path output = temporaryFolder.newFolder().toPath();
         DexArchiveTestUtil.convertClassesToDexArchive(inputDir, output);
 
-        Path dex =
-                Iterators.getOnlyElement(
-                        Files.walk(output).filter(Files::isRegularFile).iterator());
+        Path dex;
+        try (Stream<Path> stream = Files.walk(output)) {
+            dex = Iterators.getOnlyElement(
+                    stream.filter(Files::isRegularFile).iterator());
+        }
         return new Dex(dex.toFile());
     }
 }

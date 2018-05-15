@@ -70,10 +70,10 @@ public final class D8MainDexList {
                 if (Files.isRegularFile(program)) {
                     command.addProgramFiles(program);
                 } else {
-                    try (Stream<Path> classFiles =
-                            Files.walk(program)
-                                    .filter(p -> p.toString().endsWith(SdkConstants.DOT_CLASS))) {
-                        List<Path> allClasses = classFiles.collect(Collectors.toList());
+                    try (Stream<Path> classFiles = Files.walk(program)) {
+                        List<Path> allClasses = classFiles
+                                .filter(p -> p.toString().endsWith(SdkConstants.DOT_CLASS))
+                                .collect(Collectors.toList());
                         command.addProgramFiles(allClasses);
                     }
                 }
