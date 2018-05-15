@@ -70,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.xml.parsers.ParserConfigurationException;
@@ -289,15 +290,8 @@ public class ApkAnalyzerImpl {
 
     public void dexCode(@NonNull Path apk, @NonNull String fqcn, @Nullable String method) {
         try (Archive archive = Archives.open(apk)) {
-            Collection<Path> dexPaths =
-                    Files.list(archive.getContentRoot())
-                            .filter(
-                                    path ->
-                                            Files.isRegularFile(path)
-                                                    && path.getFileName()
-                                                            .toString()
-                                                            .endsWith(".dex"))
-                            .collect(Collectors.toList());
+            Collection<Path> dexPaths = getDexFilesFrom(archive.getContentRoot());
+
             boolean dexFound = false;
             for (Path dexPath : dexPaths) {
                 DexBackedDexFile dexBackedDexFile = DexFiles.getDexFile(dexPath);
@@ -431,15 +425,7 @@ public class ApkAnalyzerImpl {
         try (Archive archive = Archives.open(apk)) {
             Collection<Path> dexPaths;
             if (dexFilePaths == null || dexFilePaths.isEmpty()) {
-                dexPaths =
-                        Files.list(archive.getContentRoot())
-                                .filter(
-                                        path ->
-                                                Files.isRegularFile(path)
-                                                        && path.getFileName()
-                                                                .toString()
-                                                                .endsWith(".dex"))
-                                .collect(Collectors.toList());
+                dexPaths = getDexFilesFrom(archive.getContentRoot());
             } else {
                 dexPaths =
                         dexFilePaths
@@ -538,15 +524,7 @@ public class ApkAnalyzerImpl {
         try (Archive archive = Archives.open(apk)) {
             Collection<Path> dexPaths;
             if (dexFilePaths == null || dexFilePaths.isEmpty()) {
-                dexPaths =
-                        Files.list(archive.getContentRoot())
-                                .filter(
-                                        path ->
-                                                Files.isRegularFile(path)
-                                                        && path.getFileName()
-                                                                .toString()
-                                                                .endsWith(".dex"))
-                                .collect(Collectors.toList());
+                dexPaths = getDexFilesFrom(archive.getContentRoot());
             } else {
                 dexPaths =
                         dexFilePaths
@@ -567,10 +545,8 @@ public class ApkAnalyzerImpl {
 
     public void dexList(@NonNull Path apk) {
         try (Archive archive = Archives.open(apk)) {
-            Files.list(archive.getContentRoot())
-                    .filter(path -> Files.isRegularFile(path))
+            getDexFilesFrom(archive.getContentRoot()).stream()
                     .map(path -> path.getFileName().toString())
-                    .filter(name -> name.toLowerCase().endsWith(".dex"))
                     .forEachOrdered(out::println);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -861,5 +837,20 @@ public class ApkAnalyzerImpl {
 
     public void setHumanReadableFlag(boolean humanReadableFlag) {
         this.humanReadableFlag = humanReadableFlag;
+    }
+
+    @NonNull
+    private static List<Path> getDexFilesFrom(Path dir) {
+        try (Stream<Path> stream = Files.list(dir)) {
+            return stream.filter(
+                    path ->
+                            Files.isRegularFile(path)
+                                    && path.getFileName()
+                                    .toString()
+                                    .endsWith(".dex"))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
