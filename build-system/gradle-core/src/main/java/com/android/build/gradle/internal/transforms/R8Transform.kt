@@ -191,7 +191,7 @@ class R8Transform(
         val output = outputProvider.getContentLocation(
                 "main",
                 TransformManager.CONTENT_DEX,
-                TransformManager.SCOPE_FULL_PROJECT,
+                scopes,
                 outputFormat
         )
         Files.createDirectories(output.toPath())

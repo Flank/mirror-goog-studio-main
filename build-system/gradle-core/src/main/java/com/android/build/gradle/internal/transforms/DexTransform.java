@@ -205,10 +205,7 @@ public class DexTransform extends Transform {
 
             File outputDir =
                     outputProvider.getContentLocation(
-                            "main",
-                            getOutputTypes(),
-                            TransformManager.SCOPE_FULL_PROJECT,
-                            Format.DIRECTORY);
+                            "main", getOutputTypes(), getScopes(), Format.DIRECTORY);
 
             // this deletes and creates the dir for the output
             FileUtils.cleanOutputDir(outputDir);

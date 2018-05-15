@@ -269,8 +269,7 @@ public class DexMergerTransform extends Transform {
             return ImmutableList.of();
         }
 
-        File outputDir =
-                getDexOutputLocation(outputProvider, "main", TransformManager.SCOPE_FULL_PROJECT);
+        File outputDir = getDexOutputLocation(outputProvider, "main", getScopes());
         // this deletes and creates the dir for the output
         FileUtils.cleanOutputDir(outputDir);
 

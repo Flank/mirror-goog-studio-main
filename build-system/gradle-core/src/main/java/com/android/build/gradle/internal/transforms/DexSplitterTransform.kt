@@ -98,12 +98,10 @@ class DexSplitterTransform(
 
             builder.build().run()
 
-            val transformOutputDir = outputProvider.getContentLocation(
-                "splitDexFiles",
-                TransformManager.CONTENT_DEX,
-                TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES,
-                Format.DIRECTORY
-            )
+            val transformOutputDir =
+                outputProvider.getContentLocation(
+                    "splitDexFiles", outputTypes, scopes, Format.DIRECTORY
+                )
             Files.createDirectories(transformOutputDir.toPath())
 
             outputDir.listFiles().find { it.name == "base" }?.let {
