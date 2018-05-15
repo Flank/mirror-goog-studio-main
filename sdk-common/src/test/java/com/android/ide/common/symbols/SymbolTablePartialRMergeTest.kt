@@ -16,8 +16,9 @@
 
 package com.android.ide.common.symbols
 
-import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
+import com.android.resources.ResourceVisibility
+import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
 import org.junit.Rule
@@ -98,8 +99,8 @@ class SymbolTablePartialRMergeTest {
             assertThat(e.message)
                     .contains("An error occurred during merging of the partial R files")
             assertThat(e.cause!!.message).contains(
-                    "Symbol with resource type string and name s1 defined both as private and " +
-                            "public.")
+                    "Symbol with resource type string and name s1 defined both as PRIVATE and " +
+                            "PUBLIC.")
         }
 
         try {
@@ -109,8 +110,8 @@ class SymbolTablePartialRMergeTest {
             assertThat(e.message)
                     .contains("An error occurred during merging of the partial R files")
             assertThat(e.cause!!.message).contains(
-                    "Symbol with resource type string and name s1 defined both as private and " +
-                            "public.")
+                    "Symbol with resource type string and name s1 defined both as PUBLIC and " +
+                            "PRIVATE.")
         }
     }
 
@@ -298,7 +299,125 @@ class SymbolTablePartialRMergeTest {
                 "private int string biip",
                 "public int string boop",
                 "public int string foo",
-                "default int[] styleable dsA", // overridden in C, should only have attr3 child
+                "default int[] styleable dsA", // should be merged and contain all children
+                "default int styleable dsA_attr1",
+                "default int styleable dsA_attr2",
                 "default int styleable dsA_attr3")
+    }
+
+    @Test
+    fun testMultipleStyleables() {
+        // Source-sets in this examples are A, B and C; C overrides B which overrides A (base).
+        // source-set A
+        val sourceSetA = mTemporaryFolder.newFolder("A")
+        val stylesA = File(sourceSetA, "values_styles-R.txt")
+        Files.write(
+                stylesA.toPath(),
+                list(
+                        "public int attr a1",
+                        "private int attr a2",
+                        "public int[] styleable s1",
+                        "default int styleable s1_a1", // should not duplicate one from B
+                        "default int styleable s1_a2"))
+
+        // source-set B
+        val sourceSetB = mTemporaryFolder.newFolder("B")
+        val stylesB = File(sourceSetB, "values_styles-R.txt")
+        Files.write(
+                stylesB.toPath(),
+                list(
+                        "default int attr a1",
+                        "default int attr a3",
+                        "public int[] styleable s1",
+                        "default int styleable s1_a1",
+                        "default int styleable s1_a3"))
+
+        // source-set C
+        val sourceSetC = mTemporaryFolder.newFolder("C")
+        val stylesC = File(sourceSetC, "values_styles-R.txt")
+        Files.write(
+                stylesC.toPath(),
+                list(
+                        "public int[] styleable s1",
+                        "default int styleable s1_android_name")) // should merge all children
+
+        // Files given in order of A files, B files, C files.
+        val result =
+                SymbolTable.mergePartialTables(listOf(stylesA, stylesB, stylesC), "com.boop.beep")
+
+        // Write to a file so it's easier to check contents.
+        val writtenResources = mTemporaryFolder.newFile("all-resources.txt")
+        SymbolIo.writeRDef(result, writtenResources.toPath())
+        val lines = Files.readAllLines(writtenResources.toPath())
+
+        assertThat(lines).containsExactly(
+                "com.boop.beep",
+                "public int attr a1",
+                "private int attr a2",
+                "default int attr a3",
+                "public int[] styleable s1",
+                "public int styleable s1_a1",
+                "public int styleable s1_a2",
+                "public int styleable s1_a3",
+                "public int styleable s1_android_name")
+    }
+
+    @Test
+    fun styleablesWithConflictingStyleableChildrenVisibilities() {
+        val sourceSetA = mTemporaryFolder.newFolder("A")
+        val stylesA = File(sourceSetA, "values_styles-R.txt")
+        // To define a styleable child as public, the attribute it refers to needs to be marked as
+        // public.
+        Files.write(
+                stylesA.toPath(),
+                list(
+                        "public int attr a1",
+                        "public int[] styleable s1",
+                        "default int styleable s1_a1"))
+
+        val sourceSetB = mTemporaryFolder.newFolder("B")
+        val stylesB = File(sourceSetB, "values_styles-R.txt")
+        // Should conflict with A for "a1". The attribute the child is referring to is marked as
+        // private.
+        Files.write(
+                stylesB.toPath(),
+                list(
+                        "private int attr a1",
+                        "public int[] styleable s1",
+                        "default int styleable s1_a1"))
+
+        try {
+            SymbolTable.mergePartialTables(listOf(stylesA, stylesB), "com.boop.beep")
+            fail()
+        } catch (e: PartialRMergingException) {
+            assertThat(Throwables.getRootCause(e).message).isEqualTo(
+                    "Symbol with resource type attr and name a1 defined both as PUBLIC and " +
+                            "PRIVATE.")
+        }
+    }
+
+    @Test
+    fun styleablesWithConflictingStyleableVisibilities() {
+        val sourceSetA = mTemporaryFolder.newFolder("A")
+        val stylesA = File(sourceSetA, "values_styles-R.txt")
+        Files.write(
+                stylesA.toPath(),
+                list("public int[] styleable s1"))
+
+        val sourceSetB = mTemporaryFolder.newFolder("B")
+        val stylesB = File(sourceSetB, "values_styles-R.txt")
+        // All styleables are marked as public by  AAPT2, but let's tests this just in case.
+        Files.write(
+                stylesB.toPath(),
+                list("private int[] styleable s1"))
+
+        try {
+            SymbolTable.mergePartialTables(listOf(stylesA, stylesB), "com.boop.beep")
+            fail()
+        } catch (e: PartialRMergingException) {
+            assertThat(Throwables.getRootCause(e).message).isEqualTo(
+                    "Symbol with resource type styleable and name s1 defined both as PUBLIC and " +
+                            "PRIVATE.")
+        }
     }
 }

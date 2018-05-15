@@ -84,4 +84,9 @@ public enum ResourceVisibility {
 
         return null;
     }
+
+    public static ResourceVisibility max(
+            @NonNull ResourceVisibility v1, @NonNull ResourceVisibility v2) {
+        return v1.compareTo(v2) <= 0 ? v2 : v1;
+    }
 }
