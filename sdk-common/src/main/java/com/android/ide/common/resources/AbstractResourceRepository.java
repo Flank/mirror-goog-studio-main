@@ -69,13 +69,17 @@ public abstract class AbstractResourceRepository {
     public AbstractResourceRepository() {}
 
     /**
-     * Returns all leaf resource repositories contained in this resource repository including this
-     * repository itself, if it does not contain any other repositories.
+     * Returns all leaf resource repositories contained in this resource, or this repository itself,
+     * if it does not contain any other repositories. The leaf resource repositories are guaranteed
+     * to implement the {@link SingleNamespaceResourceRepository} interface.
      *
      * @param result the collection to add the leaf repositories to
      */
     public void getLeafResourceRepositories(
             @NonNull Collection<AbstractResourceRepository> result) {
+        //noinspection InstanceofIncompatibleInterface
+        assert this instanceof SingleNamespaceResourceRepository
+                : getClass().getCanonicalName() + " is not a SingleNamespaceResourceRepository";
         result.add(this);
     }
 
