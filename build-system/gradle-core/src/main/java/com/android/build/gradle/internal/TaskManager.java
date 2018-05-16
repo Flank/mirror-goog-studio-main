@@ -2922,16 +2922,6 @@ public abstract class TaskManager {
                             getLogger().isDebugEnabled(),
                             dataBindingBuilder.getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
-            // HACK ALERT:
-            // Workaround for https://youtrack.jetbrains.com/issue/KT-23866. Remove this when Kapt
-            // is fixed (and also enforce a minimum version of Kapt that has the fix).
-            // Normally, we don't need to call the method below as the arguments are already
-            // provided via the above compilerArgumentProvider API call. However, because Kapt is
-            // not yet aware of the new compilerArgumentProvider API, we need to provide the
-            // arguments via the arguments() API. The Java compiler will see duplicate arguments,
-            // but it won't break, and it will pass a list of unique arguments to the annotation
-            // processors.
-            options.arguments(dataBindingArgs.toMap());
 
             // Set these so we can use them later to configure Kapt.
             scope.setDataBindingCompilerArguments(dataBindingArgs);
@@ -3901,12 +3891,23 @@ public abstract class TaskManager {
 
     // TODO we should merge this w/ JavaCompileConfigAction
     private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
-        // HACK ALERT:
-        // Workaround for https://youtrack.jetbrains.com/issue/KT-23964. Remove this when Kapt is
-        // fixed (and also enforce a minimum version of Kapt that has the fix).
-        // In the following, we need to add all inputs and outputs annotated in
-        // DataBindingCompilerArguments to the Kapt task.
+        // HACK ALERT - Remove this when Kapt is fixed (and also enforce a minimum version of Kapt
+        // that has the fix).
         if (scope.getDataBindingCompilerArguments() != null) {
+            // 1 - Workaround for https://youtrack.jetbrains.com/issue/KT-23866.
+            // Since Kapt is not yet aware of the new compilerArgumentProvider() API, we need to
+            // provide the arguments via the arguments() API. The Java compiler might see duplicate
+            // arguments (if AndroidJavaCompile is configured after this), but it won't break, and
+            // it will pass a list of unique arguments to the annotation processors.
+            AnnotationProcessorOptions options =
+                    scope.getVariantConfiguration()
+                            .getJavaCompileOptions()
+                            .getAnnotationProcessorOptions();
+            options.getArguments().putAll(scope.getDataBindingCompilerArguments().toMap());
+
+            // 2 - Workaround for https://youtrack.jetbrains.com/issue/KT-23964.
+            // Add all inputs and outputs annotated in DataBindingCompilerArguments to the Kapt
+            // task.
             scope.getDataBindingCompilerArguments().configureInputsOutputsForTask(kaptTask);
         }
 

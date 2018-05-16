@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -215,6 +216,7 @@ public final class GradleTestProject implements TestRule {
     @NonNull private final File androidHome;
     @NonNull private final File androidNdkHome;
     @NonNull private final File gradleDistributionDirectory;
+    @Nullable private final File gradleBuildCacheDirectory;
     @NonNull private final String kotlinVersion;
 
     private GradleBuildResult lastBuildResult;
@@ -247,6 +249,7 @@ public final class GradleTestProject implements TestRule {
             @NonNull File androidHome,
             @NonNull File androidNdkHome,
             @NonNull File gradleDistributionDirectory,
+            @Nullable File gradleBuildCacheDirectory,
             @NonNull String kotlinVersion,
             boolean outputLogOnFailure) {
         this.withDeviceProvider = withDeviceProvider;
@@ -274,6 +277,7 @@ public final class GradleTestProject implements TestRule {
         this.androidHome = androidHome;
         this.androidNdkHome = androidNdkHome;
         this.gradleDistributionDirectory = gradleDistributionDirectory;
+        this.gradleBuildCacheDirectory = gradleBuildCacheDirectory;
         this.kotlinVersion = kotlinVersion;
         this.outputLogOnFailure = outputLogOnFailure;
     }
@@ -312,6 +316,7 @@ public final class GradleTestProject implements TestRule {
         this.androidHome = rootProject.androidHome;
         this.androidNdkHome = rootProject.androidNdkHome;
         this.gradleDistributionDirectory = rootProject.gradleDistributionDirectory;
+        this.gradleBuildCacheDirectory = rootProject.gradleBuildCacheDirectory;
         this.kotlinVersion = rootProject.kotlinVersion;
         this.outputLogOnFailure = rootProject.outputLogOnFailure;
     }
@@ -541,6 +546,8 @@ public final class GradleTestProject implements TestRule {
         } else {
             Files.write(getGradleBuildscript(), buildFile, Charsets.UTF_8);
         }
+
+        createSettingsFile();
 
         localProp = createLocalProp();
         createGradleProp();
@@ -1511,6 +1518,24 @@ public final class GradleTestProject implements TestRule {
                                 "prebuilts/tools/common/cmake/%s/%s",
                                 osType.getFolderName(), cmakeVersion));
         return cmakeVersionFolder;
+    }
+
+    private void createSettingsFile() throws IOException {
+        if (gradleBuildCacheDirectory != null) {
+            File absoluteFile =
+                    gradleBuildCacheDirectory.isAbsolute()
+                            ? gradleBuildCacheDirectory
+                            : new File(testDir, gradleBuildCacheDirectory.getPath());
+            TestFileUtils.appendToFile(
+                    getSettingsFile(),
+                    "buildCache {\n"
+                            + "    local(DirectoryBuildCache) {\n"
+                            + "        directory = \""
+                            + absoluteFile.getPath()
+                            + "\"\n"
+                            + "    }\n"
+                            + "}");
+        }
     }
 
     private void createGradleProp() throws IOException {

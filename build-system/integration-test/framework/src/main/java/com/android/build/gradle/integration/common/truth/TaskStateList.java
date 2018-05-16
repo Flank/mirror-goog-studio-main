@@ -198,7 +198,7 @@ public class TaskStateList {
         // information is not provided by the tooling API, so we need to detect them in the Gradle
         // output.
         inputChangedTasks = getTasksByPatternFromGradleOutput(gradleOutput, INPUT_CHANGED_PATTERN);
-        Preconditions.checkState(taskList.containsAll(noActionsTasks));
+        Preconditions.checkState(taskList.containsAll(inputChangedTasks));
         for (String inputChangedTask : inputChangedTasks) {
             Preconditions.checkState(
                     !taskMap.get(ExecutionState.UP_TO_DATE).contains(inputChangedTask));
