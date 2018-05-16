@@ -21,7 +21,6 @@ import static com.android.SdkConstants.PLATFORM_WINDOWS;
 import static com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfigurationKt.createNativeBuildSystemVariantConfig;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
@@ -30,6 +29,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator;
+import com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
@@ -55,11 +55,7 @@ import com.android.builder.profile.ProcessProfileWriter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.repository.Revision;
-import com.android.repository.api.ConsoleProgressIndicator;
-import com.android.repository.api.LocalPackage;
-import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -668,14 +664,36 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull GradleBuildVariant.Builder stats) {
         AndroidConfig extension = variantData.getScope().getGlobalScope().getExtension();
         CoreExternalNativeBuild externalNativeBuild = extension.getExternalNativeBuild();
-        File cmakeFolder =
-                ExternalNativeBuildTaskUtils.findCmakeExecutableFolder(
-                        externalNativeBuild.getCmake().getVersion(), sdkHandler);
+
+        File cmakeFolder;
+        if (variantData
+                .getScope()
+                .getGlobalScope()
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)) {
+            cmakeFolder =
+                    CmakeLocatorKt.findCmakePath(
+                            externalNativeBuild.getCmake().getVersion(),
+                            sdkHandler,
+                            variantData.getName(),
+                            variantData.getScope().getGlobalScope().getErrorHandler(),
+                            androidBuilder.getLogger());
+
+        } else {
+            cmakeFolder =
+                    ExternalNativeBuildTaskUtils.findCmakeExecutableFolder(
+                            externalNativeBuild.getCmake().getVersion(), sdkHandler);
+        }
 
         Revision cmakeVersion;
         try {
             cmakeVersion = CmakeUtils.getVersion(new File(cmakeFolder, "bin"));
         } catch (IOException e) {
+            // For pre-ENABLE_SIDE_BY_SIDE_CMAKE case, the text of this message triggers
+            // Android Studio to prompt for download.
+            // Post-ENABLE_SIDE_BY_SIDE different messages may be thrown from
+            // CmakeLocatorKt.findCmakePath to trigger download of particular versions of
+            // CMake from the SDK.
             throw new RuntimeException(
                     "Unable to get the CMake version located at: "
                             + (new File(cmakeFolder, "bin")).getAbsolutePath());
@@ -731,14 +749,6 @@ public abstract class ExternalNativeJsonGenerator {
         }
 
         return externalNativeBuildPath;
-    }
-
-    @NonNull
-    protected static File getSdkCmakeExecutable(@NonNull File sdkFolder) {
-        if (isWindows()) {
-            return new File(getSdkCmakeBinFolder(sdkFolder), "cmake.exe");
-        }
-        return new File(getSdkCmakeBinFolder(sdkFolder), "cmake");
     }
 
     public void forEachNativeBuildConfiguration(@NonNull Consumer<JsonReader> callback)
@@ -855,20 +865,4 @@ public abstract class ExternalNativeJsonGenerator {
         return result;
     }
 
-    @NonNull
-    protected static File getSdkCmakeBinFolder(@NonNull File sdkFolder) {
-        return new File(getCmakeFolderFromSdkFolder(sdkFolder), "bin");
-    }
-
-    @NonNull
-    protected static File getCmakeFolderFromSdkFolder(@NonNull File sdkFolder) {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
-        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkFolder);
-        LocalPackage cmakePackage =
-                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
-        if (cmakePackage != null) {
-            return cmakePackage.getLocation();
-        }
-        return new File(sdkFolder, SdkConstants.FD_CMAKE);
-    }
 }

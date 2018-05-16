@@ -400,7 +400,7 @@ public class ExternalNativeBuildTaskUtils {
             return cmakePackage.getLocation();
         }
         // If CMake package is not found, we install it and try to find it.
-        sdkHandler.installCMake();
+        sdkHandler.installCMake("3.6.4111459");
         cmakePackage =
                 sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
         if (cmakePackage != null) {

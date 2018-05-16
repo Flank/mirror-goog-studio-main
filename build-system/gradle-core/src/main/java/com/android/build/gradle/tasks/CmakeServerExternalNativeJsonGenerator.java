@@ -84,7 +84,7 @@ import org.apache.commons.io.FileUtils;
 class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGenerator {
 
     private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
-    // Constructor
+
     public CmakeServerExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
             @NonNull NdkHandler ndkHandler,
@@ -92,14 +92,6 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             @NonNull File cmakeFolder,
             @NonNull GradleBuildVariant.Builder stats) {
         super(config, ndkHandler, androidBuilder, cmakeFolder, stats);
-
-        logPreviewWarning(androidBuilder);
-    }
-
-    private static void logPreviewWarning(@NonNull AndroidBuilder androidBuilder) {
-        String previewWarning =
-                "Support for CMake 3.7 and higher is a preview feature. To report a bug, see https://developer.android.com/studio/report-bugs.html";
-        androidBuilder.getLogger().warning(previewWarning);
     }
 
     /**
@@ -145,6 +137,16 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         // By default, use the ninja generator.
         cacheArguments.add("-G Ninja");
+
+        // To preserve backward compatibility with fork CMake look for ninja.exe next to cmake.exe
+        // and use it. If it's not there then normal CMake search logic will be used.
+        File possibleNinja =
+                isWindows()
+                        ? new File(getCmakeBinFolder(), "ninja.exe")
+                        : new File(getCmakeBinFolder(), "ninja");
+        if (possibleNinja.isFile()) {
+            cacheArguments.add(String.format("-DCMAKE_MAKE_PROGRAM=%s", possibleNinja));
+        }
         return cacheArguments;
     }
 
@@ -169,12 +171,18 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             ConfigureCommandResult configureCommandResult =
                     doConfigure(abi, abiPlatformVersion, cmakeServer);
             if (!ServerUtils.isConfigureResultValid(configureCommandResult.configureResult)) {
-                throw new ProcessException("Error configuring");
+                throw new ProcessException(
+                        String.format(
+                                "Error configuring CMake server (%s).\r\n%s",
+                                cmakeServer.getCmakePath(),
+                                configureCommandResult.interactiveMessages));
             }
 
             ComputeResult computeResult = doCompute(cmakeServer);
             if (!ServerUtils.isComputedResultValid(computeResult)) {
-                throw new ProcessException("Error computing");
+                throw new ProcessException(
+                        "Error computing CMake server result.\r\n"
+                                + configureCommandResult.interactiveMessages);
             }
 
             generateAndroidGradleBuild(abi, cmakeServer);
@@ -361,8 +369,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             throws IOException {
         List<String> cacheArgumentsList = getCacheArguments(abi, abiPlatformVersion);
         cacheArgumentsList.addAll(getBuildArguments());
-        return cmakeServer.configure(
-                cacheArgumentsList.toArray(new String[cacheArgumentsList.size()]));
+        String argsArray[] = new String[cacheArgumentsList.size()];
+        cacheArgumentsList.toArray(argsArray);
+        return cmakeServer.configure(argsArray);
     }
 
     /**

@@ -97,8 +97,8 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     }
 
     @Override
-    void processBuildOutput(@NonNull String buildOutput, @NonNull String abi,
-            int abiPlatformVersion) throws IOException {
+    void processBuildOutput(
+            @NonNull String buildOutput, @NonNull String abi, int abiPlatformVersion) {
         // CMake doesn't need to process build output because it directly writes JSON file
         // to specified location.
     }
@@ -110,7 +110,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         checkConfiguration();
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
-        builder.setExecutable(getSdkCmakeExecutable());
+        builder.setExecutable(getCmakeExecutable());
         builder.addArgs(getProcessBuilderArgs(abi, abiPlatformVersion, outputJson));
 
         return builder;
@@ -260,14 +260,14 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         if (!toolchainFile.exists()) {
             // Toolchain file for NDK r12 is in the SDK.
             // TODO: remove this when we stop caring about r12.
-            toolchainFile = new File(getCmakeInstallFolder(), toolchainFileName);
+            toolchainFile = new File(cmakeInstallFolder, toolchainFileName);
         }
         return toolchainFile;
     }
 
     @NonNull
     protected File getCmakeBinFolder() {
-        return new File(getCmakeInstallFolder(), "bin");
+        return new File(cmakeInstallFolder, "bin");
     }
 
     @NonNull
@@ -319,15 +319,5 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         }
         messages.addAll(getBaseConfigurationErrors());
         return messages;
-    }
-
-    @NonNull
-    private File getCmakeInstallFolder() {
-        return cmakeInstallFolder;
-    }
-
-    @NonNull
-    protected File getSdkCmakeExecutable() {
-        return getSdkCmakeExecutable(getSdkFolder());
     }
 }

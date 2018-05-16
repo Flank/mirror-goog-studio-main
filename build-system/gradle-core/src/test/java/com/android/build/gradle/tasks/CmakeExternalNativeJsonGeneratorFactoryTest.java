@@ -111,13 +111,13 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testCmakeStrategyUnsupportedCmakeVersion() {
-        assertThat(getCmakeStrategy(new Revision(0, 0))).isNull();
-        assertThat(getCmakeStrategy(new Revision(1, 1))).isNull();
-        assertThat(getCmakeStrategy(new Revision(2, 9))).isNull();
-        assertThat(getCmakeStrategy(new Revision(3, 0))).isNull();
-        assertThat(getCmakeStrategy(new Revision(3, 6))).isNull();
-        assertThat(getCmakeStrategy(new Revision(3, 6, 2))).isNull();
+    public void testCmakeStrategyUnsupportedCmakeVersion0_0() {
+        getCmakeStrategy(new Revision(0, 0));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCmakeStrategyUnsupportedCmakeVersion_3_6_2() {
+        getCmakeStrategy(new Revision(3, 6, 2));
     }
 
     private ExternalNativeJsonGenerator getCmakeStrategy(@NonNull Revision cmakeRevision) {
