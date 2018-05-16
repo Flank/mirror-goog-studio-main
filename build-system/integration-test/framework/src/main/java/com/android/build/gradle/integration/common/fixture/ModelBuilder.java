@@ -268,34 +268,26 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 throw new RuntimeException("Unsupported ModelLevel: " + modelLevel);
         }
 
-        while (true) {
-            BuildActionExecuter<ModelContainer<T>> executor = projectConnection.action(action);
-            setJvmArguments(executor);
+        BuildActionExecuter<ModelContainer<T>> executor = projectConnection.action(action);
+        setJvmArguments(executor);
 
-            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-            setStandardOut(executor, stdout);
-            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-            setStandardError(executor, stderr);
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        setStandardOut(executor, stdout);
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        setStandardError(executor, stderr);
 
-            try {
-                ModelContainer<T> result = executor.withArguments(getArguments()).run();
+        try {
+            ModelContainer<T> result = executor.withArguments(getArguments()).run();
 
-                lastBuildResultConsumer.accept(
-                        new GradleBuildResult(stdout, stderr, ImmutableList.of(), null));
+            lastBuildResultConsumer.accept(
+                    new GradleBuildResult(stdout, stderr, ImmutableList.of(), null));
 
-                return result;
-            } catch (GradleConnectionException e) {
-                RetryAction retryAction = chooseRetryAction(e);
-                if (retryAction != RetryAction.RETRY) {
-                    lastBuildResultConsumer.accept(
-                            new GradleBuildResult(stdout, stderr, ImmutableList.of(), e));
-                    if (retryAction == RetryAction.FAILED_TOO_MANY_TIMES) {
-                        throw new TooFlakyException(e);
-                    } else if (retryAction == RetryAction.THROW) {
-                        throw e;
-                    }
-                }
-            }
+            return result;
+        } catch (GradleConnectionException e) {
+            lastBuildResultConsumer.accept(
+                    new GradleBuildResult(stdout, stderr, ImmutableList.of(), e));
+            maybePrintJvmLogs(e);
+            throw e;
         }
     }
 
