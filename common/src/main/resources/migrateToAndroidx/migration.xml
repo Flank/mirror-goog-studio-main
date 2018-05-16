@@ -485,5 +485,6 @@
   <migrate-dependency old-group-name="com.android.support.design.typography" old-artifact-name="design-typography" new-group-name="com.google.android.material.typography" new-artifact-name="material-typography" base-version="1.0.0-alpha1"/>
   <migrate-dependency old-group-name="com.android.support.design.widget" old-artifact-name="design-widget" new-group-name="com.google.android.material.widget" new-artifact-name="material-widget" base-version="1.0.0-alpha1"/>
 
+  <upgrade-dependency group-name="androidx.core" artifact-name="core-ktx" base-version="1.0.0-alpha1" />
 </migration-map>
 

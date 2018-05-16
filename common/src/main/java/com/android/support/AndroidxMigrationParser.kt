@@ -34,6 +34,10 @@ private const val ATTR_OLD_ARTIFACT_NAME = "old-artifact-name"
 private const val ATTR_NEW_GROUP_NAME = "new-group-name"
 private const val ATTR_NEW_ARTIFACT_NAME = "new-artifact-name"
 private const val ATTR_NEW_BASE_VERSION_NAME = "base-version"
+// upgrade-dependency element and attributes
+private const val UPGRADE_DEPENDENCY_NAME = "upgrade-dependency"
+private const val ATTR_GROUP_NAME = "group-name"
+private const val ATTR_ARTIFACT_NAME = "artifact-name"
 
 class InvalidDataException(message: String? = null) : RuntimeException(message)
 
@@ -84,6 +88,11 @@ fun parseMigrationFile(visitor: MigrationParserVisitor) {
                     newArtifactName,
                     newBaseVersion
                 )
+            } else if (node.nodeName == UPGRADE_DEPENDENCY_NAME) {
+                val groupName = node.getAttribute(ATTR_GROUP_NAME)
+                val artifactName = node.getAttribute(ATTR_ARTIFACT_NAME)
+                val baseVersion = node.getAttribute(ATTR_NEW_BASE_VERSION_NAME)
+                visitor.visitGradleCoordinateUpgrade(groupName, artifactName, baseVersion)
             }
         }
     }
