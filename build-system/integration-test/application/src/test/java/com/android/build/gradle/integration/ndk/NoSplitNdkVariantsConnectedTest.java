@@ -73,16 +73,9 @@ public class NoSplitNdkVariantsConnectedTest {
                         + "        }\n"
                         + "        arm {\n"
                         + "            ndk {\n"
-                        // Armeabi also disabled due to b/79847055
-                        + "                abiFilters 'armeabi-v7a'\n" //, 'armeabi'\n"
+                        + "                abiFilters 'armeabi-v7a'\n"
                         + "            }\n"
                         + "        }\n"
-                        // Mips disabled due to b/79847055
-                        //+ "        mips {\n"
-                        //+ "            ndk {\n"
-                        //+ "                abiFilter 'mips'\n"
-                        //+ "            }\n"
-                        //+ "        }\n"
                         + "    }\n"
                         + "}");
         TestFileUtils.appendToFile(
