@@ -203,7 +203,7 @@ open class DefaultJavaEvaluator(
 
     private fun findJarPath(containingFile: PsiFile?): String? {
         if (containingFile is PsiCompiledFile) {
-            ///This code is roughly similar to the following:
+            // This code is roughly similar to the following:
             //      VirtualFile jarVirtualFile = PsiUtil.getJarFile(containingFile);
             //      if (jarVirtualFile != null) {
             //        return jarVirtualFile.getPath();

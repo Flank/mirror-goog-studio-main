@@ -38,7 +38,6 @@ class ToastDetectorTest : AbstractCheckTest() {
         0 errors, 4 warnings
         """
 
-        //noinspection all // Sample code
         lint().files(
             java(
                 """

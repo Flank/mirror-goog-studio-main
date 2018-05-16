@@ -3576,7 +3576,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testTargetInLambda() {
         // Regression test for
-        // // 226364: TargetAPI annotation on method doesn't apply to lambda
+        // 226364: TargetAPI annotation on method doesn't apply to lambda
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(4),

@@ -354,7 +354,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 // In earlier versions we checked not just for java.lang.SecurityException but
                 // any super type as well, however that probably hides warnings in cases where
                 // users don't want that; see http://b.android.com/182165
-                //return context.getEvaluator().extendsClass(cls, "java.lang.SecurityException", false);
+                // return context.getEvaluator().extendsClass(cls, "java.lang.SecurityException", false);
                 if (cls != null && SECURITY_EXCEPTION == cls.qualifiedName) {
                     return true
                 }

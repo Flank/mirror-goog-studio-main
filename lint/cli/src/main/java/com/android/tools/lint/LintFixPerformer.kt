@@ -306,7 +306,7 @@ open class LintFixPerformer constructor(
                 val endOffset: Int = position.endOffset
                 // Ideally we'd remove surrounding whitespace too, but that's risky
                 // when we're also inserting attributes around the same place
-                //val padding = if (contents[endOffset] == ' ') 1 else 0
+                // val padding = if (contents[endOffset] == ' ') 1 else 0
                 val padding = 0
                 file.edits.add(PendingEdit(setFix, contents, startOffset, endOffset + padding, ""))
                 return true

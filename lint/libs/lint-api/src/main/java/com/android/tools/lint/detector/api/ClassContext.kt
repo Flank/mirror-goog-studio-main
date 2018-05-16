@@ -265,7 +265,7 @@ class ClassContext(
             curr = driver.getOuterClassNode(curr)
             if (curr != null) {
                 if (prev.outerMethod != null) {
-                    val methods = curr.methods// ASM API
+                    val methods = curr.methods // ASM API
                     for (m in methods) {
                         val method = m as MethodNode
                         if (method.name == prev.outerMethod && method.desc == prev.outerMethodDesc) {
@@ -569,7 +569,7 @@ class ClassContext(
             // Return the first method in the class for line number purposes. Skip <init>,
             // since it's typically not located near the real source of the method.
             if (classNode.methods != null) {
-                val methods = classNode.methods// ASM API
+                val methods = classNode.methods // ASM API
                 for (m in methods) {
                     val method = m as MethodNode
                     if (method.name[0] != '<') {

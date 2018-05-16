@@ -2298,7 +2298,7 @@ class LintDriver
         var current: ClassNode? = classNode
         while (current != null) {
             if (owner == current.name) {
-                val fieldList = current.fields// ASM API
+                val fieldList = current.fields // ASM API
                 for (f in fieldList) {
                     val field = f as FieldNode
                     if (field.name == name) {
@@ -2319,7 +2319,7 @@ class LintDriver
     ): MethodNode? {
         var current: ClassNode? = classNode
         while (current != null) {
-            val methodList = current.methods// ASM API
+            val methodList = current.methods // ASM API
             for (f in methodList) {
                 val method = f as MethodNode
                 if (method.name == name) {

@@ -56,7 +56,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     /** Using hardware unsupported by Chrome OS devices */
     public static final Issue UNSUPPORTED_CHROME_OS_HARDWARE =
             Issue.create(
-                            "UnsupportedChromeOsHardware", //$NON-NLS-1$
+                            "UnsupportedChromeOsHardware",
                             "Unsupported Chrome OS Hardware Feature",
                             "The `<uses-feature>` element should not require this unsupported Chrome OS hardware "
                                     + "feature. Any uses-feature not explicitly marked with `required=\"false\"` is "
@@ -74,7 +74,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     /** Permission implies required hardware unsupported by Chrome OS */
     public static final Issue PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE =
             Issue.create(
-                            "PermissionImpliesUnsupportedChromeOsHardware", //$NON-NLS-1$
+                            "PermissionImpliesUnsupportedChromeOsHardware",
                             "Permission Implies Unsupported Chrome OS Hardware",
                             "The `<uses-permission>` element should not require a permission that implies an "
                                     + "unsupported Chrome OS hardware feature. Google Play assumes that certain "
@@ -89,16 +89,14 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                     .addMoreInfo(
                             "https://developer.android.com/topic/arc/manifest.html#implied-features");
 
-    private static final String HARDWARE_FEATURE_CAMERA = "android.hardware.camera"; //$NON-NLS-1$
+    private static final String HARDWARE_FEATURE_CAMERA = "android.hardware.camera";
 
     private static final String HARDWARE_FEATURE_CAMERA_AUTOFOCUS =
-            "android.hardware.camera.autofocus"; //$NON-NLS-1$
+            "android.hardware.camera.autofocus";
 
-    private static final String HARDWARE_FEATURE_TELEPHONY =
-            "android.hardware.telephony"; //$NON-NLS-1$
+    private static final String HARDWARE_FEATURE_TELEPHONY = "android.hardware.telephony";
 
-    private static final String ANDROID_PERMISSION_CAMERA =
-            "android.permission.CAMERA"; //$NON-NLS-1$
+    private static final String ANDROID_PERMISSION_CAMERA = "android.permission.CAMERA";
 
     // https://developer.android.com/topic/arc/manifest.html#incompat-entries
     private static final String[] UNSUPPORTED_HARDWARE_FEATURES =

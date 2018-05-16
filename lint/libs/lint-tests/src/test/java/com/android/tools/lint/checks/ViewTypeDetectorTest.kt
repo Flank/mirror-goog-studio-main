@@ -20,8 +20,7 @@ import com.android.tools.lint.detector.api.Detector
 
 class ViewTypeDetectorTest : AbstractCheckTest() {
 
-    private// Sample code
-    val casts = xml(
+    private val casts = xml(
         "res/layout/casts.xml",
         "" +
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -45,8 +44,7 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                 "</LinearLayout>\n"
     )
 
-    private// Sample code
-    val casts2 = xml(
+    private val casts2 = xml(
         "res/layout/casts2.xml",
         "" +
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -74,8 +72,7 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                 "</ScrollView>\n"
     )
 
-    private// Sample code
-    val wrongCastActivity = java(
+    private val wrongCastActivity = java(
         "" +
                 "package test.pkg;\n" +
                 "\n" +
@@ -95,8 +92,7 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                 "}\n"
     )
 
-    private// Sample code
-    val rClass = java(
+    private val rClass = java(
         "" +
                 "package test.pkg;\n" +
                 "public final class R {\n" +
@@ -608,8 +604,8 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "public class FindViewByIdTest extends Activity {\n" +
                         "    private static void test() {\n" +
-                        //"        View localVar = findViewById(R.id.some_view);\n" +
-                        //"        Integer integer = doSomethingWithView(localVar);\n" +
+                        // "        View localVar = findViewById(R.id.some_view);\n" +
+                        // "        Integer integer = doSomethingWithView(localVar);\n" +
                         "\n" +
                         "        doSomethingWithView(findViewById(R.id.some_view));\n" +
                         "    }\n" +

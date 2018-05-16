@@ -1679,8 +1679,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    private// Sample code
-    val fragment = java(
+    private val fragment = java(
         """
         package android.support.v4.app;
 
@@ -1692,8 +1691,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    private// Sample code
-    val fragmentManager = java(
+    private val fragmentManager = java(
         """
         package android.support.v4.app;
 
@@ -1706,8 +1704,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    private// Sample code
-    val fragmentTransaction = java(
+    private val fragmentTransaction = java(
         """
         package android.support.v4.app;
 
@@ -1731,8 +1728,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    private// Sample code
-    val sharedPrefsTest8 = java(
+    private val sharedPrefsTest8 = java(
         """
         package test.pkg;
 

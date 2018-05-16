@@ -501,7 +501,6 @@ class TranslationDetectorTest : AbstractCheckTest() {
         // If a library project provides additional locales, that should not force
         // the main project to include all those translations
 
-        //noinspection all // Sample code
         val library = project(
             // Library project
             xml(
