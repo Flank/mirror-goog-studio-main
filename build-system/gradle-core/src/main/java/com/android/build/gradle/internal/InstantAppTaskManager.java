@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.CheckInstantAppLibrariesTask;
 import com.android.build.gradle.internal.tasks.InstantAppProvisionTask;
 import com.android.build.gradle.internal.tasks.InstantAppSideLoadTask;
 import com.android.build.gradle.options.ProjectOptions;
@@ -66,14 +65,10 @@ public class InstantAppTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         // Create the bundling task.
-        CheckInstantAppLibrariesTask checkInstantAppLibrariesTask =
-                taskFactory.create(new CheckInstantAppLibrariesTask.ConfigAction(variantScope));
-
         File bundleDir = variantScope.getApkLocation();
         BundleInstantApp bundleTask =
                 taskFactory.create(new BundleInstantApp.ConfigAction(variantScope, bundleDir));
         variantScope.getAssembleTask().dependsOn(bundleTask);
-        bundleTask.dependsOn(checkInstantAppLibrariesTask);
         variantScope
                 .getArtifacts()
                 .appendArtifact(

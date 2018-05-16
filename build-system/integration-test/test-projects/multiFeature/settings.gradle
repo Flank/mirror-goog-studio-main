@@ -1,6 +1,0 @@
-include 'app'
-include 'instant'
-include 'base'
-include 'featurea'
-include 'featureb'
-include 'library'

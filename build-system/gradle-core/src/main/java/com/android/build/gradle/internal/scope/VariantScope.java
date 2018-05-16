@@ -356,6 +356,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     void setProcessJavaResourcesTask(Sync processJavaResourcesTask);
 
+    @Nullable
+    Task getMergeJavaResourcesTask();
+
     void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask);
 
     @Nullable
