@@ -73,7 +73,8 @@ public class NoSplitNdkVariantsConnectedTest {
                         + "        }\n"
                         + "        arm {\n"
                         + "            ndk {\n"
-                        + "                abiFilters 'armeabi-v7a', 'armeabi'\n"
+                        // Armeabi also disabled due to b/79847055
+                        + "                abiFilters 'armeabi-v7a'\n" //, 'armeabi'\n"
                         + "            }\n"
                         + "        }\n"
                         // Mips disabled due to b/79847055
