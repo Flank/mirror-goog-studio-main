@@ -497,6 +497,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/ide/",
                 "com/android/build/gradle/internal/ide/level2/",
                 "com/android/build/gradle/internal/incremental/",
+                "com/android/build/gradle/internal/matcher/",
                 "com/android/build/gradle/internal/model/",
                 "com/android/build/gradle/internal/ndk/",
                 "com/android/build/gradle/internal/packaging/",
