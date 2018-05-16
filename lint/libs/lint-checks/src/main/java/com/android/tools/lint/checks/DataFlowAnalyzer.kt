@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.skipParentheses
-import com.google.common.collect.Sets
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLocalVariable
@@ -62,7 +61,7 @@ abstract class DataFlowAnalyzer(
     }
 
     protected val references: MutableSet<PsiVariable> = mutableSetOf()
-    protected val instances: MutableSet<UElement> = Sets.newIdentityHashSet<UElement>()
+    protected val instances: MutableSet<UElement> = mutableSetOf()
 
     init {
         if (references.isEmpty()) {
@@ -132,20 +131,24 @@ abstract class DataFlowAnalyzer(
 
     override fun afterVisitVariable(node: UVariable) {
         if (node is ULocalVariable) {
-            val variable = node.sourcePsi as? PsiLocalVariable ?: node
             val initializer = node.uastInitializer
             if (initializer != null) {
                 if (instances.contains(initializer)) {
                     // Instance is stored in a variable
-                    references.add(variable)
+                    addVariableReference(node)
                 } else if (initializer is UReferenceExpression) {
                     val resolved = initializer.resolve()
                     if (resolved != null && references.contains(resolved)) {
-                        references.add(variable)
+                        addVariableReference(node)
                     }
                 }
             }
         }
+    }
+
+    private fun addVariableReference(node: UVariable) {
+        (node.sourcePsi as? PsiVariable)?.let { references.add(it) }
+        (node.javaPsi as? PsiVariable)?.let { references.add(it) }
     }
 
     override fun afterVisitBinaryExpression(node: UBinaryExpression) {
@@ -161,20 +164,20 @@ abstract class DataFlowAnalyzer(
         val rhs = node.rightOperand
         if (instances.contains(rhs)) {
             val lhs = node.leftOperand.tryResolve()
-            if (lhs is PsiLocalVariable) {
-                references.add(lhs)
-            } else if (lhs is PsiField) {
-                field(rhs)
+            when (lhs) {
+                is UVariable -> addVariableReference(lhs)
+                is PsiLocalVariable -> references.add(lhs)
+                is PsiField -> field(rhs)
             }
         } else if (rhs is UReferenceExpression) {
             val resolved = rhs.resolve()
             if (resolved != null && references.contains(resolved)) {
                 clearLhs = false
                 val lhs = node.leftOperand.tryResolve()
-                if (lhs is PsiLocalVariable) {
-                    references.add(lhs)
-                } else if (lhs is PsiField) {
-                    field(rhs)
+                when (lhs) {
+                    is UVariable -> addVariableReference(lhs)
+                    is PsiLocalVariable -> references.add(lhs)
+                    is PsiField -> field(rhs)
                 }
             }
         }

@@ -29,7 +29,7 @@ import org.junit.Assert.assertNotEquals
 import java.io.File
 
 class DataFlowAnalyzerTest : TestCase() {
-    fun test() {
+    fun testJava() {
         val parsed = LintUtilsTest.parse(
             """
                 package test.pkg;
@@ -55,6 +55,50 @@ class DataFlowAnalyzerTest : TestCase() {
                     public Test other() { return this; }
                 }
             """, File("test/pkg/Test.java")
+        )
+
+        val target = findMethodCall(parsed, "d")
+
+        val receivers = mutableListOf<String>()
+        val analyzer = object : DataFlowAnalyzer(listOf(target)) {
+            override fun receiver(call: UCallExpression) {
+                val name = call.methodName ?: "?"
+                assertNotEquals(name, "hashCode")
+                receivers.add(name)
+                super.receiver(call)
+            }
+        }
+        target.getParentOfType<UMethod>(UMethod::class.java)?.accept(analyzer)
+
+        assertEquals("e, f, g, toString", receivers.joinToString { it })
+
+        Disposer.dispose(parsed.second)
+    }
+
+    fun testKotlin() {
+        val parsed = LintUtilsTest.parseKotlin(
+            """
+                package test.pkg
+
+                class Test {
+                    fun test() {
+                        val result = a().b().c().d().e().f()
+                        val copied2: Test
+                        copied2 = result
+                        copied2.g()
+                        copied2.toString().hashCode()
+                    }
+
+                    fun a(): Test = this
+                    fun b(): Test = this
+                    fun c(): Test = this
+                    fun d(): Test = this
+                    fun e(): Test = this
+                    fun f(): Test = this
+                    fun g(): Test = this
+                    fun other(): Test = this
+                }
+            """, File("test/pkg/Test.kt")
         )
 
         val target = findMethodCall(parsed, "d")

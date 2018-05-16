@@ -1640,6 +1640,30 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testParcelableKotlin() {
+        // Regression for https://issuetracker.google.com/79716779
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Parcel
+                import android.os.Parcelable
+
+                fun testCleanup(parcelable: Parcelable): ByteArray? {
+                    val parcel = Parcel.obtain()
+                    parcel.writeParcelable(parcelable, 0)
+                    try {
+                        return parcel.marshall()
+                    } finally {
+                        parcel.recycle()
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

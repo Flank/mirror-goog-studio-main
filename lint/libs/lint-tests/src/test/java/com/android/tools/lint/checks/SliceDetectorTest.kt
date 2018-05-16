@@ -267,6 +267,99 @@ class SliceDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testKotlin() {
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.annotation.SuppressLint
+                import android.app.PendingIntent
+                import android.content.Context
+                import android.net.Uri
+
+                import androidx.core.graphics.drawable.IconCompat
+                import androidx.slice.builders.ListBuilder
+                import androidx.slice.builders.ListBuilder.RowBuilder
+                import androidx.slice.builders.SliceAction
+
+                @SuppressLint("UnknownNullness")
+                class SliceTest {
+                    // RowBuilder shouldn't have a mixture of actions / icons in end items
+                    fun testNoMixingActionsAndIcons1(context: Context, uri: Uri, ttl: Long,
+                                                     sliceAction: SliceAction, sliceAction2: SliceAction, icon: IconCompat) {
+                        val listBuilder = ListBuilder(context, uri, ttl)
+                        val rowBuilder = RowBuilder(listBuilder)
+                        rowBuilder.setTitle("some title text")
+                        rowBuilder.setPrimaryAction(sliceAction)
+                        rowBuilder.addEndItem(icon, 0)
+
+                        // This is bad because an icon was already added to the end
+                        rowBuilder.addEndItem(sliceAction2)
+                    }
+
+
+                    fun testListBuilderShouldHavePrimaryAction(context: Context, uri: Uri,
+                                                               ttl: Long) {
+                        // All rows accept a primary action via #setPrimaryAction
+                        // there should be at least one primary action set
+                        // somewhere in the Slice
+
+                        val listBuilder = ListBuilder(context, uri, ttl)
+                        val rowBuilder = RowBuilder(listBuilder)
+                        rowBuilder.setTitle("some title text")
+
+                        // This is bad because rowBuilder#setPrimaryAction has not been called
+                        listBuilder.addRow(rowBuilder)
+                    }
+
+                    // A mixture of slice actions and icons are not supported on a row, add
+                    // either actions or icons but not both.
+                    fun testNoMixingDefaultAndCustom(context: Context, uri: Uri, ttl: Long,
+                                                     pendingIntent: PendingIntent, sliceAction: SliceAction,
+                                                     sliceAction2: SliceAction, icon: IconCompat, primary: SliceAction) {
+                        val listBuilder = ListBuilder(context, uri, ttl)
+
+                        val defaultToggle = SliceAction(pendingIntent,
+                                "default toggle",
+                                true /* isChecked */)
+
+                        val customToggle = SliceAction(pendingIntent,
+                                icon,
+                                "default toggle",
+                                true /* isChecked */)
+
+                        val rowBuilder = RowBuilder(listBuilder)
+                        rowBuilder.setPrimaryAction(primary)
+
+                        // Bad because mixture of ‘default' toggle and custom toggle
+                        rowBuilder.addEndItem(defaultToggle)
+                        rowBuilder.addEndItem(customToggle)
+                    }
+                }
+                """
+            ).indented(),
+            *stubs
+        ).run().expect(
+            """
+            src/test/pkg/SliceTest.kt:27: Warning: RowBuilder cannot have a mixture of icons and slice actions added to the end items [Slices]
+                    rowBuilder.addEndItem(sliceAction2)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/SliceTest.kt:24: Earlier icon here
+            src/test/pkg/SliceTest.kt:37: Warning: A slice should have a primary action set on one of its rows [Slices]
+                    val listBuilder = ListBuilder(context, uri, ttl)
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/SliceTest.kt:65: Warning: RowBuilder should not have a mixture of default and custom toggles [Slices]
+                    rowBuilder.addEndItem(defaultToggle)
+                                          ~~~~~~~~~~~~~
+                src/test/pkg/SliceTest.kt:66: Conflicting action type here
+            0 errors, 3 warnings
+            """
+        )
+    }
+
     fun testRowBuilderCannotHaveMultipleTimeStamps() {
         lint().files(
             java(
