@@ -33,6 +33,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.findKotlinStdlibPath
+import com.android.tools.lint.client.api.LintClient.Companion.CLIENT_UNIT_TESTS
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.client.api.TYPE_BOOLEAN
@@ -646,7 +647,7 @@ class LintUtilsTest : TestCase() {
             .isEqualTo("foo/bar.baz")
         assertThat(
             getFileNameWithParent(
-                LintCliClient(),
+                LintCliClient(CLIENT_UNIT_TESTS),
                 File(
                     "tmp" +
                             File.separator +
@@ -750,10 +751,10 @@ class LintUtilsTest : TestCase() {
             writer.write(sb.toString())
             writer.close()
 
-            val s = getEncodedString(LintCliClient(), file, true).toString()
+            val s = getEncodedString(LintCliClient(CLIENT_UNIT_TESTS), file, true).toString()
             assertEquals(expected, s)
 
-            val seq = getEncodedString(LintCliClient(), file, false)
+            val seq = getEncodedString(LintCliClient(CLIENT_UNIT_TESTS), file, false)
             if (encoding.equals("utf-8", ignoreCase = true)) {
                 assertFalse(seq is String)
             }
@@ -773,7 +774,7 @@ class LintUtilsTest : TestCase() {
                 fail(e.message)
             }
 
-            val client = object : LintCliClient() {
+            val client = object : LintCliClient(CLIENT_UNIT_TESTS) {
                 override fun readFile(file: File): CharSequence {
                     return if (file.path == fullPath.path) {
                         source!!
@@ -815,7 +816,7 @@ class LintUtilsTest : TestCase() {
             val client = project.getClient() as LintCliClient
 
             val request = LintRequest(client, listOf(fullPath))
-            val driver = LintDriver(TestIssueRegistry(), LintCliClient(), request)
+            val driver = LintDriver(TestIssueRegistry(), LintCliClient(CLIENT_UNIT_TESTS), request)
             driver.scope = Scope.JAVA_FILE_SCOPE
             val folderType = ResourceFolderType.getFolderType(relativePath.parentFile.name)
 
@@ -890,7 +891,7 @@ class LintUtilsTest : TestCase() {
             val client = project.getClient() as LintCliClient
             val request = LintRequest(client, listOf(fullPath))
 
-            val driver = LintDriver(TestIssueRegistry(), LintCliClient(), request)
+            val driver = LintDriver(TestIssueRegistry(), LintCliClient(CLIENT_UNIT_TESTS), request)
             driver.scope = Scope.JAVA_FILE_SCOPE
             val context = JavaTestContext(driver, project, source, fullPath)
             val uastParser = client.getUastParser(project)

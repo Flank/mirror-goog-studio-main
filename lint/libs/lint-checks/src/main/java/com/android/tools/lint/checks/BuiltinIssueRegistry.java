@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 339;
+    public static final int INITIAL_CAPACITY = 339;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);

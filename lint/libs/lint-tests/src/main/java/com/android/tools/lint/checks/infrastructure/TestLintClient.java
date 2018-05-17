@@ -139,7 +139,11 @@ public class TestLintClient extends LintCliClient {
     TestLintTask task;
 
     public TestLintClient() {
-        super(new LintCliFlags(), "test");
+        this(CLIENT_UNIT_TESTS);
+    }
+
+    public TestLintClient(String clientName) {
+        super(new LintCliFlags(), clientName);
         TextReporter reporter = new TextReporter(this, flags, writer, false);
         reporter.setForwardSlashPaths(true); // stable tests
         flags.getReporters().add(reporter);

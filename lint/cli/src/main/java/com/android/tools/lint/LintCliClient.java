@@ -154,9 +154,8 @@ public class LintCliClient extends LintClient {
     private Configuration configuration;
     private boolean validatedIds;
 
-    /** Creates a CLI driver */
-    public LintCliClient() {
-        super(CLIENT_CLI);
+    public LintCliClient(@NonNull String clientName) {
+        super(clientName);
         flags = new LintCliFlags();
         TextReporter reporter =
                 new TextReporter(this, flags, new PrintWriter(System.out, true), false);
@@ -164,7 +163,12 @@ public class LintCliClient extends LintClient {
         initialize();
     }
 
-    /** Creates a CLI driver */
+    /** @deprecated Specify client explicitly by calling {@link LintCliClient(String)} */
+    @Deprecated
+    public LintCliClient() {
+        this(CLIENT_UNIT_TESTS);
+    }
+
     public LintCliClient(@NonNull LintCliFlags flags, @NonNull String clientName) {
         super(clientName);
         this.flags = flags;
@@ -219,11 +223,14 @@ public class LintCliClient extends LintClient {
      * the command line flags.
      */
     public int run(@NonNull IssueRegistry registry, @NonNull List<File> files) throws IOException {
+        long startTime = System.currentTimeMillis();
+
         assert !flags.getReporters().isEmpty();
         this.registry = registry;
 
         LintRequest lintRequest = createLintRequest(files);
         driver = createDriver(registry, lintRequest);
+        driver.setAnalysisStartTime(startTime);
 
         addProgressPrinter();
         validateIssueIds();
@@ -237,6 +244,15 @@ public class LintCliClient extends LintClient {
 
         for (Reporter reporter : flags.getReporters()) {
             reporter.write(stats, warnings);
+        }
+
+        Collection<Project> projects = lintRequest.getProjects();
+        if (projects == null) {
+            projects = getKnownProjects();
+        }
+        if (!projects.isEmpty()) {
+            LintBatchAnalytics analytics = new LintBatchAnalytics();
+            analytics.logSession(registry, flags, driver, projects, warnings);
         }
 
         if (flags.isAutoFix()) {

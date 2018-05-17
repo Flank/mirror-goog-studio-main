@@ -33,5 +33,9 @@
     <orderEntry type="module" module-name="analyzer-base" scope="TEST" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" scope="TEST" name="kotlin-compiler" level="project" />
+    <orderEntry type="module" module-name="analytics-testing-base" scope="TEST" />
+    <orderEntry type="module" module-name="analytics-protos-base" scope="TEST" />
+    <orderEntry type="module" module-name="analytics-shared-base" scope="TEST" />
+    <orderEntry type="module" module-name="analytics-tracker-base" scope="TEST" />
   </component>
 </module>

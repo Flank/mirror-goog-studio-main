@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
@@ -45,7 +47,7 @@ import org.w3c.dom.NodeList;
 
 @SuppressWarnings("javadoc")
 public class LintCliXmlParserTest extends TestCase {
-    public void test() throws Exception {
+    public void testBasic() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -66,7 +68,7 @@ public class LintCliXmlParserTest extends TestCase {
                         + "        android:text=\"Button\" />\n"
                         + "\n"
                         + "</LinearLayout>\n";
-        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient());
+        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
         File file = File.createTempFile("parsertest", ".xml");
         //noinspection IOResourceOpenedButNotSafelyClosed
         Writer fw = new BufferedWriter(new FileWriter(file));
@@ -180,7 +182,7 @@ public class LintCliXmlParserTest extends TestCase {
                         + "\r"
                         + "<LinearLayout></LinearLayout>\r\n"
                         + "</LinearLayout>\r\n";
-        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient());
+        LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
         File file = File.createTempFile("parsertest2", ".xml");
         //noinspection IOResourceOpenedButNotSafelyClosed
         Writer fw = new BufferedWriter(new FileWriter(file));
@@ -201,6 +203,10 @@ public class LintCliXmlParserTest extends TestCase {
     }
 
     private static class TestClient extends LintCliClient {
+        TestClient() {
+            super(CLIENT_UNIT_TESTS);
+        }
+
         @Override
         public void report(
                 @NonNull Context context,

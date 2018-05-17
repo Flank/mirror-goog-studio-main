@@ -228,6 +228,23 @@ class LintDriver
         isCanceled = true
     }
 
+    /** Time the analysis started */
+    var analysisStartTime = System.currentTimeMillis()
+
+    /** Count of files the driver has encountered (intended for analytics) */
+    var fileCount = 0
+    /** Number of Java sources to encountered in source or test folders */
+    var javaFileCount = 0
+    /** Number of Kotlin sources to encountered in source or test folders */
+    var kotlinFileCount = 0
+    /** Number of resource files (XML or bitmaps) encountered in res folders */
+    var resourceFileCount = 0
+    /** Number of source files encountered in test folders */
+    var testSourceCount = 0
+
+    /** Count of modules the driver has encountered (intended for analytics) */
+    var moduleCount = 0
+
     /**
      * Returns the project containing a given file, or null if not found. This searches
      * only among the currently checked project and its library projects, not among all
@@ -890,6 +907,10 @@ class LintDriver
     }
 
     private fun runFileDetectors(project: Project, main: Project?) {
+        if (phase == 1) {
+            moduleCount++
+        }
+
         // Look up manifest information (but not for library projects)
         if (project.isAndroidProject) {
             for (manifestFile in project.manifestFiles) {
@@ -913,6 +934,8 @@ class LintDriver
                                 val v = ResourceVisitor(parser, xmlDetectors, null)
                                 fireEvent(EventType.SCANNING_FILE, context)
                                 v.visitFile(context)
+                                fileCount++
+                                resourceFileCount++
                             }
                         }
                     } finally {
@@ -1114,6 +1137,7 @@ class LintDriver
                         }
                     })
                     uastParser.dispose()
+                    fileCount++
                 } else {
                     val gradleVisitor = project.client.getGradleVisitor()
                     val context = GradleContext(gradleVisitor, this, project, main, file)
@@ -1128,6 +1152,7 @@ class LintDriver
                     for (detector in detectors) {
                         detector.afterCheckFile(context)
                     }
+                    fileCount++
                 }
             }
         }
@@ -1144,6 +1169,7 @@ class LintDriver
                     detector.beforeCheckFile(context)
                     detector.run(context)
                     detector.afterCheckFile(context)
+                    fileCount++
                 }
             }
         }
@@ -1159,6 +1185,7 @@ class LintDriver
                     detector.beforeCheckFile(context)
                     detector.run(context)
                     detector.afterCheckFile(context)
+                    fileCount++
                 }
             }
         }
@@ -1386,6 +1413,12 @@ class LintDriver
                         }
                     }
 
+                    // We're not counting class files even though technically lint has
+                    // to process them separately; this will essentially double the
+                    // observed file count (which is usually taken to mean source files)
+                    // and with lots of inner classes, more than double.
+                    // fileCount++
+
                     if (isCanceled) {
                         return
                     }
@@ -1592,6 +1625,12 @@ class LintDriver
                 fireEvent(EventType.SCANNING_FILE, context)
                 // TODO: Don't hold read lock around the entire process?
                 client.runReadAction(Runnable { uElementVisitor.visitFile(context) })
+                fileCount++
+                if (context.file.name.endsWith(DOT_JAVA)) {
+                    javaFileCount++
+                } else {
+                    kotlinFileCount++
+                }
                 if (isCanceled) {
                     return
                 }
@@ -1610,6 +1649,13 @@ class LintDriver
                         fireEvent(EventType.SCANNING_FILE, context)
                         // TODO: Don't hold read lock around the entire process?
                         client.runReadAction(Runnable { uTestVisitor.visitFile(context) })
+                        fileCount++
+                        testSourceCount++
+                        if (context.file.name.endsWith(DOT_JAVA)) {
+                            javaFileCount++
+                        } else {
+                            kotlinFileCount++
+                        }
                         if (isCanceled) {
                             return
                         }
@@ -1781,6 +1827,8 @@ class LintDriver
                     check.beforeCheckFile(context)
                     check.checkFolder(context, folderName)
                     check.afterCheckFile(context)
+                    fileCount++
+                    resourceFileCount++
                 }
             }
             if (binaryChecks == null && xmlChecks.isEmpty()) {
@@ -1809,6 +1857,8 @@ class LintDriver
                     } finally {
                         disposeXmlContext(context)
                     }
+                    fileCount++
+                    resourceFileCount++
                 } else if (binaryChecks != null &&
                     (isBitmapFile(file) || type == ResourceFolderType.RAW)
                 ) {
@@ -1819,6 +1869,8 @@ class LintDriver
                     }
                     fireEvent(EventType.SCANNING_FILE, context)
                     visitor.visitBinaryResource(context)
+                    fileCount++
+                    resourceFileCount++
                 }
                 if (isCanceled) {
                     return
@@ -1891,6 +1943,8 @@ class LintDriver
                                 disposeXmlContext(context)
                             }
                         }
+                        fileCount++
+                        resourceFileCount++
                     }
                 }
             } else if (binaryChecks != null && file.isFile && isBitmapFile(file)) {
@@ -1903,6 +1957,8 @@ class LintDriver
                         val context = ResourceContext(this, project, main, file, type, "")
                         fireEvent(EventType.SCANNING_FILE, context)
                         visitor.visitBinaryResource(context)
+                        fileCount++
+                        resourceFileCount++
                         if (isCanceled) {
                             return
                         }

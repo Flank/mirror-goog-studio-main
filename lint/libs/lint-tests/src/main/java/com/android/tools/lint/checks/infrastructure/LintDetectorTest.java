@@ -704,7 +704,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     public class TestLintClient extends LintCliClient {
         public TestLintClient() {
-            super(new LintCliFlags(), "test");
+            super(new LintCliFlags(), CLIENT_UNIT_TESTS);
             TextReporter reporter = new TextReporter(this, flags, writer, false);
             reporter.setForwardSlashPaths(true); // stable tests
             flags.getReporters().add(reporter);

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api;
 
+import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,7 +49,7 @@ import junit.framework.TestCase;
 public class LintClientTest extends TestCase {
 
     public void testApiLevel() {
-        LintCliClient client = new LintCliClient();
+        LintCliClient client = new LintCliClient(CLIENT_UNIT_TESTS);
         int max = client.getHighestKnownApiLevel();
         assertTrue(max >= 16);
     }
@@ -67,7 +68,7 @@ public class LintClientTest extends TestCase {
         RepoManager mgr = new FakeRepoManager(null, packages);
         AndroidSdkHandler sdkHandler = new AndroidSdkHandler(null, null, fop, mgr);
         LintCliClient client =
-                new LintCliClient() {
+                new LintCliClient(CLIENT_UNIT_TESTS) {
                     @Override
                     public AndroidSdkHandler getSdk() {
                         return sdkHandler;
@@ -164,7 +165,7 @@ public class LintClientTest extends TestCase {
 
     public void testVersion() {
         LintCliClient client =
-                new LintCliClient() {
+                new LintCliClient(CLIENT_UNIT_TESTS) {
                     @Override
                     public File getSdkHome() {
                         return TestUtils.getSdk();

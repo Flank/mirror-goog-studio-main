@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
@@ -39,7 +41,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
         File dir = new File(getTargetDir(), "report");
         try {
             LintCliClient client =
-                    new LintCliClient() {
+                    new LintCliClient(CLIENT_UNIT_TESTS) {
                         @Override
                         IssueRegistry getRegistry() {
                             if (registry == null) {

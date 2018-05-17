@@ -1604,6 +1604,13 @@ abstract class LintClient {
 
         /**
          * The client name returned by [.getClientName] when running in
+         * unit tests
+         */
+        @Suppress("MemberVisibilityCanBePrivate")
+        const val CLIENT_UNIT_TESTS = "test"
+
+        /**
+         * The client name returned by [.getClientName] when running in
          * some unknown client
          */
         @Suppress("MemberVisibilityCanBePrivate")
@@ -1639,6 +1646,11 @@ abstract class LintClient {
         @JvmStatic
         val isGradle: Boolean
             get() = CLIENT_GRADLE == clientName
+
+        /** Returns true if running from unit tests */
+        @JvmStatic
+        val isUnitTest: Boolean
+            get() = CLIENT_UNIT_TESTS == clientName
 
         /**
          * Reports an issue where we don't (necessarily) have a [Context] or [Project].
