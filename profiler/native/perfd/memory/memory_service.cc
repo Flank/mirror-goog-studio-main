@@ -61,9 +61,11 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     ::grpc::ServerContext* context, const MemoryStopRequest* request,
     MemoryStopResponse* response) {
   auto got = collectors_.find(request->session().pid());
-  if (got != collectors_.end() && got->second.IsRunning()) {
-    got->second.Stop();
-    // TODO remove stopped collector?
+  if (got != collectors_.end()) {
+    if (got->second.IsRunning()) {
+      got->second.Stop();
+    }
+    collectors_.erase(got);
   }
   response->set_status(MemoryStopResponse::SUCCESS);
   return ::grpc::Status::OK;
