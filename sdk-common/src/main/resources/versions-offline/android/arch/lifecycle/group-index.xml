@@ -1,13 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <android.arch.lifecycle>
-  <compiler versions="1.1.1"/>
-  <runtime versions="1.1.1"/>
-  <extensions versions="1.1.1"/>
-  <reactivestreams versions="1.1.1"/>
-  <common versions="1.1.1"/>
-  <common-java8 versions="1.1.1"/>
-  <viewmodel versions="1.1.1"/>
-  <livedata-core versions="1.1.1"/>
-  <livedata versions="1.1.1"/>
+  <compiler versions="1.0.0"/>
+  <runtime versions="1.0.3"/>
+  <extensions versions="1.0.0"/>
+  <reactivestreams versions="1.0.0"/>
+  <common versions="1.0.3"/>
+  <common-java8 versions="1.0.0"/>
 </android.arch.lifecycle>
 

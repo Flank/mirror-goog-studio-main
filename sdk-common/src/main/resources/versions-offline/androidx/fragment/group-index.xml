@@ -1,6 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<androidx.fragment>
-  <fragment-ktx versions="1.0.0-alpha1"/>
-  <fragment versions="1.0.0-alpha1"/>
-</androidx.fragment>
-

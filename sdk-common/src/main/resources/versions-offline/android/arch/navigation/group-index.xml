@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<android.arch.navigation>
+<android.arch.core>
   <navigation-common versions="1.0.0-alpha01"/>
-  <navigation-safe-args-gradle-plugin versions="1.0.0-alpha01"/>
-  <navigation-runtime versions="1.0.0-alpha01"/>
-  <navigation-testing-ktx versions="1.0.0-alpha01"/>
   <navigation-common-ktx versions="1.0.0-alpha01"/>
-  <navigation-ui versions="1.0.0-alpha01"/>
-  <navigation-fragment-ktx versions="1.0.0-alpha01"/>
-  <navigation-testing versions="1.0.0-alpha01"/>
-  <navigation-ui-ktx versions="1.0.0-alpha01"/>
-  <navigation-safe-args-generator versions="1.0.0-alpha01"/>
-  <navigation-runtime-ktx versions="1.0.0-alpha01"/>
   <navigation-fragment versions="1.0.0-alpha01"/>
-</android.arch.navigation>
+  <navigation-fragment-ktx versions="1.0.0-alpha01"/>
+  <navigation-runtime versions="1.0.0-alpha01"/>
+  <navigation-runtime-ktx versions="1.0.0-alpha01"/>
+  <navigation-safe-args-generator versions="1.0.0-alpha01"/>
+  <navigation-safe-args-gradle-plugin versions="1.0.0-alpha01"/>
+  <navigation-testing versions="1.0.0-alpha01"/>
+  <navigation-testing-ktx versions="1.0.0-alpha01"/>
+  <navigation-ui versions="1.0.0-alpha01"/>
+  <navigation-ui-ktx versions="1.0.0-alpha01"/>
+</android.arch.core>
 

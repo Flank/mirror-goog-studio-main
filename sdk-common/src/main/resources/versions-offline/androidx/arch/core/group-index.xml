@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<androidx.arch.core>
-  <core-common versions="2.0.0-alpha1"/>
-  <core-runtime versions="2.0.0-alpha1"/>
-  <core-testing versions="2.0.0-alpha1"/>
-</androidx.arch.core>
-
