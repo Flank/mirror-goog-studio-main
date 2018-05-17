@@ -269,7 +269,7 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        KotlinLintAnalyzerFacade.analyze(ktFiles, paths, project);
+        new KotlinLintAnalyzerFacade().analyze(ktFiles, paths, project);
         extractor.extractFromProjectSource(units);
 
         if (mergePaths != null) {
