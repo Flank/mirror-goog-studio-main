@@ -56,7 +56,7 @@ class LintExtractAnnotations {
                     ktFiles.add(file)
                 }
             }
-            KotlinLintAnalyzerFacade.analyze(ktFiles, roots, projectEnvironment.project)
+            KotlinLintAnalyzerFacade().analyze(ktFiles, roots, projectEnvironment.project)
 
             val displayInfo = logger.isEnabled(LogLevel.INFO)
             val extractor = Extractor(null, classDir.files, displayInfo, false, false)

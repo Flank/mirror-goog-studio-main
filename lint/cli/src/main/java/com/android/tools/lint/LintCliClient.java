@@ -1647,7 +1647,7 @@ public class LintCliClient extends LintClient {
             MockProject project = (MockProject) ideaProject;
             if (project != null && projectEnvironment != null) {
                 List<File> paths = projectEnvironment.getPaths();
-                KotlinLintAnalyzerFacade.analyze(kotlinFiles, paths, project);
+                new KotlinLintAnalyzerFacade().analyze(kotlinFiles, paths, project);
             }
 
             boolean ok = super.prepare(contexts, testContexts);

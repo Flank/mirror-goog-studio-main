@@ -2703,7 +2703,8 @@ class LintDriver
                 else -> driver.client.log(throwable, message)
             }
 
-            if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
+            if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE") ||
+                    VALUE_TRUE == System.getProperty("lint.print-stacktrace")) {
                 throwable.printStackTrace()
             }
 
