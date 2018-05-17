@@ -281,13 +281,13 @@ public final class GradleTestProject implements TestRule {
     /**
      * Create a GradleTestProject representing a subProject of another GradleTestProject.
      *
-     * @param subProject name of the subProject.
+     * @param subProject name of the subProject, or the subProject's gradle project path
      * @param rootProject root GradleTestProject.
      */
     private GradleTestProject(@NonNull String subProject, @NonNull GradleTestProject rootProject) {
-        name = subProject;
+        name = subProject.substring(subProject.lastIndexOf(':') + 1);
 
-        testDir = new File(rootProject.getTestDir(), subProject);
+        testDir = new File(rootProject.getTestDir(), subProject.replace(":", "/"));
         assertTrue("No subproject dir at " + getTestDir().toString(), getTestDir().isDirectory());
 
         buildFile = new File(getTestDir(), "build.gradle");
@@ -869,11 +869,12 @@ public final class GradleTestProject implements TestRule {
                 SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
     }
 
-    /** Create a GradleTestProject representing a subproject. */
+    /**
+     * Create a GradleTestProject representing a subproject.
+     *
+     * @param name name of the subProject, or the subProject's gradle project path
+     */
     public GradleTestProject getSubproject(String name) {
-        if (name.startsWith(":")) {
-            name = name.substring(1);
-        }
         return new GradleTestProject(name, rootProject);
     }
 
