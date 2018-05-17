@@ -1,6 +1,9 @@
 <?xml version="1.0" ?>
 <sdk_metadata>
-  <library  groupId="AppsFlyer" artifactId="af-android-sdk" recommended-version="4.8.9">
+  <library  groupId="com.android.volley" artifactId="volley" recommended-version="1.1.0">
+    <versions from="1.1.0-rc2" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+    <versions from="1.1.0-rc1" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+    <versions from="1.0.0" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
   </library>
   <library  groupId="com.tune" artifactId="tune-marketing-console-sdk" recommended-version="5.2.1">
     <versions from="5.1.1" status="deprecated" url="https://developers.tune.com/sdk/migrating-to-android-4-8-0-and-above/" version-literal="com.tune.BuildConfig.5.1.1" />
@@ -14,6 +17,12 @@
     <versions from="4.0.0" to="4.7.1" status="deprecated" description="Bug affecting app stability" url="https://developers.tune.com/sdk/migrating-to-android-4-8-0-and-above/" version-literal="com.tune.BuildConfig.4.0.0" />
     <versions from="3.0.0" to="3.11.4" status="deprecated" description="Bug affecting app stability" url="https://developers.tune.com/sdk/migrating-to-android-4-8-0-and-above/" version-literal="com.tune.BuildConfig.3.0.0" />
     <versions from="0.0.0" to="3.0.0" status="deprecated" description="Bug affecting app stability" />
+  </library>
+  <library  groupId="com.google.firebase" artifactId="firebase-analytics" recommended-version="15.0.0">
+  </library>
+  <library  groupId="com.google.guava" artifactId="guava" recommended-version="24.1-jre">
+  </library>
+  <library  groupId="AppsFlyer" artifactId="af-android-sdk" recommended-version="4.8.9">
   </library>
   <library  groupId="com.kochava" artifactId="tracker" recommended-version="3.3.1">
     <versions from="3.1.0" status="deprecated" description="Bug affecting SDK performance" version-literal="'AndroidTracker 3.1.0', 'control.kochava.com'" />

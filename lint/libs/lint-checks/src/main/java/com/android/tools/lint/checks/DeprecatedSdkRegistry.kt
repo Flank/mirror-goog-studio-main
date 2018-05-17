@@ -131,6 +131,18 @@ abstract class DeprecatedSdkRegistry(
                     val description = versionElement.getAttribute(ATTR_DESCRIPTION)
                     val groupId = dependency.groupId ?: return null
                     val artifactId = dependency.artifactId ?: return null
+
+                    if (recommendedVersion.isNotEmpty()) {
+                        // In case the most recent (buggy) version is open ended, and there
+                        // is a recommended version, we'll assume that the recommended version
+                        // is fine.
+                        val version = dependency.version
+                        val recommended = GradleVersion.tryParse(recommendedVersion)
+                        if (version != null && recommended != null && version >= recommended) {
+                            return null
+                        }
+                    }
+
                     return DeprecatedLibrary(
                         groupId,
                         artifactId,
