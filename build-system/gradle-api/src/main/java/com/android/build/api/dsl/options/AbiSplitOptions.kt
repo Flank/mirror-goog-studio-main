@@ -24,6 +24,8 @@ import org.gradle.api.Incubating
  *
  * See [FULL_APK
  * Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface AbiSplitOptions : SplitOptions {

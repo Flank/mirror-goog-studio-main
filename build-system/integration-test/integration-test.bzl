@@ -32,6 +32,7 @@ def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test
     native.java_import(
       name = kotlin_java_import_name,
       jars = [kotlin_name],
+      deps =  java_deps,
     )
     java_deps += [":" + kotlin_java_import_name]
     test_classes_target_names += [kotlin_java_import_name]
@@ -84,3 +85,17 @@ def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test
       ] + runtime_deps + [':' + name for name in test_classes_target_names],
       **kwargs
   )
+
+
+def single_gradle_integration_test(name, deps, data, maven_repos, runtime_deps=[], tags=[], **kwargs):
+  gradle_integration_test(
+      name = name,
+      srcs = native.glob([name + ".java", name + ".kt"]),
+      deps = deps,
+      data = data,
+      dirs = ["."],
+      shard_count = 1,
+      maven_repos = maven_repos,
+      runtime_deps = runtime_deps,
+      tags = tags,
+      **kwargs)

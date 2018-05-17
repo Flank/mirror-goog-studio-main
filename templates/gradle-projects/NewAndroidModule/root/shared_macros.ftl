@@ -21,7 +21,7 @@
 </manifest></#if>
 </#macro>
 
-<#macro androidConfig hasApplicationId=false applicationId='' hasTests=false canHaveCpp=false isBaseFeature=false>
+<#macro androidConfig hasApplicationId=false applicationId='' hasTests=false canHaveCpp=false isBaseFeature=false canUseProguard=false>
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
     <#if compareVersionsIgnoringQualifiers(gradlePluginVersion, '3.0.0') lt 0>buildToolsVersion "${buildToolsVersion}"</#if>
@@ -59,7 +59,9 @@ android {
     }
 </#if>
 
+<#if canUseProguard>
 <@proguard.proguardConfig />
+</#if>
 
 <#if canHaveCpp && (includeCppSupport!false)>
     externalNativeBuild {

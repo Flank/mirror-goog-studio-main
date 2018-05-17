@@ -22,6 +22,9 @@ import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
 import org.gradle.api.Incubating
 
+/**
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface Variant : VariantProperties, ProductFlavorOrVariant, BuildTypeOrVariant,
         VariantOrExtensionProperties, CommonVariantProperties

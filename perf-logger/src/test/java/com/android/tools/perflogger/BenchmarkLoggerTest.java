@@ -83,6 +83,9 @@ public class BenchmarkLoggerTest {
         InputStream outputStream = new FileInputStream(outputFile);
         String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
         assertThat(output).isEqualTo(expected);
+
+        // Delete file to prevent it from being uploaded.
+        outputFile.delete();
     }
 
     @Test
@@ -133,5 +136,8 @@ public class BenchmarkLoggerTest {
         InputStream outputStream = new FileInputStream(outputFile);
         String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
         assertThat(output).isEqualTo(expected);
+
+        // Delete file to prevent it from being uploaded.
+        outputFile.delete();
     }
 }

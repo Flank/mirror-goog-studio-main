@@ -39,7 +39,7 @@ fun matchPattern(line: String): Boolean = line.matches(BUS_REGEX)
 
 class LinuxParser : OutputParser {
   override fun parse(output: InputStream): List<UsbDevice> {
-    return BufferedReader(InputStreamReader(output)).lines()
+    return BufferedReader(InputStreamReader(output, Charsets.UTF_8)).lines()
       .filter { l -> matchPattern(l) }
       .map { l -> createUsbDevice(l) }.collect(Collectors.toList())
 

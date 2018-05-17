@@ -24,10 +24,10 @@ import java.util.List;
 /**
  * A Resource value representing a declare-styleable resource.
  *
- * {@link #getValue()} will return null, instead use {@link #getAllAttributes()} to
- * get the list of attributes defined in the declare-styleable.
+ * <p>{@link #getValue()} will return null, instead use {@link #getAllAttributes()} to get the list
+ * of attributes defined in the declare-styleable.
  */
-public class DeclareStyleableResourceValue extends ResourceValue {
+public class DeclareStyleableResourceValue extends ResourceValueImpl {
     @NonNull
     private List<AttrResourceValue> mAttrs = new ArrayList<>();
 

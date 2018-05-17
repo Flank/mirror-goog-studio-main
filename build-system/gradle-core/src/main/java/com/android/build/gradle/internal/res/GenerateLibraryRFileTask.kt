@@ -80,10 +80,11 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
         private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
+    @Suppress("MemberVisibilityCanBePrivate")
     @get:Input val packageForR get() = packageForRSupplier.get()
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: BuildableArtifact
+    @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: FileCollection
         private set
 
     @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
@@ -99,7 +100,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
                 .outputFile
 
-        val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile())
+        val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile)
 
         val symbolTable = parseResourceSourceSetDirectory(
                 inputResourcesDir.single(),
@@ -148,8 +149,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.variantName = variantScope.fullVariantName
 
-            task.platformAttrRTxt = variantScope.globalScope.artifacts
-                .getFinalArtifactFiles(InternalArtifactType.PLATFORM_R_TXT)
+            task.platformAttrRTxt = variantScope.globalScope.platformAttrs
 
             task.applicationIdSupplier = TaskInputHelper.memoize {
                 variantScope.variantData.variantConfiguration.applicationId

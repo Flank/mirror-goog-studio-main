@@ -93,7 +93,7 @@ class MacParser : OutputParser {
   }
 
   override fun parse(output: InputStream): List<UsbDevice> {
-    return BufferedReader(InputStreamReader(output))
+    return BufferedReader(InputStreamReader(output, Charsets.UTF_8))
       .lines().skip(1) // skip the first line USB: output
       .collect(USBDeclarationCollector)
       .map { usbLines -> extractValues(usbLines) }

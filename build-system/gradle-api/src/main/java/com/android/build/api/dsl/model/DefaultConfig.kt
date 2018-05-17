@@ -25,6 +25,8 @@ import org.gradle.api.Incubating
  * You can override any `defaultConfig` property when
  * [configuring product flavors](https://d.android.com/studio/build/build-variants.html#product-flavors).
  *
+ * This interface is not currently usable. It is a work in progress.
+ *
  * @see [ProductFlavor][com.android.build.api.dsl.model.ProductFlavor]
  */
 @Incubating

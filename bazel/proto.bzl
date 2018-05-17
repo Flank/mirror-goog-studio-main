@@ -109,6 +109,7 @@ _gen_proto_rule = rule(
 
 def java_proto_library(
     name, srcs=None, proto_deps=[], java_deps=[], pom=None, visibility=None, grpc_support=False, protoc_version="3.4.0",
+    proto_java_runtime_library=["//tools/base/third_party:com.google.protobuf_protobuf-java"],
     **kwargs):
   srcs_name = name + "_srcs"
   outs = [srcs_name + ".srcjar"]
@@ -128,17 +129,27 @@ def java_proto_library(
     )
 
   java_deps = list(java_deps)
-  java_deps += ["//tools/base/third_party:com.google.protobuf_protobuf-java"]
+  java_deps += proto_java_runtime_library
   if grpc_support:
     java_deps += ["//tools/base/third_party:io.grpc_grpc-all"]
-  maven_java_library(
-      name  = name,
-      pom = pom,
-      srcs = outs,
-      deps = java_deps,
-      visibility = visibility,
-      **kwargs
-  )
+
+  if pom:
+    maven_java_library(
+        name  = name,
+        pom = pom,
+        srcs = outs,
+        deps = java_deps,
+        visibility = visibility,
+        **kwargs
+    )
+  else:
+    native.java_library(
+       name = name,
+       srcs = outs,
+       deps = java_deps,
+       visibility = visibility,
+       **kwargs
+    )
 
 def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, grpc_support=False, tags=None):
   outs = []

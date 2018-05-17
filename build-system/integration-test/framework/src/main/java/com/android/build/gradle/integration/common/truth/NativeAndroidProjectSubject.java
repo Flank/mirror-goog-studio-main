@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A Truth subject for testing NativeAndroidProject
@@ -126,9 +127,10 @@ public class NativeAndroidProjectSubject
         Set<Path> intermediates = Sets.newHashSet();
         for (File intermediatesFolder : intermediatesFolders) {
             Path intermediatesPath = Paths.get(intermediatesFolder.getPath());
-            intermediates.addAll( Files.find(intermediatesPath,
-                    12, // Recursion depth
-                    (path, attributes) -> attributes.isRegularFile()).collect(Collectors.toSet()));
+            try (Stream<Path> stream = Files.find(intermediatesPath, 12,
+                    (path, attributes) -> attributes.isRegularFile())) {
+                stream.forEach(it -> intermediates.add(it));
+            }
         }
         return intermediates;
     }

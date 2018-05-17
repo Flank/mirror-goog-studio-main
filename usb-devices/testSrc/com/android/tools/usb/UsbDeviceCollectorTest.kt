@@ -32,7 +32,6 @@
 
 package com.android.tools.usb
 
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -51,8 +50,8 @@ class UsbDeviceCollectorTest {
     }
 
     @Test
-    fun testWindowsNotSupported() {
-        assertFalse(collector.isSupported("Windows 8"))
+    fun testWindowsSupported() {
+        assertTrue(collector.isSupported("Windows 8"))
     }
 
     @Test

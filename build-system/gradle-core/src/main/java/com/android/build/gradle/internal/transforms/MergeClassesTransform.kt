@@ -16,19 +16,14 @@
 
 package com.android.build.gradle.internal.transforms
 
-import com.android.build.api.transform.JarInput
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
-import com.android.build.gradle.internal.scope.ExistingBuildElements.Companion.executor
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.JarMerger.MODULE_PATH
-import com.android.ide.common.internal.WaitableExecutor
-import com.android.utils.FileUtils
 import java.io.File
 import java.util.function.Predicate
 import java.util.regex.Pattern

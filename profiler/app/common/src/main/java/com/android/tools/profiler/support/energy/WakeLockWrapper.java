@@ -33,6 +33,8 @@ import java.util.Map;
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class WakeLockWrapper {
 
+    private static final String DEFAULT_TAG = "UNKNOWN";
+
     /** Data structure for wake lock creation parameters. */
     private static final class CreationParams {
         final int myLevelAndFlags;
@@ -125,7 +127,7 @@ public final class WakeLockWrapper {
         if (!eventIdMap.containsKey(wakeLock)) {
             eventIdMap.put(wakeLock, EventIdGenerator.nextId());
         }
-        CreationParams creationParams = new CreationParams(1, "UNKNOWN");
+        CreationParams creationParams = new CreationParams(1, DEFAULT_TAG);
         if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
             creationParams = wakeLockCreationParamsMap.get(wakeLock);
         } else {
@@ -171,14 +173,15 @@ public final class WakeLockWrapper {
      */
     public static void onReleaseExit() {
         ReleaseParams releaseParams = releaseWakeLockData.get();
-        if (eventIdMap.containsKey(releaseParams.myWakeLock)) {
-            sendWakeLockReleased(
-                    eventIdMap.get(releaseParams.myWakeLock),
-                    releaseParams.myFlags,
-                    releaseParams.myWakeLock.isHeld(),
-                    // API release is one level down of user code or 3rd party code.
-                    StackTrace.getStackTrace(1));
+        if (!eventIdMap.containsKey(releaseParams.myWakeLock)) {
+            eventIdMap.put(releaseParams.myWakeLock, EventIdGenerator.nextId());
         }
+        sendWakeLockReleased(
+                eventIdMap.get(releaseParams.myWakeLock),
+                releaseParams.myFlags,
+                releaseParams.myWakeLock.isHeld(),
+                // API release is one level down of user code or 3rd party code.
+                StackTrace.getStackTrace(1));
     }
 
     // Native functions to send wake lock events to perfd.

@@ -35,6 +35,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.testutils.truth.FileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
@@ -139,7 +140,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -268,7 +269,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -397,7 +398,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -525,7 +526,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -651,7 +652,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -779,7 +780,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -917,7 +918,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File addedJar = output.getContentLocation("added", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(addedJar.getParentFile());
@@ -997,7 +998,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File addedJar = output.getContentLocation("added",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 projectClass.getScopes(), Format.JAR);
@@ -1108,7 +1109,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File addedJar = output.getContentLocation("added",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.PROJECT), Format.JAR);
@@ -1286,7 +1287,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -1366,7 +1367,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // however, we split the output into 2 streams, one for each content type.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File classesOutput = output.getContentLocation("classes",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 projectClass.getScopes(), Format.DIRECTORY);
@@ -1464,7 +1465,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // however, we split the output into 2 streams, one for each content type.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File classesOutput = output.getContentLocation("classes",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.PROJECT),
@@ -1616,7 +1617,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -1755,7 +1756,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput();
+        TransformOutputProvider output = projectClass.asOutput(false);
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -1854,7 +1855,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // only these jars could be detected as deleted.
-        TransformOutputProvider output2 = scope2.asOutput();
+        TransformOutputProvider output2 = scope2.asOutput(false);
         File scope2RootFolder = output2.getContentLocation("foo", scope2.getContentTypes(),
                 scope2.getScopes(), Format.DIRECTORY);
         mkdirs(scope2RootFolder);
@@ -1886,7 +1887,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // only these jars could be detected as deleted.
-        TransformOutputProvider output4 = scope4.asOutput();
+        TransformOutputProvider output4 = scope4.asOutput(false);
         File scope4RootFolder = output4.getContentLocation("foo", scope4.getContentTypes(),
                 scope4.getScopes(), Format.DIRECTORY);
         mkdirs(scope4RootFolder);
@@ -2386,7 +2387,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(stream);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = stream.asOutput();
+        TransformOutputProvider output = stream.asOutput(false);
         File outputFolder = output.getContentLocation("foo", stream.getContentTypes(),
                 stream.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -2421,6 +2422,59 @@ public class TransformTaskTest extends TaskTestUtils {
                         "Unexpected scopes found in folder '%s'. Required: PROJECT. Found: EXTERNAL_LIBRARIES, PROJECT",
                         rootFolder));
         transformTask.transform(inputBuilder().build());
+    }
+
+    @Test
+    public void oldSubStreamFileIgnored()
+            throws IOException, TransformException, InterruptedException {
+        // create a stream and add it to the pipeline
+        File rootFolder = temporaryFolder.newFolder();
+        IntermediateStream stream =
+                IntermediateStream.builder(project, "", "my dependency")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .build();
+        transformManager.addStream(stream);
+
+        // create the transform
+        TestTransform t =
+                TestTransform.builder()
+                        .setInputTypes(DefaultContentType.CLASSES)
+                        .setScopes(Scope.PROJECT)
+                        .setIncremental(false)
+                        .build();
+
+        // add the transform to the manager
+        TransformTask task =
+                transformManager
+                        .addTransform(taskFactory, scope, t)
+                        .orElseThrow(mTransformTaskFailed);
+        // and get the real gradle task object
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
+        assertThat(transformTask).isNotNull();
+
+        // mimic an old __content__.json file with too many scopes from a previous build
+        File transformOutputFolder = transformTask.getStreamOutputFolder();
+        assertThat(transformOutputFolder).isNotNull();
+        File subStreamFile = new File(transformOutputFolder, SubStream.FN_FOLDER_CONTENT);
+        FileSubject.assertThat(subStreamFile).doesNotExist();
+        String subStreamFileContents =
+                ""
+                        + "[{\"name\":\"foo\","
+                        + "\"index\":0,"
+                        + "\"scopes\":[\"EXTERNAL_LIBRARIES\",\"PROJECT\"],"
+                        + "\"types\":[\"CLASSES\"],"
+                        + "\"format\":\"DIRECTORY\","
+                        + "\"present\":true}]";
+        FileUtils.createFile(subStreamFile, subStreamFileContents);
+        FileSubject.assertThat(subStreamFile).exists();
+        FileSubject.assertThat(subStreamFile).hasContents(subStreamFileContents);
+
+        // run the transform
+        transformTask.transform(inputBuilder().build());
+        FileSubject.assertThat(subStreamFile).exists();
+        FileSubject.assertThat(subStreamFile).hasContents("[]");
     }
 
     static InputFileBuilder fileBuilder() {

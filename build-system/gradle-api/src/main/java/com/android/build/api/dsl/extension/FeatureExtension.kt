@@ -18,7 +18,10 @@ package com.android.build.api.dsl.extension
 
 import org.gradle.api.Incubating
 
-/** 'android' extension for 'com.android.feature' projects.  */
+/** 'android' extension for 'com.android.feature' projects.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface FeatureExtension : LibraryExtension, ApkProperties {
     /** Whether the feature module is the base feature.  */

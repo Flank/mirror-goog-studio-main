@@ -22,6 +22,7 @@ import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ImmutableMap;
@@ -320,7 +321,8 @@ public class ResourceItemResolverTest extends TestCase {
         resolver.setLookupChainList(chain);
         chain.clear();
         ResourceValue target =
-                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STRING, "dummy", "?foo");
+                new ResourceValueImpl(
+                        ResourceNamespace.RES_AUTO, ResourceType.STRING, "dummy", "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
         assertEquals(
                 "?foo => ?android:colorForeground => @color/bright_foreground_light => "

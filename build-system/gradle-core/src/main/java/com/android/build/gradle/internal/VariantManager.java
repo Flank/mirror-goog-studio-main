@@ -41,12 +41,14 @@ import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
+import com.android.build.gradle.internal.dependency.AndroidXMapping;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.MockableJarTransform;
+import com.android.build.gradle.internal.dependency.PlatformAttrTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -125,9 +127,9 @@ public class VariantManager implements VariantModel {
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
-            "androidx.multidex:multidex:1.0.0-alpha1";
+            AndroidXMapping.MAPPINGS.get("com.android.support:multidex");
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
-            "androidx.multidex:multidex-instrumentation:1.0.0-alpha1";
+            AndroidXMapping.MAPPINGS.get("com.android.support:multidex-instrumentation");
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
@@ -733,6 +735,14 @@ public class VariantManager implements VariantModel {
                     reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
                     reg.artifactTransform(
                             MockableJarTransform.class, config -> config.params(false));
+                });
+
+        // transform to extract attr info from android.jar
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_PLATFORM_ATTR);
+                    reg.artifactTransform(PlatformAttrTransform.class);
                 });
 
         boolean sharedLibSupport =

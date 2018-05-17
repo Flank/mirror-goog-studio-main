@@ -24,8 +24,10 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.model.SyncIssue
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,7 +57,7 @@ import org.junit.runners.Parameterized
 class MinifyFeaturesTest(
         val codeShrinker: CodeShrinker,
         val multiApkMode: MultiApkMode,
-        dexArchiveMode: DexArchiveMode) {
+        val dexArchiveMode: DexArchiveMode) {
 
     enum class MultiApkMode {
         DYNAMIC_APP, INSTANT_APP
@@ -756,6 +758,19 @@ class MinifyFeaturesTest(
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseModule/Main;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+    }
+
+    @Test
+    fun testSyncError() {
+        Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
+        Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
+        project.getSubproject("otherFeature1").buildFile.appendText(
+            "android.buildTypes.minified.minifyEnabled true")
+        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        assertThat(model.rootBuildModelMap[":otherFeature1"])
+            .hasSingleError(SyncIssue.TYPE_GENERIC)
+            .that()
+            .hasMessageThatContains("cannot set minifyEnabled to true.")
     }
 }
 

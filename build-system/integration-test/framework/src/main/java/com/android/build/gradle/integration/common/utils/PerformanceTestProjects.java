@@ -621,17 +621,15 @@ public class PerformanceTestProjects {
                         + "\n"
                         + "\n // End support lib version fixes. \n");
 
-        List<Path> allBuildFiles =
-                Files.find(
-                                project.getTestDir().toPath(),
-                                Integer.MAX_VALUE,
-                                (path, attrs) ->
-                                        path.getFileName().toString().equals("build.gradle"))
-                        .filter(
-                                p ->
-                                        !PathUtils.toSystemIndependentPath(p)
-                                                .endsWith("gradle/SourceTemplate/app/build.gradle"))
-                        .collect(Collectors.toList());
+        List<Path> allBuildFiles;
+        try (Stream<Path> stream = Files.find(project.getTestDir().toPath(), Integer.MAX_VALUE,
+                (path, attrs) -> path.getFileName().toString().equals("build.gradle"))) {
+            allBuildFiles = stream.filter(
+                    p ->
+                            !PathUtils.toSystemIndependentPath(p)
+                                    .endsWith("gradle/SourceTemplate/app/build.gradle"))
+                    .collect(Collectors.toList());
+        }
 
         modifyBuildFiles(allBuildFiles);
         return project;

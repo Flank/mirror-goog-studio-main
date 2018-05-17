@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.ndk;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,6 +31,9 @@ public class NdkSanAngelesConnectedTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
+        // Mips disabled due to b/79847055
+        TestFileUtils.searchAndReplace(project.getBuildFile(), ", 'mips'", "");
+        TestFileUtils.searchAndReplace(project.getBuildFile(), "mips:2, x86:3", "x86:2");
         project.executeConnectedCheck();
     }
 }

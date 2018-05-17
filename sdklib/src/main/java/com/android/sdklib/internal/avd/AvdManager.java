@@ -1344,8 +1344,8 @@ public class AvdManager {
      * @return A new {@link AvdInfo} with an {@link AvdStatus} indicating whether this AVD is
      *         valid or not.
      */
-    @NonNull
-    private AvdInfo parseAvdInfo(@NonNull File iniPath, @NonNull ILogger log) {
+    @VisibleForTesting
+    public AvdInfo parseAvdInfo(@NonNull File iniPath, @NonNull ILogger log) {
         Map<String, String> map = parseIniFile(
                 new FileOpFileWrapper(iniPath, mFop, false),
                 log);

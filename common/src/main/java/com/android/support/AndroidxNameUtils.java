@@ -54,6 +54,14 @@ public class AndroidxNameUtils {
             AndroidxMigrationParserKt.parseMigrationFile(
                     new MigrationParserVisitor() {
                         @Override
+                        public void visitGradleCoordinateUpgrade(
+                                @NonNull String groupName,
+                                @NonNull String artifactName,
+                                @NonNull String newBaseVersion) {
+                            // AndroidxName does not use the coordinate upgrades
+                        }
+
+                        @Override
                         public void visitGradleCoordinate(
                                 @NonNull String oldGroupName,
                                 @NonNull String oldArtifactName,
@@ -63,8 +71,9 @@ public class AndroidxNameUtils {
                             coordinatesTransformMap.put(
                                     oldGroupName + ":" + oldArtifactName,
                                     newGroupName + ":" + newArtifactName);
-                            versionedCoordinatesTransformMap.put(oldGroupName + ":" + oldArtifactName,
-                                                            newGroupName + ":" + newArtifactName + ":" + newBaseVersion);
+                            versionedCoordinatesTransformMap.put(
+                                    oldGroupName + ":" + oldArtifactName,
+                                    newGroupName + ":" + newArtifactName + ":" + newBaseVersion);
                         }
 
                         @Override

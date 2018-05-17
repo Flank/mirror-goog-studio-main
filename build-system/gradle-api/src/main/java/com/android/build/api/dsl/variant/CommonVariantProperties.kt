@@ -20,7 +20,10 @@ import com.android.build.api.sourcesets.AndroidSourceSet
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** common variant properties to all variants */
+/** common variant properties to all variants
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface CommonVariantProperties {
 

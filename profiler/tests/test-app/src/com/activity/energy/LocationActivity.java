@@ -120,4 +120,17 @@ public class LocationActivity extends PerfdTestActivity {
         client.removeLocationUpdates(intent);
         System.out.println("GMS INTENT LOCATION UPDATES");
     }
+
+    public void updateLocationWithoutStartingRequest() {
+        LocationManager locationManager = new LocationManager();
+        LocationListener listener = new DefaultLocationListener();
+        // Use a direct setter instead of requesting location updates.
+        locationManager.setListener(listener);
+        Location location = new Location("network");
+        location.setAccuracy(100.0f);
+        location.setLatitude(30.0);
+        location.setLongitude(60.0);
+        locationManager.changeLocation(location);
+        System.out.println("LISTENER LOCATION UPDATES");
+    }
 }

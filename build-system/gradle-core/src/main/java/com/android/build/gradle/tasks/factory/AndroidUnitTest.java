@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -135,10 +136,19 @@ public class AndroidUnitTest extends Test {
                         testedScope
                                 .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS);
-                runTestsTask.resCollection =
-                        testedScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.MERGED_NOT_COMPILED_RES);
+                boolean enableBinaryResources =
+                        scope.getGlobalScope()
+                                .getProjectOptions()
+                                .get(BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
+                if (enableBinaryResources) {
+                    runTestsTask.resCollection =
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.APK_FOR_LOCAL_TEST);
+                } else {
+                    runTestsTask.resCollection =
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.MERGED_RES);
+                }
             }
             runTestsTask.mergedManifest =
                     testedScope

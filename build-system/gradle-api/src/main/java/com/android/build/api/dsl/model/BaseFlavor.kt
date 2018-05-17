@@ -20,7 +20,10 @@ import com.android.build.api.dsl.options.PostProcessingFilesOptions
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** Base DSL object used to configure product flavors.  */
+/** Base DSL object used to configure product flavors.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface BaseFlavor {
 

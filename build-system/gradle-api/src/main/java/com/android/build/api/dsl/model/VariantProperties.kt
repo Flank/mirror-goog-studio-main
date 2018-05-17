@@ -25,7 +25,10 @@ import org.gradle.api.Action
 import org.gradle.api.Incubating
 import java.io.File
 
-/** Properties common to Build Type, Product Flavors and Variants  */
+/** Properties common to Build Type, Product Flavors and Variants.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface VariantProperties {
 

@@ -32,6 +32,8 @@ import org.gradle.api.Incubating
  *
  * Preview versions of the platform are identified by a code name. Their API level is usually set
  * to the value of the previous platform.
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
 interface ApiVersion {

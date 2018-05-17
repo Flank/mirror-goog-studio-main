@@ -188,22 +188,24 @@ public final class LocationManagerWrapper {
      */
     public static void wrapRemoveUpdates(
             LocationManager locationManager, LocationListener listener) {
-        if (listenerIdMap.containsKey(listener)) {
-            sendListenerLocationUpdateRemoved(
-                    // API removeUpdates is one level down of user code.
-                    listenerIdMap.get(listener), StackTrace.getStackTrace(1));
+        if (!listenerIdMap.containsKey(listener)) {
+            listenerIdMap.put(listener, EventIdGenerator.nextId());
         }
+        sendListenerLocationUpdateRemoved(
+                // API removeUpdates is one level down of user code.
+                listenerIdMap.get(listener), StackTrace.getStackTrace(1));
     }
 
     public static void wrapRemoveUpdates(LocationManager locationManager, PendingIntent intent) {
-        if (intentIdMap.containsKey(intent)) {
-            sendIntentLocationUpdateRemoved(
-                    intentIdMap.get(intent),
-                    intent.getCreatorPackage(),
-                    intent.getCreatorUid(),
-                    // API removeUpdates is one level down of user code.
-                    StackTrace.getStackTrace(1));
+        if (!intentIdMap.containsKey(intent)) {
+            intentIdMap.put(intent, EventIdGenerator.nextId());
         }
+        sendIntentLocationUpdateRemoved(
+                intentIdMap.get(intent),
+                intent.getCreatorPackage(),
+                intent.getCreatorUid(),
+                // API removeUpdates is one level down of user code.
+                StackTrace.getStackTrace(1));
     }
 
     /**
@@ -214,14 +216,15 @@ public final class LocationManagerWrapper {
      */
     public static void wrapOnLocationChanged(LocationListener listener, Location location) {
         listener.onLocationChanged(location);
-        if (listenerIdMap.containsKey(listener)) {
-            sendListenerLocationChanged(
-                    listenerIdMap.get(listener),
-                    location.getProvider(),
-                    location.getAccuracy(),
-                    location.getLatitude(),
-                    location.getLongitude());
+        if (!listenerIdMap.containsKey(listener)) {
+            listenerIdMap.put(listener, EventIdGenerator.nextId());
         }
+        sendListenerLocationChanged(
+                listenerIdMap.get(listener),
+                location.getProvider(),
+                location.getAccuracy(),
+                location.getLatitude(),
+                location.getLongitude());
     }
 
     /**

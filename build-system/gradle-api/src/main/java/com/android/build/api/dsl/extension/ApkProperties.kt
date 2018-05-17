@@ -21,7 +21,10 @@ import com.android.build.api.dsl.options.Splits
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/** Partial extension properties for modules that generate APKs  */
+/** Partial extension properties for modules that generate APKs
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface ApkProperties {
 

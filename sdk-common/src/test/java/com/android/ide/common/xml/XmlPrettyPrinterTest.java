@@ -168,54 +168,53 @@ public class XmlPrettyPrinterTest {
     public void testNodeTypes() throws Exception {
         // Ensures that a document with all kinds of node types is serialized correctly
         checkFormat(
-
-                "<!--\n" +
-                "/**\n" +
-                " * Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
-                " */\n" +
-                "-->\n" +
-                "<!DOCTYPE metadata [\n" +
-                "<!ELEMENT metadata (category)*>\n" +
-                "<!ENTITY % ISOLat2\n" +
-                "         SYSTEM \"http://www.xml.com/iso/isolat2-xml.entities\" >\n" +
-                "]>\n" +
-                "<LinearLayout\n" +
-                "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    android:orientation=\"vertical\">\n" +
-                "<![CDATA[\n" +
-                "This is character data!\n" +
-                "<!-- This is not a comment! -->\n" +
-                "and <this is not an element>\n" +
-                "]]>         \n" +
-                "This is text: &lt; and &amp;\n" +
-                "<!-- comment 1 \"test\"... -->\n" +
-                "<!-- ... comment2 -->\n" +
-                "%ISOLat2;        \n" +
-                "<!-- \n" +
-                "Type <key>less-than</key> (&#x3C;)\n" +
-                "-->        \n" +
-                "</LinearLayout>",
+                "<!--\n"
+                        + "/**\n"
+                        + " * Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                        + " */\n"
+                        + "-->\n"
+                        + "<!DOCTYPE metadata [\n"
+                        + "<!ELEMENT metadata (category)*>\n"
+                        + "<!ENTITY % ISOLat2\n"
+                        + "         SYSTEM \"http://www.xml.com/iso/isolat2-xml.entities\" >\n"
+                        + "]>\n"
+                        + "<LinearLayout\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:orientation=\"vertical\">\n"
+                        + "<![CDATA[\n"
+                        + "This is character data!\n"
+                        + "<!-- This is not a comment! -->\n"
+                        + "and <this is not an element>\n"
+                        + "]]>         \n"
+                        + "This is text: &lt; and &amp;\n"
+                        + "<!-- comment 1 \"test\"... -->\n"
+                        + "<!-- ... comment2 -->\n"
+                        + "%ISOLat2;        \n"
+                        + "<!-- \n"
+                        + "Type <key>less-than</key> (&#x3C;)\n"
+                        + "-->        \n"
+                        + "</LinearLayout>",
 
                 //"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<!--\n" +
-                "/**\n" +
-                " * Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
-                " */\n" +
-                "-->\n" +
-                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    android:orientation=\"vertical\" >\n" +
-                "<![CDATA[\n" +
-                "This is character data!\n" +
-                "<!-- This is not a comment! -->\n" +
-                "and <this is not an element>\n" +
-                "]]>\n" +
-                "This is text: &lt; and &amp;\n" +
-                "    <!-- comment 1 \"test\"... -->\n" +
-                "    <!-- ... comment2 -->\n" +
-                "%ISOLat2;        \n" +
-                "<!-- Type <key>less-than</key> (&#x3C;) -->\n" +
-                "\n" +
-                "</LinearLayout>");
+                "<!--\n"
+                        + "/**\n"
+                        + " * Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+                        + " */\n"
+                        + "-->\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "<![CDATA[\n"
+                        + "This is character data!\n"
+                        + "<!-- This is not a comment! -->\n"
+                        + "and <this is not an element>\n"
+                        + "]]>\n"
+                        + " This is text: &lt; and &amp;\n"
+                        + "    <!-- comment 1 \"test\"... -->\n"
+                        + "    <!-- ... comment2 -->\n"
+                        + "%ISOLat2;        \n"
+                        + "<!-- Type <key>less-than</key> (&#x3C;) -->\n"
+                        + "\n"
+                        + "</LinearLayout>");
     }
 
     @Test
@@ -1186,6 +1185,34 @@ public class XmlPrettyPrinterTest {
                 + "\n"
                 + "</resources>",
             xml);
+    }
+
+    @Test
+    public void testCdata() throws Exception {
+        String xml =
+                ""
+                        + "<resources>\n"
+                        + "    <string name=\"cdata\">Some text\n"
+                        + "        <![CDATA[and then CDATA text]]></string>\n"
+                        + "    <string name=\"cdata2\">Some text<![CDATA[ and then CDATA text]]></string>\n"
+                        + "    <string name=\"cdata3\"><![CDATA[CDATA text]]> <![CDATA[more CDATA text]]></string>\n"
+                        + "</resources>";
+
+        Document doc = parse(xml);
+        assertNotNull(doc);
+
+        xml = prettyPrint(doc);
+        assertEquals(
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "\n"
+                        + "    <string name=\"cdata\">Some text <![CDATA[and then CDATA text]]></string>\n"
+                        + "    <string name=\"cdata2\">Some text<![CDATA[ and then CDATA text]]></string>\n"
+                        + "    <string name=\"cdata3\"><![CDATA[CDATA text]]> <![CDATA[more CDATA text]]></string>\n"
+                        + "\n"
+                        + "</resources>",
+                xml);
     }
 
     @Test

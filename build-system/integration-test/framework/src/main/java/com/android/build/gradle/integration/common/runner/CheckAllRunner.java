@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.runner;
 
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.testutils.TestUtils;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +29,9 @@ import org.junit.runners.model.RunnerScheduler;
 public class CheckAllRunner extends FilterableParameterized {
 
     private static class ThreadPoolScheduler implements RunnerScheduler {
+        private static final LoggerWrapper logger =
+                LoggerWrapper.getLogger(ThreadPoolScheduler.class);
+
         private ExecutorService executor;
 
         public ThreadPoolScheduler() {
@@ -40,9 +44,11 @@ public class CheckAllRunner extends FilterableParameterized {
         public void finished() {
             executor.shutdown();
             try {
-                executor.awaitTermination(60, TimeUnit.MINUTES);
+                boolean waitResult = executor.awaitTermination(90, TimeUnit.MINUTES);
+                logger.info("ThreadPoolScheduler awaitTermination = %s", waitResult);
             }
             catch (InterruptedException exc) {
+                logger.info("ThreadPoolScheduler awaitTermination was interrupted.");
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(exc);
             }

@@ -18,7 +18,11 @@ package com.android.build.api.artifact;
 
 import org.gradle.api.Incubating;
 
-/** Artifact type use for transform */
+/**
+ * Artifact type use for transform
+ *
+ * <p>This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 public enum BuildArtifactType implements ArtifactType {
     JAVAC_CLASSES,

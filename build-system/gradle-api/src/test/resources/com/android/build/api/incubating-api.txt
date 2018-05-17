@@ -1,3 +1,11 @@
+Incubating Android Gradle Plugin API.
+-------------------------------------------------------------------------
+ATTENTION REVIEWER: If this needs to be changed, please make sure changes
+below are backwards compatible.
+-------------------------------------------------------------------------
+Sha256 of below classes:
+378239fcee83f287e7cc2d7431c5ce5942cb384824880d997d12d04f5ac6b779
+-------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
 com.android.build.api.artifact.ArtifactType

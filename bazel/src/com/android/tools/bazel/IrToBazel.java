@@ -141,7 +141,14 @@ public class IrToBazel {
                                         new UnmanagedRule(
                                                 bazel.findPackage(relJar),
                                                 Files.getNameWithoutExtension(relJar));
+                            } else if (isBinFile(relJar)) {
+                                String targetName = Files.getNameWithoutExtension(relJar);
+                                if (targetName.startsWith("lib")) {
+                                    targetName = targetName.substring("lib".length());
+                                }
+                                jarRule = new UnmanagedRule(bazel.findPackage(relJar), targetName);
                             } else {
+                                // This must be a prebuilt jar in the source tree.
                                 Package jarPkg = bazel.findPackage(relJar);
                                 if (jarPkg != null) {
                                     String packageRelative = jarPkg.getPackageDir().toPath()
@@ -221,8 +228,12 @@ public class IrToBazel {
         return listener.getUpdatedPackages();
     }
 
-    private boolean isGenFile(String relJar) {
-        return relJar.startsWith("bazel-genfiles") || relJar.startsWith("bazel-bin");
+    private static boolean isGenFile(String relJar) {
+        return relJar.startsWith("bazel-genfiles");
+    }
+
+    private static boolean isBinFile(String relJar) {
+        return relJar.startsWith("bazel-bin");
     }
 
 

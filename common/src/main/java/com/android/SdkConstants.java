@@ -1665,7 +1665,7 @@ public final class SdkConstants {
     // Material BottomAppBar Attributes
     public static final String ATTR_FAB_ALIGNMENT_MODE = "fabAlignmentMode";
     public static final String ATTR_FAB_ATTACHED = "fabAttached";
-    public static final String ATTR_FAB_CRADLE_DIAMETER = "fabCradleDiameter";
+    public static final String ATTR_FAB_CRADLE_MARGIN = "fabCradleMargin";
     public static final String ATTR_FAB_CRADLE_ROUNDED_CORNER_RADIUS =
             "fabCradleRoundedCornerRadius";
     public static final String ATTR_FAB_CRADLE_VERTICAL_OFFSET = "fabCradleVerticalOffset";
@@ -1678,10 +1678,9 @@ public final class SdkConstants {
     public static final String ATTR_ICON_PADDING = "iconPadding";
     public static final String ATTR_ICON_TINT = "iconTint";
     public static final String ATTR_ICON_TINT_MODE = "iconTintMode";
-    public static final String ATTR_ADDITIONAL_PADDING_LEFT_FOR_ICON =
-            "additionalPaddingLeftForIcon";
-    public static final String ATTR_ADDITIONAL_PADDING_RIGHT_FOR_ICON =
-            "additionalPaddingRightForIcon";
+    public static final String ATTR_ADDITIONAL_PADDING_START_FOR_ICON =
+            "additionalPaddingStartForIcon";
+    public static final String ATTR_ADDITIONAL_PADDING_END_FOR_ICON = "additionalPaddingEndForIcon";
     public static final String ATTR_STROKE_COLOR = "strokeColor";
     public static final String ATTR_STROKE_WIDTH = "strokeWidth";
     public static final String ATTR_CORNER_RADIUS = "cornerRadius";
@@ -2257,6 +2256,9 @@ public final class SdkConstants {
     /** The android.support.design. package prefix */
     public static final String ANDROID_SUPPORT_DESIGN_PKG =
             ANDROID_SUPPORT_PKG_PREFIX + "design."; //$NON-NLS-1$
+
+    /** The com.google.android.material. package prefix */
+    public static final String ANDROID_MATERIAL_PKG = "com.google.android.material.";
 
     /** The android.support.v17.leanback. package prefix */
     public static final String ANDROID_SUPPORT_LEANBACK_V17_PKG =

@@ -19,7 +19,9 @@ package com.android.build.gradle.integration.databinding;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static org.junit.Assert.fail;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -27,6 +29,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.TestUtils;
 import com.android.testutils.truth.DexClassSubject;
 import com.android.testutils.truth.DexSubject;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
@@ -45,6 +48,7 @@ public class DataBindingIncrementalTest {
     public GradleTestProject project;
 
     private static final String EXPORT_INFO_TASK = ":dataBindingExportBuildInfoDebug";
+    private static final String COMPILE_JAVA_TASK = ":compileDebugJavaWithJavac";
 
     private static final String MAIN_ACTIVITY_BINDING_CLASS =
             "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
@@ -60,9 +64,9 @@ public class DataBindingIncrementalTest {
 
 
     private static final String ACTIVITY_MAIN_XML = "src/main/res/layout/activity_main.xml";
-
     private static final String ACTIVITY_MAIN_JAVA
             = "src/main/java/android/databinding/testapp/MainActivity.java";
+    private static final String USER_JAVA = "src/main/java/android/databinding/testapp/User.java";
 
     private final boolean enableV2;
 
@@ -107,6 +111,18 @@ public class DataBindingIncrementalTest {
                 "DataBindingInfo.java");
     }
 
+    private File getGeneratedSourceFile() {
+        return project.getGeneratedSourceFile(
+                "source",
+                "apt",
+                "debug",
+                "android",
+                "databinding",
+                "testapp",
+                "databinding",
+                enableV2 ? "ActivityMainBindingImpl.java" : "ActivityMainBinding.java");
+    }
+
     private File getInfoIntermediate(String fileName) {
         return project.getIntermediateFile("data-binding", "debug", "layout-info", fileName);
     }
@@ -122,24 +138,113 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
-    public void changeJavaCode() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
-        File infoClass = getGeneratedInfoClass();
-        assertThat(infoClass).exists();
-        String contents = FileUtils.readFileToString(infoClass, Charsets.UTF_8);
+    public void changeIrrelevantJavaCode() throws Exception {
+        // Compile fully the first time
+        project.execute(COMPILE_JAVA_TASK);
 
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_JAVA), 44, "return false;");
-        project.executor().run(EXPORT_INFO_TASK);
-        String updated = FileUtils.readFileToString(getGeneratedInfoClass(), Charsets.UTF_8);
-        assertThat(updated).isNotEqualTo(contents);
+        File generatedInfoFile = getGeneratedInfoClass();
+        File generatedSourceFile = getGeneratedSourceFile();
+        assertThat(generatedInfoFile).exists();
+        assertThat(generatedSourceFile).exists();
+
+        String infoFileContents = FileUtils.readFileToString(generatedInfoFile, Charsets.UTF_8);
+        String sourceFileContents = FileUtils.readFileToString(generatedSourceFile, Charsets.UTF_8);
+        long sourceFileTimestamp = generatedSourceFile.lastModified();
+
+        // Make an irrelevant change, ideally data binding should not be invoked. However, since
+        // data binding does not yet fully support incrementality, the sources are currently
+        // re-generated for now.
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(ACTIVITY_MAIN_JAVA), "return true;", "return false;");
+        GradleBuildResult result = project.executor().run(COMPILE_JAVA_TASK);
+
+        assertThat(generatedInfoFile).exists();
+        assertThat(generatedSourceFile).exists();
+        String updatedInfoFileContents =
+                FileUtils.readFileToString(generatedInfoFile, Charsets.UTF_8);
+        String updatedSourceFileContents =
+                FileUtils.readFileToString(generatedSourceFile, Charsets.UTF_8);
+        assertThat(updatedInfoFileContents).isEqualTo(infoFileContents);
+        assertThat(updatedSourceFileContents).isEqualTo(sourceFileContents);
+
+        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        assertThat(result.getTask(COMPILE_JAVA_TASK)).didWork();
+
+        TestUtils.waitForFileSystemTick();
+        assertThat(generatedSourceFile).isNewerThan(sourceFileTimestamp);
+    }
+
+    @Test
+    public void changeRelevantJavaCode() throws Exception {
+        // Compile fully the first time
+        project.execute(COMPILE_JAVA_TASK);
+
+        File generatedInfoFile = getGeneratedInfoClass();
+        File generatedSourceFile = getGeneratedSourceFile();
+        assertThat(generatedInfoFile).exists();
+        assertThat(generatedSourceFile).exists();
+
+        String infoFileContents = FileUtils.readFileToString(generatedInfoFile, Charsets.UTF_8);
+        String sourceFileContents = FileUtils.readFileToString(generatedSourceFile, Charsets.UTF_8);
+        long sourceFileTimestamp = generatedSourceFile.lastModified();
+
+        // Make a relevant change, data binding should be invoked and the sources should be
+        // re-generated.
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(USER_JAVA), "return this.name;", "return name;");
+        GradleBuildResult result = project.executor().run(COMPILE_JAVA_TASK);
+
+        assertThat(generatedInfoFile).exists();
+        assertThat(generatedSourceFile).exists();
+        String updatedInfoFileContents =
+                FileUtils.readFileToString(generatedInfoFile, Charsets.UTF_8);
+        String updatedSourceFileContents =
+                FileUtils.readFileToString(generatedSourceFile, Charsets.UTF_8);
+        assertThat(updatedInfoFileContents).isEqualTo(infoFileContents);
+        assertThat(updatedSourceFileContents).isEqualTo(sourceFileContents);
+
+        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        assertThat(result.getTask(COMPILE_JAVA_TASK)).didWork();
+
+        TestUtils.waitForFileSystemTick();
+        assertThat(generatedSourceFile).isNewerThan(sourceFileTimestamp);
+    }
+
+    @Test
+    public void breakRelevantJavaCodeExpectFailure() throws Exception {
+        // Compile fully the first time
+        project.execute(COMPILE_JAVA_TASK);
+
+        File generatedInfoFile = getGeneratedInfoClass();
+        File generatedSourceFile = getGeneratedSourceFile();
+        assertThat(generatedInfoFile).exists();
+        assertThat(generatedSourceFile).exists();
+
+        // Make a relevant change that breaks data binding, data binding should be invoked and
+        // compilation should fail.
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(USER_JAVA),
+                "public String getName() {",
+                "public String getFirstName() {");
+        try {
+            GradleBuildResult result = project.executor().run(COMPILE_JAVA_TASK);
+            fail("Expected exception");
+        } catch (Exception expected) {
+            assertThat(Throwables.getStackTraceAsString(expected))
+                    .contains("Could not find accessor android.databinding.testapp.User.name");
+        }
     }
 
     @Test
     public void changeVariableName() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 20,
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<variable name=\"foo\" type=\"String\"/>",
                 "<variable name=\"foo2\" type=\"String\"/>");
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 29,
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<TextView android:text='@{foo + \" \" + foo}'",
                 "<TextView android:text='@{foo2 + \" \" + foo2}'");
         project.executor().run("assembleDebug");
 
@@ -158,7 +263,9 @@ public class DataBindingIncrementalTest {
     @Test
     public void addVariable() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 20,
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<variable name=\"foo\" type=\"String\"/>",
                 "<variable name=\"foo\" type=\"String\"/><variable name=\"foo2\" type=\"String\"/>");
         project.executor().run("assembleDebug");
 
@@ -175,8 +282,11 @@ public class DataBindingIncrementalTest {
     @Test
     public void addIdToView() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30,
-                "android:id=\"@+id/myTextView\"");
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<TextView android:text='@{foo + \" \" + foo}'",
+                "<TextView android:text='@{foo + \" \" + foo}'\n"
+                        + "android:id=\"@+id/myTextView\"");
         project.executor().run("assembleDebug");
 
         assertThat(project.getApk(DEBUG))
@@ -195,7 +305,8 @@ public class DataBindingIncrementalTest {
                     .doesNotHaveField("myTextView");
         }
 
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30, "");
+        TestFileUtils.searchVerbatimAndReplace(
+                project.file(ACTIVITY_MAIN_XML), "android:id=\"@+id/myTextView\"", "");
         project.executor().run("assembleDebug");
 
         assertThat(project.getApk(DEBUG))
@@ -305,7 +416,8 @@ public class DataBindingIncrementalTest {
         // Modify the file.
         long activity3LayoutLastModified = activity3.lastModified();
         TestUtils.waitForFileSystemTick();
-        TestFileUtils.replaceLine(activity3, 19, "<data class=\"MyCustomName\">");
+        TestFileUtils.searchVerbatimAndReplace(
+                activity3, "<data>", "<data class=\"MyCustomName\">");
 
         // Make sure that the file was actually modified.
         assertThat(activity3.lastModified()).isNotEqualTo(activity3LayoutLastModified);

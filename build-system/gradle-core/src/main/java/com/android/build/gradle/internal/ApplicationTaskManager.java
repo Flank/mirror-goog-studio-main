@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.builder.packaging.JarMerger.MODULE_PATH;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -61,10 +60,11 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
+import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
@@ -133,7 +133,10 @@ public class ApplicationTaskManager extends TaskManager {
         createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(variantScope, true);
+        createMergeResourcesTask(
+                variantScope,
+                true,
+                Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
         // Add tasks to compile shader
         createShaderTask(variantScope);
@@ -379,10 +382,6 @@ public class ApplicationTaskManager extends TaskManager {
                         task.from(postJavacGeneratedBytecode);
                         task.setDestinationDir(outputFile.getParentFile());
                         task.setArchiveName(outputFile.getName());
-                        task.manifest(
-                                it -> {
-                                    it.attributes(ImmutableMap.of(MODULE_PATH, project.getPath()));
-                                });
                     }
                 });
 

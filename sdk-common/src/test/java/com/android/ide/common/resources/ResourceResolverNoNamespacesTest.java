@@ -28,6 +28,7 @@ import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
@@ -344,7 +345,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 resolver.findItemInTheme("colorForeground", true).getValue());
         assertEquals("@color/bright_foreground_light",
                 resolver.findResValue("?colorForeground", true).getValue());
-        ResourceValue target = new ResourceValue(RES_AUTO, ResourceType.STRING, "dummy", "?foo");
+        ResourceValue target =
+                new ResourceValueImpl(RES_AUTO, ResourceType.STRING, "dummy", "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
 
         // getFrameworkResource
@@ -369,7 +371,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertEquals(
                 "#ffffffff",
                 resolver.resolveResValue(
-                                new ResourceValue(
+                                new ResourceValueImpl(
                                         ResourceNamespace.ANDROID,
                                         ResourceType.STRING,
                                         "bright_foreground_dark",
@@ -378,7 +380,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
         assertFalse(
                 resolver.resolveResValue(
-                                new ResourceValue(
+                                new ResourceValueImpl(
                                         RES_AUTO, ResourceType.ID, "my_id", "@+id/some_new_id"))
                         .isFramework());
         // error expected.
@@ -387,7 +389,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         try {
             val =
                     resolver.resolveResValue(
-                            new ResourceValue(
+                            new ResourceValueImpl(
                                     RES_AUTO,
                                     ResourceType.STRING,
                                     "bright_foreground_dark",

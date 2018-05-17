@@ -45,14 +45,16 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import android.databinding.tool.CompilerArguments;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -112,7 +114,6 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
-import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -882,16 +883,22 @@ public abstract class TaskManager {
     }
 
     public MergeResources createMergeResourcesTask(
-            @NonNull VariantScope scope, boolean processResources) {
+            @NonNull VariantScope scope,
+            boolean processResources,
+            ImmutableSet<MergeResources.Flag> flags) {
+
+        boolean unitTestRawResources =
+                globalScope
+                                .getExtension()
+                                .getTestOptions()
+                                .getUnitTests()
+                                .isIncludeAndroidResources()
+                        && !projectOptions.get(BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
 
         boolean alsoOutputNotCompiledResources =
-                scope.useResourceShrinker()
-                        || (scope.getTestedVariantData() == null
-                                && globalScope
-                                        .getExtension()
-                                        .getTestOptions()
-                                        .getUnitTests()
-                                        .isIncludeAndroidResources());
+                scope.getType().isApk()
+                        && !scope.getType().isForTesting()
+                        && (scope.useResourceShrinker() || unitTestRawResources);
 
         return basicCreateMergeResourcesTask(
                 scope,
@@ -900,7 +907,7 @@ public abstract class TaskManager {
                 true /*includeDependencies*/,
                 processResources,
                 alsoOutputNotCompiledResources,
-                ImmutableSet.of());
+                flags);
     }
 
     /** Defines the merge type for {@link #basicCreateMergeResourcesTask} */
@@ -958,7 +965,6 @@ public abstract class TaskManager {
                                 mergedNotCompiledDir,
                                 includeDependencies,
                                 processResources,
-                                true,
                                 flags));
 
         scope.getArtifacts().appendArtifact(mergeType.getOutputType(),
@@ -1722,12 +1728,7 @@ public abstract class TaskManager {
                 && globalScope.getProjectOptions().get(
                         BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
 
-        if (enableBinaryResources) {
-            createAnchorTasks(variantScope);
-        } else {
-            createPreBuildTasks(variantScope);
-            createCompileAnchorTask(variantScope);
-        }
+        createAnchorTasks(variantScope);
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
@@ -1735,28 +1736,63 @@ public abstract class TaskManager {
         // process java resources
         createProcessJavaResTask(variantScope);
 
-        PackageForUnitTest packageForUnitTest = null;
         if (includeAndroidResources) {
-            if (enableBinaryResources) {
+            if (testedVariantScope.getType().isAar()) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(variantScope, testedVariantData.getScope());
 
                 // Add a task to create the res values
                 createGenerateResValuesTask(variantScope);
 
-                // Add a task to merge the resource folders
-                createMergeResourcesTask(variantScope, true);
-
-                if (isLibrary()) {
-                    // Add a task to process the Android Resources and generate source files
-                    createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
-                }
-
                 // Add a task to merge the assets folders
                 createMergeAssetsTask(variantScope);
 
-                packageForUnitTest = createPackagingTaskForUnitTest(variantScope,
-                        testedVariantData.getScope());
+                if (enableBinaryResources) {
+                    createMergeResourcesTask(variantScope, true, ImmutableSet.of());
+                    // Add a task to process the Android Resources and generate source files
+                    createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
+                    taskFactory.create(new PackageForUnitTest.ConfigAction(variantScope));
+                } else {
+                    createMergeResourcesTask(variantScope, false, ImmutableSet.of());
+                }
+            } else if (testedVariantScope.getType().isApk()) {
+                if (enableBinaryResources) {
+                    // The IDs will have been inlined for an non-namespaced application
+                    // so just re-export the artifacts here.
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.PROCESSED_RES,
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(PROCESSED_RES));
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    MERGED_ASSETS,
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(MERGED_ASSETS));
+                    taskFactory.create(new PackageForUnitTest.ConfigAction(variantScope));
+                } else {
+                    // TODO: don't implicitly subtract tested component in APKs, as that only
+                    // makes sense for instrumentation tests. For now, rely on the production
+                    // merged resources.
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.MERGED_RES,
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(MERGED_NOT_COMPILED_RES));
+                }
+            } else {
+                throw new IllegalStateException(
+                        "Tested variant "
+                                + testedVariantScope.getFullVariantName()
+                                + " in "
+                                + globalScope.getProject().getPath()
+                                + " must be a library or an application to have unit tests.");
             }
 
             GenerateTestConfig generateTestConfig =
@@ -1786,22 +1822,8 @@ public abstract class TaskManager {
 
         createRunUnitTestTask(variantScope);
 
-        DefaultTask assembleUnitTests = variantScope.getAssembleTask();
-        if (packageForUnitTest != null) {
-            assembleUnitTests.dependsOn(packageForUnitTest);
-        }
-
         // This hides the assemble unit test task from the task list.
-        assembleUnitTests.setGroup(null);
-    }
-
-    private PackageForUnitTest createPackagingTaskForUnitTest(VariantScope scope,
-            VariantScope testedScope) {
-        PackageForUnitTest packageForUnitTest =
-                taskFactory.create(new PackageForUnitTest.ConfigAction(scope));
-        packageForUnitTest.dependsOn(testedScope.getProcessResourcesTask());
-        packageForUnitTest.dependsOn(testedScope.getMergeAssetsTask());
-        return packageForUnitTest;
+        variantScope.getAssembleTask().setGroup(null);
     }
 
     protected void createSplitsDiscovery(VariantScope variantScope) {
@@ -1836,7 +1858,7 @@ public abstract class TaskManager {
         createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(variantScope, true);
+        createMergeResourcesTask(variantScope, true, ImmutableSet.of());
 
         // Add tasks to compile shader
         createShaderTask(variantScope);
@@ -1952,7 +1974,6 @@ public abstract class TaskManager {
 
     public void createTopLevelTestTasks(boolean hasFlavors) {
         createMockableJarTask();
-        taskFactory.create(new PlatformAttrExtractorTask.ConfigAction(globalScope));
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
 
@@ -2853,8 +2874,7 @@ public abstract class TaskManager {
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
         DataBindingExportBuildInfoTask exportBuildInfo =
-                taskFactory.create(
-                        new DataBindingExportBuildInfoTask.ConfigAction(scope, mergeType));
+                taskFactory.create(new DataBindingExportBuildInfoTask.ConfigAction(scope));
 
         exportBuildInfo.dependsOn(scope.getSourceGenTask());
 
@@ -2865,10 +2885,11 @@ public abstract class TaskManager {
                 taskFactory.create(new DataBindingGenBaseClassesTask.ConfigAction(scope));
         generateBaseClasses.dependsOn(scope.getVariantData().mergeResourcesTask);
 
-        setDataBindingAnnotationProcessorParams(scope);
+        setDataBindingAnnotationProcessorParams(scope, mergeType);
     }
 
-    private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
+    private void setDataBindingAnnotationProcessorParams(
+            @NonNull VariantScope scope, @NonNull MergeType mergeType) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         JavaCompileOptions javaCompileOptions = variantConfiguration.getJavaCompileOptions();
@@ -2879,100 +2900,35 @@ public abstract class TaskManager {
             com.android.build.gradle.internal.dsl.AnnotationProcessorOptions options =
                     (com.android.build.gradle.internal.dsl.AnnotationProcessorOptions)
                             processorOptions;
-            // Specify data binding only if another class is specified. Doing so disables discovery
-            // so we must explicitly list data binding.
+            // We want to pass data binding processor's class name to the Java compiler. However, if
+            // the class names of other annotation processors were not added previously, adding the
+            // class name of data binding alone would disable Java compiler's automatic discovery of
+            // annotation processors and the other annotation processors would not be invoked.
+            // Therefore, we add data binding only if another class name was specified before.
             if (!options.getClassNames().isEmpty()
                     && !options.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
                 options.className(DataBindingBuilder.PROCESSOR_NAME);
             }
 
-            final BaseVariantData artifactVariantData;
-            final boolean isTest;
-            if (variantData.getType().isTestComponent()) {
-                artifactVariantData = checkNotNull(scope.getTestedVariantData());
-                isTest = true;
-            } else {
-                artifactVariantData = variantData;
-                isTest = false;
-            }
-
-            final CompilerArguments.Type type;
-            final VariantType variantType = artifactVariantData.getType();
-
-            if (variantType.isAar()) {
-                type = CompilerArguments.Type.LIBRARY;
-            } else {
-                if (variantType.isBaseModule()) {
-                    type = CompilerArguments.Type.APPLICATION;
-                } else {
-                    type = CompilerArguments.Type.FEATURE;
-                }
-            }
-
-            int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
-            File classLogDir = Iterables.getOnlyElement(
-                    scope.getArtifacts().getFinalArtifactFiles(
-                            InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT).get());
-            File baseFeatureInfoFolder = null;
-            BuildArtifactsHolder buildArtifactsHolder = scope.getArtifacts();
-            if (buildArtifactsHolder.hasArtifact(
-                    InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
-                baseFeatureInfoFolder =
-                        Iterables.getOnlyElement(
-                                buildArtifactsHolder
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
-                                        .get());
-            }
-            File featureInfoFile = null;
-            if (buildArtifactsHolder.hasArtifact(
-                    InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
-                featureInfoFile =
-                        Iterables.getOnlyElement(
-                                buildArtifactsHolder
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .FEATURE_DATA_BINDING_FEATURE_INFO)
-                                        .get());
-            }
-            // TODO: find a way to not pass the packageName if possible, as this may force us to
-            // parse the manifest for data binding during configuration.
-            String packageName = variantConfiguration.getOriginalApplicationId();
-            DataBindingCompilerArguments args =
-                    new DataBindingCompilerArguments(
-                            /* artifactType */ type,
-                            /* modulePackage */ packageName,
-                            /* minApi */ minApi,
-                            /* sdkDir */
-                            scope.getGlobalScope().getSdkHandler().getAndCheckSdkFolder(),
-                            /* buildDir */ scope.getBuildFolderForDataBindingCompiler(),
-                            /* layoutInfoDir */ scope.getLayoutInfoOutputForDataBinding(),
-                            /* classLogDir */ classLogDir,
-                            /* baseFeatureInfoDir */ baseFeatureInfoFolder,
-                            /* featureInfoDir */ featureInfoFile,
-                            /* aarOutDir */ scope.getBundleArtifactFolderForDataBinding(),
-                            /* exportClassListOutFile */
-                            variantData.getType().isExportDataBindingClassList()
-                                    ? scope.getGeneratedClassListOutputFileForDataBinding()
-                                    : null,
-                            /* enableDebugLogs */ getLogger().isDebugEnabled(),
-                            /* printEncodedErrorLogs */
-                            dataBindingBuilder.getPrintMachineReadableOutput(),
-                            /* isTestVariant */ isTest,
-                            /* isEnabledForTests */ extension.getDataBinding().isEnabledForTests(),
-                            /* isEnableV2 */ scope.getGlobalScope()
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_DATA_BINDING_V2));
-            options.compilerArgumentProvider(args);
+            DataBindingCompilerArguments dataBindingArgs =
+                    DataBindingCompilerArguments.createArguments(
+                            scope,
+                            getLogger().isDebugEnabled(),
+                            dataBindingBuilder.getPrintMachineReadableOutput());
+            options.compilerArgumentProvider(dataBindingArgs);
             // HACK ALERT:
             // Workaround for https://youtrack.jetbrains.com/issue/KT-23866. Remove this when Kapt
             // is fixed (and also enforce a minimum version of Kapt that has the fix).
-            // Normally, we don't need to call the method below. However, because Kapt is not yet
-            // aware of the new compilerArgumentProvider API, we need to provide the arguments via
-            // the arguments() method. JavaCompiler will see duplicate arguments, but it won't
-            // break, and it will pass a unique list of arguments to the annotation processors.
-            options.arguments(args.toMap());
+            // Normally, we don't need to call the method below as the arguments are already
+            // provided via the above compilerArgumentProvider API call. However, because Kapt is
+            // not yet aware of the new compilerArgumentProvider API, we need to provide the
+            // arguments via the arguments() API. The Java compiler will see duplicate arguments,
+            // but it won't break, and it will pass a list of unique arguments to the annotation
+            // processors.
+            options.arguments(dataBindingArgs.toMap());
+
+            // Set these so we can use them later to configure Kapt.
+            scope.setDataBindingCompilerArguments(dataBindingArgs);
         } else {
             getLogger().error("Cannot setup data binding for %s because java compiler options"
                     + " is not an instance of AnnotationProcessorOptions", processorOptions);
@@ -3944,6 +3900,10 @@ public abstract class TaskManager {
         // fixed (and also enforce a minimum version of Kapt that has the fix).
         // In the following, we need to add all inputs and outputs annotated in
         // DataBindingCompilerArguments to the Kapt task.
+        if (scope.getDataBindingCompilerArguments() != null) {
+            scope.getDataBindingCompilerArguments().configureInputsOutputsForTask(kaptTask);
+        }
+
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         if (artifacts.hasArtifact(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
             // if data binding is enabled and this variant has merged dependency artifacts, then
@@ -3954,11 +3914,6 @@ public abstract class TaskManager {
                     .withPathSensitivity(PathSensitivity.RELATIVE)
                     .withPropertyName("dataBindingDependencyArtifacts");
         }
-        kaptTask.getInputs()
-                .files(artifacts.getFinalArtifactFiles(
-                                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
-                .withPathSensitivity(PathSensitivity.RELATIVE)
-                .withPropertyName("dataBindingClassLogDir");
 
         // the data binding artifact is created by the annotation processor, so we register this
         // task output (which also publishes it) with javac as the generating task.
@@ -3970,31 +3925,6 @@ public abstract class TaskManager {
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
                     ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
                     kaptTask);
-        }
-        kaptTask.getOutputs()
-                .files(
-                        scope.getVariantData().getType().isExportDataBindingClassList()
-                                ? scope.getGeneratedClassListOutputFileForDataBinding()
-                                : null)
-                .withPropertyName("exportClassListOutFile");
-
-        final VariantType variantType = scope.getType();
-        if (variantType.isApk() && !variantType.isForTesting()) {
-            if (variantType.isBaseModule()) {
-                kaptTask.getInputs()
-                        .file(
-                                artifacts
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
-            } else {
-                kaptTask.getInputs()
-                        .file(
-                                artifacts
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .FEATURE_DATA_BINDING_FEATURE_INFO));
-            }
         }
     }
 

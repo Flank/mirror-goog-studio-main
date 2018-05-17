@@ -1282,11 +1282,7 @@ public final class GradleTestProject implements TestRule {
 
     /** Fluent method to run a build. */
     public GradleTaskExecutor executor() {
-        return new GradleTaskExecutor(this, getProjectConnection(), false);
-    }
-
-    public GradleTaskExecutor nonRetryingExecutor() {
-        return new GradleTaskExecutor(this, getProjectConnection(), true);
+        return new GradleTaskExecutor(this, getProjectConnection());
     }
 
     /** Fluent method to get the model. */

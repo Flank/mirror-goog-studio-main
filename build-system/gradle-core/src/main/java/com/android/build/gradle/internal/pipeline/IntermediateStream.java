@@ -22,6 +22,7 @@ import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -131,11 +132,12 @@ class IntermediateStream extends TransformStream {
         return getFileCollection().getSingleFile();
     }
 
-    /**
-     * Returns a new view of this content as a {@link TransformOutputProvider}.
-     */
+    /** Returns a new view of this content as a {@link TransformOutputProvider}. */
     @NonNull
-    TransformOutputProvider asOutput() {
+    TransformOutputProvider asOutput(boolean isIncremental) throws IOException {
+        if (!isIncremental) {
+            FileUtils.deleteIfExists(new File(getRootLocation(), SubStream.FN_FOLDER_CONTENT));
+        }
         init();
         return new TransformOutputProviderImpl(folderUtils);
     }
@@ -197,7 +199,9 @@ class IntermediateStream extends TransformStream {
         Callable<Collection<File>> supplier =
                 () -> {
                     // If the task has not been executed, return an empty list; otherwise, gradle
-                    // will try to resolve the output files during task graph creation.
+                    // will try to resolve the output files before task execution.
+                    // TaskState::getExecuted below will return true if task was executed or if it
+                    // is UP_TO_DATE, FROM_CACHE, SKIPPED, or NO_SOURCE.
                     if (!project.getTasks().getByName(taskName).getState().getExecuted()) {
                         return ImmutableList.of();
                     }

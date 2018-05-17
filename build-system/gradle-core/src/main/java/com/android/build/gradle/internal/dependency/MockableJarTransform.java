@@ -36,10 +36,6 @@ public class MockableJarTransform extends ArtifactTransform {
         this.returnDefaultValues = returnDefaultValues;
     }
 
-    public boolean getReturnDefaultValues() {
-        return returnDefaultValues;
-    }
-
     @Override
     @NonNull
     public List<File> transform(@NonNull File input) {
@@ -53,7 +49,7 @@ public class MockableJarTransform extends ArtifactTransform {
                         + " with input "
                         + input.getAbsolutePath());
 
-        MockableJarGenerator generator = new MockableJarGenerator(getReturnDefaultValues());
+        MockableJarGenerator generator = new MockableJarGenerator(returnDefaultValues);
         try {
             generator.createMockableJar(input, outputFile);
         } catch (IOException e) {

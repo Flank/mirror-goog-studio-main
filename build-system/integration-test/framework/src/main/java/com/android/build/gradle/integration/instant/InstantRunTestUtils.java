@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.DeviceHelper.DEFAULT_ADB_TIMEOUT_MSEC;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertNotNull;
 
@@ -66,7 +65,7 @@ public final class InstantRunTestUtils {
     public static final Map<String, Integer> PORTS =
             ImmutableMap.<String, Integer>builder()
                     .put("ColdSwapConnectedTest", 8115)
-                    .put("NdkBuildInstantRunTest", 8116)
+                    .put("NdkBuildInstantRunConnectedTest", 8116)
                     .put("HotSwapTest", 8117)
                     .put("ButterKnifeConnectedTest", 8118)
                     .put("DaggerTest", 8119)

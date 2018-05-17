@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -81,7 +80,6 @@ public class GenerateTestConfig extends DefaultTask {
 
     @TaskAction
     public void generateTestConfig() throws IOException {
-        checkNotNull(resourcesDirectory);
         checkNotNull(assets);
         checkNotNull(sdkHome);
 
@@ -90,7 +88,11 @@ public class GenerateTestConfig extends DefaultTask {
                         .element(mainApkInfo);
         generateTestConfigForOutput(
                 Iterables.getOnlyElement(assets).toPath().toAbsolutePath(),
-                BuildableArtifactUtil.singleFile(resourcesDirectory).toPath().toAbsolutePath(),
+                resourcesDirectory == null
+                        ? null
+                        : BuildableArtifactUtil.singleFile(resourcesDirectory)
+                                .toPath()
+                                .toAbsolutePath(),
                 sdkHome,
                 getPackageForR(),
                 checkNotNull(output, "Unable to find manifest output").getOutputFile().toPath(),
@@ -101,7 +103,7 @@ public class GenerateTestConfig extends DefaultTask {
     @VisibleForTesting
     static void generateTestConfigForOutput(
             @NonNull Path assetsDir,
-            @NonNull Path resDir,
+            @Nullable Path resDir,
             @NonNull Path sdkHome,
             @NonNull String packageForR,
             @NonNull Path manifest,
@@ -111,7 +113,9 @@ public class GenerateTestConfig extends DefaultTask {
 
         Properties properties = new Properties();
         properties.setProperty("android_sdk_home", sdkHome.toAbsolutePath().toString());
-        properties.setProperty("android_merged_resources", resDir.toAbsolutePath().toString());
+        if (resDir != null) {
+            properties.setProperty("android_merged_resources", resDir.toAbsolutePath().toString());
+        }
         properties.setProperty("android_merged_manifest", manifest.toAbsolutePath().toString());
         properties.setProperty("android_merged_assets", assetsDir.toAbsolutePath().toString());
         if (compiledResourcesZip != null) {
@@ -134,7 +138,11 @@ public class GenerateTestConfig extends DefaultTask {
     }
 
     @Input // No need for @InputDirectory, we only care about the path.
+    @Optional
     public String getResourcesDirectory() {
+        if (resourcesDirectory == null) {
+            return null;
+        }
         return BuildableArtifactUtil.singleFile(resourcesDirectory).getPath();
     }
 
@@ -202,9 +210,6 @@ public class GenerateTestConfig extends DefaultTask {
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
 
-            task.resourcesDirectory =
-                    testedScope.getArtifacts().getFinalArtifactFiles(MERGED_NOT_COMPILED_RES);
-            task.dependsOn(task.resourcesDirectory);
             task.manifests =
                     testedScope
                             .getArtifacts()
@@ -216,8 +221,10 @@ public class GenerateTestConfig extends DefaultTask {
             if (enableBinaryResources) {
                 task.compiledResourcesZip = scope
                         .getArtifacts().getFinalArtifactFiles(APK_FOR_LOCAL_TEST);
-
                 task.dependsOn(task.compiledResourcesZip);
+            } else {
+                task.resourcesDirectory = scope.getArtifacts().getFinalArtifactFiles(MERGED_RES);
+                task.dependsOn(task.resourcesDirectory);
             }
 
             task.assets = testedScope.getArtifacts().getFinalArtifactFiles(MERGED_ASSETS);

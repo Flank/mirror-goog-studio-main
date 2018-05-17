@@ -15,10 +15,14 @@
  */
 package com.android.ide.common.resources;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
@@ -41,13 +45,17 @@ public class ResourceNameKeyedMapTest {
 
         // Check null key
         ResourceValue value1 =
-                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STRING, "test1", null);
+                new ResourceValueImpl(
+                        ResourceNamespace.RES_AUTO, ResourceType.STRING, "test1", null);
         ResourceValue value2 =
-                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STYLE, "test1", null);
+                new ResourceValueImpl(
+                        ResourceNamespace.RES_AUTO, ResourceType.STYLE, "test1", null);
         ResourceValue value3 =
-                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STRING, "test1", null);
+                new ResourceValueImpl(
+                        ResourceNamespace.RES_AUTO, ResourceType.STRING, "test1", null);
         ResourceValue value4 =
-                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.INTEGER, "test1", null);
+                new ResourceValueImpl(
+                        ResourceNamespace.RES_AUTO, ResourceType.INTEGER, "test1", null);
 
         assertNull(resourceNameKeyedMap.put("test_key", value1));
         assertNull(resourceNameKeyedMap.put("key2", value2));

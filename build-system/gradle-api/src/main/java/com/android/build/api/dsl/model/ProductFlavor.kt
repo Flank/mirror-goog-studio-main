@@ -51,8 +51,9 @@ import org.gradle.api.Named
  * If the plugin creates certain build variants that you don't want, you can use the
  * [`VariantFilter`][com.android.build.api.variant.VariantFilter] API to
  * [filter variants](https://d.android.com/studio/build/build-variants.html#filter-variants).
+ *
+ * This interface is not currently usable. It is a work in progress.
  */
-
 @Incubating
 interface ProductFlavor : BaseFlavor, BuildTypeOrProductFlavor, ProductFlavorOrVariant, VariantProperties, FallbackStrategy, Initializable<ProductFlavor>, Named {
     /**

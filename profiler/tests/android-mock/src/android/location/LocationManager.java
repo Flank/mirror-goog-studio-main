@@ -40,6 +40,11 @@ public class LocationManager {
     private ListenerTransport mListenerTransport;
     private PendingIntent mIntent;
 
+    /** Directly sets LocationListener. For testing only. */
+    public void setListener(LocationListener listener) {
+        mListenerTransport = new ListenerTransport(listener);
+    }
+
     public void requestLocationUpdates(
             String provider, long minTime, float minDistance, LocationListener listener) {
         mListenerTransport = new ListenerTransport(listener);

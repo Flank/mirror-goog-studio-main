@@ -48,7 +48,8 @@ class AtraceManager {
   // TODO: Investigate if running atrace with two different application
   // names keeps the profiling unique.
   bool StartProfiling(const std::string &app_name, int sampling_interval_us,
-                      std::string *trace_path, std::string *error);
+                      int buffer_size_in_mb, std::string *trace_path,
+                      std::string *error);
   bool StopProfiling(const std::string &app_name, bool need_result,
                      std::string *error);
   void Shutdown();
@@ -86,7 +87,8 @@ class AtraceManager {
   // Runs atrace with the given arguments, app_name, the path expected for the
   // output, the additional command arguments to pass atrace.
   virtual void RunAtrace(const std::string &app_name, const std::string &path,
-                         const std::string &command);
+                         const std::string &command,
+                         const std::string &additonal_args = "");
 
   // Takes [combine_file_prefix] appends an integer from 0 to count and writes
   // contents to [output_path].
@@ -102,6 +104,9 @@ class AtraceManager {
   // Returns the trace_path with the current count of dumps. Then increments the
   // number of dumps captured.
   std::string GetNextDumpPath();
+
+  // Checks legacy and current system path to see if atrace is running.
+  virtual bool IsAtraceRunning();
 
  protected:
   // Takes the output from atrace --list_categories parses the output and

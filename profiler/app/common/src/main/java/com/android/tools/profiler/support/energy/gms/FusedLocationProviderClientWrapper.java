@@ -125,12 +125,13 @@ public final class FusedLocationProviderClientWrapper {
      * @param callback the callback parameter passed to the original method.
      */
     public static void wrapRemoveLocationUpdates(Object client, LocationCallback callback) {
-        if (callbackIdMap.containsKey(callback)) {
-            LocationManagerWrapper.sendListenerLocationUpdateRemoved(
-                    callbackIdMap.get(callback),
-                    // API removeUpdates is one level down of user code.
-                    StackTrace.getStackTrace(1));
+        if (!callbackIdMap.containsKey(callback)) {
+            callbackIdMap.put(callback, EventIdGenerator.nextId());
         }
+        LocationManagerWrapper.sendListenerLocationUpdateRemoved(
+                callbackIdMap.get(callback),
+                // API removeUpdates is one level down of user code.
+                StackTrace.getStackTrace(1));
     }
 
     /**
@@ -141,14 +142,15 @@ public final class FusedLocationProviderClientWrapper {
      * @param callbackIntent the callbackIntent parameter passed to the original method.
      */
     public static void wrapRemoveLocationUpdates(Object client, PendingIntent callbackIntent) {
-        if (intentIdMap.containsKey(callbackIntent)) {
-            LocationManagerWrapper.sendIntentLocationUpdateRemoved(
-                    intentIdMap.get(callbackIntent),
-                    callbackIntent.getCreatorPackage(),
-                    callbackIntent.getCreatorUid(),
-                    // API removeUpdates is one level down of user code.
-                    StackTrace.getStackTrace(1));
+        if (!intentIdMap.containsKey(callbackIntent)) {
+            intentIdMap.put(callbackIntent, EventIdGenerator.nextId());
         }
+        LocationManagerWrapper.sendIntentLocationUpdateRemoved(
+                intentIdMap.get(callbackIntent),
+                callbackIntent.getCreatorPackage(),
+                callbackIntent.getCreatorUid(),
+                // API removeUpdates is one level down of user code.
+                StackTrace.getStackTrace(1));
     }
 
     /**

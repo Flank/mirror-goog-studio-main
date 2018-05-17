@@ -18,6 +18,9 @@ package com.android.build.api.dsl.variant
 
 import org.gradle.api.Incubating
 
+/**
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface LibraryVariant : Variant {
     val androidTestVariant: AndroidTestVariant?

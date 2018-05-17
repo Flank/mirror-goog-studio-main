@@ -18,6 +18,9 @@ package com.android.build.api.dsl.variant
 
 import org.gradle.api.Incubating
 
-/** variant for separate test projects */
+/** variant for separate test projects
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface TestVariant : Variant

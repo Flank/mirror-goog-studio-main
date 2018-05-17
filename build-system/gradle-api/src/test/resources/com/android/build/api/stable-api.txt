@@ -1,3 +1,11 @@
+Stable Android Gradle Plugin API.
+-------------------------------------------------------------------------
+ATTENTION REVIEWER: If this needs to be changed, please make sure changes
+below are backwards compatible.
+-------------------------------------------------------------------------
+Sha256 of below classes:
+a368f5086e7e086f47b4424467f5bf26ebec74fb28c7b1157442008937f4ff20
+-------------------------------------------------------------------------
 com.android.build.api.attributes.BuildTypeAttr
 com.android.build.api.attributes.ProductFlavorAttr
 com.android.build.api.attributes.VariantAttr

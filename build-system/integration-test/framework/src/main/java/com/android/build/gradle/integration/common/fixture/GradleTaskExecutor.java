@@ -60,16 +60,14 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
     GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
-            @NonNull ProjectConnection projectConnection,
-            boolean disableRetryLogic) {
+            @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
                 gradleTestProject::setLastBuildResult,
                 gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
-                gradleTestProject.getHeapSize(),
                 gradleTestProject.getProfileDirectory(),
-                disableRetryLogic);
+                gradleTestProject.getHeapSize());
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
     }
 
@@ -146,71 +144,49 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             args.add("--stacktrace");
         }
 
-        while (true) {
-            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-            String message =
-                    "[GradleTestProject "
-                            + projectDirectory
-                            + "] Executing tasks: \ngradle "
-                            + Joiner.on(' ').join(args)
-                            + " "
-                            + Joiner.on(' ').join(tasksList)
-                            + "\n\n";
-            stdout.write(message.getBytes());
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        String message =
+                "[GradleTestProject "
+                        + projectDirectory
+                        + "] Executing tasks: \ngradle "
+                        + Joiner.on(' ').join(args)
+                        + " "
+                        + Joiner.on(' ').join(tasksList)
+                        + "\n\n";
+        stdout.write(message.getBytes());
 
-            BuildLauncher launcher =
-                    projectConnection
-                            .newBuild()
-                            .forTasks(Iterables.toArray(tasksList, String.class));
+        BuildLauncher launcher =
+                projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
-            setJvmArguments(launcher);
-            setStandardOut(launcher, stdout);
-            setStandardError(launcher, stderr);
+        setJvmArguments(launcher);
+        setStandardOut(launcher, stdout);
+        setStandardError(launcher, stderr);
 
-            CollectingProgressListener progressListener = new CollectingProgressListener();
+        CollectingProgressListener progressListener = new CollectingProgressListener();
 
-            launcher.addProgressListener(progressListener, OperationType.TASK);
+        launcher.addProgressListener(progressListener, OperationType.TASK);
 
-            launcher.withArguments(Iterables.toArray(args, String.class));
+        launcher.withArguments(Iterables.toArray(args, String.class));
 
-            WaitingResultHandler handler = new WaitingResultHandler();
-            launcher.run(handler);
-            GradleConnectionException failure = handler.waitForResult();
+        WaitingResultHandler handler = new WaitingResultHandler();
+        launcher.run(handler);
+        GradleConnectionException failure = handler.waitForResult();
 
-            RuntimeException exceptionToThrow = null;
-            if (failure != null && !isExpectingFailure) {
-                switch (chooseRetryAction(failure)) {
-                    case RETRY:
-                        continue;
-                    case FAILED_TOO_MANY_TIMES:
-                        exceptionToThrow = new TooFlakyException(failure);
-                        break;
-                    case THROW:
-                        exceptionToThrow = failure;
-                        break;
-                }
-            }
+        GradleBuildResult result =
+                new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+        lastBuildResultConsumer.accept(result);
 
-            GradleBuildResult result =
-                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
-            lastBuildResultConsumer.accept(result);
-
-            if (exceptionToThrow != null) {
-                throw exceptionToThrow;
-            }
-
-            if (isExpectingFailure && failure == null) {
-                throw new AssertionError("Expecting build to fail");
-            } else if (!isExpectingFailure && failure != null) {
-                throw failure;
-            }
-            if (!allowStderr && !result.getStderr().isEmpty()) {
-                throw new AssertionError("Unexpected stderr: " + stderr);
-            }
-
-            return result;
+        if (isExpectingFailure && failure == null) {
+            throw new AssertionError("Expecting build to fail");
+        } else if (!isExpectingFailure && failure != null) {
+            maybePrintJvmLogs(failure);
+            throw failure;
         }
+        if (!allowStderr && !result.getStderr().isEmpty()) {
+            throw new AssertionError("Unexpected stderr: " + stderr);
+        }
+        return result;
     }
 
     private static class CollectingProgressListener implements ProgressListener {

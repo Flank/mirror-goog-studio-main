@@ -145,6 +145,11 @@ class GradleDetectorTest : AbstractCheckTest() {
             SDK_REGISTRY_URL,
             """
             <sdk_metadata>
+             <library groupId="com.android.volley" artifactId="volley" recommended-version="1.1.0">
+              <versions from="1.1.0-rc2" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+              <versions from="1.1.0-rc1" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+              <versions from="1.0.0" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+             </library>
              <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
               <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
                <vulnerability description="Specifics and developer actions go here." cve="CVE-4313" />
@@ -2266,6 +2271,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     compile 'com.example.ads.thirdparty:example:7.0.5' // OK
                     compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
                     compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
+                    compile 'com.android.volley:volley:1.1.0'   // OK
                 }
                 """
             ).indented()

@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.resources.deprecated.ValueResourceParser.IValueResourceRepository;
 import com.android.resources.ResourceType;
 import com.google.common.io.Closeables;
@@ -139,7 +140,7 @@ public class IdResourceParser {
                         // Strip out the @+id/ or @+android:id/ section
                         String id = value.substring(value.indexOf('/') + 1);
                         ResourceValue newId =
-                                new ResourceValue(
+                                new ResourceValueImpl(
                                         new ResourceReference(ResourceType.ID, id, mIsFramework),
                                         null);
                         mRepository.addResourceValue(newId);

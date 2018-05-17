@@ -21,7 +21,10 @@ import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.JavaVersion
 
-/** Options for configuring Java compilation.  */
+/** Options for configuring Java compilation.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface JavaCompileOptions : Initializable<JavaCompileOptions> {
 

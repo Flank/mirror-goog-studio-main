@@ -20,7 +20,10 @@ import com.android.build.api.dsl.Initializable
 import com.android.build.api.dsl.model.BuildType
 import org.gradle.api.Incubating
 
-/** DSL object for configuring aapt options.  */
+/** DSL object for configuring aapt options.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface AaptOptions : Initializable<AaptOptions> {
 

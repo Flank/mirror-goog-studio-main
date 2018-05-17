@@ -68,7 +68,6 @@ public class ProGuardTransform extends BaseProguardAction {
     private final File proguardOut;
 
     private final File printMapping;
-    private final File dump;
     private final File printSeeds;
     private final File printUsage;
     private final ImmutableList<File> secondaryFileOutputs;
@@ -88,10 +87,9 @@ public class ProGuardTransform extends BaseProguardAction {
                 variantScope.getVariantConfiguration().getDirName()));
 
         printMapping = new File(proguardOut, "mapping.txt");
-        dump = new File(proguardOut, "dump.txt");
         printSeeds = new File(proguardOut, "seeds.txt");
         printUsage = new File(proguardOut, "usage.txt");
-        secondaryFileOutputs = ImmutableList.of(printMapping, dump, printSeeds, printUsage);
+        secondaryFileOutputs = ImmutableList.of(printMapping, printSeeds, printUsage);
     }
 
     @Nullable
@@ -244,7 +242,6 @@ public class ProGuardTransform extends BaseProguardAction {
             }
 
             configuration.printMapping = printMapping;
-            configuration.dump = dump;
             configuration.printSeeds = printSeeds;
             configuration.printUsage = printUsage;
 

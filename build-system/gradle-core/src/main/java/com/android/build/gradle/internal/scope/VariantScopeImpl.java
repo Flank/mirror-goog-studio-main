@@ -81,6 +81,7 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -219,7 +220,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private InstantRunTaskManager instantRunTaskManager;
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
-    private DataBindingExportBuildInfoTask dataBindingExportBuildInfoTask;
+
+    @Nullable private DataBindingExportBuildInfoTask dataBindingExportBuildInfoTask;
+    @Nullable private DataBindingCompilerArguments dataBindingCompilerArguments;
 
     private FileCollection bootClasspath;
 
@@ -2010,13 +2013,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public void setDataBindingExportBuildInfoTask(DataBindingExportBuildInfoTask task) {
+    public void setDataBindingExportBuildInfoTask(@NonNull DataBindingExportBuildInfoTask task) {
         this.dataBindingExportBuildInfoTask = task;
     }
 
     @Override
+    @Nullable
     public DataBindingExportBuildInfoTask getDataBindingExportBuildInfoTask() {
         return dataBindingExportBuildInfoTask;
+    }
+
+    @Override
+    public void setDataBindingCompilerArguments(
+            @NonNull DataBindingCompilerArguments dataBindingCompilerArguments) {
+        this.dataBindingCompilerArguments = dataBindingCompilerArguments;
+    }
+
+    @Override
+    @Nullable
+    public DataBindingCompilerArguments getDataBindingCompilerArguments() {
+        return dataBindingCompilerArguments;
     }
 
     @Override

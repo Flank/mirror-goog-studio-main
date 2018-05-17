@@ -18,7 +18,10 @@ package com.android.build.api.dsl.extension
 
 import org.gradle.api.Incubating
 
-/** 'android' extension for 'com.android.library' projects.  */
+/** 'android' extension for 'com.android.library' projects.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface LibraryExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
 

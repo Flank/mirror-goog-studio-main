@@ -19,5 +19,7 @@
  * </code> are the extension interfaces used by each plugins. There is a 1:1 mapping between plugins
  * and these interfaces <code>[name>Module</code> are interfaces containing partial properties
  * grouped by themes. The extensions extend these
+ *
+ * <p>These interfaces are for the new DSL and not currently usable. It is a work in progress.
  */
 package com.android.build.api.dsl.extension;

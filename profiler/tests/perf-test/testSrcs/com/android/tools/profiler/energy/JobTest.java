@@ -225,4 +225,27 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
     }
+
+    @Test
+    public void testMissingJobScheduled() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "startWithoutScheduling");
+        assertThat(myAndroidDriver.waitForInput("JOB STARTED")).isTrue();
+
+        EnergyEventsResponse response =
+                TestUtils.waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 1);
+        assertWithMessage(
+                        "Actual events: (%s).",
+                        response.getEventsList()
+                                .stream()
+                                .map(event -> String.valueOf(event.getMetadataCase()))
+                                .collect(Collectors.joining(", ")))
+                .that(response.getEventsCount())
+                .isEqualTo(1);
+
+        final EnergyEvent startEvent = response.getEvents(0);
+        assertThat(startEvent.getEventId()).isGreaterThan(0);
+        assertThat(startEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STARTED);
+    }
 }

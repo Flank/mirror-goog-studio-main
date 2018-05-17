@@ -19,7 +19,10 @@ package com.android.build.api.dsl.options
 import com.android.build.api.dsl.Initializable
 import org.gradle.api.Incubating
 
-/** Options for the adb tool.  */
+/** Options for the adb tool.
+ *
+ * This interface is not currently usable. It is a work in progress.
+ */
 @Incubating
 interface AdbOptions : Initializable<AdbOptions> {
 

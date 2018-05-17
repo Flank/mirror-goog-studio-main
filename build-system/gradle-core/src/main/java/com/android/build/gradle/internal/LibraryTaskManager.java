@@ -153,7 +153,7 @@ public class LibraryTaskManager extends TaskManager {
                                 .getExtension()
                                 .getAaptOptions()
                                 .getNamespaced())) {
-            createVerifyLibraryResTask(variantScope, MergeType.MERGE);
+            createVerifyLibraryResTask(variantScope);
         }
 
         // process java resources only, the merge is setup after
@@ -438,14 +438,17 @@ public class LibraryTaskManager extends TaskManager {
         ImmutableSet<MergeResources.Flag> flags;
         if (Boolean.TRUE.equals(
                 variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
-            flags = Sets.immutableEnumSet(MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES);
+            flags =
+                    Sets.immutableEnumSet(
+                            MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
+                            MergeResources.Flag.PROCESS_VECTOR_DRAWABLES);
         } else {
-            flags = ImmutableSet.of();
+            flags = Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES);
         }
 
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
-        MergeResources mergeResourceTask =
+        MergeResources packageResourcesTask =
                 basicCreateMergeResourcesTask(
                         variantScope,
                         MergeType.PACKAGE,
@@ -455,16 +458,18 @@ public class LibraryTaskManager extends TaskManager {
                         false,
                         flags);
 
-        // Add a task to merge the resource folders, including the libraries, in order to
-        // generate the R.txt file with all the symbols, including the ones from
-        // the dependencies.
-        createMergeResourcesTask(variantScope, false /*processResources*/);
-
-        mergeResourceTask.setPublicFile(
+        packageResourcesTask.setPublicFile(
                 variantScope
                         .getArtifacts()
                         .appendArtifact(
-                                InternalArtifactType.PUBLIC_RES, mergeResourceTask, FN_PUBLIC_TXT));
+                                InternalArtifactType.PUBLIC_RES,
+                                packageResourcesTask,
+                                FN_PUBLIC_TXT));
+
+        // This task merges all the resources, including the dependencies of this library.
+        // This should be unused, except that external libraries might consume it.
+        createMergeResourcesTask(variantScope, false /*processResources*/, ImmutableSet.of());
+
     }
 
     @Override
@@ -522,10 +527,9 @@ public class LibraryTaskManager extends TaskManager {
         return true;
     }
 
-    public void createVerifyLibraryResTask(
-            @NonNull VariantScope scope, @NonNull MergeType mergeType) {
+    public void createVerifyLibraryResTask(@NonNull VariantScope scope) {
         VerifyLibraryResourcesTask verifyLibraryResources =
-                taskFactory.create(new VerifyLibraryResourcesTask.ConfigAction(scope, mergeType));
+                taskFactory.create(new VerifyLibraryResourcesTask.ConfigAction(scope));
 
         scope.getAssembleTask().dependsOn(verifyLibraryResources);
     }

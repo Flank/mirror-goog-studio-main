@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.builder.packaging.JarMerger.MODULE_PATH
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -37,7 +36,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
@@ -79,8 +77,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
             it.submit(JarWorkerRunnable::class.java,
                 JarRequest(toFile = outputJar,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
-                    fromFiles = files,
-                    manifestProperties = mapOf(MODULE_PATH to modulePath)))
+                    fromFiles = files))
         }
     }
 

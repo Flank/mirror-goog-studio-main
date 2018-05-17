@@ -100,8 +100,10 @@ public class AndroidArtifacts {
     private static final String TYPE_METADATA_JAVA_RES = "android-metadata-java-res";
 
     public static final String TYPE_MOCKABLE_JAR = "android-mockable-jar";
-    public static final Attribute MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
+    public static final Attribute<Boolean> MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
             Attribute.of("returnDefaultValues", Boolean.class);
+    // attr info extracted from the platform android.jar
+    public static final String TYPE_PLATFORM_ATTR = "android-platform-attr";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
