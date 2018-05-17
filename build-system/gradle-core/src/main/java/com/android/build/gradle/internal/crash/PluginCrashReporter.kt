@@ -50,14 +50,15 @@ object PluginCrashReporter {
 
     @VisibleForTesting
     fun maybeReportExceptionForTest(ex: Throwable, settings: AnalyticsSettings): Boolean {
-        val crashReporter = getCrashReporter(settings)
+        val crashReporter = getCrashReporter(settings, forTest = true)
         return maybeReportExceptionImpl(crashReporter, ex)
     }
 
-    private fun getCrashReporter(analyticsSettings: AnalyticsSettings): CrashReporter? {
+    private fun getCrashReporter(
+        analyticsSettings: AnalyticsSettings, forTest: Boolean = false): CrashReporter? {
         return if (analyticsSettings.hasOptedIn()) {
             val isDebugBuild = Version.ANDROID_GRADLE_PLUGIN_VERSION.endsWith("-dev")
-            GoogleCrashReporter(false, isDebugBuild)
+            GoogleCrashReporter(false, isDebugBuild || forTest)
         } else {
             null
         }
