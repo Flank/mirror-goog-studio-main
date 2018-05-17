@@ -20,13 +20,15 @@
 #include <sstream>
 #include <thread>
 
+#include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
 #include "utils/filesystem_notifier.h"
-#include "utils/trace.h"
 #include "utils/log.h"
+#include "utils/trace.h"
 
+using profiler::proto::Device;
 using std::string;
 
 namespace {
@@ -109,13 +111,11 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
 
   if (need_result) {
     const int64_t timeout_ms = Clock::s_to_ms(timeout_sec);
-    // Because of an issue in the android platform, it is unreliable to
+    // Because of an issue in the android pre-P platform, it is unreliable to
     // monitor the file close event for a trace which started by "am start
     // --start-profiler" (http://b/73891014). So working around the issue by
     // just waiting for 5 Seconds.
-    // TODO(b/75298275): once the fix (http://b/73891014) merged into android P
-    // and it's available, we should do this workaround only for android O.
-    if (is_startup_profiling) {
+    if (is_startup_profiling && DeviceInfo::feature_level() < Device::P) {
       std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
       return true;
     }
