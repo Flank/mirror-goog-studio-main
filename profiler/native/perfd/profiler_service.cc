@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cassert>
 #include <sstream>
 #include <string>
 #include "perfd/connector.h"
@@ -190,19 +191,35 @@ Status ProfilerServiceImpl::GetBytes(
 Status ProfilerServiceImpl::GetAgentStatus(
     ServerContext* context, const profiler::proto::AgentStatusRequest* request,
     profiler::proto::AgentStatusResponse* response) {
-  auto got = heartbeat_timestamp_map_.find(request->pid());
-  if (got != heartbeat_timestamp_map_.end()) {
-    int64_t current_time = daemon_->clock()->GetCurrentTime();
-    if (GenericComponent::kHeartbeatThresholdNs >
-        (current_time - got->second)) {
-      response->set_status(AgentStatusResponse::ATTACHED);
-    } else {
-      response->set_status(AgentStatusResponse::DETACHED);
-    }
-    response->set_last_timestamp(got->second);
+  auto got = agent_status_map_.find(request->pid());
+  if (got != agent_status_map_.end()) {
+    response->set_status(got->second);
   } else {
     response->set_status(AgentStatusResponse::DETACHED);
-    response->set_last_timestamp(INT64_MIN);
+  }
+
+  string app_name = ProcessManager::GetCmdlineForPid(request->pid());
+  if (app_name.empty()) {
+    // process is not available.
+    response->set_is_agent_attachable(false);
+  } else {
+    if (profiler::DeviceInfo::feature_level() < Device::O) {
+      // pre-O, since the agent is deployed with the app, we should receive a
+      // heartbeat right away. We can simply use that as a signal to determine
+      // whether an agent can be attached.
+      response->set_is_agent_attachable(response->status() ==
+                                        AgentStatusResponse::ATTACHED);
+    } else {
+      // In O+, we can attach an jvmti agent as long as the app is debuggable
+      // and the app's data folder is available to us.
+      string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+      PackageManager package_manager;
+      string data_path;
+      string error;
+      bool has_data_path =
+          package_manager.GetAppDataPath(package_name, &data_path, &error);
+      response->set_is_agent_attachable(has_data_path);
+    }
   }
 
   return Status::OK;
@@ -219,54 +236,53 @@ Status ProfilerServiceImpl::GetDevices(
   return Status::OK;
 }
 
-Status ProfilerServiceImpl::TryAttachAppAgent(
-    int32_t app_pid, const string& agent_lib_file_name) {
-  if (profiler::DeviceInfo::feature_level() < Device::O) {
-    return Status(StatusCode::UNIMPLEMENTED,
-                  "JVMTI agent cannot be attached on Nougat or older devices");
-  } else {
-    string app_name = ProcessManager::GetCmdlineForPid(app_pid);
-    if (app_name.empty()) {
-      return Status(StatusCode::NOT_FOUND,
-                    "Process isn't running. Cannot attach agent.");
-    }
+bool ProfilerServiceImpl::TryAttachAppAgent(int32_t app_pid,
+                                            const std::string& app_name,
+                                            const string& agent_lib_file_name) {
+  assert(profiler::DeviceInfo::feature_level() >= Device::O);
 
-    // Copies the connector over to the package's data folder so we can run it
-    // to send messages to perfa's Unix socket server.
-    string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
-    CopyFileToPackageFolder(package_name, kConnectorFileName);
-    // Only attach agent if one is not detected. Note that an agent can already
-    // exist if we have profiled the same app before, and either Studio/perfd
-    // has restarted and has lost any knowledge about such agent.
-    if (!IsAppAgentAlive(app_pid, package_name)) {
-      auto* config = daemon_->config();
-      RunAgent(app_name, package_name, config->GetConfigFilePath(),
-               agent_lib_file_name);
-    }
-
-    // Only reconnect to perfa if an existing connection has not been detected.
-    // This can be identified by whether perfa has a valid grpc channel to send
-    // this perfd instance the heartbeats.
-    if (!CheckAppHeartBeat(app_pid)) {
-      int fork_pid = fork();
-      if (fork_pid == -1) {
-        perror("fork connector");
-        return Status(StatusCode::RESOURCE_EXHAUSTED,
-                      "Cannot fork a process to run connector");
-      } else if (fork_pid == 0) {
-        // child process
-        string socket_name;
-        auto* config = daemon_->config();
-        socket_name.append(config->GetAgentConfig().service_socket_name());
-        RunConnector(app_pid, package_name, socket_name);
-        // RunConnector calls execl() at the end. It returns only if an error
-        // has occured.
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    return Status::OK;
+  string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+  PackageManager package_manager;
+  string data_path;
+  string error;
+  if (!package_manager.GetAppDataPath(package_name, &data_path, &error)) {
+    // Cannot access the app's data folder.
+    return false;
   }
+
+  // Copies the connector over to the package's data folder so we can run it
+  // to send messages to perfa's Unix socket server.
+  CopyFileToPackageFolder(package_name, kConnectorFileName);
+  // Only attach agent if one is not detected. Note that an agent can already
+  // exist if we have profiled the same app before, and either Studio/perfd
+  // has restarted and has lost any knowledge about such agent.
+  if (!IsAppAgentAlive(app_pid, package_name)) {
+    auto* config = daemon_->config();
+    RunAgent(app_name, package_name, config->GetConfigFilePath(),
+             agent_lib_file_name);
+  }
+
+  // Only reconnect to perfa if an existing connection has not been detected.
+  // This can be identified by whether perfa has a valid grpc channel to send
+  // this perfd instance the heartbeats.
+  if (!CheckAppHeartBeat(app_pid)) {
+    int fork_pid = fork();
+    if (fork_pid == -1) {
+      perror("fork connector");
+      return false;
+    } else if (fork_pid == 0) {
+      // child process
+      string socket_name;
+      auto* config = daemon_->config();
+      socket_name.append(config->GetAgentConfig().service_socket_name());
+      RunConnector(app_pid, package_name, socket_name);
+      // RunConnector calls execl() at the end. It returns only if an error
+      // has occured.
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  return true;
 }
 
 Status ProfilerServiceImpl::ConfigureStartupAgent(
@@ -304,20 +320,27 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
+  // Make sure the pid is valid.
+  string app_name = ProcessManager::GetCmdlineForPid(request->pid());
+  if (app_name.empty()) {
+    return Status(StatusCode::NOT_FOUND,
+                  "Process isn't running. Cannot create session.");
+  }
+
   int64_t start_timestamp = daemon_->clock()->GetCurrentTime();
   for (const auto& component : daemon_->GetComponents()) {
     start_timestamp = std::min(start_timestamp,
                                component->GetEarliestDataTime(request->pid()));
   }
   daemon_->sessions()->BeginSession(request->device_id(), request->pid(),
-                                    response->mutable_session(), start_timestamp);
-  Status status = Status::OK;
+                                    response->mutable_session(),
+                                    start_timestamp);
   if (request->jvmti_config().attach_agent()) {
-    status = TryAttachAppAgent(request->pid(),
-                               request->jvmti_config().agent_lib_file_name());
+    TryAttachAppAgent(request->pid(), app_name,
+                      request->jvmti_config().agent_lib_file_name());
   }
 
-  return status;
+  return Status::OK;
 }
 
 Status ProfilerServiceImpl::EndSession(
@@ -359,13 +382,9 @@ bool ProfilerServiceImpl::IsAppAgentAlive(int app_pid, const string& app_name) {
 }
 
 bool ProfilerServiceImpl::CheckAppHeartBeat(int app_pid) {
-  auto got = heartbeat_timestamp_map_.find(app_pid);
-  if (got != heartbeat_timestamp_map_.end()) {
-    int64_t current_time = daemon_->clock()->GetCurrentTime();
-    if (GenericComponent::kHeartbeatThresholdNs >
-        (current_time - got->second)) {
-      return true;
-    }
+  auto got = agent_status_map_.find(app_pid);
+  if (got != agent_status_map_.end()) {
+    return got->second == proto::AgentStatusResponse::ATTACHED;
   }
   return false;
 }

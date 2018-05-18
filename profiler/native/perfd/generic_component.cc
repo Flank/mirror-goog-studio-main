@@ -24,7 +24,7 @@ namespace profiler {
 
 GenericComponent::GenericComponent(Daemon* daemon, Clock* clock,
                                    SessionsManager* sessions)
-    : generic_public_service_(daemon, &heartbeat_timestamp_map_),
+    : generic_public_service_(daemon, &agent_status_map_),
       agent_service_(clock, &heartbeat_timestamp_map_),
       clock_(clock) {
   status_thread_ = std::thread(&GenericComponent::RunAgentStatusThread, this);
@@ -39,13 +39,13 @@ void GenericComponent::RunAgentStatusThread() {
           kHeartbeatThresholdNs > (current_time - map.second)
               ? proto::AgentStatusResponse::ATTACHED
               : proto::AgentStatusResponse::DETACHED;
-      auto got = heartbeat_status_map_.find(map.first);
-      if (got == heartbeat_status_map_.end() || got->second != status) {
+      auto got = agent_status_map_.find(map.first);
+      if (got == agent_status_map_.end() || got->second != status) {
         for (auto callback : agent_status_changed_callbacks_) {
           callback(map.first, status);
         }
       }
-      heartbeat_status_map_[map.first] = status;
+      agent_status_map_[map.first] = status;
     }
     usleep(Clock::ns_to_us(kHeartbeatThresholdNs));
   }

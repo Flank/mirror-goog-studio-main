@@ -30,8 +30,9 @@ class ProfilerServiceImpl final
  public:
   explicit ProfilerServiceImpl(
       Daemon* daemon,
-      std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
-      : daemon_(daemon), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
+      std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>*
+          agent_status_map)
+      : daemon_(daemon), agent_status_map_(*agent_status_map) {}
 
   grpc::Status GetCurrentTime(grpc::ServerContext* context,
                               const profiler::proto::TimeRequest* request,
@@ -81,13 +82,14 @@ class ProfilerServiceImpl final
       profiler::proto::GetSessionsResponse* response) override;
 
  private:
-  // Attaches an JVMTI agent to an app. If |agent_lib_file_name| is attached
-  // successfully Status::Ok is returned, otherwise a grpc error is returned.
+  // Attaches an JVMTI agent to an app. Returns true if |agent_lib_file_name| is
+  // attached successfully (either an agent already exists or a new one
+  // attaches), otherwise returns false.
   // Note: |agent_lib_file_name| refers to the name of the agent library file
   // located within the perfd directory, and it needs to be compatible with the
   // app's CPU architecture.
-  grpc::Status TryAttachAppAgent(int32_t app_pid,
-                                 const std::string& agent_lib_file_name);
+  bool TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
+                         const std::string& agent_lib_file_name);
 
   // True if there is an JVMTI agent attached to an app. False otherwise.
   bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name);
@@ -100,7 +102,8 @@ class ProfilerServiceImpl final
   // The daemon this service talks to.
   Daemon* daemon_;
 
-  std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
+  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>&
+      agent_status_map_;
 };
 
 }  // namespace profiler
