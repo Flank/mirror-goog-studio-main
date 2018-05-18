@@ -81,12 +81,11 @@ import java.io.File
 
 // Analyze PSI files with Kotlin compiler and produce binding context
 // From https://github.com/JetBrains/kotlin/commits/rr/yan : fb82b72dc1892d377ccf98511d56ecce219c8098
-object KotlinLintAnalyzerFacade {
-    @JvmStatic
+class KotlinLintAnalyzerFacade {
     fun analyze(files: List<File>, contentRoots: List<File>, project: MockProject): BindingTrace {
 
         if (ServiceManager.getService(project, LightClassGenerationSupport::class.java) == null) {
-            KotlinLintAnalyzerFacade.registerProjectComponents(project)
+            registerProjectComponents(project)
         }
 
         val localFs = StandardFileSystems.local()
@@ -98,7 +97,6 @@ object KotlinLintAnalyzerFacade {
         return analyzePsi(ktFiles, contentRoots, project)
     }
 
-    @JvmStatic
     private fun analyzePsi(
         ktFiles: List<KtFile>,
         contentRoots: List<File>,
@@ -227,7 +225,6 @@ object KotlinLintAnalyzerFacade {
 
     private val packagePartProviders = mutableListOf<JvmPackagePartProvider>()
 
-    @JvmStatic
     private fun registerProjectComponents(project: MockProject) {
         KotlinCoreEnvironment.registerPluginExtensionPoints(project)
         KotlinCoreEnvironment.registerKotlinLightClassSupport(project)
