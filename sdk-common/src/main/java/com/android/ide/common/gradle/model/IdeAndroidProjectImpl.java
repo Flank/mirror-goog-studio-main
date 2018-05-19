@@ -66,8 +66,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     public IdeAndroidProjectImpl(
             @NonNull AndroidProject project,
             @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable Variant variant) {
-        this(project, new ModelCache(), dependenciesFactory, variant);
+            @Nullable Collection<Variant> variants) {
+        this(project, new ModelCache(), dependenciesFactory, variants);
     }
 
     @VisibleForTesting
@@ -75,7 +75,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
             @NonNull AndroidProject project,
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable Variant selectedVariant) {
+            @Nullable Collection<Variant> variants) {
         super(project, modelCache);
         myModelVersion = project.getModelVersion();
         // Old plugin versions do not return model version.
@@ -102,26 +102,17 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                         project.getSyncIssues(),
                         modelCache,
                         issue -> new IdeSyncIssue(issue, modelCache));
-        if (selectedVariant != null) {
-            IdeVariantImpl variant =
-                    new IdeVariantImpl(
-                            selectedVariant, modelCache, dependenciesFactory, myParsedModelVersion);
-            ImmutableList.Builder<Variant> variants = ImmutableList.builder();
-            variants.add(variant);
-            myVariants = variants.build();
-        } else {
-            myVariants =
-                    copy(
-                            project.getVariants(),
-                            modelCache,
-                            variant ->
-                                    new IdeVariantImpl(
-                                            variant,
-                                            modelCache,
-                                            dependenciesFactory,
-                                            myParsedModelVersion));
-        }
-
+        Collection<Variant> variantsToCopy = variants != null ? variants : project.getVariants();
+        myVariants =
+                copy(
+                        variantsToCopy,
+                        modelCache,
+                        variant ->
+                                new IdeVariantImpl(
+                                        variant,
+                                        modelCache,
+                                        dependenciesFactory,
+                                        myParsedModelVersion));
         myVariantNames =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(project.getVariantNames()),

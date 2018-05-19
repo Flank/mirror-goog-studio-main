@@ -17,6 +17,7 @@ package com.android.ide.common.gradle.model;
 
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
@@ -122,7 +123,8 @@ public class IdeAndroidProjectImplTest {
         original.getVariants().clear();
         Variant variant = new VariantStub();
         IdeAndroidProjectImpl copy =
-                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, variant);
+                new IdeAndroidProjectImpl(
+                        original, myModelCache, myDependenciesFactory, singletonList(variant));
 
         original.getVariants().add(variant);
         assertEqualsOrSimilar(original, copy);
