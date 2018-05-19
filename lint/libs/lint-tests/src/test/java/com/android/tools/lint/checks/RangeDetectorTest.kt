@@ -854,4 +854,66 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun test79907796() {
+        // Regression test for
+        // 79907796: Range Check fails for arrays with size greater than 30
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+                    import android.support.annotation.Size;
+                    import java.util.Random;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class SizeTest {
+                        public void doSomethingWithArrayOf40(@Size(40) int[] xValues) {
+                        }
+
+                        void test(int luminance) {
+                            int[] fortyValues = new int[40];
+                            doSomethingWithArrayOf40(fortyValues);
+                        }
+                    }
+                    """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testKotlinArraySize() {
+        intArrayOf()
+        // Regression test for
+        // 79907796: Range Check fails for arrays with size greater than 30
+        lint().files(
+            kotlin(
+                """
+                    package test.pkg
+                    import android.support.annotation.Size
+
+                    class SizeTest {
+                        fun method(@Size(5) collection: IntArray) { }
+
+                        fun test() {
+                            val array1 = arrayOf(1,2,3,4,5)
+                            method(array1) // OK
+
+                            val array2 = arrayOf(1,2,3,4)
+                            method(array2) // ERROR
+                        }
+                    }
+                    """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/SizeTest.kt:12: Error: Expected size 5 (was 4) [Range]
+                    method(array2) // ERROR
+                           ~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

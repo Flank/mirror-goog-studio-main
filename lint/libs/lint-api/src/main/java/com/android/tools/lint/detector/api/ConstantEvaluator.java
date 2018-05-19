@@ -58,7 +58,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.jetbrains.uast.UArrayAccessExpression;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBinaryExpressionWithType;
 import org.jetbrains.uast.UBlockExpression;
@@ -85,6 +87,12 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /** Evaluates constant expressions */
 public class ConstantEvaluator {
+    /**
+     * When evaluating expressions that resolve to arrays, this is the largest array size we'll
+     * initialize; for larger arrays we'll return a {@link ArrayReference} instead
+     */
+    private static final int LARGEST_LITERAL_ARRAY = 12;
+
     private boolean allowUnknown;
     private boolean allowFieldInitializers;
 
@@ -220,6 +228,21 @@ public class ConstantEvaluator {
                 // or if allowFieldInitializers is true
                 if (resolved instanceof PsiField) {
                     PsiField field = (PsiField) resolved;
+                    if ("length".equals(field.getName())
+                            && node instanceof UQualifiedReferenceExpression
+                            && ((UQualifiedReferenceExpression) node)
+                                            .getReceiver()
+                                            .getExpressionType()
+                                    instanceof PsiArrayType) {
+                        // It's an array.length expression
+                        Object array =
+                                evaluate(((UQualifiedReferenceExpression) node).getReceiver());
+                        int size = getArraySize(array);
+                        if (size != -1) {
+                            return size;
+                        }
+                        return null;
+                    }
                     Object value = field.computeConstantValue();
                     if (value != null) {
                         return value;
@@ -261,148 +284,179 @@ public class ConstantEvaluator {
                 }
                 return null;
             }
-        } else if (UastExpressionUtils.isNewArrayWithDimensions(node)) {
-            UCallExpression call = (UCallExpression) node;
-            PsiType arrayType = call.getExpressionType();
-            if (arrayType instanceof PsiArrayType) {
-                PsiType componentType = ((PsiArrayType) arrayType).getComponentType();
-                // Single-dimension array
-                if (!(componentType instanceof PsiArrayType) && call.getValueArgumentCount() == 1) {
-                    Object lengthObj = evaluate(call.getValueArguments().get(0));
-                    if (lengthObj instanceof Number) {
-                        int length = ((Number) lengthObj).intValue();
-                        if (length > 30) {
-                            length = 30;
+            if (node instanceof UQualifiedReferenceExpression) {
+                UQualifiedReferenceExpression expression = (UQualifiedReferenceExpression) node;
+                UExpression selector = expression.getSelector();
+                UExpression receiver = expression.getReceiver();
+
+                if (receiver instanceof USimpleNameReferenceExpression) {
+                    USimpleNameReferenceExpression name = (USimpleNameReferenceExpression) receiver;
+                    // such as kotlin.IntArray(x)
+                    if (name.getIdentifier().equals("kotlin")) {
+                        return evaluate(selector);
+                    }
+                }
+
+                if (selector instanceof USimpleNameReferenceExpression) {
+                    USimpleNameReferenceExpression nameReferenceExpression =
+                            (USimpleNameReferenceExpression) selector;
+                    String identifier = nameReferenceExpression.getIdentifier();
+                    // "kotlin.<N>Array".size ?
+                    if (receiver instanceof UQualifiedReferenceExpression) {
+                        UQualifiedReferenceExpression expression1 =
+                                (UQualifiedReferenceExpression) receiver;
+                        if (expression1.getReceiver() instanceof USimpleNameReferenceExpression
+                                && ((USimpleNameReferenceExpression) expression1.getReceiver())
+                                        .getIdentifier()
+                                        .equals("kotlin")) {
+                            receiver = expression1.getSelector();
                         }
-                        if (componentType == PsiType.BOOLEAN) {
-                            return new boolean[length];
-                        } else if (isObjectType(componentType)) {
-                            return new Object[length];
-                        } else if (componentType == PsiType.CHAR) {
-                            return new char[length];
-                        } else if (componentType == PsiType.BYTE) {
-                            return new byte[length];
-                        } else if (componentType == PsiType.DOUBLE) {
-                            return new double[length];
-                        } else if (componentType == PsiType.FLOAT) {
-                            return new float[length];
-                        } else if (componentType == PsiType.INT) {
-                            return new int[length];
-                        } else if (componentType == PsiType.SHORT) {
-                            return new short[length];
-                        } else if (componentType == PsiType.LONG) {
-                            return new long[length];
-                        } else if (isStringType(componentType)) {
-                            return new String[length];
+                    }
+
+                    // TODO: Handle listOf, arrayListOf etc as well!
+
+                    if ("size".equals(identifier) && receiver instanceof UCallExpression) {
+                        UCallExpression receiverCall = (UCallExpression) receiver;
+                        String name = Lint.getMethodName(receiverCall);
+                        if (name != null) {
+                            if (name.endsWith("Array")
+                                    && (name.equals("Array")
+                                            || getKotlinPrimitiveArrayType(name) != null)) {
+                                int size = getKotlinArrayConstructionSize(receiverCall);
+                                if (size != -1) {
+                                    return size;
+                                }
+                            } else if (name.endsWith("rrayOf")
+                                    && (name.equals("arrayOf")
+                                            || getKotlinPrimitiveArrayType(name) != null)) {
+                                return receiverCall.getValueArgumentCount();
+                            } else if ("arrayOfNulls".equals(name)) {
+                                int size = getKotlinArrayConstructionSize(receiverCall);
+                                if (size != -1) {
+                                    return size;
+                                }
+                            }
                         }
                     }
                 }
             }
-        } else if (UastExpressionUtils.isNewArrayWithInitializer(node)) {
+        } else if (UastExpressionUtils.isNewArrayWithDimensions(node)) {
             UCallExpression call = (UCallExpression) node;
             PsiType arrayType = call.getExpressionType();
             if (arrayType instanceof PsiArrayType) {
-                PsiType componentType = ((PsiArrayType) arrayType).getComponentType();
-                // Single-dimension array
-                if (!(componentType instanceof PsiArrayType)) {
-                    int length = call.getValueArgumentCount();
-                    List<Object> evaluatedArgs = new ArrayList<>(length);
-                    for (UExpression arg : call.getValueArguments()) {
-                        Object evaluatedArg = evaluate(arg);
-                        if (!allowUnknown && evaluatedArg == null) {
-                            // Inconclusive
-                            return null;
-                        }
-                        evaluatedArgs.add(evaluatedArg);
-                    }
 
-                    if (componentType == PsiType.BOOLEAN) {
-                        boolean[] arr = new boolean[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Boolean) {
-                                arr[i] = (Boolean) o;
+                PsiType type = arrayType.getDeepComponentType();
+                // Single-dimension array
+                if (!(type instanceof PsiArrayType) && call.getValueArgumentCount() == 1) {
+                    Object lengthObj = evaluate(call.getValueArguments().get(0));
+                    if (lengthObj instanceof Number) {
+                        int size = ((Number) lengthObj).intValue();
+                        int dimensions = arrayType.getArrayDimensions();
+                        return getArray(type, size, dimensions);
+                    }
+                }
+            }
+        } else if (UastExpressionUtils.isNewArrayWithInitializer(node)) {
+            Object array = createInitializedArray((UCallExpression) node);
+            if (array != null) {
+                return array;
+            }
+        } else if (node instanceof UCallExpression) {
+            UCallExpression call = (UCallExpression) node;
+
+            String name = Lint.getMethodName(call);
+            if (name != null) {
+                if (name.endsWith("Array") && UastExpressionUtils.isConstructorCall(call)) {
+                    int size = getKotlinArrayConstructionSize(call);
+                    if (size != -1) {
+                        if (name.equals("Array")) {
+                            PsiType type = call.getExpressionType();
+                            if (type instanceof PsiArrayType) {
+                                int dimensions = type.getArrayDimensions();
+                                PsiType componentType = type.getDeepComponentType();
+                                return getArray(componentType, size, dimensions);
+                            }
+                        } else {
+                            PsiType type = getKotlinPrimitiveArrayType(name);
+                            if (type != null) {
+                                int dimensions = 1;
+                                return getArray(type, size, dimensions);
                             }
                         }
-                        return arr;
-                    } else if (isObjectType(componentType)) {
-                        Object[] arr = new Object[length];
-                        for (int i = 0; i < length; ++i) {
-                            arr[i] = evaluatedArgs.get(i);
+                    }
+                } else if ("arrayOf".equals(name)
+                        || name.endsWith("ArrayOf") && getKotlinPrimitiveArrayType(name) != null) {
+                    Object array = createInitializedArray(call);
+                    if (array != null) {
+                        return array;
+                    }
+                } else if ("arrayOfNulls".equals(name)) {
+                    PsiType type = call.getExpressionType();
+                    if (type instanceof PsiArrayType) {
+                        int size = getKotlinArrayConstructionSize(call);
+                        if (size != -1) {
+                            int dimensions = type.getArrayDimensions();
+                            PsiType componentType = type.getDeepComponentType();
+                            return getArray(componentType, size, dimensions);
                         }
-                        return arr;
-                    } else if (componentType.equals(PsiType.CHAR)) {
-                        char[] arr = new char[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Character) {
-                                arr[i] = (Character) o;
+                    }
+                }
+            }
+        } else if (node instanceof UArrayAccessExpression) {
+            UArrayAccessExpression expression = (UArrayAccessExpression) node;
+            List<UExpression> indices = expression.getIndices();
+            if (indices.size() == 1) {
+                Object indexValue = evaluate(indices.get(0));
+                if (indexValue instanceof Number) {
+                    Object array = evaluate(expression.getReceiver());
+                    if (array != null) {
+                        int index = ((Number) indexValue).intValue();
+                        if (array instanceof Object[]) {
+                            Object[] objArray = (Object[]) array;
+                            if (index >= 0 && index < objArray.length) {
+                                return objArray[index];
+                            }
+                        } else if (array instanceof int[]) {
+                            int[] intArray = (int[]) array;
+                            if (index >= 0 && index < intArray.length) {
+                                return intArray[index];
+                            }
+                        } else if (array instanceof boolean[]) {
+                            boolean[] booleanArray = (boolean[]) array;
+                            if (index >= 0 && index < booleanArray.length) {
+                                return booleanArray[index];
+                            }
+                        } else if (array instanceof char[]) {
+                            char[] charArray = (char[]) array;
+                            if (index >= 0 && index < charArray.length) {
+                                return charArray[index];
+                            }
+                        } else if (array instanceof long[]) {
+                            long[] longArray = (long[]) array;
+                            if (index >= 0 && index < longArray.length) {
+                                return longArray[index];
+                            }
+                        } else if (array instanceof float[]) {
+                            float[] floatArray = (float[]) array;
+                            if (index >= 0 && index < floatArray.length) {
+                                return floatArray[index];
+                            }
+                        } else if (array instanceof double[]) {
+                            double[] doubleArray = (double[]) array;
+                            if (index >= 0 && index < doubleArray.length) {
+                                return doubleArray[index];
+                            }
+                        } else if (array instanceof byte[]) {
+                            byte[] byteArray = (byte[]) array;
+                            if (index >= 0 && index < byteArray.length) {
+                                return byteArray[index];
+                            }
+                        } else if (array instanceof short[]) {
+                            short[] shortArray = (short[]) array;
+                            if (index >= 0 && index < shortArray.length) {
+                                return shortArray[index];
                             }
                         }
-                        return arr;
-                    } else if (componentType.equals(PsiType.BYTE)) {
-                        byte[] arr = new byte[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Byte) {
-                                arr[i] = (Byte) o;
-                            }
-                        }
-                        return arr;
-                    } else if (componentType.equals(PsiType.DOUBLE)) {
-                        double[] arr = new double[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Double) {
-                                arr[i] = (Double) o;
-                            }
-                        }
-                        return arr;
-                    } else if (componentType.equals(PsiType.FLOAT)) {
-                        float[] arr = new float[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Float) {
-                                arr[i] = (Float) o;
-                            }
-                        }
-                        return arr;
-                    } else if (componentType.equals(PsiType.INT)) {
-                        int[] arr = new int[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Integer) {
-                                arr[i] = (Integer) o;
-                            }
-                        }
-                        return arr;
-                    } else if (componentType.equals(PsiType.SHORT)) {
-                        short[] arr = new short[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Short) {
-                                arr[i] = (Short) o;
-                            }
-                        }
-                        return arr;
-                    } else if (componentType.equals(PsiType.LONG)) {
-                        long[] arr = new long[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof Long) {
-                                arr[i] = (Long) o;
-                            }
-                        }
-                        return arr;
-                    } else if (isStringType(componentType)) {
-                        String[] arr = new String[length];
-                        for (int i = 0; i < length; ++i) {
-                            Object o = evaluatedArgs.get(i);
-                            if (o instanceof String) {
-                                arr[i] = (String) o;
-                            }
-                        }
-                        return arr;
                     }
                 }
             }
@@ -419,6 +473,207 @@ public class ConstantEvaluator {
         // Math.* methods, String utility methods like notNullize, etc
 
         return null;
+    }
+
+    private Object createInitializedArray(UCallExpression call) {
+        PsiType arrayType = call.getExpressionType();
+        if (arrayType instanceof PsiArrayType) {
+            PsiType componentType = arrayType.getDeepComponentType();
+            if (!(componentType instanceof PsiArrayType)) {
+                int length = call.getValueArgumentCount();
+                List<Object> evaluatedArgs = new ArrayList<>(length);
+                int count = 0;
+                for (UExpression arg : call.getValueArguments()) {
+                    Object evaluatedArg = evaluate(arg);
+                    if (!allowUnknown && evaluatedArg == null) {
+                        // Inconclusive
+                        return null;
+                    }
+                    evaluatedArgs.add(evaluatedArg);
+                    count++;
+                    if (count == 40) { // avoid large initializers
+                        return getArray(componentType, length, 1);
+                    }
+                }
+
+                if (componentType == PsiType.BOOLEAN) {
+                    boolean[] arr = new boolean[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Boolean) {
+                            arr[i] = (Boolean) o;
+                        }
+                    }
+                    return arr;
+                } else if (isObjectType(componentType)) {
+                    Object[] arr = new Object[length];
+                    for (int i = 0; i < length; ++i) {
+                        arr[i] = evaluatedArgs.get(i);
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.CHAR)) {
+                    char[] arr = new char[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Character) {
+                            arr[i] = (Character) o;
+                        }
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.BYTE)) {
+                    byte[] arr = new byte[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Byte) {
+                            arr[i] = (Byte) o;
+                        }
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.DOUBLE)) {
+                    double[] arr = new double[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Double) {
+                            arr[i] = (Double) o;
+                        }
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.FLOAT)) {
+                    float[] arr = new float[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Float) {
+                            arr[i] = (Float) o;
+                        }
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.INT)) {
+                    int[] arr = new int[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Integer) {
+                            arr[i] = (Integer) o;
+                        }
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.SHORT)) {
+                    short[] arr = new short[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Short) {
+                            arr[i] = (Short) o;
+                        }
+                    }
+                    return arr;
+                } else if (componentType.equals(PsiType.LONG)) {
+                    long[] arr = new long[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof Long) {
+                            arr[i] = (Long) o;
+                        }
+                    }
+                    return arr;
+                } else if (isStringType(componentType)) {
+                    String[] arr = new String[length];
+                    for (int i = 0; i < length; ++i) {
+                        Object o = evaluatedArgs.get(i);
+                        if (o instanceof String) {
+                            arr[i] = (String) o;
+                        }
+                    }
+                    return arr;
+                }
+
+                // Try to instantiate base type
+                if (!evaluatedArgs.isEmpty()) {
+                    Object first = evaluatedArgs.get(0);
+                    for (Object o : evaluatedArgs) {
+                        if (o.getClass() != first.getClass()) {
+                            return null;
+                        }
+                    }
+                    return evaluatedArgs.toArray((Object[]) Array.newInstance(first.getClass(), 0));
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static PsiType getKotlinPrimitiveArrayType(@NonNull String constructorName) {
+        switch (constructorName) {
+            case "ByteArray":
+            case "byteArrayOf":
+                return PsiPrimitiveType.BYTE;
+            case "CharArray":
+            case "charArrayOf":
+                return PsiPrimitiveType.CHAR;
+            case "ShortArray":
+            case "shortArrayOf":
+                return PsiPrimitiveType.SHORT;
+            case "IntArray":
+            case "intArrayOf":
+                return PsiPrimitiveType.INT;
+            case "LongArray":
+            case "longArrayOf":
+                return PsiPrimitiveType.LONG;
+            case "FloatArray":
+            case "floatArrayOf":
+                return PsiPrimitiveType.FLOAT;
+            case "DoubleArray":
+            case "doubleArrayOf":
+                return PsiPrimitiveType.DOUBLE;
+            case "BooleanArray":
+            case "booleanArrayOf":
+                return PsiPrimitiveType.BOOLEAN;
+        }
+        return null;
+    }
+
+    private int getKotlinArrayConstructionSize(@NonNull UCallExpression call) {
+        List<UExpression> valueArguments = call.getValueArguments();
+        if (!valueArguments.isEmpty()) {
+            Object lengthObj = evaluate(call.getValueArguments().get(0));
+            if (lengthObj instanceof Number) {
+                return ((Number) lengthObj).intValue();
+            }
+        }
+
+        return -1;
+    }
+
+    public static int getArraySize(@Nullable Object array) {
+        // This is kinda repetitive but there is no subtyping relationship between
+        // primitive arrays; int[] is not a subtype of Object[] etc.
+        if (array instanceof ArrayReference) {
+            return ((ArrayReference) array).size;
+        }
+        if (array instanceof int[]) {
+            return ((int[]) array).length;
+        }
+        if (array instanceof long[]) {
+            return ((long[]) array).length;
+        }
+        if (array instanceof float[]) {
+            return ((float[]) array).length;
+        }
+        if (array instanceof double[]) {
+            return ((double[]) array).length;
+        }
+        if (array instanceof char[]) {
+            return ((char[]) array).length;
+        }
+        if (array instanceof byte[]) {
+            return ((byte[]) array).length;
+        }
+        if (array instanceof short[]) {
+            return ((short[]) array).length;
+        }
+        if (array instanceof Object[]) {
+            return ((Object[]) array).length;
+        }
+        return -1;
     }
 
     @Nullable
@@ -1877,6 +2132,22 @@ public class ConstantEvaluator {
             PsiElement resolved = ((PsiReference) node).resolve();
             if (resolved instanceof PsiField) {
                 PsiField field = (PsiField) resolved;
+
+                // array.length expression?
+                if ("length".equals(field.getName()) && node instanceof PsiReferenceExpression) {
+                    PsiExpression expression =
+                            ((PsiReferenceExpression) node).getQualifierExpression();
+                    if (expression != null && expression.getType() instanceof PsiArrayType) {
+                        // It's an array.length expression
+                        Object array = evaluate(expression);
+                        int size = getArraySize(array);
+                        if (size != -1) {
+                            return size;
+                        }
+                        return null;
+                    }
+                }
+
                 Object value = field.computeConstantValue();
                 if (value != null) {
                     return value;
@@ -1943,8 +2214,8 @@ public class ConstantEvaluator {
                             return null;
                         }
                         count++;
-                        if (count == 20) { // avoid large initializers
-                            break;
+                        if (count == 40) { // avoid large initializers
+                            return getArray(type.getDeepComponentType(), initializers.length, 1);
                         }
                     }
                     type = type.getDeepComponentType();
@@ -2057,53 +2328,17 @@ public class ConstantEvaluator {
                     // we return a byte[3] array, but if it's say byte[1024*1024] we don't
                     // want to do that.
                     PsiExpression[] arrayDimensions = creation.getArrayDimensions();
+
                     int size = 0;
-                    if (arrayDimensions.length == 1) {
+                    if (arrayDimensions.length > 0) {
                         Object fixedSize = evaluate(arrayDimensions[0]);
                         if (fixedSize instanceof Number) {
                             size = ((Number) fixedSize).intValue();
-                            if (size > 30) {
-                                size = 30;
-                            }
                         }
                     }
+                    int dimensions = type.getArrayDimensions();
                     type = type.getDeepComponentType();
-                    if (type instanceof PsiPrimitiveType) {
-                        if (PsiType.BYTE.equals(type)) {
-                            return new byte[size];
-                        }
-                        if (PsiType.BOOLEAN.equals(type)) {
-                            return new boolean[size];
-                        }
-                        if (PsiType.INT.equals(type)) {
-                            return new int[size];
-                        }
-                        if (PsiType.LONG.equals(type)) {
-                            return new long[size];
-                        }
-                        if (PsiType.CHAR.equals(type)) {
-                            return new char[size];
-                        }
-                        if (PsiType.FLOAT.equals(type)) {
-                            return new float[size];
-                        }
-                        if (PsiType.DOUBLE.equals(type)) {
-                            return new double[size];
-                        }
-                        if (PsiType.SHORT.equals(type)) {
-                            return new short[size];
-                        }
-                    } else if (type instanceof PsiClassType) {
-                        String className = type.getCanonicalText();
-                        if (TYPE_STRING.equals(className)) {
-                            //noinspection SSBasedInspection
-                            return new String[size];
-                        }
-                        if (TYPE_OBJECT.equals(className)) {
-                            //noinspection SSBasedInspection
-                            return new Object[size];
-                        }
-                    }
+                    return getArray(type, size, dimensions);
                 }
             }
         }
@@ -2112,6 +2347,141 @@ public class ConstantEvaluator {
         // Math.* methods, String utility methods like notNullize, etc
 
         return null;
+    }
+
+    @Nullable
+    private static Object getArray(PsiType type, int size, int dimensions) {
+        if (type instanceof PsiPrimitiveType) {
+            if (size <= LARGEST_LITERAL_ARRAY) {
+                if (PsiType.BYTE.equals(type)) {
+                    return new byte[size];
+                }
+                if (PsiType.BOOLEAN.equals(type)) {
+                    return new boolean[size];
+                }
+                if (PsiType.INT.equals(type)) {
+                    return new int[size];
+                }
+                if (PsiType.LONG.equals(type)) {
+                    return new long[size];
+                }
+                if (PsiType.CHAR.equals(type)) {
+                    return new char[size];
+                }
+                if (PsiType.FLOAT.equals(type)) {
+                    return new float[size];
+                }
+                if (PsiType.DOUBLE.equals(type)) {
+                    return new double[size];
+                }
+                if (PsiType.SHORT.equals(type)) {
+                    return new short[size];
+                }
+            } else {
+                if (PsiType.BYTE.equals(type)) {
+                    return new ArrayReference(Byte.TYPE, size, dimensions);
+                }
+                if (PsiType.BOOLEAN.equals(type)) {
+                    return new ArrayReference(Boolean.TYPE, size, dimensions);
+                }
+                if (PsiType.INT.equals(type)) {
+                    return new ArrayReference(Integer.TYPE, size, dimensions);
+                }
+                if (PsiType.LONG.equals(type)) {
+                    return new ArrayReference(Long.TYPE, size, dimensions);
+                }
+                if (PsiType.CHAR.equals(type)) {
+                    return new ArrayReference(Character.TYPE, size, dimensions);
+                }
+                if (PsiType.FLOAT.equals(type)) {
+                    return new ArrayReference(Float.TYPE, size, dimensions);
+                }
+                if (PsiType.DOUBLE.equals(type)) {
+                    return new ArrayReference(Double.TYPE, size, dimensions);
+                }
+                if (PsiType.SHORT.equals(type)) {
+                    return new ArrayReference(Short.TYPE, size, dimensions);
+                }
+            }
+        } else if (type instanceof PsiClassType) {
+            String className = type.getCanonicalText();
+            if (TYPE_STRING.equals(className)) {
+                if (size < LARGEST_LITERAL_ARRAY) {
+                    //noinspection SSBasedInspection
+                    return new String[size];
+                } else {
+                    return new ArrayReference(String.class, size, dimensions);
+                }
+            } else if (TYPE_OBJECT.equals(className)) {
+                if (size < LARGEST_LITERAL_ARRAY) {
+                    //noinspection SSBasedInspection
+                    return new Object[size];
+                } else {
+                    return new ArrayReference(Object.class, size, dimensions);
+                }
+            } else {
+                return new ArrayReference(className, size, dimensions);
+            }
+        }
+        return null;
+    }
+
+    public static class ArrayReference {
+        @Nullable public final Class<?> type;
+        @Nullable public final String className;
+        public final int size;
+        public final int dimensions;
+
+        public ArrayReference(@Nullable Class<?> type, int size, int dimensions) {
+            this.type = type;
+            this.className = null;
+            this.size = size;
+            this.dimensions = dimensions;
+        }
+
+        public ArrayReference(@Nullable String className, int size, int dimensions) {
+            this.className = className;
+            this.type = null;
+            this.size = size;
+            this.dimensions = dimensions;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ArrayReference that = (ArrayReference) o;
+            return size == that.size
+                    && dimensions == that.dimensions
+                    && Objects.equals(type, that.type)
+                    && Objects.equals(className, that.className);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, className, size, dimensions);
+        }
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Array Reference: ");
+            if (type != null) {
+                sb.append(type.toString());
+            } else if (className != null) {
+                sb.append(className);
+            }
+            for (int i = 0; i < dimensions - 1; i++) {
+                sb.append("[]");
+            }
+            sb.append("[");
+            sb.append(Integer.toString(size));
+            sb.append("]");
+            return sb.toString();
+        }
     }
 
     /** Returns true if the given variable is referenced from within the given element */

@@ -253,7 +253,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 actual = `object`.length.toLong()
                 isString = true
             } else {
-                actual = getArrayLength(`object`).toLong()
+                actual = ConstantEvaluator.getArraySize(`object`).toLong()
                 if (actual == -1L) {
                     // Try to resolve it; see if there's an annotation on the variable/parameter/field
                     if (argument is UResolvable) {
@@ -293,22 +293,6 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 unit, actual
             )
             report(context, RANGE, argument, context.getLocation(argument), message)
-        }
-    }
-
-    private fun getArrayLength(array: Any?): Int {
-        // This is kinda repetitive but there is no subtyping relationship between
-        // primitive arrays; int[] is not a subtype of Object[] etc.
-        return when (array) {
-            is IntArray -> array.size
-            is LongArray -> array.size
-            is FloatArray -> array.size
-            is DoubleArray -> array.size
-            is CharArray -> array.size
-            is ByteArray -> array.size
-            is ShortArray -> array.size
-            is Array<*> -> array.size
-            else -> -1
         }
     }
 
