@@ -58,12 +58,14 @@ class JetifierTest {
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app").buildFile,
             "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-P\"")
+            "compileSdkVersion \"android-P\""
+        )
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app")
                 .file("src/main/java/com/example/app/MainActivity.java"),
             "import android.support.v7.app.AppCompatActivity;",
-            "import androidx.appcompat.app.AppCompatActivity;")
+            "import androidx.appcompat.app.AppCompatActivity;"
+        )
 
         // Build the project with Jetifier enabled and AndroidX enabled
         project.executor()
@@ -94,5 +96,41 @@ class JetifierTest {
             assertThat(Throwables.getStackTraceAsString(e))
                 .contains("AndroidX must be enabled when Jetifier is enabled.")
         }
+    }
+
+    @Test
+    fun testAndroidArchNavigationLibrariesAreJetified() {
+        // Regression test for https://issuetracker.google.com/79667498
+        // Prepare the project to use AndroidX
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app").buildFile,
+            "compileSdkVersion rootProject.latestCompileSdk",
+            "compileSdkVersion \"android-P\""
+        )
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app")
+                .file("src/main/java/com/example/app/MainActivity.java"),
+            "import android.support.v7.app.AppCompatActivity;",
+            "import androidx.appcompat.app.AppCompatActivity;"
+        )
+
+        // Add an android.arch.navigation dependency
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            "dependencies{\n" +
+                    "implementation 'android.arch.navigation:navigation-fragment:1.0.0-alpha01'\n" +
+                    "}\n"
+        )
+
+        // Build the project with Jetifier enabled and AndroidX enabled
+        project.executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, true)
+            .run("assembleDebug")
+        val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+
+        // Check that the android.arch.navigation library has been jetified
+        assertThat(apk).hasClass("Landroidx/navigation/fragment/NavHostFragment;")
+            .that().hasSuperclass("Landroidx/fragment/app/Fragment;")
     }
 }
