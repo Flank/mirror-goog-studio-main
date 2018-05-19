@@ -91,7 +91,7 @@ public class ResourceItemResolverTest extends TestCase {
 
         MergerResourceRepository appResources =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO,
+                        ResourceNamespace.TODO(),
                         new Object[] {
                             "layout/layout1.xml",
                             "<!--contents doesn't matter-->",

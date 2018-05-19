@@ -987,7 +987,7 @@ public class TestLintClient extends LintCliClient {
             // to do that here.
             // TODO: namespaces
             Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                    repository.getItems().row(ResourceNamespace.TODO);
+                    repository.getItems().row(ResourceNamespace.TODO());
             ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
             if (layouts != null) {
                 for (ResourceItem item : layouts.values()) {
@@ -1013,7 +1013,7 @@ public class TestLintClient extends LintCliClient {
                                 ResourceMergerItem idItem =
                                         new ResourceMergerItem(
                                                 id,
-                                                ResourceNamespace.TODO,
+                                                ResourceNamespace.TODO(),
                                                 ResourceType.ID,
                                                 null,
                                                 null);

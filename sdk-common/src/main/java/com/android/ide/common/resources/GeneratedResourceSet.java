@@ -50,7 +50,7 @@ public class GeneratedResourceSet extends ResourceSet {
 
     @Override
     protected DataSet<ResourceMergerItem, ResourceFile> createSet(String name) {
-        return new GeneratedResourceSet(name, ResourceNamespace.TODO, getLibraryName());
+        return new GeneratedResourceSet(name, ResourceNamespace.TODO(), getLibraryName());
     }
 
     @Override

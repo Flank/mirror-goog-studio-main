@@ -1020,7 +1020,7 @@ fun getStyleAttributes(
                     val srv = rv as StyleResourceValue?
                     val namespace = MoreObjects.firstNonNull(
                         ResourceNamespace.fromNamespaceUri(namespaceUri),
-                        ResourceNamespace.TODO
+                        ResourceNamespace.TODO()
                     )
                     val value = srv!!.getItem(namespace, attribute)
                     if (value != null) {

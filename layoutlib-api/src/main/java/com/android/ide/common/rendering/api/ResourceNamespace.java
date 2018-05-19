@@ -13,17 +13,16 @@
 // limitations under the License.
 package com.android.ide.common.rendering.api;
 
-import static com.android.SdkConstants.TOOLS_NS_NAME;
-import static com.android.SdkConstants.TOOLS_URI;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.utils.TraceUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  * Represents a namespace used by aapt when processing resources.
@@ -48,11 +47,26 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
     public static final ResourceNamespace AAPT = new AaptNamespace();
 
+    /** @deprecated Use {@link #TODO()}, or, better yet, make the code support namespaces. */
+    @Deprecated public static final ResourceNamespace TODO = RES_AUTO;
+
+    private static final Logger LOG = Logger.getLogger(ResourceNamespace.class.getSimpleName());
+
+    @SuppressWarnings("StaticNonFinalField")
+    public static boolean noncomplianceLogging = false;
+
     /**
      * Namespace used in code that needs to start keeping track of namespaces. For easy tracking of
      * parts of codebase that need fixing.
      */
-    public static final ResourceNamespace TODO = RES_AUTO;
+    @NonNull
+    public static ResourceNamespace TODO() {
+        if (noncomplianceLogging) {
+            LOG.warning(
+                    "This code does not support namespaces yet\n" + TraceUtils.getCurrentStack(1));
+        }
+        return RES_AUTO;
+    }
 
     /**
      * Logic for looking up namespace prefixes defined in some context.
@@ -90,7 +104,8 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
          * "tools:" prefix is defined, we need to keep doing this for projects that don't care about
          * namespaces.
          */
-        Resolver TOOLS_ONLY = fromBiMap(ImmutableBiMap.of(TOOLS_NS_NAME, TOOLS_URI));
+        Resolver TOOLS_ONLY =
+                fromBiMap(ImmutableBiMap.of(SdkConstants.TOOLS_NS_NAME, SdkConstants.TOOLS_URI));
 
         /**
          * Creates a new {@link Resolver} which looks up prefix definitions in the given {@link
@@ -148,7 +163,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     @NonNull
     @Deprecated
     public static ResourceNamespace fromBoolean(boolean isFramework) {
-        return isFramework ? ANDROID : TODO;
+        return isFramework ? ANDROID : TODO();
     }
 
     /**
@@ -195,7 +210,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
         if (uri.equals(SdkConstants.AUTO_URI)) {
             return RES_AUTO;
         }
-        if (uri.equals(TOOLS_URI)) {
+        if (uri.equals(SdkConstants.TOOLS_URI)) {
             return TOOLS;
         }
         if (uri.equals(SdkConstants.AAPT_URI)) {
@@ -269,7 +284,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
 
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
-            super(TOOLS_URI, null);
+            super(SdkConstants.TOOLS_URI, null);
         }
     }
 
