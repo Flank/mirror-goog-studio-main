@@ -136,7 +136,7 @@ public class RenderResources {
 
     /**
      * Returns the {@link ResourceValue} for a given attr in the all themes returned by {@link
-     * #getAllThemes()}. If the item is not directly available in the a theme, its parent theme is
+     * #getAllThemes()}. If the item is not directly available in a theme, its parent theme is
      * used before checking the next theme from the list.
      */
     @Nullable
