@@ -59,15 +59,6 @@ final class DirDexArchive implements DexArchive {
     }
 
     @Override
-    public void removeFile(@NonNull String relativePath) throws IOException {
-        Path finalPath = rootDir.resolve(relativePath);
-        if (Files.isDirectory(finalPath)) {
-            FileUtils.deleteDirectoryContents(finalPath.toFile());
-        }
-        Files.deleteIfExists(finalPath);
-    }
-
-    @Override
     @NonNull
     public List<DexArchiveEntry> getFiles() throws IOException {
         ImmutableList.Builder<DexArchiveEntry> builder = ImmutableList.builder();

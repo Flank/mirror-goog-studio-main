@@ -28,7 +28,7 @@ import java.util.List;
  * is preserved e.g. if a file com/example/tools/A.class was processed, it will have relative path
  * com/example/tools/A.dex in the archive.
  *
- * <p>Dex archives can be updated by adding new files, or removing existing ones.
+ * <p>Dex archives can be updated by adding new files.
  *
  * <p>When using instances of {@link DexArchive} make sure that you invoke {@link #close()} after
  * you are done using it.
@@ -56,15 +56,6 @@ public interface DexArchive extends Closeable {
      */
     void addFile(@NonNull String relativePath, byte[] bytes, int offset, int end)
             throws IOException;
-
-    /**
-     * Removes the specified DEX file from the dex archive. In case the file does not exist, nothing
-     * is done.
-     *
-     * @param relativePath file to be removed from the dex archive, relative to the {@link
-     *     #getRootPath()}
-     */
-    void removeFile(@NonNull String relativePath) throws IOException;
 
     /**
      * Returns collection of all entries, {@link DexArchiveEntry}, in this dex archive. The entries

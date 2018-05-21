@@ -2270,12 +2270,16 @@ public abstract class TaskManager {
                     variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
             preColdSwapTask.dependsOn(allActionsAnchorTask);
 
-            // force pre-dexing to be true as we rely on individual slices to be packaged
-            // separately.
-            extension.getDexOptions().setPreDexLibraries(true);
-            variantScope.getInstantRunTaskManager().createSlicerTask();
-
-            extension.getDexOptions().setJumboMode(true);
+            if (!usingIncrementalDexing(variantScope)) {
+                androidBuilder
+                        .getIssueReporter()
+                        .reportError(
+                                Type.GENERIC,
+                                new EvalIssueException(
+                                        "Instant Run requires incremental dexing. Please remove '"
+                                                + BooleanOption.ENABLE_DEX_ARCHIVE.name()
+                                                + "=false' from gradle.properties"));
+            }
         }
 
         // ----- Multi-Dex support
@@ -2498,6 +2502,8 @@ public abstract class TaskManager {
                         .setNumberOfBuckets(
                                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))
                         .setIncludeFeaturesInScope(variantScope.consumesFeatureJars())
+                        .setIsInstantRun(
+                                variantScope.getInstantRunBuildContext().isInInstantRunMode())
                         .createDexArchiveBuilderTransform();
         transformManager
                 .addTransform(taskFactory, variantScope, preDexTransform)
