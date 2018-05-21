@@ -212,6 +212,10 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
       DiskFileSystem fs;
       fs.CreateFile(path);
     }
+    // Before stopping atrace we write a clock sync marker. We do this because
+    // internally to atrace there is a ring buffer of data. The data may clobber
+    // the initial clock sync marker.
+    WriteClockSyncMarker();
     RunAtrace(profiled_app_.app_pkg_name, path, "--async_stop");
     isRunning = IsAtraceRunning();
   }
@@ -225,6 +229,46 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
                         profiled_app_.trace_path.c_str());
   }
   return !isRunning;
+}
+
+void AtraceManager::WriteClockSyncMarker() {
+  const std::string debugfs_path = "/sys/kernel/debug/tracing/";
+  const std::string tracefs_path = "/sys/kernel/tracing/";
+  const std::string trace_file = "trace_marker";
+  std::string write_path = "";
+  bool tracefs = access((tracefs_path + trace_file).c_str(), F_OK) != -1;
+  bool debugfs = access((debugfs_path + trace_file).c_str(), F_OK) != -1;
+
+  if (!tracefs && !debugfs) {
+    Log::E("Atrace: Did not find trace folder");
+    return;
+  }
+
+  if (tracefs) {
+    write_path.append(tracefs_path);
+  } else {
+    write_path.append(debugfs_path);
+  }
+  write_path.append(trace_file);
+
+  char buffer[128];
+  int len = 0;
+  int fd = open((write_path).c_str(), O_WRONLY);
+  if (fd == -1) {
+    Log::E("Atrace: error opening %s: %s (%d)", write_path.c_str(),
+           strerror(errno), errno);
+    return;
+  }
+  float now_in_seconds = clock_->GetCurrentTime() / 1000000000.0f;
+
+  // Write the clock sync marker in the same format as the initial
+  len = snprintf(buffer, 128, "trace_event_clock_sync: parent_ts=%f\n",
+                 now_in_seconds);
+  if (write(fd, buffer, len) != len) {
+    Log::E("Atrace: error writing clock sync marker %s (%d)", strerror(errno),
+           errno);
+  }
+  close(fd);
 }
 
 void AtraceManager::Shutdown() {

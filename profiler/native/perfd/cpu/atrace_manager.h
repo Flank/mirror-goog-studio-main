@@ -108,6 +108,13 @@ class AtraceManager {
   // Checks legacy and current system path to see if atrace is running.
   virtual bool IsAtraceRunning();
 
+  // Writes clock sync marker to systrace file before stopping the trace.
+  // The marker is written near the end of the trace file.
+  // This is done because sometimes the sync marker may be stomped over by
+  // the ring buffer internally by atrace. This marker is used to sync
+  // the atrace clock with the device boot clock (used by studio).
+  virtual void WriteClockSyncMarker();
+
  protected:
   // Takes the output from atrace --list_categories parses the output and
   // returns the set of supported categories.
