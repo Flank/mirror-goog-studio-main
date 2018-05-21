@@ -87,7 +87,7 @@ open class CompileSourceSetResources
                                         )
                                     }
                                     requests.add(compileRequest(resFile.toFile()))
-                                    addedFiles.put(relativePath, resFile)
+                                    addedFiles[relativePath] = resFile
                                 }
                             }
                         }
@@ -122,7 +122,8 @@ open class CompileSourceSetResources
                 workers.submit(Aapt2CompileDeleteRunnable::class.java,
                     Aapt2CompileDeleteRunnable.Params(
                         outputDirectory = outputDirectory,
-                        deletedInputs = deletes
+                        deletedInputs = deletes,
+                        partialRDirectory = partialRDirectory
                     )
                 )
             }
