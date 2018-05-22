@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
@@ -42,7 +46,7 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
-import com.android.build.gradle.internal.dependency.JarTransform;
+import com.android.build.gradle.internal.dependency.IdentityTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
@@ -117,6 +121,12 @@ import org.gradle.api.model.ObjectFactory;
  * Class to create, manage variants.
  */
 public class VariantManager implements VariantModel {
+
+    /**
+     * Artifact type for processed aars (the aars may need to be processed, e.g. jetified to
+     * AndroidX, before they can be used).
+     */
+    private static final String TYPE_PROCESSED_AAR = "processed-aar";
 
     private static final String MULTIDEX_VERSION = "1.0.2";
 
@@ -701,30 +711,38 @@ public class VariantManager implements VariantModel {
         /*
          * Register transforms.
          */
-        String maybeJetifiedAar;
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
-            dependencies.registerTransform(
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
-                        reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JETIFIED_AAR);
-                        reg.artifactTransform(JetifyTransform.class);
-                    });
-            maybeJetifiedAar = AndroidArtifacts.TYPE_JETIFIED_AAR;
-        } else {
-            maybeJetifiedAar = AndroidArtifacts.TYPE_AAR;
-        }
+        // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
+        // used
+        dependencies.registerTransform(
+                transform -> {
+                    transform.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
+                    transform.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    transform.artifactTransform(
+                            globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)
+                                    ? JetifyTransform.class
+                                    : IdentityTransform.class);
+                });
+        dependencies.registerTransform(
+                transform -> {
+                    transform.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                    transform.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                    transform.artifactTransform(
+                            globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)
+                                    ? JetifyTransform.class
+                                    : IdentityTransform.class);
+                });
 
-        final String explodedAarType = ArtifactType.EXPLODED_AAR.getType();
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedAar);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, explodedAarType);
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
                     reg.artifactTransform(ExtractAarTransform.class);
                 });
 
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
                     reg.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
                     reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
                     reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
@@ -733,7 +751,8 @@ public class VariantManager implements VariantModel {
                 });
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
                     reg.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
                     reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
                     reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
@@ -744,7 +763,8 @@ public class VariantManager implements VariantModel {
         // transform to extract attr info from android.jar
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
                     reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_PLATFORM_ATTR);
                     reg.artifactTransform(PlatformAttrTransform.class);
                 });
@@ -760,7 +780,7 @@ public class VariantManager implements VariantModel {
         for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
                         reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
                         reg.artifactTransform(
                                 AarTransform.class,
@@ -774,7 +794,7 @@ public class VariantManager implements VariantModel {
 
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
                     reg.getTo()
                             .attribute(
                                     ARTIFACT_FORMAT,
@@ -785,7 +805,7 @@ public class VariantManager implements VariantModel {
         if (autoNamespaceDependencies) {
             dependencies.registerTransform(
                     reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
                         reg.getTo()
                                 .attribute(
                                         ARTIFACT_FORMAT,
@@ -794,25 +814,15 @@ public class VariantManager implements VariantModel {
                     });
         }
 
-        String maybeJetifiedJar;
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+        // Transform to go from external jars to CLASSES and JAVA_RES artifacts. This returns the
+        // same exact file but with different types, since a jar file can contain both.
+        for (String classesOrResources :
+                new String[] {ArtifactType.CLASSES.getType(), ArtifactType.JAVA_RES.getType()}) {
             dependencies.registerTransform(
                     reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
-                        reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JETIFIED_JAR);
-                        reg.artifactTransform(JetifyTransform.class);
-                    });
-            maybeJetifiedJar = AndroidArtifacts.TYPE_JETIFIED_JAR;
-        } else {
-            maybeJetifiedJar = AndroidArtifacts.TYPE_JAR;
-        }
-
-        for (String transformTarget : JarTransform.getTransformTargets()) {
-            dependencies.registerTransform(
-                    reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedJar);
-                        reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
-                        reg.artifactTransform(JarTransform.class);
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                        reg.getTo().attribute(ARTIFACT_FORMAT, classesOrResources);
+                        reg.artifactTransform(IdentityTransform.class);
                     });
         }
 
