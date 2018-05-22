@@ -46,6 +46,8 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="module" module-name="android.sdktools.binary-resources" />
+    <orderEntry type="module" module-name="android.sdktools.lint-api" exported=""/>
+    <orderEntry type="module" module-name="android.sdktools.lint-checks" exported=""/>
     <orderEntry type="module" module-name="android.sdktools.sdk-common" />
   </component>
 </module>

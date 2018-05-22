@@ -49,6 +49,8 @@
     <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.lint-api-base"/>
+    <orderEntry type="module" module-name="android.sdktools.base.lint.checks-base"/>
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
