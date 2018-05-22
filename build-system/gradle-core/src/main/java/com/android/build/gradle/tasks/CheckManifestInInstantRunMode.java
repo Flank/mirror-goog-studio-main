@@ -55,17 +55,17 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     private InternalArtifactType resInputType;
 
     @Input
-    InternalArtifactType getResourcesInputType() {
+    public InternalArtifactType getResourcesInputType() {
         return resInputType;
     }
 
     @InputFiles
-    BuildableArtifact getInstantRunManifests() {
+    public BuildableArtifact getInstantRunManifests() {
         return instantRunManifests;
     }
 
     @InputFiles
-    BuildableArtifact getProcessedRes() {
+    public BuildableArtifact getProcessedRes() {
         return processedRes;
     }
 

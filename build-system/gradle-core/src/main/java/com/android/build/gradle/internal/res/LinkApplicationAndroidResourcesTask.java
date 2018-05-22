@@ -1199,19 +1199,19 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
-    BuildableArtifact getSplitListInput() {
+    public BuildableArtifact getSplitListInput() {
         return splitListInput;
     }
 
     @Input
     @Optional
-    String getBuildTargetDensity() {
+    public String getBuildTargetDensity() {
         return buildTargetDensity;
     }
 
     @OutputDirectory
     @NonNull
-    File getResPackageOutputFolder() {
+    public File getResPackageOutputFolder() {
         return resPackageOutputFolder;
     }
 
@@ -1227,7 +1227,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     boolean isLibrary;
 
     @Input
-    boolean isLibrary() {
+    public boolean isLibrary() {
         return isLibrary;
     }
 

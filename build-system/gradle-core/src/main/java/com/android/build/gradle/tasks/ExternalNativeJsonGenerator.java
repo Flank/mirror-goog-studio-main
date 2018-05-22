@@ -922,7 +922,7 @@ public abstract class ExternalNativeJsonGenerator {
 
     @Input
     @NonNull
-    Collection<Abi> getAbis() {
+    public Collection<Abi> getAbis() {
         List<Abi> result = Lists.newArrayList();
         for (JsonGenerationAbiConfiguration configuration : abiConfigurations) {
             result.add(configuration.getAbi());

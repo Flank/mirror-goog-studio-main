@@ -64,7 +64,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
     private int targetSdkVersion;
 
     @Input
-    String getBuildToolsVersion() {
+    public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
     }
 
