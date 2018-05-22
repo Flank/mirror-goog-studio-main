@@ -323,7 +323,6 @@ java_test(
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
     data = ["//tools/base/bazel/test:iml_to_bazel"],
     tags = [
-        "no_test_foundry",
         "no_test_windows",
     ],
     test_class = "com.android.tools.binaries.ImlToBazelTest",
