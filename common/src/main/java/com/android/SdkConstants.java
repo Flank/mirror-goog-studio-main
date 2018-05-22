@@ -1865,6 +1865,8 @@ public final class SdkConstants {
     public static final String EXT_XML = "xml"; //$NON-NLS-1$
     /** Extension of gradle files, i.e. "gradle" */
     public static final String EXT_GRADLE = "gradle"; //$NON-NLS-1$
+    /** Extension of Kotlin gradle files, i.e. "gradle.kts" */
+    public static final String EXT_GRADLE_KTS = "gradle.kts"; //$NON-NLS-1$
     /** Extension of jar files, i.e. "jar" */
     public static final String EXT_JAR = "jar"; //$NON-NLS-1$
     /** Extension of ZIP files, i.e. "zip" */
