@@ -88,7 +88,7 @@ open class LinkAndroidResForBundleTask
         private set
 
     @get:InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var featureResourcePackages: FileCollection
         private set
 
@@ -143,7 +143,7 @@ open class LinkAndroidResForBundleTask
             val buildElements =
                 ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, featurePackage)
             if (buildElements.size() != 1) {
-                throw IOException("Found more than one PROCESSED_RES output at " + featurePackage)
+                throw IOException("Found more than one PROCESSED_RES output at $featurePackage")
             }
 
             featurePackagesBuilder.add(buildElements.iterator().next().outputFile)

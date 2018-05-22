@@ -34,16 +34,24 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
 
-    @Input public String uniqueIdentifier;
+    @VisibleForTesting String uniqueIdentifier;
+    @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
+    @VisibleForTesting File outputDirectory;
+
+    @Input
+    public String getUniqueIdentifier() {
+        return uniqueIdentifier;
+    }
 
     @Input
     public String getApplicationId() {
         return originalApplicationIdSupplier.get();
     }
 
-    @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
-
-    @OutputDirectory File outputDirectory;
+    @OutputDirectory
+    public File getOutputDirectory() {
+        return outputDirectory;
+    }
 
     @TaskAction
     public void fullTaskAction() throws IOException {

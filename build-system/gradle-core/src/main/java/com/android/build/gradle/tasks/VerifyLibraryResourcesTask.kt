@@ -73,15 +73,15 @@ import java.util.function.Function as JavaFunction
 open class VerifyLibraryResourcesTask @Inject
 constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
-    @OutputDirectory
+    @get:OutputDirectory
     lateinit var compiledDirectory: File private set
 
     // Merged resources directory.
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var inputDirectory: BuildableArtifact private set
 
-    @Input
+    @get:Input
     lateinit var mergeBlameLogFolder: File private set
 
     lateinit var taskInputType: InternalArtifactType private set
@@ -91,19 +91,19 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         return taskInputType.name
     }
 
-    @InputFiles
+    @get:InputFiles
     lateinit var manifestFiles: BuildableArtifact private set
 
-    lateinit private var aaptGeneration: AaptGeneration
+    private lateinit var aaptGeneration: AaptGeneration
 
     @Input
     fun getAaptGeneration(): String {
         return aaptGeneration.name
     }
 
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     var aapt2FromMaven: FileCollection? = null
         private set
 
@@ -122,7 +122,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 .forEach { dir ->
                     dir.listFiles()
                             .filter { file -> Files.isRegularFile(file.toPath()) }
-                            .forEach { file -> fileStatusMap.put(file, FileStatus.NEW) }
+                            .forEach { file -> fileStatusMap[file] = FileStatus.NEW }
                 }
 
         FileUtils.cleanOutputDir(compiledDirectory)
