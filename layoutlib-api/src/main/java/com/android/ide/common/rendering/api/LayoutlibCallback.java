@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import org.intellij.lang.annotations.MagicConstant;
-import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Intermediary class implementing parts of both the old and new ProjectCallback from the LayoutLib
@@ -76,10 +75,11 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
     }
 
     /**
-     * Find a custom class in the project.
-     * <p>
-     * Like {@link #loadClass(String, Class[], Object[])}, but doesn't instantiate
-     * an object and just returns the class found.
+     * Finds a custom class in the project.
+     *
+     * <p>Like {@link #loadClass(String, Class[], Object[])}, but doesn't instantiate an object and
+     * just returns the class found.
+     *
      * @param name className in binary format. (see {@link ClassLoader}.
      * @since API 15
      */
@@ -104,5 +104,20 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
     @NonNull
     public ResourceNamespace.Resolver getImplicitNamespaces() {
         return ResourceNamespace.Resolver.EMPTY_RESOLVER;
+    }
+
+    /** Returns true if the module depends on android.support.v7.appcompat. */
+    public boolean hasLegacyAppCompat() {
+        return false;
+    }
+
+    /** Returns true if the module depends on androidx.appcompat. */
+    public boolean hasAndroidXAppCompat() {
+        return false;
+    }
+
+    /** Returns true if the module uses namespaced resources. */
+    public boolean isResourceNamespacingRequired() {
+        return false;
     }
 }
