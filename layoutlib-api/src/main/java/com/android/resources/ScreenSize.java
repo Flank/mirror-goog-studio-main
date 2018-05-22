@@ -16,6 +16,7 @@
 
 package com.android.resources;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 /**
@@ -79,6 +80,33 @@ public enum ScreenSize implements ResourceEnum {
         }
         return null;
     }
+
+  /**
+   * Get the resource bucket value that corresponds to the given size in inches.
+   *
+   * @param diagonalSize Diagonal Screen size in inches.
+   *                     If null, a default diagonal size is used
+   */
+  @NonNull
+  public static ScreenSize getScreenSize(@Nullable Double diagonalSize) {
+    if (diagonalSize == null) {
+      return ScreenSize.NORMAL;
+    }
+
+     // Density-independent pixel (dp) : The density-independent pixel is
+     // equivalent to one physical pixel on a 160 dpi screen,
+     // which is the baseline density assumed by the system for a
+     // "medium" density screen.
+     // Android 8.1 Compatibility Definition, section 7.1
+    double diagonalDp = 160.0 * diagonalSize;
+
+    // Set the Screen Size
+    if (diagonalDp >= 1200) return XLARGE;
+    if (diagonalDp >=  800) return LARGE;
+    if (diagonalDp >=  568) return NORMAL;
+
+    return SMALL;
+  }
 
     @Override
     public boolean isFakeValue() {

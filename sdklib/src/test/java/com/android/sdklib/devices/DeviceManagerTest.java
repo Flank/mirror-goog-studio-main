@@ -412,24 +412,24 @@ public class DeviceManagerTest {
         final Device d1 = dm.getDevice("7in WSVGA (Tablet)", "Generic");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(d1, "invalid"))
-                .isEqualTo("MD5:6f5876a1c548aef127b373f80cac4953");
+                .isEqualTo("MD5:72f958b40e25d465a8b3767f77810370");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:6f5876a1c548aef127b373f80cac4953"))
+                d1, "MD5:72f958b40e25d465a8b3767f77810370"))
                 .isNull();
 
         // change the device hardware props, this should change the hash
         d1.getDefaultHardware().setNav(Navigation.TRACKBALL);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:6f5876a1c548aef127b373f80cac4953"))
-                .isEqualTo("MD5:029c6388bae1062cfa3031d03edd36d8");
+                d1, "MD5:72f958b40e25d465a8b3767f77810370"))
+                .isEqualTo("MD5:6d894e528c6338f3079d9139111e2959");
 
         // change the property back, should revert its hash to the previous one
         d1.getDefaultHardware().setNav(Navigation.NONAV);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:6f5876a1c548aef127b373f80cac4953"))
+                d1, "MD5:72f958b40e25d465a8b3767f77810370"))
                 .isNull();
     }
 
@@ -438,24 +438,24 @@ public class DeviceManagerTest {
         final Device d2 = dm.getDevice("Nexus One", "Google");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(d2, "invalid"))
-                .isEqualTo("MD5:0250c2773d1dd25bb2b12d9502c789f7");
+                .isEqualTo("MD5:3f5de6d0fcc45cb6f4bcf63965b1a486");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:0250c2773d1dd25bb2b12d9502c789f7"))
+                d2, "MD5:3f5de6d0fcc45cb6f4bcf63965b1a486"))
                 .isNull();
 
         // change the device hardware props, this should change the hash
         d2.getDefaultHardware().setChargeType(PowerType.PLUGGEDIN);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:0250c2773d1dd25bb2b12d9502c789f7"))
-                .isEqualTo("MD5:efccdbbce8865090f04307054226afa9");
+                d2, "MD5:3f5de6d0fcc45cb6f4bcf63965b1a486"))
+                .isEqualTo("MD5:723565b9cfe5de483a3fd31db5335f74");
 
         // change the property back, should revert its hash to the previous one
         d2.getDefaultHardware().setChargeType(PowerType.BATTERY);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:0250c2773d1dd25bb2b12d9502c789f7"))
+                d2, "MD5:3f5de6d0fcc45cb6f4bcf63965b1a486"))
                 .isNull();
     }
 

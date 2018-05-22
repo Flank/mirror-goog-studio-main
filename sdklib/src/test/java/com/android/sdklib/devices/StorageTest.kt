@@ -48,13 +48,13 @@ class StorageTest {
   @Test
   fun testEquals() {
     val storageNoUnits = Storage(1025 * 1024L)
-    val StorageBytes = Storage(1025 * 1024L, Storage.Unit.B)
-    val StorageKbytes = Storage(1025, Storage.Unit.KiB)
-    val StorageDecimal = Storage((1025 * 1000).toLong())
+    val storageBytes = Storage(1025 * 1024L, Storage.Unit.B)
+    val storageKbytes = Storage(1025, Storage.Unit.KiB)
+    val storageDecimal = Storage(1025 * 1000L)
 
-    assertThat(storageNoUnits).isEqualTo(StorageBytes)
-    assertThat(StorageBytes).isEqualTo(StorageKbytes)
-    assertThat(StorageKbytes).isNotEqualTo(StorageDecimal)
+    assertThat(storageNoUnits).isEqualTo(storageBytes)
+    assertThat(storageBytes).isEqualTo(storageKbytes)
+    assertThat(storageKbytes).isNotEqualTo(storageDecimal)
   }
 
   @Test
@@ -70,13 +70,44 @@ class StorageTest {
     assertThat(medium.lessThan(small)).isFalse()
     assertThat(large.lessThan(medium)).isFalse()
   }
+  @Test
+  fun getStorageFromString() {
+    assertThat(Storage.getStorageFromString("4")).isEqualTo(Storage(4, Storage.Unit.MiB))
+    assertThat(Storage.getStorageFromString("5B")).isEqualTo(Storage(5, Storage.Unit.B))
+    assertThat(Storage.getStorageFromString("5 B")).isEqualTo(Storage(5, Storage.Unit.B))
+    assertThat(Storage.getStorageFromString("6 KB")).isEqualTo(Storage(6, Storage.Unit.KiB))
+    assertThat(Storage.getStorageFromString("7MB")).isEqualTo(Storage(7, Storage.Unit.MiB))
+    assertThat(Storage.getStorageFromString("2048   M")).isEqualTo(Storage(2, Storage.Unit.GiB))
+    assertThat(Storage.getStorageFromString("8G")).isEqualTo(Storage(8, Storage.Unit.GiB))
+    assertThat(Storage.getStorageFromString("9T")).isEqualTo(Storage(9, Storage.Unit.TiB))
+
+    assertThat(Storage.getStorageFromString("")).isNull()
+    assertThat(Storage.getStorageFromString("blah")).isNull()
+    assertThat(Storage.getStorageFromString("2m")).isNull()
+    assertThat(Storage.getStorageFromString("2 M B")).isNull()
+    assertThat(Storage.getStorageFromString("2M B")).isNull()
+    assertThat(Storage.getStorageFromString("1.5M")).isNull()
+    assertThat(Storage.getStorageFromString("8KiB")).isNull()
+  }
 
   @Test
   fun testToString() {
+    assertThat(Storage(1234, Storage.Unit.B).toString()).isEqualTo("1234 B")
     assertThat(Storage(2048, Storage.Unit.KiB).toString()).isEqualTo("2 MB")
     assertThat(Storage(2049, Storage.Unit.KiB).toString()).isEqualTo("2049 KB")
     assertThat(Storage(2000, Storage.Unit.MiB).toString()).isEqualTo("2000 MB")
     assertThat(Storage(2000 * 1024L, Storage.Unit.MiB).toString()).isEqualTo("2000 GB")
+    assertThat(Storage(2048 * 1024L, Storage.Unit.MiB).toString()).isEqualTo("2 TB")
+  }
+
+  @Test
+  fun testToIniString() {
+    assertThat(Storage(1234, Storage.Unit.B).toIniString()).isEqualTo("1234B")
+    assertThat(Storage(2048, Storage.Unit.KiB).toIniString()).isEqualTo("2M")
+    assertThat(Storage(2049, Storage.Unit.KiB).toIniString()).isEqualTo("2049K")
+    assertThat(Storage(2000, Storage.Unit.MiB).toIniString()).isEqualTo("2000M")
+    assertThat(Storage(2000 * 1024L, Storage.Unit.MiB).toIniString()).isEqualTo("2000G")
+    assertThat(Storage(2048 * 1024L, Storage.Unit.MiB).toIniString()).isEqualTo("2T")
   }
 
   @Test
@@ -86,7 +117,18 @@ class StorageTest {
     assertThat(Storage.Unit.getEnum("MiB")).isEqualTo(Storage.Unit.MiB)
     assertThat(Storage.Unit.getEnum("GiB")).isEqualTo(Storage.Unit.GiB)
     assertThat(Storage.Unit.getEnum("TiB")).isEqualTo(Storage.Unit.TiB)
+    assertThat(Storage.Unit.getEnum("")).isEqualTo(null)
+    assertThat(Storage.Unit.getEnum(" ")).isEqualTo(null)
     assertThat(Storage.Unit.getEnum("ZiB")).isEqualTo(null)
+
+    assertThat(Storage.Unit.getEnum('B')).isEqualTo(Storage.Unit.B)
+    assertThat(Storage.Unit.getEnum('K')).isEqualTo(Storage.Unit.KiB)
+    assertThat(Storage.Unit.getEnum('M')).isEqualTo(Storage.Unit.MiB)
+    assertThat(Storage.Unit.getEnum('G')).isEqualTo(Storage.Unit.GiB)
+    assertThat(Storage.Unit.getEnum('T')).isEqualTo(Storage.Unit.TiB)
+    assertThat(Storage.Unit.getEnum(' ')).isEqualTo(null)
+    assertThat(Storage.Unit.getEnum('m')).isEqualTo(null)
+    assertThat(Storage.Unit.getEnum('Z')).isEqualTo(null)
 
     assertThat(Storage.Unit.B.displayValue).isEqualTo("B")
     assertThat(Storage.Unit.KiB.displayValue).isEqualTo("KB")

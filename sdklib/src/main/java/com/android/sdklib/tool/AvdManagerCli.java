@@ -16,7 +16,6 @@
 
 package com.android.sdklib.tool;
 
-import static com.android.sdklib.internal.avd.HardwareProperties.HardwarePropertyType.STRING_ENUM;
 import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.SdkConstants;
@@ -29,15 +28,16 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.repository.io.FileOp;
+import com.android.resources.Density;
+import com.android.resources.ScreenSize;
 import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.internal.avd.AvdInfo;
-import com.android.sdklib.internal.avd.AvdManager;
-import com.android.sdklib.internal.avd.HardwareProperties;
+import com.android.sdklib.devices.Storage;
+import com.android.sdklib.internal.avd.*;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
@@ -81,49 +81,27 @@ class AvdManagerCli extends CommandLineParser {
      */
 
     private static final String VERB_LIST = "list";
-
     private static final String VERB_CREATE = "create";
-
     private static final String VERB_MOVE = "move";
-
     private static final String VERB_DELETE = "delete";
-
     private static final String OBJECT_AVDS = "avds";
-
     private static final String OBJECT_AVD = "avd";
-
     private static final String OBJECT_TARGET = "target";
-
     private static final String OBJECT_TARGETS = "targets";
-
     private static final String OBJECT_DEVICE = "device";
-
     private static final String OBJECT_DEVICES = "devices";
-
     private static final String KEY_IMAGE_PACKAGE = "package";
-
     private static final String KEY_NAME = "name";
-
     private static final String KEY_PATH = "path";
-
     private static final String KEY_SDCARD = "sdcard";
-
     private static final String KEY_FORCE = "force";
-
     private static final String KEY_RENAME = "rename";
-
     private static final String KEY_SNAPSHOT = "snapshot";
-
     private static final String KEY_COMPACT = "compact";
-
     private static final String KEY_EOL_NULL = "null";
-
     private static final String KEY_TAG = "tag";
-
     private static final String KEY_ABI = "abi";
-
     private static final String KEY_CLEAR_CACHE = "clear-cache";
-
     private static final String KEY_DEVICE = "device";
 
     /** Java property that defines the location of the sdk/tools directory. */
@@ -136,7 +114,6 @@ class AvdManagerCli extends CommandLineParser {
     private static final String WORKDIR = "com.android.sdkmanager.workdir";
 
     private static final String[] BOOLEAN_YES_REPLIES = new String[] {"yes", "y"};
-
     private static final String[] BOOLEAN_NO_REPLIES = new String[] {"no", "n"};
 
     /**
@@ -829,21 +806,23 @@ class AvdManagerCli extends CommandLineParser {
 
                 if (device == null) {
                     errorAndExit("No device found matching --%1$s %2$s.",
-                            AvdManagerCli.KEY_DEVICE,
+                            KEY_DEVICE,
                             deviceParam);
                 }
             }
 
             Map<String, String> hardwareConfig = new TreeMap<>();
             if (device != null) {
-                // Don't ask user for customized hardware config if a device was selected
-                hardwareConfig = DeviceManager.getHardwareProperties(device);
+                // The user selected a hardware configuration. Don't ask if they
+                // want custom hardware.
+                // Start with the default values, then overlay the selected hardware.
+                hardwareConfig = defaultHardwareConfig();
+                hardwareConfig.putAll(DeviceManager.getHardwareProperties(device));
+                EmulatedProperties.restrictDefaultRamSize(hardwareConfig);
             } else {
                 try {
-                    Map<String, String> prompted = promptForHardware();
-                    if (prompted != null) {
-                        hardwareConfig.putAll(prompted);
-                    }
+                    // Take the generic hardware config, possibly customized by the user
+                    hardwareConfig = promptForHardware();
                 } catch (IOException e) {
                     errorAndExit(e.getMessage());
                 }
@@ -852,6 +831,7 @@ class AvdManagerCli extends CommandLineParser {
             if (getParamSdCard() != null) {
                 hardwareConfig.put(HardwareProperties.HW_SDCARD, HardwareProperties.BOOLEAN_YES);
             }
+            updateUninitializedDynamicParameters(hardwareConfig);
 
             @SuppressWarnings("unused") // newAvdInfo is never read, yet useful for debugging
                     AvdInfo newAvdInfo = avdManager.createAvd(avdFolder,
@@ -875,6 +855,34 @@ class AvdManagerCli extends CommandLineParser {
         } catch (AndroidLocation.AndroidLocationException e) {
             errorAndExit(e.getMessage());
         }
+    }
+
+    /**
+     * Returns a map containing the defaults for the editable properties
+     */
+    @NonNull
+    private static Map<String, String> defaultEmulatorPropertiesMap() {
+        HashMap<String, String> map = new HashMap<>();
+
+        map.put(EmulatedProperties.BACK_CAMERA_KEY, AvdCamera.EMULATED.getAsParameter());
+        map.put(EmulatedProperties.CPU_CORES_KEY, String.valueOf(EmulatedProperties.RECOMMENDED_NUMBER_OF_CORES));
+        map.put(EmulatedProperties.CUSTOM_SKIN_FILE_KEY, "_no_skin");
+        map.put(EmulatedProperties.DEVICE_FRAME_KEY, HardwareProperties.BOOLEAN_YES);
+        map.put(EmulatedProperties.FRONT_CAMERA_KEY, AvdCamera.EMULATED.getAsParameter());
+        map.put(EmulatedProperties.HAS_HARDWARE_KEYBOARD_KEY, HardwareProperties.BOOLEAN_YES);
+        map.put(EmulatedProperties.HOST_GPU_MODE_KEY, GpuMode.AUTO.getGpuSetting());
+        map.put(HardwareProperties.HW_INITIAL_ORIENTATION, "Portrait");
+        map.put(EmulatedProperties.INTERNAL_STORAGE_KEY, EmulatedProperties.DEFAULT_INTERNAL_STORAGE.toString());
+        map.put(EmulatedProperties.NETWORK_LATENCY_KEY, "None");
+        map.put(EmulatedProperties.NETWORK_SPEED_KEY, "Full");
+        map.put(EmulatedProperties.SDCARD_SIZE, EmulatedProperties.DEFAULT_SDCARD_SIZE.toString());
+        map.put(EmulatedProperties.USE_CHOSEN_SNAPSHOT_BOOT, HardwareProperties.BOOLEAN_NO);
+        map.put(EmulatedProperties.USE_COLD_BOOT, HardwareProperties.BOOLEAN_NO);
+        map.put(EmulatedProperties.USE_FAST_BOOT, HardwareProperties.BOOLEAN_YES);
+        map.put(EmulatedProperties.USE_HOST_GPU_KEY, HardwareProperties.BOOLEAN_YES);
+        map.put(EmulatedProperties.VM_HEAP_STORAGE_KEY, EmulatedProperties.DEFAULT_HEAP.toString());
+
+        return map;
     }
 
     /**
@@ -997,9 +1005,50 @@ class AvdManagerCli extends CommandLineParser {
     }
 
     /**
-     * Prompts the user to setup a hardware config for a Platform-based AVD.
+     * Returns the default AVD hardware configuration.
      */
-    @Nullable
+    @NonNull
+    private Map<String, String> defaultHardwareConfig() {
+        // Get the defaults of all the user-modifiable properties.
+        // The file is in the emulator component
+        LocalPackage emulatorPackage = mSdkHandler.getLocalPackage(SdkConstants.FD_EMULATOR,
+                                                                   new ProgressIndicatorAdapter() { });
+        if (emulatorPackage == null) {
+            errorAndExit("\"emulator\" package must be installed!");
+        }
+        File libDir = new File(emulatorPackage.getLocation(), SdkConstants.FD_LIB);
+        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
+        FileOp fop = mSdkHandler.getFileOp();
+        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
+          .parseHardwareDefinitions(
+            new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
+
+        // Get the generic default values
+        Map<String, String> hwConfigMap = defaultEmulatorPropertiesMap();
+
+        HardwareProperties.HardwareProperty[] hwProperties = hwMap.values().toArray(
+          new HardwareProperties.HardwareProperty[0]);
+
+        // Loop through all the HardwareProperties and get the
+        // values specified for this device.
+        for (HardwareProperties.HardwareProperty property : hwProperties) {
+            String defaultValue = property.getDefault();
+            if (defaultValue != null && !defaultValue.isEmpty()) {
+                hwConfigMap.put(property.getName(), defaultValue);
+            }
+        }
+        return hwConfigMap;
+    }
+
+    /**
+     * Prompts the user to setup a hardware config for a Platform-based AVD.
+     * Creates a configuration by taking either the default or the user-entered
+     * value for each parameter.
+     *
+     * @return The resulting config
+     * @throws IOException
+     */
+    @NonNull
     private Map<String, String> promptForHardware() throws IOException {
         byte[] readLineBuffer = new byte[256];
         String result;
@@ -1014,8 +1063,10 @@ class AvdManagerCli extends CommandLineParser {
         }
 
         if (!getBooleanReply(result)) {
-            // no custom config, return the skin hardware config in case there is one.
-            return null;
+            // "No, I don't want to create a custom hardware profile"
+            Map<String, String> defaultConfig = defaultHardwareConfig();
+            updateUninitializedDynamicParameters(defaultConfig);
+            return defaultConfig;
         }
 
         mSdkLog.info("\n"); // empty line
@@ -1042,7 +1093,7 @@ class AvdManagerCli extends CommandLineParser {
 
         // we just want to loop on the HardwareProperties
         HardwareProperties.HardwareProperty[] hwProperties = hwMap.values().toArray(
-                new HardwareProperties.HardwareProperty[hwMap.size()]);
+                new HardwareProperties.HardwareProperty[0]);
         for (int i = 0; i < hwProperties.length; ) {
             HardwareProperties.HardwareProperty property = hwProperties[i];
 
@@ -1064,6 +1115,10 @@ class AvdManagerCli extends CommandLineParser {
             if (result.isEmpty()) {
                 if (defaultValue != null) {
                     mSdkLog.info("\n"); // empty line
+                    if (!defaultValue.isEmpty()) {
+                        // The user wants a non-empty default. Add that to the map.
+                        map.put(property.getName(), defaultValue);
+                    }
                     i++; // go to the next property if we have a valid default value.
                     // if there's no default, we'll redo this property
                 }
@@ -1166,6 +1221,101 @@ class AvdManagerCli extends CommandLineParser {
         return null; // Should never get here
     }
 
+    /**
+     * Some parameters are set dynamically based on other parameter values.
+     * If these parameters have not been explicitly set by the user or by
+     * the device, update them now.
+     * @param hwConfig We may modify this
+     */
+    private static void updateUninitializedDynamicParameters(@NonNull Map<String, String> hwConfig) {
+
+        // Update the RAM size
+        boolean updateRamSize = true;
+        Storage ramSize;
+        String ramSizeString = hwConfig.get(EmulatedProperties.RAM_STORAGE_KEY);
+        if (ramSizeString != null) {
+            ramSize = Storage.getStorageFromString(ramSizeString);
+            updateRamSize = (ramSize == null || ramSize.getSize() == 0);
+        }
+        if (updateRamSize) {
+            String lcdWidthString = hwConfig.get(HardwareProperties.HW_LCD_WIDTH);
+            String lcdHeightString = hwConfig.get(HardwareProperties.HW_LCD_HEIGHT);
+            int numPixels;
+            try {
+                numPixels = Integer.parseInt(lcdWidthString) * Integer.parseInt(lcdHeightString);
+            } catch (Exception unused) {
+                numPixels = 1920 * 1080; // Just use a reasonable screen size
+            }
+            ramSize = EmulatedProperties.defaultRamStorage(numPixels);
+            hwConfig.put(EmulatedProperties.RAM_STORAGE_KEY, ramSize.toIniString());
+        }
+
+        // Update the internal data partition size
+        boolean updateInternalStorage = true;
+        Storage internalStorageSize;
+        String internalStorageString = hwConfig.get(EmulatedProperties.INTERNAL_STORAGE_KEY);
+        if (internalStorageString != null) {
+            internalStorageSize = Storage.getStorageFromString(internalStorageString);
+            updateInternalStorage = (internalStorageSize == null || internalStorageSize.getSize() == 0);
+        }
+        if (updateInternalStorage) {
+            hwConfig.put(EmulatedProperties.INTERNAL_STORAGE_KEY, EmulatedProperties.DEFAULT_INTERNAL_STORAGE.toIniString());
+        }
+
+        // Update the heap size
+        boolean updateHeapSize = true;
+        try {
+            String heapSizeString = hwConfig.get(EmulatedProperties.VM_HEAP_STORAGE_KEY);
+            updateHeapSize = heapSizeString == null || Integer.parseInt(heapSizeString) == 0;
+        } catch (Exception unused) {
+            // Ignore, but leave updateHeapSize true
+        }
+        if (updateHeapSize) {
+            Density density = null;
+            String densityString = hwConfig.get(HardwareProperties.HW_LCD_DENSITY);
+            if (densityString != null && !densityString.isEmpty()) {
+                if (!densityString.endsWith("dpi")) {
+                    densityString += "dpi";
+                }
+                density = Density.getEnum(densityString);
+            }
+            if (density == null) density = Density.DPI_420; // A reasonable default
+
+            int screenWidth = 1080;
+            try {
+                screenWidth = Integer.parseInt(hwConfig.get(HardwareProperties.HW_LCD_WIDTH));
+            } catch (NumberFormatException unused) {
+                // Just use the default
+            }
+            int screenHeight = 1920;
+            try {
+                screenHeight = Integer.parseInt(hwConfig.get(HardwareProperties.HW_LCD_HEIGHT));
+            } catch (NumberFormatException unused) {
+                // Just use the default
+            }
+
+            double screenDiagonalInches = Math.sqrt(screenHeight * screenHeight + screenWidth * screenWidth) / density.getDpiValue();
+            ScreenSize screenSize = ScreenSize.getScreenSize(screenDiagonalInches);
+
+            boolean isWear = (screenDiagonalInches <= 2.5); // CDD 2.2.1 "Screen Size"
+
+            Storage heapSize = EmulatedProperties.calculateDefaultVmHeapSize(screenSize, density, isWear);
+
+            hwConfig.put(EmulatedProperties.VM_HEAP_STORAGE_KEY, heapSize.toIniString());
+        }
+
+        // Update the number of CPU cores
+        boolean updateNumCores = true;
+        try {
+            String numCoresString = hwConfig.get(EmulatedProperties.CPU_CORES_KEY);
+            updateNumCores = numCoresString == null || Integer.parseInt(numCoresString) == 2;
+        } catch (Exception ee) {
+            // Ignore, but leave updateNumCores true
+        }
+        if (updateNumCores) {
+            hwConfig.put(EmulatedProperties.CPU_CORES_KEY, Integer.toString(EmulatedProperties.RECOMMENDED_NUMBER_OF_CORES));
+        }
+    }
 
     /** Reads a line from the input stream. */
     private String readLine(byte[] buffer) throws IOException {

@@ -19,7 +19,13 @@ package com.android.sdklib.devices;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Storage {
+    // For parsing a string that represents a Storage
+    static final Pattern storagePattern = Pattern.compile("([0-9]+)( *)([KMGT]?)(B?)");
+
     private long mNoBytes;
 
     public Storage(long amount, Unit unit) {
@@ -58,6 +64,51 @@ public class Storage {
     public double getPreciseSizeAsUnit(@NonNull Unit unit) {
         return ((double)mNoBytes) / unit.getNumberOfBytes();
     }
+
+  /**
+   * Decodes the given string and returns a {@link Storage} of
+   * the corresponding size.
+   * The input string can look like these:
+   *     "2"  "2B" "2MB"  "2 M"  "2   MB"
+   * But NOT like these:
+   *     "2m"  "2.6"  "2 MiB"
+   */
+  @Nullable
+  public static Storage getStorageFromString(@Nullable String storageString) {
+    if (storageString == null || storageString.isEmpty()) {
+      return null;
+    }
+
+    Matcher matcher = storagePattern.matcher(storageString);
+    if (!matcher.matches()) {
+      return null;
+    }
+    // Get the numeric part
+    int numberPart;
+    try {
+      numberPart = Integer.parseInt(matcher.group(1));
+    }
+    catch (NumberFormatException unused) {
+      return null;
+    }
+    // Get the units
+    String unitString = matcher.group(3);
+    Unit unitPart;
+    if (!unitString.isEmpty()) {
+      // The unit was specified
+      unitPart = Unit.getEnum(matcher.group(3).charAt(0));
+      if (unitPart == null) return null; // Should not happen
+    }
+    else if (matcher.group(4).isEmpty()) {
+      // No unit specified at all. Use MiB.
+      unitPart = Unit.MiB;
+    }
+    else {
+      // Just "B"--use bytes
+      unitPart = Unit.B;
+    }
+    return new Storage(numberPart, unitPart);
+  }
 
     @Override
     public boolean equals(Object other) {
@@ -105,10 +156,22 @@ public class Storage {
             mNoBytes = noBytes;
         }
 
+        /** Accepts "B" "KiB" "MiB" "GiB" "TiB" */
         @Nullable
         public static Unit getEnum(@NonNull String val) {
             for (Unit unit : values()) {
                 if (unit.mValue.equals(val)) {
+                    return unit;
+                }
+            }
+            return null;
+        }
+
+        /* Accepts 'B' 'K' 'M' 'G' 'T' */
+        @Nullable
+        public static Unit getEnum(char unitChar) {
+            for (Unit unit : values()) {
+                if (unitChar == unit.mValue.charAt(0)) {
                     return unit;
                 }
             }
@@ -128,6 +191,10 @@ public class Storage {
         @NonNull
         public String getDisplayValue() {
           return mDisplayValue;
+        }
+
+        public char getUnitChar() {
+            return mValue.charAt(0);
         }
     }
 
@@ -155,4 +222,14 @@ public class Storage {
         Unit unit = getAppropriateUnits();
         return String.format("%d %s", getSizeAsUnit(unit), unit.getDisplayValue());
     }
+
+  /**
+   * Represents a {@link Storage} as a string suitable
+   * for use in an INI file.
+   */
+  @NonNull
+  public String toIniString() {
+      Unit unit = getAppropriateUnits();
+      return String.format("%d%c", getSizeAsUnit(unit), unit.getUnitChar());
+  }
 }

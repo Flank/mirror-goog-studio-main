@@ -859,10 +859,13 @@ public class AvdManager {
             configValues.put(AVD_INI_PLAYSTORE_ENABLED, Boolean.toString(deviceHasPlayStore && systemImage.hasPlayStore()));
             configValues.put(AVD_INI_ARC, Boolean.toString(SystemImage.CHROMEOS_TAG.equals(tag)));
 
-            writeCpuArch(systemImage, configValues, log);
-
             createAvdSkin(skinFolder, skinName, configValues, log);
             createAvdSdCard(sdcard, editExisting, configValues, avdFolder, log);
+
+            if (hardwareConfig == null) {
+                hardwareConfig = new HashMap<>();
+            }
+            writeCpuArch(systemImage, hardwareConfig, log);
 
             addHardwareConfig(systemImage, skinFolder, avdFolder, hardwareConfig, configValues, log);
 
@@ -1931,8 +1934,8 @@ public class AvdManager {
      */
     private void writeCpuArch(
             @NonNull ISystemImage        systemImage,
-            @Nullable Map<String,String> values,
-            @NonNull  ILogger            log)
+            @NonNull Map<String,String>  values,
+            @NonNull ILogger             log)
             throws AvdMgrException {
 
         String abiType = systemImage.getAbiType();
@@ -1957,7 +1960,6 @@ public class AvdManager {
             log.warning("ABI %1$s is not supported by this version of the SDK Tools", abiType);
             throw new AvdMgrException();
         }
-        return;
     }
 
     /**

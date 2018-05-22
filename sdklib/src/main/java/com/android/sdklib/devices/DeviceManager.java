@@ -19,10 +19,8 @@ package com.android.sdklib.devices;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.io.FileOp;
-import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.sdklib.internal.avd.AvdManager;
@@ -52,8 +50,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -573,6 +569,10 @@ public class DeviceManager {
     public static Map<String, String> getHardwareProperties(@NonNull Device d) {
         Map<String, String> props = getHardwareProperties(d.getDefaultState());
         for (State s : d.getAllStates()) {
+            final Storage ramSize = s.getHardware().getRam();
+            if (ramSize.getSize() > 0) {
+                props.put("hw.ramSize", ramSize.toString());
+            }
             if (s.getKeyState().equals(KeyboardState.HIDDEN)) {
                 props.put("hw.keyboard.lid", getBooleanVal(true));
             }
