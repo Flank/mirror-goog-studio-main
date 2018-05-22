@@ -33,14 +33,14 @@ public class AndroidArtifacts {
     public static final Attribute<String> MODULE_PATH = Attribute.of("modulePath", String.class);
 
     // types for main artifacts
-    public static final String TYPE_AAR = "aar";
+    private static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
-    public static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
+    private static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
     private static final String TYPE_BUNDLE = "aab";
 
-    // types for jetified artifacts
-    public static final String TYPE_JETIFIED_AAR = "jetified-aar";
-    public static final String TYPE_JETIFIED_JAR = "jetified-jar";
+    // type for processed jars (the jars may need to be processed, e.g. jetified to AndroidX, before
+    // they can be used)
+    private static final String TYPE_PROCESSED_JAR = "processed-jar";
 
     // types for AAR content
     private static final String TYPE_CLASSES = "android-classes";
@@ -159,7 +159,11 @@ public class AndroidArtifacts {
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
         // Jar file for annotation processor as both classes and resources are needed, and for
         // building model
+        // NOTE: Consumers should generally use PROCESSED_JAR instead of JAR, as the jars may need
+        // to be processed (e.g., jetified to AndroidX) before they can be used. If JAR is used, the
+        // reason should be documented.
         JAR(TYPE_JAR),
+        PROCESSED_JAR(TYPE_PROCESSED_JAR),
         // published dex folder for bundle
         DEX(TYPE_DEX),
 

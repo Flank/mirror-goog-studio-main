@@ -67,13 +67,19 @@ public class AarTransform extends ArtifactTransform {
 
     @NonNull
     public static ArtifactType[] getTransformTargets() {
+        // Note that these transform targets come from TYPE_EXPLODED_AAR, which comes from
+        // TYPE_PROCESSED_AAR (see VariantManager), meaning that the aar has been processed, and
+        // therefore the jar inside the aar can also be considered processed. However, because a few
+        // places in the plugin still need to query for JAR instead of PROCESSED_JAR, we need to
+        // publish JAR instead of PROCESSED_JAR below. (Consequently, the jar may be processed
+        // twice, but it's probably okay since the ArtifactTransforms are cached.)
         return new ArtifactType[] {
             ArtifactType.CLASSES,
             ArtifactType.NON_NAMESPACED_CLASSES,
             ArtifactType.SHARED_CLASSES,
             ArtifactType.JAVA_RES,
             ArtifactType.SHARED_JAVA_RES,
-            ArtifactType.JAR,
+            ArtifactType.JAR, /* Publish JAR instead of PROCESSED_JAR (see explanation above). */
             ArtifactType.MANIFEST,
             ArtifactType.NON_NAMESPACED_MANIFEST,
             ArtifactType.ANDROID_RES,

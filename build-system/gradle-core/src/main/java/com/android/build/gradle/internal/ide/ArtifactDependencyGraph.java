@@ -272,6 +272,7 @@ public class ArtifactDependencyGraph {
 
         // Querying for JAR type gives us all the dependencies we care about, and we can use this
         // to differentiate external vs sub-projects (to a certain degree).
+        // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
         ArtifactCollection allArtifactList =
                 computeArtifactList(
                         variantScope,
@@ -309,6 +310,7 @@ public class ArtifactDependencyGraph {
 
         // We also need the actual AARs so that we can get the artifact location and find the source
         // location from it.
+        // Note: Query for AAR instead of PROCESSED_AAR due to b/110054209
         ArtifactCollection aarList =
                 computeArtifactList(
                         variantScope,
@@ -465,6 +467,7 @@ public class ArtifactDependencyGraph {
                 // need to call getAllArtifacts() which computes a lot more many things, and takes
                 // longer on large projects.
                 // Instead just get all the jars to get all the dependencies.
+                // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
                 ArtifactCollection runtimeArtifactCollection =
                         computeArtifactList(
                                 variantScope,
@@ -560,6 +563,7 @@ public class ArtifactDependencyGraph {
             // get the runtime artifact. We only care about the ComponentIdentifier so we don't
             // need to call getAllArtifacts() which computes a lot more many things.
             // Instead just get all the jars to get all the dependencies.
+            // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
             ArtifactCollection runtimeArtifactCollection =
                     computeArtifactList(
                             variantScope,

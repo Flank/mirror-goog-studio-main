@@ -277,6 +277,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public FileCollection getLocalCustomLintChecks() {
+        // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
         Action<AttributeContainer> attributes =
                 container ->
                         container.attribute(
