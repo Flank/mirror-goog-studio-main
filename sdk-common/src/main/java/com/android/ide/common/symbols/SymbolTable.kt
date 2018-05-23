@@ -43,10 +43,10 @@ import javax.lang.model.SourceVersion
  * / name. Tables have one main attribute: a package name. This should be unique and are used to
  * generate the `R.java` file.
  */
+private const val ANDROID_ATTR_PREFIX = "android_"
+
 @Immutable
 abstract class SymbolTable protected constructor() {
-
-    private val ANDROID_ATTR_PREFIX = "android_"
 
     abstract val tablePackage: String
     abstract val symbols: ImmutableTable<ResourceType, String, Symbol>
@@ -71,19 +71,19 @@ abstract class SymbolTable protected constructor() {
     fun filter(table: SymbolTable): SymbolTable {
         val builder = ImmutableTable.builder<ResourceType, String, Symbol>()
 
-        for (resourceType in symbols.rowKeySet()) {
-            val symbols = symbols.row(resourceType).values
-            val filteringSymbolNames = table.symbols.row(resourceType).keys
+        for (resourceType in table.symbols.rowKeySet()) {
+            val symbols = table.symbols.row(resourceType).values
+            val filteringSymbolNames = this.symbols.row(resourceType).keys
 
             for (symbol in symbols) {
                 if (filteringSymbolNames.contains(symbol.name)) {
-                    builder.put(resourceType, symbol.name, symbol)
+                    builder.put(
+                        resourceType, symbol.name, this.symbols.get(resourceType, symbol.name))
                 }
             }
         }
 
-        return SymbolTableImpl(tablePackage,
-                builder.build())
+        return SymbolTableImpl(tablePackage, builder.build())
     }
 
     /**
