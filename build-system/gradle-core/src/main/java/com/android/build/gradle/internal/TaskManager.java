@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
@@ -123,7 +122,7 @@ import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
@@ -638,22 +637,6 @@ public abstract class TaskManager {
 
         // data binding related artifacts for external libs
         if (extension.getDataBinding().isEnabled()) {
-            transformManager.addStream(
-                    OriginalStream.builder(project, "sub-project-data-binding")
-                            .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
-                            .addScope(Scope.SUB_PROJECTS)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH, MODULE, DATA_BINDING_ARTIFACT))
-                            .build());
-            transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-data-binding")
-                            .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
-                            .addScope(Scope.EXTERNAL_LIBRARIES)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING_ARTIFACT))
-                            .build());
             transformManager.addStream(
                     OriginalStream.builder(project, "sub-project-data-binding-base-classes")
                             .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
@@ -2792,10 +2775,6 @@ public abstract class TaskManager {
         variantScope.getTransformManager().addTransform(taskFactory, variantScope, jacocoTransform);
     }
 
-    /**
-     * Must be called before the javac task is created so that we it can be earlier in the transform
-     * pipeline.
-     */
     private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
         if (!extension.getDataBinding().isEnabled()) {
             return;
@@ -2808,27 +2787,7 @@ public abstract class TaskManager {
                 return;
             }
         }
-        File outFolder =
-                new File(
-                        variantScope.getBuildFolderForDataBindingCompiler(),
-                        DataBindingBuilder.ARTIFACT_FILES_DIR_FROM_LIBS);
-
-
-        Optional<TransformTask> dataBindingMergeTask;
-        dataBindingMergeTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(
-                                taskFactory,
-                                variantScope,
-                                new DataBindingMergeArtifactsTransform(getLogger(), outFolder));
-
-        dataBindingMergeTask.ifPresent(
-                task ->
-                        variantScope.getArtifacts().appendArtifact(
-                                InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
-                                ImmutableList.of(outFolder),
-                                task));
+        taskFactory.create(new DataBindingMergeDependencyArtifactsTask.ConfigAction(variantScope));
     }
 
     private void createDataBindingMergeBaseClassesTask(@NonNull VariantScope variantScope) {

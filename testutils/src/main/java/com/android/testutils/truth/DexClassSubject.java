@@ -21,6 +21,9 @@ import com.android.annotations.Nullable;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.jf.dexlib2.DebugItemType;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedField;
@@ -94,6 +97,12 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         fail("contains method", name);
     }
 
+    public void hasExactFields(@NonNull Set<String> names) {
+        if (assertSubjectIsNonNull() && !checkHasExactFields(names)) {
+            fail("Expected exactly " + names + " fields but have " + getAllFieldNames());
+        }
+    }
+
     public void hasField(@NonNull String name) {
         if (assertSubjectIsNonNull() && !checkHasField(name)) {
             fail("contains field", name);
@@ -152,6 +161,18 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
             }
         }
         return false;
+    }
+
+    /** Checks the subject has the given fields and no other fields. */
+    private boolean checkHasExactFields(@NonNull Set<String> names) {
+        return getAllFieldNames().equals(names);
+    }
+
+    /** Returns all of the field names */
+    private Set<String> getAllFieldNames() {
+        return StreamSupport.stream(getSubject().getFields().spliterator(), false)
+                .map(DexBackedField::getName)
+                .collect(Collectors.toSet());
     }
 
     private boolean assertSubjectIsNonNull() {
