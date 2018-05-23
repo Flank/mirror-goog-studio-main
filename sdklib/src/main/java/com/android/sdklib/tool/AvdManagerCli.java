@@ -16,6 +16,7 @@
 
 package com.android.sdklib.tool;
 
+import static com.android.sdklib.internal.avd.HardwareProperties.HardwarePropertyType.STRING_ENUM;
 import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.SdkConstants;
@@ -1047,9 +1048,9 @@ class AvdManagerCli extends CommandLineParser {
 
             String description = property.getDescription();
             if (description != null) {
-                mSdkLog.info("%s: %s\n", property.getAbstract(), description);
+                mSdkLog.info("%2d: %s: %s\n", i, property.getAbstract(), description);
             } else {
-                mSdkLog.info("%s\n", property.getAbstract());
+                mSdkLog.info("%2d: %s\n", i, property.getAbstract());
             }
 
             String defaultValue = property.getDefault();
@@ -1069,61 +1070,10 @@ class AvdManagerCli extends CommandLineParser {
                 continue;
             }
 
-            switch (property.getType()) {
-                case BOOLEAN:
-                    try {
-                        if (getBooleanReply(result)) {
-                            map.put(property.getName(), "yes");
-                            i++; // valid reply, move to next property
-                        } else {
-                            map.put(property.getName(), "no");
-                            i++; // valid reply, move to next property
-                        }
-                    } catch (IOException e) {
-                        // display error, and do not increment i to redo this property
-                        mSdkLog.info("\n%s\n", e.getMessage());
-                    }
-                    break;
-                case INTEGER:
-                    try {
-                        Integer.parseInt(result);
-                        map.put(property.getName(), result);
-                        i++; // valid reply, move to next property
-                    } catch (NumberFormatException e) {
-                        // display error, and do not increment i to redo this property
-                        mSdkLog.info("\n%s\n", e.getMessage());
-                    }
-                    break;
-                case STRING:
-                    map.put(property.getName(), result);
-                    i++; // valid reply, move to next property
-                    break;
-                case DISKSIZE:
-                    // TODO check validity
-                    map.put(property.getName(), result);
-                    i++; // valid reply, move to next property
-                    break;
-                case INTEGER_ENUM:
-                case STRING_ENUM:
-                    // Verify that the input is one of the enumerated values
-                    boolean isValidEnum = false;
-                    for (String enumString : property.getEnum()) {
-                        if (result.equals(enumString)) {
-                            map.put(property.getName(), result);
-                            isValidEnum = true;
-                            i++; // valid reply, move to next property
-                            break;
-                        }
-                    }
-                    if (!isValidEnum) {
-                        // display error, and do not increment i to redo this property
-                        mSdkLog.info("\nInvalid entry. Allowed values are:");
-                        for (String enumString : property.getEnum()) {
-                            mSdkLog.info(" \"%s\"", enumString);
-                        }
-                        mSdkLog.info("\n");
-                    }
-                    break;
+            String validResponse = validateResponse(result, property, mSdkLog);
+            if (validResponse != null) {
+                map.put(property.getName(), validResponse);
+                i++; // Move on to the next property
             }
 
             mSdkLog.info("\n"); // empty line
@@ -1131,6 +1081,91 @@ class AvdManagerCli extends CommandLineParser {
 
         return map;
     }
+
+
+    /**
+     * Validate the user's input against the property that is being set.
+     * @param userInput What the user typed
+     * @param property The property that is being set
+     * @param logger
+     * @return The property value string corresponding to the user's valid input. Null if the input is invalid.
+     */
+    @VisibleForTesting
+    @Nullable
+    public static String validateResponse(@NonNull String userInput, HardwareProperties.HardwareProperty property, ILogger logger) {
+        switch (property.getType()) {
+            case BOOLEAN:
+                try {
+                    return getBooleanReply(userInput) ? "yes" : "no";
+                }
+                catch (IOException e) {
+                    logger.info("\n%s\n", e.getMessage());
+                    return null;
+                }
+            case INTEGER:
+                try {
+                    Integer.parseInt(userInput);
+                    return userInput;
+                }
+                catch (NumberFormatException e) {
+                    logger.info("\nInvalid integer input: %s\n", e.getMessage());
+                    return null;
+                }
+            case STRING:
+                return userInput;
+            case DISKSIZE:
+                // TODO check validity
+                return userInput;
+            case INTEGER_ENUM:
+                // Verify that the input is one of the enumerated values
+                for (String enumString : property.getEnum()) {
+                    if (userInput.equals(enumString)) {
+                        return userInput;
+                    }
+                }
+                // display error
+                logger.info("\nInvalid entry. Allowed values are:");
+                for (String enumString : property.getEnum()) {
+                    logger.info(" \"%s\"", enumString);
+                }
+                logger.info("\n");
+                return null;
+            case STRING_ENUM:
+                // Verify that the input is one of the enumerated values
+                String priorEnumString = "";
+                for (String enumString : property.getEnum()) {
+                    if ("...".equals(enumString)) {
+                        if (priorEnumString.endsWith("0")
+                            && userInput.startsWith(priorEnumString.substring(0, priorEnumString.length() - 1))) {
+                            // This string is "..." and the previous string
+                            // ends with '0'. Accept anything that matches the
+                            // first (n-1) characters and ends with a number.
+                            try {
+                                Integer.parseInt(userInput.substring(priorEnumString.length() - 1));
+                                return userInput;
+                            }
+                            catch (NumberFormatException nfe_unused) {
+                                // Invalid; keep looking
+                            }
+                        }
+                        // Keep looking
+                    }
+                    else if (userInput.equals(enumString)) {
+                        return userInput;
+                    }
+                    priorEnumString = enumString;
+                }
+                // display error
+                logger.info("\nInvalid entry. Allowed values are:");
+                for (String enumString : property.getEnum()) {
+                    logger.info(" \"%s\"", enumString);
+                }
+                logger.info("\n");
+                return null;
+        }
+        return null; // Should never get here
+    }
+
 
     /** Reads a line from the input stream. */
     private String readLine(byte[] buffer) throws IOException {
