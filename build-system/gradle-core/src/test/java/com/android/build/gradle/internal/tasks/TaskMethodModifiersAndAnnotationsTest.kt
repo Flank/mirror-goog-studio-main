@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal
+package com.android.build.gradle.internal.tasks
 
 import com.google.common.reflect.ClassPath
 import org.gradle.api.tasks.Classpath
@@ -38,7 +38,7 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.junit.Test
 import java.lang.reflect.AnnotatedElement
 
-class GradleAnnotationsTest {
+class TaskMethodModifiersAndAnnotationsTest {
 
     @Test
     fun `check for non-public methods with gradle input or output annotations`() {
