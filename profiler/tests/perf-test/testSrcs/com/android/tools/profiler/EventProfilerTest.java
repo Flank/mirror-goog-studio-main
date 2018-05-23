@@ -28,6 +28,9 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class EventProfilerTest {
+
+    private static final String ACTIVITY_CLASS = "com.activity.event.EventActivity";
+
     @Parameterized.Parameters
     public static Collection<Integer> data() {
         return Arrays.asList(24, 26);
@@ -45,7 +48,7 @@ public class EventProfilerTest {
     @Before
     public void setup() throws Exception {
         myPerfDriver = new PerfDriver(mySdkLevel);
-        myPerfDriver.start("com.activity.event.EventActivity");
+        myPerfDriver.start(ACTIVITY_CLASS);
         myGrpc = myPerfDriver.getGrpc();
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         if (TestUtils.isOPlusDevice(mySdkLevel)) {
@@ -59,17 +62,17 @@ public class EventProfilerTest {
     @Test
     public void testInputMethodManagerDoesntLeakInputConnection() throws Exception {
         // Capture initial handle to InputConnection
-        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "printConnection");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "printConnection");
         String connection =
                 myAndroidDriver
                         .waitForInput(Pattern.compile("(.*)(Connection\\:)(?<result>.*)"))
                         .trim();
         // Accept input and wait for the input thread to loop around capturing required input.
-        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "acceptInput");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "acceptInput");
         Thread.sleep(1000);
 
         // Verify that we have captured input and our wrapper captures the expected InputConnection
-        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "printConnection");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "printConnection");
         String wrappedConnection =
                 myAndroidDriver
                         .waitForInput(Pattern.compile("(.*)(WrapperConnection\\:)(?<result>.*)"))
@@ -77,20 +80,20 @@ public class EventProfilerTest {
         assertThat(wrappedConnection).matches(connection);
 
         // Disable capturing input and verify the inner connection has been set back to null.
-        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "blockInput");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "blockInput");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "clearConnection");
         Thread.sleep(1000);
-        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "printConnection");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "printConnection");
         assertThat(myAndroidDriver.waitForInput("WrapperConnection: null")).isTrue();
     }
 
     @Test
     public void testNoRecursionOnWeakReferenceApis() throws Exception {
         // Accept input and wait for the input thread to loop around capturing required input.
-        myAndroidDriver.triggerMethod("com.activity.event.EventActivity", "acceptInput");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "acceptInput");
         // Wait a little, we should have the same wrapped connection we initially had.
         Thread.sleep(500);
-        myAndroidDriver.triggerMethod(
-                "com.activity.event.EventActivity", "printInputConnectionTreeDepth");
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "printInputConnectionTreeDepth");
         String depth =
                 myAndroidDriver
                         .waitForInput(

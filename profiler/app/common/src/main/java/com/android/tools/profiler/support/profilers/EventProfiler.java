@@ -317,8 +317,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                             //Clean up and set state so we don't do this more than once.
                             ic.setAccessible(false);
                         }
-                    } else {
-                        inputConnectionWrapper.setTarget(null);
                     }
                 }
             } catch (InterruptedException ex) {

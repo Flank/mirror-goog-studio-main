@@ -1,3 +1,5 @@
 package android.view.inputmethod;
 
-public interface InputConnection {}
+public interface InputConnection {
+    void closeConnection();
+}
