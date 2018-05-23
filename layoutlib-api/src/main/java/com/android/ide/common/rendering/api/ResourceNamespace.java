@@ -47,9 +47,6 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
     public static final ResourceNamespace AAPT = new AaptNamespace();
 
-    /** @deprecated Use {@link #TODO()}, or, better yet, make the code support namespaces. */
-    @Deprecated public static final ResourceNamespace TODO = RES_AUTO;
-
     private static final Logger LOG = Logger.getLogger(ResourceNamespace.class.getSimpleName());
 
     @SuppressWarnings("StaticNonFinalField")
