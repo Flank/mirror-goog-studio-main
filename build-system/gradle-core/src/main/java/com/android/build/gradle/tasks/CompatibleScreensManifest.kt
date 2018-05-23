@@ -50,23 +50,26 @@ open class CompatibleScreensManifest : AndroidVariantTask() {
 
     @get:Input
     lateinit var screenSizes: Set<String>
+        internal set
+
     @get:OutputDirectory
     lateinit var outputFolder: File
-    internal lateinit var outputScope: OutputScope
-    lateinit var minSdkVersion: Supplier<String?>
+        internal set
 
+    lateinit var outputScope: OutputScope
+        private set
+
+    lateinit var minSdkVersion: Supplier<String?>
+        internal set
+
+    @get:Input
     val splits: List<ApkData>
-        @Input
         get() = outputScope.apkDatas
 
     @Input
     @Optional
     internal fun getMinSdkVersion(): String? {
         return minSdkVersion.get()
-    }
-
-    internal fun setMinSdkVersion(minSdkVersion: Supplier<String?>) {
-        this.minSdkVersion = minSdkVersion
     }
 
     @TaskAction

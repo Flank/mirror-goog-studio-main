@@ -33,13 +33,17 @@ import java.io.File
  * Task to persist the {@see OutputScope#apkdatas} which allows downstream tasks to depend
  * on the {@see InternalArtifactType#APK_LIST} rather than on various complicated data structures.
  * This also allow to record the choices made during configuration time about what APKs will be
- * produced and which ones are enabled. 
+ * produced and which ones are enabled.
  */
 open class MainApkListPersistence : AndroidVariantTask() {
 
-    @get:OutputFile lateinit var outputFile: File
+    @get:OutputFile
+    lateinit var outputFile: File
+        private set
 
-    @get:Input lateinit var apkData :  Collection<ApkData>
+    @get:Input
+    lateinit var apkData : Collection<ApkData>
+        private set
 
     @TaskAction
     fun fullTaskAction() {

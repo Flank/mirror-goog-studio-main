@@ -93,6 +93,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var inputResourcesDir: BuildableArtifact
+        private set
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
