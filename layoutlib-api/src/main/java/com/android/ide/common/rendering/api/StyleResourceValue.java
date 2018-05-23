@@ -105,7 +105,7 @@ public class StyleResourceValue extends ResourceValueImpl {
                 return null;
             }
 
-            return new ResourceReference(getNamespace(), ResourceType.STYLE, parent);
+            return ResourceReference.style(getNamespace(), parent);
         }
 
         return null;
