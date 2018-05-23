@@ -47,8 +47,8 @@ import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.AndroidZip;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
+import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
@@ -391,8 +391,8 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void createBundleTask(@NonNull VariantScope variantScope) {
-        final AndroidZip bundle =
-                taskFactory.create(new AndroidZip.ConfigAction(extension, variantScope));
+        final BundleAar bundle =
+                taskFactory.create(new BundleAar.ConfigAction(extension, variantScope));
 
         variantScope.getAssembleTask().dependsOn(bundle);
 

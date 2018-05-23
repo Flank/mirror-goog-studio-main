@@ -380,7 +380,8 @@ public class VariantManager implements VariantModel {
     private void createAssembleTaskForVariantData(final BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
         VariantType variantType = variantData.getType();
-        boolean needBundleTask = variantType.isBaseModule() && !variantType.isHybrid();
+        boolean needBundleTask = variantType.isBaseModule();
+
         if (variantType.isTestComponent()) {
             variantScope.setAssembleTask(taskManager.createAssembleTask(variantData));
         } else {
@@ -459,6 +460,7 @@ public class VariantManager implements VariantModel {
                                     "assemble", task1 -> task1.dependsOn(variantAssembleTaskName));
 
                     if (needBundleTask) {
+
                         final String variantBundleTaskName =
                                 StringHelper.appendCapitalized("bundle", name);
                         if (!taskManager.getTaskFactory().containsKey(variantBundleTaskName)) {
@@ -501,7 +503,13 @@ public class VariantManager implements VariantModel {
                             task.dependsOn(buildTypeData.getAssembleTask().getName());
                         });
 
-        if (variantScope.getType().isBaseModule() && !variantScope.getType().isHybrid()) {
+        if (variantScope.getType().isBaseModule()) {
+
+            if (variantType.isHybrid()
+                    && taskManager.getTaskFactory().findByName("bundle") == null) {
+                taskManager.getTaskFactory().create("bundle");
+            }
+
             if (buildTypeData.getBundleTask() == null) {
                 buildTypeData.setBundleTask(taskManager.createBundleTask(buildTypeData));
             }

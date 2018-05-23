@@ -180,7 +180,7 @@ class ResourceNamespaceTest {
                     ":lib:assembleDebugAndroidTest",
                     ":baseFeature:assembleDebug",
                     ":baseFeature:assembleDebugAndroidTest",
-                    ":otherFeature:bundleDebug",
+                    ":otherFeature:bundleDebugAar",
                     ":otherFeature:assembleDebugAndroidTest",
                     ":notNamespacedLib:assembleDebug",
                     ":notNamespacedLib:assembleDebugAndroidTest",

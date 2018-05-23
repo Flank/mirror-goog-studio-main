@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.process.JarSigner
@@ -254,7 +255,13 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             task.aaptOptionsNoCompress =
                     scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
-            task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+            if (scope.type.isHybrid) {
+                task.bundleOptions =
+                        ((scope.globalScope.extension as FeatureExtension).bundle).convert()
+            } else {
+                task.bundleOptions =
+                        ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+            }
 
             if (scope.needsMainDexListForBundle) {
                 task.mainDexList =

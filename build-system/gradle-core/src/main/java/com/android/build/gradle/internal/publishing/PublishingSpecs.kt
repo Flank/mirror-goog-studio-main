@@ -282,6 +282,7 @@ class PublishingSpecs {
                 metadata(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 metadata(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(FEATURE_CLASSES, ArtifactType.CLASSES)

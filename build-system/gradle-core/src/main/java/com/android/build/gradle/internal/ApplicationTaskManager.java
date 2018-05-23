@@ -482,26 +482,24 @@ public class ApplicationTaskManager extends TaskManager {
             return;
         }
 
-        if (!scope.getType().isHybrid()) {
-            taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
+        taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
 
-            if (scope.getType().isBaseModule()) {
-                BundleTask bundleTask = taskFactory.create(new BundleTask.ConfigAction(scope));
-                scope.getBundleTask()
-                        .dependsOn(
-                                scope.getArtifacts()
-                                        .getFinalArtifactFiles(InternalArtifactType.BUNDLE));
+        if (scope.getType().isBaseModule()) {
+            BundleTask bundleTask = taskFactory.create(new BundleTask.ConfigAction(scope));
+            scope.getBundleTask()
+                    .dependsOn(
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.BUNDLE));
 
-                BundleToApkTask task = taskFactory.create(new BundleToApkTask.ConfigAction(scope));
-                // make the task depend on the validate signing task to ensure that the keystore
-                // is created if it's a debug one.
-                if (scope.getVariantConfiguration().getSigningConfig() != null) {
-                    task.dependsOn(getValidateSigningTask(scope));
-                    bundleTask.dependsOn(getValidateSigningTask(scope));
-                }
-
-                taskFactory.create(new ExtractApksTask.ConfigAction(scope));
+            BundleToApkTask task = taskFactory.create(new BundleToApkTask.ConfigAction(scope));
+            // make the task depend on the validate signing task to ensure that the keystore
+            // is created if it's a debug one.
+            if (scope.getVariantConfiguration().getSigningConfig() != null) {
+                task.dependsOn(getValidateSigningTask(scope));
+                bundleTask.dependsOn(getValidateSigningTask(scope));
             }
+
+            taskFactory.create(new ExtractApksTask.ConfigAction(scope));
         }
     }
 }

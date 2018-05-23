@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.builder.core.BuilderConstants
-import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
@@ -34,10 +33,9 @@ import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.bundling.Zip
 import java.io.File
-import java.util.concurrent.Callable
 
 /** Custom Zip task to allow archive name to be set lazily. */
-open class AndroidZip : Zip() {
+open class BundleAar : Zip() {
     private lateinit var archiveNameSupplier: () -> String
 
     @Input
@@ -46,13 +44,13 @@ open class AndroidZip : Zip() {
     class ConfigAction(
         private val extension: AndroidConfig,
         private val variantScope: VariantScope
-    ) : TaskConfigAction<AndroidZip> {
+    ) : TaskConfigAction<BundleAar> {
 
-        override fun getName() = variantScope.getTaskName("bundle")
+        override fun getName() = variantScope.getTaskName("bundle", "Aar")
 
-        override fun getType() = AndroidZip::class.java
+        override fun getType() = BundleAar::class.java
 
-        override fun execute(bundle: AndroidZip) {
+        override fun execute(bundle: BundleAar) {
             val libVariantData = variantScope.variantData as LibraryVariantData
 
             val artifacts = variantScope.artifacts
