@@ -75,8 +75,9 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   dumps_created_ = 0;
   Trace trace("CPU: StartProfiling atrace");
   Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
-  std::ostringstream buffer_size_arg;
-  buffer_size_arg << "-b " << (buffer_size_in_mb * 1024);
+  std::ostringstream buffer_size_stream;
+  buffer_size_stream << "-b " << (buffer_size_in_mb * 1024);
+  buffer_size_arg_ = buffer_size_stream.str();
   // Build entry to keep track of what is being profiled.
   profiled_app_.trace_path = GetTracePath(app_pkg_name);
   profiled_app_.app_pkg_name = app_pkg_name;
@@ -86,7 +87,7 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   bool isRunning = IsAtraceRunning();
   for (int i = 0; i < kRetryAttempts && !isRunning; i++) {
     RunAtrace(app_pkg_name, profiled_app_.trace_path, "--async_start",
-              buffer_size_arg.str());
+              buffer_size_arg_);
     isRunning = IsAtraceRunning();
   }
   if (!isRunning) {
@@ -167,7 +168,8 @@ void AtraceManager::DumpData() {
     // longer profiling we do not need to collect an async_dump as stop
     // profiling will do that for us.
     if (is_profiling_) {
-      RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_dump");
+      RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_dump",
+                buffer_size_arg_);
     }
   }
 }
