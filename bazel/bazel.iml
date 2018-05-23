@@ -133,5 +133,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="perf-logger" scope="TEST" />
   </component>
 </module>

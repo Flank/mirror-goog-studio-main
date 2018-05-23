@@ -77,6 +77,10 @@ public class Gradle implements Closeable {
         run(Collections.singletonList(task), System.out, System.err);
     }
 
+    public void run(List<String> tasks) {
+        run(tasks, System.out, System.err);
+    }
+
     public void run(List<String> tasks, OutputStream out, OutputStream err) {
         File buildDir = getBuildDir().getAbsoluteFile();
         File androidDir = new File(outDir, "_android").getAbsoluteFile();
