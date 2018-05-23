@@ -36,36 +36,6 @@ public class ResourceValue implements ResourceValueTemp {
     protected ResourceNamespace.Resolver mNamespaceResolver =
             ResourceNamespace.Resolver.EMPTY_RESOLVER;
 
-    /**
-     * Constructor still used by layoutlib. Remove ASAP.
-     *
-     * @deprecated Use {@link #ResourceValue(ResourceNamespace, ResourceType, String, String)}
-     */
-    @Deprecated
-    public ResourceValue(
-            @NonNull ResourceType type,
-            @NonNull String name,
-            @Nullable String value,
-            boolean isFramework) {
-        this(ResourceNamespace.fromBoolean(isFramework), type, name, value);
-    }
-
-    public ResourceValue(
-            @NonNull ResourceReference reference,
-            @Nullable String value,
-            @Nullable String libraryName) {
-        this(
-                reference.getNamespace(),
-                reference.getResourceType(),
-                reference.getName(),
-                value,
-                libraryName);
-    }
-
-    public ResourceValue(@NonNull ResourceReference reference, @Nullable String value) {
-        this(reference, value, null);
-    }
-
     public ResourceValue(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
@@ -85,6 +55,22 @@ public class ResourceValue implements ResourceValueTemp {
         this.name = name;
         this.value = value;
         this.libraryName = libraryName;
+    }
+
+    public ResourceValue(
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        this(
+                reference.getNamespace(),
+                reference.getResourceType(),
+                reference.getName(),
+                value,
+                libraryName);
+    }
+
+    public ResourceValue(@NonNull ResourceReference reference, @Nullable String value) {
+        this(reference, value, null);
     }
 
     @Override
