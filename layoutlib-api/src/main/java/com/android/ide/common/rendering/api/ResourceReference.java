@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 
@@ -30,7 +30,7 @@ import java.io.Serializable;
  * <p>This is an immutable class.
  */
 @Immutable
-public class ResourceReference implements Serializable {
+public final class ResourceReference implements Serializable {
     @NonNull private final ResourceType mResourceType;
     @NonNull private final ResourceNamespace mNamespace;
     @NonNull private final String mName;
@@ -152,10 +152,7 @@ public class ResourceReference implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = mResourceType.hashCode();
-        result = 31 * result + mNamespace.hashCode();
-        result = 31 * result + mName.hashCode();
-        return result;
+        return HashCodes.mix(mResourceType.hashCode(), mNamespace.hashCode(), mName.hashCode());
     }
 
     @Override
