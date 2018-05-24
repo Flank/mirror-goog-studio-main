@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Workers;
+import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
@@ -384,6 +385,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     .getExperimentalOptions()
                     .forEach(extraModelInfo.getDeprecationReporter()::reportExperimentalOption);
         }
+
+        // Enforce minimum versions of certain plugins
+        GradlePluginUtils.enforceMinimumVersionsOfPlugins(
+                project, androidBuilder.getIssueReporter());
 
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);

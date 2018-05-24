@@ -166,10 +166,20 @@ public interface SyncIssue {
      */
     int TYPE_MANIFEST_PARSED_DURING_CONFIGURATION = 33;
 
-    // WHEN ADDING NEW VALUES HERE, UPDATE EvalIssueReporter.Type
+    /**
+     * Indicates that the version of a third-party Gradle plugin (not the Android Gradle plugin) is
+     * not supported and needs to be updated.
+     */
+    int TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD = 34;
 
-    /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 34; // increment when adding new types.
+    // ATTENTION: When adding new values here, update EvalIssueReporter.Type and TYPE_MAX below.
+
+    /**
+     * Highest number assigned to types of {@link SyncIssue}s.
+     *
+     * <p>TODO: Why is it needed even when there are no usages in the code?
+     */
+    int TYPE_MAX = 35; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();
