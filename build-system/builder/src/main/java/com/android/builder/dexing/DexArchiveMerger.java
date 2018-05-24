@@ -24,11 +24,15 @@ public interface DexArchiveMerger {
     /** Creates an instance of dex archive merger that is using d8 to merge dex files. */
     @NonNull
     static DexArchiveMerger createD8DexMerger(
-            @NonNull MessageReceiver messageReceiver, int minSdkVersion, boolean isDebuggable) {
+            @NonNull MessageReceiver messageReceiver,
+            int minSdkVersion,
+            boolean isDebuggable,
+            @NonNull ForkJoinPool forkJoinPool) {
         return new D8DexArchiveMerger(
                 messageReceiver,
                 minSdkVersion,
-                isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE);
+                isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE,
+                forkJoinPool);
     }
 
     /**

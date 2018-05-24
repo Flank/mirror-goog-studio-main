@@ -54,15 +54,18 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;
     @NonNull private final MessageReceiver messageReceiver;
+    @NonNull private final ForkJoinPool forkJoinPool;
     private volatile boolean hintForMultidex = false;
 
     public D8DexArchiveMerger(
             @Nonnull MessageReceiver messageReceiver,
             int minSdkVersion,
-            @NonNull CompilationMode compilationMode) {
+            @NonNull CompilationMode compilationMode,
+            @NonNull ForkJoinPool forkJoinPool) {
         this.minSdkVersion = minSdkVersion;
         this.compilationMode = compilationMode;
         this.messageReceiver = messageReceiver;
+        this.forkJoinPool = forkJoinPool;
     }
 
     @Override
@@ -109,7 +112,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     .setOutput(outputDir, OutputMode.DexIndexed)
                     .setDisableDesugaring(true)
                     .setIntermediate(false);
-            D8.run(builder.build(), ForkJoinPool.commonPool());
+            D8.run(builder.build(), forkJoinPool);
         } catch (CompilationFailedException e) {
             throw getExceptionToRethrow(e, inputs, d8DiagnosticsHandler);
         }
