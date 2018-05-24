@@ -381,5 +381,11 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         public void setUnitTestVariant(@Nullable UnitTestVariant testVariant) {
             variant.setUnitTestVariant(testVariant);
         }
+
+        @NonNull
+        @Override
+        public FileCollection getAllRawAndroidResources() {
+            return variant.getAllRawAndroidResources();
+        }
     }
 }

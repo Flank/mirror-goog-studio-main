@@ -446,4 +446,10 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public boolean getOutputsAreSigned() {
         return getVariantData().outputsAreSigned;
     }
+
+    @NonNull
+    @Override
+    public FileCollection getAllRawAndroidResources() {
+        return getVariantData().getAllRawAndroidResources();
+    }
 }

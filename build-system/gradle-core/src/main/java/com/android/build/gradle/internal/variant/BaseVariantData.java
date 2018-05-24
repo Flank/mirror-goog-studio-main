@@ -15,6 +15,10 @@
  */
 package com.android.build.gradle.internal.variant;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -55,9 +59,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
@@ -92,6 +98,8 @@ public abstract class BaseVariantData {
     private FileCollection preJavacGeneratedBytecodeLatest;
     private final ConfigurableFileCollection allPreJavacGeneratedBytecode;
     private final ConfigurableFileCollection allPostJavacGeneratedBytecode;
+
+    private FileCollection rawAndroidResources = null;
 
     private Set<String> densityFilters;
     private Set<String> languageFilters;
@@ -447,6 +455,46 @@ public abstract class BaseVariantData {
                 DiscoverableFilterType.LANGUAGE.folderPrefix,
                 DiscoverableFilterType.DENSITY.folderPrefix));
         return resFoldersOnDisk;
+    }
+
+    @NonNull
+    public FileCollection getAllRawAndroidResources() {
+        if (rawAndroidResources == null) {
+            Project project = scope.getGlobalScope().getProject();
+            Iterator<Object> builtBy =
+                    Lists.newArrayList(
+                                    taskContainer.getRenderscriptCompileTask(),
+                                    taskContainer.getGenerateResValuesTask(),
+                                    taskContainer.getGenerateApkDataTask(),
+                                    extraGeneratedResFolders.getBuiltBy())
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .iterator();
+            FileCollection allRes = project.files().builtBy(builtBy);
+
+            FileCollection libraries =
+                    scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+                            .getArtifactFiles();
+            allRes = allRes.plus(libraries);
+
+            Iterator<BuildableArtifact> sourceSets = getAndroidResources().values().iterator();
+            FileCollection mainSourceSet = sourceSets.next().get();
+            FileCollection generated =
+                    project.files(
+                            scope.getRenderscriptResOutputDir(),
+                            scope.getGeneratedResOutputDir(),
+                            scope.getMicroApkResDirectory(),
+                            extraGeneratedResFolders);
+            allRes = allRes.plus(mainSourceSet.plus(generated));
+
+            while (sourceSets.hasNext()) {
+                allRes = allRes.plus(sourceSets.next().get());
+            }
+
+            rawAndroidResources = allRes;
+        }
+
+        return rawAndroidResources;
     }
 
     /**

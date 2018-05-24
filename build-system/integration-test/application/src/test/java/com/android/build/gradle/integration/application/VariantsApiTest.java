@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.options.BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -102,5 +104,27 @@ public class VariantsApiTest {
         // are backwards compatible before updating this test.
         HashCode hashCode = Hashing.sha1().hashString(VARIANTS_API_SNIPPET, StandardCharsets.UTF_8);
         assertThat(hashCode.toString()).isEqualTo("8b2f82a3cb8b14b86236243e085261e3359108cf");
+    }
+
+    @Test
+    public void checkGettingRawResources() throws Exception {
+        // This is simulating what kotlin-android-extensions plugin is doing
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nandroid {\n"
+                        + "  "
+                        + dslProperty
+                        + ".all {\n"
+                        + "    def res = it.getAllRawAndroidResources().getFiles()\n"
+                        + "    assert res.size() == 5"
+                        + "  }\n"
+                        + "}");
+
+        @SuppressWarnings("deprecation") // kotlin-extensions-plugin is doing this
+        GradleBuildResult result =
+                project.executor()
+                        .withProperty("doneWithConfiguration", "true")
+                        .with(DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
+                        .run("clean");
     }
 }
