@@ -72,6 +72,12 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     var mainDexList: BuildableArtifact? = null
         private set
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    var obsfuscationMappingFile: BuildableArtifact? = null
+        private set
+
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
@@ -119,6 +125,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                     baseModuleFile = baseModuleZip.singleFile(),
                     featureFiles = featureZips.files,
                     mainDexList = mainDexList?.singleFile(),
+                    obfuscationMappingFile = obsfuscationMappingFile?.singleFile(),
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     signature = signature,
@@ -132,6 +139,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         val baseModuleFile: File,
         val featureFiles: Set<File>,
         val mainDexList: File?,
+        val obfuscationMappingFile: File?,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
         val signature: JarSigner.Signature?,
@@ -177,6 +185,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             params.mainDexList?.let {
                 command.setMainDexListFile(it.toPath())
+            }
+
+            params.obfuscationMappingFile?.let {
+                command.addMetadataFile(
+                    "com.android.tools.build.obfuscation",
+                    "proguard.map",
+                    it.toPath()
+                )
             }
 
             command.build().execute()
@@ -244,6 +260,11 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                 // The dex files from this application are still processed for legacy multidex
                 // in this case, as if none of the dynamic features are fused the bundle tool will
                 // not reprocess the dex files.
+            }
+
+            if (scope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
+                task.obsfuscationMappingFile =
+                        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
             }
 
             scope.variantConfiguration.signingConfig?.let {

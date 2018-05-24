@@ -75,7 +75,12 @@ class DynamicAppTest {
         "/META-INF/ANDROIDD.RSA",
         "/META-INF/ANDROIDD.SF",
         "/META-INF/MANIFEST.MF"))
-    
+
+    private val releaseUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
+        // Only the release variant is shrunk, so only it will contain a proguard mapping file.
+        "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"
+    ))
+
     private val mainDexClasses: List<String> = listOf(
         "Landroid/support/multidex/MultiDex;",
         "Landroid/support/multidex/MultiDexApplication;",
@@ -91,7 +96,7 @@ class DynamicAppTest {
 
     private val mainDexListClassesInBundle: List<String> =
         mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
-    
+
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
@@ -182,7 +187,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
         }
     }
 
