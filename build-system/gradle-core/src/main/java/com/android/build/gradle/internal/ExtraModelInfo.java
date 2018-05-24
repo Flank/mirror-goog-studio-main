@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.ide.ArtifactMetaDataImpl;
 import com.android.build.gradle.internal.ide.JavaArtifactImpl;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ArtifactMetaData;
@@ -70,7 +71,12 @@ public class ExtraModelInfo {
 
         syncIssueHandler =
                 new SyncIssueHandlerImpl(SyncOptions.getModelQueryMode(projectOptions), logger);
-        deprecationReporter = new DeprecationReporterImpl(syncIssueHandler, projectPath);
+
+        deprecationReporter =
+                new DeprecationReporterImpl(
+                        syncIssueHandler,
+                        projectOptions.get(StringOption.SUPPRESS_UNSUPPORTED_OPTION_WARNINGS),
+                        projectPath);
         messageReceiver =
                 new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
     }

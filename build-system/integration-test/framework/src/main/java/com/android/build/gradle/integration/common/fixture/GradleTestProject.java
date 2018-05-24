@@ -26,6 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -48,6 +49,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -646,6 +648,15 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
+    public Map<BooleanOption, Boolean> getBooleanOptions() {
+        ImmutableMap.Builder<BooleanOption, Boolean> builder = ImmutableMap.builder();
+        builder.put(
+                BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,
+                withDependencyChecker);
+        builder.put(BooleanOption.ENABLE_SDK_DOWNLOAD, false); // Not enabled in tests
+        return builder.build();
+    }
+
     @NonNull
     public String generateProjectRepoScript() {
         return generateRepoScript(getRepoDirectories());
@@ -691,44 +702,6 @@ public final class GradleTestProject implements TestRule {
                             + "}\n";
         }
 
-        if (withDependencyChecker) {
-            String dependencyChecker =
-                    "// Check to ensure dependencies are not resolved during configuration.\n"
-                    + "//\n"
-                    + "// If it is intentional, create GradleTestProject without dependency checker\n"
-                    + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the\n"
-                    + "// checker with:\n"
-                    + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
-                    + "//\n"
-                    + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
-                    + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
-                    + "// interest to get a stacktrace.\n"
-                    + "if (!rootProject.hasProperty(\"doneWithConfiguration\")) {\n"
-                    + "    rootProject.ext.doneWithConfiguration = false\n"
-                    + "    gradle.projectsEvaluated {\n"
-                    + "        rootProject.ext.doneWithConfiguration = true\n"
-                    + "    }\n"
-                    + "    ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
-                    + "        @Override\n"
-                    + "        void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
-                    + "            if (!doneWithConfiguration\n"
-                                           // classpath is resolved to find the plugin.
-                    + "                    && !resolvableDependencies.getName().equals('classpath')\n"
-                    + "                    && project.findProperty(\""
-                    + AndroidProject.PROPERTY_BUILD_MODEL_ONLY
-                    + "\")?.toBoolean() != true) {\n"
-                    + "                throw new RuntimeException(\n"
-                    + "                        \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
-                    + "            }\n"
-                    + "        }\n"
-                    + "\n"
-                    + "        @Override\n"
-                    + "        void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
-                    + "    }\n"
-                    + "    gradle.addListener(dependencyResolutionChecker)\n"
-                    + "}\n";
-            result = result + dependencyChecker;
-        }
         return result;
     }
 
@@ -1290,13 +1263,20 @@ public final class GradleTestProject implements TestRule {
 
     /** Fluent method to run a build. */
     public GradleTaskExecutor executor() {
-        return new GradleTaskExecutor(this, getProjectConnection());
+        return applyOptions(new GradleTaskExecutor(this, getProjectConnection()));
     }
 
     /** Fluent method to get the model. */
     @NonNull
     public ModelBuilder model() {
-        return new ModelBuilder(this, getProjectConnection());
+        return applyOptions(new ModelBuilder(this, getProjectConnection()));
+    }
+
+    private <T extends BaseGradleExecutor<T>> T applyOptions(T executor) {
+        Map<BooleanOption, Boolean> booleanOptions = getBooleanOptions();
+        booleanOptions.forEach(executor::with);
+        booleanOptions.keySet().forEach(executor::suppressOptionWarning);
+        return executor;
     }
 
     /**

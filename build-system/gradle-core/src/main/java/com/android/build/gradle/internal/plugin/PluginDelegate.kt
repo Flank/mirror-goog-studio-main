@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.variant2.VariantBuilder
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
@@ -96,7 +97,7 @@ class PluginDelegate<out E: BaseExtension2>(
 
         dslScope = DslScopeImpl(
                 issueReporter,
-                DeprecationReporterImpl(issueReporter, projectPath),
+                DeprecationReporterImpl(issueReporter, projectOptions[StringOption.SUPPRESS_UNSUPPORTED_OPTION_WARNINGS], projectPath),
                 objectFactory)
 
         if (projectOptions.hasRemovedOptions()) {

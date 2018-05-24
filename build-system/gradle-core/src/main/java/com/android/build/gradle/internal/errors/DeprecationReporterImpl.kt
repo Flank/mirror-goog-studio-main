@@ -24,7 +24,11 @@ import com.android.builder.errors.EvalIssueReporter.Type
 
 class DeprecationReporterImpl(
         private val issueReporter: EvalIssueReporter,
+        suppressedOptionWarningOption: String?,
         private val projectPath: String) : DeprecationReporter {
+
+    private val suppressedOptionWarnings: Set<String> =
+        suppressedOptionWarningOption?.splitToSequence(',')?.toSet() ?: setOf()
 
     override fun reportDeprecatedUsage(
             newDslElement: String,
@@ -122,7 +126,9 @@ class DeprecationReporterImpl(
             option: String,
             value: String?,
             deprecationTarget: DeprecationTarget) {
-
+        if (suppressedOptionWarnings.contains(option)) {
+            return
+        }
         issueReporter.reportIssue(
                 Type.UNSUPPORTED_PROJECT_OPTION_USE,
                 Severity.WARNING,
@@ -133,6 +139,9 @@ class DeprecationReporterImpl(
 
 
     override fun reportExperimentalOption(option: Option<*>, value: String) {
+        if (suppressedOptionWarnings.contains(option.propertyName)) {
+            return
+        }
         issueReporter.reportIssue(
             Type.UNSUPPORTED_PROJECT_OPTION_USE,
             Severity.WARNING,

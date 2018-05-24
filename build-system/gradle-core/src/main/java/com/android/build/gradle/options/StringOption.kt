@@ -61,7 +61,10 @@ enum class StringOption(
 
     BUILD_ARTIFACT_REPORT_FILE("android.buildartifact.reportfile"),
 
-    AAPT2_FROM_MAVEN_OVERRIDE("android.aapt2FromMavenOverride")
+    AAPT2_FROM_MAVEN_OVERRIDE("android.aapt2FromMavenOverride"),
+
+    SUPPRESS_UNSUPPORTED_OPTION_WARNINGS("android.suppressUnsupportedOptionWarnings"),
+
     ;
 
     override fun parse(value: Any): String {

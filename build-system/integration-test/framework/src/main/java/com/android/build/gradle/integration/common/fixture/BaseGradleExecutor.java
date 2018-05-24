@@ -82,7 +82,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     private boolean sdkInLocalProperties = false;
     private boolean localAndroidSdkHome = false;
 
-
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
@@ -127,6 +126,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     public final T with(@NonNull StringOption option, @NonNull String value) {
         options.strings.put(option, value);
+        return (T) this;
+    }
+
+    public final T suppressOptionWarning(@NonNull Option option) {
+        options.suppressWarnings.add(option);
         return (T) this;
     }
 
