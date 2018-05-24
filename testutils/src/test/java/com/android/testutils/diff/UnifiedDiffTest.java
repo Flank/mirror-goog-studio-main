@@ -17,8 +17,15 @@ package com.android.testutils.diff;
 
 import static org.junit.Assert.*;
 
+import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import org.junit.Test;
 
@@ -102,5 +109,35 @@ public class UnifiedDiffTest {
         ArrayList<String> file = new ArrayList<>(FILE);
         diff.diffs.get(0).apply(file);
         assertEquals(AFTER_DIFF_2, file);
+    }
+
+    @Test
+    public void testFullDiff() throws IOException {
+        File data = TestUtils.getWorkspaceFile("tools/base/testutils/src/test/data");
+        File tmp = TestUtils.createTempDirDeletedOnExit();
+        File before = new File(data, "before");
+        File after = new File(data, "after");
+        FileUtils.copyDirectory(before, tmp);
+        UnifiedDiff diff = new UnifiedDiff(new File(data, "diff.txt"));
+        diff.apply(tmp, 2);
+
+        assertDirectoriesEqual(after, tmp);
+
+        diff.invert().apply(tmp, 2);
+
+        assertDirectoriesEqual(before, tmp);
+    }
+
+    private static void assertDirectoriesEqual(File expected, File value) throws IOException {
+        Iterator<File> it = FileUtils.getAllFiles(value).iterator();
+        Iterator<File> ex = FileUtils.getAllFiles(expected).iterator();
+        while (ex.hasNext() && it.hasNext()) {
+            Path e = ex.next().toPath();
+            Path r = it.next().toPath();
+            assertEquals(
+                    expected.toPath().relativize(e).toString(),
+                    value.toPath().relativize(r).toString());
+            assertEquals(new String(Files.readAllBytes(e)), new String(Files.readAllBytes(r)));
+        }
     }
 }

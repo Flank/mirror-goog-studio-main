@@ -113,7 +113,7 @@ public class BenchmarkTest {
 
         Gradle.unzip(new File(data, "src.zip"), src);
         UnifiedDiff diff = new UnifiedDiff(new File(data, "setup.diff"));
-        diff.apply(src);
+        diff.apply(src, 3);
 
         try (Gradle gradle = new Gradle(src, out, distribution)) {
             gradle.addRepo(repo);
