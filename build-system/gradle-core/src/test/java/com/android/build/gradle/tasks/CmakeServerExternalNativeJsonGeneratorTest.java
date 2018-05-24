@@ -29,6 +29,8 @@ import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessag
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
+import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
@@ -54,6 +56,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.Assume;
@@ -520,24 +523,22 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     private CmakeServerExternalNativeJsonGenerator getCMakeServerGenerator() {
         Mockito.when(ndkHandler.getRevision()).thenReturn(new Revision(15));
         Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
+        JsonGenerationVariantConfiguration config =
+                new JsonGenerationVariantConfiguration(
+                        new NativeBuildSystemVariantConfig(
+                                new HashSet<>(), new HashSet<>(), buildArguments, cFlags, cppFlags),
+                        variantName,
+                        makeFile,
+                        sdkFolder,
+                        ndkFolder,
+                        soFolder,
+                        objFolder,
+                        jsonFolder,
+                        debuggable,
+                        abis,
+                        nativeBuildConfigurationsJsons);
         return new CmakeServerExternalNativeJsonGenerator(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                cmakeFolder,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+                config, ndkHandler, androidBuilder, cmakeFolder, stats);
     }
 
     /**

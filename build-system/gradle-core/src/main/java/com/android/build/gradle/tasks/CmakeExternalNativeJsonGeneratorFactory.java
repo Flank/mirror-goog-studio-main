@@ -17,14 +17,12 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
-import java.util.List;
 
 /** Factory class to create Cmake strategy object based on Cmake version. */
 class CmakeExternalNativeJsonGeneratorFactory {
@@ -33,23 +31,11 @@ class CmakeExternalNativeJsonGeneratorFactory {
      * versions 3.6+.
      */
     public static ExternalNativeJsonGenerator createCmakeStrategy(
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull Revision cmakeRevision,
             @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
             @NonNull File cmakeInstallFolder,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
 
         stats.setNativeCmakeVersion(cmakeRevision.toShortString());
@@ -61,23 +47,7 @@ class CmakeExternalNativeJsonGeneratorFactory {
                         ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
                         Revision.Precision.MICRO))) {
             return new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                    ndkHandler,
-                    variantName,
-                    abis,
-                    androidBuilder,
-                    sdkFolder,
-                    ndkFolder,
-                    soFolder,
-                    objFolder,
-                    jsonFolder,
-                    makeFile,
-                    cmakeInstallFolder,
-                    debuggable,
-                    buildArguments,
-                    cFlags,
-                    cppFlags,
-                    nativeBuildConfigurationsJsons,
-                    stats);
+                    config, ndkHandler, androidBuilder, cmakeInstallFolder, stats);
         }
 
         if (cmakeRevision.getMajor() < 3
@@ -89,22 +59,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
         }
 
         return new CmakeServerExternalNativeJsonGenerator(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                cmakeInstallFolder,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+                config, ndkHandler, androidBuilder, cmakeInstallFolder, stats);
     }
 }

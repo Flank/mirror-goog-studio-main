@@ -19,10 +19,9 @@ package com.android.build.gradle.tasks;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -53,40 +52,12 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @NonNull final File cmakeInstallFolder;
 
     CmakeExternalNativeJsonGenerator(
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
             @NonNull File cmakeInstallFolder,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+        super(config, ndkHandler, androidBuilder, stats);
         this.cmakeInstallFolder = cmakeInstallFolder;
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
     }
@@ -295,11 +266,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     }
 
     @NonNull
-    protected File getSdkCmakeFolder() {
-        return getCmakeFolderFromSdkFolder(getSdkFolder());
-    }
-
-    @NonNull
     protected File getCmakeBinFolder() {
         return new File(getCmakeInstallFolder(), "bin");
     }
@@ -363,10 +329,5 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @NonNull
     protected File getSdkCmakeExecutable() {
         return getSdkCmakeExecutable(getSdkFolder());
-    }
-
-    @NonNull
-    protected File getSdkCmakeBinFolder() {
-        return getSdkCmakeBinFolder(getSdkFolder());
     }
 }

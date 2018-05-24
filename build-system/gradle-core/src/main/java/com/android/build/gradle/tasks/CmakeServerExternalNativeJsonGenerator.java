@@ -45,7 +45,7 @@ import com.android.build.gradle.external.cmake.server.Target;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage;
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchain;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
@@ -86,41 +86,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
     // Constructor
     public CmakeServerExternalNativeJsonGenerator(
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
             @NonNull File cmakeFolder,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                cmakeFolder,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+        super(config, ndkHandler, androidBuilder, cmakeFolder, stats);
 
         logPreviewWarning(androidBuilder);
     }
