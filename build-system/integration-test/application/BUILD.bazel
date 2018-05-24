@@ -218,6 +218,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1:jar",
         "//prebuilts/tools/common/m2/repository/de/greenrobot/eventbus/2.4.0:jar",
         "//prebuilts/tools/common/m2/repository/io/fabric/tools/gradle/1.22.1:jar",
+        "//prebuilts/tools/common/m2/repository/io/fabric/tools/gradle/1.25.4:jar",
         "//prebuilts/tools/common/m2/repository/io/reactivex/rxandroid/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/io/reactivex/rxjava/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.2:jar",
