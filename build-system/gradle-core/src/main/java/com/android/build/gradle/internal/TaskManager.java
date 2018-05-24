@@ -167,6 +167,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
+import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -195,13 +196,13 @@ import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.build.gradle.tasks.ProcessAnnotationsTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
-import com.android.build.gradle.tasks.factory.JavaCompileCreationAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessArgs;
@@ -1406,8 +1407,14 @@ public abstract class TaskManager {
     public TaskProvider<? extends JavaCompile> createJavacTask(@NonNull final VariantScope scope) {
         taskFactory.register(new JavaPreCompileTask.CreationAction(scope));
 
+        if (scope.getGlobalScope()
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)) {
+            taskFactory.register(new ProcessAnnotationsTask.CreationAction(scope));
+        }
+
         final TaskProvider<? extends JavaCompile> javacTask =
-                taskFactory.register(new JavaCompileCreationAction(scope));
+                taskFactory.register(new AndroidJavaCompile.CreationAction(scope));
 
         postJavacCreation(scope);
 

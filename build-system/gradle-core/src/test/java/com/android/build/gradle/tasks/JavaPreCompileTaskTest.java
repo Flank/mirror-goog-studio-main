@@ -20,22 +20,18 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -45,9 +41,6 @@ import org.junit.rules.TemporaryFolder;
 
 public class JavaPreCompileTaskTest {
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    private static final String processorMetaInf =
-            "META-INF/services/javax.annotation.processing.Processor";
 
     private static final String testProcessorName = "com.google.test.MyAnnotationProcessor";
 
@@ -69,7 +62,10 @@ public class JavaPreCompileTaskTest {
     public static void classSetUp() throws IOException {
         directory = temporaryFolder.newFolder();
         directoryWithAnnotationProcessor = temporaryFolder.newFolder();
-        File processorMetaInfFile = new File(directoryWithAnnotationProcessor, processorMetaInf);
+        File processorMetaInfFile =
+                new File(
+                        directoryWithAnnotationProcessor,
+                        JavaCompileUtils.ANNOTATION_PROCESSORS_INDICATOR_FILE);
         Files.createParentDirs(processorMetaInfFile);
         assertThat(processorMetaInfFile.createNewFile()).isTrue();
 
@@ -83,7 +79,7 @@ public class JavaPreCompileTaskTest {
         jarWithAnnotationProcessor = temporaryFolder.newFile(dependencyWithProcessorJar);
         try (ZipOutputStream out =
                 new ZipOutputStream(new FileOutputStream(jarWithAnnotationProcessor))) {
-            out.putNextEntry(new ZipEntry(processorMetaInf));
+            out.putNextEntry(new ZipEntry(JavaCompileUtils.ANNOTATION_PROCESSORS_INDICATOR_FILE));
             out.write(testProcessorName.getBytes());
             out.closeEntry();
         }
@@ -108,7 +104,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 new AnnotationProcessorOptions(),
-                false,
                 false);
 
         task.preCompile();
@@ -134,7 +129,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 new AnnotationProcessorOptions(),
-                false,
                 false);
 
         task.preCompile();
@@ -158,7 +152,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 new AnnotationProcessorOptions(),
-                false,
                 false);
         try {
             task.preCompile();
@@ -180,7 +173,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
-                false,
                 false);
 
         task.preCompile();
@@ -199,7 +191,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
-                false,
                 false);
 
         task.preCompile();
@@ -218,7 +209,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
-                false,
                 false);
         task.preCompile();
 
@@ -235,7 +225,6 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
-                false,
                 false);
         task.preCompile();
 
@@ -243,23 +232,7 @@ public class JavaPreCompileTaskTest {
     }
 
     @Test
-    public void checkDataBindingAddedForMetrics() throws IOException {
-        FileCollection compileClasspath = project.files();
-        task.init(
-                outputFile,
-                "annotationProcessor",
-                processorConfiguration.getIncoming().getArtifacts(),
-                compileConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(),
-                false,
-                true);
-        task.preCompile();
-
-        assertThat(getProcessorNames()).containsExactly(JavaPreCompileTask.DATA_BINDING_SPEC);
-    }
-
-    @Test
-    public void checkAllProcessorsAddedForMetrics() throws IOException {
+    public void checkOnlyExplicitProcessorsAddedForMetrics() throws IOException {
         project.getDependencies().add("api", project.files(jarWithAnnotationProcessor));
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true); // Disable exception.
@@ -271,21 +244,39 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
-                false,
-                true);
+                false);
         task.preCompile();
 
-        assertThat(getProcessorNames())
-                .containsExactly(
-                        testProcessorName,
-                        JavaPreCompileTask.DATA_BINDING_SPEC,
-                        dependencyWithProcessorJar);
+        // Since the processor name is explicitly specified via
+        // AnnotationProcessorOptions.getClassNames(), only the annotation processor with that name
+        // will be executed and should be added for metrics
+        assertThat(getProcessorNames()).containsExactly(testProcessorName);
     }
 
-    private List<String> getProcessorNames() throws IOException {
-        Gson gson = new GsonBuilder().create();
+    @Test
+    public void checkImplicitProcessorsAddedForMetrics() throws IOException {
+        project.getDependencies()
+                .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
+        AnnotationProcessorOptions options = new AnnotationProcessorOptions();
+
+        task.init(
+                outputFile,
+                "annotationProcessor",
+                processorConfiguration.getIncoming().getArtifacts(),
+                compileConfiguration.getIncoming().getArtifacts(),
+                options,
+                false);
+        task.preCompile();
+
+        // Since the processor names are not explicitly specified via
+        // AnnotationProcessorOptions.getClassNames(), any annotation processors on the annotation
+        // processor classpath will be executed and should be added for metrics
+        assertThat(getProcessorNames()).containsExactly(dependencyWithProcessorJar);
+    }
+
+    @NonNull
+    private Set<String> getProcessorNames() {
         assertThat(outputFile).isFile();
-        FileReader reader = new FileReader(outputFile);
-        return gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
+        return JavaCompileUtils.readAnnotationProcessorsFromJsonFile(outputFile).keySet();
     }
 }

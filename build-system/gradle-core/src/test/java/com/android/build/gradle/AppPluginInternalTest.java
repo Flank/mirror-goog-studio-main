@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
+import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.model.SigningConfig;

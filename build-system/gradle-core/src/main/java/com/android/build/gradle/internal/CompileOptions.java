@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.tasks.factory.JavaCompileCreationAction;
 import com.google.common.base.Charsets;
 import java.util.Locale;
 import javax.inject.Inject;
@@ -42,8 +41,7 @@ public class CompileOptions {
     @NonNull
     private String encoding = Charsets.UTF_8.name();
 
-    /** The default value is chosen in {@link JavaCompileCreationAction}. */
-    private Boolean incremental = null;
+    @Nullable private Boolean incremental = null;
 
     /** @see #setDefaultJavaVersion(JavaVersion) */
     @NonNull
@@ -119,10 +117,18 @@ public class CompileOptions {
     }
 
     /**
-     * Whether java compilation should use Gradle's new incremental model.
+     * Whether Java compilation should be incremental or not.
      *
-     * <p>This may cause issues in projects that rely on annotation processing etc.
+     * <p>Note that even if this option is set to {@code true}, Java compilation may still be
+     * non-incremental (e.g., if incremental annotation processing is not yet possible in the
+     * project).
+     *
+     * <p>If this option is not set (set to {@code null}), Java compilation may or may not be
+     * incremental, depending on the Android Gradle plugin's default behavior ({@link
+     * com.android.build.gradle.tasks.JavaCompileUtils#DEFAULT_INCREMENTAL_COMPILATION}) and
+     * Gradle's default behavior.
      */
+    @Nullable
     public Boolean getIncremental() {
         return incremental;
     }

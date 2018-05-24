@@ -19,7 +19,10 @@ package com.android.build.gradle.tasks.factory;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.tasks.AndroidJavaCompile;
+import com.android.build.gradle.tasks.JavaCompileUtils;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
@@ -29,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
@@ -60,11 +64,16 @@ public class AndroidJavaCompileTest {
 
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
-        task.setVariantName(VARIANT_NAME);
+        task.variantName = VARIANT_NAME;
         task.processorListFile =
                 new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
 
-        task.processAnalytics();
+        Set<String> annotationProcessors =
+                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(
+                                BuildableArtifactUtil.singleFile(task.processorListFile))
+                        .keySet();
+        JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
+                annotationProcessors, project.getPath(), task.variantName);
 
         Collection<String> processorNames = getProcessorList();
         assertThat(processorNames).isEmpty();
@@ -75,11 +84,19 @@ public class AndroidJavaCompileTest {
         AndroidJavaCompile task = project.getTasks().create("test", AndroidJavaCompile.class);
 
         File inputFile = temporaryFolder.newFile();
-        Files.write(inputFile.toPath(), "[\"processor1\", \"processor2\"]".getBytes("utf-8"));
-        task.setVariantName(VARIANT_NAME);
+        Files.write(
+                inputFile.toPath(), "{\"processor1\":false,\"processor2\":true}".getBytes("utf-8"));
+        task.variantName = VARIANT_NAME;
         task.processorListFile =
                 new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
-        task.processAnalytics();
+
+        Set<String> annotationProcessors =
+                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(
+                                BuildableArtifactUtil.singleFile(task.processorListFile))
+                        .keySet();
+        JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
+                annotationProcessors, project.getPath(), task.variantName);
+
         Collection<String> processorNames = getProcessorList();
         assertThat(processorNames).containsExactly("processor1", "processor2");
     }

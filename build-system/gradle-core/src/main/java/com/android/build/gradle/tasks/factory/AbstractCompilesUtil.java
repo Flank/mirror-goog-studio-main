@@ -17,16 +17,10 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.internal.CompileOptions;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.ILogger;
 import org.gradle.api.JavaVersion;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;
 
@@ -69,34 +63,5 @@ public class AbstractCompilesUtil {
             javaVersionToUse = jdkVersion;
         }
         return javaVersionToUse;
-    }
-
-    /**
-     * Determine if java compilation can be incremental.
-     */
-    public static boolean isIncremental(
-            @NonNull Project project,
-            @NonNull VariantScope variantScope,
-            @NonNull CompileOptions compileOptions,
-            @Nullable Configuration processorConfiguration,
-            @NonNull ILogger log) {
-        boolean incremental = true;
-        if (compileOptions.getIncremental() != null) {
-            incremental = compileOptions.getIncremental();
-            log.verbose("Incremental flag set to %1$b in DSL", incremental);
-        } else {
-            boolean hasAnnotationProcessor =
-                    processorConfiguration != null
-                            && !processorConfiguration.getAllDependencies().isEmpty();
-            if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                    || hasAnnotationProcessor
-                    || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
-                incremental = false;
-                log.verbose("Incremental Java compilation disabled in variant %1$s "
-                                + "as you are using an incompatible plugin",
-                        variantScope.getVariantConfiguration().getFullName());
-            }
-        }
-        return incremental;
     }
 }

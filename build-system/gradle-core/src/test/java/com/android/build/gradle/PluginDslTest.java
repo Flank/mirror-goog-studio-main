@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
+import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestOptions.Execution;
