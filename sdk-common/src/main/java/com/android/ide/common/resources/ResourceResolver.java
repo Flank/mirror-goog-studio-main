@@ -206,13 +206,13 @@ public class ResourceResolver extends RenderResources {
      */
     public void setDeviceDefaults(@NonNull String deviceDefaultParent) {
         if (deviceDefaultParent.equals(mDeviceDefaultParent)) {
-            // No need to patch again with the same parent
+            // No need to patch again with the same parent.
             return;
         }
 
         mDeviceDefaultParent = deviceDefaultParent;
         // The joiner will ignore nulls so if the caller specified an empty name, we replace it with
-        // a null so it gets ignored
+        // a null so it gets ignored.
         String parentName = Strings.emptyToNull(deviceDefaultParent);
 
         // TODO(namespaces): why only framework styles?
@@ -223,7 +223,7 @@ public class ResourceResolver extends RenderResources {
         }
 
         for (ResourceValue value : frameworkStyles.values()) {
-            // The regexp gets the prefix and suffix if they exist (without the dots)
+            // The regexp gets the prefix and suffix if they exist (without the dots).
             Matcher matcher = DEVICE_DEFAULT_PATTERN.matcher(value.getName());
             if (!matcher.matches()) {
                 continue;
@@ -238,7 +238,7 @@ public class ResourceResolver extends RenderResources {
 
     /**
      * Updates the parent of a given framework style. This method is used to patch DeviceDefault
-     * styles when using a CompatibilityTarget
+     * styles when using a CompatibilityTarget.
      */
     private void patchFrameworkStyleParent(String childStyleName, String parentName) {
         // TODO(namespaces): why only framework styles?
@@ -340,76 +340,67 @@ public class ResourceResolver extends RenderResources {
     @Nullable
     public StyleItemResourceValueImpl findItemInStyle(
             @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
-        return findItemInStyle(style, attr, 0);
-    }
+        for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
+            StyleItemResourceValueImpl item = style.getItem(attr);
 
-    // TODO: Change return type to StyleItemResourceValue.
-    @Nullable
-    private StyleItemResourceValueImpl findItemInStyle(
-            @NonNull StyleResourceValue style, @NonNull ResourceReference attr, int depth) {
-        StyleItemResourceValueImpl item = style.getItem(attr);
+            // if we didn't find it, we look in the parent style (if applicable)
+            //noinspection VariableNotUsedInsideIf
+            if (item != null) {
+                return item;
+            }
 
-        // if we didn't find it, we look in the parent style (if applicable)
-        //noinspection VariableNotUsedInsideIf
-        if (item == null) {
-            StyleResourceValue parentStyle = mStyleInheritanceMap.get(style);
-            if (parentStyle != null) {
-                if (depth >= MAX_RESOURCE_INDIRECTION) {
-                    if (mLogger != null) {
-                        mLogger.error(
-                                LayoutLog.TAG_BROKEN,
-                                String.format(
-                                        "Cyclic style parent definitions: %1$s",
-                                        computeCyclicStyleChain(style)),
-                                null,
-                                null,
-                                null);
-                    }
-
-                    return null;
-                }
-
-                return findItemInStyle(parentStyle, attr, depth + 1);
+            style = mStyleInheritanceMap.get(style);
+            if (style == null) {
+                return null;
             }
         }
 
-        return item;
+        if (mLogger != null) {
+            mLogger.error(
+                    LayoutLog.TAG_BROKEN,
+                    String.format(
+                            "Cyclic style parent definitions: %1$s",
+                            computeCyclicStyleChain(style)),
+                    null,
+                    null,
+                    null);
+        }
+
+        return null;
     }
 
     private String computeCyclicStyleChain(StyleResourceValue style) {
-        StringBuilder sb = new StringBuilder(100);
-        appendStyleParents(style, new HashSet<>(), 0, sb);
-        return sb.toString();
-    }
-
-    private void appendStyleParents(StyleResourceValue style, Set<StyleResourceValue> seen,
-            int depth, StringBuilder sb) {
-        if (depth >= MAX_RESOURCE_INDIRECTION) {
-            sb.append("...");
-            return;
-        }
-
-        boolean haveSeen = seen.contains(style);
-        seen.add(style);
-
-        sb.append('"');
-        sb.append(style.getResourceUrl().getQualifiedName());
-        sb.append('"');
-
-        if (haveSeen) {
-            return;
-        }
-
-        StyleResourceValue parentStyle = mStyleInheritanceMap.get(style);
-        if (parentStyle != null) {
-            if (style.getParentStyleName() != null) {
-                sb.append(" specifies parent ");
-            } else {
-                sb.append(" implies parent ");
+        StringBuilder result = new StringBuilder(100);
+        Set<StyleResourceValue> seen = new HashSet<>();
+        for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION + 1; depth++) {
+            if (depth >= MAX_RESOURCE_INDIRECTION) {
+                result.append("...");
+                break;
             }
 
-            appendStyleParents(parentStyle, seen, depth + 1, sb);
+            result.append('"');
+            result.append(style.getResourceUrl().getQualifiedName());
+            result.append('"');
+
+            if (!seen.add(style)) {
+                break;
+            }
+
+            StyleResourceValue parentStyle = mStyleInheritanceMap.get(style);
+            if (parentStyle == null) {
+                break;
+            }
+
+            if (style.getParentStyleName() != null) {
+                result.append(" specifies parent ");
+            } else {
+                result.append(" implies parent ");
+            }
+
+            style = parentStyle;
         }
+
+        return result.toString();
     }
 
     @Override
@@ -502,6 +493,7 @@ public class ResourceResolver extends RenderResources {
 
     @Override
     public ResourceValue resolveResValue(@Nullable ResourceValue resValue) {
+        boolean referenceToItself = false;
         for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
             if (resValue == null) {
                 return null;
@@ -521,7 +513,8 @@ public class ResourceResolver extends RenderResources {
                 return resValue;
             }
 
-            if (resValue == resolvedResValue) {
+            if (resolvedResValue.equals(resValue)) {
+                referenceToItself = true;
                 break; // Resource value referring to itself.
             }
             // Continue resolution with the new value.
@@ -529,12 +522,12 @@ public class ResourceResolver extends RenderResources {
         }
 
         if (mLogger != null) {
+            String msg = referenceToItself
+                    ? "Infinite cycle trying to resolve '%s': Render may not be accurate."
+                    : "Potential infinite cycle trying to resolve '%s': Render may not be accurate.";
             mLogger.error(
                     LayoutLog.TAG_BROKEN,
-                    String.format(
-                            "Potential stack overflow trying to resolve '%s': "
-                                    + "cyclic resource definitions? Render may not be accurate.",
-                            resValue.getValue()),
+                    String.format(msg, resValue.getValue()),
                     null,
                     null,
                     null);
@@ -675,56 +668,43 @@ public class ResourceResolver extends RenderResources {
         return null;
     }
 
-    /** Returns true if the given {@link ResourceValue} represents a theme */
+    /** Checks if the given {@link ResourceValue} represents a theme. */
     public boolean isTheme(
-            @NonNull ResourceValue value,
-            @Nullable Map<ResourceValue, Boolean> cache) {
-        return isTheme(value, cache, 0);
-    }
-
-    private boolean isTheme(
-            @NonNull ResourceValue value,
-            @Nullable Map<ResourceValue, Boolean> cache,
-            int depth) {
+            @NonNull ResourceValue value, @Nullable Map<ResourceValue, Boolean> cache) {
         if (cache != null) {
             Boolean known = cache.get(value);
             if (known != null) {
                 return known;
             }
         }
+
         if (value instanceof StyleResourceValue) {
-            StyleResourceValue srv = (StyleResourceValue) value;
-            String name = srv.getName();
-            if (srv.getNamespace() == ResourceNamespace.ANDROID
-                    && (name.equals(THEME_NAME) || name.startsWith(THEME_NAME_DOT))) {
-                if (cache != null) {
-                    cache.put(value, true);
-                }
-                return true;
-            }
-
-            StyleResourceValue parentStyle = mStyleInheritanceMap.get(srv);
-            if (parentStyle != null) {
-                if (depth >= MAX_RESOURCE_INDIRECTION) {
-                    if (mLogger != null) {
-                        mLogger.error(
-                                LayoutLog.TAG_BROKEN,
-                                String.format(
-                                        "Cyclic style parent definitions: %1$s",
-                                        computeCyclicStyleChain(srv)),
-                                null,
-                                null,
-                                null);
+            StyleResourceValue styleValue = (StyleResourceValue) value;
+            for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
+                String name = styleValue.getName();
+                if (styleValue.getNamespace() == ResourceNamespace.ANDROID
+                        && (name.equals(THEME_NAME) || name.startsWith(THEME_NAME_DOT))) {
+                    if (cache != null) {
+                        cache.put(value, true);
                     }
+                    return true;
+                }
 
+                styleValue = mStyleInheritanceMap.get(styleValue);
+                if (styleValue == null) {
                     return false;
                 }
+            }
 
-                boolean result = isTheme(parentStyle, cache, depth + 1);
-                if (cache != null) {
-                    cache.put(value, result);
-                }
-                return result;
+            if (mLogger != null) {
+                mLogger.error(
+                        LayoutLog.TAG_BROKEN,
+                        String.format(
+                                "Cyclic style parent definitions: %1$s",
+                                computeCyclicStyleChain(styleValue)),
+                        null,
+                        null,
+                        null);
             }
         }
 

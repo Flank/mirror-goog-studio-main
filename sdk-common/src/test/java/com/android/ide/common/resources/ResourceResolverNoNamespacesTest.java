@@ -512,7 +512,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 nonNamespacedResolver(projectResources, projectResources, "MyTheme");
         assertNotNull(resolver);
 
-        final AtomicBoolean wasWarned = new AtomicBoolean(false);
+        AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
                 new LayoutLog() {
                     @Override
@@ -522,13 +522,11 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                             @Nullable Throwable throwable,
                             @Nullable Object viewCookie,
                             @Nullable Object data) {
-                        if (("Potential stack overflow trying to resolve "
-                                        + "'@color/loop1': cyclic resource definitions?"
-                                        + " Render may not be accurate.")
+                        if (("Infinite cycle trying to resolve '@color/loop1': "
+                                        + "Render may not be accurate.")
                                 .equals(message)) {
                             wasWarned.set(true);
-                        } else if (("Potential stack overflow trying to resolve "
-                                        + "'@color/loop2b': cyclic resource definitions? "
+                        } else if (("Potential infinite cycle trying to resolve '@color/loop2b': "
                                         + "Render may not be accurate.")
                                 .equals(message)) {
                             wasWarned.set(true);
