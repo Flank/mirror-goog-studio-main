@@ -107,7 +107,9 @@ public class MainTest extends AbstractCheckTest {
                     expectedOutput = cleanup.cleanup(expectedOutput);
                     stdout = cleanup.cleanup(stdout);
                 }
-                if (!expectedOutput.replace('\\', '/').trim()
+                if (!expectedOutput
+                        .replace('\\', '/')
+                        .trim()
                         .equals(stdout.replace('\\', '/').trim())) {
                     assertEquals(expectedOutput.trim(), stdout.trim());
                 }

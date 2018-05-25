@@ -47,6 +47,7 @@ import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.AnnotationLookup;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -181,6 +182,8 @@ public class Extractor {
      */
     private static final boolean INCLUDE_INFERRED_NULLABLE = false;
 
+    public static final String ANDROIDX_NULLABLE = "androidx.annotation.Nullable";
+    public static final String ANDROIDX_NOTNULL = "androidx.annotation.NonNull";
     public static final String ANDROID_ANNOTATIONS_PREFIX = "android.annotation.";
     public static final String ANDROID_NULLABLE = "android.annotation.Nullable";
     public static final String SUPPORT_NULLABLE = "android.support.annotation.Nullable";
@@ -494,10 +497,6 @@ public class Extractor {
     }
 
     private boolean hasSourceRetention(@NonNull String fqn, @Nullable UAnnotation annotation) {
-        if (annotation == null) {
-            return false;
-        }
-
         if (sourceRetention == null) {
             sourceRetention = Maps.newHashMapWithExpectedSize(20);
             // The @IntDef and @String annotations have always had source retention,
@@ -507,15 +506,25 @@ public class Extractor {
             sourceRetention.put(INT_DEF_ANNOTATION.newName(), true);
             sourceRetention.put(STRING_DEF_ANNOTATION.oldName(), true);
             sourceRetention.put(STRING_DEF_ANNOTATION.newName(), true);
+            sourceRetention.put(LONG_DEF_ANNOTATION.oldName(), true);
+            sourceRetention.put(LONG_DEF_ANNOTATION.newName(), true);
             // The @Nullable and @NonNull annotations have always had class retention
             sourceRetention.put(SUPPORT_NOTNULL, false);
             sourceRetention.put(SUPPORT_NULLABLE, false);
+            sourceRetention.put(ANDROID_NOTNULL, false);
+            sourceRetention.put(ANDROID_NULLABLE, false);
+            sourceRetention.put(ANDROIDX_NOTNULL, false);
+            sourceRetention.put(ANDROIDX_NULLABLE, false);
         }
 
         Boolean source = sourceRetention.get(fqn);
 
         if (source != null) {
             return source;
+        }
+
+        if (annotation == null) {
+            return false;
         }
 
         boolean hasSourceRetention = false;
@@ -1335,6 +1344,14 @@ public class Extractor {
                 continue;
             }
             AnnotationData annotation = createAnnotation(annotationElement);
+            if (annotation == null) {
+                continue;
+            }
+
+            if (!includeClassRetentionAnnotations && !hasSourceRetention(annotation.name, null)) {
+                continue;
+            }
+
             item.annotations.add(annotation);
             count++;
         }
@@ -1352,6 +1369,11 @@ public class Extractor {
             if (annotation == null) {
                 continue;
             }
+
+            if (!includeClassRetentionAnnotations && !hasSourceRetention(annotation.name, null)) {
+                continue;
+            }
+
             boolean haveNullable = false;
             boolean haveNotNull = false;
             for (AnnotationData existing : item.annotations) {
@@ -1383,12 +1405,14 @@ public class Extractor {
     private static boolean isNonNull(String name) {
         return name.equals(IDEA_NOTNULL)
                 || name.equals(ANDROID_NOTNULL)
+                || name.equals(ANDROIDX_NOTNULL)
                 || name.equals(SUPPORT_NOTNULL);
     }
 
     private static boolean isNullable(String name) {
         return name.equals(IDEA_NULLABLE)
                 || name.equals(ANDROID_NULLABLE)
+                || name.equals(ANDROIDX_NULLABLE)
                 || name.equals(SUPPORT_NULLABLE);
     }
 
@@ -1829,7 +1853,11 @@ public class Extractor {
                     // extracted metadata.
                     if (("prefix".equals(name) || "suffix".equals(name))
                             && (INT_DEF_ANNOTATION.isEquals(this.name)
-                                    || STRING_DEF_ANNOTATION.isEquals(this.name))) {
+                                    || LONG_DEF_ANNOTATION.isEquals(this.name)
+                                    || STRING_DEF_ANNOTATION.isEquals(this.name)
+                                    || ANDROID_INT_DEF.equals(this.name)
+                                    || ANDROID_LONG_DEF.equals(this.name)
+                                    || ANDROID_STRING_DEF.equals(this.name))) {
                         continue;
                     }
 
@@ -2825,10 +2853,16 @@ public class Extractor {
                                             + "doc comment");
                         }
                         if (requireSourceRetention && !hasSourceRetention(aClass)) {
-                            Extractor.warning(
+                            String message =
                                     aClass.getQualifiedName()
                                             + ": The typedef annotation should have "
-                                            + "@Retention(RetentionPolicy.SOURCE)");
+                                            + "@Retention(RetentionPolicy.SOURCE)";
+                            if (VALUE_TRUE.equals(
+                                    System.getProperty("android.typedef.enforce-retention"))) {
+                                throw new ReflectiveLintRunner.ExtractErrorException(message);
+                            } else {
+                                Extractor.warning(message);
+                            }
                         }
                         if (isHiddenTypeDef(aClass)) {
                             String cls = Lint.getInternalName(aClass);

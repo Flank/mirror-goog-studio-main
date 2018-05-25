@@ -16,7 +16,11 @@
 
 package com.android.tools.lint.gradle;
 
+import static com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT;
+import static com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT;
+import static com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT;
 import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
+import static com.android.SdkConstants.LEANBACK_V17_ARTIFACT;
 import static com.android.SdkConstants.SUPPORT_LIB_ARTIFACT;
 
 import com.android.annotations.NonNull;
@@ -591,18 +595,35 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
-            if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
+            if (SUPPORT_LIB_ARTIFACT.equals(artifact)
+                    || ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
                 if (supportLib == null) {
+                    // OR,
+                    // androidx.legacy:legacy-support-v4
                     Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    supportLib = dependsOn(dependencies, artifact);
+                    supportLib =
+                            dependsOn(dependencies, SUPPORT_LIB_ARTIFACT)
+                                    || dependsOn(dependencies, ANDROIDX_SUPPORT_LIB_ARTIFACT);
                 }
                 return supportLib;
-            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
+            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)
+                    || ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
                 if (appCompat == null) {
                     Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    appCompat = dependsOn(dependencies, artifact);
+                    appCompat =
+                            dependsOn(dependencies, APPCOMPAT_LIB_ARTIFACT)
+                                    || dependsOn(dependencies, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
                 }
                 return appCompat;
+            } else if (LEANBACK_V17_ARTIFACT.equals(artifact)
+                    || ANDROIDX_LEANBACK_ARTIFACT.equals(artifact)) {
+                if (leanback == null) {
+                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
+                    leanback =
+                            dependsOn(dependencies, LEANBACK_V17_ARTIFACT)
+                                    || dependsOn(dependencies, ANDROIDX_LEANBACK_ARTIFACT);
+                }
+                return leanback;
             } else {
                 return super.dependsOn(artifact);
             }
@@ -753,16 +774,30 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
-            if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
+            if (SUPPORT_LIB_ARTIFACT.equals(artifact)
+                    || ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
                 if (supportLib == null) {
-                    supportLib = dependsOn(mLibrary, artifact);
+                    supportLib =
+                            dependsOn(mLibrary, SUPPORT_LIB_ARTIFACT)
+                                    || dependsOn(mLibrary, ANDROIDX_SUPPORT_LIB_ARTIFACT);
                 }
                 return supportLib;
-            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
+            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)
+                    || ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
                 if (appCompat == null) {
-                    appCompat = dependsOn(mLibrary, artifact);
+                    appCompat =
+                            dependsOn(mLibrary, APPCOMPAT_LIB_ARTIFACT)
+                                    || dependsOn(mLibrary, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
                 }
                 return appCompat;
+            } else if (LEANBACK_V17_ARTIFACT.equals(artifact)
+                    || ANDROIDX_LEANBACK_ARTIFACT.equals(artifact)) {
+                if (leanback == null) {
+                    leanback =
+                            dependsOn(mLibrary, LEANBACK_V17_ARTIFACT)
+                                    || dependsOn(mLibrary, ANDROIDX_LEANBACK_ARTIFACT);
+                }
+                return leanback;
             } else {
                 return super.dependsOn(artifact);
             }

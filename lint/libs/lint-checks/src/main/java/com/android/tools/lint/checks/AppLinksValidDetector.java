@@ -38,6 +38,7 @@ import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_PREFIX
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_SIMPLE_GLOB;
 import static com.android.tools.lint.detector.api.Lint.isDataBindingExpression;
 import static com.android.tools.lint.detector.api.Lint.isManifestPlaceHolderExpression;
+import static com.android.tools.lint.detector.api.Lint.resolvePlaceHolders;
 import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.utils.XmlUtils.getPreviousTagByName;
@@ -401,13 +402,23 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             Attr mimeType = data.getAttributeNodeNS(ANDROID_URI, ATTR_MIME_TYPE);
             if (mimeType != null) {
                 hasMimeType = true;
-                if (context != null && CharSequences.containsUpperCase(mimeType.getValue())) {
-                    reportUrlError(
-                            context,
-                            mimeType,
-                            context.getValueLocation(mimeType),
-                            "Mime-type matching is case sensitive and should only "
-                                    + "use lower-case characters");
+                if (context != null) {
+                    String mimeTypeValue = mimeType.getValue();
+                    String resolved =
+                            resolvePlaceHolders(context.getProject(), mimeTypeValue, null);
+                    if (CharSequences.containsUpperCase(resolved)) {
+                        String message =
+                                "Mime-type matching is case sensitive and should only "
+                                        + "use lower-case characters";
+                        if (!CharSequences.containsUpperCase(
+                                resolvePlaceHolders(null, mimeTypeValue, null))) {
+                            // The upper case character is only present in the substituted
+                            // manifest place holders, so include them in the message
+                            message += " (without placeholders, value is `" + resolved + "`)";
+                        }
+                        reportUrlError(
+                                context, mimeType, context.getValueLocation(mimeType), message);
+                    }
                 }
             }
 

@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.resolveManifestName
 import com.android.utils.XmlUtils.getFirstSubTagByName
 import com.android.utils.XmlUtils.getNextTagByName
@@ -48,6 +49,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isConstructorCall
@@ -312,12 +314,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                     if (type == SLICE_ACTION_CLASS) {
                         endActionItems.add(first)
                     }
-                } else if (WARN_ABOUT_TOO_MANY_ROWS && (methodName == "addRow" ||
-                            methodName == "addInputRange" ||
-                            methodName == "addRange" ||
-                            methodName == "addGridRow"
-                            )
-                ) {
+                } else if (WARN_ABOUT_TOO_MANY_ROWS && (isAddRowMethod(methodName))) {
                     rowCount++
                     if (rowCount == 5) {
                         context.report(
@@ -338,6 +335,13 @@ class SliceDetector : Detector(), SourceCodeScanner {
             "A mixture of slice actions and icons are not supported on a list, " +
                     "add either actions or icons but not both."
         )
+    }
+
+    private fun isAddRowMethod(methodName: String?): Boolean {
+        return methodName == "addRow" ||
+                methodName == "addInputRange" ||
+                methodName == "addRange" ||
+                methodName == "addGridRow"
     }
 
     private fun ensureSingleToggleType(
@@ -401,6 +405,29 @@ class SliceDetector : Detector(), SourceCodeScanner {
             override fun receiver(call: UCallExpression) {
                 if (isBuildConsumer(call)) {
                     rows.add(call)
+                }
+
+                if (isAddRowMethod(getMethodName(call))) {
+                    call.valueArguments.firstOrNull()?.let {
+                        if (it is UCallExpression) {
+                            argument(it, it)
+                        } else if (it is UQualifiedReferenceExpression) {
+                            var curr: UElement = it
+                            while (curr is UQualifiedReferenceExpression) {
+                                if (curr.receiver is UQualifiedReferenceExpression) {
+                                    curr = curr.receiver
+                                } else if (curr.receiver is UCallExpression) {
+                                    argument(curr.receiver as UCallExpression, curr)
+                                    return
+                                } else if (curr.selector is UCallExpression) {
+                                    argument(curr.selector as UCallExpression, curr)
+                                    return
+                                } else {
+                                    break
+                                }
+                            }
+                        }
+                    }
                 }
             }
         })

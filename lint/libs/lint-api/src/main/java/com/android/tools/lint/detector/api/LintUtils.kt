@@ -30,6 +30,7 @@ import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.ID_PREFIX
 import com.android.SdkConstants.MANIFEST_PLACEHOLDER_PREFIX
+import com.android.SdkConstants.MANIFEST_PLACEHOLDER_SUFFIX
 import com.android.SdkConstants.NEW_ID_PREFIX
 import com.android.SdkConstants.PREFIX_BINDING_EXPR
 import com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR
@@ -1658,6 +1659,51 @@ fun resolveManifestName(element: Element): String {
     } // else: the class name is already a fully qualified class name
 
     return className
+}
+
+/**
+ * Finds the place holder values for the current string and replaces them
+ * with the current variant version, or values from the default map
+ * if supplied.
+ */
+fun resolvePlaceHolders(
+    project: Project?,
+    value: String,
+    fallbacks: Map<String, String>? = null
+): String? {
+    var s = value
+    while (true) {
+        val start = s.indexOf(SdkConstants.MANIFEST_PLACEHOLDER_PREFIX)
+        if (start == -1) {
+            return s
+        }
+        val end = s.indexOf(MANIFEST_PLACEHOLDER_SUFFIX, start + 1)
+        if (end == -1) {
+            return s // not terminated
+        }
+        val name = s.substring(start + MANIFEST_PLACEHOLDER_PREFIX.length,
+            end
+        )
+        val replacement = resolvePlaceHolder(project, name) ?: fallbacks?.get(name) ?: ""
+        s = s.substring(0, start) + replacement +
+                s.substring(end + MANIFEST_PLACEHOLDER_PREFIX.length)
+    }
+}
+
+/** Looks up the value of a given place holder for the current variant of the given project */
+fun resolvePlaceHolder(
+    project: Project?,
+    name: String
+): String? {
+    val variant = project?.currentVariant
+    if (variant != null) {
+        val placeHolders = variant.mergedFlavor.manifestPlaceholders
+        val newValue = placeHolders[name]
+        if (newValue is String) {
+            return newValue.toString()
+        }
+    }
+    return null
 }
 
 fun getSourceProviders(

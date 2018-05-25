@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT;
+import static com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ANDROID_LIBRARY;
 import static com.android.SdkConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
@@ -153,6 +155,7 @@ public class Project {
     protected Boolean gradleProject;
     protected Boolean supportLib;
     protected Boolean appCompat;
+    protected Boolean leanback;
     protected GradleVersion gradleVersion;
     protected MavenCoordinates mavenCoordinates = null;
     private Map<String, String> superClassMap;
@@ -1465,11 +1468,14 @@ public class Project {
      */
     @Nullable
     public Boolean dependsOn(@NonNull String artifact) {
-        if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
+        if (SUPPORT_LIB_ARTIFACT.equals(artifact)
+                || ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
             if (supportLib == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.equals("android-support-v4.jar") || name.startsWith("support-v4-")) {
+                    if (name.equals("android-support-v4.jar")
+                            || name.startsWith("support-v4-")
+                            || name.startsWith("legacy-support-")) {
                         supportLib = true;
                         break;
                     }
@@ -1489,11 +1495,12 @@ public class Project {
             }
 
             return supportLib;
-        } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
+        } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)
+                || ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
             if (appCompat == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.startsWith("appcompat-v7-")) {
+                    if (name.startsWith("appcompat")) {
                         appCompat = true;
                         break;
                     }

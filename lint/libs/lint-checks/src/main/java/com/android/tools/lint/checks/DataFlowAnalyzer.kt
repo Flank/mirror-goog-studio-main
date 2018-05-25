@@ -16,17 +16,20 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UBinaryExpression
+import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDeclarationsExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
+import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
@@ -82,8 +85,8 @@ abstract class DataFlowAnalyzer(
 
     override fun visitCallExpression(node: UCallExpression): Boolean {
         val receiver = node.receiver
+        var matched = false
         if (receiver != null) {
-            var matched = false
             if (instances.contains(receiver)) {
                 matched = true
             } else {
@@ -94,19 +97,53 @@ abstract class DataFlowAnalyzer(
                     }
                 }
             }
-            if (matched) {
-                if (!initial.contains(node)) {
-                    receiver(node)
+        } else {
+            val lambda = node.uastParent as? ULambdaExpression
+                    ?: node.uastParent?.uastParent as? ULambdaExpression
+            if (lambda != null && lambda.uastParent is UCallExpression &&
+                isKotlinScopingFunction(lambda.uastParent as UCallExpression)) {
+                if (instances.contains(node)) {
+                    matched = true
                 }
-                if (returnsSelf(node)) {
-                    instances.add(node)
-                    val parent = node.uastParent as? UQualifiedReferenceExpression
-                    if (parent != null) {
-                        instances.add(parent)
-                        val parentParent = parent.uastParent as? UQualifiedReferenceExpression
-                        val chained = parentParent?.selector
-                        if (chained != null) {
-                            instances.add(chained)
+            } else if (getMethodName(node) == "with") {
+                val args = node.valueArguments
+                if (args.size == 2 && instances.contains(args[0]) &&
+                        args[1] is ULambdaExpression) {
+                    val body = (args[1] as ULambdaExpression).body
+                    instances.add(body)
+                    if (body is UBlockExpression) {
+                        for (expression in body.expressions) {
+                            instances.add(expression)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (matched) {
+            if (!initial.contains(node)) {
+                receiver(node)
+            }
+            if (returnsSelf(node)) {
+                instances.add(node)
+                val parent = node.uastParent as? UQualifiedReferenceExpression
+                if (parent != null) {
+                    instances.add(parent)
+                    val parentParent = parent.uastParent as? UQualifiedReferenceExpression
+                    val chained = parentParent?.selector
+                    if (chained != null) {
+                        instances.add(chained)
+                    }
+                }
+            }
+
+            if (isKotlinScopingFunction(node)) {
+                (node.valueArguments.lastOrNull() as? ULambdaExpression)?.let {
+                    val body = it.body
+                    instances.add(body)
+                    if (body is UBlockExpression) {
+                        for (expression in body.expressions) {
+                            instances.add(expression)
                         }
                     }
                 }
@@ -127,6 +164,15 @@ abstract class DataFlowAnalyzer(
         }
 
         return super.visitCallExpression(node)
+    }
+
+    private fun isKotlinScopingFunction(node: UCallExpression): Boolean {
+        val methodName = getMethodName(node)
+        return methodName == "apply" ||
+                methodName == "run" ||
+                methodName == "with" ||
+                methodName == "also" ||
+                methodName == "let"
     }
 
     override fun afterVisitVariable(node: UVariable) {
@@ -212,8 +258,8 @@ abstract class DataFlowAnalyzer(
      * foo instance.
      */
     open fun returnsSelf(call: UCallExpression): Boolean {
-        // Heuristic: the return method is the same type as the class
-        return (call.returnType as? PsiClassType)?.resolve() == call.resolve()?.containingClass
+        val resolvedCall = call.resolve() ?: return false
+        return (call.returnType as? PsiClassType)?.resolve() == resolvedCall.containingClass
     }
 
     companion object {

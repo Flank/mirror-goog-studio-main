@@ -56,6 +56,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         LONG_DEF_ANNOTATION.oldName(),
         LONG_DEF_ANNOTATION.newName()
+
+        // Consider including org.jetbrains.annotations.Range here, but be careful
+        // such that we don't end up with a double set of warnings in the IDE (one
+        // from Lint, one from IntelliJ's support for this annotation)
     )
 
     override fun visitAnnotationUsage(

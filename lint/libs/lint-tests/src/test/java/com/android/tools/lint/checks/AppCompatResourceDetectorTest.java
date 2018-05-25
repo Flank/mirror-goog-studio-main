@@ -149,6 +149,27 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                                 + "+         app:actionViewClass=\"android.widget.SearchView\"/>\n");
     }
 
+    public void test80234998() {
+        // Regression test for issue 80234998
+        lint().files(
+                        xml(
+                                "res/menu/menu.xml",
+                                ""
+                                        + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    tools:context=\"com.example.bendowski.androidplayground.MainActivity\">\n"
+                                        + "    <item\n"
+                                        + "        android:id=\"@+id/action_settings\"\n"
+                                        + "        android:orderInCategory=\"100\"\n"
+                                        + "        android:title=\"@string/action_settings\"\n"
+                                        + "        app:actionProviderClass=\"androidx.appcompat.widget.ShareActionProvider\" />\n"
+                                        + "</menu>"),
+                        mAppCompatJar)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new AppCompatResourceDetector();

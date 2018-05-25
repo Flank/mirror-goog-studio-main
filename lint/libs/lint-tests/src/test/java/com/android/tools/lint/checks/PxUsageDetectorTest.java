@@ -328,6 +328,63 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
         lint().files(dimens, textsize2).run().expect(expected);
     }
 
+    public void test80029760() {
+        // 80029760: SpUsage suppression on TextView doesn't make it go away from results
+        lint().files(
+                        xml(
+                                "res/values/dimens.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "        <!-- http://www.androiddocs.com/design/style/iconography.html#small-contextual\n"
+                                        + "             Within the body of your app, use small icons to surface actions and/or provide status for specific items. -->\n"
+                                        + "        <dimen name=\"icon_context\">16dp</dimen>\n"
+                                        + "</resources>\n"),
+                        xml(
+                                "res/layout/textsize2.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout\n"
+                                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "        xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "        android:layout_width=\"match_parent\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:orientation=\"horizontal\"\n"
+                                        + "        tools:layout_height=\"24dp\"\n"
+                                        + "        >\n"
+                                        + "        <ImageView\n"
+                                        + "                android:id=\"@+id/image\"\n"
+                                        + "                android:layout_width=\"@dimen/icon_context\"\n"
+                                        + "                android:layout_height=\"@dimen/icon_context\"\n"
+                                        + "                android:layout_gravity=\"center_vertical\"\n"
+                                        + "                android:contentDescription=\"@null\"\n"
+                                        + "                tools:src=\"@android:drawable/sym_def_app_icon\"\n"
+                                        + "                />\n"
+                                        + "        <TextView\n"
+                                        + "                android:id=\"@+id/type\"\n"
+                                        + "                android:layout_width=\"@dimen/icon_context\"\n"
+                                        + "                android:layout_height=\"match_parent\"\n"
+                                        + "                android:gravity=\"center\"\n"
+                                        + "                android:includeFontPadding=\"false\"\n"
+                                        + "                android:textIsSelectable=\"false\"\n"
+                                        + "                android:textSize=\"@dimen/icon_context\"\n"
+                                        + "                android:typeface=\"monospace\"\n"
+                                        + "                tools:text=\"+\"\n"
+                                        + "                tools:ignore=\"SpUsage\"\n"
+                                        + "                />\n"
+                                        + "        <TextView\n"
+                                        + "                android:id=\"@+id/title\"\n"
+                                        + "                android:layout_width=\"wrap_content\"\n"
+                                        + "                android:layout_height=\"match_parent\"\n"
+                                        + "                android:gravity=\"center_vertical\"\n"
+                                        + "                android:textIsSelectable=\"false\"\n"
+                                        + "                tools:text=\"Category Name\"\n"
+                                        + "                />\n"
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testIsZero() {
         assertFalse(PxUsageDetector.isZero(""));
         assertTrue(PxUsageDetector.isZero("0"));

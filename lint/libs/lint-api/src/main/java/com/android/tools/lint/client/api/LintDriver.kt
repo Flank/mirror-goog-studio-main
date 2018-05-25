@@ -2570,6 +2570,20 @@ class LintDriver
         issue: Issue,
         node: org.w3c.dom.Node?
     ): Boolean {
+        if (context != null && context.resourceFolderType == null && node != null) {
+            // manifest file
+            // Look for merged manifest source nodes
+            if (context.client.isMergeManifestNode(node)) {
+                val source = context.client.findManifestSourceNode(node)
+                if (source != null) {
+                    val sourceNode = source.second
+                    if (sourceNode != null && sourceNode != node) {
+                        return isSuppressed(context, issue, source.second)
+                    }
+                }
+            }
+        }
+
         var currentNode = node
         if (currentNode is Attr) {
             currentNode = currentNode.ownerElement
