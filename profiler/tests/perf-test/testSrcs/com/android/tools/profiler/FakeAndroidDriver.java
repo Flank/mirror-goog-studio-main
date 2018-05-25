@@ -18,12 +18,11 @@ public class FakeAndroidDriver extends ProcessRunner {
     private int myCommunicationPort;
     private String myAddress;
 
-    public FakeAndroidDriver(String address, int port) {
+    public FakeAndroidDriver(String address) {
         super(
                 ART_PATH,
                 "--64",
                 "--verbose",
-                String.format("-Dservice.address=%s:%d", address, port),
                 "-Djava.library.path="
                         + ProcessRunner.getProcessPath("agent.location")
                         + ":"

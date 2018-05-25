@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -36,27 +37,17 @@ public class EventProfilerTest {
         return Arrays.asList(24, 26);
     }
 
-    private int mySdkLevel;
-    private PerfDriver myPerfDriver;
-    private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
 
+    @Rule public final PerfDriver myPerfDriver;
+
     public EventProfilerTest(int sdkLevel) {
-        mySdkLevel = sdkLevel;
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void setup() throws Exception {
-        myPerfDriver = new PerfDriver(mySdkLevel);
-        myPerfDriver.start(ACTIVITY_CLASS);
-        myGrpc = myPerfDriver.getGrpc();
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
-        if (TestUtils.isOPlusDevice(mySdkLevel)) {
-            myGrpc.beginSessionWithAgent(
-                    myPerfDriver.getPid(), myPerfDriver.getCommunicationPort());
-        } else {
-            myGrpc.beginSession(myPerfDriver.getPid());
-        }
     }
 
     @Test

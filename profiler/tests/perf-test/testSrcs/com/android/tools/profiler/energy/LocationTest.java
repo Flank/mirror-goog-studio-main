@@ -34,8 +34,8 @@ import com.android.tools.profiler.proto.EnergyProfiler.LocationUpdateRemoved;
 import com.android.tools.profiler.proto.EnergyProfiler.LocationUpdateRequested;
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -51,37 +51,23 @@ public class LocationTest {
     private static final String ACTIVITY_CLASS = "com.activity.energy.LocationActivity";
     private static final float EPSILON = 0.0001f;
 
-    private int mySdkLevel;
-    private PerfDriver myPerfDriver;
+    @Rule public final PerfDriver myPerfDriver;
+
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
 
     public LocationTest(int sdkLevel) {
-        mySdkLevel = sdkLevel;
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void setUp() throws Exception {
-        myPerfDriver = new PerfDriver(mySdkLevel);
-        myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
         myStubWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
-        mySession =
-                myGrpc.beginSessionWithAgent(
-                        myPerfDriver.getPid(), myPerfDriver.getCommunicationPort());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        if (myPerfDriver != null) {
-            if (mySession != null) {
-                myGrpc.endSession(mySession.getSessionId());
-            }
-            myPerfDriver.tearDown();
-        }
+        mySession = myPerfDriver.getSession();
     }
 
     @Test

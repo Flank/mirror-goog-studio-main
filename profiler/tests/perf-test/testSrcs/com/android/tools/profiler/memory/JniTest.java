@@ -27,38 +27,31 @@ import java.util.HashSet;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class JniTest {
     private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
 
-    private PerfDriver myPerfDriver;
+    // We currently only test O+ test scenarios.
+    @Rule public final PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26);
+
     private GrpcUtils myGrpc;
     private Session mySession;
 
     @Before
     public void setup() throws Exception {
-        // We currently only test O+ test scenarios.
-        myPerfDriver = new PerfDriver(26);
-        myPerfDriver.start(ACTIVITY_CLASS);
         myGrpc = myPerfDriver.getGrpc();
+        mySession = myPerfDriver.getSession();
 
         // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
         // initialize the memory cache and establish the perfa->perfd connection
-        mySession =
-                myGrpc.beginSessionWithAgent(
-                        myPerfDriver.getPid(), myPerfDriver.getCommunicationPort());
         myGrpc.getMemoryStub()
                 .startMonitoringApp(MemoryStartRequest.newBuilder().setSession(mySession).build());
     }
 
     @After
     public void tearDown() {
-        myGrpc.getProfilerStub()
-                .endSession(
-                        EndSessionRequest.newBuilder()
-                                .setSessionId(mySession.getSessionId())
-                                .build());
         myGrpc.getMemoryStub()
                 .stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(mySession).build());
     }
