@@ -67,13 +67,23 @@ public class TestUtils {
     @NonNull
     public static String getKotlinVersionForTests() {
         try {
-            return Files.readLines(
-                            getWorkspaceFile(
-                                    "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt"),
-                            Charsets.UTF_8)
-                    .get(0);
+            return Files.readLines(getKotlinVersionFile(), Charsets.UTF_8).get(0);
         } catch (IOException ex) {
             throw new IllegalStateException("Could not determine Kotlin plugin version", ex);
+        }
+    }
+
+    @NonNull
+    private static File getKotlinVersionFile() {
+        if (System.getProperty("idea.gui.test.running.on.release") != null) {
+            File homePath =
+                    new File(System.getProperty("idea.gui.test.remote.ide.path"))
+                            .getParentFile()
+                            .getParentFile();
+            return new File(homePath, "plugins/Kotlin/kotlinc/build.txt");
+        } else {
+            return getWorkspaceFile(
+                    "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt");
         }
     }
 
