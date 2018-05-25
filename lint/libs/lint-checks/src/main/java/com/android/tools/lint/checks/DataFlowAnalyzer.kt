@@ -146,7 +146,7 @@ abstract class DataFlowAnalyzer(
         }
     }
 
-    private fun addVariableReference(node: UVariable) {
+    protected fun addVariableReference(node: UVariable) {
         (node.sourcePsi as? PsiVariable)?.let { references.add(it) }
         (node.javaPsi as? PsiVariable)?.let { references.add(it) }
     }
