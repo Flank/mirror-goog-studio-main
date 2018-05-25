@@ -34,6 +34,7 @@ import com.android.tools.lint.detector.api.Issue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import kotlin.text.StringsKt;
 import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
@@ -100,11 +101,15 @@ public class MainTest extends AbstractCheckTest {
             }
             if (expectedOutput != null) {
                 String stdout = output.toString();
+                expectedOutput = StringsKt.trimIndent(expectedOutput);
+                stdout = StringsKt.trimIndent(stdout);
                 if (cleanup != null) {
+                    expectedOutput = cleanup.cleanup(expectedOutput);
                     stdout = cleanup.cleanup(stdout);
                 }
-                if (!expectedOutput.trim().equals(stdout.trim())) {
-                    assertEquals(expectedOutput, stdout);
+                if (!expectedOutput.replace('\\', '/').trim()
+                        .equals(stdout.replace('\\', '/').trim())) {
+                    assertEquals(expectedOutput.trim(), stdout.trim());
                 }
             }
             assertEquals(expectedExitCode, exitCode);
