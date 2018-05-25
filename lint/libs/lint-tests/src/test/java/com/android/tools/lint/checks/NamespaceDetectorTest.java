@@ -51,6 +51,13 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
                         mCustomview));
     }
 
+    public void testGradle_namespaced() throws Exception {
+        // In a namespaced project it's fine (and necessary) to declare custom namespaces.
+        lint().files(mCustomview, gradle("android.aaptOptions.namespaced true"))
+                .run()
+                .expectClean();
+    }
+
     public void testCustomOk() throws Exception {
         //noinspection all // Sample code
         assertEquals(
