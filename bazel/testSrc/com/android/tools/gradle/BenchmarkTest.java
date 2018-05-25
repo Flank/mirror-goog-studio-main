@@ -44,6 +44,7 @@ public class BenchmarkTest {
         List<String> tasks = new ArrayList<>();
         List<String> startups = new ArrayList<>();
         List<String> cleanups = new ArrayList<>();
+        List<File> mutations = new ArrayList<>();
 
         Iterator<String> it = Arrays.asList(args).iterator();
         while (it.hasNext()) {
@@ -66,6 +67,8 @@ public class BenchmarkTest {
                 cleanups.add(it.next());
             } else if (arg.equals("--metric") && it.hasNext()) {
                 metric = it.next();
+            } else if (arg.equals("--mutation") && it.hasNext()) {
+                mutations.add(new File(it.next()));
             } else {
                 throw new IllegalArgumentException("Unknown flag: " + arg);
             }
@@ -79,6 +82,7 @@ public class BenchmarkTest {
                         repo,
                         warmUps,
                         iterations,
+                        mutations,
                         startups,
                         cleanups,
                         tasks);
@@ -99,6 +103,7 @@ public class BenchmarkTest {
             File repo,
             int warmUps,
             int iterations,
+            List<File> mutations,
             List<String> startups,
             List<String> cleanups,
             List<String> tasks)
@@ -115,6 +120,11 @@ public class BenchmarkTest {
         UnifiedDiff diff = new UnifiedDiff(new File(data, "setup.diff"));
         diff.apply(src, 3);
 
+        UnifiedDiff[] diffs = new UnifiedDiff[mutations.size()];
+        for (int i = 0; i < mutations.size(); i++) {
+            diffs[i] = new UnifiedDiff(mutations.get(i));
+        }
+
         try (Gradle gradle = new Gradle(src, out, distribution)) {
             gradle.addRepo(repo);
             gradle.addRepo(new File(data, "repo.zip"));
@@ -127,6 +137,10 @@ public class BenchmarkTest {
             for (int i = 0; i < warmUps + iterations; i++) {
                 gradle.run(cleanups);
 
+                for (int j = 0; j < diffs.length; j++) {
+                    diffs[j].apply(src, 3);
+                    diffs[j] = diffs[j].invert();
+                }
                 long start = System.currentTimeMillis();
                 gradle.run(tasks);
                 if (i >= warmUps) {
