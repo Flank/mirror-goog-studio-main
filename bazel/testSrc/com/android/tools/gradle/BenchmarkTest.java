@@ -45,6 +45,7 @@ public class BenchmarkTest {
         List<String> startups = new ArrayList<>();
         List<String> cleanups = new ArrayList<>();
         List<File> mutations = new ArrayList<>();
+        List<BenchmarkListener> listeners = new ArrayList<>();
 
         Iterator<String> it = Arrays.asList(args).iterator();
         while (it.hasNext()) {
@@ -69,6 +70,8 @@ public class BenchmarkTest {
                 metric = it.next();
             } else if (arg.equals("--mutation") && it.hasNext()) {
                 mutations.add(new File(it.next()));
+            } else if (arg.equals("--listener") && it.hasNext()) {
+                listeners.add(locateListener(it.next()).newInstance());
             } else {
                 throw new IllegalArgumentException("Unknown flag: " + arg);
             }
@@ -85,7 +88,20 @@ public class BenchmarkTest {
                         mutations,
                         startups,
                         cleanups,
-                        tasks);
+                        tasks,
+                        listeners);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Class<? extends BenchmarkListener> locateListener(String className)
+            throws ClassNotFoundException {
+        String fqcn =
+                className.indexOf('.') != -1
+                        ? className
+                        : BenchmarkTest.class.getPackage().getName() + "." + className;
+
+        return (Class<? extends BenchmarkListener>)
+                BenchmarkTest.class.getClassLoader().loadClass(fqcn);
     }
 
     private static String getLocalGradleVersion() throws IOException {
@@ -106,7 +122,8 @@ public class BenchmarkTest {
             List<File> mutations,
             List<String> startups,
             List<String> cleanups,
-            List<String> tasks)
+            List<String> tasks,
+            List<BenchmarkListener> listeners)
             throws Exception {
 
         Benchmark benchmark = new Benchmark("GradleBenchmark [" + project + "]");
@@ -130,10 +147,12 @@ public class BenchmarkTest {
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
+            listeners.forEach(it -> it.configure(home, gradle));
 
             gradle.run(startups);
 
             BenchmarkLogger logger = new BenchmarkLogger(metric);
+            listeners.forEach(it -> it.benchmarkStarting(benchmark, logger));
             for (int i = 0; i < warmUps + iterations; i++) {
                 gradle.run(cleanups);
 
@@ -141,13 +160,18 @@ public class BenchmarkTest {
                     diffs[j].apply(src, 3);
                     diffs[j] = diffs[j].invert();
                 }
+                if (i >= warmUps) {
+                    listeners.forEach(it -> it.iterationStarting());
+                }
                 long start = System.currentTimeMillis();
                 gradle.run(tasks);
                 if (i >= warmUps) {
                     logger.addSamples(
                             benchmark, new MetricSample(start, System.currentTimeMillis() - start));
+                    listeners.forEach(BenchmarkListener::iterationDone);
                 }
             }
+            listeners.forEach(BenchmarkListener::benchmarkDone);
             logger.commit();
         }
     }
