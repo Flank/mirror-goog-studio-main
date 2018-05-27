@@ -10,6 +10,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,6 +25,12 @@ public class CpuTaskCategory extends TaskCategory {
 
     private final List<Task> mTasks;
 
+    static {
+        System.loadLibrary("native_cpu");
+    }
+
+    public native int fib(int index);
+
     public CpuTaskCategory(@NonNull File filesDir) {
         mTasks =
                 Arrays.asList(
@@ -31,7 +38,8 @@ public class CpuTaskCategory extends TaskCategory {
                         new FileWritingTask(filesDir),
                         new MaximumPowerTask(new SingleThreadIntegerTask(RUNNING_TIME_S)),
                         new MaximumPowerTask(new SingleThreadFpuTask(RUNNING_TIME_S)),
-                        new MaximumPowerTask(new SingleThreadMemoryTask(RUNNING_TIME_S)));
+                        new MaximumPowerTask(new SingleThreadMemoryTask(RUNNING_TIME_S)),
+                        new RunNativeCodeTask());
     }
 
     private static ThreadPoolExecutor getDefaultThreadPoolExecutor(int corePoolSize) {
@@ -370,6 +378,26 @@ public class CpuTaskCategory extends TaskCategory {
         private int stupidHash(int input, int offset) {
             int s1 = (input * 103 + offset) % 65521;
             return s1 * 21179 + s1;
+        }
+    }
+
+    public class RunNativeCodeTask extends Task {
+        private static final int FIB_INDEX = 40;
+
+        @Nullable
+        public String execute() {
+            int result = CpuTaskCategory.this.fib(FIB_INDEX);
+            return String.format(
+                    Locale.getDefault(),
+                    "Calling native method fib(%d), returned %d",
+                    FIB_INDEX,
+                    result);
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Run Native Code Task";
         }
     }
 }
