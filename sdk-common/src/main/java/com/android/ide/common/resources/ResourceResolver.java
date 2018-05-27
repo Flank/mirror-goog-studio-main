@@ -491,14 +491,22 @@ public class ResourceResolver extends RenderResources {
         }
     }
 
+    /**
+     * If the given resource value contains a reference, resolves that reference to the actual
+     * value.
+     *
+     * @param resValue the resource value to resolve
+     * @return the resolved resource value, or null if {@code resValue} is null
+     */
     @Override
+    @Nullable
     public ResourceValue resolveResValue(@Nullable ResourceValue resValue) {
+        if (resValue == null) {
+            return null;
+        }
+
         boolean referenceToItself = false;
         for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
-            if (resValue == null) {
-                return null;
-            }
-
             String value = resValue.getValue();
             if (value == null || resValue instanceof ArrayResourceValue) {
                 // If there's no value or this an array resource (e.g. <string-array>), return.
