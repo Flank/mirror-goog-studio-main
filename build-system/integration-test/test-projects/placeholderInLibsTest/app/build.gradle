@@ -9,6 +9,7 @@ android {
         applicationId "com.example.manifest_merger_example"
         manifestPlaceholders = [ localApplicationId:"com.example.manifest_merger_example"]
         minSdkVersion 15
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
@@ -20,6 +21,7 @@ android {
             applicationId "com.example.manifest_merger_example.flavor"
             manifestPlaceholders = [ localApplicationId:"com.example.manifest_merger_example.flavor"]
             minSdkVersion 15
+            //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
             targetSdkVersion 21
             versionCode 1
             versionName "1.0"

@@ -25,6 +25,7 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion rootProject.latestCompileSdk
     }
 

@@ -4,6 +4,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     defaultConfig {
         minSdkVersion 23
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion rootProject.latestCompileSdk
     }
 }

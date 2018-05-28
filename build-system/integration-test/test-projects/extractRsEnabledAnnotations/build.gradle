@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 19
         renderscriptTargetApi 18
         renderscriptSupportModeEnabled true

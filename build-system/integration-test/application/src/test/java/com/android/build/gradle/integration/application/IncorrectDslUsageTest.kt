@@ -45,6 +45,7 @@ class IncorrectDslUsageTest {
                     "    defaultConfig {\n" +
                     "        applicationId \"demo.bug\"\n" +
                     "        minSdkVersion 21\n" +
+                    "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n" +
                     "        targetSdkVersion 27\n" +
                     "        versionCode 1\n" +
                     "        versionName \"1.0\"\n" +
@@ -85,6 +86,7 @@ class IncorrectDslUsageTest {
                 "    defaultConfig {\n" +
                 "        applicationId \"demo.bug\"\n" +
                 "        minSdkVersion 21\n" +
+                "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n" +
                 "        targetSdkVersion 27\n" +
                 "        versionCode 1\n" +
                 "        versionName \"1.0\"\n" +
@@ -117,6 +119,7 @@ class IncorrectDslUsageTest {
                 "    defaultConfig {\n" +
                 "        applicationId \"demo.bug\"\n" +
                 "        minSdkVersion 21\n" +
+                "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n" +
                 "        targetSdkVersion 27\n" +
                 "        versionCode 1\n" +
                 "        versionName \"1.0\"\n" +

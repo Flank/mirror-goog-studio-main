@@ -10,6 +10,7 @@ android {
     defaultConfig {
         applicationId "com.android.tests.conditionalApiUse"
         minSdkVersion 19
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"

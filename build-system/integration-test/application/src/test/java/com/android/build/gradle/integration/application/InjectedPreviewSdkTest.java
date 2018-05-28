@@ -43,6 +43,7 @@ public class InjectedPreviewSdkTest {
                         + "\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion 'O'\n"
+                        + "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n"
                         + "        targetSdkVersion 'O'\n"
                         + "        versionCode 1\n"
                         + "        versionName '1.0'\n"

@@ -126,6 +126,7 @@ public class ManifestMergingTest {
                         + "    compileSdkVersion 24\n"
                         + "    defaultConfig{\n"
                         + "        minSdkVersion 15\n"
+                        + "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n"
                         + "        targetSdkVersion 'N'\n"
                         + "    }\n"
                         + "}");
@@ -149,6 +150,7 @@ public class ManifestMergingTest {
                         + "    compileSdkVersion 24\n"
                         + "    defaultConfig{\n"
                         + "        minSdkVersion 'N'\n"
+                        + "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n"
                         + "        targetSdkVersion 15\n"
                         + "    }\n"
                         + "}");
@@ -171,6 +173,7 @@ public class ManifestMergingTest {
                         + "    compileSdkVersion 24\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion 15\n"
+                        + "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n"
                         + "        targetSdkVersion 24\n"
                         + "    }\n"
                         + "}");

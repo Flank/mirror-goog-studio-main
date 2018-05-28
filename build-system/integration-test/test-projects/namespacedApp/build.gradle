@@ -8,6 +8,7 @@ android {
     defaultConfig {
         applicationId "com.example.namespacedApp"
         minSdkVersion 15
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
