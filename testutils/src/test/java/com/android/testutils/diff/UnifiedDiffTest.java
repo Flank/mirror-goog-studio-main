@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class UnifiedDiffTest {
@@ -111,8 +112,10 @@ public class UnifiedDiffTest {
         assertEquals(AFTER_DIFF_2, file);
     }
 
+
+    @Ignore
     @Test
-    public void testFullDiff() throws IOException {
+    public void ignore_testFullDiff() throws IOException {
         File data = TestUtils.getWorkspaceFile("tools/base/testutils/src/test/data");
         File tmp = TestUtils.createTempDirDeletedOnExit();
         File before = new File(data, "before");
