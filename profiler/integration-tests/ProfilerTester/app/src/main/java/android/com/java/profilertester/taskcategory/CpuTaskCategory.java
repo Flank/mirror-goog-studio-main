@@ -2,6 +2,8 @@ package android.com.java.profilertester.taskcategory;
 
 import android.com.java.profilertester.util.Lookup3;
 import android.os.AsyncTask;
+import android.os.Debug;
+import android.os.Trace;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import java.io.File;
@@ -39,11 +41,13 @@ public class CpuTaskCategory extends TaskCategory {
                         new MaximumPowerTask(new SingleThreadIntegerTask(RUNNING_TIME_S)),
                         new MaximumPowerTask(new SingleThreadFpuTask(RUNNING_TIME_S)),
                         new MaximumPowerTask(new SingleThreadMemoryTask(RUNNING_TIME_S)),
-                        new RunNativeCodeTask());
+                        new RunNativeCodeTask(),
+                        new RunCodeWithTraceMarkersTask(),
+                        new AutomaticRecordingTask());
     }
 
     private static ThreadPoolExecutor getDefaultThreadPoolExecutor(int corePoolSize) {
-        ThreadPoolExecutor threadPoolExecutor =  new ThreadPoolExecutor(
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
                 corePoolSize, 128, 30, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(128), new ThreadFactory() {
 
@@ -247,7 +251,8 @@ public class CpuTaskCategory extends TaskCategory {
 
     private static class MaximumPowerTask extends Task {
         private static final int NUM_CORES = Runtime.getRuntime().availableProcessors();
-        @NonNull private final ComputationTask mComputationTask;
+        @NonNull
+        private final ComputationTask mComputationTask;
 
         private MaximumPowerTask(@NonNull ComputationTask computationTask) {
             mComputationTask = computationTask;
@@ -400,4 +405,63 @@ public class CpuTaskCategory extends TaskCategory {
             return "Run Native Code Task";
         }
     }
+
+    public class RunCodeWithTraceMarkersTask extends Task {
+        private static final int FIB_INDEX = 20;
+
+        private int doFibonacciRecursively(int index) {
+            Trace.beginSection("doFibonacciRecursively");
+
+            try {
+                if (index <= 0) {
+                    return 0;
+                }
+                if (index == 1) {
+                    return 1;
+                }
+
+                return doFibonacciRecursively(index - 1) + doFibonacciRecursively(index - 2);
+            } finally {
+                Trace.endSection();
+            }
+        }
+
+        @Nullable
+        public String execute() {
+            int result = doFibonacciRecursively(FIB_INDEX);
+            return String.format(
+                    Locale.getDefault(),
+                    "Calling Java method fib(%d), returned %d",
+                    FIB_INDEX,
+                    result);
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Run Code With Trace Markers Task";
+        }
+    }
+
+    public class AutomaticRecordingTask extends Task {
+        RunCodeWithTraceMarkersTask innerTask = new RunCodeWithTraceMarkersTask();
+
+        @Nullable
+        public String execute() {
+            try {
+                Debug.startMethodTracing("AutomaticRecordingTask#execute");
+                return innerTask.execute();
+            } finally {
+                Debug.stopMethodTracing();
+            }
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Automatic Recording Task";
+        }
+    }
+
 }
+
