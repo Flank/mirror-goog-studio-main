@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
@@ -87,11 +86,10 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     public CmakeServerExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull NdkHandler ndkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, ndkHandler, androidBuilder, cmakeFolder, stats);
+        super(config, androidBuilder, cmakeFolder, stats);
     }
 
     /**
@@ -739,8 +737,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
         // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
         // programmatically.
-        if (getNdkHandler().getRevision() != null
-                && getNdkHandler().getRevision().getMajor() >= 15) {
+        if (config.ndkVersion.getMajor() >= 15) {
             // Add our toolchain file.
             // Note: When setting this flag, Cmake's android toolchain would end up calling our
             // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only

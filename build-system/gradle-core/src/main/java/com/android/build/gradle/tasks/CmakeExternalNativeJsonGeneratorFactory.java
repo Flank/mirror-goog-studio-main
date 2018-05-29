@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
@@ -33,7 +32,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
     public static ExternalNativeJsonGenerator createCmakeStrategy(
             @NonNull JsonGenerationVariantConfiguration config,
             @NonNull Revision cmakeRevision,
-            @NonNull NdkHandler ndkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
@@ -47,7 +45,7 @@ class CmakeExternalNativeJsonGeneratorFactory {
                         ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
                         Revision.Precision.MICRO))) {
             return new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                    config, ndkHandler, androidBuilder, cmakeInstallFolder, stats);
+                    config, androidBuilder, cmakeInstallFolder, stats);
         }
 
         if (cmakeRevision.getMajor() < 3
@@ -59,6 +57,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
         }
 
         return new CmakeServerExternalNativeJsonGenerator(
-                config, ndkHandler, androidBuilder, cmakeInstallFolder, stats);
+                config, androidBuilder, cmakeInstallFolder, stats);
     }
 }

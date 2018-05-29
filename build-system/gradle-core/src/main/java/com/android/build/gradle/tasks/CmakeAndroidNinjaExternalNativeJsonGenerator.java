@@ -20,7 +20,6 @@ import static com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils.execut
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
@@ -36,11 +35,10 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull NdkHandler ndkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, ndkHandler, androidBuilder, cmakeInstallFolder, stats);
+        super(config, androidBuilder, cmakeInstallFolder, stats);
     }
 
     @NonNull
@@ -77,4 +75,4 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
         }
         return new File(getCmakeBinFolder(), "ninja");
     }
-};
+}

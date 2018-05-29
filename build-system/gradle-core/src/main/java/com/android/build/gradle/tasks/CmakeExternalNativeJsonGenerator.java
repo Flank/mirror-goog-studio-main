@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -53,11 +52,10 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     CmakeExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull NdkHandler ndkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, ndkHandler, androidBuilder, stats);
+        super(config, androidBuilder, stats);
         this.cmakeInstallFolder = cmakeInstallFolder;
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
     }

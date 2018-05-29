@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConf
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -68,7 +69,6 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         SdkHandler.setTestSdkFolder(TestUtils.getSdk());
 
         sdkDirectory = TestUtils.getSdk();
-        ndkHandler = Mockito.mock(NdkHandler.class);
         minSdkVersion = 123;
         variantName = "dummy variant name";
         abis = Lists.newArrayList();
@@ -120,10 +120,11 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                         jsonFolder,
                         debuggable,
                         abis,
+                        Revision.parseRevision("15"),
                         nativeBuildConfigurationsJsons);
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
                 new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                        config, ndkHandler, androidBuilder, cmakeFolder, stats);
+                        config, androidBuilder, cmakeFolder, stats);
         List<String> cacheArguments =
                 cmakeAndroidNinjaStrategy.getProcessBuilderArgs("x86", 12, jsonFolder);
 

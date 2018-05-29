@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -53,11 +52,10 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     NdkBuildExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull NdkHandler ndkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File projectDir,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, ndkHandler, androidBuilder, stats);
+        super(config, androidBuilder, stats);
         this.projectDir = projectDir;
         this.stats.setNativeBuildSystemType(
                 GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD);

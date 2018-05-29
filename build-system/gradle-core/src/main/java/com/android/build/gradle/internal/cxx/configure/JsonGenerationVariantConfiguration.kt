@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.repository.Revision
 import java.io.File
 
 /**
@@ -32,5 +33,6 @@ data class JsonGenerationVariantConfiguration(
     @JvmField val jsonFolder: File,
     @JvmField val debuggable: Boolean,
     @JvmField val abiConfigurations: List<JsonGenerationAbiConfiguration>,
+    @JvmField val ndkVersion : Revision,
     @JvmField val generatedJsonFiles : List<File>
 )

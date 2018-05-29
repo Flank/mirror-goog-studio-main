@@ -135,10 +135,11 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
                         jsonFolder,
                         debuggable,
                         abis,
+                        Revision.parseRevision("15"),
                         nativeBuildConfigurationsJsons);
         ExternalNativeJsonGenerator generator =
                 CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
-                        config, cmakeRevision, ndkHandler, androidBuilder, cmakeFolder, stats);
+                        config, cmakeRevision, androidBuilder, cmakeFolder, stats);
         assertThat(stats.getNativeCmakeVersion()).isEqualTo(cmakeRevision.toShortString());
         return generator;
     }

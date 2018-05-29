@@ -255,7 +255,7 @@ public class ExternalNativeBuildTaskUtils {
      */
     @NonNull
     public static File findCmakeExecutableFolder(
-            @NonNull String cmakeVersion, @NonNull SdkHandler sdkHandler) {
+            @Nullable String cmakeVersion, @NonNull SdkHandler sdkHandler) {
         return doFindCmakeExecutableFolder(cmakeVersion, sdkHandler, getEnvironmentPathList());
     }
 

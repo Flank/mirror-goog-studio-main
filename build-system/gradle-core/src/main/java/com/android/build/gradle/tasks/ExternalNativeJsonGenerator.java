@@ -90,15 +90,12 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull final JsonGenerationVariantConfiguration config;
     @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull protected final GradleBuildVariant.Builder stats;
-    @NonNull private final NdkHandler ndkHandler;
 
     ExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull NdkHandler ndkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
         this.config = config;
-        this.ndkHandler = ndkHandler;
         this.androidBuilder = androidBuilder;
         this.stats = stats;
     }
@@ -623,6 +620,7 @@ public abstract class ExternalNativeJsonGenerator {
                                     abi.getName(), variantData.getName(), version)));
         }
 
+        assert ndkHandler.getRevision() != null;
         JsonGenerationVariantConfiguration config =
                 new JsonGenerationVariantConfiguration(
                         nativeBuildVariantConfig,
@@ -635,16 +633,17 @@ public abstract class ExternalNativeJsonGenerator {
                         externalNativeBuildFolder,
                         variantConfig.getBuildType().isDebuggable(),
                         abiConfigurations,
+                        ndkHandler.getRevision(),
                         expectedJsons);
 
 
         switch (buildSystem) {
             case NDK_BUILD:
                 return new NdkBuildExternalNativeJsonGenerator(
-                        config, ndkHandler, androidBuilder, projectDir, stats);
+                        config, androidBuilder, projectDir, stats);
             case CMAKE:
                 return createCmakeExternalNativeJsonGenerator(
-                        config, variantData, ndkHandler, sdkHandler, androidBuilder, stats);
+                        config, variantData, sdkHandler, androidBuilder, stats);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }
@@ -658,7 +657,6 @@ public abstract class ExternalNativeJsonGenerator {
     private static ExternalNativeJsonGenerator createCmakeExternalNativeJsonGenerator(
             JsonGenerationVariantConfiguration config,
             @NonNull BaseVariantData variantData,
-            @NonNull NdkHandler ndkHandler,
             @NonNull SdkHandler sdkHandler,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
@@ -700,7 +698,7 @@ public abstract class ExternalNativeJsonGenerator {
         }
 
         return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
-                config, cmakeVersion, ndkHandler, androidBuilder, cmakeFolder, stats);
+                config, cmakeVersion, androidBuilder, cmakeFolder, stats);
     }
 
     private static File findExternalNativeBuildFolder(
@@ -848,12 +846,6 @@ public abstract class ExternalNativeJsonGenerator {
     public File getSdkFolder() {
         return config.sdkFolder;
     }
-
-    @NonNull
-    protected NdkHandler getNdkHandler() {
-        return ndkHandler;
-    }
-
 
     @Input
     @NonNull
