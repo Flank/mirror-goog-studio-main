@@ -25,9 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class UnifiedDiffTest {
@@ -112,10 +110,8 @@ public class UnifiedDiffTest {
         assertEquals(AFTER_DIFF_2, file);
     }
 
-
-    @Ignore
     @Test
-    public void ignore_testFullDiff() throws IOException {
+    public void testFullDiff() throws IOException {
         File data = TestUtils.getWorkspaceFile("tools/base/testutils/src/test/data");
         File tmp = TestUtils.createTempDirDeletedOnExit();
         File before = new File(data, "before");
@@ -132,15 +128,23 @@ public class UnifiedDiffTest {
     }
 
     private static void assertDirectoriesEqual(File expected, File value) throws IOException {
-        Iterator<File> it = FileUtils.getAllFiles(value).iterator();
-        Iterator<File> ex = FileUtils.getAllFiles(expected).iterator();
-        while (ex.hasNext() && it.hasNext()) {
-            Path e = ex.next().toPath();
-            Path r = it.next().toPath();
+        File[] it = FileUtils.getAllFiles(value).toArray(File.class);
+        File[] ex = FileUtils.getAllFiles(expected).toArray(File.class);
+        Arrays.sort(it);
+        Arrays.sort(ex);
+        for (int i = 0; i < it.length && i < ex.length; i++) {
+            Path e = ex[i].toPath();
+            Path r = it[i].toPath();
             assertEquals(
                     expected.toPath().relativize(e).toString(),
                     value.toPath().relativize(r).toString());
             assertEquals(new String(Files.readAllBytes(e)), new String(Files.readAllBytes(r)));
+        }
+        if (it.length > ex.length) {
+            fail("Unexpected file " + it[ex.length] + " was found.");
+        }
+        if (it.length < ex.length) {
+            fail("Expected file " + ex[it.length] + " was not found.");
         }
     }
 }
