@@ -270,6 +270,8 @@ java_library(
     srcs = glob(["testSrc/com/android/tools/gradle/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/analytics-library/protos/src/main/proto",
+        "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/base/bazel:gradle",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
     ],
