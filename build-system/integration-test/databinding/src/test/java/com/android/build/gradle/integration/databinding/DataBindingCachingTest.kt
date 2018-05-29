@@ -19,10 +19,13 @@ package com.android.build.gradle.integration.databinding
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.testutils.truth.FileSubject.assertThat
+import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 /**
  * Integration test for the interaction between data binding and Gradle task output caching
@@ -36,22 +39,60 @@ class DataBindingCachingTest(withKotlin: Boolean) {
         @JvmStatic
         fun parameters() = listOf(
             // arrayOf(true), /* TODO Test with Kotlin once issues with Kapt are fixed. */
-            arrayOf(false))
+            arrayOf(false)
+        )
+
+        const val GRADLE_BUILD_CACHE = "gradle-build-cache"
     }
 
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject(if (withKotlin) "databindingAndKotlin" else "databinding")
-        .withDependencyChecker(false)
+        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE"))
+        .withName("project")
+        .create()
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    @get:Rule
+    val projectCopy = GradleTestProject.builder()
+        .fromTestProject(if (withKotlin) "databindingAndKotlin" else "databinding")
+        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE"))
+        .withName("projectCopy")
         .create()
 
     @Test
     fun testSameProjectLocation() {
         // Run the first build to populate the Gradle build cache
-        project.executor().withArgument("--build-cache").run("clean", "assembleDebug")
+        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
+        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+
+        project.executor().withArgument("--build-cache").run("clean", "compileDebugJavaWithJavac")
+        assertThat(buildCacheDir).exists()
 
         // In the second build, the Java compile task should get their outputs from the build cache
-        val result = project.executor().withArgument("--build-cache").run("clean", "assembleDebug")
-        assertThat(result.getTask(":compileDebugJavaWithJavac")).wasFromCache();
+        val result = project.executor().withArgument("--build-cache")
+            .run("clean", "compileDebugJavaWithJavac")
+        assertThat(result.getTask(":compileDebugJavaWithJavac")).wasFromCache()
+
+        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+    }
+
+    @Test
+    fun testDifferentProjectLocations() {
+        // Build the first project to populate the Gradle build cache
+        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
+        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
+
+        project.executor().withArgument("--build-cache").run("clean", "compileDebugJavaWithJavac")
+        assertThat(buildCacheDir).exists()
+
+        // Build the second project that is identical to the first project, uses the same build
+        // cache, but has a different location. The Java compile task should still get their outputs
+        // from the build cache.
+        val result = projectCopy.executor().withArgument("--build-cache")
+            .run("clean", "compileDebugJavaWithJavac")
+        assertThat(result.getTask(":compileDebugJavaWithJavac")).wasFromCache()
+
+        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
     }
 }

@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.transforms.InstantRunDex;
-import com.android.build.gradle.internal.transforms.InstantRunSlicer;
 import com.android.build.gradle.internal.transforms.InstantRunTransform;
 import com.android.build.gradle.internal.transforms.InstantRunVerifierTransform;
 import com.android.build.gradle.internal.transforms.NoChangesVerifierTransform;
@@ -275,19 +274,6 @@ public class InstantRunTaskManager {
         }
 
         return preColdSwapTask;
-    }
-
-
-    /**
-     * If we are at API 21 or above, we generate multi-dexes.
-     */
-    public void createSlicerTask() {
-        TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
-        //
-        InstantRunSlicer slicer = new InstantRunSlicer(logger, variantScope);
-        Optional<TransformTask> slicing =
-                transformManager.addTransform(taskFactory, transformVariantScope, slicer);
-        slicing.ifPresent(variantScope::addColdSwapBuildTask);
     }
 
     /**

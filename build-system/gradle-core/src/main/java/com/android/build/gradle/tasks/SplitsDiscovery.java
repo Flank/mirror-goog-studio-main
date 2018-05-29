@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import joptsimple.internal.Strings;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -79,36 +78,37 @@ public class SplitsDiscovery extends AndroidBuilderTask {
     @Optional
     @Nullable
     @PathSensitive(PathSensitivity.RELATIVE)
-    BuildableArtifact getMergedResourcesFolders() {
+    public BuildableArtifact getMergedResourcesFolders() {
         return mergedResourcesFolders;
     }
 
     @Input
     @Optional
-    Set<String> getDensityFilters() {
+    public Set<String> getDensityFilters() {
         return densityFilters;
     }
 
     @Input
     @Optional
-    boolean isDensityAuto() {
+    public boolean isDensityAuto() {
         return densityAuto;
     }
 
     @Input
     @Optional
-    Set<String> getLanguageFilters() {
+    public Set<String> getLanguageFilters() {
         return languageFilters;
     }
 
     @Input
     @Optional
-    boolean isLanguageAuto() {
+    public boolean isLanguageAuto() {
         return languageAuto;
     }
+
     @Input
     @Optional
-    Set<String> getAbiFilters() {
+    public Set<String> getAbiFilters() {
         return abiFilters;
     }
 
@@ -118,7 +118,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
     }
 
     @Input
-    Collection<String> getResourceConfigs() {
+    public Collection<String> getResourceConfigs() {
         return resourceConfigs;
     }
 
@@ -130,7 +130,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
     File persistedList;
 
     @OutputFile
-    File getPersistedList() {
+    public File getPersistedList() {
         return persistedList;
     }
 

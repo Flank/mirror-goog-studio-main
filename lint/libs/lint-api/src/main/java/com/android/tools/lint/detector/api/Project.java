@@ -88,6 +88,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -731,6 +732,45 @@ public class Project {
     @Nullable
     public String getPackage() {
         return pkg;
+    }
+
+    /**
+     * Returns the application id, if known
+     *
+     * @return the application id, if known
+     */
+    @Nullable
+    public String getApplicationId() {
+        Variant currentVariant = getCurrentVariant();
+        if (currentVariant != null) {
+            return currentVariant.getMainArtifact().getApplicationId();
+        }
+
+        return getPackage();
+    }
+
+    /**
+     * Returns all application ids, if known
+     *
+     * @return all application ids, if known
+     */
+    @NonNull
+    public Set<String> getAllApplicationIds() {
+        Set<String> ids = new HashSet<>();
+        AndroidProject model = getGradleProjectModel();
+        if (model != null) {
+            for (Variant variant : model.getVariants()) {
+                String applicationId = variant.getMergedFlavor().getApplicationId();
+                if (applicationId != null) {
+                    ids.add(applicationId);
+                }
+            }
+        }
+        String pkg = getPackage();
+        if (pkg != null) {
+            ids.add(pkg);
+        }
+        return ids;
     }
 
     /**

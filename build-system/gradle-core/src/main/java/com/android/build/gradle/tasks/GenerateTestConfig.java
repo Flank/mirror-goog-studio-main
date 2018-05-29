@@ -69,12 +69,12 @@ public class GenerateTestConfig extends DefaultTask {
     Supplier<String> packageForR;
 
     @Input
-    ApkInfo getMainApkInfo() {
+    public ApkInfo getMainApkInfo() {
         return mainApkInfo;
     }
 
     @InputFiles
-    BuildableArtifact getManifests() {
+    public BuildableArtifact getManifests() {
         return manifests;
     }
 

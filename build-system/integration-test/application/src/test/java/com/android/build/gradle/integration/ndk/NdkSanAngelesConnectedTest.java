@@ -31,9 +31,6 @@ public class NdkSanAngelesConnectedTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        // Mips disabled due to b/79847055
-        TestFileUtils.searchAndReplace(project.getBuildFile(), ", 'mips'", "");
-        TestFileUtils.searchAndReplace(project.getBuildFile(), "mips:2, x86:3", "x86:2");
         project.executeConnectedCheck();
     }
 }

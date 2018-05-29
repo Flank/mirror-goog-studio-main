@@ -65,7 +65,6 @@ perf_test(
     name = "BasicTest",
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
-        "testSrcs/com/android/tools/profiler/JvmtiAgentTest.java",
     ],
     tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",

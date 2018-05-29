@@ -22,6 +22,7 @@ import com.android.bundle.Devices
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers
@@ -155,6 +156,10 @@ class InstallVariantViaBundleTaskTest {
         }
 
         override fun setDeviceSpec(spec: Devices.DeviceSpec?): ExtractApksCommand.Builder {
+            return this
+        }
+
+        override fun setModules(modules: ImmutableSet<String>?): ExtractApksCommand.Builder {
             return this
         }
 

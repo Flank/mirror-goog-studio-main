@@ -160,44 +160,6 @@ public class DexArchiveBuilderTest {
     }
 
     @Test
-    public void checkRemovingDexEntries() throws Exception {
-        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
-        Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
-        Path input = writeToInput(classesInInput);
-        Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
-
-        // remove the file, we close it to make sure it is written to disk
-        try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            dexArchive.removeFile(PACKAGE + "/B.dex");
-        }
-
-        try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            assertArchiveIsValid(dexArchive, ImmutableList.of("A", "C"));
-        }
-    }
-
-    @Test
-    public void checkRemovingAllEntries() throws Exception {
-        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
-        Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
-        Path input = writeToInput(classesInInput);
-        Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
-
-        // remove the file, we close it to make sure it is written to disk
-        try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            dexArchive.removeFile(PACKAGE + "/A.dex");
-            dexArchive.removeFile(PACKAGE + "/B.dex");
-            dexArchive.removeFile(PACKAGE + "/C.dex");
-        }
-
-        try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            assertArchiveIsValid(dexArchive, ImmutableList.of());
-        }
-    }
-
-    @Test
     public void checkManyClasses() throws Exception {
         Collection<String> classesInInput = Lists.newArrayList();
         for (int i = 0; i < 1000; i++) {

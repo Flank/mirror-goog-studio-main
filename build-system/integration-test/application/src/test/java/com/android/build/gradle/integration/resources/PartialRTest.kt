@@ -124,6 +124,28 @@ class PartialRTest {
                 checkResource(testC, "invalid")
             }
         }
+
+        // Check that deletes are handled properly too.
+        val symbolsOrig =
+                FileUtils.join(
+                        project.getSubproject(":app").mainSrcDir.parentFile,
+                        "res", "values", "symbols.xml")
+        // Make sure we've got the right file and then delete it.
+        assertThat(symbolsOrig).exists()
+        FileUtils.delete(symbolsOrig)
+        assertThat(symbolsOrig).doesNotExist()
+        // Partial file from previous build.
+        assertThat(symbolsR).exists()
+
+        // Incremental build.
+        project.executor().run(":app:assembleDebug")
+
+        // Partial file for the removed file should have been removed too.
+        assertThat(symbolsR).doesNotExist()
+
+        // The "java-symbol" tag was removed, so the string shouldn't be private anymore.
+        assertThat(Files.readAllLines(resIds.toPath()))
+                .contains("default int string private_string")
     }
 
     private fun checkResource(testC: Class<*>, name: String) {

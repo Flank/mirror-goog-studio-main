@@ -48,7 +48,8 @@ public class DataBindingIntegrationTestAppsConnectedTest {
                                         + "="
                                         + useV2)
                         .addGradleProperties(
-                                BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX);
+                                BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
+                        .withDependencyChecker(!"KotlinTestApp".equals(projectName));
         if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
             builder.withCompileSdkVersion("\"android-P\"");
         }
@@ -65,6 +66,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
                 params.add(new Object[] {"ProguardedAppWithTest", useV2, useAndroidX});
                 params.add(new Object[] {"AppWithDataBindingInTests", useV2, useAndroidX});
             }
+            params.add(new Object[] {"KotlinTestApp", useV2, true});
         }
         return params;
     }

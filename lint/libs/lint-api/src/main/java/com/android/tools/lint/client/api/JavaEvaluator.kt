@@ -74,7 +74,7 @@ const val TYPE_DOUBLE_WRAPPER = "java.lang.Double"
 const val TYPE_FLOAT_WRAPPER = "java.lang.Float"
 const val TYPE_CHARACTER_WRAPPER = "java.lang.Character"
 
-abstract// Some of these methods may be overridden by LintClients
+abstract // Some of these methods may be overridden by LintClients
 class JavaEvaluator {
     abstract val dependencies: Dependencies?
 

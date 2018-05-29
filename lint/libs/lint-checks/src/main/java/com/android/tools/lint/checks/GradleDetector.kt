@@ -1001,8 +1001,8 @@ open class GradleDetector : Detector(), GradleScanner {
         if (targetSdkVersion >= 26) {
             // When targeting O the following libraries must be using at least version 10.2.1
             // (or 0.6.0 of the jobdispatcher API)
-            //com.google.android.gms:play-services-gcm:V
-            //com.google.firebase:firebase-messaging:V
+            // com.google.android.gms:play-services-gcm:V
+            // com.google.firebase:firebase-messaging:V
             if (GMS_GROUP_ID == groupId && "play-services-gcm" == artifactId) {
                 ensureTargetCompatibleWithO(context, version, cookie, 10, 2, 1)
             } else if (FIREBASE_GROUP_ID == groupId && "firebase-messaging" == artifactId) {
@@ -2235,7 +2235,7 @@ open class GradleDetector : Detector(), GradleScanner {
         //   com.android.support:support-v4:21.0.+
         @JvmStatic
         fun getNamedDependency(expression: String): String? {
-            //if (value.startsWith("group: 'com.android.support', name: 'support-v4', version: '21.0.+'"))
+            // if (value.startsWith("group: 'com.android.support', name: 'support-v4', version: '21.0.+'"))
             if (expression.indexOf(',') != -1 && expression.contains("version:")) {
                 var artifact: String? = null
                 var group: String? = null

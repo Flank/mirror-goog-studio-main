@@ -953,4 +953,44 @@ public class SymbolIoTest {
                         new Symbol.NormalSymbol(
                                 ResourceType.TRANSITION, "t", 0, ResourceVisibility.PUBLIC));
     }
+
+    @Test
+    public void testPublicRFileRead() throws Exception {
+        File publicTxt = mTemporaryFolder.newFile();
+        java.nio.file.Files.write(
+                publicTxt.toPath(),
+                ImmutableList.of(
+                        "attr color",
+                        "attr size",
+                        "string publicString",
+                        "integer value",
+                        "styleable myStyleable"),
+                StandardCharsets.UTF_8);
+
+        SymbolTable table = SymbolIo.readFromPublicTxtFile(publicTxt, "foo.bar.com");
+
+        // Sanity check for the package.
+        assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
+        //Check the size.
+        assertThat(table.getSymbols().values().size()).isEqualTo(5);
+        // Make sure all are public.
+        assertThat(table.getSymbols().values().size())
+                .isEqualTo(table.getSymbolByVisibility(ResourceVisibility.PUBLIC).size());
+
+        assertThat(table.getSymbols().values())
+                .containsExactly(
+                        new Symbol.NormalSymbol(
+                                ResourceType.ATTR, "color", 0, ResourceVisibility.PUBLIC),
+                        new Symbol.NormalSymbol(
+                                ResourceType.ATTR, "size", 0, ResourceVisibility.PUBLIC),
+                        new Symbol.NormalSymbol(
+                                ResourceType.STRING, "publicString", 0, ResourceVisibility.PUBLIC),
+                        new Symbol.NormalSymbol(
+                                ResourceType.INTEGER, "value", 0, ResourceVisibility.PUBLIC),
+                        new Symbol.StyleableSymbol(
+                                "myStyleable",
+                                ImmutableList.of(),
+                                ImmutableList.of(),
+                                ResourceVisibility.PUBLIC));
+    }
 }

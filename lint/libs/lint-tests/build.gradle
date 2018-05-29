@@ -16,6 +16,10 @@ dependencies {
     compile libs.groovy
     compile libs.mockito_core
 
+    testCompile project(':analytics-library:shared')
+    testCompile project(':analytics-library:protos')
+    testCompile project(':analytics-library:tracker')
+    testCompile project(':analytics-library:testing')
     testCompile project(':base:apkparser:binary-resources')
     testCompile project(':base:apkparser:apkanalyzer')
     testCompile libs.truth

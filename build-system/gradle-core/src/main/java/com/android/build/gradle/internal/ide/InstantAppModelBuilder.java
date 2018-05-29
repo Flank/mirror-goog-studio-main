@@ -21,6 +21,7 @@ import static com.android.builder.model.AndroidProject.PROJECT_TYPE_INSTANTAPP;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
@@ -47,6 +48,7 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.InstantAppProjectBuildOutput;
 import com.android.builder.model.InstantAppVariantBuildOutput;
+import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SyncIssue;
@@ -71,10 +73,11 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.tooling.provider.model.ToolingModelBuilder;
+import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom instantApp model. */
-public class InstantAppModelBuilder implements ToolingModelBuilder {
+public class InstantAppModelBuilder
+        implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
 
     @NonNull private final AndroidConfig config;
@@ -99,24 +102,55 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
     public boolean canBuild(@NonNull String modelName) {
         // FIXME: We should not return an AndroidProject here.
         return modelName.equals(AndroidProject.class.getName())
-                || modelName.equals(InstantAppProjectBuildOutput.class.getName());
+                || modelName.equals(InstantAppProjectBuildOutput.class.getName())
+                || modelName.equals(Variant.class.getName());
     }
 
     @NonNull
     @Override
     public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         if (modelName.equals(AndroidProject.class.getName())) {
-            return buildAndroidProject(project);
+            return buildAndroidProject(project, true);
         }
+        if (modelName.equals(Variant.class.getName())) {
+            throw new RuntimeException(
+                    "Please use parameterized tooling API to obtain Variant model.");
+        }
+        return buildNonParameterizedModels(modelName);
+    }
+
+    // Build parameterized model.
+    @NonNull
+    @Override
+    public Object buildAll(
+            @NonNull String modelName,
+            @NonNull ModelBuilderParameter parameter,
+            @NonNull Project project) {
+        if (modelName.equals(AndroidProject.class.getName())) {
+            return buildAndroidProject(project, parameter.getShouldBuildVariant());
+        }
+        if (modelName.equals(Variant.class.getName())) {
+            return buildVariant(parameter.getVariantName());
+        }
+        return buildNonParameterizedModels(modelName);
+    }
+
+    @NonNull
+    private Object buildNonParameterizedModels(@NonNull String modelName) {
         if (modelName.equals(InstantAppProjectBuildOutput.class.getName())) {
             return buildMinimalisticModel();
         }
-
         // should not happen based on canBuild
         throw new RuntimeException("Cannot build model " + modelName);
     }
 
-    private Object buildAndroidProject(Project project) {
+    @NonNull
+    @Override
+    public Class<ModelBuilderParameter> getParameterType() {
+        return ModelBuilderParameter.class;
+    }
+
+    private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
         ProjectOptions projectOptions = new ProjectOptions(project);
@@ -149,6 +183,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
         Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
         Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
         Collection<Variant> variants = Lists.newArrayList();
+        Collection<String> variantNames = Lists.newArrayList();
 
         for (BuildTypeData btData : variantManager.getBuildTypes().values()) {
             buildTypes.add(
@@ -167,7 +202,10 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
 
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
-                variants.add(createVariant(variantScope.getVariantData()));
+                variantNames.add(variantScope.getFullVariantName());
+                if (shouldBuildVariant) {
+                    variants.add(createVariant(variantScope.getVariantData()));
+                }
             }
         }
 
@@ -178,7 +216,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 buildTypes,
                 productFlavors,
                 variants,
-                Collections.emptyList(),
+                variantNames,
                 "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -235,6 +273,21 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
         }
 
         return new DefaultInstantAppProjectBuildOutput(variantsOutput.build());
+    }
+
+    @NonNull
+    private VariantImpl buildVariant(@Nullable String variantName) {
+        if (variantName == null) {
+            throw new IllegalArgumentException("Variant name cannot be null.");
+        }
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            if (!variantScope.getVariantData().getType().isTestComponent()
+                    && variantScope.getFullVariantName().equals(variantName)) {
+                return createVariant(variantScope.getVariantData());
+            }
+        }
+        throw new IllegalArgumentException(
+                String.format("Variant with name '%s' doesn't exist.", variantName));
     }
 
     @NonNull

@@ -84,6 +84,8 @@ public class ImlToIr {
 
     public IrProject convert(Path workspace, String projectPath, String imlGraph, PrintWriter writer) throws IOException {
         projectPath = workspace.resolve(projectPath).toString();
+        // Depending on class initialization order this property will be read, so it needs to be set.
+        System.setProperty("idea.home.path", projectPath);
 
         HashMap<String, String> pathVariables = new HashMap<>();
         pathVariables.put("KOTLIN_BUNDLED", workspace.resolve("prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc").toString());

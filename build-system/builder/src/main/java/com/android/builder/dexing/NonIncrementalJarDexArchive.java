@@ -90,11 +90,6 @@ final class NonIncrementalJarDexArchive implements DexArchive {
         jarOutputStream.closeEntry();
     }
 
-    @Override
-    public void removeFile(@NonNull String relativePath) throws IOException {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
     @NonNull
     @Override
     public List<DexArchiveEntry> getFiles() throws IOException {

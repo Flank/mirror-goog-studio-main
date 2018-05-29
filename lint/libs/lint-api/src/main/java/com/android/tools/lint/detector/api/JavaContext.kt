@@ -530,7 +530,7 @@ open class JavaContext(
         fun findNameElement(element: UElement): UElement? {
             if (element is UDeclaration) {
                 return element.uastAnchor
-                //} else if (element instanceof PsiNameIdentifierOwner) {
+                // } else if (element instanceof PsiNameIdentifierOwner) {
                 //    return ((PsiNameIdentifierOwner) element).getNameIdentifier();
             } else if (element is UCallExpression) {
                 return element.methodIdentifier

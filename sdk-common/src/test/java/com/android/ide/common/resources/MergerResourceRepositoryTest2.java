@@ -331,9 +331,9 @@ public class MergerResourceRepositoryTest2 extends TestCase {
                         + "</resources>\n";
         MergerResourceRepository resources =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO, new Object[] {"values/strings.xml", content});
+                        ResourceNamespace.TODO(), new Object[] {"values/strings.xml", content});
 
-        assertEquals(Collections.singleton(ResourceNamespace.TODO), resources.getNamespaces());
+        assertEquals(Collections.singleton(ResourceNamespace.TODO()), resources.getNamespaces());
         assertNotNull(resources);
 
         assertNotNull(resources);

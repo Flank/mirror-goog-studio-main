@@ -312,7 +312,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
      * @return tested variant metadata file.
      */
     @InputFiles
-    FileCollection getTestTargetManifests() {
+    public FileCollection getTestTargetManifests() {
         return testTargetManifests;
     }
 
@@ -322,13 +322,13 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @InputFiles
-    BuildableArtifact getTestApkDir() {
+    public BuildableArtifact getTestApkDir() {
         return testData.getTestApkDir();
     }
 
     @InputFiles
     @Optional
-    BuildableArtifact getTestedApksDir() {
+    public BuildableArtifact getTestedApksDir() {
         return testData.getTestedApksDir();
     }
 

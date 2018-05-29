@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.testutils.TestInputsGenerator.dirWithEmptyClasses;
+import static com.android.testutils.TestInputsGenerator.jarWithEmptyClasses;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
@@ -58,6 +60,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -513,7 +516,7 @@ public class DexArchiveBuilderTransformTest {
     @Test
     public void testIncrementalUnchangedDirInput() throws Exception {
         Path input = tmpDir.newFolder("classes").toPath();
-        TestInputsGenerator.dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
+        dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
 
         TransformInput dirInput =
                 TransformTestHelper.directoryBuilder(input.toFile())
@@ -536,7 +539,7 @@ public class DexArchiveBuilderTransformTest {
         File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
         FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
         Path input = tmpDir.getRoot().toPath().resolve("classes.jar");
-        TestInputsGenerator.jarWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
+        jarWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
 
         TransformInput jarInput =
                 TransformTestHelper.singleJarBuilder(input.toFile())
@@ -574,7 +577,7 @@ public class DexArchiveBuilderTransformTest {
 
         // modify the file so it is not a build cache hit any more
         Files.deleteIfExists(input);
-        TestInputsGenerator.jarWithEmptyClasses(input, ImmutableList.of("test/C"));
+        jarWithEmptyClasses(input, ImmutableList.of("test/C"));
 
         TransformInput changedInput =
                 TransformTestHelper.singleJarBuilder(input.toFile())
@@ -659,6 +662,94 @@ public class DexArchiveBuilderTransformTest {
         }
     }
 
+    @Test
+    public void testIrSlicingPerPackage() throws Exception {
+        Path folder = tmpDir.getRoot().toPath().resolve("dir_input");
+        dirWithEmptyClasses(
+                folder, ImmutableList.of(PACKAGE + "/A", PACKAGE + "/B", PACKAGE + "/C"));
+        TransformInput dirInput =
+                TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        DexArchiveBuilderTransform transform =
+                new DexArchiveBuilderTransformBuilder()
+                        .setAndroidJarClasspath(Collections::emptyList)
+                        .setDexOptions(new DefaultDexOptions())
+                        .setMessageReceiver(new NoOpMessageReceiver())
+                        .setMinSdkVersion(21)
+                        .setDexer(dexerTool)
+                        .setIsDebuggable(true)
+                        .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                        .setEnableIncrementalDesugaring(true)
+                        .setProjectVariant("myVariant")
+                        .setIsInstantRun(true)
+                        .createDexArchiveBuilderTransform();
+        transform.transform(invocation);
+
+        File dexA = Objects.requireNonNull(FileUtils.find(out.toFile(), "A.dex").orNull());
+        assertThat(dexA.toString()).contains("slice_");
+        assertThat(dexA.toPath().resolveSibling("B.dex")).exists();
+        assertThat(dexA.toPath().resolveSibling("C.dex")).exists();
+    }
+
+    @Test
+    public void testIrRemovedClasses() throws Exception {
+        Path folder = tmpDir.getRoot().toPath().resolve("dir_input");
+        dirWithEmptyClasses(
+                folder, ImmutableList.of(PACKAGE + "/A", PACKAGE + "/B", PACKAGE + "/C"));
+        TransformInput dirInput =
+                TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        DexArchiveBuilderTransform transform =
+                new DexArchiveBuilderTransformBuilder()
+                        .setAndroidJarClasspath(Collections::emptyList)
+                        .setDexOptions(new DefaultDexOptions())
+                        .setMessageReceiver(new NoOpMessageReceiver())
+                        .setMinSdkVersion(21)
+                        .setDexer(dexerTool)
+                        .setIsDebuggable(true)
+                        .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                        .setEnableIncrementalDesugaring(true)
+                        .setProjectVariant("myVariant")
+                        .setIsInstantRun(true)
+                        .createDexArchiveBuilderTransform();
+        transform.transform(invocation);
+
+        dirInput =
+                TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        folder.resolve(PACKAGE + "/A.class").toFile(),
+                                        Status.REMOVED))
+                        .build();
+        invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
+        transform.transform(invocation);
+
+        File dexA = Objects.requireNonNull(FileUtils.find(out.toFile(), "B.dex").orNull());
+        assertThat(dexA.toPath().resolveSibling("A.dex")).doesNotExist();
+        assertThat(dexA.toPath().resolveSibling("C.dex")).exists();
+    }
+
     @NonNull
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
@@ -674,7 +765,7 @@ public class DexArchiveBuilderTransformTest {
             @NonNull VariantScope.Java8LangSupport java8Support) {
 
         return new DexArchiveBuilderTransformBuilder()
-                .setAndroidJarClasspath(() -> Collections.emptyList())
+                .setAndroidJarClasspath(Collections::emptyList)
                 .setDexOptions(new DefaultDexOptions())
                 .setMessageReceiver(new NoOpMessageReceiver())
                 .setUserLevelCache(userCache)
@@ -706,7 +797,7 @@ public class DexArchiveBuilderTransformTest {
     @NonNull
     private TransformInput getDirInput(@NonNull Path path, @NonNull Collection<String> classes)
             throws Exception {
-        TestInputsGenerator.dirWithEmptyClasses(path, classes);
+        dirWithEmptyClasses(path, classes);
         return getDirInput(path);
     }
 
@@ -731,7 +822,7 @@ public class DexArchiveBuilderTransformTest {
     @NonNull
     private TransformInput getJarInput(@NonNull Path path, @NonNull Collection<String> classes)
             throws Exception {
-        TestInputsGenerator.jarWithEmptyClasses(path, classes);
+        jarWithEmptyClasses(path, classes);
         return getJarInput(path);
     }
 

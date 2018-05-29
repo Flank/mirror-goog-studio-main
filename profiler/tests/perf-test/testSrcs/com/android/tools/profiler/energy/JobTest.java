@@ -137,7 +137,7 @@ public class JobTest {
         assertThat(jobInfo.getTransientExtras()).isEqualTo("transient extras");
 
         final EnergyEvent startEvent = response.getEvents(1);
-        assertThat(startEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(startEvent.getTimestamp()).isAtLeast(scheduleEvent.getTimestamp());
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(startEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
         assertThat(startEvent.getIsTerminal()).isFalse();
@@ -153,7 +153,7 @@ public class JobTest {
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
         final EnergyEvent finishEvent = response.getEvents(2);
-        assertThat(finishEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(finishEvent.getTimestamp()).isAtLeast(startEvent.getTimestamp());
         assertThat(finishEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(finishEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
         assertThat(finishEvent.getIsTerminal()).isTrue();
@@ -210,7 +210,7 @@ public class JobTest {
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
         final EnergyEvent stopEvent = response.getEvents(2);
-        assertThat(stopEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(stopEvent.getTimestamp()).isAtLeast(startEvent.getTimestamp());
         assertThat(stopEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(stopEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
         assertThat(stopEvent.getIsTerminal()).isTrue();

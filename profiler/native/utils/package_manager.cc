@@ -54,9 +54,7 @@ bool PackageManager::GetAppDataPath(const string &package_name, string *path,
   std::string output;
   bool success = pwd.RunAs(parameters, package_name, &output);
   if (!success) {
-    string msg = "Unable to retrieve App Data Path";
-    *error_string = msg;
-    Log::E("%s", msg.c_str());
+    *error_string = "Unable to retrieve App Data Path";
     return false;
   }
 

@@ -26,7 +26,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.internal.transforms.InstantRunSlicer;
+import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.InstantRun;
@@ -94,13 +94,18 @@ public class ResourcesPackagingTest {
         // the other the resources.apk. Otherwise, just one for the main apk
         int extraApks = separateResourcesApk ? 2 : 1;
         assertThat(buildInfo.getArtifacts())
-                .hasSize(InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES + extraApks);
+                .hasSize(
+                        DexArchiveBuilderTransform.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES
+                                + extraApks);
         assertThat(
                         InstantRunTestUtils.getArtifactsOfType(
                                         buildInfo, InstantRunArtifactType.SPLIT)
                                 .size())
                 // Subtract the main APK.
-                .isEqualTo(InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES + extraApks - 1);
+                .isEqualTo(
+                        DexArchiveBuilderTransform.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES
+                                + extraApks
+                                - 1);
 
         InstantRunArtifact splitMain =
                 InstantRunTestUtils.getOnlyArtifactOfType(

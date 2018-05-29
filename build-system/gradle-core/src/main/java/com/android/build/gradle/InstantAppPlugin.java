@@ -42,6 +42,7 @@ import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -151,5 +152,11 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
     @Override
     protected TypedPluginDelegate<BaseExtension2> getTypedDelegate() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    Class<? extends Plugin<Project>> getApiPluginClass() {
+        return com.android.build.api.plugin.InstantAppPlugin.class;
     }
 }

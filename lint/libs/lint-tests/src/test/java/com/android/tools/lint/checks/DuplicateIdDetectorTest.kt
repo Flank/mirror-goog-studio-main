@@ -392,8 +392,7 @@ res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earli
 """
     )
 
-    private // Sample code
-    val mLayout3 = xml(
+    private val mLayout3 = xml(
         "res/layout/layout3.xml", """<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"

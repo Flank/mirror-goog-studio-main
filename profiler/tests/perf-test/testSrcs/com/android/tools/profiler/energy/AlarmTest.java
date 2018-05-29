@@ -109,7 +109,7 @@ public class AlarmTest {
         assertThat(setEvent.getAlarmSet().getOperation().getCreatorUid()).isEqualTo(1);
 
         EnergyEvent cancelEvent = response.getEvents(1);
-        assertThat(cancelEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(cancelEvent.getTimestamp()).isAtLeast(setEvent.getTimestamp());
         assertThat(cancelEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
         assertThat(cancelEvent.getIsTerminal()).isTrue();
@@ -152,6 +152,7 @@ public class AlarmTest {
         assertThat(setEvent.getAlarmSet().getListener().getTag()).isEqualTo("foo");
 
         EnergyEvent cancelEvent = response.getEvents(1);
+        assertThat(cancelEvent.getTimestamp()).isAtLeast(setEvent.getTimestamp());
         assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
         assertThat(cancelEvent.getIsTerminal()).isTrue();
         assertThat(cancelEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_CANCELLED);
@@ -177,12 +178,14 @@ public class AlarmTest {
         assertThat(response.getEventsCount()).isEqualTo(2);
 
         EnergyEvent setEvent = response.getEvents(0);
+        assertThat(setEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(setEvent.getEventId()).isGreaterThan(0);
         assertThat(setEvent.getIsTerminal()).isFalse();
         assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
         assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.OPERATION);
 
         EnergyEvent fireEvent = response.getEvents(1);
+        assertThat(fireEvent.getTimestamp()).isAtLeast(setEvent.getTimestamp());
         assertThat(fireEvent.getEventId()).isEqualTo(setEvent.getEventId());
         assertThat(fireEvent.getIsTerminal()).isFalse();
         assertThat(fireEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_FIRED);
@@ -205,6 +208,7 @@ public class AlarmTest {
         assertThat(response.getEventsCount()).isEqualTo(2);
 
         EnergyEvent setEvent = response.getEvents(0);
+        assertThat(setEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(setEvent.getEventId()).isGreaterThan(0);
         assertThat(setEvent.getIsTerminal()).isFalse();
         assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
@@ -212,6 +216,7 @@ public class AlarmTest {
         String tag = setEvent.getAlarmSet().getListener().getTag();
 
         EnergyEvent fireEvent = response.getEvents(1);
+        assertThat(fireEvent.getTimestamp()).isAtLeast(setEvent.getTimestamp());
         assertThat(fireEvent.getEventId()).isEqualTo(setEvent.getEventId());
         assertThat(fireEvent.getIsTerminal()).isTrue();
         assertThat(fireEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_FIRED);

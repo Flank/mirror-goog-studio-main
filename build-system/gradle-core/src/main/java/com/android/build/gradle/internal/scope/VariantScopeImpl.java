@@ -1720,6 +1720,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
+    @Nullable
+    public Task getMergeJavaResourcesTask() {
+        return mergeJavaResourcesTask;
+    }
+
+    @Override
     public void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask) {
         this.mergeJavaResourcesTask = mergeJavaResourcesTask;
     }

@@ -275,7 +275,6 @@ class CustomRuleTest {
 
     @Test
     fun testLegacyLombokJavaLintRule() {
-        //noinspection all // Sample code
         lint().files(
             classpath(),
             manifest().minSdk(1),
@@ -500,8 +499,7 @@ class CustomRuleTest {
             }
     }
 
-    private // Sample code
-    val appCompatTestSource = java(
+    private val appCompatTestSource = java(
         "" +
                 "package test.pkg;\n" +
                 "\n" +

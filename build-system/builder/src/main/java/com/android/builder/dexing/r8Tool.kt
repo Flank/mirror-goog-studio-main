@@ -20,8 +20,11 @@ package com.android.builder.dexing
 
 import com.android.SdkConstants
 import com.android.ide.common.blame.MessageReceiver
+import com.android.tools.r8.ClassFileConsumer
 import com.android.tools.r8.CompatProguardCommandBuilder
 import com.android.tools.r8.CompilationMode
+import com.android.tools.r8.DataResourceConsumer
+import com.android.tools.r8.DexIndexedConsumer
 import com.android.tools.r8.OutputMode
 import com.android.tools.r8.R8
 import com.android.tools.r8.origin.Origin
@@ -92,6 +95,25 @@ fun runR8(
         .setMinApiLevel(toolConfig.minSdkVersion)
         .setMode(compilationMode)
         .setOutput(output, outputType)
+
+    // By default, R8 will maintain Java data resources. Wrap the consumer to ignore them.
+    val outputConsumer = r8CommandBuilder.programConsumer
+    when (outputConsumer) {
+        is ClassFileConsumer ->
+            r8CommandBuilder.programConsumer =
+                    object : ClassFileConsumer.ForwardingConsumer(outputConsumer) {
+                        override fun getDataResourceConsumer(): DataResourceConsumer? {
+                            return null
+                        }
+                    }
+        is DexIndexedConsumer ->
+            r8CommandBuilder.programConsumer =
+                    object : DexIndexedConsumer.ForwardingConsumer(outputConsumer) {
+                        override fun getDataResourceConsumer(): DataResourceConsumer? {
+                            return null
+                        }
+                    }
+    }
 
     fun pathsAdder(paths: Collection<Path>, consumer: (Path) -> Any) {
         for (path in paths) {

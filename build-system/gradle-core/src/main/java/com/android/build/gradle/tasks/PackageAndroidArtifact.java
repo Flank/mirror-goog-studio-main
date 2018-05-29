@@ -348,7 +348,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
      * is changed (e.g., by the users), the task will be re-executed in non-incremental mode.
      */
     @Input
-    Collection<String> getApkNames() {
+    public Collection<String> getApkNames() {
         // this task does not handle packaging of the configuration splits.
         return outputScope
                 .getApkDatas()
@@ -359,7 +359,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     @InputFiles
-    BuildableArtifact getApkList() {
+    public BuildableArtifact getApkList() {
         return apkList;
     }
 

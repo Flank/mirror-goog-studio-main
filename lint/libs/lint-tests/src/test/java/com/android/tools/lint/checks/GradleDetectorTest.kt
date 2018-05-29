@@ -68,8 +68,7 @@ import java.util.function.Predicate
  */
 class GradleDetectorTest : AbstractCheckTest() {
 
-    private// Sample code
-    val mDependencies = source(
+    private val mDependencies = source(
         "build.gradle",
         "" +
                 "apply plugin: 'android'\n" +

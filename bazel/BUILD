@@ -264,6 +264,17 @@ java_library(
     ],
 )
 
+java_library(
+    name = "gradle_benchmarks",
+    testonly = 1,
+    srcs = glob(["testSrc/com/android/tools/gradle/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/bazel:gradle",
+        "//tools/base/perf-logger:studio.perf-logger_testlib",
+    ],
+)
+
 java_binary(
     name = "antlr",
     srcs = ["src/com/android/tools/binaries/AntlrCompiler.java"],
@@ -323,7 +334,6 @@ java_test(
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
     data = ["//tools/base/bazel/test:iml_to_bazel"],
     tags = [
-        "no_test_foundry",
         "no_test_windows",
     ],
     test_class = "com.android.tools.binaries.ImlToBazelTest",

@@ -361,7 +361,7 @@ public class ResourceMerger extends DataMerger<ResourceMergerItem, ResourceFile,
 
         if (name != null && type != null) {
             return new MergedResourceMergerItem(
-                    name, ResourceNamespace.TODO, type, qualifiers, node, null);
+                    name, ResourceNamespace.TODO(), type, qualifiers, node, null);
         }
 
         return null;

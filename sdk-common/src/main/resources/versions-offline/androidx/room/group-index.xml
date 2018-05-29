@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<androidx.room>
+  <room-rxjava2 versions="2.0.0-alpha1"/>
+  <room-common versions="2.0.0-alpha1"/>
+  <room-compiler versions="2.0.0-alpha1"/>
+  <room-guava versions="2.0.0-alpha1"/>
+  <room-migration versions="2.0.0-alpha1"/>
+  <room-testing versions="2.0.0-alpha1"/>
+  <room-runtime versions="2.0.0-alpha1"/>
+</androidx.room>
+

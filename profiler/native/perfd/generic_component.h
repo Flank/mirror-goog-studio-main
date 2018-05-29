@@ -58,9 +58,9 @@ class GenericComponent final : public ProfilerComponent {
   // Mapping pid -> timestamp of last ping from the agent.
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
   std::list<AgentStatusChanged> agent_status_changed_callbacks_;
-  // Mapping pid -> latest status of heartbeat (Attached / Detached).
+  // Mapping pid -> latest status of agent (Attached / Detached).
   std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>
-      heartbeat_status_map_;
+      agent_status_map_;
   std::thread status_thread_;
 };
 

@@ -182,6 +182,16 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     }
 
     @Override
+    public void setCoverageReportLocation(String reportPath) {
+        addInstrumentationArg("coverageFile", reportPath);
+    }
+
+    @Override
+    public CoverageOutput getCoverageOutputType() {
+        return CoverageOutput.FILE;
+    }
+
+    @Override
     public void setEnforceTimeStamp(boolean timestamp) {
         mEnforceTimeStamp = timestamp;
     }

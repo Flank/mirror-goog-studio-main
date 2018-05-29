@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
+import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
@@ -206,6 +207,17 @@ public class ApplicationTaskManager extends TaskManager {
 
         // Add a compile task
         createCompileTask(variantScope);
+
+        if (variantScope.getType().isBaseModule()) {
+            CheckMultiApkLibrariesTask checkMultiApkLibrariesTask =
+                    taskFactory.create(new CheckMultiApkLibrariesTask.ConfigAction(variantScope));
+            // variantScope.setMergeJavaResourcesTask() is called in createCompileTask() above.
+            assert variantScope.getMergeJavaResourcesTask() != null;
+            // We set the merge java resources task to depend on this check, because merging java
+            // resources is the first place an error could be thrown if there are duplicate
+            // libraries.
+            variantScope.getMergeJavaResourcesTask().dependsOn(checkMultiApkLibrariesTask);
+        }
 
         createStripNativeLibraryTask(taskFactory, variantScope);
 

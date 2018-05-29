@@ -23,6 +23,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Streams;
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -79,9 +80,11 @@ class BundleOptionsTest {
                 "bundle.apks"
             ).toPath()
         ).use { apks ->
-            Files.list(apks.getPath("/")).use {
-                it.map{ it.fileName.toString() }.collect(ImmutableSet.toImmutableSet())
-            }
+            Streams.concat(
+                Files.list(apks.getPath("splits/")),
+                Files.list(apks.getPath("standalones/"))).use {
+                    it.map{ it.fileName.toString() }.collect(ImmutableSet.toImmutableSet())
+                }
         }
     }
 }

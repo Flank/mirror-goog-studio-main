@@ -2,8 +2,8 @@
     package="com.example.feature2"
     android:versionCode="1">
 
-    <dist:module>
-      <dist:fusing include="true" />
+    <dist:module dist:onDemand="true">
+      <dist:fusing dist:include="true" />
     </dist:module>
 
     <application>

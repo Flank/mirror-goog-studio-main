@@ -238,7 +238,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         when (name) {
             LIST_BUILDER_CLASS -> checkListBuilder(context, node, method)
             ROW_BUILDER_CLASS -> checkRowBuilder(context, node, method)
-        //GRID_ROW_BUILDER_CLASS -> checkGridRowBuilder(context, node, method)
+        // GRID_ROW_BUILDER_CLASS -> checkGridRowBuilder(context, node, method)
             GRID_ROW_CELL_BUILDER_CLASS, LIST_HEADER_BUILDER_CLASS -> checkHasContent(
                 name,
                 context,

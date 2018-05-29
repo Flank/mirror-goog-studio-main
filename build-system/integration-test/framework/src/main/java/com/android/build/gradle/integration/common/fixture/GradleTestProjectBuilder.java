@@ -55,11 +55,12 @@ public final class GradleTestProjectBuilder {
     private boolean withDependencyChecker = true;
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
     private boolean withCmakeDirInLocalProp = false;
-    @NonNull String cmakeVersion;
+    @Nullable String cmakeVersion;
     @Nullable private List<Path> repoDirectories;
     @Nullable private File androidHome;
     @Nullable private File androidNdkHome;
     @Nullable private File gradleDistributionDirectory;
+    @Nullable private File gradleBuildCacheDirectory;
     @Nullable private String kotlinVersion;
 
     private boolean withDeviceProvider = true;
@@ -130,6 +131,7 @@ public final class GradleTestProjectBuilder {
                 androidHome,
                 androidNdkHome,
                 gradleDistributionDirectory,
+                gradleBuildCacheDirectory,
                 kotlinVersion,
                 outputLogOnFailure);
     }
@@ -158,6 +160,16 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder withGradleDistributionDirectory(
             File gradleDistributionDirectory) {
         this.gradleDistributionDirectory = gradleDistributionDirectory;
+        return this;
+    }
+
+    /**
+     * Sets a custom directory for the Gradle build cache (not the Android Gradle build cache). The
+     * path can be absolute or relative to testDir.
+     */
+    public GradleTestProjectBuilder withGradleBuildCacheDirectory(
+            @NonNull File gradleBuildCacheDirectory) {
+        this.gradleBuildCacheDirectory = gradleBuildCacheDirectory;
         return this;
     }
 

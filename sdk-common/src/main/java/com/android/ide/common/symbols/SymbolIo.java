@@ -52,14 +52,18 @@ import org.xml.sax.SAXException;
  * AAR Format:
  *  - R.txt in AARs
  *     - Format is <type> <class> <name> <value>
- *     - Contains the resources for this library and all its
- *       transitive dependencies.
+ *     - Contains the resources for this library and all its transitive dependencies.
  *     - Written using writeForAar()
- *     - Only read as part of writeSymbolListWithPackageName() as
- *       there are corrupt files with stylable children not below
- *       their parents in the wild.
- *     - IDs and styleable children don't matter, as this is only
- *       used to filtering symbols when generating R classes.
+ *     - Only read as part of writeSymbolListWithPackageName() as there are corrupt files with
+ *       styleable children not below their parents in the wild.
+ *     - IDs and styleable children don't matter, as this is only used to filtering symbols when
+ *       generating R classes.
+ *  - public.txt in AARs
+ *     - Format is <class> <name>
+ *     - Contains all the resources from this AAR that are public (missing public.txt means all
+ *       resources should be public)
+ *     - There are no IDs or styleable children here, needs to be merged with R.txt and filtered by
+ *       the public visibility to actually get a full list of public resources from the AAR
  *
  * AAPT2 Outputs the following formats:
  *  - R.txt as output by AAPT2, where ID values matter.
@@ -72,8 +76,8 @@ import org.xml.sax.SAXException;
  *     - Used to push R class generation earlier.
  *
  * Internal intermediates:
- *  - Symbol list with package name. Used to filter down the generated R
- *    class for this library in the non-namespaced case.
+ *  - Symbol list with package name. Used to filter down the generated R class for this library in
+ *    the non-namespaced case.
  *     - Format is <type> <name> [<child> [<child>, [...]]], with the first line as the package name.
  *     - Contains resources from this sub-project and all its transitive dependencies.
  *     - Read by readSymbolListWithPackageName()
@@ -81,8 +85,7 @@ import org.xml.sax.SAXException;
  *  - R def format,
  *     - Used for namespace backward compatibility.
  *     - Contains only the resources defined in a single library.
- *     - Reuses the partial R file format, but with the package name as the
- *       first line.
+ *     - Reuses the partial R file format, but with the package name as the first line.
  * </pre>
  */
 public final class SymbolIo {
@@ -117,6 +120,12 @@ public final class SymbolIo {
     public static SymbolTable readFromPartialRFile(
             @NonNull File file, @Nullable String tablePackage) throws IOException {
         return read(file, tablePackage, ReadConfiguration.PARTIAL_FILE);
+    }
+
+    @NonNull
+    public static SymbolTable readFromPublicTxtFile(
+            @NonNull File file, @Nullable String tablePackage) throws IOException {
+        return read(file, tablePackage, ReadConfiguration.PUBLIC_FILE);
     }
 
     @NonNull
@@ -439,6 +448,28 @@ public final class SymbolIo {
     }
 
     @NonNull
+    private static SymbolData readPublicTxtLine(@NonNull String line) throws IOException {
+        // format is "<class> <name>"
+        int pos = line.indexOf(' ');
+        String className = line.substring(0, pos);
+        ResourceType resourceType = ResourceType.getEnum(className);
+        if (resourceType == null) {
+            throw new IOException("Invalid resource type " + className);
+        }
+        // If it's a styleable it must be the parent. Styleable-children are only references to
+        // attrs, if a child is to be public then the corresponding attr will be marked as public.
+        // Styleable children (int styleable) should not be present in the public.txt.
+        String typeName = resourceType == ResourceType.STYLEABLE ? "int[]" : "int";
+        SymbolJavaType type = SymbolJavaType.getEnum(typeName);
+        if (type == null) {
+            throw new IOException("Invalid symbol type " + typeName);
+        }
+
+        String name = line.substring(pos + 1);
+        return new SymbolData(ResourceVisibility.PUBLIC, resourceType, name, type, "");
+    }
+
+    @NonNull
     private static SymbolData readSymbolListWithPackageLine(@NonNull String line)
             throws IOException {
         // format is "<type> <name>[ <child>[ <child>[ ...]]]"
@@ -506,7 +537,13 @@ public final class SymbolIo {
                 return readPartialRLine(line);
             }
         },
-        ;
+        PUBLIC_FILE(false, true) {
+            @NonNull
+            @Override
+            public SymbolData parseLine(@NonNull String line) throws IOException {
+                return readPublicTxtLine(line);
+            }
+        };
 
         ReadConfiguration(boolean readValues, boolean singleLineStyleable) {
             this.readValues = readValues;

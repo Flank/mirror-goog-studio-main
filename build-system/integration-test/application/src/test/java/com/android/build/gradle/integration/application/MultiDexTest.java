@@ -173,7 +173,7 @@ public class MultiDexTest {
                                         .toPath());
                 BufferedOutputStream out =
                         new BufferedOutputStream(Files.newOutputStream(extracted))) {
-            Files.copy(apks.getPath("standalone-hdpi.apk"), out);
+            Files.copy(apks.getPath("standalones/standalone-hdpi.apk"), out);
         }
         return new Apk(extracted);
     }

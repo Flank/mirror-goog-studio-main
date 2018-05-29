@@ -61,12 +61,14 @@ class FakeAtraceManager final : public AtraceManager {
     if (command.compare("--async_start") == 0) {
       EXPECT_FALSE(start_profiling_captured_);
       EXPECT_FALSE(stop_profiling_captured_);
+      EXPECT_FALSE(clock_sync_write_);
       EXPECT_THAT(profiling_dumps_captured_, 0);
       EXPECT_THAT(additional_args, testing::Eq("-b 8192"));
       start_profiling_captured_ = true;
     } else if (command.compare("--async_stop") == 0) {
       EXPECT_TRUE(start_profiling_captured_);
       EXPECT_FALSE(stop_profiling_captured_);
+      EXPECT_TRUE(clock_sync_write_);
       stop_profiling_captured_ = true;
       EXPECT_THAT(GetDumpCount(), profiling_dumps_captured_ + 1);
       ValidatePath(path);
@@ -79,6 +81,8 @@ class FakeAtraceManager final : public AtraceManager {
       profiling_dumps_captured_++;
     }
   }
+
+  virtual void WriteClockSyncMarker() override { clock_sync_write_ = true; }
 
   virtual bool IsAtraceRunning() override {
     if (forced_running_state_ == -1) {
@@ -131,6 +135,7 @@ class FakeAtraceManager final : public AtraceManager {
   void ResetState() {
     stop_profiling_captured_ = false;
     start_profiling_captured_ = false;
+    clock_sync_write_ = false;
     profiling_dumps_captured_ = 0;
     forced_running_state_ = -1;
   }
@@ -148,6 +153,7 @@ class FakeAtraceManager final : public AtraceManager {
   // -1 is not set, 0, is false, 1 is true.
   int forced_running_state_;
   int profiling_dumps_captured_;
+  bool clock_sync_write_;
 };
 
 // Simple helper struct to define test data used across multiple test.

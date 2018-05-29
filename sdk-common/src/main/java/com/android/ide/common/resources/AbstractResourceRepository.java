@@ -69,13 +69,17 @@ public abstract class AbstractResourceRepository {
     public AbstractResourceRepository() {}
 
     /**
-     * Returns all leaf resource repositories contained in this resource repository including this
-     * repository itself, if it does not contain any other repositories.
+     * Returns all leaf resource repositories contained in this resource, or this repository itself,
+     * if it does not contain any other repositories. The leaf resource repositories are guaranteed
+     * to implement the {@link SingleNamespaceResourceRepository} interface.
      *
      * @param result the collection to add the leaf repositories to
      */
     public void getLeafResourceRepositories(
             @NonNull Collection<AbstractResourceRepository> result) {
+        //noinspection InstanceofIncompatibleInterface
+        assert this instanceof SingleNamespaceResourceRepository
+                : getClass().getCanonicalName() + " is not a SingleNamespaceResourceRepository";
         result.add(this);
     }
 
@@ -142,7 +146,7 @@ public abstract class AbstractResourceRepository {
     public List<ResourceItem> getResourceItem(
             @NonNull ResourceType resourceType, @NonNull String resourceName) {
         List<ResourceItem> items =
-                getResourceItems(ResourceNamespace.TODO, resourceType, resourceName);
+                getResourceItems(ResourceNamespace.TODO(), resourceType, resourceName);
         // That's what the method used to return, let's keep it this way for now.
         return items.isEmpty() ? null : items;
     }
@@ -225,7 +229,7 @@ public abstract class AbstractResourceRepository {
     @Deprecated
     @NonNull
     public final Collection<String> getItemsOfType(@NonNull ResourceType type) {
-        return getItemsOfType(ResourceNamespace.TODO, type);
+        return getItemsOfType(ResourceNamespace.TODO(), type);
     }
 
     @NonNull
@@ -306,7 +310,7 @@ public abstract class AbstractResourceRepository {
                     namespace = ResourceNamespace.ANDROID;
                 } else {
                     // TODO: namespaces
-                    namespace = ResourceNamespace.TODO;
+                    namespace = ResourceNamespace.TODO();
                 }
                 typeBegin = colon + 1;
             }
@@ -331,7 +335,7 @@ public abstract class AbstractResourceRepository {
             @NonNull ResourceType resourceType, @NonNull String resourceName) {
         synchronized (ITEM_MAP_LOCK) {
             ListMultimap<String, ResourceItem> map =
-                    getMap(ResourceNamespace.TODO, resourceType, false);
+                    getMap(ResourceNamespace.TODO(), resourceType, false);
 
             if (map != null) {
                 List<ResourceItem> itemList = map.get(resourceName);
@@ -507,7 +511,8 @@ public abstract class AbstractResourceRepository {
             @NonNull FolderConfiguration referenceConfig) {
         synchronized (ITEM_MAP_LOCK) {
             // get the resource item for the given type
-            ListMultimap<String, ResourceItem> items = getMap(ResourceNamespace.TODO, type, false);
+            ListMultimap<String, ResourceItem> items =
+                    getMap(ResourceNamespace.TODO(), type, false);
             if (items == null) {
                 return null;
             }

@@ -36,10 +36,25 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class ConstantEvaluatorTest extends TestCase {
-    private static void checkUast(
+    private static void checkJavaUast(
             Object expected, @Language("JAVA") String source, final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
                 LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
+        checkUast(expected, pair, source, targetVariable);
+    }
+
+    private static void checkKotlinUast(
+            Object expected, @Language("Kt") String source, final String targetVariable) {
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parseKotlin(source, new File("src/test/pkg/Test.kt"));
+        checkUast(expected, pair, source, targetVariable);
+    }
+
+    private static void checkUast(
+            Object expected,
+            Pair<JavaContext, Disposable> pair,
+            String source,
+            final String targetVariable) {
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
@@ -158,7 +173,7 @@ public class ConstantEvaluatorTest extends TestCase {
 
     private static void check(
             Object expected, @Language("JAVA") String source, final String targetVariable) {
-        checkUast(expected, source, targetVariable);
+        checkJavaUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
         LintCoreApplicationEnvironment.disposeApplicationEnvironment();
     }
@@ -202,6 +217,26 @@ public class ConstantEvaluatorTest extends TestCase {
         check(expected, source, "expression");
     }
 
+    private static void checkKotlinExpression(Object expected, String expressionSource) {
+        @Language("Kt")
+        String source =
+                ""
+                        + "package test.pkg\n"
+                        + "class Test {\n"
+                        + "    fun test() {\n"
+                        + "        val expression = "
+                        + expressionSource
+                        + "\n"
+                        + "    }\n"
+                        + "    const val MY_INT_FIELD = 5;\n"
+                        + "    const val MY_BOOLEAN_FIELD = true;\n"
+                        + "    const val MY_STRING_FIELD = \"test\";\n"
+                        + "}\n";
+
+        checkKotlinUast(expected, source, "expression");
+        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
+    }
+
     public void testStrings() {
         checkExpression(null, "null");
         checkExpression("hello", "\"hello\"");
@@ -212,6 +247,35 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(new int[] {1, 2, 3}, "new int[] { 1,2,3] }");
         checkExpression(new int[0], "new int[0]");
         checkExpression(new byte[0], "new byte[0]");
+    }
+
+    public void testLargeArrays() {
+        checkExpression(new ConstantEvaluator.ArrayReference(Byte.TYPE, 100, 2), "new byte[100][]");
+        checkExpression(new ConstantEvaluator.ArrayReference(Byte.TYPE, 100, 1), "new byte[100]");
+        checkExpression(
+                new ConstantEvaluator.ArrayReference("java.lang.Integer", 100, 1),
+                "new Integer[100]");
+        checkExpression(100, "(new byte[100]).length");
+        checkExpression(100, "(new Integer[100]).length");
+    }
+
+    public void testKotlin() {
+        checkKotlinExpression(
+                new ConstantEvaluator.ArrayReference(Integer.TYPE, 100, 1), "IntArray(100)");
+        checkKotlinExpression(100, "IntArray(100).size");
+        checkKotlinExpression(1000, "kotlin.Array<String>(1000).size");
+        checkKotlinExpression(
+                new ConstantEvaluator.ArrayReference(String.class, 1000, 1), "Array<String>(1000)");
+        checkKotlinExpression(
+                new ConstantEvaluator.ArrayReference(String.class, 1000, 1),
+                "kotlin.Array<String>(1000)");
+        checkKotlinExpression(new Integer[] {1, 2, 3, 4}, "arrayOf(1,2,3,4)");
+        checkKotlinExpression(3, "arrayOf(1,2,3,4)[2]");
+        checkKotlinExpression(4, "arrayOf(1,2,3,4).size");
+        checkKotlinExpression(
+                new ConstantEvaluator.ArrayReference(String.class, 1000, 1),
+                "arrayOfNulls<String>(1000)");
+        checkKotlinExpression(1000, "arrayOfNulls<String>(1000).size");
     }
 
     public void testBooleans() {

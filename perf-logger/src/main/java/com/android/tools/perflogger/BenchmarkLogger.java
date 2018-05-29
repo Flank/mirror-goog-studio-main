@@ -15,16 +15,17 @@
  */
 package com.android.tools.perflogger;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.testutils.TestUtils;
 import com.google.gson.stream.JsonWriter;
-import com.intellij.openapi.diagnostic.Logger;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.TestOnly;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utility class used for logging and outputting benchmark which can be consumed by our dashboard
@@ -67,7 +68,7 @@ import org.jetbrains.annotations.TestOnly;
  */
 public class BenchmarkLogger {
     private static Logger getLogger() {
-        return Logger.getInstance(BenchmarkLogger.class);
+        return Logger.getLogger(BenchmarkLogger.class.getName());
     }
 
 
@@ -75,15 +76,15 @@ public class BenchmarkLogger {
     private static final String INVALID_CHARACTERS = "[\\[\\]]";
     private static final String REPLACEMENT_CHARACTER = "-";
 
-    @NotNull private final String myMetricName;
-    @NotNull private final File myOutputDirectory;
-    @NotNull private final Map<Benchmark, List<MetricSample>> mySamples;
+    @NonNull private final String myMetricName;
+    @NonNull private final File myOutputDirectory;
+    @NonNull private final Map<Benchmark, List<MetricSample>> mySamples;
 
     /**
      * @param metricName The name to be used to associate the logged data with. e.g. the legend name
      *     for a line series on a dashboard (usually the name of a test).
      */
-    public BenchmarkLogger(@NotNull String metricName) {
+    public BenchmarkLogger(@NonNull String metricName) {
         String replacedMetricName =
                 metricName.replaceAll(INVALID_CHARACTERS, REPLACEMENT_CHARACTER);
         if (!replacedMetricName.equals(metricName)) {
@@ -101,14 +102,14 @@ public class BenchmarkLogger {
         mySamples = new LinkedHashMap<>();
     }
 
-    @TestOnly
-    @NotNull
+    @VisibleForTesting
+    @NonNull
     String getMetricName() {
         return myMetricName;
     }
 
-    @TestOnly
-    @NotNull
+    @VisibleForTesting
+    @NonNull
     File getOutputDirectory() {
         return myOutputDirectory;
     }
@@ -118,7 +119,7 @@ public class BenchmarkLogger {
      *     you want to add data to for the metric.
      * @param data Series of sample data to be added.
      */
-    public void addSamples(@NotNull Benchmark benchmark, @NotNull MetricSample... data) {
+    public void addSamples(@NonNull Benchmark benchmark, @NonNull MetricSample... data) {
         mySamples.putIfAbsent(benchmark, new ArrayList<>());
         mySamples.get(benchmark).addAll(Arrays.asList(data));
     }
@@ -162,16 +163,17 @@ public class BenchmarkLogger {
             writer.endObject();
             writer.flush();
         } catch (IOException e) {
-            getLogger().error(e);
+            getLogger().log(Level.ALL, "Failed to commit", e);
         }
     }
 
     /**
-     * A helper method for logging a single data point for a metric to a single benchmark.
-     * Note - if you need to write multiple data points or to multiple benchmarks for the same metric within a test,
-     * use the {@link #addSamples(Benchmark, MetricSample...)} and {@link #commit()} APIs manually instead.
+     * A helper method for logging a single data point for a metric to a single benchmark. Note - if
+     * you need to write multiple data points or to multiple benchmarks for the same metric within a
+     * test, use the {@link #addSamples(Benchmark, MetricSample...)} and {@link #commit()} APIs
+     * manually instead.
      */
-    public static void log(@NotNull Benchmark benchmark, @NotNull String metricName, long data) {
+    public static void log(@NonNull Benchmark benchmark, @NonNull String metricName, long data) {
         long utcMs = Instant.now().toEpochMilli();
         BenchmarkLogger logger = new BenchmarkLogger(metricName);
         logger.addSamples(benchmark, new MetricSample(utcMs, data));
@@ -186,9 +188,9 @@ public class BenchmarkLogger {
         /**
          * Name of the benchmark (e.g. this should match the name of the dashboard to add data to)
          */
-        @NotNull private final String myBenchmarkName;
+        @NonNull private final String myBenchmarkName;
 
-        public Benchmark(@NotNull String name) {
+        public Benchmark(@NonNull String name) {
             myBenchmarkName = name;
         }
 

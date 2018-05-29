@@ -78,7 +78,7 @@ public class PackageForUnitTest extends DefaultTask {
     }
 
     @InputFiles
-    BuildableArtifact getResApk() {
+    public BuildableArtifact getResApk() {
         return resApk;
     }
 

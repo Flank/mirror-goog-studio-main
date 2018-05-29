@@ -162,7 +162,7 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             val module = parts[1]
             val version = parts[2]
 
-            return if (group == "androidx.contentpaging" && module =="contentpaging") {
+            return if (group == "androidx.contentpaging" && module == "contentpaging") {
                 "androidx.contentpager:contentpager:$version"
             } else {
                 targetDependency
@@ -208,7 +208,16 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         // or because its AndroidX version is not yet available on remote repositories. Again, no
         // need to jetify it.
         if (isOldSupportLibrary(aarOrJarFile)) {
-            return listOf(aarOrJarFile)
+            // TODO (jetifier-core): The exceptions to the above rule are android.arch.navigation
+            // and android.arch.work libraries, which do need to be jetified. See
+            // https://issuetracker.google.com/79667498. It seems that this workaround can be
+            // removed in the next version of jetifier-core (and we have a test to ensure that
+            // removing it is safe).
+            if (!aarOrJarFile.absolutePath.matches(Regex(".*android.arch.navigation.*"))
+                && !aarOrJarFile.absolutePath.matches(Regex(".*android.arch.work.*"))
+            ) {
+                return listOf(aarOrJarFile)
+            }
         }
 
         // Case 3: For the remaining, let's jetify them.

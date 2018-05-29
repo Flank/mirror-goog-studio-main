@@ -41,6 +41,7 @@ import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -54,6 +55,12 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
     @Override
     protected int getProjectType() {
         return AndroidProject.PROJECT_TYPE_TEST;
+    }
+
+    @NonNull
+    @Override
+    Class<? extends Plugin<Project>> getApiPluginClass() {
+        return com.android.build.api.plugin.TestPlugin.class;
     }
 
     @NonNull

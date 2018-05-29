@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
+
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
@@ -48,7 +50,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
 
         try {
             LintCliClient client =
-                    new LintCliClient() {
+                    new LintCliClient(CLIENT_UNIT_TESTS) {
                         @Override
                         IssueRegistry getRegistry() {
                             if (registry == null) {

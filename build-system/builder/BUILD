@@ -42,8 +42,6 @@ kotlin_library(
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/jack/jack-api",
-        "//tools/base/jack/jill-api",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",

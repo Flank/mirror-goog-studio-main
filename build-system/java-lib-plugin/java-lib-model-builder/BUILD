@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 # managed by go/iml_to_build
 iml_module(
@@ -21,17 +22,6 @@ iml_module(
     ],
 )
 
-java_test(
-    name = "studio.builder_tests",
-    jvm_flags = ["-Dtest.suite.jar=builder_test.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
-    runtime_deps = [
-        ":studio.android.sdktools.java-lib-model-builder_testlib",
-        "//tools/base/build-system:gradle-api",
-        "//tools/base/testutils:studio.android.sdktools.testutils",
-    ],
-)
-
 fileset(
     name = "resources",
     srcs = glob(["src/main/resources/**"]),
@@ -40,11 +30,9 @@ fileset(
     },
 )
 
-maven_java_library(
+kotlin_library(
     name = "java-lib-model-builder",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]),
+    srcs = ["src/main/java"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/java-lib-plugin/java-lib-model-builder",
     resources = [":resources"],
@@ -63,9 +51,9 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+kotlin_test(
     name = "builder_tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = ["src/test/java"],
     jvm_flags = ["-Dtest.suite.jar=builder_tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

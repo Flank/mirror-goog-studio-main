@@ -70,12 +70,12 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
     @Nested
     @Optional
-    CoreSigningConfig getSigningConf() {
+    public CoreSigningConfig getSigningConf() {
         return signingConf;
     }
 
     @Input
-    String getResInputType() {
+    public String getResInputType() {
         return resInputType.name();
     }
 

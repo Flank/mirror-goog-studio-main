@@ -224,6 +224,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                         detector.beforeCheckFile(context)
                         detector.run(context)
                         detector.afterCheckFile(context)
+                        driver.fileCount++
                     }
                     if (driver.isCanceled) {
                         return

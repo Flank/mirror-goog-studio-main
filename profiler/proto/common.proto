@@ -41,6 +41,7 @@ message Device {
   enum AndroidVersion {
     UNKNOWN = 0;
     O = 26; // First API where JVMTI is supported.
+    P = 28;
   }
 
   // Numeric representation of the device's |serial| and |boot_id| properties.

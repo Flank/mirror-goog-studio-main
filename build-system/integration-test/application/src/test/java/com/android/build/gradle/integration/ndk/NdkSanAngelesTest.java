@@ -70,15 +70,14 @@ public class NdkSanAngelesTest {
 
         // get the outputs.
         Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
-        assertEquals(3, debugOutputs.size());
+        assertEquals(2, debugOutputs.size());
 
         // build a map of expected outputs and their versionCode
-        Map<String, Integer> expected = Maps.newHashMapWithExpectedSize(5);
+        Map<String, Integer> expected = Maps.newHashMapWithExpectedSize(2);
         expected.put("armeabi-v7a", 1000123);
-        expected.put("mips", 2000123);
-        expected.put("x86", 3000123);
+        expected.put("x86", 2000123);
 
-        assertEquals(3, debugOutputs.size());
+        assertEquals(2, debugOutputs.size());
         for (OutputFile output : debugOutputs) {
             for (FilterData filterData : output.getFilters()) {
                 if (filterData.getFilterType().equals(OutputFile.ABI)) {

@@ -39,7 +39,6 @@ service ProfilerService {
   }
 
   // Gets the running processes of a given device
-  // TODO expand with timing information for historical requests.
   rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {
   }
 
@@ -253,7 +252,11 @@ message AgentStatusResponse {
     DETACHED = 2;
   }
   Status status = 1;
-  // The last time a heartbeat was received from the requested agent.
-  // If no heartbeat was ever detected, this returns INT64_MIN.
-  int64 last_timestamp = 2;
+  // Whether the requested process supports advanced profiling (perfa).
+  // For pre-O, since the agent is included wih the app, this returns
+  // true if we receive an heartbeat from the app.
+  // For post-O, since the agent is late-attached during runtime, this
+  // return tures if an JVMTI agent can be attached. (e.g. the app is
+  // debuggable).
+  bool is_agent_attachable = 2;
 }

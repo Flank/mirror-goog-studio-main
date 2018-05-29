@@ -95,7 +95,7 @@ public class MainTest extends AbstractCheckTest {
             if (cleanup != null) {
                 stderr = cleanup.cleanup(stderr);
             }
-            if (!expectedError.trim().equals(stderr.trim())) {
+            if (expectedError != null && !expectedError.trim().equals(stderr.trim())) {
                 assertEquals(expectedError, stderr); // instead of fail: get difference in output
             }
             if (expectedOutput != null) {

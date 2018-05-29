@@ -210,7 +210,7 @@ open class XmlContext(
         // Warn if clients use the non-scoped form? No, there are cases where an
         //  XML detector's error isn't applicable to one particular location (or it's
         //  not feasible to compute it cheaply)
-        //driver.getClient().log(null, "Warning: Issue " + issue
+        // driver.getClient().log(null, "Warning: Issue " + issue
         //        + " was reported without a scope node: Can't be suppressed.");
 
         // For now just check the document root itself

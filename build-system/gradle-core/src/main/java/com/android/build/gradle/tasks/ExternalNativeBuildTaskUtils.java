@@ -496,13 +496,13 @@ public class ExternalNativeBuildTaskUtils {
 
             @NonNull
             @Override
-            public ProgressiveLoggingOutputStream getStandardOutput() {
+            public OutputStream getStandardOutput() {
                 return outputStream;
             }
 
             @NonNull
             @Override
-            public ProgressiveLoggingOutputStream getErrorOutput() {
+            public OutputStream getErrorOutput() {
                 return errorStream;
             }
 
@@ -524,20 +524,37 @@ public class ExternalNativeBuildTaskUtils {
                 }
 
                 @Override
-                public void write(int b) throws IOException {
-                    combinedOutput.write(b);
+                public void write(byte b[], int off, int len) throws IOException {
+                    combinedOutput.write(b, off, len);
                     if (individualOutput != null) {
-                        individualOutput.write(b);
+                        individualOutput.write(b, off, len);
                     }
-                    // Check for /r and /n respectively
-                    if (b == 0x0A || b == 0x0D) {
-                        printBuffer();
-                    } else {
-                        writeBuffer(b);
+                    if (logToInfo) {
+                        for (int i = 0; i < len; i++) {
+                            int value = b[off + i];
+                            // The reason this doesn't double the presented linebreaks is because
+                            // in the \r\n case printBuffer() exits without emitting a linebreak
+                            // when byteCount accumulated by writeBuffer() is still zero. However,
+                            // a single \r or \n will still emit a linebreak.
+                            if (value == '\r' || value == '\n') {
+                                printBuffer();
+                            } else {
+                                writeBuffer(value);
+                            }
+                        }
                     }
                 }
 
+                @Override
+                public void write(int b) throws IOException {
+                    throw new RuntimeException(
+                            "If single byte write is needed then a "
+                                    + "buffered output stream should be used to wrap "
+                                    + "ProgressiveLoggingOutputStream");
+                }
+
                 private void writeBuffer(int b) {
+                    assert logToInfo;
                     if (nextByteIndex == buffer.length) {
                         buffer = Arrays.copyOf(buffer, buffer.length * 2);
                     }
@@ -546,13 +563,12 @@ public class ExternalNativeBuildTaskUtils {
                 }
 
                 private void printBuffer() throws UnsupportedEncodingException {
+                    assert logToInfo;
                     if (nextByteIndex == 0) {
                         return;
                     }
-                    if (logToInfo) {
-                        String line = new String(buffer, 0, nextByteIndex, "UTF-8");
-                        logger.lifecycle(logPrefix + line);
-                    }
+                    String line = new String(buffer, 0, nextByteIndex, "UTF-8");
+                    logger.lifecycle(logPrefix + line);
                     nextByteIndex = 0;
                 }
 

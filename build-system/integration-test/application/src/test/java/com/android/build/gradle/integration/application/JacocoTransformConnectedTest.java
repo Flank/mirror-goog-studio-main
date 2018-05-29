@@ -22,9 +22,15 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.utils.FileUtils;
+import com.google.common.truth.Truth;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,10 +47,8 @@ public class JacocoTransformConnectedTest {
 
     @Before
     public void setUp() throws IOException {
-        Files.append(
-                "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
-                project.getBuildFile(),
-                Charsets.UTF_8);
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true");
     }
 
     @Test
@@ -53,6 +57,57 @@ public class JacocoTransformConnectedTest {
         adb.exclusiveAccess();
         project.executor().run("connectedCheck");
         assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
+        assertThat(
+                        project.file(
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                .exists();
+    }
+
+    @Test
+    @Category(DeviceTests.class)
+    public void connectedCheckWithOrchestrator() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.defaultConfig.minSdkVersion 16\n"
+                        + "android.defaultConfig.testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
+                        + "android.testOptions.execution 'ANDROID_TEST_ORCHESTRATOR'\n"
+                        + "dependencies {\n"
+                        + "  androidTestImplementation 'com.android.support.test:runner:1.0.2'\n"
+                        + "  androidTestUtil 'com.android.support.test:orchestrator:1.0.2'\n"
+                        + "}");
+
+        String testSrc =
+                "package com.example.helloworld;\n"
+                        + "\n"
+                        + "import android.support.test.runner.AndroidJUnit4;\n"
+                        + "import org.junit.Test;\n"
+                        + "import org.junit.runner.RunWith;\n"
+                        + "\n"
+                        + "@RunWith(AndroidJUnit4.class)\n"
+                        + "public class ExampleTest {\n"
+                        + "    @Test\n"
+                        + "    public void test1() { }\n"
+                        + "\n"
+                        + "    @Test\n"
+                        + "    public void test2() { }\n"
+                        + "}\n";
+        Path exampleTest =
+                project.getTestDir()
+                        .toPath()
+                        .resolve("src/androidTest/java/com/example/helloworld/ExampleTest.java");
+        Files.createDirectories(exampleTest.getParent());
+        Files.write(exampleTest, testSrc.getBytes());
+
+        adb.exclusiveAccess();
+        project.executor().run("connectedCheck");
+        List<File> files =
+                FileUtils.find(
+                        project.file("build/outputs/code-coverage/connected"),
+                        Pattern.compile(".*\\.ec"));
+
+        // ExampleTest has 2 methods, and there should be at least 2 .ec files
+        Truth.assertThat(files.size()).isAtLeast(2);
         assertThat(
                         project.file(
                                 "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))

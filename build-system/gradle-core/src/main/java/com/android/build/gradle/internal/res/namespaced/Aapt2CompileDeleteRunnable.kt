@@ -28,9 +28,16 @@ class Aapt2CompileDeleteRunnable @Inject constructor(
     override fun run() {
         val outDir = params.outputDirectory.toPath()
         params.deletedInputs.forEach {
-            Files.delete(outDir.resolve(Aapt2RenamingConventions.compilationRename(it)))
+            val compiledName = Aapt2RenamingConventions.compilationRename(it)
+            Files.delete(outDir.resolve(compiledName))
+            if (params.partialRDirectory != null) {
+                Files.delete(params.partialRDirectory.toPath().resolve("$compiledName-R.txt"))
+            }
         }
     }
 
-    class Params(val outputDirectory: File, val deletedInputs: Iterable<File>) : Serializable
+    class Params(
+            val outputDirectory: File,
+            val deletedInputs: Iterable<File>,
+            val partialRDirectory: File? = null) : Serializable
 }

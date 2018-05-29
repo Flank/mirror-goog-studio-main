@@ -39,7 +39,7 @@ public class GetContentDescriptionOverrideDetector extends Detector implements S
 
     public static final Issue ISSUE =
             Issue.create(
-                    "GetContentDescriptionOverride", //$NON-NLS-1$
+                    "GetContentDescriptionOverride",
                     "Overriding `getContentDescription()` on a View",
                     "Overriding `getContentDescription()` may prevent some accessibility services from "
                             + "properly navigating content exposed by your view. Instead, call "

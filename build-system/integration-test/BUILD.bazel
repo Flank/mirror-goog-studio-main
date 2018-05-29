@@ -66,6 +66,9 @@ SUPPORT_LIBRARY_JARS = [
 ANDROID_ARCH_DEPS = [
     "android/arch/core/runtime/1.0.0:aar",
     "android/arch/lifecycle/common/1.1.0:jar",
+    "android/arch/navigation/navigation-common/1.0.0-alpha01:aar",
+    "android/arch/navigation/navigation-fragment/1.0.0-alpha01:aar",
+    "android/arch/navigation/navigation-runtime/1.0.0-alpha01:aar",
     "android/arch/persistence/db-framework/1.0.0:aar",
     "android/arch/persistence/db/1.0.0:aar",
     "android/arch/persistence/room/common/1.0.0:jar",

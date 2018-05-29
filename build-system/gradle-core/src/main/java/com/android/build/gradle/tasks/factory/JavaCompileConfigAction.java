@@ -26,6 +26,7 @@ import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.PathSensitivity;
 
 /**
  * Configuration Action for a JavaCompile task.
@@ -177,21 +178,25 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             if (variantType.isBaseModule()) {
                 javacTask
                         .getInputs()
-                        .file(
+                        .files(
                                 artifacts
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
-                                        .get());
+                                        .get())
+                        .withPropertyName("databinding.baseFeatureInfoDir")
+                        .withPathSensitivity(PathSensitivity.RELATIVE);
             } else if (variantType.isFeatureSplit()) {
                 javacTask
                         .getInputs()
-                        .file(
+                        .files(
                                 artifacts
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO)
-                                        .get());
+                                        .get())
+                        .withPropertyName("databinding.featureInfoDir")
+                        .withPathSensitivity(PathSensitivity.RELATIVE);
             }
         }
 

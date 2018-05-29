@@ -222,7 +222,7 @@ class MinifyFeaturesTest(
                     .appendToBuild(
                         """
                             android {
-	                            dynamicFeatures = [':otherFeature1', ':otherFeature2']
+	                            dynamicFeatures = [':foo:otherFeature1', ':otherFeature2']
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
                                     minified {
@@ -601,7 +601,7 @@ class MinifyFeaturesTest(
             .subproject(":lib2", lib2)
             .subproject(":lib3", lib3)
             .subproject(":baseModule", baseModule)
-            .subproject(":otherFeature1", otherFeature1)
+            .subproject(":foo:otherFeature1", otherFeature1)
             .subproject(":otherFeature2", otherFeature2)
             .dependency(otherFeature1, lib2)
             // otherFeature1 depends on lib3 to test having multiple library module dependencies.
@@ -718,7 +718,7 @@ class MinifyFeaturesTest(
         assertThat(baseModuleApk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
 
         val otherFeature1Apk =
-            project.getSubproject("otherFeature1")
+            project.getSubproject(":foo:otherFeature1")
                 .let {
                     when (multiApkMode) {
                         MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
@@ -764,10 +764,11 @@ class MinifyFeaturesTest(
     fun testSyncError() {
         Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
         Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
-        project.getSubproject("otherFeature1").buildFile.appendText(
-            "android.buildTypes.minified.minifyEnabled true")
+        project.getSubproject(":foo:otherFeature1")
+            .buildFile
+            .appendText("android.buildTypes.minified.minifyEnabled true")
         val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        assertThat(model.rootBuildModelMap[":otherFeature1"])
+        assertThat(model.rootBuildModelMap[":foo:otherFeature1"])
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("cannot set minifyEnabled to true.")

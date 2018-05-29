@@ -112,11 +112,13 @@ public final class LocationManagerWrapper {
             int powerReq,
             LocationListener listener,
             PendingIntent intent) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (listener != null) {
             if (!listenerIdMap.containsKey(listener)) {
-                listenerIdMap.put(listener, EventIdGenerator.nextId());
+                listenerIdMap.put(listener, EnergyUtils.nextId());
             }
             sendListenerLocationUpdateRequested(
+                    timestamp,
                     listenerIdMap.get(listener),
                     provider,
                     minTime,
@@ -129,9 +131,10 @@ public final class LocationManagerWrapper {
                     StackTrace.getStackTrace(1));
         } else if (intent != null) {
             if (!intentIdMap.containsKey(intent)) {
-                intentIdMap.put(intent, EventIdGenerator.nextId());
+                intentIdMap.put(intent, EnergyUtils.nextId());
             }
             sendIntentLocationUpdateRequested(
+                    timestamp,
                     intentIdMap.get(intent),
                     provider,
                     minTime,
@@ -188,19 +191,22 @@ public final class LocationManagerWrapper {
      */
     public static void wrapRemoveUpdates(
             LocationManager locationManager, LocationListener listener) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!listenerIdMap.containsKey(listener)) {
-            listenerIdMap.put(listener, EventIdGenerator.nextId());
+            listenerIdMap.put(listener, EnergyUtils.nextId());
         }
         sendListenerLocationUpdateRemoved(
                 // API removeUpdates is one level down of user code.
-                listenerIdMap.get(listener), StackTrace.getStackTrace(1));
+                timestamp, listenerIdMap.get(listener), StackTrace.getStackTrace(1));
     }
 
     public static void wrapRemoveUpdates(LocationManager locationManager, PendingIntent intent) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!intentIdMap.containsKey(intent)) {
-            intentIdMap.put(intent, EventIdGenerator.nextId());
+            intentIdMap.put(intent, EnergyUtils.nextId());
         }
         sendIntentLocationUpdateRemoved(
+                timestamp,
                 intentIdMap.get(intent),
                 intent.getCreatorPackage(),
                 intent.getCreatorUid(),
@@ -215,16 +221,18 @@ public final class LocationManagerWrapper {
      * @param location the location parameter passed to the original method.
      */
     public static void wrapOnLocationChanged(LocationListener listener, Location location) {
-        listener.onLocationChanged(location);
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!listenerIdMap.containsKey(listener)) {
-            listenerIdMap.put(listener, EventIdGenerator.nextId());
+            listenerIdMap.put(listener, EnergyUtils.nextId());
         }
         sendListenerLocationChanged(
+                timestamp,
                 listenerIdMap.get(listener),
                 location.getProvider(),
                 location.getAccuracy(),
                 location.getLatitude(),
                 location.getLongitude());
+        listener.onLocationChanged(location);
     }
 
     /**
@@ -240,6 +248,7 @@ public final class LocationManagerWrapper {
             PendingIntent pendingIntent, Location location) {
         if (intentIdMap.containsKey(pendingIntent)) {
             sendIntentLocationChanged(
+                    EnergyUtils.getCurrentTime(),
                     intentIdMap.get(pendingIntent),
                     location.getProvider(),
                     location.getAccuracy(),
@@ -252,6 +261,7 @@ public final class LocationManagerWrapper {
 
     // Native functions to send location events to perfd.
     public static native void sendListenerLocationUpdateRequested(
+            long timestamp,
             int eventId,
             String provider,
             long interval,
@@ -263,6 +273,7 @@ public final class LocationManagerWrapper {
             String stack);
 
     public static native void sendIntentLocationUpdateRequested(
+            long timestamp,
             int eventId,
             String provider,
             long interval,
@@ -275,15 +286,22 @@ public final class LocationManagerWrapper {
             int creatorUid,
             String stack);
 
-    public static native void sendListenerLocationUpdateRemoved(int eventId, String stack);
+    public static native void sendListenerLocationUpdateRemoved(
+            long timestamp, int eventId, String stack);
 
     public static native void sendIntentLocationUpdateRemoved(
-            int eventId, String creatorPackage, int creatorUid, String stack);
+            long timestamp, int eventId, String creatorPackage, int creatorUid, String stack);
 
     private static native void sendListenerLocationChanged(
-            int eventId, String provider, float accuracy, double latitude, double longitude);
+            long timestamp,
+            int eventId,
+            String provider,
+            float accuracy,
+            double latitude,
+            double longitude);
 
     public static native void sendIntentLocationChanged(
+            long timestamp,
             int eventId,
             String provider,
             float accuracy,

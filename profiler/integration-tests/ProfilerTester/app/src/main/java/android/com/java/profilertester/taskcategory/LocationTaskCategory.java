@@ -259,7 +259,9 @@ public final class LocationTaskCategory extends TaskCategory {
                                     });
             countDownLatch.await();
             Location location = locationTask.getResult();
-            return mTaskName + " update completed " + location.toString();
+            return mTaskName
+                    + " update completed: "
+                    + (location == null ? "no location data" : location.toString());
         }
 
         @NonNull
@@ -324,7 +326,7 @@ public final class LocationTaskCategory extends TaskCategory {
                     locationRequest, locationCallback, mLooper);
             countDownLatch.await(UPDATE_INTERVAL_MS * (UPDATE_NUMBER + 1), TimeUnit.SECONDS);
 
-            locationProviderClient.removeLocationUpdates(new LocationCallback());
+            locationProviderClient.removeLocationUpdates(locationCallback);
 
             return mTaskName
                     + " update completed, changed "

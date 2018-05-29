@@ -71,7 +71,7 @@ class NoCompressTest {
 
         FileUtils.createZipFilesystem(project.getIntermediateFile("apks_from_bundle", "debug", "makeApkFromBundleForDebug", "bundle.apks").toPath()).use { apks ->
             extracted.outputStream().buffered().use {
-                Files.copy(apks.getPath("base-master.apk"), it)
+                Files.copy(apks.getPath("splits/base-master.apk"), it)
             }
         }
         verifyCompression(extracted)

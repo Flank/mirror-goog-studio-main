@@ -816,7 +816,7 @@ fun isStaticInnerClass(classNode: ClassNode): Boolean {
     // because the static flag only appears on methods and fields in the class
     // file. Instead, look for the synthetic this pointer.
 
-    val fieldList = classNode.fields// ASM API
+    val fieldList = classNode.fields // ASM API
     for (f in fieldList) {
         val field = f as FieldNode
         if (field.name.startsWith("this$") && field.access and Opcodes.ACC_SYNTHETIC != 0) {
@@ -1020,7 +1020,7 @@ fun getStyleAttributes(
                     val srv = rv as StyleResourceValue?
                     val namespace = MoreObjects.firstNonNull(
                         ResourceNamespace.fromNamespaceUri(namespaceUri),
-                        ResourceNamespace.TODO
+                        ResourceNamespace.TODO()
                     )
                     val value = srv!!.getItem(namespace, attribute)
                     if (value != null) {
@@ -1638,7 +1638,7 @@ fun getPrimitiveType(autoBoxedType: String): String? {
 fun resolveManifestName(element: Element): String {
     var className = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
     className = className.replace('$', '.')
-    if (className.startsWith(".")) { //$NON-NLS-1$
+    if (className.startsWith(".")) {
         // If the activity class name starts with a '.', it is shorthand for prepending the
         // package name specified in the manifest.
         val pkg = element.ownerDocument

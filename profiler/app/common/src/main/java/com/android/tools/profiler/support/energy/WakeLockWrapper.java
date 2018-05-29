@@ -73,6 +73,9 @@ public final class WakeLockWrapper {
     private static final ThreadLocal<ReleaseParams> releaseWakeLockData =
             new ThreadLocal<ReleaseParams>();
 
+    /** Use a thread-local to store the timestamp upon entering {@link WakeLock#release(int)}. */
+    private static final ThreadLocal<Long> releaseTimestamp = new ThreadLocal<Long>();
+
     /** Used by acquire and release hooks to look up the generated ID by wake lock instance. */
     private static final Map<WakeLock, Integer> eventIdMap = new HashMap<WakeLock, Integer>();
 
@@ -124,8 +127,9 @@ public final class WakeLockWrapper {
      * @param timeout the timeout parameter passed to the original method.
      */
     public static void wrapAcquire(WakeLock wakeLock, long timeout) {
+        long timestamp = EnergyUtils.getCurrentTime();
         if (!eventIdMap.containsKey(wakeLock)) {
-            eventIdMap.put(wakeLock, EventIdGenerator.nextId());
+            eventIdMap.put(wakeLock, EnergyUtils.nextId());
         }
         CreationParams creationParams = new CreationParams(1, DEFAULT_TAG);
         if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
@@ -147,6 +151,7 @@ public final class WakeLockWrapper {
             }
         }
         sendWakeLockAcquired(
+                timestamp,
                 eventIdMap.get(wakeLock),
                 creationParams.myLevelAndFlags,
                 creationParams.myTag,
@@ -163,6 +168,7 @@ public final class WakeLockWrapper {
      * @param flags the flags parameter passed to the original method.
      */
     public static void onReleaseEntry(WakeLock wakeLock, int flags) {
+        releaseTimestamp.set(EnergyUtils.getCurrentTime());
         releaseWakeLockData.set(new ReleaseParams(wakeLock, flags));
     }
 
@@ -174,9 +180,10 @@ public final class WakeLockWrapper {
     public static void onReleaseExit() {
         ReleaseParams releaseParams = releaseWakeLockData.get();
         if (!eventIdMap.containsKey(releaseParams.myWakeLock)) {
-            eventIdMap.put(releaseParams.myWakeLock, EventIdGenerator.nextId());
+            eventIdMap.put(releaseParams.myWakeLock, EnergyUtils.nextId());
         }
         sendWakeLockReleased(
+                releaseTimestamp.get(),
                 eventIdMap.get(releaseParams.myWakeLock),
                 releaseParams.myFlags,
                 releaseParams.myWakeLock.isHeld(),
@@ -186,8 +193,8 @@ public final class WakeLockWrapper {
 
     // Native functions to send wake lock events to perfd.
     private static native void sendWakeLockAcquired(
-            int eventId, int flags, String tag, long timeout, String stack);
+            long timestamp, int eventId, int flags, String tag, long timeout, String stack);
 
     private static native void sendWakeLockReleased(
-            int eventId, int releaseFlags, boolean isHeld, String stack);
+            long timestamp, int eventId, int releaseFlags, boolean isHeld, String stack);
 }
