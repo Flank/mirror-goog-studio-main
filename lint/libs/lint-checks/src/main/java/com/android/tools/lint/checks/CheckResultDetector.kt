@@ -164,6 +164,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             curr = curr.uastParent ?: return true
         }
 
+        @Suppress("RedundantIf")
         if (curr is UBlockExpression) {
             if (curr.uastParent is ULambdaExpression) {
                 // Lambda block: for now assume used (e.g. parameter
@@ -200,6 +201,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return true
             }
             return isExpressionValueUnused(parent)
+        } else if (curr is UMethod && curr.isConstructor) {
+            return true
         } else {
             // Some other non block node type, such as assignment,
             // method declaration etc: not unused
