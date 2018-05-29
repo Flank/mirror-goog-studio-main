@@ -27,7 +27,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
-class IncorrectDslUsageTest {
+class AbiRelatedDslUsageTest {
 
     @get:Rule
     var project = GradleTestProject.builder()
@@ -36,48 +36,59 @@ class IncorrectDslUsageTest {
 
     @Test
     fun incorrectSupportedAbisAndSplitsInformation() {
+        testSupportedAbisAndSplitsInformation(false)
+    }
 
-            TestFileUtils.appendToFile(project.buildFile, "\n" +
-                    "apply plugin: 'com.android.application'\n" +
-                    "android {\n" +
-                    "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                    "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
-                    "    defaultConfig {\n" +
-                    "        applicationId \"demo.bug\"\n" +
-                    "        minSdkVersion 21\n" +
-                    "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n" +
-                    "        targetSdkVersion 27\n" +
-                    "        versionCode 1\n" +
-                    "        versionName \"1.0\"\n" +
-                    "        testInstrumentationRunner \"android.support.test.runner.AndroidJUnitRunner\"\n" +
-                    "        ndk {\n" +
-                    "            abiFilters \"x86\"\n" +
-                    "        }\n" +
-                    "      }\n" +
-                    "      splits {\n" +
-                    "        abi {\n" +
-                    "            enable true\n" +
-                    "            reset()\n" +
-                    "            include 'armeabi-v7a'\n" +
-                    "            universalApk false\n" +
-                    "        }\n" +
-                    "      }\n" +
-                    "}\n")
+    @Test
+    fun correctSupportedAbisAndSplitsInformation() {
+        testSupportedAbisAndSplitsInformation(true)
+    }
+
+    private fun testSupportedAbisAndSplitsInformation(isUniversalApkRequested: Boolean) {
+        TestFileUtils.appendToFile(project.buildFile, "\n" +
+                "apply plugin: 'com.android.application'\n" +
+                "android {\n" +
+                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
+                "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
+                "    defaultConfig {\n" +
+                "        applicationId \"demo.bug\"\n" +
+                "        minSdkVersion 21\n" +
+                "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n" +
+                "        targetSdkVersion 27\n" +
+                "        versionCode 1\n" +
+                "        versionName \"1.0\"\n" +
+                "        testInstrumentationRunner \"android.support.test.runner.AndroidJUnitRunner\"\n" +
+                "        ndk {\n" +
+                "            abiFilters \"x86\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "      splits {\n" +
+                "        abi {\n" +
+                "            enable true\n" +
+                "            reset()\n" +
+                "            include 'armeabi-v7a'\n" +
+                "            universalApk $isUniversalApkRequested \n" +
+                "        }\n" +
+                "      }\n" +
+                "}\n")
 
         // Query the model to get the incorrect DSL declaration.
         val model : AndroidProject = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel
 
-        val dslIssue = TruthHelper.assertThat(model).hasIssue(
+        if (isUniversalApkRequested) {
+            TruthHelper.assertThat(model).hasIssueSize(0)
+        } else {
+            val dslIssue = TruthHelper.assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_GENERIC)
 
-        assertThat(dslIssue.message).contains("x86")
-        assertThat(dslIssue.message).contains("armeabi-v7a")
+            assertThat(dslIssue.message).contains("x86")
+            assertThat(dslIssue.message).contains("armeabi-v7a")
+        }
     }
 
     @Test
     fun incorrectAbiRequestedWithNdkFilters() {
-
         TestFileUtils.appendToFile(project.buildFile, "\n" +
                 "apply plugin: 'com.android.application'\n" +
                 "android {\n" +
@@ -110,7 +121,6 @@ class IncorrectDslUsageTest {
 
     @Test
     fun incorrectAbiRequestedWithSplits() {
-
         TestFileUtils.appendToFile(project.buildFile, "\n" +
                 "apply plugin: 'com.android.application'\n" +
                 "android {\n" +
