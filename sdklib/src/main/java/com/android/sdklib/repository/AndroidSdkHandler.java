@@ -62,6 +62,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -628,8 +629,12 @@ public final class AndroidSdkHandler {
                 progress.logError("Failed to set up addons source provider", e);
             }
 
-            String url = String.format(REPO_URL_PATTERN, getBaseUrl(progress),
-                    REPOSITORY_MODULE.getNamespaceVersionMap().size());
+            String url =
+                    String.format(
+                            Locale.US,
+                            REPO_URL_PATTERN,
+                            getBaseUrl(progress),
+                            REPOSITORY_MODULE.getNamespaceVersionMap().size());
             mRepositorySourceProvider = new ConstantSourceProvider(url, "Android Repository",
                     ImmutableSet.of(REPOSITORY_MODULE, RepoManager.getGenericModule()));
         }

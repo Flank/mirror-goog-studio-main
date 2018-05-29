@@ -8,6 +8,7 @@ iml_module(
     name = "studio.android.sdktools.sdklib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdklib.iml"],
+    test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -92,6 +93,7 @@ kotlin_test(
     name = "tools.tests",
     # TODO: Why are the xml files not under resources?
     srcs = ["src/test/java"],
+    data = ["//prebuilts/studio/sdk:platforms/latest"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(
         include = [

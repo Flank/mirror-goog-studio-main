@@ -43,11 +43,11 @@ import com.android.sdklib.repository.legacy.local.LocalSdk;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -173,7 +173,11 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
             if (res == null) {
                 res = factory.createLicenseType();
                 res.setValue(mWrapped.getSourceProperties().getProperty(PkgProps.PKG_LICENSE));
-                res.setId(String.format("license-%X", mWrapped.getSourceProperties().hashCode()));
+                res.setId(
+                        String.format(
+                                Locale.US,
+                                "license-%X",
+                                mWrapped.getSourceProperties().hashCode()));
                 res.setType("text");
             }
             return res;

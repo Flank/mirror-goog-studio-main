@@ -18,11 +18,11 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Maps;
-
+import java.io.InputStream;
+import java.util.Locale;
+import java.util.Map;
 import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Represents a versioned set of generated classes corresponding to a versioned XML schema.
@@ -67,12 +67,13 @@ public class SchemaModule<T> {
         for (int i = 1; ; i++) {
             Class<? extends T> objectFactory;
             try {
-                objectFactory = (Class<? extends T>)Class.forName(String.format(ofPattern, i));
+                objectFactory =
+                        (Class<? extends T>) Class.forName(String.format(Locale.US, ofPattern, i));
             } catch (ClassNotFoundException e) {
                 break;
             }
-            String xsdLocation = String.format(xsdPattern, i);
-            version = new SchemaModuleVersion<T>(objectFactory, xsdLocation);
+            String xsdLocation = String.format(Locale.US, xsdPattern, i);
+            version = new SchemaModuleVersion<>(objectFactory, xsdLocation);
             mVersions.put(version.getNamespace(), version);
         }
         mLatestVersion = version;

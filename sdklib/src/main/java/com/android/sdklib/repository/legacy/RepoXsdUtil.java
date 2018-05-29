@@ -19,18 +19,16 @@ package com.android.sdklib.repository.legacy;
 import com.android.repository.api.RepoManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.collect.Lists;
-
+import java.io.InputStream;
+import java.util.List;
+import java.util.Locale;
 import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.InputStream;
-import java.util.List;
-
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.stream.StreamSource;
 
 /**
  * Utilities related to the respository XSDs.
@@ -55,20 +53,25 @@ public class RepoXsdUtil {
      * @param version     The XML schema revision number, an integer &ge; 1.
      */
     public static StreamSource[] getXsdStream(final String rootElement, int version) {
-        String filename = String.format("%1$s-%2$02d.xsd", rootElement, version);      //$NON-NLS-1$
+        String filename =
+                String.format(Locale.US, "%1$s-%2$02d.xsd", rootElement, version); //$NON-NLS-1$
         final List<StreamSource> streams = Lists.newArrayList();
         InputStream stream = null;
         try {
             stream = RepoXsdUtil.class.getResourceAsStream(filename);
             if (stream == null) {
-                filename = String.format("%1$s-%2$d.xsd", rootElement, version);      //$NON-NLS-1$
+                filename =
+                        String.format(
+                                Locale.US, "%1$s-%2$d.xsd", rootElement, version); //$NON-NLS-1$
                 stream = RepoXsdUtil.class.getResourceAsStream(filename);
             }
             if (stream == null) {
                 // Try the alternate schemas that are not published yet.
                 // This allows us to internally test with new schemas before the
                 // public repository uses it.
-                filename = String.format("-%1$s-%2$02d.xsd", rootElement, version);      //$NON-NLS-1$
+                filename =
+                        String.format(
+                                Locale.US, "-%1$s-%2$02d.xsd", rootElement, version); //$NON-NLS-1$
                 stream = RepoXsdUtil.class.getResourceAsStream(filename);
             }
 
