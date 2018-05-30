@@ -24,6 +24,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -103,6 +104,7 @@ public final class ProfilerInitializer {
 
         @Override
         public void projectsEvaluated(Gradle gradle) {
+            gradle.allprojects(this::collectProjectInfo);
             if (profileDirProperty != null) {
                 this.profileDir = gradle.getRootProject().file(profileDirProperty).toPath();
             } else if (enableProfileJson) {
@@ -110,6 +112,13 @@ public final class ProfilerInitializer {
                 this.profileDir =
                         gradle.getRootProject().getBuildDir().toPath().resolve(PROFILE_DIRECTORY);
             }
+        }
+
+        private void collectProjectInfo(Project project) {
+            GradleBuildProject.Builder analyticsProject =
+                    ProcessProfileWriter.getProject(project.getPath());
+            project.getPlugins()
+                    .all((plugin) -> analyticsProject.addPlugin(AnalyticsUtil.toProto(plugin)));
         }
 
         @Override

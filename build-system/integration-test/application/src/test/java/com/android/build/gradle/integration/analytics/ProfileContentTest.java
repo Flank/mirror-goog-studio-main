@@ -74,7 +74,12 @@ public class ProfileContentTest {
             GradleBuildProject gbp = profile.getProject(0);
             assertThat(gbp.getCompileSdk()).isEqualTo(GradleTestProject.getCompileSdkHash());
             assertThat(gbp.getKotlinPluginVersion()).isEqualTo(project.getKotlinVersion());
-
+            assertThat(gbp.getPluginList())
+                    .contains(
+                            GradleBuildProject.GradlePlugin
+                                    .ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER);
+            assertThat(gbp.getPluginList())
+                    .doesNotContain(GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN);
             assertThat(gbp.getVariantCount()).isGreaterThan(0);
             GradleBuildVariant gbv = gbp.getVariant(0);
             assertThat(gbv.getMinSdkVersion().getApiLevel()).isEqualTo(3);

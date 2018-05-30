@@ -36,6 +36,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.stats.DeviceInfo;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import java.io.IOException;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.gradle.api.Plugin;
 import org.gradle.api.Task;
 import org.junit.Test;
 
@@ -343,5 +345,23 @@ public class AnalyticsUtilTest {
                 .containsExactly(
                         com.android.tools.build.gradle.internal.profile.StringOption
                                 .IDE_BUILD_TARGET_ABI_VALUE);
+    }
+
+    @Test
+    public void includedPluginNames() throws IOException {
+        checkHaveAllEnumValues(
+                Plugin.class,
+                (pluginClass) -> AnalyticsUtil.otherPluginToProto(pluginClass.getName()),
+                (pluginClass) -> AnalyticsUtil.getOtherPluginEnumName(pluginClass.getName()));
+    }
+
+    @Test
+    public void otherPluginNames() {
+        assertThat(
+                        AnalyticsUtil.otherPluginToProto(
+                                "com.google.gms.googleservices.GoogleServicesPlugin"))
+                .isEqualTo(
+                        GradleBuildProject.GradlePlugin
+                                .COM_GOOGLE_GMS_GOOGLESERVICES_GOOGLESERVICESPLUGIN);
     }
 }
