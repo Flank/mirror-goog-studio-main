@@ -25,7 +25,7 @@
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="module" module-name="android.sdktools.builder-model" exported="" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
-    <orderEntry type="module" module-name="analytics-protos-base" exported="" />
+    <orderEntry type="library" name="studio-analytics-proto" level="project" />
     <orderEntry type="module" module-name="apkzlib" exported="" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="sdklib-base" />

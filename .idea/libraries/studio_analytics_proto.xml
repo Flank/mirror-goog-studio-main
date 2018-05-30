@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="studio-analytics-proto">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../out/build/analytics-library/protos/build/classes/java/main" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
