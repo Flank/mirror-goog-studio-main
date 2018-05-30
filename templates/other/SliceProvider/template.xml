@@ -3,6 +3,7 @@
     format="5"
     revision="1"
     name="Slice Provider"
+    minBuildApi="28"
     description="Creates a new SliceProvider component and adds it to your Android manifest.">
 
     <parameter
