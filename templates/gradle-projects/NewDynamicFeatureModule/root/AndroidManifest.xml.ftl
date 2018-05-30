@@ -3,7 +3,7 @@
     package="${packageName}">
     <dist:module
         dist:onDemand="${dynamicFeatureOnDemand?c}"
-	dist:instant="${dynamicFeatureInstant?c}"
+        dist:instant="${dynamicFeatureInstant?c}"
         dist:title="@string/title_${projectSimpleName}">
         <dist:fusing include="${dynamicFeatureFusing?c}" />
     </dist:module>
