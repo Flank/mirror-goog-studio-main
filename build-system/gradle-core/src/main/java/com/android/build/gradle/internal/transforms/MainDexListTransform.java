@@ -233,6 +233,9 @@ public class MainDexListTransform extends BaseProguardAction implements MainDexL
                 "public class * extends android.app.Instrumentation {\n"
                         + "  <init>(); \n"
                         + "  void onCreate(...);\n"
+                        + "  android.app.Application newApplication(...);\n"
+                        + "  void callApplicationOnCreate(android.app.Application);\n"
+                        + "  Z onException(java.lang.Object, java.lang.Throwable);\n"
                         + "}",
                 "public class * extends android.app.Application { "
                         + "  <init>();\n"

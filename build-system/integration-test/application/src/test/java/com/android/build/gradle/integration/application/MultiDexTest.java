@@ -271,6 +271,40 @@ public class MultiDexTest {
         assertThat(testApk).containsMainClass("Lcom/android/tests/basic/OtherActivityTest;");
     }
 
+    @Test
+    public void checkLegacyMultiInstrumentationForAndroidTest()
+            throws IOException, InterruptedException, ProcessException {
+        String someClass =
+                "package example;\n"
+                        + "public class SomeClass {\n"
+                        + "  Object o = new OtherClass();\n"
+                        + "}\n"
+                        + "class OtherClass {}\n";
+        Path someClassPath =
+                project.getTestDir()
+                        .toPath()
+                        .resolve("src/androidTest/java/example/SomeClass.java");
+        Files.createDirectories(someClassPath.getParent());
+        Files.write(someClassPath, someClass.getBytes());
+
+        String instrumentation =
+                "package example;\n"
+                        + "public class MyRunner extends android.app.Instrumentation {\n"
+                        + "  public void callApplicationOnCreate(android.app.Application app) {\n"
+                        + "    new SomeClass();\n"
+                        + "  }\n"
+                        + "}\n";
+        Path instrumentationPath =
+                project.getTestDir().toPath().resolve("src/androidTest/java/example/MyRunner.java");
+        Files.createDirectories(instrumentationPath.getParent());
+        Files.write(instrumentationPath, instrumentation.getBytes());
+
+        executor().run("assembleIcsDebugAndroidTest");
+
+        Apk testApk = project.getTestApk("ics");
+        assertThat(testApk).containsMainClass("Lexample/OtherClass;");
+    }
+
     private void commonApkChecks(String buildType) throws Exception {
         assertThat(project.getApk(ApkType.of(buildType, true), "ics"))
                 .containsClass("Landroid/support/multidex/MultiDexApplication;");
