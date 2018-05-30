@@ -161,7 +161,7 @@ public class JarTestSuiteRunner extends Suite {
                         String className = ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
                         Class<?> aClass = loader.loadClass(className);
                         if (seemsLikeJUnit3(aClass) || seemsLikeJUnit4(aClass)) {
-                            testClasses.add(aClass);
+                            testClasses.add(checkNotAbstract(aClass));
                         }
                     }
                 }
@@ -181,5 +181,13 @@ public class JarTestSuiteRunner extends Suite {
         Predicate<Method> hasTestAnnotation = method -> method.isAnnotationPresent(Test.class);
         return aClass.isAnnotationPresent(RunWith.class)
                 || Arrays.stream(aClass.getMethods()).anyMatch(hasTestAnnotation);
+    }
+
+    private static Class<?> checkNotAbstract(Class<?> aClass) {
+        if (Modifier.isAbstract(aClass.getModifiers())) {
+            throw new RuntimeException(
+                    String.format("Test class '%1$s' cannot be abstract.", aClass.getName()));
+        }
+        return aClass;
     }
 }
