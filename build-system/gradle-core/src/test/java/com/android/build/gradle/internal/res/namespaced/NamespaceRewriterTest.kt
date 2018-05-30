@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.ide.common.symbols.SymbolTable
 import com.android.testutils.TestResources
-import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -293,5 +292,181 @@ class NamespaceRewriterTest {
     </application>
 
 </manifest>""")
+    }
+
+    @Test
+    fun rewriteValuesFile() {
+        val original = temporaryFolder.newFile("values.xml")
+        FileUtils.writeToFile(original, """<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="app_name">@string/string</string>
+    <string name="string">string</string>
+    <string name="activity_name">foo</string>
+    <string name="activity_ref">@string/activity_name</string>
+
+    <integer name="version_code">@integer/remote_value</integer>
+
+    <style name="MyStyle" parent="@style/Parent">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#008</item>
+    </style>
+
+    <style name="MyStyle2" parent="Parent">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#008</item>
+        <item name="showText">true</item>
+    </style>
+
+    <declare-styleable name="PieChart">
+        <attr name="showText" format="boolean" />
+        <attr name="labelPosition" format="enum">
+            <enum name="left" value="0"/>
+            <enum name="right" value="1"/>
+        </attr>
+    </declare-styleable>
+
+</resources>""")
+        val namespaced = File(temporaryFolder.newFolder("namespaced", "values") , "values.xml")
+        // TODO: add mock platform attributes, styles and styleables
+        val moduleTable = SymbolTable.builder()
+                .tablePackage("com.example.module")
+                .add(symbol("integer", "version_code"))
+                .add(symbol("string", "app_name"))
+                .add(symbol("string", "string")) // just make sure we don't rewrite the types
+                .add(symbol("string", "activity_name")) // overrides library string
+                .add(symbol("string", "activity_ref")) // to make sure we will reference the app one
+                .add(symbol("attr", "showText"))
+                .build()
+        val dependencyTable = SymbolTable.builder()
+                .tablePackage("com.example.dependency")
+                .add(symbol("string", "reference"))
+                .add(symbol("integer", "remote_value"))
+                .add(symbol("string", "activity_name"))
+                .add(symbol("style", "Parent"))
+                .build()
+
+        NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
+                .rewriteValuesFile(original, namespaced)
+
+        assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
+                """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">@com.example.module:string/string</string>
+    <string name="string">string</string>
+    <string name="activity_name">foo</string>
+    <string name="activity_ref">@com.example.module:string/activity_name</string>
+
+    <integer name="version_code">@com.example.dependency:integer/remote_value</integer>
+
+    <style name="MyStyle" parent="@com.example.dependency:style/Parent">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#008</item>
+    </style>
+
+    <style name="MyStyle2" parent="@com.example.dependency:style/Parent">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#008</item>
+        <item name="com.example.module:showText">true</item>
+    </style>
+
+    <declare-styleable name="PieChart">
+        <attr name="showText" format="boolean" />
+        <attr name="labelPosition" format="enum">
+            <enum name="left" value="0" />
+            <enum name="right" value="1" />
+        </attr>
+    </declare-styleable>
+
+</resources>""")
+    }
+
+    @Test
+    fun rewriteLayoutFile() {
+        val original = temporaryFolder.newFile("layout.xml")
+        FileUtils.writeToFile(original, """<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:custom="http://schemas.android.com/apk/res/com.example.customviews"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.example.module.PieChart
+        custom:showText="true"
+        custom:labelPosition="left" />
+
+</LinearLayout>""")
+        val namespaced = File(temporaryFolder.newFolder("namespaced", "layout") , "layout.xml")
+        val moduleTable = SymbolTable.builder()
+                .tablePackage("com.example.module")
+                .add(symbol("layout", "activity_main"))
+                .add(symbol("string", "text"))
+                .add(symbol("attr", "labelPosition"))
+                .add(symbol("attr", "showText"))
+                .build()
+        val dependencyTable = SymbolTable.builder()
+                .tablePackage("com.example.dependency")
+                .add(symbol("string", "appbar_scrolling_view_behavior"))
+                .build()
+        val coordinatorlayoutTable = SymbolTable.builder()
+                .tablePackage("androidx.coordinatorlayout")
+                .add(symbol("attr", "layout_behavior"))
+                .build()
+        val constraintTable = SymbolTable.builder()
+                .tablePackage("android.support.constraint")
+                .add(symbol("attr", "layout_constraintBottom_toBottomOf"))
+                .add(symbol("attr", "layout_constraintLeft_toLeftOf"))
+                .add(symbol("attr", "layout_constraintRight_toRightOf"))
+                .add(symbol("attr", "layout_constraintTop_toTopOf"))
+                .build()
+
+        NamespaceRewriter(
+                ImmutableList.of(
+                        moduleTable, dependencyTable, coordinatorlayoutTable, constraintTable))
+                .rewriteXmlFile(original, namespaced)
+
+        assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
+                """<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res/com.example.customviews"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    androidx_coordinatorlayout:layout_behavior="@com.example.dependency:string/appbar_scrolling_view_behavior"
+    xmlns:android_support_constraint="http://schemas.android.com/apk/res/android.support.constraint"
+    xmlns:androidx_coordinatorlayout="http://schemas.android.com/apk/res/androidx.coordinatorlayout"
+    xmlns:com_example_dependency="http://schemas.android.com/apk/res/com.example.dependency"
+    xmlns:com_example_module="http://schemas.android.com/apk/res/com.example.module"
+    tools:context=".MainActivity"
+    tools:showIn="@com.example.module:layout/activity_main" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android_support_constraint:layout_constraintBottom_toBottomOf="parent"
+        android_support_constraint:layout_constraintLeft_toLeftOf="parent"
+        android_support_constraint:layout_constraintRight_toRightOf="parent"
+        android_support_constraint:layout_constraintTop_toTopOf="parent"
+        android:text="@com.example.module:string/text" />
+
+    <com.example.module.PieChart
+        custom:labelPosition="left"
+        custom:showText="true" />
+
+</LinearLayout>""")
     }
 }
