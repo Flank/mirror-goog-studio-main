@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_SRC;
 import static com.android.SdkConstants.ATTR_SRC_COMPAT;
 import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.TAG_ANIMATED_VECTOR;
 import static com.android.SdkConstants.TAG_VECTOR;
 
 import com.android.SdkConstants;
@@ -49,8 +50,8 @@ import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -159,7 +160,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
     @Nullable
     @Override
     public Collection<String> getApplicableElements() {
-        return mSkipChecks ? null : Collections.singletonList(TAG_VECTOR);
+        return mSkipChecks ? null : Arrays.asList(TAG_VECTOR, TAG_ANIMATED_VECTOR);
     }
 
     @Nullable
@@ -251,7 +252,8 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
                 continue;
             }
 
-            return TAG_VECTOR.equals(XmlUtils.getRootTagName(file));
+            String rootTagName = XmlUtils.getRootTagName(file);
+            return TAG_VECTOR.equals(rootTagName) || TAG_ANIMATED_VECTOR.equals(rootTagName);
         }
 
         return false;

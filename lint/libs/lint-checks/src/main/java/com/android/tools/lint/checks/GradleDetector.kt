@@ -181,8 +181,8 @@ open class GradleDetector : Detector(), GradleScanner {
 
                             // Don't report if already suppressed with EXPIRING
 
-                            val alreadySuppressed = context.containsCommentSuppress()
-                                    && context.isSuppressedWithComment(
+                            val alreadySuppressed = context.containsCommentSuppress() &&
+                                    context.isSuppressedWithComment(
                                 valueCookie,
                                 EXPIRING_TARGET_SDK_VERSION
                             )

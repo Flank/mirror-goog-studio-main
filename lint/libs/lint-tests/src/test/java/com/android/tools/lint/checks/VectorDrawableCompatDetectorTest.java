@@ -149,4 +149,45 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected);
     }
+
+    public void testAnimatedVector() {
+        // Regression test for
+        //  79950951: Android Studio should display lint warning when referencing an
+        //   AnimatedVectorDrawable using `android:src` instead of `app:srcCompat`
+        lint().files(
+                        xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC),
+                        xml(
+                                "src/main/res/drawable/foo.xml",
+                                ""
+                                        + "<animated-vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+                                        + "    android:drawable=\"@drawable/vd_sample\">\n"
+                                        + "\n"
+                                        + "    <target android:name=\"vector\">\n"
+                                        + "        <aapt:attr name=\"android:animation\">\n"
+                                        + "            <objectAnimator\n"
+                                        + "                android:duration=\"3000\"\n"
+                                        + "                android:propertyName=\"alpha\"\n"
+                                        + "                android:valueFrom=\"1\"\n"
+                                        + "                android:valueTo=\"0\" />\n"
+                                        + "        </aapt:attr>\n"
+                                        + "    </target>\n"
+                                        + "\n"
+                                        + "</animated-vector>\n"),
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:3.2.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
+                                + "    <ImageView android:src=\"@drawable/foo\" />\n"
+                                + "               ~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
 }
