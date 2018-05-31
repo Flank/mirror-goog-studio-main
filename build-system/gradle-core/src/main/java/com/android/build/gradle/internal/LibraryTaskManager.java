@@ -258,7 +258,6 @@ public class LibraryTaskManager extends TaskManager {
                 new LibraryIntermediateJarsTransform(
                         mainClassJar,
                         mainResJar,
-                        null,
                         variantConfig::getPackageFromManifest,
                         extension.getPackageBuildConfig());
         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);

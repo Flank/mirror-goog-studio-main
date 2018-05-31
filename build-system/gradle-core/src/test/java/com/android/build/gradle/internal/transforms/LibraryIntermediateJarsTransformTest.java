@@ -54,7 +54,7 @@ public class LibraryIntermediateJarsTransformTest {
 
         transform =
                 new LibraryIntermediateJarsTransform(
-                        mainClassLocation, resJarLocation, null, () -> packageName, true);
+                        mainClassLocation, resJarLocation, () -> packageName, true);
     }
 
     @After

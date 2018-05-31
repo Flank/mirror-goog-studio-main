@@ -263,17 +263,6 @@ public abstract class LibraryBaseTransform extends Transform {
         return true;
     }
 
-    protected static void jarFolderToLocation(
-            @NonNull File fromFolder,
-            @NonNull File toFile,
-            @Nullable Predicate<String> filter,
-            @Nullable JarMerger.Transformer typedefRemover)
-            throws IOException {
-        try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
-            jarMerger.addDirectory(fromFolder.toPath(), filter, typedefRemover, null);
-        }
-    }
-
     protected static void mergeInputsToLocation(
             @NonNull List<QualifiedContent> qualifiedContentList,
             @NonNull File toFile,

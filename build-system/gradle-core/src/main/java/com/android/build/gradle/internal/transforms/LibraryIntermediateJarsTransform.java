@@ -21,7 +21,6 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
@@ -29,11 +28,11 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.builder.packaging.TypedefRemover;
+import com.android.builder.packaging.JarMerger;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,10 +66,9 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     public LibraryIntermediateJarsTransform(
             @NonNull File mainClassLocation,
             @NonNull File resJarLocation,
-            @Nullable BuildableArtifact typedefRecipe,
             @NonNull Supplier<String> packageNameSupplier,
             boolean packageBuildConfig) {
-        super(mainClassLocation, null, typedefRecipe, packageNameSupplier, packageBuildConfig);
+        super(mainClassLocation, null, null, packageNameSupplier, packageBuildConfig);
         this.resJarLocation = resJarLocation;
     }
 
@@ -95,9 +93,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws TransformException, InterruptedException, IOException {
-        if (typedefRecipe != null && !Iterables.getOnlyElement(typedefRecipe).exists()) {
-            throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
-        }
+        Preconditions.checkState(typedefRecipe == null, "Type def recipe should be null");
         final boolean incrementalDisabled = !invocation.isIncremental();
         List<Pattern> excludePatterns = computeExcludeList();
 
@@ -176,13 +172,8 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                         (CLASS_PATTERN.matcher(archivePath).matches()
                                         || META_INF_PATTERN.matcher(archivePath).matches())
                                 && checkEntry(excludePatterns, archivePath);
-        TypedefRemover typedefRemover =
-                typedefRecipe != null
-                        ? new TypedefRemover()
-                                .setTypedefFile(Iterables.getOnlyElement(typedefRecipe))
-                        : null;
 
-        handleJarOutput(mainClassInputs, mainClassLocation, filter, typedefRemover);
+        handleJarOutput(mainClassInputs, mainClassLocation, filter);
     }
 
     private void handleMainRes(
@@ -196,14 +187,13 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         final Predicate<String> filter =
                 archivePath -> !CLASS_PATTERN.matcher(archivePath).matches();
 
-        handleJarOutput(resJarInputs, resJarLocation, filter, null);
+        handleJarOutput(resJarInputs, resJarLocation, filter);
     }
 
     private static void handleJarOutput(
             @NonNull List<QualifiedContent> inputs,
             @NonNull File toFile,
-            @Nullable Predicate<String> filter,
-            @Nullable TypedefRemover typedefRemover)
+            @Nullable Predicate<String> filter)
             throws IOException {
         if (inputs.size() == 1) {
             QualifiedContent content = inputs.get(0);
@@ -211,10 +201,18 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
             if (content instanceof JarInput) {
                 copyJarWithContentFilter(content.getFile(), toFile, filter);
             } else {
-                jarFolderToLocation(content.getFile(), toFile, filter, typedefRemover);
+                jarFolderToLocation(content.getFile(), toFile, filter);
             }
         } else {
-            mergeInputsToLocation(inputs, toFile, true, filter, typedefRemover);
+            mergeInputsToLocation(inputs, toFile, true, filter, null);
+        }
+    }
+
+    protected static void jarFolderToLocation(
+            @NonNull File fromFolder, @NonNull File toFile, @Nullable Predicate<String> filter)
+            throws IOException {
+        try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
+            jarMerger.addDirectory(fromFolder.toPath(), filter, null, null);
         }
     }
 }
