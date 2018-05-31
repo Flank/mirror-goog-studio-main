@@ -85,7 +85,7 @@ public class ProfileContentTest {
             assertThat(gbv.getMinSdkVersion().getApiLevel()).isEqualTo(3);
             assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isFalse();
             assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse();
-            assertThat(new HashSet<>(getModel.getRawProjectIdList()))
+            assertThat(new HashSet<>(profile.getRawProjectIdList()))
                     .containsExactly("com.example.helloworld");
         }
     }
