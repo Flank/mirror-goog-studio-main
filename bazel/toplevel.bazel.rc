@@ -76,6 +76,10 @@ build:remote --strategy=Closure=remote
 build:remote --genrule_strategy=remote
 build:remote --define=EXECUTOR=remote
 
+# Compute MD5 digests of files with multiple threads. Testing to see if this
+# leads to better performance with RBE. See b/77543953.
+build:remote --experimental_multi_threaded_digest=true
+
 # Enable the remote cache so action results can be shared across machines,
 # developers, and workspaces.
 build:remote --remote_cache=remotebuildexecution.googleapis.com
