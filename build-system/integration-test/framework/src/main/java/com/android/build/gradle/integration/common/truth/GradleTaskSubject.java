@@ -149,18 +149,6 @@ public class GradleTaskSubject extends Subject<GradleTaskSubject, TaskInfo> {
         }
     }
 
-    public void hadChangedInputs() {
-        if (!actual().hadChangedInputs()) {
-            failWithRawMessage("Not true that %s had changed inputs", getDisplaySubject());
-        }
-    }
-
-    public void hadNoChangedInputs() {
-        if (actual().hadChangedInputs()) {
-            failWithRawMessage("Not true that %s had no changed inputs", getDisplaySubject());
-        }
-    }
-
     public void ranBefore(String task) {
         TaskInfo taskInfo = getSubject();
         TaskStateList taskStateList = taskInfo.getTaskStateList();

@@ -182,11 +182,6 @@ public class GradleBuildResult {
     }
 
     @NonNull
-    public Set<String> getInputChangedTasks() {
-        return initTaskStates().getInputChangedTasks();
-    }
-
-    @NonNull
     public Set<String> getSkippedTasks() {
         return initTaskStates().getSkippedTasks();
     }
