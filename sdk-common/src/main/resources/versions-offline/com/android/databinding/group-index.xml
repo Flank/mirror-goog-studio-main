@@ -1,9 +1,9 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <com.android.databinding>
-  <library versions="1.3.3,3.1.2,3.2.0-alpha14"/>
-  <adapters versions="1.3.3,3.1.2,3.2.0-alpha14"/>
+  <library versions="1.3.3,3.1.2,3.2.0-alpha16"/>
+  <adapters versions="1.3.3,3.1.2,3.2.0-alpha16"/>
   <compiler versions="3.1.2,3.2.0-alpha10"/>
   <compilerCommon versions="3.1.2,3.2.0-alpha10"/>
-  <baseLibrary versions="3.1.2,3.2.0-alpha14"/>
+  <baseLibrary versions="3.1.2,3.2.0-alpha16"/>
 </com.android.databinding>
 

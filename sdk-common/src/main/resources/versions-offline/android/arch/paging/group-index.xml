@@ -2,6 +2,6 @@
 <android.arch.paging>
   <runtime versions="1.0.0"/>
   <common versions="1.0.0"/>
-  <rxjava2 versions="1.0.0-alpha1"/>
+  <rxjava2 versions="1.0.0-rc1"/>
 </android.arch.paging>
 
