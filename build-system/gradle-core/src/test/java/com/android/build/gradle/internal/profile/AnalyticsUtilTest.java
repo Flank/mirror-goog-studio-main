@@ -30,7 +30,6 @@ import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
 import com.google.protobuf.Descriptors;
@@ -43,7 +42,6 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Plugin;
@@ -57,12 +55,7 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName,
-                "com.android.build.gradle.tasks.ZipMergingTask",
-                "com.android.build.gradle.tasks.AndroidZip",
-                "com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask",
-                "com.android.build.gradle.internal.res.LinkAndroidResForBundleTask",
-                "com.android.build.gradle.internal.tasks.PipelineToPublicationTask");
+                AnalyticsUtil::getPotentialTaskExecutionTypeName);
     }
 
     @Test
@@ -70,11 +63,7 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Transform.class,
                 AnalyticsUtil::getTransformType,
-                AnalyticsUtil::getPotentialTransformTypeName,
-                "com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform",
-                "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
-                "com.android.build.gradle.internal.pipeline.TestTransform",
-                "com.android.build.gradle.internal.tasks.AppPreBuildTask");
+                AnalyticsUtil::getPotentialTransformTypeName);
     }
 
     @Test
@@ -158,20 +147,15 @@ public class AnalyticsUtilTest {
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
             @NonNull Class<T> itemClass,
             @NonNull Function<Class<T>, U> mappingFunction,
-            @NonNull Function<Class<T>, String> calculateExpectedEnumName,
-            @NonNull String... blackListClasses)
+            @NonNull Function<Class<T>, String> calculateExpectedEnumName)
             throws IOException {
         ClassPath classPath = ClassPath.from(this.getClass().getClassLoader());
-
-        Set<String> blackList = Sets.newHashSet(blackListClasses);
 
         TypeToken<T> taskInterface = TypeToken.of(itemClass);
         List<Class<T>> missingTasks =
                 classPath
                         .getTopLevelClassesRecursive("com.android.build")
                         .stream()
-                        .filter(
-                                info -> !blackList.contains(info.getName()))
                         .map(classInfo -> (Class<T>) classInfo.load())
                         .filter(
                                 clazz ->
