@@ -17,16 +17,21 @@ package com.android.ide.common.gradle.model;
 
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
+import com.android.ide.common.gradle.model.stubs.SyncIssueStub;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,6 +133,51 @@ public class IdeAndroidProjectImplTest {
 
         original.getVariants().add(variant);
         assertEqualsOrSimilar(original, copy);
+        verifyUsageOfImmutableCollections(copy);
+    }
+
+    @Test
+    public void addSyncIssues() throws Throwable {
+        AndroidProject original = new AndroidProjectStub("3.2.0");
+        SyncIssue defaultIssue = new SyncIssueStub();
+        original.getSyncIssues().clear();
+        original.getSyncIssues().add(defaultIssue);
+
+        IdeAndroidProjectImpl copy =
+                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
+
+        // Confirm SyncIssues contain one default issue.
+        Collection<SyncIssue> issues = copy.getSyncIssues();
+        assertThat(issues).hasSize(1);
+        assertThat(issues).contains(defaultIssue);
+
+        // Add SyncIssues.
+        SyncIssue newIssue = new SyncIssueStub("new_message", "new_data", 1, 2);
+        copy.addSyncIssues(asList(defaultIssue, newIssue));
+
+        // Verify that duplicated SyncIssue is not added, and new SyncIssue is added.
+        Collection<SyncIssue> updatedIssues = copy.getSyncIssues();
+        assertThat(updatedIssues).hasSize(2);
+        assertThat(updatedIssues.stream().map(SyncIssue::getData).collect(toList()))
+                .containsExactly("data", "new_data");
+
+        verifyUsageOfImmutableCollections(copy);
+    }
+
+    @Test
+    public void addVariants() throws Throwable {
+        AndroidProject original = new AndroidProjectStub("3.2.0");
+        original.getVariants().clear();
+        Variant variant = new VariantStub();
+        IdeAndroidProjectImpl copy =
+                new IdeAndroidProjectImpl(
+                        original, myModelCache, myDependenciesFactory, singletonList(variant));
+
+        // Verify that new variant is added.
+        Variant newVariant = new VariantStub();
+        copy.addVariants(singletonList(newVariant), myDependenciesFactory);
+        assertThat(copy.getVariants()).hasSize(2);
+
         verifyUsageOfImmutableCollections(copy);
     }
 

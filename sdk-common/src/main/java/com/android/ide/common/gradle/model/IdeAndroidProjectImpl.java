@@ -24,9 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 
 /** Creates a deep copy of an {@link AndroidProject}. */
@@ -52,6 +50,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
+    @NonNull private final Collection<String> myDynamicFeatures;
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
     @Nullable private final String myResourcePrefix;
@@ -60,7 +59,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     private final boolean myLibrary;
     private final int myProjectType;
     private final boolean myBaseSplit;
-    @NonNull private final Collection<String> myDynamicFeatures;
     private final int myHashCode;
 
     public IdeAndroidProjectImpl(
@@ -98,21 +96,23 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                         container -> new IdeProductFlavorContainer(container, modelCache));
         myBuildToolsVersion = copyNewProperty(project::getBuildToolsVersion, null);
         mySyncIssues =
-                copy(
-                        project.getSyncIssues(),
-                        modelCache,
-                        issue -> new IdeSyncIssue(issue, modelCache));
+                new ArrayList<>(
+                        copy(
+                                project.getSyncIssues(),
+                                modelCache,
+                                issue -> new IdeSyncIssue(issue, modelCache)));
         Collection<Variant> variantsToCopy = variants != null ? variants : project.getVariants();
         myVariants =
-                copy(
-                        variantsToCopy,
-                        modelCache,
-                        variant ->
-                                new IdeVariantImpl(
-                                        variant,
-                                        modelCache,
-                                        dependenciesFactory,
-                                        myParsedModelVersion));
+                new ArrayList<>(
+                        copy(
+                                variantsToCopy,
+                                modelCache,
+                                variant ->
+                                        new IdeVariantImpl(
+                                                variant,
+                                                modelCache,
+                                                dependenciesFactory,
+                                                myParsedModelVersion)));
         myVariantNames =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(project.getVariantNames()),
@@ -219,13 +219,13 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @Override
     @NonNull
     public Collection<SyncIssue> getSyncIssues() {
-        return mySyncIssues;
+        return ImmutableList.copyOf(mySyncIssues);
     }
 
     @Override
     @NonNull
     public Collection<Variant> getVariants() {
-        return myVariants;
+        return ImmutableList.copyOf(myVariants);
     }
 
     @Override
@@ -353,6 +353,28 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
         for (Variant variant : myVariants) {
             action.accept((IdeVariant) variant);
+        }
+    }
+
+    @Override
+    public void addVariants(
+            @NonNull Collection<Variant> variants, @NonNull IdeDependenciesFactory factory) {
+        ModelCache modelCache = new ModelCache();
+        for (Variant variant : variants) {
+            myVariants.add(new IdeVariantImpl(variant, modelCache, factory, myParsedModelVersion));
+        }
+    }
+
+    @Override
+    public void addSyncIssues(@NonNull Collection<SyncIssue> syncIssues) {
+        ModelCache modelCache = new ModelCache();
+        Set<SyncIssue> currentSyncIssues = new HashSet<>(mySyncIssues);
+        for (SyncIssue issue : syncIssues) {
+            // Only add the sync issues that are not seen from previous sync.
+            IdeSyncIssue newSyncIssue = new IdeSyncIssue(issue, modelCache);
+            if (!currentSyncIssues.contains(newSyncIssue)) {
+                mySyncIssues.add(newSyncIssue);
+            }
         }
     }
 

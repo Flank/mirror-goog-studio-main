@@ -18,8 +18,12 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 public interface IdeAndroidProject extends Serializable, AndroidProject {
@@ -27,4 +31,21 @@ public interface IdeAndroidProject extends Serializable, AndroidProject {
     GradleVersion getParsedModelVersion();
 
     void forEachVariant(@NonNull Consumer<IdeVariant> action);
+
+    /**
+     * Add variant models obtained from Variant-Only Sync.
+     *
+     * @param variants List of Variant models obtained by Variant-Only Sync.
+     * @param factory IdeDependenciesFactory that handles GlobalLibraryMap for DependencyGraph.
+     */
+    void addVariants(
+            @NonNull Collection<Variant> variants, @NonNull IdeDependenciesFactory factory);
+
+    /**
+     * Add sync issues from Variant-Only Sync.
+     *
+     * @param syncIssues List of SyncIssue from the AndroidProject model obtained by Variant-Only
+     *     Sync.
+     */
+    void addSyncIssues(@NonNull Collection<SyncIssue> syncIssues);
 }
