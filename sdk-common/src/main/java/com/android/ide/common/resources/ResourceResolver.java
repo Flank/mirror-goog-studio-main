@@ -405,6 +405,9 @@ public class ResourceResolver extends RenderResources {
 
     @Override
     public ResourceValue getUnresolvedResource(ResourceReference reference) {
+        if (reference.getResourceType() == ResourceType.SAMPLE_DATA) {
+            return findSampleDataValue(reference);
+        }
         ResourceValueMap resourceValueMap =
                 getResourceValueMap(reference.getNamespace(), reference.getResourceType());
         if (resourceValueMap != null) {
