@@ -18,7 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_JAR;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
@@ -576,7 +576,7 @@ public abstract class TaskManager {
         FileCollection mockableJar = globalScope.getMockableJarArtifact();
         project.getDependencies()
                 .add(
-                        CONFIG_NAME_ANDROID_JAR,
+                        CONFIG_NAME_ANDROID_APIS,
                         project.files(
                                 globalScope
                                         .getAndroidBuilder()
@@ -593,7 +593,7 @@ public abstract class TaskManager {
     @NonNull
     public static Configuration createAndroidJarConfig(@NonNull Project project) {
         Configuration androidJarConfig =
-                project.getConfigurations().maybeCreate(CONFIG_NAME_ANDROID_JAR);
+                project.getConfigurations().maybeCreate(CONFIG_NAME_ANDROID_APIS);
         androidJarConfig.setDescription(
                 "Configuration providing various types of Android JAR file");
         androidJarConfig.setCanBeConsumed(false);
