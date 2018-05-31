@@ -3512,9 +3512,7 @@ public abstract class TaskManager {
         final Collection<String> modulePaths;
         final AndroidConfig extension = globalScope.getExtension();
         if (extension instanceof BaseAppModuleExtension) {
-            modulePaths =
-                    AppModelBuilder.getDynamicFeatures(
-                            (BaseAppModuleExtension) extension, globalScope);
+            modulePaths = ((BaseAppModuleExtension) extension).getDynamicFeatures();
         } else if (extension instanceof FeatureExtension) {
             modulePaths = FeatureModelBuilder.getDynamicFeatures(globalScope);
         } else {

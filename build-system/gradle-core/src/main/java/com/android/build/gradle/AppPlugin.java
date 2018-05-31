@@ -45,23 +45,6 @@ public class AppPlugin extends AbstractAppPlugin {
     public void apply(@NonNull Project project) {
         super.apply(project);
 
-        // create the configuration used to declare the feature split in the base split.
-        //noinspection deprecation
-        Configuration featureSplit =
-                project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE);
-        featureSplit.setCanBeConsumed(false);
-        featureSplit.setCanBeResolved(false);
-
-        //noinspection deprecation
-        featureSplit
-                .getAllDependencies()
-                .whenObjectAdded(
-                        new DeprecatedConfigurationAction(
-                                "android.dynamicFeatures",
-                                VariantDependencies.CONFIG_NAME_FEATURE,
-                                extraModelInfo.getDeprecationReporter(),
-                                DeprecationReporter.DeprecationTarget.FEATURE_CONFIG));
-
         // root bundle task
         taskManager.getTaskFactory().create("bundle");
     }

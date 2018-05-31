@@ -260,9 +260,7 @@ public class ApplicationTaskManager extends TaskManager {
         // then use the default install task
         if (variantType.isForTesting()
                 || !(extension instanceof BaseAppModuleExtension)
-                || AppModelBuilder.getDynamicFeatures(
-                                (BaseAppModuleExtension) extension, variantScope.getGlobalScope())
-                        .isEmpty()) {
+                || ((BaseAppModuleExtension) extension).getDynamicFeatures().isEmpty()) {
             super.createInstallTask(variantScope);
 
         } else {
