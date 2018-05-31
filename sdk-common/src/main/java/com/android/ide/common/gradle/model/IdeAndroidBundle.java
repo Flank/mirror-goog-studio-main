@@ -28,8 +28,9 @@ import java.util.Objects;
 
 /** Creates a deep copy of an {@link AndroidBundle}. */
 public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBundle {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    // Increase the value when adding/removing fields or when changing the
+    // serialization/deserialization mechanism.
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final File myBundle;
     @NonNull private final File myFolder;
@@ -38,6 +39,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
     @NonNull private final File myManifest;
     @NonNull private final File myJarFile;
     @NonNull private final File myResFolder;
+    @Nullable private final File myResStaticLibrary;
     @NonNull private final File myAssetsFolder;
     @Nullable private final String myProjectVariant;
     private final int myHashCode;
@@ -57,9 +59,9 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         myManifest = bundle.getManifest();
         myJarFile = bundle.getJarFile();
         myResFolder = bundle.getResFolder();
+        myResStaticLibrary = copyNewProperty(bundle::getResStaticLibrary, null);
         myAssetsFolder = bundle.getAssetsFolder();
         myProjectVariant = bundle.getProjectVariant();
-
         myHashCode = calculateHashCode();
     }
 
@@ -118,6 +120,12 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         return myResFolder;
     }
 
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        return myResStaticLibrary;
+    }
+
     @Override
     @NonNull
     public File getAssetsFolder() {
@@ -145,6 +153,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
         return bundle.canEqual(this)
                 && Objects.equals(myBundle, bundle.myBundle)
                 && Objects.equals(myFolder, bundle.myFolder)
+                && Objects.equals(myResStaticLibrary, bundle.myResStaticLibrary)
                 && Objects.equals(myLibraryDependencies, bundle.myLibraryDependencies)
                 && Objects.equals(myJavaDependencies, bundle.myJavaDependencies)
                 && Objects.equals(myManifest, bundle.myManifest)
@@ -170,6 +179,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
                 super.calculateHashCode(),
                 myBundle,
                 myFolder,
+                myResStaticLibrary,
                 myLibraryDependencies,
                 myJavaDependencies,
                 myManifest,
@@ -186,6 +196,8 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
                 + myBundle
                 + ", myFolder="
                 + myFolder
+                + ", myNamespacedStaticLibrary="
+                + myResStaticLibrary
                 + ", myLibraryDependencies="
                 + myLibraryDependencies
                 + ", myJavaDependencies="

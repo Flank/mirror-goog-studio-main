@@ -148,6 +148,12 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
         throw unsupportedMethodForModuleLibrary("getResFolder");
     }
 
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        throw unsupportedMethodForModuleLibrary("getResStaticLibrary");
+    }
+
     @Override
     @NonNull
     public String getAssetsFolder() {

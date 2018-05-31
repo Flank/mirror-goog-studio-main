@@ -21,6 +21,7 @@ import static com.android.SdkConstants.EXT_AAR;
 import static com.android.SdkConstants.EXT_JAR;
 import static com.android.SdkConstants.FD_AAR_LIBS;
 import static com.android.SdkConstants.FD_JARS;
+import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.ANDROID;
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.JAVA;
 import static com.android.build.gradle.internal.ide.ModelBuilder.CURRENT_BUILD_NAME;
@@ -128,6 +129,7 @@ public class ArtifactDependencyGraph {
                                         ? artifact.bundleResult.getFile()
                                         : explodedFolder, // fallback so that the value is non-null
                                 explodedFolder,
+                                findResStaticLibrary(explodedFolder),
                                 findLocalJarsAsStrings(explodedFolder));
             } else {
                 library = new JavaLibraryImpl(address, artifact.getFile());
@@ -630,8 +632,10 @@ public class ArtifactDependencyGraph {
                                     projectPath,
                                     artifact.bundleResult != null
                                             ? artifact.bundleResult.getFile()
-                                            : explodedFolder, // fallback so that the value is non-null
+                                            : explodedFolder, // fallback so that the value is
+                                    // non-null
                                     explodedFolder,
+                                    findResStaticLibrary(explodedFolder),
                                     getVariant(artifact),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */
@@ -817,6 +821,15 @@ public class ArtifactDependencyGraph {
         }
 
         return ImmutableList.of();
+    }
+
+    @Nullable
+    private static File findResStaticLibrary(@NonNull File explodedAar) {
+        File file = new File(explodedAar, FN_RESOURCE_STATIC_LIBRARY);
+        if (!file.exists()) {
+            return null;
+        }
+        return file;
     }
 
     public static class HashableResolvedArtifactResult implements ResolvedArtifactResult {

@@ -15,7 +15,9 @@
  */
 package com.android.ide.common.gradle.model.level2;
 
-import static com.android.builder.model.level2.Library.*;
+import static com.android.builder.model.level2.Library.LIBRARY_ANDROID;
+import static com.android.builder.model.level2.Library.LIBRARY_JAVA;
+import static com.android.builder.model.level2.Library.LIBRARY_MODULE;
 import static com.android.ide.common.gradle.model.IdeLibraries.computeAddress;
 import static com.android.ide.common.gradle.model.IdeLibraries.isLocalAarModule;
 import static com.android.utils.FileUtils.join;
@@ -29,6 +31,7 @@ import com.android.ide.common.gradle.model.ModelCache;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Creates instance of {@link Library}. */
@@ -50,6 +53,7 @@ class IdeLibraryFactory {
                     getFullPath(folder, library.getManifest()),
                     getFullPath(folder, library.getJarFile()),
                     getFullPath(folder, library.getResFolder()),
+                    library.getResStaticLibrary(),
                     getFullPath(folder, library.getAssetsFolder()),
                     getLocalJars(library, folder),
                     getFullPath(folder, library.getJniFolder()),
@@ -109,6 +113,7 @@ class IdeLibraryFactory {
                     androidLibrary.getManifest().getPath(),
                     androidLibrary.getJarFile().getPath(),
                     androidLibrary.getResFolder().getPath(),
+                    nullIfNotPresent(androidLibrary::getResStaticLibrary),
                     androidLibrary.getAssetsFolder().getPath(),
                     androidLibrary
                             .getLocalJars()
@@ -137,6 +142,15 @@ class IdeLibraryFactory {
         try {
             return androidLibrary.getSymbolFile().getPath();
         } catch (UnsupportedOperationException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    protected static <T> T nullIfNotPresent(@NonNull Supplier<T> propertyInvoker) {
+        try {
+            return propertyInvoker.get();
+        } catch (UnsupportedOperationException ignored) {
             return null;
         }
     }

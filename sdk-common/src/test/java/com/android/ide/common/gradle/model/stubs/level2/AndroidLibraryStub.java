@@ -32,6 +32,7 @@ public class AndroidLibraryStub extends BaseStub implements Library {
     @NonNull private final String myManifest;
     @NonNull private final String myJarFile;
     @NonNull private final String myResFolder;
+    @Nullable private final File resStaticLibrary;
     @NonNull private final String myAssetsFolder;
     @NonNull private final Collection<String> myLocalJars;
     @NonNull private final String myJniFolder;
@@ -52,6 +53,7 @@ public class AndroidLibraryStub extends BaseStub implements Library {
                 "manifest.xml",
                 "file.jar",
                 "res",
+                new File("libraryFolder/res.apk"),
                 "assets",
                 Collections.emptyList(),
                 "jni",
@@ -72,6 +74,7 @@ public class AndroidLibraryStub extends BaseStub implements Library {
             @NonNull String manifest,
             @NonNull String jarFile,
             @NonNull String resFolder,
+            @Nullable File resStaticLibrary,
             @NonNull String assetsFolder,
             @NonNull Collection<String> localJars,
             @NonNull String jniFolder,
@@ -89,6 +92,7 @@ public class AndroidLibraryStub extends BaseStub implements Library {
         myManifest = manifest;
         myJarFile = jarFile;
         myResFolder = resFolder;
+        this.resStaticLibrary = resStaticLibrary;
         myAssetsFolder = assetsFolder;
         myLocalJars = localJars;
         myJniFolder = jniFolder;
@@ -142,6 +146,12 @@ public class AndroidLibraryStub extends BaseStub implements Library {
     @NonNull
     public String getResFolder() {
         return myResFolder;
+    }
+
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        return resStaticLibrary;
     }
 
     @Override

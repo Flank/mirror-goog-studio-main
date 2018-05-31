@@ -123,9 +123,22 @@ public interface Library {
     String getResFolder();
 
     /**
+     * Returns the location of the namespaced resources static library (res.apk).
+     *
+     * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     *
+     * <p>TODO(b/109854607): When rewriting dependencies, this should be populated with the
+     * rewritten artifact, which will not be in the exploded AAR directory.
+     *
+     * @return the static library apk. Null if the library is not namespaced.
+     */
+    @Nullable
+    File getResStaticLibrary();
+
+    /**
      * Returns the location of the assets folder.
      *
-     * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
+     * <p>Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_ANDROID}
      *
      * @return a File for the assets folder. The file may not point to an existing folder.
      */

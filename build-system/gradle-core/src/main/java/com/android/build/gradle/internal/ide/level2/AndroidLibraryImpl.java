@@ -50,16 +50,19 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull private final String address;
     @NonNull private final File artifact;
     @NonNull private final File folder;
+    @Nullable private final File resStaticLibrary;
     @NonNull private final List<String> localJarPaths;
 
     public AndroidLibraryImpl(
             @NonNull String address,
             @NonNull File artifact,
             @NonNull File folder,
+            @Nullable File resStaticLibrary,
             @NonNull List<String> localJarPaths) {
         this.address = address;
         this.artifact = artifact;
         this.folder = folder;
+        this.resStaticLibrary = resStaticLibrary;
         this.localJarPaths = ImmutableList.copyOf(localJarPaths);
     }
 
@@ -102,6 +105,12 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @Override
     public String getResFolder() {
         return FD_RES;
+    }
+
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        return resStaticLibrary;
     }
 
     @NonNull
@@ -197,12 +206,13 @@ public final class AndroidLibraryImpl implements Library, Serializable {
         return Objects.equals(address, that.address)
                 && Objects.equals(artifact, that.artifact)
                 && Objects.equals(folder, that.folder)
+                && Objects.equals(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equals(localJarPaths, that.localJarPaths);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, artifact, folder, localJarPaths);
+        return Objects.hash(address, artifact, folder, resStaticLibrary, localJarPaths);
     }
 
     @Override
@@ -211,6 +221,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
                 .add("address", address)
                 .add("artifact", artifact)
                 .add("folder", folder)
+                .add("resStaticLibrary", resStaticLibrary)
                 .add("localJarPath", localJarPaths)
                 .toString();
     }

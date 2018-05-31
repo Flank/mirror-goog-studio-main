@@ -37,6 +37,7 @@ public class AndroidLibraryImplTest {
                                 "",
                                 new File("bundle"),
                                 new File("folder"),
+                                new File("resourceStaticLibrary"),
                                 null,
                                 false,
                                 false,

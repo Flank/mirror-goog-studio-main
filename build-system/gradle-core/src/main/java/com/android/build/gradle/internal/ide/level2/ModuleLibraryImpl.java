@@ -112,6 +112,13 @@ public final class ModuleLibraryImpl implements Library, Serializable {
                 "getResFolder() cannot be called when getType() returns LIBRARY_MODULE");
     }
 
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        throw new UnsupportedOperationException(
+                "getResStaticLibrary() cannot be called when getType() returns LIBRARY_MODULE");
+    }
+
     @NonNull
     @Override
     public String getAssetsFolder() {

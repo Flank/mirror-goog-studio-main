@@ -33,6 +33,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
     @NonNull private final File myManifest;
     @NonNull private final File myJarFile;
     @NonNull private final File myResFolder;
+    @Nullable private final File myResStaticLibrary;
     @NonNull private final File myAssetsFolder;
     @Nullable private final String myProjectVariant;
 
@@ -45,6 +46,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
                 new File("manifest"),
                 new File("jarFile"),
                 new File("resFolder"),
+                new File("resStaticLibrary"),
                 new File("assetsFolder"),
                 "variant");
     }
@@ -57,6 +59,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
             @NonNull File manifest,
             @NonNull File jarFile,
             @NonNull File resFolder,
+            @Nullable File resStaticLibrary,
             @NonNull File assetsFolder,
             @Nullable String variant) {
         myBundle = bundle;
@@ -66,6 +69,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
         myManifest = manifest;
         myJarFile = jarFile;
         myResFolder = resFolder;
+        myResStaticLibrary = resStaticLibrary;
         myAssetsFolder = assetsFolder;
         myProjectVariant = variant;
     }
@@ -113,6 +117,12 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
     }
 
     @Override
+    @Nullable
+    public File getResStaticLibrary() {
+        return myResStaticLibrary;
+    }
+
+    @Override
     @NonNull
     public File getAssetsFolder() {
         return myAssetsFolder;
@@ -131,6 +141,8 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
                 + myBundle
                 + ", myFolder="
                 + myFolder
+                + ", myNamespacedStaticLibrary="
+                + myResStaticLibrary
                 + ", myLibraryDependencies="
                 + myLibraryDependencies
                 + ", myJavaDependencies="

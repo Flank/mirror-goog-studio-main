@@ -106,6 +106,13 @@ public class JavaLibraryStub extends BaseStub implements Library {
                 "getResFolder() cannot be called when getType() returns LIBRARY_JAVA");
     }
 
+    @NonNull
+    @Override
+    public File getResStaticLibrary() {
+        throw new UnsupportedOperationException(
+                "getResStaticLibrary() cannot be called when getType() returns LIBRARY_JAVA");
+    }
+
     @Override
     @NonNull
     public String getAssetsFolder() {

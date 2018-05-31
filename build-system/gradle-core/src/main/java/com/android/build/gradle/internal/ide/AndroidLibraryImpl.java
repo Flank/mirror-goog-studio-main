@@ -56,6 +56,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     private final String variant;
     @NonNull private final File bundle;
     @NonNull private final File folder;
+    @Nullable private final File resStaticLibrary;
     @NonNull
     private final List<AndroidLibrary> androidLibraries;
     @NonNull
@@ -71,6 +72,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
             @Nullable String projectPath,
             @NonNull File bundle,
             @NonNull File extractedFolder,
+            @Nullable File resStaticLibrary,
             @Nullable String variant,
             boolean isProvided,
             boolean isSkipped,
@@ -78,6 +80,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
             @NonNull Collection<JavaLibrary> javaLibraries,
             @NonNull Collection<File> localJavaLibraries) {
         super(buildId, projectPath, null, coordinates, isSkipped, isProvided);
+        this.resStaticLibrary = resStaticLibrary;
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);
@@ -139,6 +142,12 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @Override
     public File getResFolder() {
         return new File(folder, FD_RES);
+    }
+
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        return resStaticLibrary;
     }
 
     @NonNull
@@ -225,6 +234,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
         return Objects.equal(variant, that.variant)
                 && Objects.equal(bundle, that.bundle)
                 && Objects.equal(folder, that.folder)
+                && Objects.equal(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equal(androidLibraries, that.androidLibraries)
                 && Objects.equal(javaLibraries, that.javaLibraries)
                 && Objects.equal(localJars, that.localJars);
@@ -241,6 +251,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 variant,
                 bundle,
                 folder,
+                resStaticLibrary,
                 androidLibraries,
                 javaLibraries,
                 localJars);
@@ -254,6 +265,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 .add("variant", variant)
                 .add("bundle", bundle)
                 .add("folder", folder)
+                .add("resStaticLibrary", resStaticLibrary)
                 .add("androidLibraries", androidLibraries)
                 .add("javaLibraries", javaLibraries)
                 .add("localJars", localJars)

@@ -34,6 +34,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
     @NonNull private final String myManifest;
     @NonNull private final String myJarFile;
     @NonNull private final String myResFolder;
+    @Nullable private final File resStaticLibrary;
     @NonNull private final String myAssetsFolder;
     @NonNull private final Collection<String> myLocalJars;
     @NonNull private final String myJniFolder;
@@ -57,6 +58,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
             @NonNull String manifest,
             @NonNull String jarFile,
             @NonNull String resFolder,
+            @Nullable File resStaticLibrary,
             @NonNull String assetsFolder,
             @NonNull Collection<String> localJars,
             @NonNull String jniFolder,
@@ -75,6 +77,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
         myManifest = manifest;
         myJarFile = jarFile;
         myResFolder = resFolder;
+        this.resStaticLibrary = resStaticLibrary;
         myAssetsFolder = assetsFolder;
         myLocalJars = localJars;
         myJniFolder = jniFolder;
@@ -128,6 +131,12 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
     @NonNull
     public String getResFolder() {
         return myResFolder;
+    }
+
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        return resStaticLibrary;
     }
 
     @Override
@@ -234,6 +243,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
                 && Objects.equals(myManifest, that.myManifest)
                 && Objects.equals(myJarFile, that.myJarFile)
                 && Objects.equals(myResFolder, that.myResFolder)
+                && Objects.equals(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equals(myAssetsFolder, that.myAssetsFolder)
                 && Objects.equals(myLocalJars, that.myLocalJars)
                 && Objects.equals(myJniFolder, that.myJniFolder)
@@ -260,6 +270,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
                 myManifest,
                 myJarFile,
                 myResFolder,
+                resStaticLibrary,
                 myAssetsFolder,
                 myLocalJars,
                 myJniFolder,
@@ -291,6 +302,9 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
                 + '\''
                 + ", myResFolder='"
                 + myResFolder
+                + '\''
+                + ", resStaticLibrary'"
+                + resStaticLibrary
                 + '\''
                 + ", myAssetsFolder='"
                 + myAssetsFolder

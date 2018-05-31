@@ -105,6 +105,12 @@ public final class IdeJavaLibrary extends IdeModel implements Library {
         throw unsupportedMethodForJavaLibrary("getResFolder");
     }
 
+    @Nullable
+    @Override
+    public File getResStaticLibrary() {
+        throw unsupportedMethodForJavaLibrary("getResStaticLibrary");
+    }
+
     @Override
     @NonNull
     public String getAssetsFolder() {

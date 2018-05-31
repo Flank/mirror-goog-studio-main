@@ -20,6 +20,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.utils.AssumeUtil
+import com.android.build.gradle.integration.common.utils.getDebugVariant
+import com.android.builder.model.AndroidProject
+import com.android.testutils.truth.FileSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -107,6 +111,27 @@ class NamespacedAarTest {
         project.executor().run(":publishedLib:assembleRelease")
         project.executor().run(":lib:assembleDebug", ":app:assembleDebug")
 
+        run {
+            // Check model level 3
+            val models =
+                project.model().level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                    .fetchAndroidProjects().onlyModelMap
+            val libraries = models[":lib"]!!.getDebugVariant().mainArtifact.dependencies.libraries
+            assertThat(libraries).hasSize(1)
+            val lib = libraries.single()
+            assertThat(lib.resStaticLibrary).exists()
+        }
+
+        run {
+            // Check model level 4
+            val models =
+                project.model().level(AndroidProject.MODEL_LEVEL_LATEST).fetchAndroidProjects()
+            val libraries =
+                models.onlyModelMap[":lib"]!!.getDebugVariant().mainArtifact.dependencyGraphs.compileDependencies
+            assertThat(libraries).hasSize(1)
+            val lib = models.globalLibraryMap.libraries[libraries.single().artifactAddress]!!
+            assertThat(lib.resStaticLibrary).exists()
+        }
     }
 
 }
