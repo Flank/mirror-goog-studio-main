@@ -43,7 +43,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_TRAN
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSETS
-import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_CLASSES_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_CLASSES_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
@@ -67,6 +68,9 @@ import com.android.builder.core.VariantTypeImpl
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Lists
+import com.google.common.collect.Multimap
+import com.google.common.collect.Multimaps
 
 /**
  * Publishing spec for variants and tasks outputs.
@@ -100,7 +104,7 @@ class PublishingSpecs {
 
         fun getTestingSpec(variantType: VariantType): VariantSpec
 
-        fun getSpec(artifactType: ArtifactType): OutputSpec?
+        fun getSpec(artifactType: ArtifactType): Collection<OutputSpec>
     }
 
     /**
@@ -224,7 +228,12 @@ class PublishingSpecs {
                 output(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
                 output(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                         ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                output(LIBRARY_CLASSES, ArtifactType.CLASSES)
+
+                // we want to publish a directory and a jar to CLASSES, so we both are mapped to
+                // ArtifactType.CLASSES
+                output(LIBRARY_CLASSES_JAR, ArtifactType.CLASSES)
+                output(LIBRARY_CLASSES_DIR, ArtifactType.CLASSES)
+
                 output(FULL_JAR, ArtifactType.JAR)
 
                 runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
@@ -239,7 +248,7 @@ class PublishingSpecs {
                 runtime(LINT_JAR, ArtifactType.LINT)
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
-                    // unit test need ALL_CLASSES instead of LIBRARY_CLASSES to get
+                    // unit test need ALL_CLASSES instead of LIBRARY_CLASSES_{JAR|DIR} to get
                     // access to the R class. Also scope should be API+Runtime.
                     output(ALL_CLASSES, ArtifactType.CLASSES)
                 }
@@ -363,13 +372,17 @@ private class VariantPublishingSpecImpl(
 ) : PublishingSpecs.VariantSpec {
 
     override val testingSpecs: Map<VariantType, PublishingSpecs.VariantSpec>
-    private var _artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>? = null
+    private var _artifactMap: Multimap<ArtifactType, PublishingSpecs.OutputSpec>? = null
 
-    private val artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>
+    private val artifactMap: Multimap<ArtifactType, PublishingSpecs.OutputSpec>
         get() {
             val map = _artifactMap
             return if (map == null) {
-                val map2 = outputs.associate { it.artifactType to it }
+                val map2 =
+                    Multimaps.newListMultimap<ArtifactType, PublishingSpecs.OutputSpec>(mutableMapOf(), { Lists.newArrayListWithCapacity(1)})
+                outputs.forEach {
+                   map2.put(it.artifactType, it)
+                }
                 _artifactMap = map2
                 map2
             } else {
@@ -388,9 +401,11 @@ private class VariantPublishingSpecImpl(
         return testingSpec ?: this
     }
 
-    override fun getSpec(artifactType: ArtifactType): PublishingSpecs.OutputSpec? {
+    override fun getSpec(artifactType: ArtifactType): Collection<PublishingSpecs.OutputSpec> {
         val spec = artifactMap[artifactType]
-        return spec ?: parentSpec?.getSpec(artifactType)
+        if (spec.isNotEmpty()) return spec
+
+        return parentSpec?.getSpec(artifactType) ?: emptyList()
     }
 }
 

@@ -76,30 +76,30 @@ public class BytecodeGenerationHooksTest {
                 project.getSubproject("library").getIntermediateFile("intermediate-jars", "debug");
         assertThat(intermediateJars).isDirectory();
 
-        File classesJar = new File(intermediateJars, "classes.jar");
+        File classesJar = new File(intermediateJars, "classes/classes.jar");
         assertThat(classesJar).isFile();
-        try (Zip classesZip = new Zip(classesJar)) {
-            assertThat(classesZip).contains("META-INF/lib.kotlin_module");
-            assertThat(classesZip).contains("META-INF/post-lib.kotlin_module");
-        }
+        File classesDir = new File(intermediateJars, "classes/dir");
+        assertThat(new File(classesDir, "META-INF/lib.kotlin_module")).exists();
+        assertThat(new File(classesDir, "META-INF/post-lib.kotlin_module")).exists();
 
         File resJar = new File(intermediateJars, "res.jar");
         assertThat(resJar).isFile();
-        try (Zip resZip = new Zip(classesJar)) {
+        try (Zip resZip = new Zip(resJar)) {
             assertThat(resZip).contains("META-INF/lib.kotlin_module");
             assertThat(resZip).contains("META-INF/post-lib.kotlin_module");
-
-            // verify the compile classpath
-            checkDependencies(
-                    result,
-                    "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
-                    true,
-                    "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                    "jar/build/libs/jar.jar");
-
-            // verify source folders
-            checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
         }
+
+        // verify the compile classpath
+        checkDependencies(
+                result,
+                "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
+                true,
+                "library/build/intermediates/intermediate-jars/debug/classes/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/dir",
+                "jar/build/libs/jar.jar");
+
+        // verify source folders
+        checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
     }
 
     @Test
@@ -120,16 +120,17 @@ public class BytecodeGenerationHooksTest {
         try (Zip classesZip = new Zip(classesJar)) {
             assertThat(classesZip).contains("META-INF/app.kotlin_module");
             assertThat(classesZip).contains("META-INF/post-app.kotlin_module");
-
-            // verify the compile classpath
-            checkDependencies(
-                    result,
-                    "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
-                    true,
-                    "app/build/intermediates/app_classes/debug/packageAppClassesDebug/classes.jar",
-                    "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                    "jar/build/libs/jar.jar");
         }
+
+        // verify the compile classpath
+        checkDependencies(
+                result,
+                "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
+                true,
+                "app/build/intermediates/app_classes/debug/packageAppClassesDebug/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/dir",
+                "jar/build/libs/jar.jar");
     }
 
 
@@ -145,7 +146,8 @@ public class BytecodeGenerationHooksTest {
                 "app/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
                 "app/build/generated/preJavacbytecode/debug",
                 "app/build/generated/postJavacBytecode/debug",
-                "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/dir",
                 "jar/build/libs/jar.jar");
     }
 
@@ -171,7 +173,8 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:library:generateBytecodeFordebugAndroidTest): ",
                 true,
-                "library/build/intermediates/intermediate-jars/debug/classes.jar");
+                "library/build/intermediates/intermediate-jars/debug/classes/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/dir");
     }
 
     @Test
@@ -190,7 +193,8 @@ public class BytecodeGenerationHooksTest {
                 true,
                 "app/build/intermediates/app_classes/debug/packageAppClassesDebug/classes.jar",
                 "jar/build/libs/jar.jar",
-                "library/build/intermediates/intermediate-jars/debug/classes.jar");
+                "library/build/intermediates/intermediate-jars/debug/classes/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/dir");
     }
 
     @Test
@@ -218,7 +222,8 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:baseFeature:generateBytecodeFordebugFeature): ",
                 true,
-                "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes/dir",
                 "jar/build/libs/jar.jar");
 
         // verify source folders

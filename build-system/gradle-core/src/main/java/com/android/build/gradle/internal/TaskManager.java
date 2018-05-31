@@ -733,23 +733,26 @@ public abstract class TaskManager {
                             .getTestingSpec(variantScope.getVariantConfiguration().getType());
 
             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-            PublishingSpecs.OutputSpec taskOutputSpec =
+            Collection<PublishingSpecs.OutputSpec> taskOutputSpecs =
                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
-            // now get the output type
-            com.android.build.api.artifact.ArtifactType testedOutputType =
-                    taskOutputSpec.getOutputType();
 
-            // create two streams of different types.
-            transformManager.addStream(
-                    OriginalStream.builder(project, "tested-code-classes")
-                            .addContentTypes(DefaultContentType.CLASSES)
-                            .addScope(Scope.TESTED_CODE)
-                            .setFileCollection(
-                                    testedVariantScope
-                                            .getArtifacts()
-                                            .getFinalArtifactFiles(testedOutputType)
-                                            .get())
-                            .build());
+            for (PublishingSpecs.OutputSpec taskOutputSpec : taskOutputSpecs) {
+                // now get the output type
+                com.android.build.api.artifact.ArtifactType testedOutputType =
+                        taskOutputSpec.getOutputType();
+
+                // create two streams of different types.
+                transformManager.addStream(
+                        OriginalStream.builder(project, "tested-code-classes")
+                                .addContentTypes(DefaultContentType.CLASSES)
+                                .addScope(Scope.TESTED_CODE)
+                                .setFileCollection(
+                                        testedVariantScope
+                                                .getArtifacts()
+                                                .getFinalArtifactFiles(testedOutputType)
+                                                .get())
+                                .build());
+            }
 
             transformManager.addStream(
                     OriginalStream.builder(project, "tested-code-deps")

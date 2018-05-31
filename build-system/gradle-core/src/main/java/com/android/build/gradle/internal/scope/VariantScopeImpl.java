@@ -1943,10 +1943,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 VariantSpec testedSpec =
                         testedScope.getPublishingSpec().getTestingSpec(variantType);
 
-                // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-                OutputSpec taskOutputSpec = testedSpec.getSpec(artifactType);
+                // get the OutputPublishingSpec from the ArtifactType for this particular variant
+                // spec
+                Collection<OutputSpec> taskOutputSpecs = testedSpec.getSpec(artifactType);
 
-                if (taskOutputSpec != null) {
+                for (OutputSpec taskOutputSpec : taskOutputSpecs) {
                     Collection<PublishedConfigType> publishedConfigs =
                             taskOutputSpec.getPublishedConfigTypes();
 

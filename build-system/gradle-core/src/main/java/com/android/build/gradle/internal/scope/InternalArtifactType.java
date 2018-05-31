@@ -38,7 +38,8 @@ public enum InternalArtifactType implements ArtifactType {
 
     // Packaged classes for AAR intermediate publishing
     // This is for external usage. For usage inside a module use ALL_CLASSES
-    LIBRARY_CLASSES,
+    LIBRARY_CLASSES_JAR,
+    LIBRARY_CLASSES_DIR,
     // the packaged classes published by APK modules.
     // This is for external usage. For usage inside a module use ALL_CLASSES
     APP_CLASSES,

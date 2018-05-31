@@ -264,7 +264,7 @@ public abstract class LibraryBaseTransform extends Transform {
     }
 
     protected static void mergeInputsToLocation(
-            @NonNull List<QualifiedContent> qualifiedContentList,
+            @NonNull List<? extends QualifiedContent> qualifiedContentList,
             @NonNull File toFile,
             boolean forIntermediateJar,
             @Nullable final Predicate<String> filter,
