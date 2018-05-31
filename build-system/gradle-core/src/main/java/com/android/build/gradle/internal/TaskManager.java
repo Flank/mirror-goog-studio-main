@@ -3337,6 +3337,12 @@ public abstract class TaskManager {
                         scope.getArtifacts().getFinalArtifactFiles(aaptProguardFileType),
                         scope.getArtifactFileCollection(
                                 RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
+
+        if (scope.getType().isHybrid() && scope.getType().isBaseModule()) {
+            Callable<Collection<File>> consumerProguardFiles = scope::getConsumerProguardFiles;
+            configurationFiles.from(consumerProguardFiles);
+        }
+
         maybeAddFeatureProguardRules(scope, configurationFiles);
         transform.setConfigurationFiles(configurationFiles);
 

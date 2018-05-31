@@ -246,8 +246,8 @@ class MinifyFeaturesTest(
                                     minified {
                                         minifyEnabled true
                                         useProguard ${codeShrinker == CodeShrinker.PROGUARD}
-                                        proguardFiles getDefaultProguardFile('proguard-android.txt'),
-                                                "proguard-rules.pro"
+                                        proguardFiles getDefaultProguardFile('proguard-android.txt')
+                                        consumerProguardFiles "proguard-rules.pro"
                                     }
                                 }
                             }
@@ -374,15 +374,20 @@ class MinifyFeaturesTest(
             MultiApkMode.DYNAMIC_APP ->
                 MinimalSubProject.dynamicFeature("com.example.otherFeature1")
             MultiApkMode.INSTANT_APP -> MinimalSubProject.feature("com.example.otherFeature1")
-        }.let {
-            it
+        }.let { minimalSubProject ->
+            val proguardFilesDsl =
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> "proguardFiles"
+                    MultiApkMode.INSTANT_APP -> "consumerProguardFiles"
+                }
+            minimalSubProject
                 .appendToBuild(
                     """
                         android {
                             buildTypes {
                                 minified.initWith(buildTypes.debug)
                                 minified {
-                                    consumerProguardFiles "proguard-rules.pro"
+                                    $proguardFilesDsl "proguard-rules.pro"
                                 }
                             }
                         }
@@ -589,6 +594,11 @@ class MinifyFeaturesTest(
                 android {
                     buildTypes {
                         minified.initWith(buildTypes.debug)
+                        minified {
+                            minifyEnabled true
+                            useProguard ${codeShrinker == CodeShrinker.PROGUARD}
+                            proguardFiles getDefaultProguardFile('proguard-android.txt')
+                        }
                     }
                 }
                 """)
@@ -758,10 +768,25 @@ class MinifyFeaturesTest(
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseModule/Main;")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+
+        if (multiApkMode == MultiApkMode.INSTANT_APP) {
+            val appApk = project.getSubproject("app").getApk(apkType)
+            assertThat(appApk).containsClass("Lcom/example/baseModule/Main;")
+            assertThat(appApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
+            assertThat(appApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
+            assertThat(appApk).containsClass("Lcom/example/otherFeature1/Main;")
+            assertThat(appApk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
+            assertThat(appApk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
+            assertThat(appApk).containsClass("Lcom/example/lib2/FooView;")
+            assertThat(appApk).containsClass("Lcom/example/otherFeature2/Main;")
+            assertThat(appApk).doesNotContainClass("Lcom/example/baseModule/EmptyClassToRemove;")
+            assertThat(appApk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
+            assertThat(appApk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+        }
     }
 
     @Test
-    fun testSyncError() {
+    fun testMinifyEnabledSyncError() {
         Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
         Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
         project.getSubproject(":foo:otherFeature1")
@@ -772,6 +797,30 @@ class MinifyFeaturesTest(
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("cannot set minifyEnabled to true.")
+    }
+
+    @Test
+    fun testDefaultProguardFilesSyncError() {
+        Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
+        Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
+        project.getSubproject(":otherFeature2")
+            .buildFile
+            .appendText(
+                """
+                    android {
+                        buildTypes {
+                            minified {
+                                proguardFiles getDefaultProguardFile('proguard-android.txt')
+                            }
+                        }
+                    }
+                    """
+            )
+        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        assertThat(model.rootBuildModelMap[":otherFeature2"])
+            .hasSingleError(SyncIssue.TYPE_GENERIC)
+            .that()
+            .hasMessageThatContains("should not be specified in this module.")
     }
 }
 

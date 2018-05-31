@@ -88,6 +88,14 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     List<File> getProguardFiles();
 
+    /**
+     * Returns the proguardFiles explicitly specified in the build.gradle. This method differs from
+     * getProguardFiles() because getProguardFiles() may include a default proguard file which
+     * wasn't specified in the build.gradle file.
+     */
+    @NonNull
+    List<File> getExplicitProguardFiles();
+
     @NonNull
     List<File> getTestProguardFiles();
 

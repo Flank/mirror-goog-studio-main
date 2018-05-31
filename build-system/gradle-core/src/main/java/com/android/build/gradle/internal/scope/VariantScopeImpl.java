@@ -564,9 +564,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public List<File> getProguardFiles() {
-        List<File> result =
-                gatherProguardFiles(
-                        PostprocessingOptions::getProguardFiles, BaseConfig::getProguardFiles);
+        List<File> result = getExplicitProguardFiles();
 
         if (getPostprocessingOptionsIfUsed() == null) {
             // For backwards compatibility, we keep the old behavior: if there are no files
@@ -579,6 +577,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return result;
+    }
+
+    @NonNull
+    @Override
+    public List<File> getExplicitProguardFiles() {
+        return gatherProguardFiles(
+                PostprocessingOptions::getProguardFiles, BaseConfig::getProguardFiles);
     }
 
     @NonNull
