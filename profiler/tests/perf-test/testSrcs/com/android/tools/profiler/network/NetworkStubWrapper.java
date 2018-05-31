@@ -36,15 +36,18 @@ final class NetworkStubWrapper {
      * non-empty range is returned.
      */
     NetworkProfiler.HttpRangeResponse getNonEmptyHttpRange(Session session) {
-        Supplier<NetworkProfiler.HttpRangeResponse> getRange =
-                () ->
-                        myNetworkStub.getHttpRange(
-                                NetworkProfiler.HttpRangeRequest.newBuilder()
-                                        .setSession(session)
-                                        .setStartTimestamp(0L)
-                                        .setEndTimestamp(Long.MAX_VALUE)
-                                        .build());
-        return TestUtils.waitForAndReturn(getRange, res -> res.getDataList().size() > 0);
+        return TestUtils.waitForAndReturn(
+                getHttpRangeSupplier(session), res -> res.getDataList().size() > 0);
+    }
+
+    Supplier<NetworkProfiler.HttpRangeResponse> getHttpRangeSupplier(Session session) {
+        return () ->
+                myNetworkStub.getHttpRange(
+                        NetworkProfiler.HttpRangeRequest.newBuilder()
+                                .setSession(session)
+                                .setStartTimestamp(0L)
+                                .setEndTimestamp(Long.MAX_VALUE)
+                                .build());
     }
 
     NetworkProfiler.HttpDetailsResponse getHttpDetails(long connId, Type type) {

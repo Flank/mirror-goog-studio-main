@@ -215,7 +215,7 @@ public class OkHttpTest {
         // Both failed and successful requests should have valid time ranges.
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
                 TestUtils.waitForAndReturn(
-                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        stubWrapper.getHttpRangeSupplier(mySession),
                         resp ->
                                 resp.getDataList().size() == 2
                                         && resp.getDataList()
@@ -230,9 +230,13 @@ public class OkHttpTest {
         // TODO(b/69328111): Once the error message is being propagated through, check it here.
 
         // Even though the request was aborted, it should still have thread information available
-        HttpDetailsResponse threadDetails =
-                stubWrapper.getHttpDetails(connectionAborted.getConnId(), Type.ACCESSING_THREADS);
-        assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
+        TestUtils.waitFor(
+                () -> {
+                    HttpDetailsResponse threadDetails =
+                            stubWrapper.getHttpDetails(
+                                    connectionAborted.getConnId(), Type.ACCESSING_THREADS);
+                    return threadDetails.getAccessingThreads().getThreadList().size() == 1;
+                });
 
         // The second request should have completed normally
         HttpConnectionData connectionSuccess = httpRangeResponse.getDataList().get(1);

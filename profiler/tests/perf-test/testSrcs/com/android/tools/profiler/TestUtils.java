@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 /** Contains helper methods for perf tests. */
 public final class TestUtils {
     private static final int RETRY_INTERVAL_MILLIS = 200;
-    private static final int RETRY_LIMIT = 10;
+    private static final int NO_LIMIT = Integer.MAX_VALUE;
 
     /**
      * Run the loop and wait until condition is true. This method does NOT timeout so you should
@@ -40,18 +40,28 @@ public final class TestUtils {
     }
 
     /**
+     * Wait forever until condition is true, as the wait time is undertermined when multiple tests
+     * run parallel. See {@link #waitForAndReturn(Supplier, Predicate, int)}.
+     */
+    public static <T> T waitForAndReturn(Supplier<T> supplier, Predicate<T> condition) {
+        return waitForAndReturn(supplier, condition, NO_LIMIT);
+    }
+
+    /**
      * Run the loop and wait until condition is true or the retry limit is reached. Returns the
      * result afterwards.
      *
      * @param supplier a function that returns the desired result.
      * @param condition tests whether the result is desired.
+     * @param retryLimit Limit to retry before return the result.
      * @param <T> type of the desired result.
      * @return the result from the last run (condition met or timeout).
      */
-    public static <T> T waitForAndReturn(Supplier<T> supplier, Predicate<T> condition) {
+    public static <T> T waitForAndReturn(
+            Supplier<T> supplier, Predicate<T> condition, int retryLimit) {
         T result = supplier.get();
         int count = 0;
-        while (!condition.test(result) && count < RETRY_LIMIT) {
+        while (!condition.test(result) && count < retryLimit) {
             System.out.println("Retrying condition");
             ++count;
             try {
