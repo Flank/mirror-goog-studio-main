@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.google.gson.GsonBuilder
+import org.apache.commons.io.FileUtils
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
 import java.io.IOException
-import org.apache.commons.io.FileUtils
 
 /** Module information like its application ID, version code and version name  */
 class ModuleMetadata(val applicationId: String,
@@ -37,7 +37,7 @@ class ModuleMetadata(val applicationId: String,
 
     companion object {
 
-        internal const val PERSISTED_FILE_NAME = "application-id.json"
+        internal const val PERSISTED_FILE_NAME = "application-metadata.json"
 
         @Throws(IOException::class)
         @JvmStatic

@@ -22,10 +22,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import java.io.File
-import java.io.IOException
-import java.util.function.IntSupplier
-import java.util.function.Supplier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -33,6 +29,9 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
+import java.io.IOException
+import java.util.function.Supplier
 
 /**
  * Task responsible for publishing this module metadata (like its application ID) for other modules
@@ -46,7 +45,7 @@ import org.gradle.api.tasks.TaskAction
  * Both dynamic-feature and feature modules consumes it, from the application module and the base
  * feature module respectively.
  */
-open class ApplicationIdWriterTask : AndroidVariantTask() {
+open class ModuleMetadataWriterTask : AndroidVariantTask() {
 
     @get:Internal lateinit var applicationIdSupplier: Supplier<String?> private set
     @get:Input val applicationId get() = applicationIdSupplier.get()
@@ -81,17 +80,17 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     }
 
     class ConfigAction(private val variantScope: VariantScope) :
-        TaskConfigAction<ApplicationIdWriterTask> {
+        TaskConfigAction<ModuleMetadataWriterTask> {
 
         override fun getName(): String {
             return variantScope.getTaskName("write", "ApplicationId")
         }
 
-        override fun getType(): Class<ApplicationIdWriterTask> {
-            return ApplicationIdWriterTask::class.java
+        override fun getType(): Class<ModuleMetadataWriterTask> {
+            return ModuleMetadataWriterTask::class.java
         }
 
-        override fun execute(task: ApplicationIdWriterTask) {
+        override fun execute(task: ModuleMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName
 
             // default value of the app ID to publish. This may get overwritten by something

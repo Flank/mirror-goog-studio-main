@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
-import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
@@ -49,6 +48,7 @@ import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.InstantRunSplitApkResourcesBuilder;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
+import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
@@ -465,7 +465,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
         if (variantScope.getType().isBaseModule()) {
-            taskFactory.create(new ApplicationIdWriterTask.ConfigAction(variantScope));
+            taskFactory.create(new ModuleMetadataWriterTask.ConfigAction(variantScope));
         }
     }
 
