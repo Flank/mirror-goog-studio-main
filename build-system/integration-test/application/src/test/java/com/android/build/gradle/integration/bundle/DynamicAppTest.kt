@@ -32,6 +32,7 @@ import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
+import com.google.common.base.Throwables
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -354,6 +355,30 @@ class DynamicAppTest {
         // check that the previous bundle does not exist anymore
         FileSubject.assertThat(bundleFile).doesNotExist()
 
+    }
+
+    fun `test invalid debuggable combination`() {
+        project.file("feature2/build.gradle").appendText(
+            """
+                 android.buildTypes.debug.debuggable = false
+            """
+        )
+        val apkFromBundleTaskName = getBundleTaskName("debug")
+
+        // use a relative path to the project build dir.
+        val failure = project
+            .executor()
+            .expectFailure()
+            .run("app:$apkFromBundleTaskName")
+
+        val exception = Throwables.getRootCause(failure.exception!!)
+
+        assertThat(exception).hasMessageThat().startsWith(
+            "Dynamic Feature ':feature2' (build type 'debug') is not debuggable,\n" +
+                    "and the corresponding build type in the base application is debuggable."
+        )
+        assertThat(exception).hasMessageThat()
+            .contains("set android.buildTypes.debug.debuggable = true")
     }
 
     private fun getBundleTaskName(name: String): String {

@@ -24,9 +24,12 @@ import java.io.FileReader
 import java.io.IOException
 
 /** Module information like its application ID, version code and version name  */
-class ModuleMetadata(val applicationId: String,
+class ModuleMetadata(
+    val applicationId: String,
     val versionCode: String,
-    val versionName: String?) {
+    val versionName: String?,
+    val debuggable: Boolean
+) {
 
     @Throws(IOException::class)
     fun save(outputFile: File) {

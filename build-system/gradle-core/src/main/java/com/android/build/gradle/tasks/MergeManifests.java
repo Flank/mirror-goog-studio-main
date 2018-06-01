@@ -72,6 +72,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -121,7 +122,31 @@ public class MergeManifests extends ManifestProcessorTask {
         ModuleMetadata moduleMetadata = null;
         if (packageManifest != null && !packageManifest.isEmpty()) {
             moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
+            boolean isDebuggable = optionalFeatures.get().contains(Feature.DEBUGGABLE);
+            if (moduleMetadata.getDebuggable() != isDebuggable) {
+                String moduleType =
+                        variantConfiguration.getType().isHybrid()
+                                ? "Instant App Feature"
+                                : "Dynamic Feature";
+                String errorMessage =
+                        String.format(
+                                "%1$s '%2$s' (build type '%3$s') %4$s debuggable,\n"
+                                        + "and the corresponding build type in the base "
+                                        + "application %5$s debuggable.\n"
+                                        + "Recommendation: \n"
+                                        + "   in  %6$s\n"
+                                        + "   set android.buildTypes.%3$s.debuggable = %7$s",
+                                moduleType,
+                                getProject().getPath(),
+                                variantConfiguration.getBuildType().getName(),
+                                isDebuggable ? "is" : "is not",
+                                moduleMetadata.getDebuggable() ? "is" : "is not",
+                                getProject().getBuildFile(),
+                                moduleMetadata.getDebuggable() ? "true" : "false");
+                throw new InvalidUserDataException(errorMessage);
+            }
         }
+
 
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 

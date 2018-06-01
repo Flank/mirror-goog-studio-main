@@ -47,7 +47,7 @@ import java.util.function.Supplier
  */
 open class ModuleMetadataWriterTask : AndroidVariantTask() {
 
-    @get:Internal lateinit var applicationIdSupplier: Supplier<String?> private set
+    @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
     @get:Input val applicationId get() = applicationIdSupplier.get()
 
     @get:Internal lateinit var versionCodeSupplier: Supplier<Int> private set
@@ -56,6 +56,9 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
     @get:Internal lateinit var versionNameSupplier: Supplier<String?> private set
     @get:Input @get:Optional val versionName get() = versionNameSupplier.get()
 
+    @get:Input
+    var debuggable: Boolean = false
+    private set
 
     @get:InputFiles
     @get:Optional
@@ -73,7 +76,12 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
             if (metadataFromInstalledModule != null && !metadataFromInstalledModule!!.isEmpty) {
                 ModuleMetadata.load(metadataFromInstalledModule!!.singleFile)
             } else {
-                ModuleMetadata(applicationId as String, versionCode, versionName)
+                ModuleMetadata(
+                    applicationId = applicationId,
+                    versionCode = versionCode,
+                    versionName = versionName,
+                    debuggable = debuggable
+                )
             }
 
         declaration.save(outputFile)
@@ -105,6 +113,8 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
             task.versionNameSupplier = TaskInputHelper.memoize {
                 variantScope.variantConfiguration.versionName
             }
+
+            task.debuggable = variantScope.variantConfiguration.buildType.isDebuggable
 
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             task.outputFile = variantScope.artifacts.appendArtifact(
