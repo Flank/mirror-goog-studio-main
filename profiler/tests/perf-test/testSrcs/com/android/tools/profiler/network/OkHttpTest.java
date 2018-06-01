@@ -191,29 +191,6 @@ public class OkHttpTest {
     }
 
     @Test
-    public void testOkHttp2AndOkHttp3WithThreadClassLoaderIsNull() {
-        String nullThreadClassLoader = "NULLTHREADCLASSLOADER";
-        myAndroidDriver.triggerMethod(
-                ACTIVITY_CLASS, "runOkHttp2AndOkHttp3WithThreadClassLoaderIsNull");
-        assertThat(myAndroidDriver.waitForInput(nullThreadClassLoader)).isTrue();
-
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
-        NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                TestUtils.waitForAndReturn(
-                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
-                        resp -> resp.getDataList().size() == 2);
-
-        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
-        String urlQuery = "?method=" + nullThreadClassLoader;
-        assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
-
-        connectionId = httpRangeResponse.getDataList().get(1).getConnId();
-        requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
-        assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
-    }
-
-    @Test
     public void testOkHttp2GetAbortedByError() throws Exception {
         String okHttp2Error = "OKHTTP2ERROR";
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
