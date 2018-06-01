@@ -1075,16 +1075,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                     .getFiles(),
                             0));
         }
-        // TODO: remove b/77676030
-        if (artifacts.hasArtifact(InternalArtifactType.EMPTY_R_CLASS_FOR_STUDIO)) {
-            folders.add(
-                    Iterables.get(
-                            artifacts
-                                    .getFinalArtifactFiles(
-                                            InternalArtifactType.EMPTY_R_CLASS_FOR_STUDIO)
-                                    .getFiles(),
-                            0));
-        }
         folders.add(scope.getAidlSourceOutputDir());
         folders.add(scope.getBuildConfigSourceOutputDir());
         Boolean ndkMode = variantData.getVariantConfiguration().getMergedFlavor().getRenderscriptNdkModeEnabled();

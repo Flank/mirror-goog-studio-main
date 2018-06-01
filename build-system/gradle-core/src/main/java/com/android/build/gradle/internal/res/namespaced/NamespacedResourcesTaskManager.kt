@@ -67,9 +67,7 @@ class NamespacedResourcesTaskManager(
         taskFactory.create(StaticLibraryManifestTask.ConfigAction(variantScope))
         taskFactory.create(LinkLibraryAndroidResourcesTask.ConfigAction(variantScope))
         // TODO: also generate a private R.jar holding private resources.
-        val genRClass = taskFactory.create(GenerateNamespacedLibraryRFilesTask.ConfigAction(variantScope))
-        // TODO: remove source generation dependency b/77676030
-        variantScope.sourceGenTask.dependsOn(genRClass)
+        taskFactory.create(GenerateNamespacedLibraryRFilesTask.ConfigAction(variantScope))
         if (variantScope.type.isTestComponent) {
             if (variantScope.testedVariantData!!.type.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
