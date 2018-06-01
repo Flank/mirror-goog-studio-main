@@ -74,6 +74,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -102,7 +103,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -363,7 +363,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     Severity.WARNING,
                     IMPLEMENTATION_RES_ONLY);
 
-    /** Wrong filename according to the format */
+    /** Wrong color of notification icon. */
     public static final Issue ICON_COLORS =
             Issue.create(
                             "IconColors",
@@ -399,6 +399,20 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             Severity.WARNING,
                             IMPLEMENTATION_JAVA)
                     .addMoreInfo("http://developer.android.com/design/style/iconography.html");
+
+    /** Raster image is required for notification icon at API < 21. */
+    public static final Issue NOTIFICATION_ICON_COMPATIBILITY =
+            Issue.create(
+                    "NotificationIconCompatibility",
+                    "Raster image is required for notification icon to support Android versions below 5.0 (API 21)",
+                    "Notification icons should define a raster image to support Android versions below 5.0 (API 21). "
+                            + "Note that the way Lint decides whether an icon is a notification icon is based on the filename prefix "
+                            + "`ic_stat_`. This corresponds to the naming convention documented in "
+                            + "http://developer.android.com/guide/practices/ui_guidelines/icon_design.html",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     /** Switch to webp? */
     public static final Issue WEBP_ELIGIBLE =
@@ -451,6 +465,10 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     }
 
     private void checkResourceFolder(Context context, @NonNull Project project) {
+        // The resource files corresponding  of the notification icons. The keys are icon names.
+        // The values are the icon files most compatible with old Android versions.
+        Map<String, File> notificationIconFiles = null;
+
         List<File> resourceFolders = project.getResourceFolders();
         for (File res : resourceFolders) {
             File[] folders = res.listFiles();
@@ -473,6 +491,10 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     pixelSizes = new HashMap<>();
                     fileSizes = new HashMap<>();
                 }
+                if (context.isEnabled(NOTIFICATION_ICON_COMPATIBILITY)
+                        && context.getMainProject().getMinSdk() < 21) {
+                    notificationIconFiles = new HashMap<>();
+                }
                 Map<File, Set<String>> folderToNames = new HashMap<>();
                 Map<File, Set<String>> nonDpiFolderNames = new HashMap<>();
                 for (File folder : folders) {
@@ -481,7 +503,13 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             || folderName.startsWith(MIPMAP_FOLDER)) {
                         File[] files = folder.listFiles();
                         if (files != null) {
-                            checkDrawableDir(context, folder, files, pixelSizes, fileSizes);
+                            checkDrawableDir(
+                                    context,
+                                    folder,
+                                    files,
+                                    pixelSizes,
+                                    fileSizes,
+                                    notificationIconFiles);
 
                             if (checkFolders && DENSITY_PATTERN.matcher(folderName).matches()) {
                                 Set<String> names = new HashSet<>(files.length);
@@ -533,7 +561,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     // (2) Use the location of the largest such image
                     File largest = null;
                     long size = 0;
-                    for (Entry<File, Long> entry : fileSizes.entrySet()) {
+                    for (Map.Entry<File, Long> entry : fileSizes.entrySet()) {
                         File f = entry.getKey();
                         String name = f.getName();
                         if (endsWithIgnoreCase(name, DOT_PNG) && !endsWithIgnoreCase(name, DOT_9PNG)
@@ -564,10 +592,25 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                 }
             }
         }
+
+        if (notificationIconFiles != null) {
+            for (Map.Entry<String, File> entry : notificationIconFiles.entrySet()) {
+                File file = entry.getValue();
+                if (!SdkUtils.isBitmapFile(file)) {
+                    String message =
+                            String.format(
+                                    "Notification icon %1$s has to have a raster image to support "
+                                            + "Android versions below 5.0 (API 21)",
+                                    entry.getKey());
+                    Location location = Location.create(file);
+                    context.report(NOTIFICATION_ICON_COMPATIBILITY, location, message);
+                }
+            }
+        }
     }
 
     /**
-     * Like {@link LintUtils#isBitmapFile(File)} but (a) operates on Strings instead of files and
+     * Like {@link SdkUtils#isBitmapFile(File)} but (a) operates on Strings instead of files and
      * (b) also considers XML drawables as images
      */
     public static boolean isDrawableFile(String name) {
@@ -1196,7 +1239,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         if (context.isEnabled(ICON_DENSITIES)) {
             // Look for folders missing some of the specific assets
             Set<String> allNames = new HashSet<>();
-            for (Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+            for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
                 if (!isNoDpiFolder(entry.getKey())) {
                     Set<String> names = entry.getValue();
                     allNames.addAll(names);
@@ -1412,7 +1455,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             File folder,
             File[] files,
             Map<File, Dimension> pixelSizes,
-            Map<File, Long> fileSizes) {
+            Map<File, Long> fileSizes,
+            @Nullable Map<String, File> notificationIconsCompatibility) {
         String folderName = folder.getName();
         if (folderName.equals(DRAWABLE_FOLDER)
                 && context.isEnabled(ICON_LOCATION)
@@ -1522,11 +1566,34 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             }
         }
 
+        // Check version compatibility of notification icons.
+        if (notificationIconsCompatibility != null) {
+            checkNotificationIconsCompatibility(files, notificationIconsCompatibility);
+        }
+
         if (context.isEnabled(WEBP_UNSUPPORTED) && files.length > 0) {
             checkWebpSupported(context, files);
         }
 
         imageCache = null;
+    }
+
+    private void checkNotificationIconsCompatibility(
+            @Nullable File[] files, @NonNull Map<String, File> notificationIconsCompatibility) {
+        if (files == null || files.length == 0) {
+            return;
+        }
+
+        for (File file : files) {
+            String name = file.getName();
+            String baseName = getBaseName(name);
+            if (isNotificationIcon(baseName)) {
+                File mostCompatibleFile = notificationIconsCompatibility.get(baseName);
+                if (mostCompatibleFile == null || !SdkUtils.isBitmapFile(mostCompatibleFile)) {
+                    notificationIconsCompatibility.put(baseName, file);
+                }
+            }
+        }
     }
 
     private void checkWebpSupported(@NonNull Context context, @NonNull File[] files) {
@@ -1885,7 +1952,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             Context context, Map<File, Set<String>> folderToNames) {
         Set<String> conflictSet = null;
 
-        for (Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+        for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
             Set<String> baseNames = new HashSet<>();
             Set<String> names = entry.getValue();
             for (String name : names) {
@@ -1896,7 +1963,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     String png = base + DOT_PNG;
                     if (names.contains(ninepatch) && names.contains(png)) {
                         if (conflictSet == null) {
-                            conflictSet = Sets.newHashSet();
+                            conflictSet = new HashSet<>();
                         }
                         conflictSet.add(base);
                     }
@@ -1911,7 +1978,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         }
 
         Map<String, List<File>> conflicts = null;
-        for (Entry<File, Set<String>> entry : folderToNames.entrySet()) {
+        for (Map.Entry<File, Set<String>> entry : folderToNames.entrySet()) {
             File dir = entry.getKey();
             Set<String> names = entry.getValue();
             for (String name : names) {
