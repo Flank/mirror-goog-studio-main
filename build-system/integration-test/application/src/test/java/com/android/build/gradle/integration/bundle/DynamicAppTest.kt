@@ -310,13 +310,13 @@ class DynamicAppTest {
 
     @Test
     fun `test overriding bundle output location`() {
-        val apkFromBundleTaskName = getBundleTaskName("debug")
+        val bundleTaskName = getBundleTaskName("debug")
 
         // use a relative path to the project build dir.
         project
             .executor()
             .with(StringOption.IDE_APK_LOCATION, "out/test/my-bundle")
-            .run("app:$apkFromBundleTaskName")
+            .run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(File(project.getSubproject(":app").buildDir,
@@ -327,9 +327,33 @@ class DynamicAppTest {
         project
             .executor()
             .with(StringOption.IDE_APK_LOCATION, absolutePath)
-            .run("app:$apkFromBundleTaskName")
+            .run("app:$bundleTaskName")
 
         FileSubject.assertThat(File(absolutePath, bundleFile.name)).exists()
+    }
+
+    @Test
+    fun `test DSL update to bundle name`() {
+        val bundleTaskName = getBundleTaskName("debug")
+
+        project.execute("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        project.getSubproject(":app").buildFile.appendText("\narchivesBaseName ='foo'")
+
+        project.execute("app:$bundleTaskName")
+
+        val newBundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(newBundleFile).exists()
+
+        // test the folder is the same as the previous one.
+        Truth.assertThat(bundleFile.parentFile).isEqualTo(newBundleFile.parentFile)
+
+        // check that the previous bundle does not exist anymore
+        FileSubject.assertThat(bundleFile).doesNotExist()
+
     }
 
     private fun getBundleTaskName(name: String): String {

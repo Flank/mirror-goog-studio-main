@@ -39,7 +39,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -106,10 +106,16 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     var keyPassword: String? = null
         private set
 
-    @get:OutputFile
+    @get:OutputDirectory
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundleFile: Provider<RegularFile>
-        private set
+    val bundleLocation: File
+        get() = bundleFile.get().asFile.parentFile
+
+    @get:Input
+    val fileName: String
+        get() = bundleFile.get().asFile.name
+
+    private lateinit var bundleFile: Provider<RegularFile>
 
     @TaskAction
     fun bundleModules() {
@@ -151,11 +157,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             // BundleTool requires that the destination directory for the bundle file exists,
             // and that the bundle file itself does not
             val bundleFile = params.bundleFile
-            FileUtils.mkdirs(bundleFile.parentFile)
-
-            if (bundleFile.isFile) {
-                FileUtils.delete(bundleFile)
-            }
+            FileUtils.cleanOutputDir(bundleFile.parentFile)
 
             val builder = ImmutableList.builder<Path>()
             builder.add(getBundlePath(params.baseModuleFile))
@@ -233,11 +235,13 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             val apkLocationOverride =
                 scope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
 
+            val bundleName = "${scope.globalScope.projectBaseName}.aab"
+
             task.bundleFile = if (apkLocationOverride == null)
-                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, "bundle.aab")
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, bundleName)
             else
                 scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task,
-                    File(apkLocationOverride, "bundle.aab"))
+                    File(apkLocationOverride, bundleName))
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
