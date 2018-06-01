@@ -49,8 +49,6 @@ interface DeprecationReporter {
         DESUGAR_TOOL("in AGP version 3.3."),
         // Deprecation of disabling incremental desugaring
         INCREMENTAL_DESUGARING("in AGP version 3.3."),
-        // deprecation of the feature dependency in favor of the DSL
-        FEATURE_CONFIG("before final 3.2."),
     }
 
     /**
