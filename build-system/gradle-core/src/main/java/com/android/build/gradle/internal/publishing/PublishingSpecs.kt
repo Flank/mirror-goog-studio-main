@@ -101,8 +101,6 @@ class PublishingSpecs {
         fun getTestingSpec(variantType: VariantType): VariantSpec
 
         fun getSpec(artifactType: ArtifactType): OutputSpec?
-
-        fun getSpec(taskOutputType: com.android.build.api.artifact.ArtifactType): OutputSpec?
     }
 
     /**
@@ -366,7 +364,6 @@ private class VariantPublishingSpecImpl(
 
     override val testingSpecs: Map<VariantType, PublishingSpecs.VariantSpec>
     private var _artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>? = null
-    private var _outputMap: Map<com.android.build.api.artifact.ArtifactType, PublishingSpecs.OutputSpec>? = null
 
     private val artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>
         get() {
@@ -379,19 +376,6 @@ private class VariantPublishingSpecImpl(
                 map
             }
         }
-
-    private val outputMap: Map<com.android.build.api.artifact.ArtifactType, PublishingSpecs.OutputSpec>
-        get() {
-            val map = _outputMap
-            return if (map == null) {
-                val map2 = outputs.associate { it.outputType to it }
-                _outputMap = map2
-                map2
-            } else {
-                map
-            }
-        }
-
 
     init {
         testingSpecs = testingSpecBuilders.toImmutableMap { it.toSpec(this) }
@@ -407,11 +391,6 @@ private class VariantPublishingSpecImpl(
     override fun getSpec(artifactType: ArtifactType): PublishingSpecs.OutputSpec? {
         val spec = artifactMap[artifactType]
         return spec ?: parentSpec?.getSpec(artifactType)
-    }
-
-    override fun getSpec(taskOutputType: com.android.build.api.artifact.ArtifactType): PublishingSpecs.OutputSpec? {
-        val spec = outputMap[taskOutputType]
-        return spec ?: parentSpec?.getSpec(taskOutputType)
     }
 }
 
