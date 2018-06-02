@@ -1693,10 +1693,17 @@ class LintDriver
         val contexts = ArrayList<JavaContext>(files.size)
         val testContexts = ArrayList<JavaContext>(files.size)
         val testFolders = project.testSourceFolders
+        val generatedFolders = project.generatedSourceFolders
         for (file in files) {
             if (file.isFile) {
                 val path = file.path
                 if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
+                    // Figure out if this is a generated test context
+                    if (!checkGeneratedSources &&
+                        generatedFolders.asSequence().any { FileUtil.isAncestor(it, file, false) }) {
+                        continue
+                    }
+
                     val context = JavaContext(this, project, main, file)
 
                     // Figure out if this file is a test context

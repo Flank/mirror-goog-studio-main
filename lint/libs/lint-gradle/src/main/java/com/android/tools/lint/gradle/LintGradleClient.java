@@ -47,14 +47,12 @@ import com.android.tools.lint.gradle.api.VariantInputs;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -161,50 +159,6 @@ public class LintGradleClient extends LintCliClient {
     @Override
     public List<File> findRuleJars(@NonNull Project project) {
         return variantInputs.getRuleJars();
-    }
-
-    @Override
-    protected boolean addBootClassPath(
-            @NonNull Collection<? extends Project> knownProjects, List<File> files) {
-        if (!super.addBootClassPath(knownProjects, files) && !isAndroid) {
-            // Non android project, e.g. perhaps a pure Kotlin project
-
-            // Gradle doesn't let you configure separate SDKs; it runs the Gradle
-            // daemon on the JDK that should be used for compilation so look up the
-            // current environment:
-            String javaHome = System.getProperty("java.home");
-            if (javaHome == null) {
-                javaHome = System.getenv("JAVA_HOME");
-            }
-            if (javaHome != null) {
-                File rt = new File(javaHome, "lib" + File.separator + "rt.jar");
-                if (rt.exists()) {
-                    files.add(rt);
-                    return true;
-                }
-                rt = new File(javaHome, "jre" + File.separator + "lib" + File.separator + "rt.jar");
-                if (rt.exists()) {
-                    files.add(rt);
-                    return true;
-                }
-            }
-
-            String cp = System.getProperty("sun.boot.class.path");
-            if (cp != null) {
-                Splitter.on(File.pathSeparatorChar)
-                        .split(cp)
-                        .forEach(
-                                (path) -> {
-                                    File file = new File(path);
-                                    if (file.exists()) {
-                                        files.add(file);
-                                    }
-                                });
-                return true;
-            }
-        }
-
-        return false;
     }
 
     @NonNull

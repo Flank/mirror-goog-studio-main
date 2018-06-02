@@ -53,101 +53,106 @@ class ProjectInitializerTest {
         val library = project(
             xml(
                 "AndroidManifest.xml", """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="foo.bar2"
-    android:versionCode="1"
-    android:versionName="1.0" >
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="foo.bar2"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="14" />
+                    <uses-sdk android:minSdkVersion="14" />
 
-    <permission android:name="bar.permission.SEND_SMS"
-        android:label="@string/foo"
-        android:description="@string/foo" />
+                    <permission android:name="bar.permission.SEND_SMS"
+                        android:label="@string/foo"
+                        android:description="@string/foo" />
 
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-    </application>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                    </application>
 
-</manifest>"""
-            ),
+                </manifest>"""
+            ).indented(),
             java(
                 "src/test/pkg/Loader.java", """
-package test.pkg;
+                package test.pkg;
 
-@SuppressWarnings("ClassNameDiffersFromFileName")
-public abstract class Loader<P> {
-    private P mParam;
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public abstract class Loader<P> {
+                    private P mParam;
 
-    public abstract void loadInBackground(P val);
+                    public abstract void loadInBackground(P val);
 
-    public void load() {
-        // Invoke a method that takes a generic type.
-        loadInBackground(mParam);
-    }
-}"""
-            ),
+                    public void load() {
+                        // Invoke a method that takes a generic type.
+                        loadInBackground(mParam);
+                    }
+                }"""
+            ).indented(),
             java(
                 "src/test/pkg/NotInProject.java", """
-package test.pkg;
+                package test.pkg;
 
-@SuppressWarnings("ClassNameDiffersFromFileName")
-public class Foo {
-    private String foo = "/sdcard/foo";
-}
-"""
-            )
-
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class Foo {
+                    private String foo = "/sdcard/foo";
+                }
+                """
+            ).indented()
         ).type(LIBRARY).name("Library")
 
         val main = project(
             xml(
                 "AndroidManifest.xml", """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="foo.bar2"
-    android:versionCode="1"
-    android:versionName="1.0" >
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="foo.bar2"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="14" />
+                    <uses-sdk android:minSdkVersion="14" />
 
-    <permission android:name="foo.permission.SEND_SMS"
-        android:label="@string/foo"
-        android:description="@string/foo" />
+                    <permission android:name="foo.permission.SEND_SMS"
+                        android:label="@string/foo"
+                        android:description="@string/foo" />
 
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-    </application>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                    </application>
 
-</manifest>
-"""
-            ),
+                </manifest>
+                """
+            ).indented(),
             xml(
                 "res/values/strings.xml", """
-<resources>
-    <string name="string1">String 1</string>
-    <string name="string1">String 2</string>
-    <string name="string3">String 3</string>
-    <string name="string3">String 4</string>
-</resources>
-"""
-            ),
+                <resources>
+                    <string name="string1">String 1</string>
+                    <string name="string1">String 2</string>
+                    <string name="string3">String 3</string>
+                    <string name="string3">String 4</string>
+                </resources>
+                """
+            ).indented(),
             xml(
                 "res/values/not_in_project.xml", """
-<resources>
-    <string name="string2">String 1</string>
-    <string name="string2">String 2</string>
-</resources>
-"""
-            ),
+                <resources>
+                    <string name="string2">String 1</string>
+                    <string name="string2">String 2</string>
+                </resources>
+                """
+            ).indented(),
             java(
                 "test/Test.java", """
-@SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
-public class Test {
-  String path = "/sdcard/file";
-}"""
-            )
-
+                @SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+                public class Test {
+                  String path = "/sdcard/file";
+                }"""
+            ).indented(),
+            java(
+                "generated/Generated.java", """
+                @SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+                public class Test {
+                  String path = "/sdcard/file";
+                }"""
+            ).indented()
         ).name("App").dependsOn(library)
 
         val root = temp.newFolder()
@@ -159,51 +164,52 @@ public class Test {
         val sdk = temp.newFolder("fake-sdk")
         val cacheDir = temp.newFolder("cache")
         @Language("XML")
-        val mergedManifestXml = """<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="foo.bar2"
-    android:versionCode="1"
-    android:versionName="1.0" >
+        val mergedManifestXml = """
 
-    <uses-sdk android:minSdkVersion="14" />
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="foo.bar2"
+                android:versionCode="1"
+                android:versionName="1.0" >
 
-    <permission
-        android:name="foo.permission.SEND_SMS"
-        android:description="@string/foo"
-        android:label="@string/foo" />
-    <permission
-        android:name="bar.permission.SEND_SMS"
-        android:description="@string/foo"
-        android:label="@string/foo" />
+                <uses-sdk android:minSdkVersion="14" />
 
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-    </application>
+                <permission
+                    android:name="foo.permission.SEND_SMS"
+                    android:description="@string/foo"
+                    android:label="@string/foo" />
+                <permission
+                    android:name="bar.permission.SEND_SMS"
+                    android:description="@string/foo"
+                    android:label="@string/foo" />
 
-</manifest>"""
+                <application
+                    android:icon="@drawable/ic_launcher"
+                    android:label="@string/app_name" >
+                </application>
+
+            </manifest>""".trimIndent()
 
         val mergedManifest = temp.newFile("merged-manifest")
         Files.asCharSink(mergedManifest, Charsets.UTF_8).write(mergedManifestXml)
 
         @Language("XML")
         val baselineXml = """
-<issues format="4" by="lint unknown">
-    <issue
-        id="DuplicateDefinition"
-        message="`string3` has already been defined in this folder"
-        errorLine1="    &lt;string name=&quot;string3&quot;>String 4&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~">
-        <location
-            file="res/values/strings.xml"
-            line="8"
-            column="13"/>
-        <location
-            file="res/values/strings.xml"
-            line="5"
-            column="13"/>
-    </issue>
-</issues>"""
+            <issues format="4" by="lint unknown">
+                <issue
+                    id="DuplicateDefinition"
+                    message="`string3` has already been defined in this folder"
+                    errorLine1="    &lt;string name=&quot;string3&quot;>String 4&lt;/string>"
+                    errorLine2="            ~~~~~~~~~~~~~~">
+                    <location
+                        file="res/values/strings.xml"
+                        line="8"
+                        column="13"/>
+                    <location
+                        file="res/values/strings.xml"
+                        line="5"
+                        column="13"/>
+                </issue>
+            </issues>""".trimIndent()
         val baseline = File(appProjectDir, "baseline.xml")
         Files.asCharSink(baseline, Charsets.UTF_8).write(baselineXml)
 
@@ -219,6 +225,7 @@ public class Test {
               <manifest file="AndroidManifest.xml" />
               <resource file="res/values/strings.xml" />
               <src file="test/Test.java" test="true" />
+              <src file="generated/Generated.java" generated="true" />
               <dep module="Library" />
             </module>
             <module name="Library" android="true" library="true" compile-sdk-version='android-M'>
@@ -286,26 +293,25 @@ public class Test {
 
         MainTest.checkDriver(
             """
-Classpath entry points to a non-existent location: ROOT/test.jar
-Classpath entry points to a non-existent location: ROOT/test.jar
-Classpath entry points to a non-existent location: ROOT/test.jar
-Classpath entry points to a non-existent location: ROOT/test.jar
-baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, baseline.xml
- [LintBaseline]
-project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
-<classpath jar="test.jar" />
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/values/strings.xml:4: Error: string1 has already been defined in this folder [DuplicateDefinition]
-    <string name="string1">String 2</string>
-            ~~~~~~~~~~~~~~
-    res/values/strings.xml:3: Previously defined here
-../Library/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
-    <permission android:name="bar.permission.SEND_SMS"
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    AndroidManifest.xml:9: Previous permission here
-3 errors, 0 warnings (1 error filtered by baseline baseline.xml)
-
-""",
+            Classpath entry points to a non-existent location: ROOT/test.jar
+            Classpath entry points to a non-existent location: ROOT/test.jar
+            Classpath entry points to a non-existent location: ROOT/test.jar
+            Classpath entry points to a non-existent location: ROOT/test.jar
+            baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, baseline.xml
+             [LintBaseline]
+            project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
+            <classpath jar="test.jar" />
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/values/strings.xml:3: Error: string1 has already been defined in this folder [DuplicateDefinition]
+                <string name="string1">String 2</string>
+                        ~~~~~~~~~~~~~~
+                res/values/strings.xml:2: Previously defined here
+            ../Library/AndroidManifest.xml:8: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
+                <permission android:name="bar.permission.SEND_SMS"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:8: Previous permission here
+            3 errors, 0 warnings (1 error filtered by baseline baseline.xml)
+            """,
             "",
 
             // Expected exit code
@@ -350,12 +356,12 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
 
         MainTest.checkDriver(
             """
-app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
-project.xml:4: Error: Unexpected tag unknown [LintError]
-  <unknown file="foo.Bar" />
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~
-2 errors, 0 warnings
-""",
+            app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
+            project.xml:4: Error: Unexpected tag unknown [LintError]
+              <unknown file="foo.Bar" />
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+            """,
             "",
 
             ERRNO_SUCCESS,
@@ -390,36 +396,36 @@ project.xml:4: Error: Unexpected tag unknown [LintError]
             ).indented(),
             java(
                 "C.java", """
-import android.app.Fragment;
+                    import android.app.Fragment;
 
-@SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
-public class C {
-  String path = "/sdcard/file";
-  void test(Fragment fragment) {
-    Object host = fragment.getHost(); // Requires API 23
-  }
-}"""
-            ),
+                    @SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+                    public class C {
+                      String path = "/sdcard/file";
+                      void test(Fragment fragment) {
+                        Object host = fragment.getHost(); // Requires API 23
+                      }
+                    }"""
+            ).indented(),
             xml(
                 "AndroidManifest.xml", """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.tools.lint.test"
-    android:versionCode="1"
-    android:versionName="1.0" >
-    <uses-sdk
-        android:minSdkVersion="15"
-        android:targetSdkVersion="22" />
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.tools.lint.test"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                    <uses-sdk
+                        android:minSdkVersion="15"
+                        android:targetSdkVersion="22" />
 
-</manifest>"""
-            ),
+                </manifest>"""
+            ).indented(),
             xml(
                 "res/values/not_in_project.xml", """
-<resources>
-    <string name="string2">String 1</string>
-    <string name="string2">String 2</string>
-</resources>
-"""
-            )
+                <resources>
+                    <string name="string2">String 1</string>
+                    <string name="string2">String 2</string>
+                </resources>
+                """
+            ).indented()
         ).createProjects(root)
         val projectDir = projects[0]
 
@@ -439,17 +445,17 @@ public class C {
 
         MainTest.checkDriver(
             """
-C.java:8: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getHost [NewApi]
-    Object host = fragment.getHost(); // Requires API 23
-                           ~~~~~~~
-AndroidManifest.xml:8: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]
-        android:targetSdkVersion="22" />
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
-  String path = "/sdcard/file";
-                ~~~~~~~~~~~~~~
-1 errors, 2 warnings
-""",
+            C.java:7: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getHost [NewApi]
+                Object host = fragment.getHost(); // Requires API 23
+                                       ~~~~~~~
+            AndroidManifest.xml:7: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]
+                    android:targetSdkVersion="22" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            C.java:5: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+              String path = "/sdcard/file";
+                            ~~~~~~~~~~~~~~
+            1 errors, 2 warnings
+            """,
             "",
 
             // Expected exit code
@@ -482,7 +488,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                         <application />
 
                     </manifest>"""
-            ),
+            ).indented(),
             xml(
                 "res/values/not_in_project.xml", """
                     <resources>
@@ -490,7 +496,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                         <string name="string2">String 2</string>
                     </resources>
                     """
-            ),
+            ).indented(),
             java(
                 "src/main/java/test/pkg/Private.java",
                 """package test.pkg;
@@ -502,7 +508,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                         }
                     }
                     """
-            )
+            ).indented()
         ).createProjects(root)
         val projectDir = projects[0]
 
@@ -585,23 +591,25 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         val root = temp.newFolder()
         val projects = lint().files(
             java(
-                "src/test/pkg/Child.java", "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.os.Parcel;\n" +
-                        "\n" +
-                        "public class Child extends Parent {\n" +
-                        "    @Override\n" +
-                        "    public int describeContents() {\n" +
-                        "        return 0;\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    @Override\n" +
-                        "    public void writeToParcel(Parcel dest, int flags) {\n" +
-                        "\n" +
-                        "    }\n" +
-                        "}\n"
-            )
+                "src/test/pkg/Child.java", """
+                package test.pkg;
+
+                import android.os.Parcel;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class Child extends Parent {
+                    @Override
+                    public int describeContents() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void writeToParcel(Parcel dest, int flags) {
+
+                    }
+                }
+                """
+            ).indented()
         ).createProjects(root)
         val projectDir = projects[0]
 
@@ -642,7 +650,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
             "" +
                     // We only find this error if we correctly include the jar dependency
                     // which provides the parent class which implements Parcelable.
-                    "src/test/pkg/Child.java:5: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n".replace(
+                    "src/test/pkg/Child.java:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n".replace(
                         '/',
                         File.separatorChar
                     ) +

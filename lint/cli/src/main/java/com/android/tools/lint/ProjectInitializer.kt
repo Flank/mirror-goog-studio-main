@@ -18,6 +18,7 @@ package com.android.tools.lint
 
 import com.android.SdkConstants
 import com.android.SdkConstants.ANDROID_MANIFEST_XML
+import com.android.SdkConstants.ATTR_PATH
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.FD_JARS
 import com.android.SdkConstants.FD_RES
@@ -63,6 +64,7 @@ private const val TAG_RESOURCE = "resource"
 private const val TAG_AAR = "aar"
 private const val TAG_JAR = "jar"
 private const val TAG_SDK = "sdk"
+private const val TAG_JDK_BOOT_CLASS_PATH = "jdk-boot-classpath"
 private const val TAG_LINT_CHECKS = "lint-checks"
 private const val TAG_BASELINE = "baseline"
 private const val TAG_MERGED_MANIFEST = "merged-manifest"
@@ -71,6 +73,7 @@ private const val TAG_AIDL = "aidl"
 private const val TAG_PROGUARD = "proguard"
 private const val ATTR_COMPILE_SDK_VERSION = "compile-sdk-version"
 private const val ATTR_TEST = "test"
+private const val ATTR_GENERATED = "generated"
 private const val ATTR_NAME = "name"
 private const val ATTR_FILE = "file"
 private const val ATTR_EXTRACTED = "extracted"
@@ -110,8 +113,13 @@ data class ProjectMetadata(
     val mergedManifests: Map<Project, File?> = emptyMap(),
     /** A map from module to a baseline to apply to that module, if any */
     val moduleBaselines: Map<Project, File?> = emptyMap(),
+    /** List of custom check JAR files to apply everywhere */
+    val globalLintChecks: List<File> = emptyList(),
     /** A map from module to a list of custom rule JAR files to apply, if any */
     val lintChecks: Map<Project, List<File>> = emptyMap(),
+    /** list of boot classpath jars to use for non-Android projects */
+    val jdkBootClasspath: List<File> = emptyList(),
+
     /**
      * If true, the project metadata being passed in only represents a small
      * subset of the real project sources, so only lint checks which can be run
@@ -212,6 +220,7 @@ private class ProjectInitializer(
         }
 
         val incomplete = projectElement.getAttribute(ATTR_INCOMPLETE) == VALUE_TRUE
+        val globalLintChecks = mutableListOf<File>()
 
         // First gather modules and sources, and collect dependency information.
         // The dependency information is captured into a separate map since dependencies
@@ -219,6 +228,7 @@ private class ProjectInitializer(
         var child = getFirstSubTag(projectElement)
         var sdk: File? = null
         var baseline: File? = null
+        val jdkBootClasspath = mutableListOf<File>()
         while (child != null) {
             val tag = child.tagName
             when (tag) {
@@ -228,8 +238,21 @@ private class ProjectInitializer(
                 TAG_CLASSPATH -> {
                     globalClasspath.add(getFile(child, this.root))
                 }
+                TAG_LINT_CHECKS -> {
+                    globalLintChecks.add(getFile(child, this.root))
+                }
                 TAG_SDK -> {
                     sdk = getFile(child, this.root)
+                }
+                TAG_JDK_BOOT_CLASS_PATH -> {
+                    val path = child.getAttribute(ATTR_PATH)
+                    if (path.isNotEmpty()) {
+                        for (s in path.split(File.pathSeparatorChar)) {
+                            jdkBootClasspath += getFile(s, child, this.root)
+                        }
+                    } else {
+                        jdkBootClasspath += getFile(child, this.root)
+                    }
                 }
                 TAG_BASELINE -> {
                     baseline = getFile(child, this.root)
@@ -299,11 +322,13 @@ private class ProjectInitializer(
             projects = sortedModules,
             sdk = sdk,
             baseline = baseline,
+            globalLintChecks = globalLintChecks,
             lintChecks = lintChecks,
             cache = cache,
             moduleBaselines = baselines,
             mergedManifests = mergedManifests,
-            incomplete = incomplete
+            incomplete = incomplete,
+            jdkBootClasspath = jdkBootClasspath
         )
     }
 
@@ -354,6 +379,7 @@ private class ProjectInitializer(
         modules[name] = module
 
         val sources = mutableListOf<File>()
+        val generatedSources = mutableListOf<File>()
         val testSources = mutableListOf<File>()
         val resources = mutableListOf<File>()
         val manifests = mutableListOf<File>()
@@ -374,9 +400,12 @@ private class ProjectInitializer(
                 }
                 TAG_SRC -> {
                     val file = getFile(child, dir)
-                    when (child.getAttribute(ATTR_TEST) == VALUE_TRUE) {
-                        false -> sources.add(file)
-                        true -> testSources.add(file)
+                    when (child.getAttribute(ATTR_GENERATED) == VALUE_TRUE) {
+                        true -> generatedSources.add(file)
+                        false -> when (child.getAttribute(ATTR_TEST) == VALUE_TRUE) {
+                            false -> sources.add(file)
+                            true -> testSources.add(file)
+                        }
                     }
                 }
                 TAG_RESOURCE -> {
@@ -425,7 +454,9 @@ private class ProjectInitializer(
 
         // Compute source roots
         val sourceRoots = computeSourceRoots(sources)
-        val testSourceRoots = computeTestSourceRoots(testSources, sourceRoots)
+        val testSourceRoots = computeUniqueSourceRoots("test", testSources, sourceRoots)
+        val generatedSourceRoots =
+            computeUniqueSourceRoots("generated", generatedSources, sourceRoots)
 
         val resourceRoots = mutableListOf<File>()
         if (!resources.isEmpty()) {
@@ -443,6 +474,7 @@ private class ProjectInitializer(
         module.setManifests(manifests)
         module.setResources(resourceRoots, resources)
         module.setTestSources(testSourceRoots, testSources)
+        module.setGeneratedSources(generatedSourceRoots, generatedSources)
         module.setSources(sourceRoots, sources)
         module.setClasspath(classes, true)
         module.setClasspath(classpath, false)
@@ -565,28 +597,30 @@ private class ProjectInitializer(
         }
     }
 
-    private fun computeTestSourceRoots(
-        testSources: MutableList<File>,
+    private fun computeUniqueSourceRoots(
+        type: String,
+        typeSources: MutableList<File>,
         sourceRoots: MutableList<File>
     ): List<File> {
         when {
-            !testSources.isNotEmpty() -> return emptyList()
+            typeSources.isEmpty() -> return emptyList()
             else -> {
-                val testSourceRoots = computeSourceRoots(testSources)
+                val typeSourceRoots = computeSourceRoots(typeSources)
 
                 // We don't allow the test sources and product sources to overlap
-                for (root in testSourceRoots) {
+                for (root in typeSourceRoots) {
                     if (sourceRoots.contains(root)) {
                         reportError(
-                            "Tests cannot be in the same source root as production files; " +
+                            "${type.capitalize()} sources cannot be in the same " +
+                                    "source root as production files; " +
                                     "source root $root is also a test root"
                         )
                         break
                     }
                 }
 
-                testSourceRoots.removeAll(sourceRoots)
-                return testSourceRoots
+                typeSourceRoots.removeAll(sourceRoots)
+                return typeSourceRoots
             }
         }
     }
@@ -660,6 +694,15 @@ private class ProjectInitializer(
             }
             return File("")
         }
+
+        return getFile(path, element, dir)
+    }
+
+    private fun getFile(
+        path: String,
+        element: Element,
+        dir: File
+    ): File {
         var source = File(path)
         if (!source.isAbsolute && !source.exists()) {
             source = File(dir, path)
@@ -782,6 +825,12 @@ constructor(
     /** Sets the given source files and their roots for this module */
     fun setTestSources(sourceRoots: List<File>, sources: List<File>) {
         this.testSourceFolders = sourceRoots
+        addFilteredFiles(sources)
+    }
+
+    /** Sets the given generated source files and their roots for this module */
+    fun setGeneratedSources(sourceRoots: List<File>, sources: List<File>) {
+        this.generatedSourceFolders = sourceRoots
         addFilteredFiles(sources)
     }
 

@@ -1309,7 +1309,12 @@ public class LintCliClient extends LintClient {
     protected boolean addBootClassPath(
             @NonNull Collection<? extends Project> knownProjects, List<File> files) {
         IAndroidTarget buildTarget = null;
+        boolean isAndroid = false;
         for (Project project : knownProjects) {
+            if (project.isAndroidProject()) {
+                isAndroid = true;
+            }
+
             IAndroidTarget t = project.getBuildTarget();
             if (t != null) {
                 if (buildTarget == null) {
@@ -1324,6 +1329,44 @@ public class LintCliClient extends LintClient {
             File file = buildTarget.getFile(IAndroidTarget.ANDROID_JAR);
             if (file != null) {
                 files.add(file);
+                return true;
+            }
+        }
+
+        if (!isAndroid) {
+            // Non android project, e.g. perhaps a pure Kotlin project
+
+            // Gradle doesn't let you configure separate SDKs; it runs the Gradle
+            // daemon on the JDK that should be used for compilation so look up the
+            // current environment:
+            String javaHome = System.getProperty("java.home");
+            if (javaHome == null) {
+                javaHome = System.getenv("JAVA_HOME");
+            }
+            if (javaHome != null) {
+                File rt = new File(javaHome, "lib" + File.separator + "rt.jar");
+                if (rt.exists()) {
+                    files.add(rt);
+                    return true;
+                }
+                rt = new File(javaHome, "jre" + File.separator + "lib" + File.separator + "rt.jar");
+                if (rt.exists()) {
+                    files.add(rt);
+                    return true;
+                }
+            }
+
+            String cp = System.getProperty("sun.boot.class.path");
+            if (cp != null) {
+                Splitter.on(File.pathSeparatorChar)
+                        .split(cp)
+                        .forEach(
+                                (path) -> {
+                                    File file = new File(path);
+                                    if (file.exists()) {
+                                        files.add(file);
+                                    }
+                                });
                 return true;
             }
         }

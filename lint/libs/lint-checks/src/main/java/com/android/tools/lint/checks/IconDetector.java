@@ -610,8 +610,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     }
 
     /**
-     * Like {@link SdkUtils#isBitmapFile(File)} but (a) operates on Strings instead of files and
-     * (b) also considers XML drawables as images
+     * Like {@link SdkUtils#isBitmapFile(File)} but (a) operates on Strings instead of files and (b)
+     * also considers XML drawables as images
      */
     public static boolean isDrawableFile(String name) {
         // endsWith(name, DOT_PNG) is also true for endsWith(name, DOT_9PNG)

@@ -25,6 +25,7 @@ import static com.android.SdkConstants.VALUE_NO_EXCLUDE_DESCENDANTS;
 import static com.android.SdkConstants.VALUE_YES;
 import static com.android.SdkConstants.VALUE_YES_EXCLUDE_DESCENDANTS;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -35,7 +36,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
 import java.util.Collections;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -76,7 +76,7 @@ public class AutofillDetector extends LayoutDetector {
     }
 
     @Override
-    public void visitElement(@NotNull XmlContext xmlContext, @NotNull Element element) {
+    public void visitElement(@NonNull XmlContext xmlContext, @NonNull Element element) {
         if (xmlContext.getMainProject().getTargetSdk() < 26) {
             return;
         }

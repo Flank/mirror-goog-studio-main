@@ -93,6 +93,7 @@ public class LintClientTest extends TestCase {
 
         Project platformProject = mock(Project.class);
         when(platformProject.getBuildTargetHash()).thenReturn("android-23");
+        when(platformProject.isAndroidProject()).thenReturn(true);
         Project previewProject = mock(Project.class);
         when(previewProject.getBuildTargetHash()).thenReturn("android-O");
         Project addOnProject = mock(Project.class);
@@ -102,14 +103,21 @@ public class LintClientTest extends TestCase {
         assertThat(platformTarget).isNotNull();
         assertEquals("android-23", AndroidTargetHash.getTargetHashString(platformTarget));
 
+        when(previewProject.isAndroidProject()).thenReturn(true);
         IAndroidTarget previewTarget = client.getCompileTarget(previewProject);
         assertThat(previewTarget).isNotNull();
         assertEquals("android-O", AndroidTargetHash.getTargetHashString(previewTarget));
 
+        when(addOnProject.isAndroidProject()).thenReturn(true);
         IAndroidTarget addOnTarget = client.getCompileTarget(addOnProject);
         assertThat(addOnTarget).isNotNull();
         assertEquals(
                 "Google Inc.:Google APIs:23", AndroidTargetHash.getTargetHashString(addOnTarget));
+
+        // Don't return IAndroidTargets for non-Android projects
+        when(previewProject.isAndroidProject()).thenReturn(false);
+        previewTarget = client.getCompileTarget(previewProject);
+        assertThat(previewTarget).isNull();
     }
 
     @NonNull

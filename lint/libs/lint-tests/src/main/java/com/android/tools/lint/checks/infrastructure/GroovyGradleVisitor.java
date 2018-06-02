@@ -44,7 +44,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.jetbrains.annotations.NotNull;
 
 // Copy of com.android.tools.lint.gradle.GroovyGradleVisitor
 //
@@ -60,7 +59,7 @@ import org.jetbrains.annotations.NotNull;
 public class GroovyGradleVisitor extends GradleVisitor {
     @Override
     public void visitBuildScript(
-            @NotNull GradleContext context, @NonNull List<? extends GradleScanner> detectors) {
+            @NonNull GradleContext context, @NonNull List<? extends GradleScanner> detectors) {
         try {
             visitQuietly(context, detectors);
         } catch (Throwable t) {
@@ -292,15 +291,15 @@ public class GroovyGradleVisitor extends GradleVisitor {
                 new DefaultPosition(toLine, toColumn, offsets.getSecond()));
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Object getPropertyKeyCookie(@NotNull Object cookie) {
+    public Object getPropertyKeyCookie(@NonNull Object cookie) {
         return cookie;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Object getPropertyPairCookie(@NotNull Object cookie) {
+    public Object getPropertyPairCookie(@NonNull Object cookie) {
         return cookie;
     }
 }
