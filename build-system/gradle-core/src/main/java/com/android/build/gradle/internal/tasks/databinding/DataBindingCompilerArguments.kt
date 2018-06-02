@@ -88,7 +88,11 @@ class DataBindingCompilerArguments constructor(
     @get:Input
     val enableDebugLogs: Boolean,
 
-    @get:Input
+    // We don't set this as an @Input because: (1) it doesn't affect the results of data binding
+    // processing, and (2) its value is changed between an Android Studio build and a command line
+    // build; by not setting it as @Input, we allow the users to get incremental/UP-TO-DATE builds
+    // when switching between the two modes (see https://issuetracker.google.com/80555723).
+    @get:Internal
     val printEncodedErrorLogs: Boolean,
 
     @get:Input
