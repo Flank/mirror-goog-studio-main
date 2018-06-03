@@ -18,7 +18,7 @@ package com.android.tools.profiler.network;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.profiler.FakeAndroidDriver;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;

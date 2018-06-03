@@ -19,7 +19,7 @@ package com.android.tools.profiler.energy;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.android.tools.profiler.FakeAndroidDriver;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;

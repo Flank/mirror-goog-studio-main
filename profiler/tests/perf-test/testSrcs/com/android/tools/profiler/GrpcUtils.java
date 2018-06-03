@@ -2,6 +2,7 @@ package com.android.tools.profiler;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.EnergyServiceGrpc;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;

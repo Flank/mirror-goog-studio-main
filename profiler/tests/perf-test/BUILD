@@ -52,6 +52,7 @@ java_library(
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
         "//tools/base/common:studio.android.sdktools.common",
+        "//tools/base/fakeandroid",
         "//tools/base/profiler:netty-grpc-jar",
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
         "//tools/base/profiler/transform",
@@ -87,6 +88,7 @@ perf_test(
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
@@ -101,6 +103,7 @@ perf_test(
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
@@ -115,6 +118,7 @@ perf_test(
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/base/profiler/tests/test-app:libmemorynativetest.so",
         "//tools/idea/.idea/libraries:truth",
@@ -130,6 +134,7 @@ perf_test(
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
@@ -147,6 +152,7 @@ perf_test(
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],

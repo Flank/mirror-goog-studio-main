@@ -1,4 +1,4 @@
-package com.android.tools.profiler;
+package com.android.tools.fakeandroid;
 
 import java.io.BufferedReader;
 import java.io.File;

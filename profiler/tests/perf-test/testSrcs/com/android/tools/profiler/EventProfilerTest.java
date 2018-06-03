@@ -18,6 +18,7 @@ package com.android.tools.profiler;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tools.fakeandroid.FakeAndroidDriver;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Pattern;
