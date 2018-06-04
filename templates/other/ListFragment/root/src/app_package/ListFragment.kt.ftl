@@ -2,7 +2,7 @@ package ${kotlinEscapedPackageName}
 
 import android.content.Context
 import android.os.Bundle
-import android${SupportPackage}.app.Fragment
+import ${getMaterialComponentName('android${SupportPackage}.app.Fragment', useAndroidX)}
 import ${getMaterialComponentName('android.support.v7.widget.GridLayoutManager', useAndroidX)}
 import ${getMaterialComponentName('android.support.v7.widget.LinearLayoutManager', useAndroidX)}
 import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)}

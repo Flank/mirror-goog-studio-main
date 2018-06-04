@@ -2,11 +2,7 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 import ${getMaterialComponentName('android.arch.lifecycle.ViewModelProviders', useAndroidX)}
 import android.os.Bundle
-<#if useAndroidX>
-import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
-<#else>
-import android${SupportPackage}.app.Fragment
-</#if>
+import ${getMaterialComponentName('android${SupportPackage}.app.Fragment', useAndroidX)}
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
