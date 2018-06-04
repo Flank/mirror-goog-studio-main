@@ -4,10 +4,11 @@ maven_repo(
     name = "gmaven",
     artifacts = [
         "//tools/data-binding:tools.compiler",
+        "//tools/analytics-library/inspector",
+        "//tools/analytics-library/publisher",
         "//tools/base/build-system/gradle-core",
         "//tools/base/build-system/aapt2",
         "//tools/base/devicelib:tools.devicelib",
-        "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/lint/libs/lint-tests",
         "//tools/base/lint:tools.lint-gradle",
         "//tools/base/testutils:tools.testutils",

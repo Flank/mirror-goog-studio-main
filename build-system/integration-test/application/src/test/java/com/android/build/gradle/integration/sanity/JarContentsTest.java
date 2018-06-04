@@ -49,28 +49,6 @@ import org.junit.Test;
 /** Checks what we distribute in our jars. */
 public class JarContentsTest {
 
-    private static final Set<String> IGNORED_ARTIFACTS =
-            ImmutableSet.of(
-                    "swt",
-                    "ddmuilib",
-                    "asset-studio",
-                    "monkeyrunner",
-                    "uiautomatorviewer",
-                    "hierarchyviewer2lib",
-                    "traceview");
-
-    // TODO: remove these (b/64921827).
-    private static final Set<String> IGNORED_ARTIFACTS_BAZEL =
-            ImmutableSet.of(
-                    "archquery",
-                    "chimpchat",
-                    "inspector",
-                    "jobb",
-                    "ninepatch",
-                    "publisher",
-                    "screenshot2",
-                    "swtmenubar");
-
     private static final Set<String> LICENSE_NAMES =
             ImmutableSet.of("NOTICE", "NOTICE.txt", "LICENSE");
 
@@ -166,15 +144,6 @@ public class JarContentsTest {
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
-        expected.putAll(
-                "com/android/tools/build/jobb",
-                "com/",
-                "com/android/",
-                "com/android/jobb/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE",
-                "Twofish/");
         expected.putAll(
                 "com/android/tools/build/apkzlib",
                 "com/",
@@ -913,15 +882,6 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
-                "com/android/tools/swtmenubar",
-                "com/",
-                "com/android/",
-                "com/android/menubar/",
-                "com/android/menubar/internal/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
                 "com/android/tools/annotations",
                 "com/",
                 "com/android/",
@@ -939,26 +899,6 @@ public class JarContentsTest {
                 "com/android/tools/device/internal/",
                 "com/android/tools/device/internal/adb/",
                 "com/android/tools/device/internal/adb/commands/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
-                "com/android/tools/ninepatch",
-                "com/",
-                "com/android/",
-                "com/android/ninepatch/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
-                "com/android/tools/chimpchat",
-                "com/",
-                "com/android/",
-                "com/android/chimpchat/",
-                "com/android/chimpchat/adb/",
-                "com/android/chimpchat/adb/image/",
-                "com/android/chimpchat/core/",
-                "com/android/chimpchat/hierarchyviewer/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -1103,14 +1043,6 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
-                "com/android/tools/archquery",
-                "com/",
-                "com/android/",
-                "com/android/archquery/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
                 "com/android/tools/layoutlib/layoutlib-api",
                 "com/",
                 "com/android/",
@@ -1120,19 +1052,6 @@ public class JarContentsTest {
                 "com/android/ide/common/rendering/api/",
                 "com/android/resources/",
                 "com/android/util/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
-                "com/android/tools/fakeadbserver/fakeadbserver",
-                "com/",
-                "com/android/",
-                "com/android/fakeadbserver/",
-                "com/android/fakeadbserver/devicecommandhandlers/",
-                "com/android/fakeadbserver/devicecommandhandlers/ddmsHandlers/",
-                "com/android/fakeadbserver/hostcommandhandlers/",
-                "com/android/fakeadbserver/shellcommandhandlers/",
-                "com/android/fakeadbserver/statechangehubs/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -1215,14 +1134,6 @@ public class JarContentsTest {
                 "META-INF/",
                 "META-INF/MANIFEST.MF"
         );
-        expected.putAll(
-                "com/android/tools/screenshot2",
-                "com/",
-                "com/android/",
-                "com/android/screenshot/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
         expected.putAll(
                 "com/android/tools/dvlib",
                 "com/",
@@ -1411,17 +1322,7 @@ public class JarContentsTest {
 
     private static boolean isIgnored(String path) {
         String normalizedPath = FileUtils.toSystemIndependentPath(path);
-        return normalizedPath.contains(EXTERNAL_DEPS)
-                || IGNORED_ARTIFACTS
-                        .stream()
-                        .anyMatch(name -> normalizedPath.contains("/" + name + "/"))
-                || (TestUtils.runningFromBazel()
-                        && IGNORED_ARTIFACTS_BAZEL
-                                .stream()
-                                .anyMatch(
-                                        name ->
-                                                normalizedPath.contains("/" + name + "/")
-                                                        || normalizedPath.endsWith("/" + name)));
+        return normalizedPath.contains(EXTERNAL_DEPS);
     }
 
     private static boolean isCurrentVersion(Path path) {
