@@ -157,9 +157,8 @@ public final class ProcessProfileWriterFactory {
             @NonNull ScheduledExecutorService eventLoop) {
         AnalyticsSettings settings = AnalyticsSettings.getInstance(logger);
         UsageTracker.initialize(settings, eventLoop);
-        UsageTracker tracker = UsageTracker.getInstance();
-        tracker.setMaxJournalTime(10, TimeUnit.MINUTES);
-        tracker.setMaxJournalSize(1000);
+        UsageTracker.setMaxJournalTime(10, TimeUnit.MINUTES);
+        UsageTracker.setMaxJournalSize(1000);
     }
 
     private boolean enableChromeTracingOutput;

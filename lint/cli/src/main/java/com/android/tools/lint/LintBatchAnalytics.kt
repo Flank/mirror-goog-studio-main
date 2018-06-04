@@ -71,7 +71,7 @@ class LintBatchAnalytics {
             computeApplicationId(projects)?.let { setRawProjectId(it) }
         }
 
-        UsageTracker.getInstance().log(event)
+        UsageTracker.log(event)
     }
 
     private fun computeApplicationId(projects: Collection<Project>): String? {

@@ -170,14 +170,13 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
         }
 
         // Public build profile.
-        UsageTracker.getInstance()
-                .log(
-                        AndroidStudioEvent.newBuilder()
-                                .setCategory(AndroidStudioEvent.EventCategory.GRADLE)
-                                .setKind(AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE)
-                                .setGradleBuildProfile(mBuild.build())
-                                .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
-                                .setJvmDetails(CommonMetricsData.getJvmDetails()));
+        UsageTracker.log(
+                AndroidStudioEvent.newBuilder()
+                        .setCategory(AndroidStudioEvent.EventCategory.GRADLE)
+                        .setKind(AndroidStudioEvent.EventKind.GRADLE_BUILD_PROFILE)
+                        .setGradleBuildProfile(mBuild.build())
+                        .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
+                        .setJvmDetails(CommonMetricsData.getJvmDetails()));
 
     }
 
