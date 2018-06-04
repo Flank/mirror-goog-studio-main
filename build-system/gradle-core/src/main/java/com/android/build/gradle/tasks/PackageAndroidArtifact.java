@@ -50,7 +50,6 @@ import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.errors.EvalIssueReporter;
@@ -987,11 +986,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
 
-            variantScope
-                    .getVariantData()
-                    .addTask(
-                            TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT,
-                            packageAndroidArtifact);
+            variantScope.getTaskContainer().setPackageAndroidTask(packageAndroidArtifact);
             configure(packageAndroidArtifact);
         }
 

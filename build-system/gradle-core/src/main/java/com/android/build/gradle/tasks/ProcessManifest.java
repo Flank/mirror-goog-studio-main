@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
@@ -318,8 +317,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                             ImmutableList.of(reportFile),
                             processManifest);
 
-            scope.getVariantData()
-                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);
+            scope.getTaskContainer().setProcessManifestTask(processManifest);
         }
     }
 }

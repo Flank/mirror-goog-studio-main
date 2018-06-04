@@ -123,7 +123,7 @@ public class GenerateResValues extends AndroidBuilderTask {
 
         @Override
         public void execute(@NonNull GenerateResValues generateResValuesTask) {
-            scope.getVariantData().generateResValuesTask = generateResValuesTask;
+            scope.getTaskContainer().setGenerateResValuesTask(generateResValuesTask);
 
             final GradleVariantConfiguration variantConfiguration =
                     scope.getVariantData().getVariantConfiguration();

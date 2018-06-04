@@ -71,8 +71,8 @@ import java.io.File;
 import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Action;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -158,15 +158,7 @@ public class ApplicationTaskManager extends TaskManager {
         createAidlTask(variantScope);
 
         // Add NDK tasks
-        if (!isComponentModelPlugin()) {
-            createNdkTasks(variantScope);
-        } else {
-            if (variantData.compileTask != null) {
-                variantData.compileTask.dependsOn(getNdkBuildable(variantData));
-            } else {
-                variantScope.getCompileTask().dependsOn(getNdkBuildable(variantData));
-            }
-        }
+        createNdkTasks(variantScope);
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
@@ -213,11 +205,13 @@ public class ApplicationTaskManager extends TaskManager {
             CheckMultiApkLibrariesTask checkMultiApkLibrariesTask =
                     taskFactory.create(new CheckMultiApkLibrariesTask.ConfigAction(variantScope));
             // variantScope.setMergeJavaResourcesTask() is called in createCompileTask() above.
-            assert variantScope.getMergeJavaResourcesTask() != null;
             // We set the merge java resources task to depend on this check, because merging java
             // resources is the first place an error could be thrown if there are duplicate
             // libraries.
-            variantScope.getMergeJavaResourcesTask().dependsOn(checkMultiApkLibrariesTask);
+            variantScope
+                    .getTaskContainer()
+                    .getMergeJavaResourcesTask()
+                    .dependsOn(checkMultiApkLibrariesTask);
         }
 
         createStripNativeLibraryTask(taskFactory, variantScope);
@@ -351,13 +345,13 @@ public class ApplicationTaskManager extends TaskManager {
         if (transformTaskAndroidTask.isPresent()) {
             TransformTask splitApk = transformTaskAndroidTask.get();
             splitApk.dependsOn(getValidateSigningTask(variantScope));
-            variantScope.getAssembleTask().dependsOn(splitApk);
+            variantScope.getTaskContainer().getAssembleTask().dependsOn(splitApk);
             buildInfoGeneratorTask.mustRunAfter(splitApk.getName());
         }
 
         // if the assembleVariant task run, make sure it also runs the task to generate
         // the build-info.xml.
-        variantScope.getAssembleTask().dependsOn(buildInfoGeneratorTask);
+        variantScope.getTaskContainer().getAssembleTask().dependsOn(buildInfoGeneratorTask);
         return buildInfoGeneratorTask;
     }
 
@@ -409,7 +403,7 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     @Override
-    protected DefaultTask createVariantPreBuildTask(@NonNull VariantScope scope) {
+    protected Task createVariantPreBuildTask(@NonNull VariantScope scope) {
         final VariantType variantType = scope.getVariantConfiguration().getType();
 
         if (variantType.isApk()) {
@@ -486,7 +480,8 @@ public class ApplicationTaskManager extends TaskManager {
 
         if (scope.getType().isBaseModule()) {
             BundleTask bundleTask = taskFactory.create(new BundleTask.ConfigAction(scope));
-            scope.getBundleTask()
+            scope.getTaskContainer()
+                    .getBundleTask()
                     .dependsOn(
                             scope.getArtifacts()
                                     .getFinalArtifactFiles(InternalArtifactType.BUNDLE));

@@ -206,7 +206,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             final GradleVariantConfiguration variantConfiguration =
                     variantData.getVariantConfiguration();
 
-            variantData.generateApkDataTask = task;
+            scope.getTaskContainer().setGenerateApkDataTask(task);
 
             task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             task.setVariantName(variantConfiguration.getFullName());

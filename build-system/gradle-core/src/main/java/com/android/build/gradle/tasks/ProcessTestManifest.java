@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
@@ -352,8 +351,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     scope.getArtifacts().getFinalArtifactFiles(
                             InternalArtifactType.MERGED_MANIFESTS));
 
-            scope.getVariantData()
-                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processTestManifestTask);
+            scope.getTaskContainer().setProcessManifestTask(processTestManifestTask);
         }
     }
 }

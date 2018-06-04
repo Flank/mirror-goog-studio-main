@@ -143,7 +143,7 @@ public class ApiObjectFactory {
                         objectFactory,
                         extension,
                         variantApi,
-                        variantData);
+                        variantData.getTaskContainer());
         GradleVariantConfiguration config = variantData.getVariantConfiguration();
         variantData
                 .getOutputScope()

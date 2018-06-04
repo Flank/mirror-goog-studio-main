@@ -271,7 +271,7 @@ public class RenderscriptCompile extends NdkTask {
             BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
-            variantData.renderscriptCompileTask = renderscriptTask;
+            scope.getTaskContainer().setRenderscriptCompileTask(renderscriptTask);
             boolean ndkMode = config.getRenderscriptNdkModeEnabled();
             renderscriptTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             renderscriptTask.setVariantName(config.getFullName());

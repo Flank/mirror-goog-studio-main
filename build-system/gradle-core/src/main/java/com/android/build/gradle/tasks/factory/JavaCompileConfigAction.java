@@ -54,8 +54,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
     @Override
     public void execute(@NonNull final AndroidJavaCompile javacTask) {
-        scope.getVariantData().javacTask = javacTask;
-        scope.getVariantData().javaCompilerTask = javacTask;
+        scope.getTaskContainer().setJavacTask(javacTask);
         final GlobalScope globalScope = scope.getGlobalScope();
         final Project project = globalScope.getProject();
         BuildArtifactsHolder artifacts = scope.getArtifacts();

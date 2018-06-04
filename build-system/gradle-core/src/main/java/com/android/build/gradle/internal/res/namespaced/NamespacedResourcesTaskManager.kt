@@ -124,7 +124,7 @@ class NamespacedResourcesTaskManager(
                     name = name,
                     inputDirectories = artifacts,
                     variantScope = variantScope))
-                .dependsOn(variantScope.resourceGenTask)
+                .dependsOn(variantScope.taskContainer.resourceGenTask)
         }
     }
 }

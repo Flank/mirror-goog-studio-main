@@ -171,10 +171,7 @@ public class LibraryTaskManager extends TaskManager {
         TaskManager.setJavaCompilerTask(javacTask, variantScope);
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (!isComponentModelPlugin()) {
-            // Add NDK tasks
-            createNdkTasks(variantScope);
-        }
+        createNdkTasks(variantScope);
         variantScope.setNdkBuildable(getNdkBuildable(variantScope.getVariantData()));
 
         // External native build
@@ -245,7 +242,7 @@ public class LibraryTaskManager extends TaskManager {
                                 // if the task is a no-op then we make assemble task
                                 // depend on it.
                                 if (transform.getScopes().isEmpty()) {
-                                    variantScope.getAssembleTask().dependsOn(t);
+                                    variantScope.getTaskContainer().getAssembleTask().dependsOn(t);
                                 }
                             });
         }
@@ -394,7 +391,7 @@ public class LibraryTaskManager extends TaskManager {
         final BundleAar bundle =
                 taskFactory.create(new BundleAar.ConfigAction(extension, variantScope));
 
-        variantScope.getAssembleTask().dependsOn(bundle);
+        variantScope.getTaskContainer().getAssembleTask().dependsOn(bundle);
 
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
@@ -515,8 +512,8 @@ public class LibraryTaskManager extends TaskManager {
         MergeSourceSetFolders mergeAssetsTask =
                 taskFactory.create(new MergeSourceSetFolders.LibraryAssetConfigAction(scope));
 
-        mergeAssetsTask.dependsOn(scope.getAssetGenTask());
-        scope.setMergeAssetsTask(mergeAssetsTask);
+        mergeAssetsTask.dependsOn(scope.getTaskContainer().getAssetGenTask());
+        scope.getTaskContainer().setMergeAssetsTask(mergeAssetsTask);
     }
 
     @NonNull
@@ -537,6 +534,6 @@ public class LibraryTaskManager extends TaskManager {
         VerifyLibraryResourcesTask verifyLibraryResources =
                 taskFactory.create(new VerifyLibraryResourcesTask.ConfigAction(scope));
 
-        scope.getAssembleTask().dependsOn(verifyLibraryResources);
+        scope.getTaskContainer().getAssembleTask().dependsOn(verifyLibraryResources);
     }
 }

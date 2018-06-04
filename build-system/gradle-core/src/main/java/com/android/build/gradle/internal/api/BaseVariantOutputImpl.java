@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.ide.common.build.ApkData;
@@ -75,19 +75,19 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Nullable
     @Override
     public ProcessAndroidResources getProcessResources() {
-        return taskContainer.getTaskByType(ProcessAndroidResources.class);
+        return taskContainer.getProcessAndroidResTask();
     }
 
     @Override
     @Nullable
     public ManifestProcessorTask getProcessManifest() {
-        return taskContainer.getTaskByType(ManifestProcessorTask.class);
+        return taskContainer.getProcessManifestTask();
     }
 
     @Nullable
     @Override
     public Task getAssemble() {
-        return taskContainer.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
+        return taskContainer.getAssembleTask();
     }
 
     @NonNull

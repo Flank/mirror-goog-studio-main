@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.AndroidBuilder
@@ -37,7 +38,6 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.doNothing
 import org.mockito.MockitoAnnotations
 import java.io.IOException
 
@@ -73,12 +73,11 @@ class ProcessManifestTest {
         `when`(variantScope.fullVariantName).thenReturn("fullVariantName")
         `when`(variantScope.getTaskName(any(), any())).thenReturn("processManifest")
         `when`(variantScope.getIncrementalDir(anyString())).thenReturn(temporaryFolder.newFolder())
+        `when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
 
         `when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         `when`(outputScope.mainSplit).thenReturn(mainSplit)
         `when`(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
-        doNothing().`when`(variantData).addTask(any(), any())
-
         `when`(mainSplit.fullName).thenReturn("fooRelease")
 
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()

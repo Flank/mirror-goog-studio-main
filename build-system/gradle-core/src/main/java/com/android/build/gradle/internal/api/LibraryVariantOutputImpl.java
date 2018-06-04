@@ -19,8 +19,7 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.LibraryVariantOutput;
-import com.android.build.gradle.internal.variant.TaskContainer;
-import com.android.build.gradle.tasks.BundleAar;
+import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.ide.common.build.ApkData;
 import java.io.File;
 import javax.inject.Inject;
@@ -49,7 +48,7 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Nullable
     @Override
     public Zip getPackageLibrary() {
-        return taskContainer.getTaskByType(BundleAar.class);
+        return taskContainer.getBundleLibraryTask();
     }
 
     @NonNull

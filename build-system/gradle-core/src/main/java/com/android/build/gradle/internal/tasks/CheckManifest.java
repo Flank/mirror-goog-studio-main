@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import java.io.File;
-import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -96,7 +95,7 @@ public class CheckManifest extends AndroidVariantTask {
 
         @Override
         public void execute(@NonNull CheckManifest checkManifestTask) {
-            scope.getVariantData().checkManifestTask = checkManifestTask;
+            scope.getTaskContainer().setCheckManifestTask(checkManifestTask);
             checkManifestTask.setVariantName(
                     scope.getVariantData().getVariantConfiguration().getFullName());
             checkManifestTask.setOptional(isManifestOptional);

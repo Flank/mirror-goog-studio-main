@@ -18,13 +18,11 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
-
 import com.android.build.gradle.AndroidConfig
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
-import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
@@ -55,7 +53,7 @@ open class BundleAar : Zip() {
 
             val artifacts = variantScope.artifacts
 
-            libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle)
+            libVariantData.scope.taskContainer.bundleLibraryTask = bundle
 
             // Sanity check, there should never be duplicates.
             bundle.duplicatesStrategy = DuplicatesStrategy.FAIL

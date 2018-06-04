@@ -68,7 +68,7 @@ public class InstantAppTaskManager extends TaskManager {
         File bundleDir = variantScope.getApkLocation();
         BundleInstantApp bundleTask =
                 taskFactory.create(new BundleInstantApp.ConfigAction(variantScope, bundleDir));
-        variantScope.getAssembleTask().dependsOn(bundleTask);
+        variantScope.getTaskContainer().getAssembleTask().dependsOn(bundleTask);
         variantScope
                 .getArtifacts()
                 .appendArtifact(

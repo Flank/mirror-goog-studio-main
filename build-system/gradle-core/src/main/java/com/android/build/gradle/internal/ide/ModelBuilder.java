@@ -50,11 +50,11 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -610,8 +610,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         return new JavaArtifactImpl(
                 variantType.getArtifactName(),
-                scope.getAssembleTask().getName(),
-                scope.getCompileTask().getName(),
+                scope.getTaskContainer().getAssembleTask().getName(),
+                scope.getTaskContainer().getCompileTask().getName(),
                 Sets.newHashSet(taskManager.createMockableJar.getName()),
                 getGeneratedSourceFoldersForUnitTests(variantData),
                 Iterables.getOnlyElement(scope.getArtifacts().getArtifactFiles(JAVAC)),
@@ -802,25 +802,22 @@ public class ModelBuilder<Extension extends AndroidConfig>
                     new SyncIssueImpl(
                             Type.GENERIC, EvalIssueReporter.Severity.ERROR, null, e.getMessage()));
         }
+        final MutableTaskContainer taskContainer = scope.getTaskContainer();
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName()
                         + "-"
                         + variantConfiguration.getBaseName(),
-                variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE) == null
-                        ? scope.getTaskName("assemble")
-                        : variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE).getName(),
+                taskContainer.getAssembleTask().getName(),
                 variantConfiguration.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 applicationId,
                 // TODO: Need to determine the tasks' name when the tasks may not be created
                 // in component plugin.
-                scope.getSourceGenTask() == null
+                taskContainer.getSourceGenTask() == null
                         ? scope.getTaskName("generate", "Sources")
-                        : scope.getSourceGenTask().getName(),
-                scope.getCompileTask() == null
-                        ? scope.getTaskName("compile", "Sources")
-                        : scope.getCompileTask().getName(),
+                        : taskContainer.getSourceGenTask().getName(),
+                taskContainer.getCompileTask().getName(),
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
                 Iterables.getOnlyElement(scope.getArtifacts().getArtifactFiles(JAVAC)),
@@ -839,10 +836,12 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 splitOutputsProxy,
                 manifestsProxy,
                 testOptions,
-                scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName(),
-                variantData.getTaskByKind(TaskContainer.TaskKind.BUNDLE) == null
+                taskContainer.getConnectedTask() == null
+                        ? null
+                        : taskContainer.getConnectedTask().getName(),
+                taskContainer.getBundleTask() == null
                         ? scope.getTaskName("bundle")
-                        : variantData.getTaskByKind(TaskContainer.TaskKind.BUNDLE).getName(),
+                        : taskContainer.getBundleTask().getName(),
                 ExtractApksTask.Companion.getTaskName(scope));
     }
 

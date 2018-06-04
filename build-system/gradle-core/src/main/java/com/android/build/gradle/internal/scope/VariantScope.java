@@ -26,22 +26,13 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.tasks.CheckManifest;
-import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.tasks.AidlCompile;
-import com.android.build.gradle.tasks.ExternalNativeBuildTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
-import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -51,14 +42,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Sync;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
  * A scope containing data for a specific variant.
@@ -216,8 +203,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getRenderscriptLibOutputDir();
 
-    void setResourceOutputDir(@NonNull File resourceOutputDir);
-
     @NonNull
     File getDefaultMergeResourcesOutputDir();
 
@@ -315,90 +300,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getApkLocation();
 
-    DefaultTask getAssembleTask();
-
-    void setAssembleTask(@NonNull DefaultTask assembleTask);
-
-    DefaultTask getBundleTask();
-
-    void setBundleTask(@NonNull DefaultTask bundleTask);
-
-    DefaultTask getPreBuildTask();
-
-    void setPreBuildTask(DefaultTask preBuildTask);
-
-    Task getSourceGenTask();
-
-    void setSourceGenTask(Task sourceGenTask);
-
-    Task getResourceGenTask();
-
-    void setResourceGenTask(Task resourceGenTask);
-
-    Task getAssetGenTask();
-
-    void setAssetGenTask(Task assetGenTask);
-
-    CheckManifest getCheckManifestTask();
-
-    void setCheckManifestTask(CheckManifest checkManifestTask);
-
-    RenderscriptCompile getRenderscriptCompileTask();
-
-    void setRenderscriptCompileTask(RenderscriptCompile renderscriptCompileTask);
-
-    AidlCompile getAidlCompileTask();
-
-    void setAidlCompileTask(AidlCompile aidlCompileTask);
-
-    @Nullable
-    MergeSourceSetFolders getMergeAssetsTask();
-
-    void setMergeAssetsTask(@Nullable MergeSourceSetFolders mergeAssetsTask);
-
-    GenerateBuildConfig getGenerateBuildConfigTask();
-
-    void setGenerateBuildConfigTask(GenerateBuildConfig generateBuildConfigTask);
-
-    Sync getProcessJavaResourcesTask();
-
-    void setProcessJavaResourcesTask(Sync processJavaResourcesTask);
-
-    @Nullable
-    Task getMergeJavaResourcesTask();
-
-    void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask);
-
-    @Nullable
-    JavaCompile getJavacTask();
-
-    void setJavacTask(@Nullable JavaCompile javacTask);
-
-    Task getCompileTask();
-
-    void setCompileTask(Task compileTask);
-
-    @Nullable
-    DefaultTask getConnectedTask();
-
-    void setConnectedTask(DefaultTask compileTask);
-
-    GenerateApkDataTask getMicroApkTask();
-
-    void setMicroApkTask(GenerateApkDataTask microApkTask);
-
-    Task getCoverageReportTask();
-
-    void setCoverageReportTask(Task coverageReportTask);
-
-    @Nullable
-    ExternalNativeBuildTask getExternalNativeBuildTask();
-
-    void setExternalNativeBuildTask(@NonNull ExternalNativeBuildTask task);
-
-    @Nullable
-    ExternalNativeJsonGenerator getExternalNativeJsonGenerator();
-    void setExternalNativeJsonGenerator(@NonNull ExternalNativeJsonGenerator generator);
+    MutableTaskContainer getTaskContainer();
 
     @Nullable
     InstantRunTaskManager getInstantRunTaskManager();

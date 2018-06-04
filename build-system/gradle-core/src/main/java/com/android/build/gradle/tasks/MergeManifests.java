@@ -47,7 +47,6 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
@@ -548,8 +547,8 @@ public class MergeManifests extends ManifestProcessorTask {
 
 
             // optional manifest files too.
-            if (variantScope.getMicroApkTask() != null &&
-                    config.getBuildType().isEmbedMicroApp()) {
+            if (variantScope.getTaskContainer().getMicroApkTask() != null
+                    && config.getBuildType().isEmbedMicroApp()) {
                 processManifestTask.microApkManifest = project.files(
                         variantScope.getMicroApkManifestFile());
             }
@@ -643,9 +642,7 @@ public class MergeManifests extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_METADATA,
                     artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
 
-            variantScope
-                    .getVariantData()
-                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifestTask);
+            variantScope.getTaskContainer().setProcessManifestTask(processManifestTask);
         }
 
         /**

@@ -58,7 +58,6 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
@@ -70,7 +69,6 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
@@ -79,8 +77,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
-import com.android.build.gradle.internal.tasks.CheckManifest;
-import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
@@ -93,13 +89,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.build.gradle.tasks.AidlCompile;
-import com.android.build.gradle.tasks.ExternalNativeBuildTask;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
-import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -139,10 +129,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
@@ -155,8 +143,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.Sync;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
  * A scope containing data for a specific variant.
@@ -174,46 +160,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable private Collection<File> ndkSoFolder;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
-    // Tasks
-    private DefaultTask assembleTask;
-    private DefaultTask bundleTask;
-    private DefaultTask preBuildTask;
-
-    private Task sourceGenTask;
-    private Task resourceGenTask;
-    private Task assetGenTask;
-    private CheckManifest checkManifestTask;
-
-    private RenderscriptCompile renderscriptCompileTask;
-    private AidlCompile aidlCompileTask;
-    @Nullable private MergeSourceSetFolders mergeAssetsTask;
-    private GenerateBuildConfig generateBuildConfigTask;
-
-    private Sync processJavaResourcesTask;
-    private TransformTask mergeJavaResourcesTask;
-
-    @Nullable private JavaCompile javacTask;
-
-    // empty anchor compile task to set all compilations tasks as dependents.
-    private Task compileTask;
-
-    @Nullable private DefaultTask connectedTask;
-
-    private GenerateApkDataTask microApkTask;
-
-    @Nullable private ExternalNativeBuildTask externalNativeBuild;
-
-    @Nullable private ExternalNativeJsonGenerator externalNativeJsonGenerator;
-
     @Nullable private CodeShrinker defaultCodeShrinker;
 
     @NonNull private BuildArtifactsHolder buildArtifactsHolder;
 
-    /**
-     * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella {@link
-     * Task} in app and lib variants and null in unit test variants.
-     */
-    private Task coverageReportTask;
+    private final MutableTaskContainer taskContainer = new MutableTaskContainer();
 
     private File resourceOutputDir;
 
@@ -288,6 +239,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public PublishingSpecs.VariantSpec getPublishingSpec() {
         return variantPublishingSpec;
+    }
+
+    @Override
+    public MutableTaskContainer getTaskContainer() {
+        return taskContainer;
     }
 
     /**
@@ -1284,11 +1240,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public void setResourceOutputDir(@NonNull File resourceOutputDir) {
-        this.resourceOutputDir = resourceOutputDir;
-    }
-
-    @Override
     @NonNull
     public File getDefaultMergeResourcesOutputDir() {
         return FileUtils.join(
@@ -1601,192 +1552,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 getVariantConfiguration().getDirName());
     }
 
-    // Tasks getters/setters.
-
-    @Override
-    public DefaultTask getAssembleTask() {
-        return assembleTask;
-    }
-
-    @Override
-    public void setAssembleTask(@NonNull DefaultTask assembleTask) {
-        this.assembleTask = assembleTask;
-    }
-
-    @Override
-    public DefaultTask getBundleTask() {
-        return bundleTask;
-    }
-
-    @Override
-    public void setBundleTask(@NonNull DefaultTask bundleTask) {
-        this.bundleTask = bundleTask;
-    }
-
-    @Override
-    public DefaultTask getPreBuildTask() {
-        return preBuildTask;
-    }
-
-    @Override
-    public void setPreBuildTask(DefaultTask preBuildTask) {
-        this.preBuildTask = preBuildTask;
-    }
-
-    @Override
-    public Task getSourceGenTask() {
-        return sourceGenTask;
-    }
-
-    @Override
-    public void setSourceGenTask(Task sourceGenTask) {
-        this.sourceGenTask = sourceGenTask;
-    }
-
-    @Override
-    public Task getResourceGenTask() {
-        return resourceGenTask;
-    }
-
-    @Override
-    public void setResourceGenTask(Task resourceGenTask) {
-        this.resourceGenTask = resourceGenTask;
-    }
-
-    @Override
-    public Task getAssetGenTask() {
-        return assetGenTask;
-    }
-
-    @Override
-    public void setAssetGenTask(Task assetGenTask) {
-        this.assetGenTask = assetGenTask;
-    }
-
-    @Override
-    public CheckManifest getCheckManifestTask() {
-        return checkManifestTask;
-    }
-
-    @Override
-    public void setCheckManifestTask(CheckManifest checkManifestTask) {
-        this.checkManifestTask = checkManifestTask;
-    }
-
-    @Override
-    public RenderscriptCompile getRenderscriptCompileTask() {
-        return renderscriptCompileTask;
-    }
-
-    @Override
-    public void setRenderscriptCompileTask(RenderscriptCompile renderscriptCompileTask) {
-        this.renderscriptCompileTask = renderscriptCompileTask;
-    }
-
-    @Override
-    public AidlCompile getAidlCompileTask() {
-        return aidlCompileTask;
-    }
-
-    @Override
-    public void setAidlCompileTask(AidlCompile aidlCompileTask) {
-        this.aidlCompileTask = aidlCompileTask;
-    }
-
-    @Override
-    @Nullable
-    public MergeSourceSetFolders getMergeAssetsTask() {
-        return mergeAssetsTask;
-    }
-
-    @Override
-    public void setMergeAssetsTask(@Nullable MergeSourceSetFolders mergeAssetsTask) {
-        this.mergeAssetsTask = mergeAssetsTask;
-    }
-
-    @Override
-    public GenerateBuildConfig getGenerateBuildConfigTask() {
-        return generateBuildConfigTask;
-    }
-
-    @Override
-    public void setGenerateBuildConfigTask(GenerateBuildConfig generateBuildConfigTask) {
-        this.generateBuildConfigTask = generateBuildConfigTask;
-    }
-
-    @Override
-    public Sync getProcessJavaResourcesTask() {
-        return processJavaResourcesTask;
-    }
-
-    @Override
-    public void setProcessJavaResourcesTask(Sync processJavaResourcesTask) {
-        this.processJavaResourcesTask = processJavaResourcesTask;
-    }
-
-    @Override
-    @Nullable
-    public Task getMergeJavaResourcesTask() {
-        return mergeJavaResourcesTask;
-    }
-
-    @Override
-    public void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask) {
-        this.mergeJavaResourcesTask = mergeJavaResourcesTask;
-    }
-
-    @Override
-    @Nullable
-    public JavaCompile getJavacTask() {
-        return javacTask;
-    }
-
-    @Override
-    public void setJavacTask(@Nullable JavaCompile javacTask) {
-        this.javacTask = javacTask;
-    }
-
-    @Override
-    public Task getCompileTask() {
-        return compileTask;
-    }
-
-    @Override
-    public void setCompileTask(Task compileTask) {
-        this.compileTask = compileTask;
-    }
-
-    @Override
-    @Nullable
-    public DefaultTask getConnectedTask() {
-        return this.connectedTask;
-    }
-
-    @Override
-    public void setConnectedTask(DefaultTask connectedTask) {
-        this.connectedTask = connectedTask;
-    }
-
-    @Override
-    public GenerateApkDataTask getMicroApkTask() {
-        return microApkTask;
-    }
-
-    @Override
-    public void setMicroApkTask(GenerateApkDataTask microApkTask) {
-        this.microApkTask = microApkTask;
-    }
-
-    @Override
-    public Task getCoverageReportTask() {
-        return coverageReportTask;
-    }
-
-    @Override
-    public void setCoverageReportTask(Task coverageReportTask) {
-        this.coverageReportTask = coverageReportTask;
-    }
-
     @NonNull private final InstantRunBuildContext instantRunBuildContext;
 
     @Override
@@ -1862,30 +1627,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 .getTargetFromHashString(targetHash, progressIndicator);
     }
 
-    @Override
-    public void setExternalNativeBuildTask(@NonNull ExternalNativeBuildTask task) {
-        this.externalNativeBuild = task;
-    }
-
-    @Nullable
-    @Override
-    public ExternalNativeJsonGenerator getExternalNativeJsonGenerator() {
-        return externalNativeJsonGenerator;
-    }
-
-    @Override
-    public void setExternalNativeJsonGenerator(@NonNull ExternalNativeJsonGenerator generator) {
-        Preconditions.checkState(this.externalNativeJsonGenerator == null,
-                "Unexpected overwrite of externalNativeJsonGenerator "
-                        + "may result in information loss");
-        this.externalNativeJsonGenerator = generator;
-    }
-
-    @Nullable
-    @Override
-    public ExternalNativeBuildTask getExternalNativeBuildTask() {
-        return externalNativeBuild;
-    }
 
     @Nullable
     @Override

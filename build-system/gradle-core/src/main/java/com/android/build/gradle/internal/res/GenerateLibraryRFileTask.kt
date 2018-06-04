@@ -16,16 +16,14 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
@@ -146,7 +144,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
         override fun getType() = GenerateLibraryRFileTask::class.java
 
         override fun execute(task: GenerateLibraryRFileTask) {
-            variantScope.variantData.addTask(TaskContainer.TaskKind.PROCESS_ANDROID_RESOURCES, task)
+            variantScope.taskContainer.processAndroidResTask = task
 
             task.variantName = variantScope.fullVariantName
 
