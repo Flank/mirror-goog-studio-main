@@ -46,8 +46,8 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="module" module-name="android.sdktools.binary-resources" />
-    <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>

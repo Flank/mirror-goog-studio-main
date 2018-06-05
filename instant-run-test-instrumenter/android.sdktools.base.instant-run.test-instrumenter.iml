@@ -7,11 +7,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="bazel" />
-    <orderEntry type="module" module-name="instant-run-instrumentation" />
+    <orderEntry type="module" module-name="android.sdktools.base.bazel" />
+    <orderEntry type="module" module-name="android.sdktools.base.instant-run.instrumentation" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="module" module-name="instant-run-runtime" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.base.instant-run.runtime" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />

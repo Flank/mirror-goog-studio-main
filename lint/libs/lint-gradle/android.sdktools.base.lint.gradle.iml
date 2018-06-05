@@ -11,25 +11,25 @@
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="module" module-name="android.sdktools.common" />
-    <orderEntry type="module" module-name="layoutlib-api-base" />
-    <orderEntry type="module" module-name="sdk-common-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.layoutlib-api-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
-    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
-    <orderEntry type="module" module-name="manifest-merger-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.manifest-merger-base" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
-    <orderEntry type="module" module-name="lint-api-base" />
-    <orderEntry type="module" module-name="lint-checks-base" />
-    <orderEntry type="module" module-name="lint-cli" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.lint-api-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.checks-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.cli" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="lint-gradle-api" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.gradle-api" />
     <orderEntry type="library" name="groovy" level="project" />
-    <orderEntry type="module" module-name="builder" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.builder" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
-    <orderEntry type="module" module-name="lint-tests" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.tests" scope="TEST" />
   </component>
 </module>

@@ -9,10 +9,16 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="module" module-name="android.sdktools.testutils" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.apkparser.analyzer-base" />
+    <orderEntry type="library" name="dexlib2" level="project" />
     <orderEntry type="module" module-name="android.sdktools.common" />
+    <orderEntry type="module" module-name="android.sdktools.binary-resources" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
+    <orderEntry type="library" scope="TEST" name="mockito" level="project" />
+    <orderEntry type="library" name="jopt-simple" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

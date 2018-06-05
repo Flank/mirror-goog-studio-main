@@ -9,7 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="instant-run-runtime" />
+    <orderEntry type="module" module-name="android.sdktools.base.instant-run.runtime" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="module" module-name="android.sdktools.instant-run-common" />
     <orderEntry type="module-library">

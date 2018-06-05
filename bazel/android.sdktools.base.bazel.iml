@@ -57,7 +57,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="aether" level="project" />
-    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="library" name="antlr3" level="project" />
     <orderEntry type="module-library">
       <library>

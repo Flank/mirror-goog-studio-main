@@ -10,15 +10,15 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="profile" exported="" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.profile" exported="" />
     <orderEntry type="module" module-name="android.sdktools.builder-test-api" exported="" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.ddmlib" exported="" />
     <orderEntry type="library" exported="" name="javawriter" level="project" />
     <orderEntry type="library" exported="" name="bouncy-castle" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
-    <orderEntry type="module" module-name="sdk-common-base" />
-    <orderEntry type="module" module-name="manifest-merger-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.manifest-merger-base" />
     <orderEntry type="library" exported="" name="asm-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" exported="" name="guava-tools" level="project" />
@@ -26,17 +26,17 @@
     <orderEntry type="module" module-name="android.sdktools.builder-model" exported="" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
-    <orderEntry type="module" module-name="apkzlib" exported="" />
+    <orderEntry type="module" module-name="android.sdktools.apkzlib" exported="" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
-    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="library" name="http-client" level="project" />
     <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="auto-value-1.3" level="project" />
-    <orderEntry type="module" module-name="dx" />
+    <orderEntry type="module" module-name="android.sdktools.dx" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="layoutlib-api-base" />
+    <orderEntry type="module" module-name="android.sdktools.base.layoutlib-api-base" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>

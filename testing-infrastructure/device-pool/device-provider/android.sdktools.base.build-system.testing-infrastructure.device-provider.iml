@@ -11,9 +11,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="builder" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.builder" />
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
-    <orderEntry type="module" module-name="gradle-core" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.gradle-core" />
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="module" module-name="android.sdktools.builder-test-api" />

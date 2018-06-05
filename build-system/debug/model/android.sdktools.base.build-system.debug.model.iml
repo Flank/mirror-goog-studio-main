@@ -10,7 +10,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="framework" />
+    <orderEntry type="module" module-name="android.sdktools.base.build-system.integration-test.framework" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
