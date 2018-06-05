@@ -26,16 +26,17 @@ import com.android.build.gradle.internal.crash.PluginCrashReporter.maybeReportEx
 class PluginCrashReporterTest {
     @Test
     fun testUserOptOut() {
-        val settings = mock(AnalyticsSettings::class.java)
-        `when`(settings.hasOptedIn()).thenReturn(false)
-
+        val settings = AnalyticsSettings()
+        AnalyticsSettings.setInstanceForTest(settings)
+        settings.optedIn = false
         assertThat(reportForTest(NullPointerException(), settings)).isFalse()
     }
 
     @Test
     fun testReportingWhiteListedException() {
-        val settings = mock(AnalyticsSettings::class.java)
-        `when`(settings.hasOptedIn()).thenReturn(true)
+        val settings = AnalyticsSettings()
+        AnalyticsSettings.setInstanceForTest(settings)
+        settings.optedIn = true
 
         assertThat(reportForTest(NullPointerException(), settings)).isTrue()
         assertThat(reportForTest(RuntimeException(NullPointerException()), settings))
@@ -47,8 +48,9 @@ class PluginCrashReporterTest {
 
     @Test
     fun testReportingNonWhiteListedException() {
-        val settings = mock(AnalyticsSettings::class.java)
-        `when`(settings.hasOptedIn()).thenReturn(true)
+        val settings = AnalyticsSettings()
+        AnalyticsSettings.setInstanceForTest(settings)
+        settings.optedIn = true
 
         assertThat(reportForTest(RuntimeException(), settings)).isFalse()
         assertThat(reportForTest(IllegalStateException(RuntimeException()), settings)).isFalse()
@@ -56,8 +58,9 @@ class PluginCrashReporterTest {
 
     @Test
     fun testExternalApiUsageException() {
-        val settings = mock(AnalyticsSettings::class.java)
-        `when`(settings.hasOptedIn()).thenReturn(true)
+        val settings = AnalyticsSettings()
+        AnalyticsSettings.setInstanceForTest(settings)
+        settings.optedIn = true
 
         assertThat(reportForTest(ExternalApiUsageException(RuntimeException()), settings)).isFalse()
     }

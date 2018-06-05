@@ -21,7 +21,6 @@ import static com.google.common.base.Verify.verifyNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.tools.analytics.AnalyticsSettings;
 import com.android.tools.analytics.Anonymizer;
 import com.android.tools.analytics.UsageTracker;
 import com.android.utils.ILogger;
@@ -162,8 +161,7 @@ public final class ProcessProfileWriterFactory {
 
     private static void initializeAnalytics(@NonNull ILogger logger,
             @NonNull ScheduledExecutorService eventLoop) {
-        AnalyticsSettings settings = AnalyticsSettings.getInstance(logger);
-        UsageTracker.initialize(settings, eventLoop);
+        UsageTracker.initialize(logger, eventLoop);
         UsageTracker.setMaxJournalTime(10, TimeUnit.MINUTES);
         UsageTracker.setMaxJournalSize(1000);
     }

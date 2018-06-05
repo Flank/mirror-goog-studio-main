@@ -63,8 +63,8 @@ class LintBatchAnalytics {
         val event = AndroidStudioEvent.newBuilder().apply {
             kind = LINT_SESSION
             lintSession = session
-            javaProcessStats = CommonMetricsData.getJavaProcessStats()
-            jvmDetails = CommonMetricsData.getJvmDetails()
+            javaProcessStats = CommonMetricsData.javaProcessStats
+            jvmDetails = CommonMetricsData.jvmDetails
 
             // We may not have raw project id's, for example when analyzing
             // non-Android projects

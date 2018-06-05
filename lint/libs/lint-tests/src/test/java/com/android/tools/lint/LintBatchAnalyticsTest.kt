@@ -40,9 +40,10 @@ class LintBatchAnalyticsTest : AbstractCheckTest() {
         super.setUp()
         scheduler = VirtualTimeScheduler()
         val analyticsSettings = AnalyticsSettings()
-        analyticsSettings.setHasOptedIn(true)
-        usageTracker = TestUsageTracker(analyticsSettings, scheduler)
-        UsageTracker.setInstanceForTest(usageTracker)
+        analyticsSettings.optedIn = true
+        AnalyticsSettings.setInstanceForTest(analyticsSettings)
+        usageTracker = TestUsageTracker(scheduler)
+        UsageTracker.setWriterForTest(usageTracker)
     }
 
     override fun tearDown() {

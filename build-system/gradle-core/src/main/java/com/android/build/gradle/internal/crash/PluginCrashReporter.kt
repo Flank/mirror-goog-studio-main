@@ -56,7 +56,7 @@ object PluginCrashReporter {
 
     private fun getCrashReporter(
         analyticsSettings: AnalyticsSettings, forTest: Boolean = false): CrashReporter? {
-        return if (analyticsSettings.hasOptedIn()) {
+        return if (analyticsSettings.optedIn) {
             val isDebugBuild = Version.ANDROID_GRADLE_PLUGIN_VERSION.endsWith("-dev")
             GoogleCrashReporter(false, isDebugBuild || forTest)
         } else {
