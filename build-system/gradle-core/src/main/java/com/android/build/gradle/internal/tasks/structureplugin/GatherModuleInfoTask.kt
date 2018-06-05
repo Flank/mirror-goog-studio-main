@@ -37,6 +37,7 @@ open class GatherModuleInfoTask : DefaultTask() {
     @TaskAction
     fun action() {
         AndroidCollector().collectInto(moduleDataHolder, this)
+        DependencyCollector().collectInto(moduleDataHolder, this)
 
         moduleDataHolder.path = sourceProjectName
         moduleDataHolder.saveAsJsonTo(outputProvider.get().asFile)
@@ -73,6 +74,63 @@ private class AndroidCollector : DataCollector {
                     AndroidTargetHash.getPlatformVersion(it.extension.compileSdkVersion)!!.apiLevel
         }
     }
+}
+
+private class DependencyCollector : DataCollector {
+    val relevantConfigurations = setOf(
+        "api", "implementation", "classpath",
+        "compile", "compileOnly",
+        "runtime", "runtimeOnly",
+        "testImplementation", "testCompile",
+        "androidTestImplementation", "androidTestCompile",
+        "annotationProcessor", "kapt",
+        "package", "provided", "wearApp"
+    )
+
+    override fun collectInto(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
+        val projectDependencies = task.project.configurations.asIterable()
+            .filter { relevantConfigurations.contains(it.name) }
+            .flatMap { gatherDependencies(it) }.asIterable()
+            .cleanDependencies(task.project)
+
+        dataHolder.dependencies.addAll(projectDependencies)
+    }
+
+    private fun gatherDependencies(config: Configuration): List<PoetDependenciesInfo> {
+        val deps = mutableListOf<PoetDependenciesInfo>()
+
+        for (dependency in config.allDependencies) when (dependency) {
+                is ProjectDependency -> PoetDependenciesInfo(
+                    DependencyType.MODULE,
+                    config.name,
+                    dependency.dependencyProject.path
+                )
+                is ModuleDependency -> PoetDependenciesInfo(
+                    DependencyType.EXTERNAL_LIBRARY,
+                    config.name,
+                    "${dependency.group}:${dependency.name}:${dependency.version}"
+                )
+                else -> null
+            }?.let { deps.add(it) }
+        return deps
+    }
+
+    private fun Iterable<PoetDependenciesInfo>.cleanDependencies(project: Project): Iterable<PoetDependenciesInfo> {
+        var filteredDependencies = this
+
+        // Java modules that have the "kotlin" plugin applied creates repeated dependencies for
+        // kotlin jdk, so here we remove them to not pollute the resulting file.
+        if (project.plugins.hasPlugin("java-library") && project.plugins.hasPlugin("kotlin")) {
+            // Keep only the compile dependency if it's org.jetbrains.kotlin:kotlin-stdlib-jdk.
+            filteredDependencies = filteredDependencies.filter {
+                !it.dependency.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk") ||
+                        it.scope == "compile"
+            }
+        }
+
+        return filteredDependencies
+    }
+
 }
 
 private fun Project.isAndroidProject(): Boolean {
