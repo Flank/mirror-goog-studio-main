@@ -63,7 +63,7 @@ public final class GradleTestProjectBuilder {
     @Nullable private File gradleBuildCacheDirectory;
     @Nullable private String kotlinVersion;
 
-    private boolean withDeviceProvider = true;
+    private Boolean withDeviceProvider = null;
     private boolean withSdk = true;
     private boolean withAndroidGradlePlugin = true;
     // list of included builds, relative to the main testDir
@@ -107,6 +107,10 @@ public final class GradleTestProjectBuilder {
 
         if (kotlinVersion == null) {
             kotlinVersion = TestUtils.getKotlinVersionForTests();
+        }
+
+        if (withDeviceProvider == null) {
+            withDeviceProvider = GradleTestProject.APPLY_DEVICEPOOL_PLUGIN;
         }
 
         return new GradleTestProject(
