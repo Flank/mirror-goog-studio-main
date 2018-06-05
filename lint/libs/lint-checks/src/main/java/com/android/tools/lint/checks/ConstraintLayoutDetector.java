@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2016 - 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,10 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ATTR_LAYOUT_EDITOR_ABSOLUTE_X;
-import static com.android.SdkConstants.ATTR_LAYOUT_EDITOR_ABSOLUTE_Y;
 import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
-import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
 
 import com.android.SdkConstants;
@@ -141,22 +138,6 @@ public class ConstraintLayoutDetector extends LayoutDetector {
 
             boolean isConstrainedHorizontally = false;
             boolean isConstrainedVertically = false;
-
-            // See if the layout doesn't use absoluteX/Y designtime positions for this
-            // child; if it doesn't, no need to complain
-
-            if (!element.hasAttributeNS(TOOLS_URI, ATTR_LAYOUT_EDITOR_ABSOLUTE_X)) {
-                // Not technically a constraint, but we'll use this to not complain
-                // about lacking constraints in this dimension
-                isConstrainedHorizontally = true;
-            }
-            if (!element.hasAttributeNS(TOOLS_URI, ATTR_LAYOUT_EDITOR_ABSOLUTE_Y)) {
-                isConstrainedVertically = true;
-                if (isConstrainedHorizontally) {
-                    // Nothing to check
-                    continue;
-                }
-            }
 
             NamedNodeMap attributes = element.getAttributes();
             for (int i = 0; i < attributes.getLength(); i++) {

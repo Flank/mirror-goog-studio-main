@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2016 - 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,9 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
     public void testMissingConstraints() {
         String expected =
                 ""
+                        +"res/layout/layout1.xml:13: Error: This view is not constrained. It only has designtime positions, so it will jump to (0,0) at runtime unless you add the constraints [MissingConstraints]\n"
+                        + "    <TextView\n"
+                        + "     ~~~~~~~~\n"
                         + "res/layout/layout1.xml:19: Error: This view is not constrained. It only has designtime positions, so it will jump to (0,0) at runtime unless you add the constraints [MissingConstraints]\n"
                         + "    <TextView\n"
                         + "     ~~~~~~~~\n"
@@ -39,7 +42,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                         + "res/layout/layout1.xml:53: Error: This view is not constrained horizontally: at runtime it will jump to the left unless you add a horizontal constraint [MissingConstraints]\n"
                         + "    <TextView\n"
                         + "     ~~~~~~~~\n"
-                        + "3 errors, 0 warnings";
+                        + "4 errors, 0 warnings";
 
         ProjectDescription project =
                 project()
