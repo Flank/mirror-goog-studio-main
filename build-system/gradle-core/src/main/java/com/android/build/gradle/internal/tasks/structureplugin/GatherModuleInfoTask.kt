@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.structureplugin
 
 import com.android.build.gradle.BasePlugin
+import com.android.sdklib.AndroidTargetHash
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -35,6 +36,8 @@ open class GatherModuleInfoTask : DefaultTask() {
 
     @TaskAction
     fun action() {
+        AndroidCollector().collectInto(moduleDataHolder, this)
+
         moduleDataHolder.path = sourceProjectName
         moduleDataHolder.saveAsJsonTo(outputProvider.get().asFile)
     }
@@ -45,4 +48,34 @@ open class GatherModuleInfoTask : DefaultTask() {
             task.outputProvider = project.layout.buildDirectory.file("local-module-info.json")
         }
     }
+}
+
+private interface DataCollector {
+    fun collectInto(dataHolder: ModuleInfo, task: GatherModuleInfoTask)
+}
+
+private class AndroidCollector : DataCollector {
+    override fun collectInto(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
+        if (!task.project.isAndroidProject()) return
+        dataHolder.type = ModuleType.ANDROID
+        collectBuildConfig(dataHolder, task)
+    }
+
+    fun collectBuildConfig(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
+        task.project.plugins.withType(BasePlugin::class.java).firstOrNull()?.let {
+            it.extension.defaultConfig.minSdkVersion?.apiLevel?.let {
+                dataHolder.androidBuildConfig.minSdkVersion = it }
+            it.extension.defaultConfig.targetSdkVersion?.apiLevel?.let {
+                dataHolder.androidBuildConfig.targetSdkVersion = it }
+
+            // extension.compileSdkVersion returns "android-27", we want just "27".
+            dataHolder.androidBuildConfig.compileSdkVersion =
+                    AndroidTargetHash.getPlatformVersion(it.extension.compileSdkVersion)!!.apiLevel
+        }
+    }
+}
+
+private fun Project.isAndroidProject(): Boolean {
+    // "com.android.application", "com.android.library", "com.android.test"
+    return plugins.withType(BasePlugin::class.java).count() > 0
 }
