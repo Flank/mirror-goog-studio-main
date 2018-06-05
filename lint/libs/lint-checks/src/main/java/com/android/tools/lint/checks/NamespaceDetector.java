@@ -26,12 +26,14 @@ import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -45,7 +47,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /** Checks for various issues related to XML namespaces */
-public class NamespaceDetector extends LayoutDetector {
+public class NamespaceDetector extends ResourceXmlDetector {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
@@ -147,12 +149,26 @@ public class NamespaceDetector extends LayoutDetector {
                     } else if (value.startsWith("urn:")) {
                         continue;
                     } else if (!value.startsWith("http://")) {
-                        if (context.isEnabled(TYPO)) {
+                        if (context.isEnabled(TYPO)
+                                // In XML there can be random XML documents from users
+                                // with arbitrary schemas; let them use https if they want
+                                && context.getResourceFolderType() != ResourceFolderType.XML) {
+                            LintFix fix = null;
+                            if (value.startsWith("https://")) {
+                                fix =
+                                        LintFix.create()
+                                                .replace()
+                                                .text("https")
+                                                .with("http")
+                                                .name("Replace with http://" + value.substring(8))
+                                                .build();
+                            }
                             context.report(
                                     TYPO,
                                     attribute,
                                     context.getValueLocation(attribute),
-                                    "Suspicious namespace: should start with `http://`");
+                                    "Suspicious namespace: should start with `http://`",
+                                    fix);
                         }
 
                         continue;
