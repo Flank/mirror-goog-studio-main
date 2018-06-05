@@ -817,7 +817,8 @@ public final class SdkConstants {
             "com.google.android.material.bottomappbar.BottomAppBar";
     public static final String CLASS_CHIP = "com.google.android.material.chip.Chip";
     public static final String CLASS_CHIP_GROUP = "com.google.android.material.chip.ChipGroup";
-    public static final String CLASS_MATERIAL_BUTTON = "com.google.android.material.button.Button";
+    public static final String CLASS_MATERIAL_BUTTON =
+            "com.google.android.material.button.MaterialButton";
 
     /* Android ConstraintLayout Constants */
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT =
@@ -1698,7 +1699,8 @@ public final class SdkConstants {
     public static final String ATTR_HIDE_MOTION_SPEC = "hideMotionSpec";
 
     // Material BottomNavigationView Attributes
-    public static final String ATTR_ITEM_HORIZONTAL_TRANSLATION = "itemHorizontalTranslation";
+    public static final String ATTR_ITEM_HORIZONTAL_TRANSLATION_ENABLED =
+            "itemHorizontalTranslationEnabled";
     public static final String ATTR_LABEL_VISIBILITY_MODE = "labelVisibilityMode";
 
     // Material ChipGroup Attributes
@@ -1766,16 +1768,7 @@ public final class SdkConstants {
     public static final String ATTR_PASSWORD_TOGGLE_TINT = "passwordToggleTint";
     public static final String ATTR_PASSWORD_TOGGLE_TINT_MODE = "passwordToggleTintMode";
     public static final String ATTR_BOX_BACKGROUND_MODE = "boxBackgroundMode";
-    public static final String ATTR_BOX_PADDING_LEFT = "boxPaddingLeft";
     public static final String ATTR_BOX_COLLAPSED_PADDING_TOP = "boxCollapsedPaddingTop";
-    public static final String ATTR_EXPANDED_PADDING_TOP = "boxExpandedPaddingTop";
-    public static final String ATTR_BOX_PADDING_RIGHT = "boxPaddingRight";
-    public static final String ATTR_BOX_COLLAPSED_PADDING_BOTTOM = "boxCollapsedPaddingBottom";
-    public static final String ATTR_BOX_CORNER_RADIUS_TOP_LEFT = "boxCornerRadiusTopLeft";
-    public static final String ATTR_BOX_CORNER_RADIUS_TOP_RIGHT = "boxCornerRadiusTopRight";
-    public static final String ATTR_BOX_CORNER_RADIUS_BOTTOM_LEFT = "boxCornerRadiusBottomLeft";
-    public static final String ATTR_BOX_CORNER_RADIUS_BOTTOM_RIGHT = "boxCornerRadiusBottomRight";
-    public static final String ATTR_BOX_EXPANDED_PADDING_BOTTOM = "boxExpandedPaddingBottom";
     public static final String ATTR_BOX_STROKE_COLOR = "boxStrokeColor";
     public static final String ATTR_BOX_BACKGROUND_COLOR = "boxBackgroundColor";
     public static final String ATTR_BOX_STROKE_WIDTH = "boxStrokeWidth";
