@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
-import com.android.build.gradle.internal.dependency.AndroidXMapping;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
@@ -127,9 +126,9 @@ public class VariantManager implements VariantModel {
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
-            AndroidXMapping.MAPPINGS.get("com.android.support:multidex");
+            JetifyTransform.androidXMappings.get("com.android.support:multidex");
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
-            AndroidXMapping.MAPPINGS.get("com.android.support:multidex-instrumentation");
+            JetifyTransform.androidXMappings.get("com.android.support:multidex-instrumentation");
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;

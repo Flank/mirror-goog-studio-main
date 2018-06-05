@@ -42,8 +42,21 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
 
         @JvmStatic
         val jetifyProcessor: Processor by lazy {
-            Processor.createProcessor(ConfigParser.loadDefaultConfig()!!)
+            Processor.createProcessor(
+                ConfigParser.loadDefaultConfig()!!,
+                dataBindingVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
+            )
         }
+
+        /**
+         * Mappings from old dependencies to AndroidX dependencies.
+         *
+         * Each entry maps "old-group:old-module" (without version) to
+         * "new-group:new-module:new-version" (with version).
+         */
+        @JvmField
+        val androidXMappings: Map<String, String> =
+            jetifyProcessor.getDependenciesMap(filterOutBaseLibrary = false)
 
         /**
          * Replaces old support libraries with new ones.
@@ -59,7 +72,11 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
                         val oldDeps = mutableSetOf<DirectDependencyMetadata>()
                         val newDeps = mutableListOf<String>()
                         metadata.forEach { it ->
-                            val newDep = AndroidXMapping.MAPPINGS["${it.group}:${it.name}"]
+                            val newDep = if (bypassDependencySubstitution(it)) {
+                                null
+                            } else {
+                                androidXMappings["${it.group}:${it.name}"]
+                            }
                             if (newDep != null) {
                                 oldDeps.add(it)
                                 newDeps.add(newDep)
@@ -104,16 +121,28 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
                 return
             }
 
-            val newDependency = jetifyProcessor.mapDependency(requestedDependency.displayName)
-            if (newDependency != null) {
-                var targetDependency = correctVersionForDataBinding(newDependency)
-                targetDependency = correctNameForContentPager(targetDependency)
-                dependencySubstitution
-                    .useTarget(
-                        targetDependency,
-                        BooleanOption.ENABLE_JETIFIER.name + " is enabled"
-                    )
+            androidXMappings[requestedDependency.group + ":" + requestedDependency.module]?.let {
+                dependencySubstitution.useTarget(
+                    it,
+                    BooleanOption.ENABLE_JETIFIER.name + " is enabled"
+                )
             }
+        }
+
+        /**
+         * Returns `true` if the requested dependency should not be substituted.
+         */
+        private fun bypassDependencySubstitution(
+            requestedDependency: DirectDependencyMetadata
+        ): Boolean {
+            // See bypassDependencySubstitution(ModuleComponentSelector, Configuration).
+            // This condition is more relaxed (catches more cases) than the condition in the
+            // other method, since the configuration information is not available when this
+            // method is called. That is acceptable as dependency substitution happens at two
+            // phases (due to a Gradle bug as mentioned in the replaceOldSupportLibraries()
+            // method): the first one can be relaxed but the second one should be strict.
+            return requestedDependency.group == "com.android.databinding"
+                    && requestedDependency.name == "baseLibrary"
         }
 
         /**
@@ -136,53 +165,6 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
                         && dependency.name == "databinding-compiler"
             })
         }
-
-        /**
-         * Corrects the version of data binding since the one returned by jetifier-core may be
-         * incorrect (data binding uses Android Gradle plugin version and jetifier-core does not
-         * know about the current Android Gradle plugin version).
-         */
-        private fun correctVersionForDataBinding(targetDependency: String): String {
-            val parts = targetDependency.split(':')
-            val group = parts[0]
-            val module = parts[1]
-
-            return if (group == "androidx.databinding") {
-                "$group:$module:${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
-            } else {
-                targetDependency
-            }
-        }
-
-        private fun correctNameForContentPager(targetDependency: String): String {
-            // TODO (jetifier-core): Jetifier-core currently does not have this correction. Remove
-            // this code when it does.
-            val parts = targetDependency.split(':')
-            val group = parts[0]
-            val module = parts[1]
-            val version = parts[2]
-
-            return if (group == "androidx.contentpaging" && module == "contentpaging") {
-                "androidx.contentpager:contentpager:$version"
-            } else {
-                targetDependency
-            }
-        }
-
-        private fun isOldSupportLibrary(aarOrJarFile: File): Boolean {
-            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is an
-            // old support library
-            return aarOrJarFile.absolutePath.matches(Regex(".*com.android.support.*"))
-                    || aarOrJarFile.absolutePath.matches(Regex(".*android.arch.*"))
-                    || aarOrJarFile.absolutePath.matches(Regex(".*com.android.databinding.*"))
-        }
-
-        private fun isNewSupportLibrary(aarOrJarFile: File): Boolean {
-            // TODO (jetifier-core): Need a method to tell whether the given aarOrJarFile is a
-            // new support library
-            return aarOrJarFile.absolutePath.contains("androidx")
-                    || aarOrJarFile.absolutePath.matches(Regex(".*com.google.android.material.*"))
-        }
     }
 
     override fun transform(aarOrJarFile: File): List<File> {
@@ -199,7 +181,7 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
          * In the following, we handle these cases accordingly.
          */
         // Case 1: If this is a new support library, no need to jetify it
-        if (isNewSupportLibrary(aarOrJarFile)) {
+        if (jetifyProcessor.isNewDependencyFile(aarOrJarFile)) {
             return listOf(aarOrJarFile)
         }
 
@@ -207,17 +189,8 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         // dependency substitution earlier, either because it does not yet have an AndroidX version,
         // or because its AndroidX version is not yet available on remote repositories. Again, no
         // need to jetify it.
-        if (isOldSupportLibrary(aarOrJarFile)) {
-            // TODO (jetifier-core): The exceptions to the above rule are android.arch.navigation
-            // and android.arch.work libraries, which do need to be jetified. See
-            // https://issuetracker.google.com/79667498. It seems that this workaround can be
-            // removed in the next version of jetifier-core (and we have a test to ensure that
-            // removing it is safe).
-            if (!aarOrJarFile.absolutePath.matches(Regex(".*android.arch.navigation.*"))
-                && !aarOrJarFile.absolutePath.matches(Regex(".*android.arch.work.*"))
-            ) {
-                return listOf(aarOrJarFile)
-            }
+        if (jetifyProcessor.isOldDependencyFile(aarOrJarFile)) {
+            return listOf(aarOrJarFile)
         }
 
         // Case 3: For the remaining, let's jetify them.

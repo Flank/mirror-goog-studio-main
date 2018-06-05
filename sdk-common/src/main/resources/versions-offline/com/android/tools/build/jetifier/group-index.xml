@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.tools.build.jetifier>
-  <jetifier-processor versions="0.0.1,1.0.0-alpha05"/>
-  <jetifier-core versions="0.0.1,1.0.0-alpha05"/>
+  <jetifier-processor versions="1.0.0-alpha07"/>
+  <jetifier-core versions="1.0.0-alpha07"/>
 </com.android.tools.build.jetifier>
 
