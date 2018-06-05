@@ -38,6 +38,7 @@ open class GatherModuleInfoTask : DefaultTask() {
     fun action() {
         AndroidCollector().collectInto(moduleDataHolder, this)
         DependencyCollector().collectInto(moduleDataHolder, this)
+        KotlinUsageCollector().collectInto(moduleDataHolder, this)
 
         moduleDataHolder.path = sourceProjectName
         moduleDataHolder.saveAsJsonTo(outputProvider.get().asFile)
@@ -73,6 +74,17 @@ private class AndroidCollector : DataCollector {
             dataHolder.androidBuildConfig.compileSdkVersion =
                     AndroidTargetHash.getPlatformVersion(it.extension.compileSdkVersion)!!.apiLevel
         }
+    }
+}
+
+private class KotlinUsageCollector : DataCollector {
+    override fun collectInto(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
+        if (task.project.usesKotlin()) dataHolder.useKotlin = true
+    }
+
+    private fun Project.usesKotlin(): Boolean {
+        return (isAndroidProject() && plugins.hasPlugin("kotlin-android")) ||
+                plugins.hasPlugin("kotlin")
     }
 }
 
