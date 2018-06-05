@@ -18,21 +18,29 @@ package com.android.tools.perflogger;
 
 import com.android.annotations.NonNull;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Wrapper for the configurations of the benchmark that the logger will add data to. TODO add
  * regression analysis configurations.
  */
 public class Benchmark {
-    /** Name of the benchmark (e.g. this should match the name of the dashboard to add data to) */
-    @NonNull private final String myBenchmarkName;
+    private static final String DEFAULT_PROJECT_NAME = "Perfgate for Android Studio";
 
-    public Benchmark(@NonNull String name) {
-        myBenchmarkName = name;
+    @NonNull private final String myBenchmarkName;
+    @NonNull private final String myProjectName;
+
+    private Benchmark(@NonNull Builder builder) {
+        myBenchmarkName = builder.myBenchmarkName;
+        myProjectName = builder.myProjectName;
     }
 
     public String getName() {
         return myBenchmarkName;
+    }
+
+    public String getProject() {
+        return myProjectName;
     }
 
     /**
@@ -50,7 +58,7 @@ public class Benchmark {
 
     @Override
     public int hashCode() {
-        return myBenchmarkName.hashCode();
+        return Objects.hash(myBenchmarkName, myProjectName);
     }
 
     @Override
@@ -59,6 +67,30 @@ public class Benchmark {
             return false;
         }
 
-        return myBenchmarkName == ((Benchmark) other).myBenchmarkName;
+        Benchmark otherBenchmark = (Benchmark) other;
+        return myBenchmarkName == otherBenchmark.myBenchmarkName
+                && myProjectName == otherBenchmark.myProjectName;
+    }
+
+    public static class Builder {
+        /** Analogous to the name of the Perfgate dashboard. * */
+        @NonNull private final String myBenchmarkName;
+        /** Analogous to the Perfgate project grouping. * */
+        @NonNull private String myProjectName = DEFAULT_PROJECT_NAME;
+
+        public Builder(@NonNull String benchmarkName) {
+            myBenchmarkName = benchmarkName;
+        }
+
+        @NonNull
+        public Builder setProject(@NonNull String projectName) {
+            myProjectName = projectName;
+            return this;
+        }
+
+        @NonNull
+        public Benchmark build() {
+            return new Benchmark(this);
+        }
     }
 }

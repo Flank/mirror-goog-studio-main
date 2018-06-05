@@ -37,15 +37,37 @@ import java.util.logging.Logger;
  * zipped and stored at WORKSPACE_ROOT/bazel-testlogs for external consumption. Also see
  * https://docs.bazel.build/versions/master/test-encyclopedia.html.
  *
- * <p>Usage example: Metric metric = new Metric("My Test"); Benchmark benchmark1 = new
- * Benchmark("Total Run Time"); metric.addSamples(benchmark1, new MetricSample(timestampMs1,
- * yourTestTotalRunTime)); Benchmark benchmark2 = new Benchmark("Peak Memory");
+ * <pre>
+ * Usage example:
+ * Metric metric = new Metric("My Test");
+ * Benchmark benchmark1 = new Benchmark("Total Run Time");
+ * metric.addSamples(benchmark1, new MetricSample(timestampMs1, yourTestTotalRunTime));
+ * Benchmark benchmark2 = new Benchmark("Peak Memory");
  * metric.addSamples(benchmark2, new MetricSample(timestampMs1, yourTestPeakMemory));
  * metric.commit();
  *
- * <p>This writes out the following data file: { "metric": "My Test", "benchmarks": [ { "benchmark":
- * "Total Run Time", "data": { "timestampMs1": yourTestTotalRunTime } }, { "benchmark": "Peak
- * Memory", "data": { "timestampMs2": yourTestPeakMemory } } ] }
+ * This writes out the following data file:
+ * {
+ *  "metric":
+ *  "My Test",
+ *  "benchmarks": [
+ *    {
+ *      "benchmark": "Total Run Time",
+ *      "project": "Your Project",
+ *      "data": {
+ *        "timestampMs1": yourTestTotalRunTime
+ *      }
+ *    },
+ *    {
+ *      "benchmark": "Peak Memory",
+ *      "project": "Your Project",
+ *      "data": {
+ *        "timestampMs2": yourTestPeakMemory
+ *      }
+ *    }
+ *  ]
+ * }
+ * </pre>
  */
 public class Metric {
     private static Logger getLogger() {
@@ -123,8 +145,12 @@ public class Metric {
                     if (samples.isEmpty()) {
                         continue;
                     }
-                    writer.beginObject().name("benchmark").value(benchmark.getName()).name("data");
-
+                    writer.beginObject()
+                            .name("benchmark")
+                            .value(benchmark.getName())
+                            .name("project")
+                            .value(benchmark.getProject())
+                            .name("data");
                     {
                         writer.beginObject();
                         for (MetricSample sample : samples) {

@@ -126,7 +126,10 @@ public class BenchmarkTest {
             List<BenchmarkListener> listeners)
             throws Exception {
 
-        Benchmark benchmark = new Benchmark("GradleBenchmark [" + project + "]");
+        Benchmark benchmark =
+                new Benchmark.Builder("GradleBenchmark [" + project + "]")
+                        .setProject("Android Studio Gradle")
+                        .build();
         File data = new File(ROOT + "buildbenchmarks/" + project);
         File out = new File(System.getenv("TEST_TMPDIR"), ".gradle_out");
         File src = new File(System.getenv("TEST_TMPDIR"), ".gradle_src");

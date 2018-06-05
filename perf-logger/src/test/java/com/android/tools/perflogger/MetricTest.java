@@ -50,7 +50,7 @@ public class MetricTest {
     @Test
     public void testSingleBenchmark() throws Exception {
         Metric logger = new Metric(myTestName.getMethodName());
-        Benchmark benchmark = new Benchmark("AS Metric Test");
+        Benchmark benchmark = new Benchmark.Builder("AS Metric Test").build();
         logger.addSamples(
                 benchmark,
                 new MetricSample(1, 10),
@@ -71,6 +71,7 @@ public class MetricTest {
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
                         + "      \"benchmark\": \"AS Metric Test\",\n"
+                        + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
                         + "        \"2\": 20,\n"
@@ -90,18 +91,25 @@ public class MetricTest {
     @Test
     public void testMultipleBenchmarks() throws Exception {
         Metric logger = new Metric(myTestName.getMethodName());
-        Benchmark benchmark1 = new Benchmark("AS Metric Test1");
+        Benchmark benchmark1 = new Benchmark.Builder("AS Metric Test1").build();
         logger.addSamples(
                 benchmark1,
                 new MetricSample(1, 10),
                 new MetricSample(2, 20),
                 new MetricSample(3, 30));
-        Benchmark benchmark2 = new Benchmark("AS Metric Test2");
+        Benchmark benchmark2 = new Benchmark.Builder("AS Metric Test2").build();
         logger.addSamples(
                 benchmark2,
                 new MetricSample(4, 40),
                 new MetricSample(5, 50),
                 new MetricSample(6, 60));
+        Benchmark benchmark3 =
+                new Benchmark.Builder("AS Metric Test2").setProject("Custom Project").build();
+        logger.addSamples(
+                benchmark3,
+                new MetricSample(7, 70),
+                new MetricSample(8, 80),
+                new MetricSample(9, 90));
         logger.commit();
 
         File outputFile =
@@ -116,6 +124,7 @@ public class MetricTest {
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
                         + "      \"benchmark\": \"AS Metric Test1\",\n"
+                        + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
                         + "        \"2\": 20,\n"
@@ -124,10 +133,20 @@ public class MetricTest {
                         + "    },\n"
                         + "    {\n"
                         + "      \"benchmark\": \"AS Metric Test2\",\n"
+                        + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"4\": 40,\n"
                         + "        \"5\": 50,\n"
                         + "        \"6\": 60\n"
+                        + "      }\n"
+                        + "    },\n"
+                        + "    {\n"
+                        + "      \"benchmark\": \"AS Metric Test2\",\n"
+                        + "      \"project\": \"Custom Project\",\n"
+                        + "      \"data\": {\n"
+                        + "        \"7\": 70,\n"
+                        + "        \"8\": 80,\n"
+                        + "        \"9\": 90\n"
                         + "      }\n"
                         + "    }\n"
                         + "  ]\n"
