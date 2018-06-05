@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
@@ -23,30 +22,16 @@ import java.util.List;
 
 /**
  * A class containing all the resources needed to do a rendering.
- * <p>
- * This contains both the project specific resources and the framework resources, and provide
+ *
+ * <p>Contains both the project specific resources and the framework resources, and provides
  * convenience methods to resolve resource and theme references.
  */
 public class RenderResources {
-
     public static final String REFERENCE_NULL = "@null";
     public static final String REFERENCE_EMPTY = "@empty";
     public static final String REFERENCE_UNDEFINED = "@undefined";
 
     public void setLogger(LayoutLog logger) {
-    }
-
-    /**
-     * Returns the {@link StyleResourceValue} representing the current theme.
-     * @return the theme or null if there is no current theme.
-     * @deprecated Use {@link #getDefaultTheme()} or {@link #getAllThemes()}
-     */
-    @Deprecated
-    public StyleResourceValue getCurrentTheme() {
-        // Default theme is same as the current theme was on older versions of the API.
-        // With the introduction of applyStyle() "current" theme makes little sense.
-        // Hence, simply return defaultTheme.
-        return getDefaultTheme();
     }
 
     /**
@@ -87,18 +72,6 @@ public class RenderResources {
     }
 
     /**
-     * Returns a theme by its name.
-     *
-     * @deprecated Use {@link #getStyle(ResourceReference)}
-     */
-    @Deprecated
-    public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
-        return getStyle(
-                new ResourceReference(
-                        ResourceNamespace.fromBoolean(frameworkTheme), ResourceType.STYLE, name));
-    }
-
-    /**
      * Returns whether a theme is a parent of a given theme.
      * @param parentTheme the parent theme
      * @param childTheme the child theme.
@@ -106,32 +79,6 @@ public class RenderResources {
      */
     public boolean themeIsParentOf(StyleResourceValue parentTheme, StyleResourceValue childTheme) {
         return false;
-    }
-
-    /**
-     * Returns a framework resource by type and name. The returned resource is resolved.
-     *
-     * @param resourceType the type of the resource
-     * @param resourceName the name of the resource
-     * @deprecated Use {@link #getResolvedResource(ResourceReference)}
-     */
-    @Deprecated
-    public ResourceValue getFrameworkResource(ResourceType resourceType, String resourceName) {
-        return getResolvedResource(
-                new ResourceReference(ResourceNamespace.ANDROID, resourceType, resourceName));
-    }
-
-    /**
-     * Returns a project resource by type and name. The returned resource is resolved.
-     *
-     * @param resourceType the type of the resource
-     * @param resourceName the name of the resource
-     * @deprecated Use {@link #getResolvedResource(ResourceReference)}
-     */
-    @Deprecated
-    public ResourceValue getProjectResource(ResourceType resourceType, String resourceName) {
-        return getResolvedResource(
-                new ResourceReference(ResourceNamespace.RES_AUTO, resourceType, resourceName));
     }
 
     /**
@@ -154,17 +101,6 @@ public class RenderResources {
         return null;
     }
 
-    /** @deprecated Use {@link #findItemInTheme(ResourceReference)}. */
-    @Nullable
-    @Deprecated
-    public final ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
-        return findItemInTheme(
-                new ResourceReference(
-                        ResourceNamespace.fromBoolean(isFrameworkAttr),
-                        ResourceType.ATTR,
-                        attrName));
-    }
-
     /**
      * Returns the {@link ResourceValue} matching a given attribute in a given style. If the item is
      * not directly available in the style, the method looks in its parent style.
@@ -173,19 +109,6 @@ public class RenderResources {
     public ResourceValue findItemInStyle(
             @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
         return null;
-    }
-
-    /** @deprecated Use {@link #findItemInStyle(StyleResourceValue, ResourceReference)}. */
-    @Nullable
-    @Deprecated
-    public final ResourceValue findItemInStyle(
-            StyleResourceValue style, String attrName, boolean isFrameworkAttr) {
-        return findItemInStyle(
-                style,
-                new ResourceReference(
-                        ResourceNamespace.fromBoolean(isFrameworkAttr),
-                        ResourceType.ATTR,
-                        attrName));
     }
 
     /**
@@ -282,20 +205,6 @@ public class RenderResources {
      */
     public StyleResourceValue getParent(StyleResourceValue style) {
         return null;
-    }
-
-    /**
-     * Returns the style matching the given name. The name should not contain any namespace prefix.
-     *
-     * @param styleName Name of the style. For example, "Widget.ListView.DropDown".
-     * @return the {link StyleResourceValue} for the style, or null if not found.
-     * @deprecated Use {@link #getStyle(ResourceReference)}
-     */
-    @Deprecated
-    public final StyleResourceValue getStyle(String styleName, boolean isFramework) {
-        return getStyle(
-                new ResourceReference(
-                        ResourceNamespace.fromBoolean(isFramework), ResourceType.STYLE, styleName));
     }
 
     /** Returns the style matching the given reference. */

@@ -796,4 +796,73 @@ public class ResourceResolver extends RenderResources {
             return value;
         }
     }
+
+    /** @deprecated Use {@link #getDefaultTheme()} or {@link #getAllThemes()} */
+    @Deprecated
+    public StyleResourceValue getCurrentTheme() {
+        // Default theme is same as the current theme was on older versions of the API.
+        // With the introduction of applyStyle() "current" theme makes little sense.
+        // Hence, simply return defaultTheme.
+        return getDefaultTheme();
+    }
+
+    /** @deprecated Use {@link #getStyle(ResourceReference)} */
+    @Deprecated
+    public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
+        return getStyle(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(frameworkTheme), ResourceType.STYLE, name));
+    }
+
+    /** @deprecated Use {@link #getResolvedResource(ResourceReference)} */
+    @Deprecated
+    public ResourceValue getFrameworkResource(ResourceType resourceType, String resourceName) {
+        return getResolvedResource(
+                new ResourceReference(ResourceNamespace.ANDROID, resourceType, resourceName));
+    }
+
+    /** @deprecated Use {@link #getResolvedResource(ResourceReference)} */
+    @Deprecated
+    public ResourceValue getProjectResource(ResourceType resourceType, String resourceName) {
+        return getResolvedResource(
+                new ResourceReference(ResourceNamespace.RES_AUTO, resourceType, resourceName));
+    }
+
+    /** @deprecated Use {@link #findItemInTheme(ResourceReference)}. */
+    @Deprecated
+    @Nullable
+    public final ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
+        return findItemInTheme(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(isFrameworkAttr),
+                        ResourceType.ATTR,
+                        attrName));
+    }
+
+    /** @deprecated Use {@link #findItemInStyle(StyleResourceValue, ResourceReference)}. */
+    @Deprecated
+    @Nullable
+    public final ResourceValue findItemInStyle(
+            StyleResourceValue style, String attrName, boolean isFrameworkAttr) {
+        return findItemInStyle(
+                style,
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(isFrameworkAttr),
+                        ResourceType.ATTR,
+                        attrName));
+    }
+
+    /**
+     * Returns the style matching the given name. The name should not contain any namespace prefix.
+     *
+     * @param styleName Name of the style. For example, "Widget.ListView.DropDown".
+     * @return the {link StyleResourceValue} for the style, or null if not found.
+     * @deprecated Use {@link #getStyle(ResourceReference)}
+     */
+    @Deprecated
+    public final StyleResourceValue getStyle(String styleName, boolean isFramework) {
+        return getStyle(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(isFramework), ResourceType.STYLE, styleName));
+    }
 }
