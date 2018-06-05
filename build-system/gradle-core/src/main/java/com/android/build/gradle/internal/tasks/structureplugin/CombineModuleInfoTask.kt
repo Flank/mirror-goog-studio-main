@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,124 +14,91 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks
+package com.android.build.gradle.internal.tasks.structureplugin
 
+import com.android.build.gradle.internal.plugins.ARTIFACT_TYPE_MODULE_INFO
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
 
 open class CombineModuleInfoTask : DefaultTask() {
 
     @get:InputFiles
     lateinit var subModules: FileCollection
+        private set
 
     // optional module info if root project is also a module with plugins applied
+    @get:InputFile
+    @get:Optional
     var localModuleInfo: Provider<RegularFile>? = null
+        internal set
 
     // output
     lateinit var outputProvider: Provider<RegularFile>
+        private set
 
     @TaskAction
     fun action() {
         // load all the modules
-        var infoList = subModules.map { loadModule(it) }
-
-        // gather all the module paths
-        val paths = infoList.map { it.path }
-
-        // create a map from path to anonymized paths
-
-        // make segments from path:
-        val segmentedPaths: Map<String, List<String>> = paths.map {
-            it to it.split(':').filter { it.isNotEmpty() }
-        }.toMap()
-
-        // make a tree from the segments.
-        val root = Segment("")
-        segmentedPaths.values.forEach {
-            root.process(it)
-        }
-
-        // anonymize the segments.
-        root.anonymize()
-
-        val fullPathMap = mutableMapOf<String, String>()
-
-        // loop on all paths and get the anonymized versions
-        for ((path, segments) in segmentedPaths) {
-            fullPathMap[path] = ":" + root.computeAnonymizedPath(segments)
-        }
+        var moduleList = subModules.map { ModuleInfo.readAsJsonFrom(it) }
 
         // if we have a local module add it to the list.
         localModuleInfo?.get()?.asFile?.let {
-            val localModule = loadModule(it)
-            val newList = mutableListOf(localModule)
-            newList.addAll(infoList)
-            infoList = newList
-            // no need to anonymize this one
-            fullPathMap[":"] = ":"
+            val localModule = ModuleInfo.readAsJsonFrom(it)
+
+            moduleList = mutableListOf(localModule).apply {
+                addAll(moduleList)
+            }
         }
 
-        // anonymize the modules and save them
-        infoList = infoList.map { it.anonymize(fullPathMap) }
+        // TODO anonymize names/paths
 
-        saveModules(infoList, outputProvider.get().asFile)
-    }
-}
+        val poetInfo = ASPoetInfo()
+        poetInfo.gradleVersion = project.gradle.gradleVersion
+        poetInfo.agpVersion = findAgpVersion()
+        poetInfo.modules = moduleList.toMutableList()
 
-class Segment(val name: String) {
-    private val children: MutableList<Segment> = mutableListOf()
-    private var anonymousName: String = ""
-
-    fun process(segments: List<String>, index: Int = 0) {
-        if (index >= segments.size) {
-            return
-        }
-
-        val name = segments[index]
-        var match = findChild(name)
-
-        if (match == null) {
-            val newChild = Segment(name)
-            children.add(newChild)
-            match = newChild
-        }
-
-        match.process(segments, index + 1)
+        poetInfo.saveAsJsonTo(outputProvider.get().asFile)
     }
 
-    fun anonymize() {
-        var index = 1
-        children.forEach {
-            it.anonymousName = "module$index"
-            it.anonymize()
-            index++
+    class ConfigAction(private val project: Project,
+            private val structureConfig: Configuration) : Action<CombineModuleInfoTask> {
+        override fun execute(task: CombineModuleInfoTask) {
+            task.outputProvider = project.layout.buildDirectory.file("project-structure.json")
+
+            task.subModules = structureConfig
+                    .incoming
+                    .artifactView(
+                            { config ->
+                                config.attributes({ container ->
+                                    container.attribute<String>(
+                                            AndroidArtifacts.ARTIFACT_TYPE,
+                                            ARTIFACT_TYPE_MODULE_INFO)
+                                })
+                            })
+                    .artifacts
+                    .artifactFiles
         }
     }
 
-    fun computeAnonymizedPath(segments: List<String>, index: Int = 0): String {
-        if (index >= segments.size) {
-            return ""
+    private fun findAgpVersion(): String {
+        for (config in project.buildscript.configurations) {
+            for (dep in config.allDependencies) {
+                if (dep.group == "com.android.tools.build" && dep.name == "gradle")
+                    return dep.version!!
+            }
         }
-
-        val name = segments[index]
-        val match = findChild(name) ?: return ""
-
-        val childrenPath = match.computeAnonymizedPath(segments, index + 1)
-
-        if (childrenPath.isEmpty()) {
-            return match.anonymousName
-        }
-
-        return match.anonymousName + ":" + childrenPath
-
-    }
-
-    private fun findChild(name: String): Segment? {
-        return children.firstOrNull { it.name == name }
+        throw IllegalStateException(
+            "Unable to find Android Gradle Plugin Version on ${project.name}")
     }
 }
 

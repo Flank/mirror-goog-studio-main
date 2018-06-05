@@ -17,11 +17,8 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.build.gradle.BasePlugin
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.tasks.CombineModuleInfoTask
-import com.android.build.gradle.internal.tasks.GatherAndroidModuleInfoTask
-import com.android.build.gradle.internal.tasks.GatherJavaModuleInfoTask
-import com.android.build.gradle.internal.tasks.GatherModuleInfoTask
+import com.android.build.gradle.internal.tasks.structureplugin.CombineModuleInfoTask
+import com.android.build.gradle.internal.tasks.structureplugin.GatherModuleInfoTask
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -51,7 +48,8 @@ class StructurePlugin: Plugin<Project> {
             val structureConfig = project.configurations.create(CLASSPATH_CONFIG_NAME).apply {
                 isCanBeConsumed = false
                 attributes.attribute(
-                        Usage.USAGE_ATTRIBUTE, project.objects.named(Usage::class.java, USAGE_STRUCTURE))
+                        Usage.USAGE_ATTRIBUTE,
+                        project.objects.named(Usage::class.java, USAGE_STRUCTURE))
             }
 
             // go through all the sub modules add add as a dependencies
@@ -61,91 +59,50 @@ class StructurePlugin: Plugin<Project> {
             }
 
             // create the task
-            combineModuleTask = project.tasks.create("TBD", CombineModuleInfoTask::class.java).apply {
-                outputProvider = project.layout.buildDirectory.file("project-structure.json")
-
-                subModules = structureConfig
-                        .incoming
-                        .artifactView(
-                                { config ->
-                                    config.attributes({ container ->
-                                        container.attribute<String>(
-                                                AndroidArtifacts.ARTIFACT_TYPE,
-                                                ARTIFACT_TYPE_MODULE_INFO)
-                                    })
-                                })
-                        .artifacts
-                        .artifactFiles
-            }
+            combineModuleTask = project.tasks.create(
+                    "getStructure",
+                    CombineModuleInfoTask::class.java,
+                    CombineModuleInfoTask.ConfigAction(project, structureConfig))
         }
 
         // we have to do the following in afterEvaluate because we want to see all the plugins
         // in one go. Using [PluginContainer.withType] doesn't really work because we have
         // to do some conditional work depending on which plugins are applied, or not applied.
         project.afterEvaluate {
-            val plugins = project.plugins
-
-            plugins.withType(BasePlugin::class.java) { plugin ->
-                createTask(
-                        project,
-                        plugin.javaClass.canonicalName,
-                        GatherAndroidModuleInfoTask::class.java) {
-                    extension = plugin.extension
-                }
-            }
-
-            val javaPlugin: Any? = plugins.findPlugin(JavaLibraryPlugin::class.java) ?: plugins.findPlugin(JavaPlugin::class.java)
-            javaPlugin?.let {
-                createTask(
-                        project,
-                        it.javaClass.canonicalName,
-                        GatherJavaModuleInfoTask::class.java)
-            }
+            if (it.plugins.count {
+                    it is BasePlugin<*> || it is JavaPlugin || it is JavaLibraryPlugin
+                } > 0) createTask(it)
 
             if (gatherModuleTask == null) {
                 // no plugin? still create the configuration.
-                createPublishingConfiguration(project)
-
-            } else if (plugins.hasPlugin("kotlin")) {
-                gatherModuleTask?.hasKotlin = true
+                createPublishingConfiguration(it)
             }
         }
     }
 
-    private fun <T: GatherModuleInfoTask> createTask(
-            project: Project,
-            pluginName: String,
-            taskClass: Class<T>,
-            taskConfig: (T.() -> Unit)? = null) {
-
+    private fun createTask(project: Project) {
         // create a configuration to publish the file
         val structureConfig = createPublishingConfiguration(project)
-
-        val task = project.tasks.create("gatherModuleInfo", taskClass).apply {
-            // use layout to get a Provider<RegularFile> to ensure we use the correct buildDir
-            outputProvider = project.layout.buildDirectory.file("local-module-info.json")
-            hasKotlin = project.plugins.hasPlugin("kotlin")
-            this.pluginName = pluginName
-
-            gatherModuleTask = this
-            taskConfig?.invoke(this)
-        }
+        gatherModuleTask = project.tasks.create(
+            "gatherModuleInfo",
+            GatherModuleInfoTask::class.java,
+            GatherModuleInfoTask.ConfigAction(project))
 
         // publish the json file as an artifact
         structureConfig.outgoing.variants(
                 { variants: NamedDomainObjectContainer<ConfigurationVariant> ->
                     variants.create(ARTIFACT_TYPE_MODULE_INFO) { variant ->
-                        variant.artifact(task.outputProvider) { artifact ->
+                        variant.artifact(gatherModuleTask!!.outputProvider) { artifact ->
                             artifact.type = ARTIFACT_TYPE_MODULE_INFO
-                            artifact.builtBy(task)
+                            artifact.builtBy(gatherModuleTask)
                         }
                     }
                 })
 
         // if this the root project, register this output as an input to the combine task
         combineModuleTask?.let {
-            it.localModuleInfo = task.outputProvider
-            it.dependsOn(task)
+            it.localModuleInfo = gatherModuleTask!!.outputProvider
+            it.dependsOn(gatherModuleTask)
         }
     }
 
