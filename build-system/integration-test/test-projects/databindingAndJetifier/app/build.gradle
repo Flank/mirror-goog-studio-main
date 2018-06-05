@@ -26,3 +26,17 @@ dependencies {
     // lint errors.
     implementation "com.android.support:preference-v7:${rootProject.supportLibVersion}"
 }
+
+// TODO (AGP): Many AndroidX dependencies do not have version 1.0.0-alpha3 available in prebuilts
+// yet, so we need to correct their versions here for testing only. In practice, the users will
+// still get version 1.0.0-alpha3 of these libraries from GMaven. This workaround needs to be
+// removed once the libraries are added to prebuilts.
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if ((requested.group.startsWith('androidx')
+                        || requested.group == 'com.google.android.material')
+                && requested.version == '1.0.0-alpha3') {
+            useVersion '1.0.0-alpha1'
+        }
+    }
+}
