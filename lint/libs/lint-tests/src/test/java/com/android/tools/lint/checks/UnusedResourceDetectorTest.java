@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
+import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
@@ -1242,6 +1243,26 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "<resources\n"
                                         + "        xmlns:tools=\"http://schemas.android.com/tools\" />\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testNoWarningsInGradleLibraries() {
+        // Regression test for
+        // 78320922: Lint: UnusedResources false positive in library module
+        mEnableIds = false;
+        lint().files(
+                        gradle("" + "apply plugin: 'com.android.library'\n"),
+                        xml(
+                                "src/main/res/values/strings.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <string name=\"hello\">Hello</string>\n"
+                                        + "</resources>\n"))
+                .client(
+                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                                CLIENT_GRADLE))
                 .run()
                 .expectClean();
     }
