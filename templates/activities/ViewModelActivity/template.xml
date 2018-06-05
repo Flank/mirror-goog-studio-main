@@ -2,7 +2,7 @@
 <template
     format="5"
     revision="1"
-    name="Activity &amp; Fragment+ViewModel"
+    name="Fragment + ViewModel"
     minApi="14"
     minBuildApi="14"
     description="Creates a new activity and a fragment with view model">
