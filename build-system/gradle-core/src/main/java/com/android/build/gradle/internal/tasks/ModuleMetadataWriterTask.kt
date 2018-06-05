@@ -97,7 +97,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
         TaskConfigAction<ModuleMetadataWriterTask> {
 
         override fun getName(): String {
-            return variantScope.getTaskName("write", "ApplicationId")
+            return variantScope.getTaskName("write", "ModuleMetadata")
         }
 
         override fun getType(): Class<ModuleMetadataWriterTask> {

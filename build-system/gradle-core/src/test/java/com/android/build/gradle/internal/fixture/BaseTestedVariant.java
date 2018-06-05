@@ -44,6 +44,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -161,6 +162,12 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public String getApplicationId() {
             return variant.getApplicationId();
+        }
+
+        @NonNull
+        @Override
+        public TextResource getApplicationIdTextResource() {
+            return variant.getApplicationIdTextResource();
         }
 
         @NonNull

@@ -217,6 +217,9 @@ public enum InternalArtifactType implements ArtifactType {
     // file containing the module information (like its application ID) to synchronize all base
     // and dynamic feature. This is published by the base feature and installed application module.
     METADATA_BASE_MODULE_DECLARATION,
+    // file containing only the application ID. It is used to synchronize all feature plugins
+    // with the application module's application ID.
+    METADATA_APPLICATION_ID,
     FEATURE_RESOURCE_PKG,
     // File containing the list of transitive dependencies of a given feature. This is consumed
     // by other features to avoid repackaging the same thing.

@@ -31,7 +31,9 @@ import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
+import com.google.common.truth.Correspondence;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.gradle.api.DomainObjectSet;
+import org.gradle.api.Task;
+import org.gradle.api.resources.TextResource;
+import org.gradle.api.tasks.TaskDependency;
 import org.junit.Assert;
 
 public class VariantCheckers {
@@ -174,6 +179,7 @@ public class VariantCheckers {
             BaseTestedVariant variant = findVariant(variants, variantName);
             assertThat(variant.getTestVariant()).named("variant.getTestVariant()").isNull();
             checkTasks(variant.getOriginal());
+            checkTextResources(variant.getOriginal());
         }
 
         @Override
@@ -181,6 +187,35 @@ public class VariantCheckers {
         public String getReleaseJavacTaskName() {
             return "compileReleaseJavaWithJavac";
         }
+
+        private static void checkTextResources(@NonNull BaseVariant variant) {
+            TextResource applicationId = variant.getApplicationIdTextResource();
+            assertThat(applicationId).isNotNull();
+            TaskDependency dependencies = applicationId.getBuildDependencies();
+            assertThat(dependencies).isNotNull();
+            Set<? extends Task> tasks = dependencies.getDependencies(null);
+            String dependencyName =
+                    StringHelper.appendCapitalized("write", variant.getName(), "ApplicationId");
+            assertThat(tasks)
+                    .comparingElementsUsing(TASK_TO_NAME_CORRESPONDENCE)
+                    .contains(dependencyName);
+        }
+
+        private static final Correspondence<Task, String> TASK_TO_NAME_CORRESPONDENCE =
+                new Correspondence<Task, String>() {
+                    @Override
+                    public boolean compare(@Nullable Task actual, @Nullable String expected) {
+                        if (actual == null) {
+                            return expected == null;
+                        }
+                        return actual.getName().equals(expected);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "has a name equal to";
+                    }
+                };
 
         private static void checkTasks(@NonNull ApkVariant variant) {
             boolean isTestVariant = variant instanceof TestVariant;

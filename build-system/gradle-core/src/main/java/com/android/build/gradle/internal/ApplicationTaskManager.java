@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
+import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
@@ -77,6 +78,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -461,6 +463,14 @@ public class ApplicationTaskManager extends TaskManager {
         if (variantScope.getType().isBaseModule()) {
             taskFactory.create(new ModuleMetadataWriterTask.ConfigAction(variantScope));
         }
+
+        Task applicationIdWriterTask =
+                taskFactory.create(new ApplicationIdWriterTask.ConfigAction(variantScope));
+
+        TextResourceFactory resources = project.getResources().getText();
+        // this builds the dependencies from the task, and its output is the textResource.
+        variantScope.getVariantData().applicationIdTextResource =
+                resources.fromFile(applicationIdWriterTask);
     }
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {

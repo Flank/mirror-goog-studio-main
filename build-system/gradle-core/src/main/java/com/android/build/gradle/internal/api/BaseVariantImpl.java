@@ -59,6 +59,7 @@ import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -203,6 +204,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public String getApplicationId() {
         return getVariantData().getApplicationId();
+    }
+
+    @Override
+    @NonNull
+    public TextResource getApplicationIdTextResource() {
+        return getVariantData().applicationIdTextResource;
     }
 
     @Override

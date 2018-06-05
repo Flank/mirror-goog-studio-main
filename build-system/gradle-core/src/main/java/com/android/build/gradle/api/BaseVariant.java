@@ -38,6 +38,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -155,6 +156,14 @@ public interface BaseVariant {
     /** Returns the applicationId of the variant. */
     @NonNull
     String getApplicationId();
+
+    /**
+     * Returns the true application Id of the variant. For feature variants, this returns the
+     * resolved application id from the application. For application variants, this is the same as
+     * getApplicationId.
+     */
+    @NonNull
+    TextResource getApplicationIdTextResource();
 
     /** Returns the pre-build anchor task */
     @NonNull

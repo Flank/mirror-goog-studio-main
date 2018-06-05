@@ -72,6 +72,7 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -122,6 +123,7 @@ public abstract class BaseVariantData {
     private final MultiOutputPolicy multiOutputPolicy;
 
     private final MutableTaskContainer taskContainer;
+    public TextResource applicationIdTextResource;
 
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
