@@ -1,0 +1,34 @@
+{
+  "moduleName": "myapp",
+  "modulePath": "myapp",
+  "moduleType": "android",
+  "javaPackageCount": 5,
+  "javaClassCount": 5,
+  "javaMethodsPerClass": 5,
+  "useKotlin": true,
+  "kotlinPackageCount": 5,
+  "kotlinClassCount": 5,
+  "kotlinMethodsPerClass": 5,
+  "androidBuildConfig": {
+    "minSdkVersion": 21,
+    "targetSdkVersion": 27,
+    "compileSdkVersion": 27
+  },
+  "activityCount": 0,
+  "hasLaunchActivity": false,
+  "resourcesConfig": {
+    "stringCount": 0,
+    "imageCount": 0,
+    "layoutCount": 0
+  },
+  "dependencies": [
+    {
+      "library": "my.org:lib1:1.0",
+      "method": "implementation"
+    },
+    {
+      "library": "my.org:lib2:3.1",
+      "method": "api"
+    }
+  ]
+}

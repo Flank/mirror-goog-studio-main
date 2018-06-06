@@ -1,0 +1,18 @@
+{
+  "moduleName": "javalib",
+  "modulePath": "javalib",
+  "moduleType": "pure",
+  "javaPackageCount": 10,
+  "javaClassCount": 10,
+  "javaMethodsPerClass": 10,
+  "dependencies": [
+    {
+      "library": "my.org:lib1:1.0",
+      "method": "implementation"
+    },
+    {
+      "library": "my.org:lib2:3.1",
+      "method": "api"
+    }
+  ]
+}
