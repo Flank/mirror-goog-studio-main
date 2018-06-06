@@ -29,7 +29,6 @@ import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
-import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import java.util.List;
 
@@ -223,7 +222,8 @@ public class ResourceItemResolver extends RenderResources {
     }
 
     @Override
-    public boolean themeIsParentOf(StyleResourceValue parentTheme, StyleResourceValue childTheme) {
+    public boolean themeIsParentOf(
+            @NonNull StyleResourceValue parentTheme, @NonNull StyleResourceValue childTheme) {
         assert false; // This method shouldn't be called on this resolver
         return super.themeIsParentOf(parentTheme, childTheme);
     }
@@ -243,7 +243,7 @@ public class ResourceItemResolver extends RenderResources {
     }
 
     @Override
-    public StyleResourceValue getParent(StyleResourceValue style) {
+    public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
         ResourceResolver resolver = getFullResolver();
         return resolver != null ? resolver.getParent(style) : null;
     }

@@ -18,6 +18,7 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,27 +35,25 @@ public class RenderResources {
     public void setLogger(LayoutLog logger) {
     }
 
-    /**
-     * Returns the {@link StyleResourceValue} representing the default theme.
-     */
+    /** Returns the {@link StyleResourceValue} representing the default theme. */
+    @Nullable
     public StyleResourceValue getDefaultTheme() {
         return null;
     }
 
     /**
      * Use this theme to resolve resources.
-     * <p>
-     * Remember to call {@link #clearStyles()} to clear the applied styles, so the default theme
+     *
+     * <p>Remember to call {@link #clearStyles()} to clear the applied styles, so the default theme
      * may be restored.
      *
      * @param theme The style to use for resource resolution in addition to the the default theme
-     *      and the styles applied earlier. If null, the operation is a no-op.
-     * @param useAsPrimary If true, the {@code theme} is used first to resolve attributes. If
-     *      false, the theme is used if the resource cannot be resolved using the default theme and
-     *      all the themes that have been applied prior to this call.
+     *     and the styles applied earlier. If null, the operation is a no-op.
+     * @param useAsPrimary If true, the {@code theme} is used first to resolve attributes. If false,
+     *     the theme is used if the resource cannot be resolved using the default theme and all the
+     *     themes that have been applied prior to this call.
      */
-    public void applyStyle(StyleResourceValue theme, boolean useAsPrimary) {
-    }
+    public void applyStyle(@Nullable StyleResourceValue theme, boolean useAsPrimary) {}
 
     /**
      * Clear all the themes applied with {@link #applyStyle(StyleResourceValue, boolean)}
@@ -67,17 +66,20 @@ public class RenderResources {
      * resolving resources. The order of the themes in the list specifies the order in which they
      * should be used to resolve resources.
      */
+    @NonNull
     public List<StyleResourceValue> getAllThemes() {
-       return null;
+        return Collections.emptyList();
     }
 
     /**
      * Returns whether a theme is a parent of a given theme.
+     *
      * @param parentTheme the parent theme
      * @param childTheme the child theme.
      * @return true if the parent theme is indeed a parent theme of the child theme.
      */
-    public boolean themeIsParentOf(StyleResourceValue parentTheme, StyleResourceValue childTheme) {
+    public boolean themeIsParentOf(
+            @NonNull StyleResourceValue parentTheme, @NonNull StyleResourceValue childTheme) {
         return false;
     }
 
@@ -89,9 +91,6 @@ public class RenderResources {
     @Nullable
     public ResourceValue findItemInTheme(@NonNull ResourceReference attr) {
         List<StyleResourceValue> allThemes = getAllThemes();
-        if (allThemes == null) {
-            return null;
-        }
         for (StyleResourceValue theme : allThemes) {
             ResourceValue value = findItemInStyle(theme, attr);
             if (value != null) {
@@ -118,10 +117,9 @@ public class RenderResources {
      *     #getResolvedResource(ResourceReference)} if you already know exactly what you're looking
      *     for.
      */
-    @Nullable
     @Deprecated
-    public final ResourceValue findResValue(
-            @Nullable String reference, boolean forceFrameworkOnly) {
+    @Nullable
+    public ResourceValue findResValue(@Nullable String reference, boolean forceFrameworkOnly) {
         if (reference == null) {
             return null;
         }
@@ -160,7 +158,7 @@ public class RenderResources {
 
     /** Returns a resource by namespace, type and name. The returned resource is unresolved. */
     @Nullable
-    public ResourceValue getUnresolvedResource(ResourceReference reference) {
+    public ResourceValue getUnresolvedResource(@NonNull ResourceReference reference) {
         return null;
     }
 
@@ -171,7 +169,7 @@ public class RenderResources {
      * @see #resolveResValue(ResourceValue)
      */
     @Nullable
-    public ResourceValue getResolvedResource(ResourceReference reference) {
+    public ResourceValue getResolvedResource(@NonNull ResourceReference reference) {
         ResourceValue referencedValue = getUnresolvedResource(reference);
         if (referencedValue == null) {
             return null;
@@ -200,10 +198,11 @@ public class RenderResources {
 
     /**
      * Returns the parent style of the given style, if any
+     *
      * @param style the style to look up
      * @return the parent style, or null
      */
-    public StyleResourceValue getParent(StyleResourceValue style) {
+    public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
         return null;
     }
 

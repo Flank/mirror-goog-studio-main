@@ -93,6 +93,7 @@ public class ResourceResolver extends RenderResources {
      * @param themeReference reference to the theme to be used.
      * @return a new {@link ResourceResolver}
      */
+    @NonNull
     public static ResourceResolver create(
             @NonNull Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> resources,
             @Nullable ResourceReference themeReference) {
@@ -158,8 +159,8 @@ public class ResourceResolver extends RenderResources {
      * <p>This method is meant for testing, where other components need to set up a simple {@link
      * ResourceResolver} with known contents.
      */
-    @NonNull
     @VisibleForTesting
+    @NonNull
     public static ResourceResolver withValues(@NonNull ResourceValue... values) {
         return withValues(Arrays.asList(values), null);
     }
@@ -172,8 +173,8 @@ public class ResourceResolver extends RenderResources {
      * <p>This method is meant for testing, where other components need to set up a simple {@link
      * ResourceResolver} with known contents.
      */
-    @NonNull
     @VisibleForTesting
+    @NonNull
     public static ResourceResolver withValues(
             @NonNull Iterable<ResourceValue> values, @Nullable ResourceReference themeReference) {
         Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> resources = new HashMap<>();
@@ -299,7 +300,7 @@ public class ResourceResolver extends RenderResources {
     }
 
     @Override
-    public void applyStyle(StyleResourceValue theme, boolean useAsPrimary) {
+    public void applyStyle(@Nullable StyleResourceValue theme, boolean useAsPrimary) {
         if (theme == null) {
             return;
         }
@@ -319,12 +320,14 @@ public class ResourceResolver extends RenderResources {
     }
 
     @Override
+    @NonNull
     public List<StyleResourceValue> getAllThemes() {
         return mThemes;
     }
 
     @Override
-    public boolean themeIsParentOf(StyleResourceValue parentTheme, StyleResourceValue childTheme) {
+    public boolean themeIsParentOf(
+            @NonNull StyleResourceValue parentTheme, @NonNull StyleResourceValue childTheme) {
         do {
             childTheme = mStyleInheritanceMap.get(childTheme);
             if (childTheme == null) {
@@ -369,6 +372,7 @@ public class ResourceResolver extends RenderResources {
         return null;
     }
 
+    @NonNull
     private String computeCyclicStyleChain(StyleResourceValue style) {
         StringBuilder result = new StringBuilder(100);
         Set<StyleResourceValue> seen = new HashSet<>();
@@ -404,7 +408,8 @@ public class ResourceResolver extends RenderResources {
     }
 
     @Override
-    public ResourceValue getUnresolvedResource(ResourceReference reference) {
+    @Nullable
+    public ResourceValue getUnresolvedResource(@NonNull ResourceReference reference) {
         if (reference.getResourceType() == ResourceType.SAMPLE_DATA) {
             return findSampleDataValue(reference);
         }
