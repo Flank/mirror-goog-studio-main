@@ -18,7 +18,8 @@ package com.android.tools.gradle;
 
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
-import com.android.tools.perflogger.BenchmarkLogger;
+import com.android.tools.perflogger.Benchmark;
+import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.BufferedInputStream;
@@ -37,7 +38,7 @@ public class GradleProfileLogger implements BenchmarkListener {
     }
 
     @Override
-    public void benchmarkStarting(BenchmarkLogger.Benchmark benchmark, BenchmarkLogger logger) {}
+    public void benchmarkStarting(Benchmark benchmark, Metric metric) {}
 
     @Override
     public void benchmarkDone() {}

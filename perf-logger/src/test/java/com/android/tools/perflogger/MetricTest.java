@@ -17,8 +17,7 @@ package com.android.tools.perflogger;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.perflogger.BenchmarkLogger.Benchmark;
-import com.android.tools.perflogger.BenchmarkLogger.MetricSample;
+import com.android.tools.perflogger.Metric.MetricSample;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import java.io.File;
@@ -29,12 +28,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-public class BenchmarkLoggerTest {
+public class MetricTest {
     @Rule public TestName myTestName = new TestName();
 
     @Test
     public void testCommitWithNoData() throws Exception {
-        BenchmarkLogger logger = new BenchmarkLogger(myTestName.getMethodName());
+        Metric logger = new Metric(myTestName.getMethodName());
         logger.commit();
 
         File outputDir = logger.getOutputDirectory();
@@ -44,14 +43,14 @@ public class BenchmarkLoggerTest {
 
     @Test
     public void testMetricNameRenamed() throws Exception {
-        BenchmarkLogger logger = new BenchmarkLogger("DEAD[BEEF]");
+        Metric logger = new Metric("DEAD[BEEF]");
         assertThat(logger.getMetricName()).isEqualTo("DEAD-BEEF-");
     }
 
     @Test
     public void testSingleBenchmark() throws Exception {
-        BenchmarkLogger logger = new BenchmarkLogger(myTestName.getMethodName());
-        Benchmark benchmark = new Benchmark("AS BenchmarkLogger Test");
+        Metric logger = new Metric(myTestName.getMethodName());
+        Benchmark benchmark = new Benchmark("AS Metric Test");
         logger.addSamples(
                 benchmark,
                 new MetricSample(1, 10),
@@ -71,7 +70,7 @@ public class BenchmarkLoggerTest {
                         + "\",\n"
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS BenchmarkLogger Test\",\n"
+                        + "      \"benchmark\": \"AS Metric Test\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
                         + "        \"2\": 20,\n"
@@ -90,14 +89,14 @@ public class BenchmarkLoggerTest {
 
     @Test
     public void testMultipleBenchmarks() throws Exception {
-        BenchmarkLogger logger = new BenchmarkLogger(myTestName.getMethodName());
-        Benchmark benchmark1 = new Benchmark("AS BenchmarkLogger Test1");
+        Metric logger = new Metric(myTestName.getMethodName());
+        Benchmark benchmark1 = new Benchmark("AS Metric Test1");
         logger.addSamples(
                 benchmark1,
                 new MetricSample(1, 10),
                 new MetricSample(2, 20),
                 new MetricSample(3, 30));
-        Benchmark benchmark2 = new Benchmark("AS BenchmarkLogger Test2");
+        Benchmark benchmark2 = new Benchmark("AS Metric Test2");
         logger.addSamples(
                 benchmark2,
                 new MetricSample(4, 40),
@@ -116,7 +115,7 @@ public class BenchmarkLoggerTest {
                         + "\",\n"
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS BenchmarkLogger Test1\",\n"
+                        + "      \"benchmark\": \"AS Metric Test1\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
                         + "        \"2\": 20,\n"
@@ -124,7 +123,7 @@ public class BenchmarkLoggerTest {
                         + "      }\n"
                         + "    },\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS BenchmarkLogger Test2\",\n"
+                        + "      \"benchmark\": \"AS Metric Test2\",\n"
                         + "      \"data\": {\n"
                         + "        \"4\": 40,\n"
                         + "        \"5\": 50,\n"

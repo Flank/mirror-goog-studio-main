@@ -17,9 +17,9 @@
 package com.android.tools.gradle;
 
 import com.android.testutils.diff.UnifiedDiff;
-import com.android.tools.perflogger.BenchmarkLogger;
-import com.android.tools.perflogger.BenchmarkLogger.Benchmark;
-import com.android.tools.perflogger.BenchmarkLogger.MetricSample;
+import com.android.tools.perflogger.Benchmark;
+import com.android.tools.perflogger.Metric;
+import com.android.tools.perflogger.Metric.MetricSample;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -151,7 +151,7 @@ public class BenchmarkTest {
 
             gradle.run(startups);
 
-            BenchmarkLogger logger = new BenchmarkLogger(metric);
+            Metric logger = new Metric(metric);
             listeners.forEach(it -> it.benchmarkStarting(benchmark, logger));
             for (int i = 0; i < warmUps + iterations; i++) {
                 gradle.run(cleanups);

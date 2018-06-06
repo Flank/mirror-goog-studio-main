@@ -22,7 +22,6 @@ import com.google.gson.stream.JsonWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,43 +31,25 @@ import java.util.logging.Logger;
  * systems. e.g. buildbots gather the output data and upload to bigstore/perfgate for regression
  * tracking and analysis.
  *
- * Currently, this is expected to be used in tests run via Bazel's test runners for logging
+ * <p>Currently, this is expected to be used in tests run via Bazel's test runners for logging
  * performance data. The data is output in JSON format at the location as specified by the
  * TEST_UNDECLARED_OUTPUT_DIR environment variable. At the end of the test(s), the output files are
  * zipped and stored at WORKSPACE_ROOT/bazel-testlogs for external consumption. Also see
  * https://docs.bazel.build/versions/master/test-encyclopedia.html.
  *
- * Usage example:
- * BenchmarkLogger logger = new BenchmarkLogger("My Test");
- * Benchmark benchmark1 = new Benchmark("Total Run Time");
- * logger.addSamples(benchmark1, new MetricSample(timestampMs1, yourTestTotalRunTime));
- * Benchmark benchmark2 = new Benchmark("Peak Memory");
- * logger.addSamples(benchmark2, new MetricSample(timestampMs1, yourTestPeakMemory));
- * logger.commit();
+ * <p>Usage example: Metric metric = new Metric("My Test"); Benchmark benchmark1 = new
+ * Benchmark("Total Run Time"); metric.addSamples(benchmark1, new MetricSample(timestampMs1,
+ * yourTestTotalRunTime)); Benchmark benchmark2 = new Benchmark("Peak Memory");
+ * metric.addSamples(benchmark2, new MetricSample(timestampMs1, yourTestPeakMemory));
+ * metric.commit();
  *
- * This writes out the following data file:
- * {
- *  "metric":
- *  "My Test",
- *  "benchmarks": [
- *    {
- *      "benchmark": "Total Run Time",
- *      "data": {
- *        "timestampMs1": yourTestTotalRunTime
- *      }
- *    },
- *    {
- *      "benchmark": "Peak Memory",
- *      "data": {
- *        "timestampMs2": yourTestPeakMemory
- *      }
- *    }
- *  ]
- * }
+ * <p>This writes out the following data file: { "metric": "My Test", "benchmarks": [ { "benchmark":
+ * "Total Run Time", "data": { "timestampMs1": yourTestTotalRunTime } }, { "benchmark": "Peak
+ * Memory", "data": { "timestampMs2": yourTestPeakMemory } } ] }
  */
-public class BenchmarkLogger {
+public class Metric {
     private static Logger getLogger() {
-        return Logger.getLogger(BenchmarkLogger.class.getName());
+        return Logger.getLogger(Metric.class.getName());
     }
 
 
@@ -84,7 +65,7 @@ public class BenchmarkLogger {
      * @param metricName The name to be used to associate the logged data with. e.g. the legend name
      *     for a line series on a dashboard (usually the name of a test).
      */
-    public BenchmarkLogger(@NonNull String metricName) {
+    public Metric(@NonNull String metricName) {
         String replacedMetricName =
                 metricName.replaceAll(INVALID_CHARACTERS, REPLACEMENT_CHARACTER);
         if (!replacedMetricName.equals(metricName)) {
@@ -142,10 +123,7 @@ public class BenchmarkLogger {
                     if (samples.isEmpty()) {
                         continue;
                     }
-                    writer.beginObject()
-                            .name("benchmark")
-                            .value(benchmark.myBenchmarkName)
-                            .name("data");
+                    writer.beginObject().name("benchmark").value(benchmark.getName()).name("data");
 
                     {
                         writer.beginObject();
@@ -164,48 +142,6 @@ public class BenchmarkLogger {
             writer.flush();
         } catch (IOException e) {
             getLogger().log(Level.ALL, "Failed to commit", e);
-        }
-    }
-
-    /**
-     * A helper method for logging a single data point for a metric to a single benchmark. Note - if
-     * you need to write multiple data points or to multiple benchmarks for the same metric within a
-     * test, use the {@link #addSamples(Benchmark, MetricSample...)} and {@link #commit()} APIs
-     * manually instead.
-     */
-    public static void log(@NonNull Benchmark benchmark, @NonNull String metricName, long data) {
-        long utcMs = Instant.now().toEpochMilli();
-        BenchmarkLogger logger = new BenchmarkLogger(metricName);
-        logger.addSamples(benchmark, new MetricSample(utcMs, data));
-        logger.commit();
-    }
-
-    /**
-     * Wrapper for the configurations of the benchmark that the logger will add data to. TODO add
-     * regression analysis configurations.
-     */
-    public static class Benchmark {
-        /**
-         * Name of the benchmark (e.g. this should match the name of the dashboard to add data to)
-         */
-        @NonNull private final String myBenchmarkName;
-
-        public Benchmark(@NonNull String name) {
-            myBenchmarkName = name;
-        }
-
-        @Override
-        public int hashCode() {
-            return myBenchmarkName.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (!(other instanceof Benchmark)) {
-                return false;
-            }
-
-            return myBenchmarkName == ((Benchmark) other).myBenchmarkName;
         }
     }
 
