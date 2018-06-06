@@ -1032,6 +1032,7 @@ public final class SdkConstants {
     public static final String TAG_MANIFEST = "manifest";
     public static final String TAG_SERVICE = "service"; //$NON-NLS-1$
     public static final String TAG_PERMISSION = "permission"; //$NON-NLS-1$
+    public static final String TAG_PERMISSION_GROUP = "permission-group"; //$NON-NLS-1$
     public static final String TAG_USES_FEATURE = "uses-feature"; //$NON-NLS-1$
     public static final String TAG_USES_PERMISSION = "uses-permission"; //$NON-NLS-1$
     public static final String TAG_USES_PERMISSION_SDK_23 = "uses-permission-sdk-23"; //$NON-NLS-1$

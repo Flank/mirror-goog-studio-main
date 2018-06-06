@@ -613,6 +613,44 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         mStrings));
     }
 
+    public void testDuplicatePermissionGroups() throws Exception {
+        mEnabled = Collections.singleton(ManifestDetector.UNIQUE_PERMISSION);
+        //noinspection all // Sample code
+        assertEquals(
+                ""
+                        + "AndroidManifest.xml:12: Error: Permission group name STORAGE is not unique (appears in both foo.permissiongroup.STORAGE and bar.permissiongroup.STORAGE) [UniquePermission]\n"
+                        + "    <permission-group android:name=\"bar.permissiongroup.STORAGE\"\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    AndroidManifest.xml:9: Previous permission group here\n"
+                        + "1 errors, 0 warnings\n",
+                lintProject(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"foo.bar2\"\n"
+                                        + "    android:versionCode=\"1\"\n"
+                                        + "    android:versionName=\"1.0\" >\n"
+                                        + "\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                                        + "\n"
+                                        + "    <permission-group android:name=\"foo.permissiongroup.STORAGE\"\n"
+                                        + "        android:label=\"@string/foo\"\n"
+                                        + "        android:description=\"@string/foo\" />\n"
+                                        + "    <permission-group android:name=\"bar.permissiongroup.STORAGE\"\n"
+                                        + "        android:label=\"@string/foo\"\n"
+                                        + "        android:description=\"@string/foo\" />\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\" >\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"),
+                        mStrings));
+    }
+
     public void testDuplicatePermissionsMultiProject() {
 
         //noinspection all // Sample code
