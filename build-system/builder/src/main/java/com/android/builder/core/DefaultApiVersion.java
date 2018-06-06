@@ -21,38 +21,39 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
 import com.android.sdklib.SdkVersionInfo;
 
-/**
- * Basic implementation of ApiVersion
- */
-public class DefaultApiVersion implements ApiVersion {
+/** Basic implementation of ApiVersion */
+public final class DefaultApiVersion implements ApiVersion {
 
     private final int mApiLevel;
 
     @Nullable
     private final String mCodename;
 
-    public DefaultApiVersion(int apiLevel, @Nullable String codename) {
-        mApiLevel = apiLevel;
-        mCodename = codename;
-    }
-
     public DefaultApiVersion(int apiLevel) {
-        this(apiLevel, null);
+        mApiLevel = apiLevel;
+        mCodename = null;
     }
 
+    /**
+     * API version for a preview Android Version.
+     *
+     * <p>Preview versions will have their true api level, i.e. the same as the previous stable
+     * version.
+     */
     public DefaultApiVersion(@NonNull String codename) {
-        this(1, codename);
+        mApiLevel = SdkVersionInfo.getApiByBuildCode(codename, true) - 1;
+        mCodename = codename;
     }
 
     @NonNull
     public static ApiVersion create(@NonNull Object value) {
         if (value instanceof Integer) {
-            return new DefaultApiVersion((Integer) value, null);
+            return new DefaultApiVersion((Integer) value);
         } else if (value instanceof String) {
-            return new DefaultApiVersion(1, (String) value);
+            return new DefaultApiVersion((String) value);
         }
 
-        return new DefaultApiVersion(1, null);
+        return new DefaultApiVersion(1);
     }
 
     @Override

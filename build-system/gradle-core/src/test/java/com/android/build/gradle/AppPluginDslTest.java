@@ -622,6 +622,17 @@ public class AppPluginDslTest {
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
     }
 
+    @Test
+    public void testMinSdkVersionParsing() {
+        android.getDefaultConfig().setMinSdkVersion("P");
+        assertThat(android.getDefaultConfig().getMinSdkVersion().getApiLevel())
+                .named("android.defaultConfig.minSdkVersion.apiLevel")
+                .isEqualTo(27);
+        assertThat(android.getDefaultConfig().getMinSdkVersion().getApiString())
+                .named("android.defaultConfig.minSdkVersion.apiLevel")
+                .isEqualTo("P");
+    }
+
     private void checkGeneratedDensities(String taskName, String... densities) {
         MergeResources mergeResources = getTask(taskName, MergeResources.class);
         assertThat(mergeResources.getGeneratedDensities())

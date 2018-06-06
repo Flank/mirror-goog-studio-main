@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.google.common.truth.Truth.assertThat
-import org.mockito.Mockito.`when`
-
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
@@ -34,16 +31,18 @@ import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
-import java.io.File
-import java.io.IOException
-import java.nio.file.Files
+import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import java.util.function.Supplier
 
 /** Tests for the [CompatibleScreensManifest] class  */
@@ -76,7 +75,7 @@ class CompatibleScreensManifestTest {
         `when`(buildArtifactsHolder.appendArtifact(
                         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task))
             .thenReturn(temporaryFolder.root)
-        `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21, null))
+        `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
         `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(productFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
         `when`(variantConfiguration.fullName).thenReturn("fullName")
