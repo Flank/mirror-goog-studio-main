@@ -16,12 +16,9 @@
 
 package com.android.tools.gradle;
 
-import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +27,7 @@ import java.io.IOException;
 @SuppressWarnings("unused")
 public class GradleProfileLogger implements BenchmarkListener {
     File testLogsDir;
+    Benchmark benchmark;
 
     @Override
     public void configure(File home, Gradle gradle) {
@@ -38,7 +36,9 @@ public class GradleProfileLogger implements BenchmarkListener {
     }
 
     @Override
-    public void benchmarkStarting(Benchmark benchmark, Metric metric) {}
+    public void benchmarkStarting(Benchmark benchmark, Metric metric) {
+        this.benchmark = benchmark;
+    }
 
     @Override
     public void benchmarkDone() {}
@@ -68,31 +68,7 @@ public class GradleProfileLogger implements BenchmarkListener {
             throw new RuntimeException(e);
         }
 
-        for (GradleBuildProfileSpan span : gradleBuildProfile.getSpanList()) {
-            if (span.getType() == GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION) {
-                if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
-                    System.out.println(
-                            "Transform "
-                                    + GradleTransformExecutionType.forNumber(
-                                            span.getTransform().getType())
-                                    + "("
-                                    + span.getTransform().getType()
-                                    + ")"
-                                    + " : "
-                                    + span.getDurationInMs());
-                } else {
-                    GradleTaskExecutionType gradleTaskExecutionType =
-                            GradleTaskExecutionType.forNumber(span.getTask().getType());
-                    System.out.println(
-                            "Task "
-                                    + gradleTaskExecutionType
-                                    + "("
-                                    + span.getTask().getType()
-                                    + ") : "
-                                    + span.getDurationInMs());
-                }
-            }
-        }
+        new ProfilerToBenchmarkAdapter().adapt(gradleBuildProfile, benchmark);
     }
 
     private static void cleanOutputDir(File outputDir) {
