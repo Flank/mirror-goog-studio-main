@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder;
@@ -158,13 +159,16 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     @NonNull
     @Override
-    String executeProcess(@NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
+    String executeProcess(@NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonFile)
             throws ProcessException, IOException {
-        return ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
-                androidBuilder,
-                getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
-                false /* logStdioToInfo */,
-                "" /* logPrefix */);
+        return createProcessOutputJunction(
+                        outputJsonFile.getParentFile(),
+                        "android_gradle_generate_ndk_build_json_" + abi,
+                        getProcessBuilder(abi, abiPlatformVersion, outputJsonFile),
+                        androidBuilder,
+                        "")
+                .logStderrToInfo()
+                .executeAndReturnStdoutString();
     }
 
     @NonNull

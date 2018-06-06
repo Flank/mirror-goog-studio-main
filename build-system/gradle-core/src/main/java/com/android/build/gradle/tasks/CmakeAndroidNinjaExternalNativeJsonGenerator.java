@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError;
+import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
@@ -59,12 +59,16 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     public String executeProcessAndGetOutput(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
-        String logPrefix = "Variant=" + config.variantName + " ABI=" + abi + " :";
-        return executeBuildProcessAndLogError(
-                androidBuilder,
-                getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
-                true,
-                logPrefix);
+        String logPrefix = config.variantName + "|" + abi + " :";
+        return createProcessOutputJunction(
+                        outputJsonDir.getParentFile(),
+                        "android_gradle_generate_cmake_ninja_json_" + abi,
+                        getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
+                        androidBuilder,
+                        logPrefix)
+                .logStderrToInfo()
+                .logStdoutToInfo()
+                .executeAndReturnStdoutString();
     }
 
 

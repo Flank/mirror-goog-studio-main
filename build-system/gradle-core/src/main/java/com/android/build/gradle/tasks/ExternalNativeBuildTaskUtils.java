@@ -27,25 +27,14 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
-import com.android.ide.common.process.BuildCommandException;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessInfoBuilder;
-import com.android.ide.common.process.ProcessOutput;
-import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.utils.ILogger;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.common.io.FileBackedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -214,39 +203,6 @@ public class ExternalNativeBuildTaskUtils {
     }
 
     /**
-     * Execute an external process and log the result in the case of a process exceptions. Returns
-     * the info part of the log so that it can be parsed by ndk-build parser;
-     *
-     * @throws BuildCommandException when the build failed.
-     */
-    @NonNull
-    public static String executeBuildProcessAndLogError(
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull ProcessInfoBuilder process,
-            boolean logStdioToInfo,
-            @NonNull String logPrefix)
-            throws BuildCommandException, IOException {
-        ProgressiveLoggingProcessOutputHandler handler =
-                new ProgressiveLoggingProcessOutputHandler(
-                        androidBuilder.getLogger(), logStdioToInfo, logPrefix);
-        try {
-            // Log the command to execute but only in verbose (ie --info)
-            androidBuilder.getLogger().verbose(process.toString());
-            androidBuilder.executeProcess(process.createProcess(), handler)
-                    .rethrowFailure().assertNormalExitValue();
-
-            return handler.getStandardOutputString();
-        } catch (ProcessException e) {
-            // Also, add process output to the process exception so that it can be analyzed by
-            // caller. Use combined stderr stdout instead of just stdout because compiler errors
-            // go to stdout.
-            String combinedMessage = String.format("%s\n%s", e.getMessage(),
-                    handler.getCombinedOutputString());
-            throw new BuildCommandException(combinedMessage);
-        }
-    }
-
-    /**
      * Returns the folder with the CMake binary. For more info, check the comments on
      * doFindCmakeExecutableFolder below.
      *
@@ -255,7 +211,7 @@ public class ExternalNativeBuildTaskUtils {
      */
     @NonNull
     public static File findCmakeExecutableFolder(
-            @Nullable String cmakeVersion, @NonNull SdkHandler sdkHandler) {
+            @NonNull String cmakeVersion, @NonNull SdkHandler sdkHandler) {
         return doFindCmakeExecutableFolder(cmakeVersion, sdkHandler, getEnvironmentPathList());
     }
 
@@ -437,146 +393,5 @@ public class ExternalNativeBuildTaskUtils {
         }
     }
 
-    /**
-     * A process output handler that receives STDOUT and STDERR progressively (as it is happening)
-     * and logs the output line-by-line to Gradle. This class also collected precise byte-for-byte
-     * output.
-     */
-    private static class ProgressiveLoggingProcessOutputHandler implements ProcessOutputHandler {
-        @NonNull
-        private final ILogger logger;
-        @NonNull private final FileBackedOutputStream standardOutput;
-        @NonNull private final FileBackedOutputStream combinedOutput;
-        @NonNull
-        private final ProgressiveLoggingProcessOutput loggingProcessOutput;
-        @NonNull private final String logPrefix;
-        private final boolean logStdioToInfo;
 
-        public ProgressiveLoggingProcessOutputHandler(
-                @NonNull ILogger logger, boolean logStdioToInfo, @NonNull String logPrefix) {
-            this.logger = logger;
-            this.logStdioToInfo = logStdioToInfo;
-            this.logPrefix = logPrefix;
-            standardOutput = new FileBackedOutputStream(2048);
-            combinedOutput = new FileBackedOutputStream(2048);
-            loggingProcessOutput = new ProgressiveLoggingProcessOutput();
-        }
-
-        @NonNull
-        String getStandardOutputString() throws IOException {
-            return standardOutput.asByteSource().asCharSource(Charsets.UTF_8).read();
-        }
-
-        @NonNull
-        String getCombinedOutputString() throws IOException {
-            return combinedOutput.asByteSource().asCharSource(Charsets.UTF_8).read();
-        }
-
-        @NonNull
-        @Override
-        public ProcessOutput createOutput() {
-            return loggingProcessOutput;
-        }
-
-        @Override
-        public void handleOutput(@NonNull ProcessOutput processOutput) throws ProcessException {
-            // Nothing to do here because the process output is handled as it comes in.
-        }
-
-        private class ProgressiveLoggingProcessOutput implements ProcessOutput {
-            @NonNull
-            private final ProgressiveLoggingOutputStream outputStream;
-            @NonNull
-            private final ProgressiveLoggingOutputStream errorStream;
-
-            ProgressiveLoggingProcessOutput() {
-                outputStream = new ProgressiveLoggingOutputStream(logStdioToInfo, standardOutput);
-                errorStream = new ProgressiveLoggingOutputStream(true /* logToInfo */, null);
-            }
-
-            @NonNull
-            @Override
-            public OutputStream getStandardOutput() {
-                return outputStream;
-            }
-
-            @NonNull
-            @Override
-            public OutputStream getErrorOutput() {
-                return errorStream;
-            }
-
-            @Override
-            public void close() throws IOException {}
-
-            private class ProgressiveLoggingOutputStream extends OutputStream {
-                private static final int INITIAL_BUFFER_SIZE = 256;
-                private final boolean logToInfo;
-                private final FileBackedOutputStream individualOutput;
-                @NonNull
-                byte[] buffer = new byte[INITIAL_BUFFER_SIZE];
-                int nextByteIndex = 0;
-
-                ProgressiveLoggingOutputStream(
-                        boolean logToInfo, FileBackedOutputStream individualOutput) {
-                    this.logToInfo = logToInfo;
-                    this.individualOutput = individualOutput;
-                }
-
-                @Override
-                public void write(byte b[], int off, int len) throws IOException {
-                    combinedOutput.write(b, off, len);
-                    if (individualOutput != null) {
-                        individualOutput.write(b, off, len);
-                    }
-                    if (logToInfo) {
-                        for (int i = 0; i < len; i++) {
-                            int value = b[off + i];
-                            // The reason this doesn't double the presented linebreaks is because
-                            // in the \r\n case printBuffer() exits without emitting a linebreak
-                            // when byteCount accumulated by writeBuffer() is still zero. However,
-                            // a single \r or \n will still emit a linebreak.
-                            if (value == '\r' || value == '\n') {
-                                printBuffer();
-                            } else {
-                                writeBuffer(value);
-                            }
-                        }
-                    }
-                }
-
-                @Override
-                public void write(int b) throws IOException {
-                    throw new RuntimeException(
-                            "If single byte write is needed then a "
-                                    + "buffered output stream should be used to wrap "
-                                    + "ProgressiveLoggingOutputStream");
-                }
-
-                private void writeBuffer(int b) {
-                    assert logToInfo;
-                    if (nextByteIndex == buffer.length) {
-                        buffer = Arrays.copyOf(buffer, buffer.length * 2);
-                    }
-                    buffer[nextByteIndex] = (byte) b;
-                    nextByteIndex++;
-                }
-
-                private void printBuffer() throws UnsupportedEncodingException {
-                    assert logToInfo;
-                    if (nextByteIndex == 0) {
-                        return;
-                    }
-                    String line = new String(buffer, 0, nextByteIndex, "UTF-8");
-                    logger.lifecycle(logPrefix + line);
-                    nextByteIndex = 0;
-                }
-
-                @Override
-                public void close() throws IOException {
-                    printBuffer();
-                }
-            }
-        }
-    }
 }

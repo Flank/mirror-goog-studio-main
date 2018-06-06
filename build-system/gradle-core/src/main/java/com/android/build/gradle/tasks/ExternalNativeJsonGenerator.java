@@ -475,9 +475,9 @@ public abstract class ExternalNativeJsonGenerator {
         androidBuilder
                 .getLogger()
                 .info(
-                        "External native JSON generation. Variant="
+                        "External native JSON generation. "
                                 + config.variantName
-                                + "ABI="
+                                + "|"
                                 + abi
                                 + " : "
                                 + format,

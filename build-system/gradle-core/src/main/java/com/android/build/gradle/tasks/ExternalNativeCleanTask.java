@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -123,8 +124,16 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
                 processBuilder.addArgs(tokens.get(i));
             }
             diagnostic("%s", processBuilder);
-            ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
-                    getBuilder(), processBuilder, true /* logStdioToInfo */, "" /* logPrefix */);
+            createProcessOutputJunction(
+                            this.objFolder,
+                            "eandroid_gradle_clean_"
+                                    + targetNames.get(commandIndex).replace(" ", "_"),
+                            processBuilder,
+                            getBuilder(),
+                            "")
+                    .logStderrToInfo()
+                    .logStdoutToInfo()
+                    .execute();
         }
     }
 

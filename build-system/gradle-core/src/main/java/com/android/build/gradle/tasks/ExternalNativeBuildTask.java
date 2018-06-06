@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -73,7 +74,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
 
     private Map<Abi, File> stlSharedObjectFiles;
 
-    @NonNull private GradleBuildVariant.Builder stats;
+    private GradleBuildVariant.Builder stats;
 
     /** Log low level diagnostic information. */
     protected void diagnostic(String format, Object... args) {
@@ -90,6 +91,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
 
         List<String> buildCommands = Lists.newArrayList();
         List<String> libraryNames = Lists.newArrayList();
+        List<File> outputFolders = Lists.newArrayList();
         if (targets.isEmpty()) {
             diagnostic(
                     "executing build commands for targets that produce .so files or executables");
@@ -122,7 +124,8 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             }
         }
 
-        for (NativeBuildConfigValueMini config : miniConfigs) {
+        for (int miniConfigIndex = 0; miniConfigIndex < miniConfigs.size(); ++miniConfigIndex) {
+            NativeBuildConfigValueMini config = miniConfigs.get(miniConfigIndex);
             diagnostic("evaluate miniconfig");
             if (config.libraries.isEmpty()) {
                 diagnostic("no libraries");
@@ -178,11 +181,13 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
 
                 buildCommands.add(libraryValue.buildCommand);
                 libraryNames.add(libraryValue.artifactName + " " + libraryValue.abi);
+                outputFolders.add(
+                        nativeBuildConfigurationsJsons.get(miniConfigIndex).getParentFile());
                 diagnostic("about to build %s", libraryValue.buildCommand);
             }
         }
 
-        executeProcessBatch(libraryNames, buildCommands);
+        executeProcessBatch(libraryNames, buildCommands, outputFolders);
 
         diagnostic("check expected build outputs");
         for (NativeBuildConfigValueMini config : miniConfigs) {
@@ -286,7 +291,9 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
      * that point.
      */
     private void executeProcessBatch(
-            @NonNull List<String> libraryNames, @NonNull List<String> commands)
+            @NonNull List<String> libraryNames,
+            @NonNull List<String> commands,
+            @NonNull List<File> output)
             throws BuildCommandException, IOException {
         // Order of building doesn't matter to final result but building in reverse order causes
         // the dependencies to be built first for CMake and ndk-build. This gives better progress
@@ -304,8 +311,15 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                 processBuilder.addArgs(tokens.get(i));
             }
             diagnostic("%s", processBuilder);
-            ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
-                    getBuilder(), processBuilder, true /* logStdioToInfo */, "" /* logPrefix */);
+            createProcessOutputJunction(
+                            output.get(library),
+                            "android_gradle_build_" + libraryName.replace(" ", "_"),
+                            processBuilder,
+                            getBuilder(),
+                            "")
+                    .logStderrToInfo()
+                    .logStdoutToInfo()
+                    .execute();
         }
     }
 
