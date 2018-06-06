@@ -397,6 +397,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean useResourceShrinker() {
+        if (variantData.getType().isForTesting()) {
+            return false;
+        }
+
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
 
         boolean userEnabledShrinkResources;
