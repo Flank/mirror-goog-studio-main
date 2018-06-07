@@ -35,17 +35,23 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.objectweb.asm.Type;
 
 /** Tests for the desugaring dependencies analysis. */
 public class DesugaringClassAnalyzerTest {
+
+    @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
     @Test
     public void testBaseInterface() throws IOException {
@@ -172,6 +178,14 @@ public class DesugaringClassAnalyzerTest {
                         Object.class, ImmutableSet.of(ClassLambdaInParam.class),
                         FunInterfaceSubtype.class, ImmutableSet.of(ClassLambdaInParam.class)),
                 graph);
+    }
+
+    @Test
+    public void testModuleInfoSkipped() throws IOException {
+        Path inputDir = tmp.newFolder().toPath();
+        Files.createFile(inputDir.resolve("module-info.class"));
+        List<DesugaringData> analyze = DesugaringClassAnalyzer.analyze(inputDir);
+        assertThat(analyze).isEmpty();
     }
 
     @NonNull

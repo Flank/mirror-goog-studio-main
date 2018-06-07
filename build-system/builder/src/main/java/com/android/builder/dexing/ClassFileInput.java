@@ -34,13 +34,23 @@ import java.util.stream.Stream;
  */
 public interface ClassFileInput extends Closeable {
 
+    /** Accepts Unix-style absolute or relative path. */
     Predicate<String> CLASS_MATCHER =
             s -> {
                 String lowerCase = s.toLowerCase(Locale.US);
-                return lowerCase.endsWith(SdkConstants.DOT_CLASS)
-                        && !lowerCase.equals("module-info.class")
-                        && !lowerCase.startsWith("/meta-inf")
-                        && !lowerCase.startsWith("meta-inf");
+                if (!lowerCase.endsWith(SdkConstants.DOT_CLASS)) {
+                    return false;
+                }
+
+                if (lowerCase.equals("module-info.class")
+                        || lowerCase.endsWith("/module-info.class")) {
+                    return false;
+                }
+
+                if (lowerCase.startsWith("/meta-inf/") || lowerCase.startsWith("meta-inf/")) {
+                    return false;
+                }
+                return true;
             };
 
     /**

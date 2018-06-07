@@ -16,9 +16,12 @@
 
 package com.android.builder.desugaring;
 
+import static com.android.utils.PathUtils.toSystemIndependentPath;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.builder.dexing.ClassFileInput;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -61,8 +64,10 @@ public class DesugaringClassAnalyzer {
         } else if (Files.isRegularFile(path)) {
             if (path.toString().endsWith(SdkConstants.DOT_JAR)) {
                 return analyzeJar(path);
-            } else {
+            } else if (ClassFileInput.CLASS_MATCHER.test(toSystemIndependentPath(path))) {
                 return ImmutableList.of(analyzeClass(path));
+            } else {
+                return ImmutableList.of();
             }
         } else {
             throw new IOException("Unable to process " + path.toString());
@@ -83,7 +88,7 @@ public class DesugaringClassAnalyzer {
             while (entries.hasMoreElements()) {
                 ZipEntry zipEntry = entries.nextElement();
 
-                if (!zipEntry.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                if (!ClassFileInput.CLASS_MATCHER.test(zipEntry.getName())) {
                     continue;
                 }
 
@@ -107,7 +112,8 @@ public class DesugaringClassAnalyzer {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
-                        if (file.toString().endsWith(SdkConstants.DOT_CLASS)) {
+                        Path relative = dir.relativize(file);
+                        if (ClassFileInput.CLASS_MATCHER.test(toSystemIndependentPath(relative))) {
                             data.add(analyzeClass(file));
                         }
 
