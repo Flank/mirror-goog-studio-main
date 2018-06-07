@@ -103,15 +103,7 @@ class DexSplitterTransformTest {
 
         runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses))
 
-        val baseDex = getDex(dexSplitterOutputProviderDir.toPath())
-        assertThat(baseDex).containsClasses("Lbase/A;", "Lbase/B;")
-        assertThat(baseDex).doesNotContainClasses("Lfeature/A;", "Lfeature/B;")
-
-        val featureDex = getDex(File(dexSplitterOutputDir, "foo/feature").toPath())
-        assertThat(featureDex).containsClasses("Lfeature/A;", "Lfeature/B;")
-        assertThat(featureDex).doesNotContainClasses("Lbase/A;", "Lbase/B;")
-
-        Truth.assertThat(dexSplitterOutputDir.listFiles().map {it.name} ).doesNotContain("base")
+        checkDexSplitterOutputs()
     }
 
     @Test
@@ -129,15 +121,7 @@ class DexSplitterTransformTest {
 
         runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses), mappingFileSrc)
 
-        val baseDex = getDex(dexSplitterOutputProviderDir.toPath())
-        assertThat(baseDex).containsClasses("Lbase/A;", "Lbase/B;")
-        assertThat(baseDex).doesNotContainClasses("Lfeature/A;", "Lfeature/B;")
-
-        val featureDex = getDex(File(dexSplitterOutputDir, "foo/feature").toPath())
-        assertThat(featureDex).containsClasses("Lfeature/A;", "Lfeature/B;")
-        assertThat(featureDex).doesNotContainClasses("Lbase/A;", "Lbase/B;")
-
-        Truth.assertThat(dexSplitterOutputDir.listFiles().map {it.name} ).doesNotContain("base")
+        checkDexSplitterOutputs()
     }
 
     private fun runDexSplitter(
@@ -180,6 +164,17 @@ class DexSplitterTransformTest {
         r8Transform.transform(r8Invocation)
     }
 
+    private fun checkDexSplitterOutputs() {
+        val baseDex = getDex(dexSplitterOutputProviderDir.toPath())
+        assertThat(baseDex).containsClasses("Lbase/A;", "Lbase/B;")
+        assertThat(baseDex).doesNotContainClasses("Lfeature/A;", "Lfeature/B;")
+
+        val featureDex = getDex(File(dexSplitterOutputDir, "features/foo/feature").toPath())
+        assertThat(featureDex).containsClasses("Lfeature/A;", "Lfeature/B;")
+        assertThat(featureDex).doesNotContainClasses("Lbase/A;", "Lbase/B;")
+
+        Truth.assertThat(dexSplitterOutputDir.listFiles().map {it.name} ).doesNotContain("base")
+    }
 
     private fun getDex(path: Path): Dex {
         val dexFiles = Files.walk(path).filter { it.toString().endsWith(".dex") }.toList()

@@ -3493,13 +3493,15 @@ public abstract class TaskManager {
         BuildableArtifact artifact =
                 variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.FEATURE_DEX);
         for (String modulePath : modulePaths) {
+            final String absoluteModulePath = project.absoluteProjectPath(modulePath);
             Provider<File> file =
                     project.provider(
                             () ->
                                     new File(
                                             Iterables.getOnlyElement(artifact.getFiles()),
-                                            modulePath.replace(":", "/")));
-            Map<Attribute<String>, String> attributeMap = ImmutableMap.of(MODULE_PATH, modulePath);
+                                            "features" + absoluteModulePath.replace(":", "/")));
+            Map<Attribute<String>, String> attributeMap =
+                    ImmutableMap.of(MODULE_PATH, absoluteModulePath);
             publishArtifactToConfiguration(
                     configuration,
                     file,
