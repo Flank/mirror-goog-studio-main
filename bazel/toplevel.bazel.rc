@@ -135,7 +135,7 @@ build:remote-cache --genrule_strategy=sandboxed
 # Set flags for uploading to BES in order to view results in the Bazel Build
 # Results UI.
 build:remote-cache --bes_backend="buildeventservice.googleapis.com"
-build:remote-cache --bes_timeout=10s
+build:remote-cache --bes_timeout=60s
 
 # Cloud project info
 build:remote-cache --remote_instance_name=projects/google.com:android-studio-alphasource
