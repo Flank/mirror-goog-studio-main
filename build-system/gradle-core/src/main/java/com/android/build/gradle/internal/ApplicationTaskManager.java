@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
@@ -407,11 +408,13 @@ public class ApplicationTaskManager extends TaskManager {
         final VariantType variantType = scope.getVariantConfiguration().getType();
 
         if (variantType.isApk()) {
-            if (variantType.isTestComponent()) { // ANDROID_TEST
-                return taskFactory.create(new TestPreBuildTask.ConfigAction(scope));
-            }
+            AppClasspathCheckTask classpathCheck =
+                    taskFactory.create(new AppClasspathCheckTask.ConfigAction(scope));
 
-            return taskFactory.create(new AppPreBuildTask.ConfigAction(scope));
+            return (variantType.isTestComponent()
+                            ? taskFactory.create(new TestPreBuildTask.ConfigAction(scope))
+                            : taskFactory.create(new AppPreBuildTask.ConfigAction(scope)))
+                    .dependsOn(classpathCheck);
         }
 
         return super.createVariantPreBuildTask(scope);

@@ -23,111 +23,37 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.google.common.collect.Maps;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import org.gradle.api.GradleException;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.CompileClasspath;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-/** Pre build task that does some checks for application variants */
+/**
+ * Pre build task that checks that there are not differences between artifact versions between the
+ * runtime classpath of tested variant, and runtime classpath of test variant.
+ */
 @CacheableTask
-public class TestPreBuildTask extends AndroidVariantTask {
+public class TestPreBuildTask extends ClasspathComparisionTask {
 
-    // list of Android only compile and runtime classpath.
-    private ArtifactCollection testedRuntimeClasspath;
-    private ArtifactCollection testRuntimeClasspath;
-    // fake output dir so that the task doesn't run unless an input has changed.
-    private File fakeOutputDirectory;
-
-    // even though the files are jars, we don't care about changes to the files, only if files
-    // are removed or added. We need to find a better way to declare this.
-    @CompileClasspath
-    @PathSensitive(PathSensitivity.NONE)
-    public FileCollection getTestedRuntimeClasspath() {
-        return testedRuntimeClasspath.getArtifactFiles();
-    }
-
-    // even though the files are jars, we don't care about changes to the files, only if files
-    // are removed or added. We need to find a better way to declare this.
-    @CompileClasspath
-    @PathSensitive(PathSensitivity.NONE)
-    public FileCollection getTestRuntimeClasspath() {
-        return testRuntimeClasspath.getArtifactFiles();
-    }
-
-    @OutputDirectory
-    public File getFakeOutputDirectory() {
-        return fakeOutputDirectory;
+    @Override
+    void onDifferentVersionsFound(
+            @NonNull String group,
+            @NonNull String module,
+            @NonNull String runtimeVersion,
+            @NonNull String compileVersion) {
+        throw new GradleException(
+                String.format(
+                        "Conflict with dependency '%s:%s' in project '%s'. Resolved versions for"
+                                + " app (%s) and test app (%s) differ. See"
+                                + " https://d.android.com/r/tools/test-apk-dependency-conflicts.html"
+                                + " for details.",
+                        group, module, getProject().getPath(), compileVersion, runtimeVersion));
     }
 
     @TaskAction
     void run() {
-        Set<ResolvedArtifactResult> testedArtifacts = testedRuntimeClasspath.getArtifacts();
-        Set<ResolvedArtifactResult> testArtifacts = testRuntimeClasspath.getArtifacts();
-
-        // Store a map of groupId -> (artifactId -> versions)
-        Map<String, Map<String, String>> testedIds =
-                Maps.newHashMapWithExpectedSize(testedArtifacts.size());
-
-        // build a list of the runtime artifacts
-        for (ResolvedArtifactResult artifact : testedArtifacts) {
-            // only care about external dependencies to compare versions.
-            final ComponentIdentifier componentIdentifier =
-                    artifact.getId().getComponentIdentifier();
-            if (componentIdentifier instanceof ModuleComponentIdentifier) {
-                ModuleComponentIdentifier moduleId =
-                        (ModuleComponentIdentifier) componentIdentifier;
-
-                // get the sub-map, creating it if needed.
-                Map<String, String> subMap =
-                        testedIds.computeIfAbsent(moduleId.getGroup(), s -> new HashMap<>());
-
-                subMap.put(moduleId.getModule(), moduleId.getVersion());
-            }
-        }
-
-        // run through the compile ones to check for provided only.
-        for (ResolvedArtifactResult artifact : testArtifacts) {
-            // only care about external dependencies to compare versions.
-            final ComponentIdentifier componentIdentifier =
-                    artifact.getId().getComponentIdentifier();
-            if (componentIdentifier instanceof ModuleComponentIdentifier) {
-                ModuleComponentIdentifier moduleId =
-                        (ModuleComponentIdentifier) componentIdentifier;
-
-                Map<String, String> subMap = testedIds.get(moduleId.getGroup());
-                if (subMap != null) {
-                    String testedVersion = subMap.get(moduleId.getModule());
-                    if (testedVersion != null) {
-                        if (!testedVersion.equals(moduleId.getVersion())) {
-                            throw new GradleException(
-                                    String.format(
-                                            "Conflict with dependency '%s:%s' in project '%s'. Resolved versions for"
-                                                    + " app (%s) and test app (%s) differ. See"
-                                                    + " https://d.android.com/r/tools/test-apk-dependency-conflicts.html"
-                                                    + " for details.",
-                                            moduleId.getGroup(),
-                                            moduleId.getModule(),
-                                            getProject().getPath(),
-                                            testedVersion,
-                                            moduleId.getVersion()));
-                        }
-                    }
-                }
-            }
-        }
+        compareClasspaths();
     }
 
     public static class ConfigAction implements TaskConfigAction<TestPreBuildTask> {
@@ -154,13 +80,13 @@ public class TestPreBuildTask extends AndroidVariantTask {
         public void execute(@NonNull TestPreBuildTask task) {
             task.setVariantName(variantScope.getFullVariantName());
 
-            task.testedRuntimeClasspath =
-                    variantScope
-                            .getTestedVariantData()
+            task.runtimeClasspath =
+                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+
+            task.compileClasspath =
+                    Objects.requireNonNull(variantScope.getTestedVariantData())
                             .getScope()
                             .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
-            task.testRuntimeClasspath =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
 
             task.fakeOutputDirectory =
                     new File(
