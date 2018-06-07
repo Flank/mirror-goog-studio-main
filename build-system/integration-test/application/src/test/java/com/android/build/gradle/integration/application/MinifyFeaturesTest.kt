@@ -92,6 +92,8 @@ class MinifyFeaturesTest(
             )
     }
 
+    // We use ":base" as otherFeature2GradlePath as regression test for http://b/80079844
+    private val otherFeature2GradlePath = ":base"
 
     private val lib1 =
         MinimalSubProject.lib("com.example.lib1")
@@ -222,7 +224,7 @@ class MinifyFeaturesTest(
                     .appendToBuild(
                         """
                             android {
-	                            dynamicFeatures = [':foo:otherFeature1', ':otherFeature2']
+	                            dynamicFeatures = [':foo:otherFeature1', '$otherFeature2GradlePath']
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
                                     minified {
@@ -612,7 +614,7 @@ class MinifyFeaturesTest(
             .subproject(":lib3", lib3)
             .subproject(":baseModule", baseModule)
             .subproject(":foo:otherFeature1", otherFeature1)
-            .subproject(":otherFeature2", otherFeature2)
+            .subproject(otherFeature2GradlePath, otherFeature2)
             .dependency(otherFeature1, lib2)
             // otherFeature1 depends on lib3 to test having multiple library module dependencies.
             .dependency(otherFeature1, lib3)
@@ -755,7 +757,7 @@ class MinifyFeaturesTest(
         assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
 
         val otherFeature2Apk =
-            project.getSubproject("otherFeature2")
+            project.getSubproject(otherFeature2GradlePath)
                 .let {
                     when (multiApkMode) {
                         MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
@@ -803,7 +805,7 @@ class MinifyFeaturesTest(
     fun testDefaultProguardFilesSyncError() {
         Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
         Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
-        project.getSubproject(":otherFeature2")
+        project.getSubproject(otherFeature2GradlePath)
             .buildFile
             .appendText(
                 """
@@ -817,7 +819,7 @@ class MinifyFeaturesTest(
                     """
             )
         val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        assertThat(model.rootBuildModelMap[":otherFeature2"])
+        assertThat(model.rootBuildModelMap[otherFeature2GradlePath])
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("should not be specified in this module.")
