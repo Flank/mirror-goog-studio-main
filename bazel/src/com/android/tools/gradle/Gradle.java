@@ -95,15 +95,21 @@ public class Gradle implements Closeable {
         env.put("ANDROID_SDK_HOME", androidDir.getAbsolutePath());
 
         // On windows it is needed to set a few more environment variables
-        env.put("SystemRoot", System.getenv("SystemRoot"));
-        env.put("TEMP", System.getenv("TEMP"));
-        env.put("TMP", System.getenv("TMP"));
+        // Variable should be set only if not null to avoid exceptions in Gradle such as
+        // "java.lang.IllegalArgumentException: Cannot encode a null string."
+        putIfNotNull(env, "SystemRoot", System.getenv("SystemRoot"));
+        putIfNotNull(env, "TEMP", System.getenv("TEMP"));
+        putIfNotNull(env, "TMP", System.getenv("TMP"));
 
         List<String> arguments = new ArrayList<>();
         arguments.add("--offline");
         arguments.add("--init-script");
         arguments.add(getInitScript().getAbsolutePath());
         arguments.add("-Dmaven.repo.local=" + tmpLocalMaven.getAbsolutePath());
+
+        // Workaround for issue https://github.com/gradle/gradle/issues/5188
+        System.setProperty("gradle.user.home", "");
+
         arguments.addAll(this.arguments);
 
         ProjectConnection projectConnection = getProjectConnection(homeDir, project, distribution);
@@ -119,6 +125,12 @@ public class Gradle implements Closeable {
             launcher.run();
         } finally {
             projectConnection.close();
+        }
+    }
+
+    private static void putIfNotNull(HashMap<String, String> env, String key, String val) {
+        if (val != null) {
+            env.put(key, val);
         }
     }
 
