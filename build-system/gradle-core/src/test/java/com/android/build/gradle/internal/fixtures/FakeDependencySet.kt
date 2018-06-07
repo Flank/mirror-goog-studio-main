@@ -22,6 +22,7 @@ import org.gradle.api.DomainObjectCollection
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
+import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.TaskDependency
 
@@ -124,6 +125,18 @@ class FakeDependencySet: DependencySet {
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
     override fun retainAll(elements: Collection<Dependency>): Boolean {
+        TODO("not implemented")
+    }
+
+    override fun configureEachLater(p0: Action<in Dependency>?) {
+        TODO("not implemented")
+    }
+
+    override fun <S : Dependency?> configureEachLater(p0: Class<S>?, p1: Action<in S>?) {
+        TODO("not implemented")
+    }
+
+    override fun addLater(p0: Provider<out Dependency>?) {
         TODO("not implemented")
     }
 }

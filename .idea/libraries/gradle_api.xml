@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="gradle-api">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/4.6/generated-gradle-jars/gradle-api-4.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/4.8/generated-gradle-jars/gradle-api-4.8.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/4.6/generated-gradle-jars/gradle-api-4.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/4.8/generated-gradle-jars/gradle-api-4.8.jar!/" />
     </SOURCES>
   </library>
 </component>

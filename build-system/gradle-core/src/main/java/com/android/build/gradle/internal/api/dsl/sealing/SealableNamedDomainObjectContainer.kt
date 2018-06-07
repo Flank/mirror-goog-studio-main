@@ -26,6 +26,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Namer
 import org.gradle.api.Rule
+import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 import java.util.SortedMap
 import java.util.SortedSet
@@ -322,6 +323,18 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
     }
 
     override fun findAll(p0: Closure<*>?): MutableSet<InterfaceT> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun configureEachLater(p0: Action<in InterfaceT>?) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <S : InterfaceT> configureEachLater(p0: Class<S>?, p1: Action<in S>?) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun addLater(p0: Provider<out InterfaceT>?) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

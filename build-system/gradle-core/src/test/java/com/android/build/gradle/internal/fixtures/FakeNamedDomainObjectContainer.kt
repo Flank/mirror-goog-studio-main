@@ -25,6 +25,7 @@ import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Namer
 import org.gradle.api.Rule
+import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 import java.util.SortedMap
 import java.util.SortedSet
@@ -223,6 +224,18 @@ open class FakeNamedDomainObjectContainer<T>(
     }
 
     override fun configure(p0: Closure<*>?): NamedDomainObjectContainer<T> {
+        TODO("not implemented")
+    }
+
+    override fun configureEachLater(p0: Action<in T>?) {
+        TODO("not implemented")
+    }
+
+    override fun <S : T> configureEachLater(p0: Class<S>?, p1: Action<in S>?) {
+        TODO("not implemented")
+    }
+
+    override fun addLater(p0: Provider<out T>?) {
         TODO("not implemented")
     }
 }
