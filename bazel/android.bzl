@@ -96,7 +96,7 @@ def select_android(android, default):
         "//conditions:default": default,
         })
 
-def dex_library(name, jars=[], output=None, visibility=[]):
+def dex_library(name, jars=[], output=None, visibility=None):
   if output == None:
     outs = [name + ".jar"]
   else:
@@ -105,6 +105,7 @@ def dex_library(name, jars=[], output=None, visibility=[]):
     name = name,
     srcs = jars,
     outs = outs,
+    visibility = visibility,
     cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<",
     tools = ["//prebuilts/studio/sdk:dx-preview"],
   )

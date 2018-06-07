@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class ProcessRunner {
 
     public static final int NO_TIMEOUT = Integer.MAX_VALUE;
-    private final String[] myProcessArgs;
+    protected String[] myProcessArgs;
     private final List<String> myInput = new ArrayList<>();
     private final List<String> myError = new ArrayList<>();
     private Process myProcess;

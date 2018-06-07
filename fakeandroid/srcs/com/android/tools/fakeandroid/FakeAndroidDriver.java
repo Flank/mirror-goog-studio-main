@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import org.junit.Assert;
 
@@ -16,13 +18,15 @@ public class FakeAndroidDriver extends ProcessRunner {
     private static final String APP_LISTENING = "Test Framework Server Listening: ";
     private static final String ART_PATH = ProcessRunner.getProcessPath("art.location");
     private int myCommunicationPort;
-    private String myAddress;
+    private final String myAddress;
 
-    public FakeAndroidDriver(String address) {
-        super(
-                ART_PATH,
-                "--64",
-                "--verbose",
+    public FakeAndroidDriver(String address, int debuggerPort) {
+        List<String> args = new ArrayList<>();
+        String[] array = new String[] {};
+        args.add(ART_PATH);
+        args.add("--64");
+        args.add("--verbose");
+        args.add(
                 "-Djava.library.path="
                         + ProcessRunner.getProcessPath("agent.location")
                         + ":"
@@ -30,9 +34,10 @@ public class FakeAndroidDriver extends ProcessRunner {
                         + ":"
                         + ProcessRunner.getProcessPath("art.lib64.location")
                         + ":"
-                        + getNativeLibLocation(),
-                "-cp",
-                ProcessRunner.getProcessPath("perfa.dex.location"),
+                        + getNativeLibLocation());
+        args.add("-cp");
+        args.add(ProcessRunner.getProcessPath("perfa.dex.location"));
+        args.add(
                 "-Xbootclasspath:"
                         + ProcessRunner.getProcessPath("android-mock.dex.location")
                         + ":"
@@ -55,14 +60,39 @@ public class FakeAndroidDriver extends ProcessRunner {
                         + String.format(
                                 "%s%s",
                                 ProcessRunner.getProcessPath("art.deps.location"),
-                                "okhttp-hostdex.jar"),
-                "-Xcompiler-option",
-                "--debuggable",
+                                "okhttp-hostdex.jar"));
+        args.add("-Xcompiler-option");
+        args.add("--debuggable");
+        args.add(
                 "-Ximage:"
                         + ProcessRunner.getProcessPath("art.boot.location")
-                        + "core-core-libart-hostdex.art",
-                "com.android.tools.profiler.FakeAndroid");
-        myAddress = address;
+                        + "core-core-libart-hostdex.art");
+
+        if (debuggerPort > 0) {
+            args.add(
+                    "-Xplugin:"
+                            + String.format(
+                                    "%s/%s",
+                                    ProcessRunner.getProcessPath("art.lib64.location"),
+                                    "libopenjdkjvmti.so"));
+            args.add(
+                    "-agentpath:"
+                            + String.format(
+                                    "%s/%s=",
+                                    ProcessRunner.getProcessPath("art.lib64.location"),
+                                    "libjdwp.so")
+                            + "transport=dt_socket,server=y,suspend=n,address="
+                            + debuggerPort);
+        }
+
+        args.add("com.android.tools.profiler.FakeAndroid");
+
+        this.myAddress = address;
+        myProcessArgs = args.toArray(new String[args.size()]);
+    }
+
+    public FakeAndroidDriver(String address) {
+        this(address, -1);
     }
 
     @Override

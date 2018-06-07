@@ -1,7 +1,9 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/profiler:perf_test.bzl", "perf_test")
 
-package(default_testonly = True)
+package(
+    default_testonly = True,
+)
 
 sh_binary(
     name = "art-runner",
@@ -21,6 +23,7 @@ sh_binary(
             "//tools/base/profiler/tests/app-launcher:app-launcher-dex",
         ],
     }),
+    visibility = ["//visibility:public"],
 )
 
 # TODO: Have transform pull in dependency jar files, so we do not need to load multiple
@@ -32,6 +35,7 @@ java_binary(
     ],
     main_class = "com.android.tools.profiler.transform.ProfilerTransformMain",
     resources = ["profiler.properties"],
+    visibility = ["//visibility:public"],
     runtime_deps = ["//tools/base/profiler/transform"],
     deps = [
         "//tools/base/profiler/transform",
@@ -42,6 +46,7 @@ java_binary(
 dex_library(
     name = "profiler-service",
     jars = ["//tools/base/profiler/app:studio-profiler"],
+    visibility = ["//visibility:public"],
 )
 
 java_library(
