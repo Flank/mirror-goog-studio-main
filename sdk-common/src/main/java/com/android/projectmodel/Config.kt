@@ -125,9 +125,8 @@ data class Config(
 }
 
 private fun <T> mergeNullable(deps: T?, moreDeps: T?, merger: (T, T)-> T) : T? =
-  if (deps == null)
-    moreDeps
-  else if (moreDeps == null)
-    deps
-  else
-    merger(deps, moreDeps)
+  when {
+      (deps == null) -> moreDeps
+      (moreDeps == null) -> deps
+      else -> merger(deps, moreDeps)
+  }
