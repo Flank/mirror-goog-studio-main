@@ -113,7 +113,7 @@ class PathString private constructor(
         } else {
             buf.append(schemeString)
             if (!schemeString.endsWith('/')) {
-                buf.append(':')
+                buf.append("!/")
             }
         }
         buf.append(path)

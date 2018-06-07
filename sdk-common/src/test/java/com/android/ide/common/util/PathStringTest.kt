@@ -162,7 +162,7 @@ class PathStringTest {
         assertThat(PathString(URI("file:///"), "/zero/one/two").toString()).isEqualTo("file:///zero/one/two")
         assertThat(PathString(URI("file:///"), "zero/one/two").toString()).isEqualTo("file://zero/one/two")
         assertThat(PathString(URI("zip:///foo/bar/baz.zip"), "zero/one/two").toString())
-            .isEqualTo("zip:///foo/bar/baz.zip:zero/one/two")
+            .isEqualTo("zip:///foo/bar/baz.zip!/zero/one/two")
     }
 
     @Test
