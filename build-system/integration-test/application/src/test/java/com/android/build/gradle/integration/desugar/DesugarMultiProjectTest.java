@@ -69,7 +69,7 @@ public class DesugarMultiProjectTest {
 
     @Test
     public void testIncrementalBuilds_changeExisting()
-            throws IOException, InterruptedException, ProcessException {
+            throws Exception {
         executor().run("assembleDebug");
 
         TestFileUtils.addMethod(
@@ -80,9 +80,10 @@ public class DesugarMultiProjectTest {
                         .toFile(),
                 "default void name() {}");
         executor().run("assembleDebug");
-        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
 
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("name");
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("name");
+        }
 
         TestFileUtils.searchAndReplace(
                 project.getSubproject("baseLibrary")
@@ -93,9 +94,10 @@ public class DesugarMultiProjectTest {
                 Pattern.quote("default void name() {}"),
                 "");
         executor().run("assembleDebug");
-        apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
 
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().doesNotHaveMethod("name");
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().doesNotHaveMethod("name");
+        }
 
         executor().run("clean");
 
@@ -107,14 +109,15 @@ public class DesugarMultiProjectTest {
                         .toFile(),
                 "default void animalName() {}");
         executor().run("assembleDebug");
-        apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
 
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("animalName");
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("animalName");
+        }
     }
 
     @Test
     public void testIncrementalBuilds_addToDirectDependency()
-            throws IOException, InterruptedException, ProcessException {
+            throws Exception {
         executor().run("assembleDebug");
 
         Path newLibSrc =
@@ -137,8 +140,9 @@ public class DesugarMultiProjectTest {
                 Pattern.quote("extends CarbonForm {"),
                 "extends CarbonForm, IAnimal {");
         executor().run("assembleDebug");
-        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("kind");
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("kind");
+        }
 
         Files.delete(newLibSrc);
         TestFileUtils.searchAndReplace(
@@ -150,13 +154,14 @@ public class DesugarMultiProjectTest {
                 Pattern.quote(", IAnimal {"),
                 "{");
         executor().run("assembleDebug");
-        apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().doesNotHaveMethod("kind");
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().doesNotHaveMethod("kind");
+        }
     }
 
     @Test
     public void testIncrementalBuilds_addToTransitiveDependency()
-            throws IOException, InterruptedException, ProcessException {
+            throws Exception {
         executor().run("assembleDebug");
 
         Path newBaseLibSrc =
@@ -179,8 +184,9 @@ public class DesugarMultiProjectTest {
                 Pattern.quote("interface CarbonForm {"),
                 "interface CarbonForm extends ICarbonForm {");
         executor().run("assembleDebug");
-        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("latinName");
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().hasMethod("latinName");
+        }
 
         Files.delete(newBaseLibSrc);
         TestFileUtils.searchAndReplace(
@@ -192,8 +198,9 @@ public class DesugarMultiProjectTest {
                 Pattern.quote("extends ICarbonForm {"),
                 "{");
         executor().run("assembleDebug");
-        apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
-        assertThat(apk).hasClass("Lcom/example/Cat;").that().doesNotHaveMethod("latinName");
+        try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).hasClass("Lcom/example/Cat;").that().doesNotHaveMethod("latinName");
+        }
     }
 
     private void compileWithJava8Target() throws IOException {
