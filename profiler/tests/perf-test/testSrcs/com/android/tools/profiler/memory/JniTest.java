@@ -95,24 +95,17 @@ public class JniTest {
         // Start memory tracking.
         TrackAllocationsResponse trackResponse = stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
-        MemoryData jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
-
-        // Wait before we start getting acutal data.
-        while (jvmtiData.getAllocationSamplesList().size() == 0) {
-            jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
-        }
+        MemoryData jvmtiData =
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE),
+                        value -> value.getAllocationSamplesList().size() != 0);
 
         // Find JNITestEntity class tag
         int testEntityId = findClassTag(jvmtiData.getAllocationSamplesList(), "JNITestEntity");
         assertThat(testEntityId).isNotEqualTo(0);
-        long startTime = jvmtiData.getEndTimestamp();
+        final long startTime = jvmtiData.getEndTimestamp();
 
         final int refCount = 10;
-        HashSet<Integer> tags = new HashSet<Integer>();
-        HashSet<Long> refs = new HashSet<Long>();
-        HashMap<Integer, String> idToThreadName = new HashMap<Integer, String>();
-        int refsReported = 0;
-
         androidDriver.setProperty("jni.refcount", Integer.toString(refCount));
         androidDriver.triggerMethod(ACTIVITY_CLASS, "createRefs");
         assertThat(androidDriver.waitForInput("createRefs")).isTrue();
@@ -128,14 +121,15 @@ public class JniTest {
         // even when fails.
         while (!allRefsAccounted && maxLoopCount-- > 0) {
             jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
-            long endTime = jvmtiData.getEndTimestamp();
             System.out.printf(
                     "getJvmtiData, start time=%d, end time=%d, alloc entries=%d, jni entries=%d\n",
                     startTime,
-                    endTime,
+                    jvmtiData.getEndTimestamp(),
                     jvmtiData.getAllocationSamplesList().size(),
                     jvmtiData.getJniReferenceEventBatchesList().size());
 
+            HashSet<Integer> tags = new HashSet<>();
+            HashMap<Integer, String> idToThreadName = new HashMap<>();
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
                 assertThat(sample.getTimestamp()).isGreaterThan(startTime);
                 for (ThreadInfo ti : sample.getThreadInfosList()) {
@@ -153,6 +147,8 @@ public class JniTest {
                 }
             }
 
+            int refsReported = 0;
+            HashSet<Long> refs = new HashSet<>();
             for (BatchJNIGlobalRefEvent batch : jvmtiData.getJniReferenceEventBatchesList()) {
                 assertThat(batch.getTimestamp()).isGreaterThan(startTime);
                 for (ThreadInfo ti : batch.getThreadInfosList()) {
@@ -163,41 +159,32 @@ public class JniTest {
                     long refValue = event.getRefValue();
                     assertThat(event.getThreadId()).isGreaterThan(0);
                     assertThat(idToThreadName.containsKey(event.getThreadId())).isTrue();
-                    if (event.getEventType() == JNIGlobalReferenceEvent.Type.CREATE_GLOBAL_REF) {
-                        if (tags.contains(event.getObjectTag())) {
-                            System.out.printf(
-                                    "Add JNI ref: %d tag:%d\n", refValue, event.getObjectTag());
-                            String refRelatedOutput = String.format("JNI ref created %d", refValue);
-                            assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
-                            assertThat(refs.add(refValue)).isTrue();
-                            refsReported++;
-                        }
+                    if (event.getEventType() == JNIGlobalReferenceEvent.Type.CREATE_GLOBAL_REF
+                            && tags.contains(event.getObjectTag())) {
+                        System.out.printf(
+                                "Add JNI ref: %d tag:%d\n", refValue, event.getObjectTag());
+                        String refRelatedOutput = String.format("JNI ref created %d", refValue);
+                        assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
+                        assertThat(refs.add(refValue)).isTrue();
+                        refsReported++;
                     }
-                    if (event.getEventType() == JNIGlobalReferenceEvent.Type.DELETE_GLOBAL_REF) {
-                        // Test that reference value was reported when created
-                        if (refs.contains(refValue)) {
-                            System.out.printf(
-                                    "Remove JNI ref: %d tag:%d\n", refValue, event.getObjectTag());
-                            String refRelatedOutput = String.format("JNI ref deleted %d", refValue);
-                            assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
-                            assertThat(tags.contains(event.getObjectTag())).isTrue();
-                            refs.remove(refValue);
-                            if (refs.isEmpty() && refsReported == refCount) {
-                                allRefsAccounted = true;
-                            }
+                    if (event.getEventType() == JNIGlobalReferenceEvent.Type.DELETE_GLOBAL_REF
+                            // Test that reference value was reported when created
+                            && refs.contains(refValue)) {
+                        System.out.printf(
+                                "Remove JNI ref: %d tag:%d\n", refValue, event.getObjectTag());
+                        String refRelatedOutput = String.format("JNI ref deleted %d", refValue);
+                        assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
+                        assertThat(tags.contains(event.getObjectTag())).isTrue();
+                        refs.remove(refValue);
+                        if (refs.isEmpty() && refsReported == refCount) {
+                            allRefsAccounted = true;
                         }
                     }
                     validateMemoryMap(batch.getMemoryMap(), event.getBacktrace());
                 }
             }
-
-            if (jvmtiData.getAllocationSamplesList().size() > 0) {
-                assertThat(endTime).isGreaterThan(startTime);
-                startTime = endTime;
-            }
         }
-
-        assertThat(refsReported).isEqualTo(refCount);
-        assertThat(refs.isEmpty()).isTrue();
+        assertThat(allRefsAccounted).isTrue();
     }
 }
