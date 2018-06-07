@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 public class ProcessRunner {
 
     public static final int NO_TIMEOUT = Integer.MAX_VALUE;
-    private static final int DEFAULT_INPUT_TIMEOUT = 10_000;
     private final String[] myProcessArgs;
     private final List<String> myInput = new ArrayList<>();
     private final List<String> myError = new ArrayList<>();
@@ -79,11 +78,11 @@ public class ProcessRunner {
     }
 
     /**
-     * Wait for a specific string to be retrieved from the server. This function uses a default
-     * timeout and will return false if a string is not found in that time.
+     * Wait for a specific string to be retrieved from the server. This function waits forever if
+     * given string statement has not been found.
      */
     public boolean waitForInput(String statement) {
-        return containsStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);
+        return containsStatement(myInput, statement, NO_TIMEOUT);
     }
 
     public boolean waitForInput(String statement, int timeout) {
@@ -102,7 +101,7 @@ public class ProcessRunner {
      * @return The value found in the result named group, or null if no value found.
      */
     public String waitForInput(Pattern statement) {
-        return containsStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);
+        return containsStatement(myInput, statement, NO_TIMEOUT);
     }
 
     public String waitForInput(Pattern statement, int timeout) {

@@ -1,6 +1,6 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 
-def perf_test(name, srcs, test_app, deps = [], tags = None):
+def perf_test(name, srcs, test_app, deps = [], tags = None, size = "small"):
     native.genrule(
       name = name + "_transform-app_java",
       srcs = [test_app + "_java_deploy.jar"],
@@ -70,7 +70,7 @@ def perf_test(name, srcs, test_app, deps = [], tags = None):
       shard_count = 1,
       test_class = "com.android.testutils.JarTestSuite",
       visibility = ["//visibility:public"],
-      size = "medium",
+      size = size,
       data = [
         ":" + name + "_transform-app",
         test_app,

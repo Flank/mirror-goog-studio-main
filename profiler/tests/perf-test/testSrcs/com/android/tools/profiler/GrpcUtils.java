@@ -3,7 +3,6 @@ package com.android.tools.profiler;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.EnergyServiceGrpc;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
@@ -109,8 +108,7 @@ public class GrpcUtils {
                                         .build());
         myProfilerServiceStub.beginSession(requestBuilder.build());
         // Block until we can verify the agent was fully attached, which takes a while.
-        assertThat(myMockApp.waitForInput("Perfa connected to Perfd.", ProcessRunner.NO_TIMEOUT))
-                .isTrue();
+        assertThat(myMockApp.waitForInput("Perfa connected to Perfd.")).isTrue();
 
         return session;
     }

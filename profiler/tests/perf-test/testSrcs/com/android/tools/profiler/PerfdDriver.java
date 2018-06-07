@@ -21,7 +21,7 @@ public class PerfdDriver extends ProcessRunner {
     public void start() throws IOException {
         super.start();
         //Block until we are in a state for the test to continue.
-        String port = waitForInput(SERVER_LISTENING, ProcessRunner.NO_TIMEOUT);
+        String port = waitForInput(SERVER_LISTENING);
         assertTrue(port != null && !port.isEmpty());
         myPort = Integer.parseInt(port);
         // Stop the process if Perfd does not bind successfully to the port.

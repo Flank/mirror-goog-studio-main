@@ -80,6 +80,7 @@ perf_test(
 
 perf_test(
     name = "HttpTest",
+    size = "medium",
     srcs = [
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
@@ -142,6 +143,7 @@ perf_test(
 
 perf_test(
     name = "EnergyTest",
+    size = "medium",
     srcs = [
         "testSrcs/com/android/tools/profiler/energy/AlarmTest.java",
         "testSrcs/com/android/tools/profiler/energy/JobTest.java",

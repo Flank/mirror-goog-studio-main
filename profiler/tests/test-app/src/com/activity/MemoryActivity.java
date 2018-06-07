@@ -65,7 +65,7 @@ public class MemoryActivity extends PerfdTestActivity {
 
     public int size() {
         int result = entities.size();
-        System.out.printf("MemoryActivity.size %d\n", result);
+        System.out.println("MemoryActivity.size " + result);
         return result;
     }
 }
