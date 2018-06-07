@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.errors.EvalIssueReporter;
@@ -236,6 +237,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected FileCache fileCache;
 
     protected BuildableArtifact apkList;
+
+    /** Desired output format. */
+    protected IncrementalPackagerBuilder.ApkFormat apkFormat;
+
+    @Input
+    public String getApkFormat() {
+        return apkFormat.name();
+    }
 
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
@@ -488,7 +497,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         /*
          * Additionally, make sure we have no previous package, if it exists.
          */
-        FileUtils.deleteIfExists(outputFile);
+        FileUtils.deleteRecursivelyIfExists(outputFile);
 
         final ImmutableMap<RelativeFile, FileStatus> updatedDex;
         final ImmutableMap<RelativeFile, FileStatus> updatedJavaResources;
@@ -663,7 +672,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         BooleanSupplier isInExecutionPhase = () -> true;
 
         try (IncrementalPackager packager =
-                new IncrementalPackagerBuilder()
+                new IncrementalPackagerBuilder(apkFormat)
                         .withOutputFile(outputFile)
                         .withSigning(signingConfig)
                         .withCreatedBy(getBuilder().getCreatedBy())
@@ -987,6 +996,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             : null;
 
             variantScope.getTaskContainer().setPackageAndroidTask(packageAndroidArtifact);
+            packageAndroidArtifact.apkFormat =
+                    projectOptions.get(BooleanOption.DEPLOYMENT_USES_DIRECTORY)
+                            ? IncrementalPackagerBuilder.ApkFormat.DIRECTORY
+                            : IncrementalPackagerBuilder.ApkFormat.FILE;
             configure(packageAndroidArtifact);
         }
 

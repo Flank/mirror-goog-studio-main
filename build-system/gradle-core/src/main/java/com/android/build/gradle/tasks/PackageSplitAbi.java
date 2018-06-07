@@ -127,7 +127,8 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                             File outFile = new File(outputDirectory, apkName);
 
                             try (IncrementalPackager pkg =
-                                    new IncrementalPackagerBuilder()
+                                    new IncrementalPackagerBuilder(
+                                                    IncrementalPackagerBuilder.ApkFormat.FILE)
                                             .withOutputFile(outFile)
                                             .withSigning(signingConfig)
                                             .withCreatedBy(getBuilder().getCreatedBy())

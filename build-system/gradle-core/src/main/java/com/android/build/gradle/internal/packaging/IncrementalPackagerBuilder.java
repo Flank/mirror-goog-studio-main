@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.tasks.FolderBasedApkCreator;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
@@ -52,11 +53,30 @@ import org.gradle.api.Project;
  */
 public class IncrementalPackagerBuilder {
 
-    /**
-     * Signing key. {@code null} if not defined.
-     */
-    @Nullable
-    private PrivateKey key;
+    /** Enums for all the supported output format. */
+    public enum ApkFormat {
+        /** Usual APK format. */
+        FILE {
+            @Override
+            ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
+                return ApkCreatorFactories.fromProjectProperties(project, debuggableBuild);
+            }
+        },
+
+        /** Directory with a structure mimicking the APK format. */
+        DIRECTORY {
+            @SuppressWarnings("resource")
+            @Override
+            ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
+                return FolderBasedApkCreator::new;
+            }
+        };
+
+        abstract ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild);
+    }
+
+    /** Signing key. {@code null} if not defined. */
+    @Nullable private PrivateKey key;
 
     /**
      * Signing certificate. {@code null} if not defined
@@ -79,9 +99,10 @@ public class IncrementalPackagerBuilder {
     @Nullable
     private File outputFile;
 
-    /**
-     * The minimum SDK.
-     */
+    /** Desired format of the output. */
+    @NonNull private ApkFormat apkFormat;
+
+    /** The minimum SDK. */
     private int minSdk;
 
     /**
@@ -145,12 +166,11 @@ public class IncrementalPackagerBuilder {
     @Nullable private EvalIssueReporter issueReporter;
     @Nullable private BooleanSupplier canParseManifest;
 
-    /**
-     * Creates a new builder.
-     */
-    public IncrementalPackagerBuilder() {
+    /** Creates a new builder. */
+    public IncrementalPackagerBuilder(@NonNull ApkFormat apkFormat) {
         minSdk = 1;
         abiFilters = new HashSet<>();
+        this.apkFormat = apkFormat;
     }
 
     /**
@@ -404,9 +424,7 @@ public class IncrementalPackagerBuilder {
             return new IncrementalPackager(
                     creationData,
                     intermediateDir,
-                    ApkCreatorFactories.fromProjectProperties(
-                            project,
-                            debuggableBuild),
+                    apkFormat.factory(project, debuggableBuild),
                     abiFilters,
                     jniDebuggableBuild);
         } catch (PackagerException|IOException e) {

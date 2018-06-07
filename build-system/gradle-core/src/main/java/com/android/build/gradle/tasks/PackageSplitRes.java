@@ -93,7 +93,8 @@ public class PackageSplitRes extends AndroidBuilderTask {
                             }
 
                             try (IncrementalPackager pkg =
-                                    new IncrementalPackagerBuilder()
+                                    new IncrementalPackagerBuilder(
+                                                    IncrementalPackagerBuilder.ApkFormat.FILE)
                                             .withSigning(signingConfig)
                                             .withOutputFile(outFile)
                                             .withProject(PackageSplitRes.this.getProject())
