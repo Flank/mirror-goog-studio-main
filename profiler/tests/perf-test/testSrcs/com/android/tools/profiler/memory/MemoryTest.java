@@ -78,62 +78,54 @@ public class MemoryTest {
         // Start memory tracking.
         TrackAllocationsResponse trackResponse = stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
-        MemoryData jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
-
-        // Wait before we start getting actual data.
-        while (jvmtiData.getAllocationSamplesList().size() == 0) {
-            jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
-        }
+        MemoryData jvmtiData =
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE),
+                        value -> value.getAllocationSamplesList().size() != 0);
 
         // Find MemTestEntity class tag
         int memTestEntityId = findClassTag(jvmtiData.getAllocationSamplesList(), "MemTestEntity");
         assertThat(memTestEntityId).isNotEqualTo(0);
-        long startTime = jvmtiData.getEndTimestamp();
+        final long startTime = jvmtiData.getEndTimestamp();
 
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
         final int allocationCount = 10;
-        int allocationsDone = 0;
         int allocationsReported = 0;
         int deallocationsReported = 0;
-        int maxLoopCount = allocationCount * 100;
-        HashSet<Integer> tags = new HashSet<Integer>();
-        HashMap<Integer, String> idToThreadName = new HashMap<Integer, String>();
 
-        // Aborts if we loop too many times and somehow didn't get
-        // back the alloc/dealloc data in time. This way the test won't timeout
-        // even when fails.
-        while (deallocationsReported < allocationCount && maxLoopCount-- > 0) {
-            // Create several instances of MemTestEntity and when
-            // done free and collect them.
-            if (allocationsDone < allocationCount) {
-                androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
-                allocationsDone++;
-                androidDriver.triggerMethod(ACTIVITY_CLASS, "size");
-                String size_response = String.format("size %d", allocationsDone);
-                assertThat(androidDriver.waitForInput(size_response)).isTrue();
-            } else {
-                androidDriver.triggerMethod(ACTIVITY_CLASS, "free");
-                androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
-                androidDriver.triggerMethod(ACTIVITY_CLASS, "size");
-                assertThat(androidDriver.waitForInput("size 0")).isTrue();
-            }
-            // Make some allocation noise here to emulate how real apps work.
-            androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
+        // Create several instances of MemTestEntity and when done free and collect them.
+        androidDriver.setProperty("allocation.count", Integer.toString(allocationCount));
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
+        assertThat(androidDriver.waitForInput("size " + allocationCount)).isTrue();
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "free");
+        assertThat(androidDriver.waitForInput("size 0")).isTrue();
+        // Make some allocation noise here to emulate how real apps work.
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
 
+        // ALLOC_DATA events are available shortly, but FREE_DATA events need System.gc
+        // and a while to happen.
+        while (deallocationsReported < allocationCount) {
+            androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
             jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
-            long endTime = jvmtiData.getEndTimestamp();
-            System.out.printf("getJvmtiData called. endTime=%d, alloc samples=%d\n",
-                            endTime, jvmtiData.getAllocationSamplesList().size());
+            System.out.printf(
+                    "getJvmtiData called. endTime=%d, alloc samples=%d\n",
+                    jvmtiData.getEndTimestamp(), jvmtiData.getAllocationSamplesList().size());
 
-            // Read alloc/dealloc reports and count how many instances of
-            // MemTestEntity were created. At the same time keeping track of
-            // tags.
+            HashMap<Integer, String> idToThreadName = new HashMap<Integer, String>();
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
                 for (ThreadInfo ti : sample.getThreadInfosList()) {
                     assertThat(ti.getThreadId()).isGreaterThan(0);
                     idToThreadName.put(ti.getThreadId(), ti.getThreadName());
                 }
+            }
 
+            // Read alloc/dealloc reports and count how many instances of
+            // MemTestEntity were created. At the same time keeping track of
+            // tags.
+            HashSet<Integer> tags = new HashSet<Integer>();
+            allocationsReported = 0;
+            deallocationsReported = 0;
+            for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
                 assertThat(sample.getTimestamp()).isGreaterThan(startTime);
                 for (AllocationEvent event : sample.getEventsList()) {
                     if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
@@ -155,17 +147,10 @@ public class MemoryTest {
                     }
                 }
             }
-
-            if (jvmtiData.getAllocationSamplesList().size() > 0) {
-                assertThat(endTime).isGreaterThan(startTime);
-                startTime = endTime;
-            }
         }
 
-        // allocationCount of instances should have been
-        // created/deleted and all tags must be acounted for.
+        // allocationCount of instances should have been created/deleted.
         assertThat(allocationsReported).isEqualTo(allocationCount);
         assertThat(deallocationsReported).isEqualTo(allocationCount);
-        assertThat(tags.isEmpty()).isTrue();
     }
 }

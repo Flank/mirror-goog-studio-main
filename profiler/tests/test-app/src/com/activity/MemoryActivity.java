@@ -49,23 +49,22 @@ public class MemoryActivity extends PerfdTestActivity {
     }
 
     public void allocate() {
-        entities.add(new MemTestEntity());
+        final int count = Integer.parseInt(System.getProperty("allocation.count"));
+        for (int i = 0; i < count; i++) {
+            entities.add(new MemTestEntity());
+        }
         System.out.println("MemoryActivity.allocate");
+        System.out.println("MemoryActivity.size " + entities.size());
     }
 
     public void free() {
         entities.clear();
         System.out.println("MemoryActivity.free");
+        System.out.println("MemoryActivity.size " + entities.size());
     }
 
     public void gc() {
         System.gc();
         System.out.println("MemoryActivity.gc");
-    }
-
-    public int size() {
-        int result = entities.size();
-        System.out.println("MemoryActivity.size " + result);
-        return result;
     }
 }

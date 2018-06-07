@@ -103,22 +103,8 @@ perf_test(
 perf_test(
     name = "MemoryTest",
     srcs = [
-        "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
-    ],
-    tags = ["no_test_foundry"],  # b/73948555
-    test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = [
-        ":tests",
-        "//tools/base/fakeandroid",
-        "//tools/base/profiler/tests/test-app:libjni.so",
-        "//tools/idea/.idea/libraries:truth",
-    ],
-)
-
-perf_test(
-    name = "JniTest",
-    srcs = [
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
+        "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
     ],
     tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
