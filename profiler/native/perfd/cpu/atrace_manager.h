@@ -69,6 +69,7 @@ class AtraceManager {
   std::condition_variable dump_data_condition_;
   std::thread atrace_thread_;
   std::string categories_;
+  std::string buffer_size_arg_;
   int dump_data_interval_ms_;
   int dumps_created_;  // Incremented by the atrace_thread_.
   bool is_profiling_;  // Writen to by main thread, read from by atrace thread.

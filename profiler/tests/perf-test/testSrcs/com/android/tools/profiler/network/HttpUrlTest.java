@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -43,27 +44,19 @@ public class HttpUrlTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.network.HttpUrlActivity";
 
-    private int mySdkLevel;
-    private PerfDriver myPerfDriver;
+    @Rule public final PerfDriver myPerfDriver;
+
     private GrpcUtils myGrpc;
     private Session mySession;
 
     public HttpUrlTest(int sdkLevel) {
-        mySdkLevel = sdkLevel;
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void setup() throws Exception {
-        myPerfDriver = new PerfDriver(mySdkLevel);
-        myPerfDriver.start(ACTIVITY_CLASS);
         myGrpc = myPerfDriver.getGrpc();
-
-        // Invoke beginSession to establish a session we can use to query data
-        mySession =
-                TestUtils.isOPlusDevice(mySdkLevel)
-                        ? myGrpc.beginSessionWithAgent(
-                                myPerfDriver.getPid(), myPerfDriver.getCommunicationPort())
-                        : myGrpc.beginSession(myPerfDriver.getPid());
+        mySession = myPerfDriver.getSession();
     }
 
     @Test

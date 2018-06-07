@@ -77,48 +77,50 @@ public class ResourceItemResolver extends RenderResources {
         if (myResolver != null) {
             return myResolver.resolveResValue(resValue);
         }
-        if (myLookupChain != null) {
-            myLookupChain.add(resValue);
-        }
-        return resolveResValue(resValue, 0);
-    }
 
-    @Nullable
-    private ResourceValue resolveResValue(@Nullable ResourceValue resValue, int depth) {
         if (resValue == null) {
             return null;
         }
 
-        String value = resValue.getValue();
-        if (value == null || resValue instanceof ArrayResourceValue) {
-            // If there's no value or this an array resource (eg. <string-array>), return.
-            return resValue;
-        }
-
-        // else attempt to find another ResourceValue referenced by this one.
-        ResourceValue resolvedResValue = findResValue(value, resValue.isFramework());
-
-        // if the value did not reference anything, then we simply return the input value
-        if (resolvedResValue == null) {
-            return resValue;
-        }
-
-        // detect potential loop due to mishandled namespace in attributes
-        if (resValue == resolvedResValue || depth >= MAX_RESOURCE_INDIRECTION) {
-            if (myLogger != null) {
-                myLogger.error(
-                        LayoutLog.TAG_BROKEN,
-                        String.format(
-                                "Potential stack overflow trying to resolve '%s': "
-                                        + "cyclic resource definitions? Render may not be accurate.",
-                                value),
-                        null);
+        boolean referenceToItself = false;
+        for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
+            if (myLookupChain != null) {
+                myLookupChain.add(resValue);
             }
-            return resValue;
+
+            if (resValue instanceof ArrayResourceValue) {
+                // If there's no value or this an array resource (eg. <string-array>), return.
+                return resValue;
+            }
+
+            // Else attempt to find another ResourceValue referenced by this one.
+            ResourceValue resolvedResValue = dereference(resValue);
+
+            // If the value did not reference anything, then we simply return the input value.
+            if (resolvedResValue == null) {
+                return resValue;
+            }
+
+            if (resolvedResValue.equals(resValue)) {
+                referenceToItself = true;
+                break; // Resource value referring to itself.
+            }
+
+            resValue = resolvedResValue;
         }
 
-        // Otherwise, we attempt to resolve this new value as well.
-        return resolveResValue(resolvedResValue, depth + 1);
+        if (myLogger != null) {
+            String msg = referenceToItself
+                         ? "Infinite cycle trying to resolve '%s': Render may not be accurate."
+                         : "Potential infinite cycle trying to resolve '%s': Render may not be accurate.";
+            myLogger.error(
+                    LayoutLog.TAG_BROKEN,
+                    String.format(msg, resValue.getValue()),
+                    null,
+                    null,
+                    null);
+        }
+        return resValue;
     }
 
     @Override
@@ -211,6 +213,18 @@ public class ResourceItemResolver extends RenderResources {
 
     @Override
     @Nullable
+    public StyleResourceValue getDefaultTheme() {
+        ResourceResolver resolver = getFullResolver();
+        if (resolver != null) {
+            return resolver.getDefaultTheme();
+        }
+
+        return null;
+    }
+
+    @Deprecated
+    @Override
+    @Nullable
     public StyleResourceValue getCurrentTheme() {
         ResourceResolver resolver = getFullResolver();
         if (resolver != null) {
@@ -220,6 +234,7 @@ public class ResourceItemResolver extends RenderResources {
         return null;
     }
 
+    @Deprecated
     @Override
     public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
         assert false; // This method shouldn't be called on this resolver.
@@ -299,6 +314,7 @@ public class ResourceItemResolver extends RenderResources {
      * @param lookupChain the list of resolved items to display
      * @return the display string
      */
+    @Deprecated
     public static String getDisplayString(
             @NonNull ResourceType type,
             @NonNull String name,

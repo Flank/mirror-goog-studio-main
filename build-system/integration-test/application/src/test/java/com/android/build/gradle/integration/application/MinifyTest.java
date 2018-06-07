@@ -21,7 +21,9 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
@@ -30,6 +32,8 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Rule;
@@ -95,6 +99,46 @@ public class MinifyTest {
                 .that()
                 // Make sure default ProGuard rules were applied.
                 .hasMethod("handleOnClick");
+    }
+
+    @Test
+    public void appTestDefaultKeepAnnotations() throws Exception {
+        String classContent =
+                "package example;\n"
+                        + "public class ToBeKept {\n"
+                        + "  @android.support.annotation.Keep String field1;\n"
+                        + "  @androidx.annotation.Keep String field2;\n"
+                        + "  String field3;\n"
+                        + "  @androidx.annotation.Keep void foo() { }\n"
+                        + "  @android.support.annotation.Keep void baz() { }\n"
+                        + "  void fab() { }\n"
+                        + "}";
+        Path toBeKept = project.getMainSrcDir().toPath().resolve("example/ToBeKept.java");
+        Files.createDirectories(toBeKept.getParent());
+        Files.write(toBeKept, classContent.getBytes());
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                ""
+                        + "dependencies {\n"
+                        + "    implementation 'com.android.support:support-annotations:"
+                        + TestVersions.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    implementation 'androidx.annotation:annotation:1.0.0-alpha1'\n"
+                        + "}");
+
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinified");
+
+        Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
+        assertThat(minified).hasClass("Lexample/ToBeKept;").that().hasField("field1");
+        assertThat(minified).hasClass("Lexample/ToBeKept;").that().hasField("field2");
+        assertThat(minified).hasClass("Lexample/ToBeKept;").that().doesNotHaveField("field3");
+
+        assertThat(minified).hasClass("Lexample/ToBeKept;").that().hasMethods("foo", "baz");
+
+        assertThat(minified).hasClass("Lexample/ToBeKept;").that().doesNotHaveMethod("fab");
     }
 
     @Test

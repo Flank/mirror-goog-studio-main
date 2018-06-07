@@ -34,6 +34,7 @@ import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
@@ -48,14 +49,35 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
 
     val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
-    @get:OutputFile lateinit var outputJar: File
+    @get:OutputFile
+    lateinit var outputJar: File
+        private set
 
-    @get:InputFiles lateinit var javacClasses: BuildableArtifact
-    @get:InputFiles lateinit var preJavacClasses: FileCollection
-    @get:InputFiles lateinit var postJavacClasses: FileCollection
-    @get:InputFiles private var thisRClassClasses: BuildableArtifact? = null
-    @get:InputFiles private var dependencyRClassClasses: FileCollection? = null
-    @get:Input private lateinit var modulePath: String
+    @get:InputFiles
+    lateinit var javacClasses: BuildableArtifact
+        private set
+
+    @get:InputFiles
+    lateinit var preJavacClasses: FileCollection
+        private set
+
+    @get:InputFiles
+    lateinit var postJavacClasses: FileCollection
+        private set
+
+    @get:InputFiles
+    @get:Optional
+    var thisRClassClasses: BuildableArtifact? = null
+        private set
+
+    @get:InputFiles
+    @get:Optional
+    var dependencyRClassClasses: FileCollection? = null
+        private set
+
+    @get:Input
+    lateinit var modulePath: String
+        private set
 
     @TaskAction
     fun merge() {
@@ -63,7 +85,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         val collector = object: ReproducibleFileVisitor {
             override fun isReproducibleFileOrder() = true
             override fun visitFile(fileVisitDetails: FileVisitDetails) {
-                files.put(fileVisitDetails.relativePath.pathString, fileVisitDetails.file)
+                files[fileVisitDetails.relativePath.pathString] = fileVisitDetails.file
             }
             override fun visitDir(fileVisitDetails: FileVisitDetails) {
             }

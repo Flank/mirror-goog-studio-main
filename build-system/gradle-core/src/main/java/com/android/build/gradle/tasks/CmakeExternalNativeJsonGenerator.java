@@ -19,11 +19,9 @@ package com.android.build.gradle.tasks;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
-import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -53,40 +51,11 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @NonNull final File cmakeInstallFolder;
 
     CmakeExternalNativeJsonGenerator(
-            @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
             @NonNull File cmakeInstallFolder,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+        super(config, androidBuilder, stats);
         this.cmakeInstallFolder = cmakeInstallFolder;
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
     }
@@ -126,8 +95,8 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     }
 
     @Override
-    void processBuildOutput(@NonNull String buildOutput, @NonNull String abi,
-            int abiPlatformVersion) throws IOException {
+    void processBuildOutput(
+            @NonNull String buildOutput, @NonNull String abi, int abiPlatformVersion) {
         // CMake doesn't need to process build output because it directly writes JSON file
         // to specified location.
     }
@@ -139,7 +108,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         checkConfiguration();
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
-        builder.setExecutable(getSdkCmakeExecutable());
+        builder.setExecutable(getCmakeExecutable());
         builder.addArgs(getProcessBuilderArgs(abi, abiPlatformVersion, outputJson));
 
         return builder;
@@ -289,19 +258,14 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         if (!toolchainFile.exists()) {
             // Toolchain file for NDK r12 is in the SDK.
             // TODO: remove this when we stop caring about r12.
-            toolchainFile = new File(getCmakeInstallFolder(), toolchainFileName);
+            toolchainFile = new File(cmakeInstallFolder, toolchainFileName);
         }
         return toolchainFile;
     }
 
     @NonNull
-    protected File getSdkCmakeFolder() {
-        return getCmakeFolderFromSdkFolder(getSdkFolder());
-    }
-
-    @NonNull
     protected File getCmakeBinFolder() {
-        return new File(getCmakeInstallFolder(), "bin");
+        return new File(cmakeInstallFolder, "bin");
     }
 
     @NonNull
@@ -353,20 +317,5 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         }
         messages.addAll(getBaseConfigurationErrors());
         return messages;
-    }
-
-    @NonNull
-    private File getCmakeInstallFolder() {
-        return cmakeInstallFolder;
-    }
-
-    @NonNull
-    protected File getSdkCmakeExecutable() {
-        return getSdkCmakeExecutable(getSdkFolder());
-    }
-
-    @NonNull
-    protected File getSdkCmakeBinFolder() {
-        return getSdkCmakeBinFolder(getSdkFolder());
     }
 }

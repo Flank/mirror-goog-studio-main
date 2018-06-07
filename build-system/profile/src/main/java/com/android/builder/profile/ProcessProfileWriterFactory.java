@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -44,14 +45,24 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ProcessProfileWriterFactory {
 
-    public static void shutdownAndMaybeWrite(@Nullable Path outputFile)
-            throws InterruptedException {
+    @SuppressWarnings("UnusedReturnValue")
+    @Nullable
+    public static Future<Void> shutdownAndMaybeWrite(@Nullable Path outputFile) {
         synchronized (LOCK) {
+            Future<Void> shutdownAction = null;
             if (sINSTANCE.isInitialized()) {
-                verifyNotNull(sINSTANCE.processProfileWriter);
-                sINSTANCE.processProfileWriter.finishAndMaybeWrite(outputFile);
+                ProcessProfileWriter processProfileWriter =
+                        verifyNotNull(sINSTANCE.processProfileWriter);
+                // Write analytics files in another thread as it might involve parsing manifest files.
+                shutdownAction =
+                        sINSTANCE.mScheduledExecutorService.submit(
+                                () -> {
+                                    processProfileWriter.finishAndMaybeWrite(outputFile);
+                                    return null;
+                                });
             }
             sINSTANCE.processProfileWriter = null;
+            return shutdownAction;
         }
     }
 

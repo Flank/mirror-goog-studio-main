@@ -12,6 +12,7 @@ android {
         versionCode 12
         versionName "2.0"
         minSdkVersion 16
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 16
     }
 

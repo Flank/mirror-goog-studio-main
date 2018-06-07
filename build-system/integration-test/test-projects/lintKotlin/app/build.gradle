@@ -26,6 +26,7 @@ android {
 
     defaultConfig {
         minSdkVersion 15
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion rootProject.latestCompileSdk
     }
 

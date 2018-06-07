@@ -42,4 +42,9 @@ public class InputMethodManager {
     public void setIsAcceptingText(boolean accepting) {
         mIsAcceptingText = accepting;
     }
+
+    @VisibleForTesting
+    public void clearConnectionLocked() {
+        mServedInputConnectionWrapper.getConnection().closeConnection();
+    }
 }

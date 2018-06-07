@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Objects;
 import org.gradle.BuildAdapter;
 import org.gradle.api.Project;
 import org.gradle.api.invocation.Gradle;
@@ -113,24 +114,21 @@ public final class ProfilerInitializer {
 
         @Override
         public void completed() {
-            try {
-                synchronized (lock) {
-                    if (recordingBuildListener != null) {
-                        gradle.removeListener(recordingBuildListener);
-                        recordingBuildListener = null;
-                        @Nullable
-                        Path profileFile =
-                                profileDir == null
-                                        ? null
-                                        : profileDir.resolve(
-                                                PROFILE_FILE_NAME.format(LocalDateTime.now()));
+            synchronized (lock) {
+                if (recordingBuildListener != null) {
+                    gradle.removeListener(Objects.requireNonNull(recordingBuildListener));
+                    recordingBuildListener = null;
+                    @Nullable
+                    Path profileFile =
+                            profileDir == null
+                                    ? null
+                                    : profileDir.resolve(
+                                            PROFILE_FILE_NAME.format(LocalDateTime.now()));
 
-                        ProcessProfileWriterFactory.shutdownAndMaybeWrite(profileFile);
-                    }
+                    // This is deliberately asynchronous, so the build can complete before the
+                    // analytics are submitted.
+                    ProcessProfileWriterFactory.shutdownAndMaybeWrite(profileFile);
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e);
             }
         }
     }

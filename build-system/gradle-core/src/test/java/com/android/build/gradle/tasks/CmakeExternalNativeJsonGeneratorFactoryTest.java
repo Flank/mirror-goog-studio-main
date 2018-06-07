@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
+import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
@@ -28,6 +30,7 @@ import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,37 +111,35 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testCmakeStrategyUnsupportedCmakeVersion() {
-        assertThat(getCmakeStrategy(new Revision(0, 0))).isNull();
-        assertThat(getCmakeStrategy(new Revision(1, 1))).isNull();
-        assertThat(getCmakeStrategy(new Revision(2, 9))).isNull();
-        assertThat(getCmakeStrategy(new Revision(3, 0))).isNull();
-        assertThat(getCmakeStrategy(new Revision(3, 6))).isNull();
-        assertThat(getCmakeStrategy(new Revision(3, 6, 2))).isNull();
+    public void testCmakeStrategyUnsupportedCmakeVersion0_0() {
+        getCmakeStrategy(new Revision(0, 0));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCmakeStrategyUnsupportedCmakeVersion_3_6_2() {
+        getCmakeStrategy(new Revision(3, 6, 2));
     }
 
     private ExternalNativeJsonGenerator getCmakeStrategy(@NonNull Revision cmakeRevision) {
         stats = GradleBuildVariant.newBuilder();
-        ExternalNativeJsonGenerator generator =
-                CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
-                        cmakeRevision,
-                        ndkHandler,
+        JsonGenerationVariantConfiguration config =
+                new JsonGenerationVariantConfiguration(
+                        new NativeBuildSystemVariantConfig(
+                                new HashSet<>(), new HashSet<>(), buildArguments, cFlags, cppFlags),
                         variantName,
-                        abis,
-                        androidBuilder,
+                        makeFile,
                         sdkFolder,
                         ndkFolder,
                         soFolder,
                         objFolder,
                         jsonFolder,
-                        makeFile,
-                        cmakeFolder,
                         debuggable,
-                        buildArguments,
-                        cFlags,
-                        cppFlags,
-                        nativeBuildConfigurationsJsons,
-                        stats);
+                        abis,
+                        Revision.parseRevision("15"),
+                        nativeBuildConfigurationsJsons);
+        ExternalNativeJsonGenerator generator =
+                CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
+                        config, cmakeRevision, androidBuilder, cmakeFolder, stats);
         assertThat(stats.getNativeCmakeVersion()).isEqualTo(cmakeRevision.toShortString());
         return generator;
     }

@@ -55,6 +55,7 @@ public class AutoResConfig {
                         + "    defaultConfig {\n"
                         + "        versionCode 12\n"
                         + "        minSdkVersion 21\n"
+                        + "        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion\n"
                         + "        targetSdkVersion 21\n"
                         + "        resConfig \"auto\"\n"
                         + "    }\n"

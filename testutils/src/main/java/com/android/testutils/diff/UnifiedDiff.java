@@ -16,6 +16,9 @@
 
 package com.android.testutils.diff;
 
+import static com.android.testutils.diff.UnifiedDiff.Chunk.Type.FROM;
+import static com.android.testutils.diff.UnifiedDiff.Chunk.Type.TO;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +33,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses and applies diff files in unified format.
+ * Parses and applies diff files in git unified format.
+ *
+ * <p>Supported diffs can be generated with:
+ *
+ * <pre>
+ *   git diff --no-index --no-renames before/ after/
+ * </pre>
  *
  * <p>Usage:
  *
@@ -41,10 +50,16 @@ import java.util.regex.Pattern;
  */
 public class UnifiedDiff {
 
+    private static final String NO_FILE = "/dev/null";
     public static final Pattern FROM_FILE = Pattern.compile("--- (.*)");
     public static final Pattern TO_FILE = Pattern.compile("\\+\\+\\+ (.*)");
     public static final Pattern CHUNK_SPEC =
-            Pattern.compile("@@ -(\\d+),(\\d+) \\+(\\d+),(\\d+) @@.*");
+            Pattern.compile("@@ -(\\d+)(,(\\d+))? \\+(\\d+)(,(\\d+))? @@.*");
+    public static final Pattern GIT_DIFF = Pattern.compile("diff --git (a/.*) (b/.*)");
+    public static final Pattern DELETED_FILE = Pattern.compile("deleted file mode .*");
+    public static final Pattern NEW_FILE = Pattern.compile("new file mode .*");
+
+
     public final List<Diff> diffs;
 
     public UnifiedDiff(File file) throws IOException {
@@ -52,25 +67,40 @@ public class UnifiedDiff {
     }
 
     public UnifiedDiff(List<String> lines) {
-        diffs = new LinkedList<>();
+        diffs = new ArrayList<>();
         parse(lines);
     }
 
-    public void apply(File directory) throws IOException {
+    public UnifiedDiff() {
+        diffs = new ArrayList<>();
+    }
+
+    /**
+     * Applies the diff to the given directory, stripping the "prefix" number of directories.
+     *
+     * <p>Equivalent to "patch -p[prefix]"
+     */
+    public void apply(File directory, int prefix) throws IOException {
         for (Diff diff : diffs) {
-            Path path = Paths.get(diff.from);
-            File target = new File(directory, path.subpath(3, path.getNameCount()).toString());
-            List<String> strings = Files.readAllLines(target.toPath());
-            diff.apply(strings);
-            Files.write(target.toPath(), strings, StandardCharsets.UTF_8);
+            diff.apply(directory, prefix);
         }
     }
+
+    public UnifiedDiff invert() {
+        UnifiedDiff inverted = new UnifiedDiff();
+        for (Diff diff : diffs) {
+            inverted.diffs.add(diff.invert());
+        }
+        return inverted;
+    }
+
 
     private void parse(List<String> lines) {
         ParseState state = ParseState.HEADER;
         Diff diff = null;
         Chunk chunk = null;
         String from = null;
+        String to = null;
         int remFrom = 0;
         int remTo = 0;
 
@@ -86,14 +116,32 @@ public class UnifiedDiff {
                         } else if (CHUNK_SPEC.matcher(line).matches()) {
                             state = ParseState.CHUNK_SPEC;
                             continue; // redo the line
+                        } else if (GIT_DIFF.matcher(line).matches()) {
+                            state = ParseState.GIT_DIFF;
+                            continue; // redo the line
+                        } else if (DELETED_FILE.matcher(line).matches()) {
+                            state = ParseState.DELETED_FILE;
+                            continue; // redo the line
+                        } else if (NEW_FILE.matcher(line).matches()) {
+                            state = ParseState.NEW_FILE;
+                            continue; // redo the line
                         }
+                        break;
+                    }
+                case GIT_DIFF:
+                    {
+                        Matcher matcher = GIT_DIFF.matcher(line);
+                        ensure(matcher.matches(), "Expected diff --git line at line " + i);
+                        diff = null;
+                        from = matcher.group(1);
+                        to = matcher.group(2);
+                        state = ParseState.HEADER;
                         break;
                     }
                 case FROM_FILE:
                     {
                         Matcher matcher = FROM_FILE.matcher(line);
                         ensure(matcher.matches(), "Expected file marker \"---\"");
-                        diff = null;
                         from = matcher.group(1);
                         state = ParseState.TO_FILE;
                         break;
@@ -102,21 +150,41 @@ public class UnifiedDiff {
                     {
                         Matcher matcher = TO_FILE.matcher(line);
                         ensure(matcher.matches(), "Expected file marker \"+++\"");
-                        String to = matcher.group(1);
-                        diff = new Diff(from, to);
-                        diffs.add(diff);
+                        to = matcher.group(1);
+                        if (diff == null || !to.equals(diff.to) || !from.equals(diff.from)) {
+                            diff = new Diff(from, to);
+                            diffs.add(diff);
+                        }
                         state = ParseState.CHUNK_SPEC;
+                        break;
+                    }
+                case DELETED_FILE:
+                    {
+                        Matcher matcher = DELETED_FILE.matcher(line);
+                        ensure(matcher.matches(), "Expected deleted file marker at line: " + i);
+                        diff = new Diff(from, NO_FILE);
+                        diffs.add(diff);
+                        state = ParseState.HEADER;
+                        break;
+                    }
+                case NEW_FILE:
+                    {
+                        Matcher matcher = NEW_FILE.matcher(line);
+                        ensure(matcher.matches(), "Expected new file marker at line: " + i);
+                        diff = new Diff(NO_FILE, to);
+                        diffs.add(diff);
+                        state = ParseState.HEADER;
                         break;
                     }
                 case CHUNK_SPEC:
                     {
                         Matcher matcher = CHUNK_SPEC.matcher(line);
-                        ensure(matcher.matches(), "Expected chunk spec");
+                        ensure(matcher.matches(), "Expected chunk spec at line: " + i);
                         ensure(diff != null, "Chunk spec must be inside a diff");
-                        int fromLine = Integer.valueOf(matcher.group(1));
-                        int fromSize = Integer.valueOf(matcher.group(2));
-                        int toLine = Integer.valueOf(matcher.group(3));
-                        int toSize = Integer.valueOf(matcher.group(4));
+                        int fromLine = optValueOf(matcher.group(1));
+                        int fromSize = optValueOf(matcher.group(3));
+                        int toLine = optValueOf(matcher.group(4));
+                        int toSize = optValueOf(matcher.group(6));
                         chunk = new Chunk(fromLine, fromSize, toLine, toSize);
                         diff.add(chunk);
                         remFrom = fromSize;
@@ -138,7 +206,7 @@ public class UnifiedDiff {
                             case '-':
                                 ensure(remFrom > 0, "Unexpected 'from' line, at line " + i);
                                 remFrom--;
-                                chunk.addLine(line.substring(1), Chunk.Type.FROM);
+                                chunk.addLine(line.substring(1), FROM);
                                 break;
                             case '+':
                                 ensure(remTo > 0, "Unexpected common line, at line " + i);
@@ -158,6 +226,10 @@ public class UnifiedDiff {
         }
     }
 
+    private static int optValueOf(String value) {
+        return value == null ? 1 : Integer.valueOf(value);
+    }
+
     private void ensure(boolean condition, String message) {
         if (!condition) throw new IllegalStateException(message);
     }
@@ -168,6 +240,9 @@ public class UnifiedDiff {
         TO_FILE,
         CHUNK_SPEC,
         CHUNK,
+        GIT_DIFF,
+        DELETED_FILE,
+        NEW_FILE,
     }
 
     public static class Diff {
@@ -189,7 +264,8 @@ public class UnifiedDiff {
         public void apply(List<String> lines) {
             int dx = 0;
             for (Chunk chunk : chunks) {
-                ListIterator<String> it = lines.listIterator(chunk.fromLine - 1 + dx);
+                ListIterator<String> it =
+                        lines.listIterator((chunk.fromLine == 0 ? 0 : chunk.fromLine - 1) + dx);
                 for (Line line : chunk.lines) {
                     if (line.type == Chunk.Type.TO) {
                         it.add(line.line);
@@ -203,13 +279,40 @@ public class UnifiedDiff {
                                             + "\nbut was:\n"
                                             + fromLine);
                         }
-                        if (line.type == Chunk.Type.FROM) {
+                        if (line.type == FROM) {
                             it.remove();
                             dx--;
                         }
                     }
                 }
             }
+        }
+
+        private void apply(File directory, int prefix) throws IOException {
+            if (NO_FILE.equals(to)) {
+                Path path = Paths.get(from);
+                File target =
+                        new File(directory, path.subpath(prefix, path.getNameCount()).toString());
+                target.delete();
+            } else {
+                Path path = Paths.get(to);
+                File target =
+                        new File(directory, path.subpath(prefix, path.getNameCount()).toString());
+                List<String> strings =
+                        NO_FILE.equals(from)
+                                ? new ArrayList<>()
+                                : Files.readAllLines(target.toPath());
+                apply(strings);
+                Files.write(target.toPath(), strings, StandardCharsets.UTF_8);
+            }
+        }
+
+        public Diff invert() {
+            Diff inverted = new Diff(this.to, this.from);
+            for (Chunk chunk : chunks) {
+                inverted.chunks.add(chunk.invert());
+            }
+            return inverted;
         }
     }
 
@@ -237,6 +340,15 @@ public class UnifiedDiff {
 
         public void addLine(String line, Type type) {
             lines.add(new Line(line, type));
+        }
+
+        public Chunk invert() {
+            Chunk chunk = new Chunk(toLine, toSize, fromLine, fromSize);
+            for (Line line : lines) {
+                Type inverted = line.type == FROM ? TO : line.type == TO ? FROM : line.type;
+                chunk.lines.add(new Line(line.line, inverted));
+            }
+            return chunk;
         }
     }
 

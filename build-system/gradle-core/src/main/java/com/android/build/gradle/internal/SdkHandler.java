@@ -423,12 +423,10 @@ public class SdkHandler {
         this.sdkLibData = sdkLibData;
     }
 
-    /**
-     * Installs CMake.
-     */
-    public void installCMake() {
+    /** Installs CMake. */
+    public void installCMake(String version) {
         try {
-            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE);
+            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE + ";" + version);
         } catch (LicenceNotAcceptedException | InstallFailedException e) {
             throw new RuntimeException(e);
         }

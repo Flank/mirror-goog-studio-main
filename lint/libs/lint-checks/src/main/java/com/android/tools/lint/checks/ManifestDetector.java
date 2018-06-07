@@ -541,7 +541,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     Location location = context.getNameLocation(sourceApplicationElement);
                     context.report(
                             ALLOW_BACKUP,
-                            application,
+                            sourceApplicationElement,
                             location,
                             ""
                                     + "On SDK version 23 and up, your app data will be automatically "
@@ -555,7 +555,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     Location location = context.getNameLocation(sourceApplicationElement);
                     context.report(
                             ALLOW_BACKUP,
-                            application,
+                            sourceApplicationElement,
                             location,
                             ""
                                     + "On SDK version 23 and up, your app data will be automatically "
@@ -569,6 +569,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
             if ((allowBackup == null || allowBackup.isEmpty() && mainProject.getMinSdk() >= 4)) {
                 context.report(
                         ALLOW_BACKUP,
+                        sourceApplicationElement,
                         context.getNameLocation(sourceApplicationElement),
                         "Should explicitly set `android:allowBackup` to `true` or "
                                 + "`false` (it's `true` by default, and that can have some security "

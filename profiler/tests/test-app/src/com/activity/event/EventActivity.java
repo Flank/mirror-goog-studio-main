@@ -63,4 +63,9 @@ public class EventActivity extends PerfdTestActivity {
         depth++;
         System.out.println("InputConnectionTree Depth: " + depth);
     }
+
+    /** Function called by test to clear the input connection. */
+    public void clearConnection() {
+        InputMethodManager.getInstance().clearConnectionLocked();
+    }
 }

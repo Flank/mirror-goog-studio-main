@@ -1037,6 +1037,13 @@ public class VariantManager implements VariantModel {
                                 globalScope.getErrorHandler(),
                                 this::canParseManifest);
 
+        // Only record release artifacts
+        if (!buildTypeData.getBuildType().isDebuggable()
+                && variantType.isApk()
+                && !variantConfig.getType().isForTesting()) {
+            ProcessProfileWriter.get().recordApplicationId(variantConfig::getApplicationId);
+        }
+
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
                 .getSourceSets();

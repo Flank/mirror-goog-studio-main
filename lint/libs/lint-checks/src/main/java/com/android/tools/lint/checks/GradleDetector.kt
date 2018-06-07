@@ -178,9 +178,26 @@ open class GradleDetector : Detector(), GradleScanner {
                                 .all()
                                 .with(Integer.toString(highest))
                                 .build()
-                            report(context, valueCookie, EXPIRED_TARGET_SDK_VERSION, message, fix)
+
+                            // Don't report if already suppressed with EXPIRING
+
+                            val alreadySuppressed = context.containsCommentSuppress()
+                                    && context.isSuppressedWithComment(
+                                valueCookie,
+                                EXPIRING_TARGET_SDK_VERSION
+                            )
+
+                            if (!alreadySuppressed) {
+                                report(
+                                    context,
+                                    valueCookie,
+                                    EXPIRED_TARGET_SDK_VERSION,
+                                    message,
+                                    fix
+                                )
+                            }
                             warned = true
-                        } else if (month >= 5 && year == 2018) {
+                        } else if (month >= 4 && year == 2018) {
                             // Start warning about this earlier - in May.
                             // (Check for 2018 here: no, we don't have a time machine, but let's
                             // allow developers to go back in time.)

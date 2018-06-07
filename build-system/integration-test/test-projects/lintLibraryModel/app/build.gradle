@@ -6,6 +6,7 @@ android {
     defaultConfig {
         applicationId "com.android.test.lint.libmodel.app"
         minSdkVersion 15
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 24
     }
     lintOptions {

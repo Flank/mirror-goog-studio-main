@@ -3,7 +3,7 @@ package ${escapeKotlinIdentifiers(packageName)}
 <#if includeCallbacks>import android.content.Context
 import android.net.Uri</#if>
 import android.os.Bundle
-import ${getMaterialComponentName('android${SupportPackage}.app.Fragment', useAndroidX)}
+import android${SupportPackage}.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

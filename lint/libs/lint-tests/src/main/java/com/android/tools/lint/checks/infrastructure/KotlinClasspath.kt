@@ -21,7 +21,7 @@ import java.io.File
 fun findKotlinStdlibPath(): List<String> {
     val classPath: String = System.getProperty("java.class.path")
     val paths = mutableListOf<String>()
-    for (path in classPath.split(':')) {
+    for (path in classPath.split(File.pathSeparatorChar)) {
         val file = File(path)
         val name = file.name
         if (name.startsWith("kotlin-stdlib") ||

@@ -215,7 +215,8 @@ public final class DexArchiveTestUtil {
                         DexArchiveMerger.createD8DexMerger(
                                 new StandardOutErrMessageReceiver(),
                                 dexingType == DexingType.NATIVE_MULTIDEX ? 21 : 1,
-                                true);
+                                true,
+                                ForkJoinPool.commonPool());
                 break;
             default:
                 throw new AssertionError();

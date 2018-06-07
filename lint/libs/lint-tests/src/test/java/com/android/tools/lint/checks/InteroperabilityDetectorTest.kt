@@ -494,4 +494,202 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
+
+    fun testNonPropertyAccess5() {
+        // Regression test for
+        // 80088526: KotlinPropertyAccess false positive with private getter
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.ColorRes;
+                import android.support.annotation.VisibleForTesting;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class PropertyAccess {
+                    public void setThumbColor(@ColorRes int color) {
+                    }
+
+                    private void setScrollbarThumbColor(@ColorRes int color) {
+                    }
+
+                    @VisibleForTesting
+                    int getScrollbarThumbColor() {
+                        return 0;
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess6() {
+        // Regression test for
+        // 80092799: KotlinPropertyAccess false positive on framework method override
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+                import android.support.annotation.Nullable;
+                import android.util.AttributeSet;
+                import android.view.View;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class BaseGridView extends View {
+                    private boolean mHasOverlappingRendering;
+
+                    public PropAccessTest(Context context, @Nullable AttributeSet attributeSet, int i) {
+                        super(context, attributeSet, i);
+                    }
+
+                    @Override
+                    public boolean hasOverlappingRendering() {
+                        return mHasOverlappingRendering;
+                    }
+
+                    public void setHasOverlappingRendering(boolean hasOverlapping) {
+                        mHasOverlappingRendering = hasOverlapping;
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess7() {
+        // Regression test for
+        // 80092906: KotlinPropertyAccess targeting getter which already has perfectly matching setter
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class FullWidthDetailsOverviewRowPresenter {
+                        public void setOnActionClickedListener(OnActionClickedListener listener) {
+                        }
+
+                        public OnActionClickedListener getOnActionClickedListener() {
+                            return null;
+                        }
+
+                        public final void setListener(Listener listener) {
+                        }
+
+
+                        public interface OnActionClickedListener {
+                            void onActionClicked();
+                        }
+
+                        public abstract static class Listener {
+                            public void onBindLogo() {
+                            }
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess8() {
+        // Regression test for
+        // 80092802: KotlinPropertyAccess should ignore constructors
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class ItemBridgeAdapter {
+
+                        public ItemBridgeAdapter() {
+                        }
+
+                        public void setAdapter(ObjectAdapter adapter) {
+                        }
+
+                        public class ObjectAdapter {
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess9() {
+        // Regression test for
+        // 80092804: KotlinPropertyAccess should prefer matching getters with the same type
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.content.SharedPreferences;
+                    import android.preference.PreferenceScreen;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class PreferenceManager {
+                        public PreferenceManager() {
+                        }
+
+                        public SharedPreferences getSharedPreferences() {
+                            return null;
+                        }
+
+                        public PreferenceScreen getPreferenceScreen() {
+                            return null;
+                        }
+
+                        public boolean setPreferences(PreferenceScreen preferenceScreen) {
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expectClean()
+    }
+
+    fun testNonPropertyAccess10() {
+        // Regression test for
+        // 80088529: KotlinPropertyAccess should suggest removing "is" from setter when is-er is present
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class RecyclerView {
+                        public final void setIsRecyclable(boolean recyclable) {
+                        }
+
+                        public final boolean isRecyclable() {
+                            return false;
+                        }
+                    }
+
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(KOTLIN_PROPERTY).run().expect(
+            """
+            src/test/pkg/RecyclerView.java:5: Warning: This method should be called setRecyclable such that (along with the isRecyclable getter) Kotlin code can access it as a property (recyclable); see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
+                public final void setIsRecyclable(boolean recyclable) {
+                                  ~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
 }

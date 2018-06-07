@@ -270,7 +270,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         getter = it
                     } else if ((name == badGetterName || name == propertyName ||
                                 name.endsWith(propertySuffix)) &&
-                        !context.evaluator.isPrivate(it) && it.returnType != PsiType.VOID
+                        context.evaluator.isPublic(it) &&
+                        !it.isConstructor &&
+                        it.returnType == setter.uastParameters.firstOrNull()?.type
                     ) {
                         badGetter = it
                     }
@@ -306,7 +308,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     val message = "This getter should be public such that `$propertyName` can " +
                             "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     val location = context.getNameLocation(getter)
-                    context.report(KOTLIN_PROPERTY, setter, location, message)
+                    context.report(KOTLIN_PROPERTY, getter, location, message)
                     return
                 }
 
@@ -332,7 +334,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     val message =
                         "This getter should not be static such that `$propertyName` can " +
                                 "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                    context.report(KOTLIN_PROPERTY, setter, location, message)
+                    context.report(KOTLIN_PROPERTY,
+                        location.source as? PsiElement ?: setter, location, message)
                     return
                 }
 
@@ -345,7 +348,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         "The getter return type (`${getter.returnType?.presentableText}`) and setter parameter type (`${setterParameterType.presentableText}`) getter and setter methods for property `$propertyName` should have exactly the same type to allow " +
                                 "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     val location = getPropertyLocation(getter, setter)
-                    context.report(KOTLIN_PROPERTY, setter, location, message)
+                    context.report(KOTLIN_PROPERTY,
+                        location.source as? PsiElement ?: setter, location, message)
                     return
                 }
 
@@ -364,17 +368,44 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                                         "be accessed as a property from Kotlin; see " +
                                         "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                             val location = getPropertyLocation(getter, setter)
-                            context.report(KOTLIN_PROPERTY, setter, location, message)
+                            context.report(KOTLIN_PROPERTY,
+                                location.source as? PsiElement ?: setter, location, message)
                             return
                         }
                     }
                 }
-            } else if (badGetter != null) {
+            } else if (badGetter != null &&
+                // Don't complain about overrides; we can't rename those
+                !badGetter!!.findSuperMethods().any() &&
+                // Don't complain if the matched bad getter method already has its own
+                // match
+                run {
+                    val matchingName =
+                        "set${badGetter!!.name.removePrefix("is").removePrefix("get").removePrefix("has")}"
+
+                    methodName == matchingName || cls.methods.none { it.name == matchingName }
+                }
+            ) {
+                val name1 = badGetter!!.name
+                if (name1.startsWith("is") && methodName.startsWith("setIs") &&
+                    name1[2].isUpperCase()
+                ) {
+                    val newProperty = name1[2].toLowerCase() + name1.substring(3)
+                    val message =
+                        "This method should be called `set${newProperty.capitalize()}` such " +
+                                "that (along with the `$name1` getter) Kotlin code can access it " +
+                                "as a property (`$newProperty`); see " +
+                                "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
+                    val location = context.getNameLocation(setter)
+                    context.report(KOTLIN_PROPERTY, setter, location, message)
+                    return
+                }
+
                 val location = context.getNameLocation(badGetter!!)
                 val message =
                     "This method should be called `get$propertySuffix` such that `$propertyName` can " +
                             "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                context.report(KOTLIN_PROPERTY, setter, location, message)
+                context.report(KOTLIN_PROPERTY, badGetter, location, message)
             }
         }
 

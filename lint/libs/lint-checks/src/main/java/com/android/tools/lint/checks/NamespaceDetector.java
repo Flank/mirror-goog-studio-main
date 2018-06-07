@@ -25,6 +25,7 @@ import static com.android.SdkConstants.URI_PREFIX;
 import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -246,8 +247,9 @@ public class NamespaceDetector extends LayoutDetector {
         if (haveCustomNamespace) {
             Project project = context.getProject();
             boolean checkCustomAttrs =
-                    context.isEnabled(CUSTOM_VIEW) && project.isLibrary()
-                            || context.isEnabled(RES_AUTO) && project.isGradleProject();
+                    project.getResourceNamespace().equals(ResourceNamespace.RES_AUTO)
+                            && ((context.isEnabled(CUSTOM_VIEW) && project.isLibrary())
+                                    || (context.isEnabled(RES_AUTO) && project.isGradleProject()));
 
             mCheckUnused = context.isEnabled(UNUSED);
 

@@ -45,7 +45,7 @@ import com.android.build.gradle.external.cmake.server.Target;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage;
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchain;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
@@ -84,51 +83,13 @@ import org.apache.commons.io.FileUtils;
 class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGenerator {
 
     private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
-    // Constructor
+
     public CmakeServerExternalNativeJsonGenerator(
-            @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
             @NonNull File cmakeFolder,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                cmakeFolder,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
-
-        logPreviewWarning(androidBuilder);
-    }
-
-    private static void logPreviewWarning(@NonNull AndroidBuilder androidBuilder) {
-        String previewWarning =
-                "Support for CMake 3.7 and higher is a preview feature. To report a bug, see https://developer.android.com/studio/report-bugs.html";
-        androidBuilder.getLogger().warning(previewWarning);
+        super(config, androidBuilder, cmakeFolder, stats);
     }
 
     /**
@@ -174,6 +135,16 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         // By default, use the ninja generator.
         cacheArguments.add("-G Ninja");
+
+        // To preserve backward compatibility with fork CMake look for ninja.exe next to cmake.exe
+        // and use it. If it's not there then normal CMake search logic will be used.
+        File possibleNinja =
+                isWindows()
+                        ? new File(getCmakeBinFolder(), "ninja.exe")
+                        : new File(getCmakeBinFolder(), "ninja");
+        if (possibleNinja.isFile()) {
+            cacheArguments.add(String.format("-DCMAKE_MAKE_PROGRAM=%s", possibleNinja));
+        }
         return cacheArguments;
     }
 
@@ -198,12 +169,18 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             ConfigureCommandResult configureCommandResult =
                     doConfigure(abi, abiPlatformVersion, cmakeServer);
             if (!ServerUtils.isConfigureResultValid(configureCommandResult.configureResult)) {
-                throw new ProcessException("Error configuring");
+                throw new ProcessException(
+                        String.format(
+                                "Error configuring CMake server (%s).\r\n%s",
+                                cmakeServer.getCmakePath(),
+                                configureCommandResult.interactiveMessages));
             }
 
             ComputeResult computeResult = doCompute(cmakeServer);
             if (!ServerUtils.isComputedResultValid(computeResult)) {
-                throw new ProcessException("Error computing");
+                throw new ProcessException(
+                        "Error computing CMake server result.\r\n"
+                                + configureCommandResult.interactiveMessages);
             }
 
             generateAndroidGradleBuild(abi, cmakeServer);
@@ -390,8 +367,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             throws IOException {
         List<String> cacheArgumentsList = getCacheArguments(abi, abiPlatformVersion);
         cacheArgumentsList.addAll(getBuildArguments());
-        return cmakeServer.configure(
-                cacheArgumentsList.toArray(new String[cacheArgumentsList.size()]));
+        String argsArray[] = new String[cacheArgumentsList.size()];
+        cacheArgumentsList.toArray(argsArray);
+        return cmakeServer.configure(argsArray);
     }
 
     /**
@@ -759,8 +737,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
         // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
         // programmatically.
-        if (getNdkHandler().getRevision() != null
-                && getNdkHandler().getRevision().getMajor() >= 15) {
+        if (config.ndkVersion.getMajor() >= 15) {
             // Add our toolchain file.
             // Note: When setting this flag, Cmake's android toolchain would end up calling our
             // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only

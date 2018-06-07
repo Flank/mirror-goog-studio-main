@@ -123,7 +123,7 @@ public class RecordingBuildListenerTest {
     }
 
     @Test
-    public void singleThreadWithMultipleSpansInvocation() throws InterruptedException, IOException {
+    public void singleThreadWithMultipleSpansInvocation() throws Exception {
 
         RecordingBuildListener listener = new RecordingBuildListener(ProcessProfileWriter.get());
 
@@ -138,7 +138,7 @@ public class RecordingBuildListenerTest {
                             return null;
                         });
         listener.afterExecute(task, taskState);
-        ProcessProfileWriterFactory.shutdownAndMaybeWrite(mProfileProtoFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(mProfileProtoFile).get();
 
         GradleBuildProfile profile = loadProfile();
         assertEquals("Span count", 2, profile.getSpanCount());
@@ -155,8 +155,7 @@ public class RecordingBuildListenerTest {
     }
 
     @Test
-    public void simulateTasksUnorderedLifecycleEventsDelivery()
-            throws InterruptedException, IOException {
+    public void simulateTasksUnorderedLifecycleEventsDelivery() throws Exception {
         RecordingBuildListener listener = new RecordingBuildListener(ProcessProfileWriter.get());
 
         listener.beforeExecute(task);
@@ -173,7 +172,7 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(task, taskState);
         listener.afterExecute(secondTask, taskState);
 
-        ProcessProfileWriterFactory.shutdownAndMaybeWrite(mProfileProtoFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(mProfileProtoFile).get();
         GradleBuildProfile profile = loadProfile();
 
         assertEquals(3, profile.getSpanCount());

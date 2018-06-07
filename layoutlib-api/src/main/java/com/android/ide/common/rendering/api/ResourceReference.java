@@ -31,17 +31,17 @@ import java.io.Serializable;
  */
 @Immutable
 public final class ResourceReference implements Serializable {
-    @NonNull private final ResourceType mResourceType;
-    @NonNull private final ResourceNamespace mNamespace;
-    @NonNull private final String mName;
+    @NonNull private final ResourceType resourceType;
+    @NonNull private final ResourceNamespace namespace;
+    @NonNull private final String name;
 
     public ResourceReference(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String name) {
-        this.mNamespace = namespace;
-        this.mResourceType = resourceType;
-        this.mName = name;
+        this.namespace = namespace;
+        this.resourceType = resourceType;
+        this.name = name;
     }
 
     /**
@@ -60,36 +60,51 @@ public final class ResourceReference implements Serializable {
         this(ResourceNamespace.fromBoolean(isFramework), type, name);
     }
 
+    /** A shorthand for creating a {@link ResourceType#STYLE} resource reference. */
+    public static ResourceReference style(
+            @NonNull ResourceNamespace namespace, @NonNull String name) {
+        return new ResourceReference(namespace, ResourceType.STYLE, name);
+    }
+
     /** Returns the name of the resource, as defined in the XML. */
     @NonNull
     public String getName() {
-        return mName;
+        return name;
+    }
+
+    /**
+     * If the package name of the namespace is not null, returns the name of the resource prefixed
+     * by the package name with a colon separator. Otherwise returns the name of the resource.
+     */
+    public String getQualifiedName() {
+        String packageName = namespace.getPackageName();
+        return packageName == null ? name : packageName + ':' + name;
     }
 
     @NonNull
     public ResourceType getResourceType() {
-        return mResourceType;
+        return resourceType;
     }
 
     @NonNull
     public ResourceNamespace getNamespace() {
-        return mNamespace;
+        return namespace;
     }
 
     /**
-     * Returns whether the resource is a framework resource (<code>true</code>) or a project
-     * resource (<code>false</code>).
+     * Returns whether the resource is a framework resource ({@code true}) or a project resource
+     * ({@code false}).
      *
      * @deprecated all namespaces should be handled not just "android:".
      */
     @Deprecated
     public final boolean isFramework() {
-        return mNamespace == ResourceNamespace.ANDROID;
+        return namespace == ResourceNamespace.ANDROID;
     }
 
     @NonNull
     public ResourceUrl getResourceUrl() {
-        return ResourceUrl.create(mNamespace.getPackageName(), mResourceType, mName);
+        return ResourceUrl.create(namespace.getPackageName(), resourceType, name);
     }
 
     /**
@@ -122,18 +137,18 @@ public final class ResourceReference implements Serializable {
     public ResourceUrl getRelativeResourceUrl(
             @NonNull ResourceNamespace context, @NonNull ResourceNamespace.Resolver resolver) {
         String namespaceString;
-        if (mNamespace.equals(context)) {
+        if (namespace.equals(context)) {
             namespaceString = null;
         } else {
-            String prefix = resolver.uriToPrefix(mNamespace.getXmlNamespaceUri());
+            String prefix = resolver.uriToPrefix(namespace.getXmlNamespaceUri());
             if (prefix != null) {
                 namespaceString = prefix;
             } else {
-                namespaceString = mNamespace.getPackageName();
+                namespaceString = namespace.getPackageName();
             }
         }
 
-        return ResourceUrl.create(namespaceString, mResourceType, mName);
+        return ResourceUrl.create(namespaceString, resourceType, name);
     }
 
     @Override
@@ -143,24 +158,24 @@ public final class ResourceReference implements Serializable {
 
         ResourceReference reference = (ResourceReference) o;
 
-        if (mResourceType != reference.mResourceType) return false;
-        if (!mNamespace.equals(reference.mNamespace)) return false;
-        if (!mName.equals(reference.mName)) return false;
+        if (resourceType != reference.resourceType) return false;
+        if (!namespace.equals(reference.namespace)) return false;
+        if (!name.equals(reference.name)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(mResourceType.hashCode(), mNamespace.hashCode(), mName.hashCode());
+        return HashCodes.mix(resourceType.hashCode(), namespace.hashCode(), name.hashCode());
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("namespace", mNamespace)
-                .add("type", mResourceType)
-                .add("name", mName)
+                .add("namespace", namespace)
+                .add("type", resourceType)
+                .add("name", name)
                 .toString();
     }
 }

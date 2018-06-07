@@ -32,8 +32,8 @@ import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -48,37 +48,23 @@ public class AlarmTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.energy.AlarmActivity";
 
-    private int mySdkLevel;
-    private PerfDriver myPerfDriver;
+    @Rule public final PerfDriver myPerfDriver;
+
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
 
     public AlarmTest(int sdkLevel) {
-        mySdkLevel = sdkLevel;
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void setUp() throws Exception {
-        myPerfDriver = new PerfDriver(mySdkLevel);
-        myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
         myStubWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
-        mySession =
-                myGrpc.beginSessionWithAgent(
-                        myPerfDriver.getPid(), myPerfDriver.getCommunicationPort());
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        if (myPerfDriver != null) {
-            if (mySession != null) {
-                myGrpc.endSession(mySession.getSessionId());
-            }
-            myPerfDriver.tearDown();
-        }
+        mySession = myPerfDriver.getSession();
     }
 
     @Test

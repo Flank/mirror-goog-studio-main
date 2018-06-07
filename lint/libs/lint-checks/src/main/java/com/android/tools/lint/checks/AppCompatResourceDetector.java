@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ATTR_SHOW_AS_ACTION;
 import static com.android.SdkConstants.AUTO_URI;
 
@@ -79,7 +80,7 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         Project mainProject = context.getMainProject();
-        Boolean appCompat = mainProject.dependsOn("com.android.support:appcompat-v7");
+        Boolean appCompat = mainProject.dependsOn(APPCOMPAT_LIB_ARTIFACT);
         String localName = attribute.getLocalName();
         if (ANDROID_URI.equals(attribute.getNamespaceURI())) {
             if (context.getFolderVersion() >= 14) {

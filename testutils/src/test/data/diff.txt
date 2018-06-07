@@ -1,0 +1,138 @@
+diff --git a/before/a.txt b/after/a.txt
+index e9c441cdb0..36275a8308 100644
+--- a/before/a.txt
++++ b/after/a.txt
+@@ -1,11 +1,16 @@
+ 01
+ 02
++02.1
++02.2
++02.3
+ 03
+-04
+ 05
+ 06
+ 07
+ 08
+ 09
+ 10
++11
++12
++13
+ 
+diff --git a/after/create_me.txt b/after/create_me.txt
+new file mode 100644
+index 0000000000..30c73ba398
+--- /dev/null
++++ b/after/create_me.txt
+@@ -0,0 +1,3 @@
++All
++new
++stuff
+diff --git a/after/create_me_empty.txt b/after/create_me_empty.txt
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/before/delete_all.txt b/after/delete_all.txt
+index 9724c9a17a..e69de29bb2 100644
+--- a/before/delete_all.txt
++++ b/after/delete_all.txt
+@@ -1,3 +0,0 @@
+-Delete
+-all
+-the lines
+diff --git a/before/delete_me.txt b/before/delete_me.txt
+deleted file mode 100644
+index 381e29c139..0000000000
+--- a/before/delete_me.txt
++++ /dev/null
+@@ -1,4 +0,0 @@
+-Deleted
+-content
+-lines
+-
+diff --git a/before/delete_me_empty.txt b/before/delete_me_empty.txt
+deleted file mode 100644
+index e69de29bb2..0000000000
+diff --git a/before/diff.txt b/before/diff.txt
+deleted file mode 100644
+index e69de29bb2..0000000000
+diff --git a/before/dir/file_in_dir.txt b/after/dir/file_in_dir.txt
+index b1eaee190d..5d390ed8b4 100644
+--- a/before/dir/file_in_dir.txt
++++ b/after/dir/file_in_dir.txt
+@@ -1,10 +1,11 @@
+ a
+-b
+-c
+-d
+ e
+ f
+ g
+ h
+ i
+-no_new_line
++j
++k
++l
++has new line
++
+diff --git a/before/empty.txt b/after/empty.txt
+index e69de29bb2..f593fb0219 100644
+--- a/before/empty.txt
++++ b/after/empty.txt
+@@ -0,0 +1,3 @@
++Now there
++is 
++something
+diff --git a/before/new_line.txt b/after/new_line.txt
+index ede5ee601b..8351cc8c0f 100644
+--- a/before/new_line.txt
++++ b/after/new_line.txt
+@@ -1,2 +1 @@
+-Has new line at the end
+-
++Has new line at the end. Not anymore 
+diff --git a/before/no_new_line.txt b/after/no_new_line.txt
+index 3afb9a415a..4cb8e43ebb 100644
+--- a/before/no_new_line.txt
++++ b/after/no_new_line.txt
+@@ -1 +1,2 @@
+-Doesn't have new line
++Doesn't have new line. Now it does
++
+diff --git a/before/random.txt b/after/random.txt
+index 947d26da1e..130da503c7 100644
+--- a/before/random.txt
++++ b/after/random.txt
+@@ -1,21 +1,21 @@
+-Inquietude simplicity terminated she compliment remarkably few her nay. The weeks are ham asked jokes. Neglected perceived shy nay concluded. Not mile draw plan snug next all. Houses latter an valley be indeed wished merely in my. Money doubt oh drawn every or an china. Visited out friends for expense message set eat. 
++Shot what able cold new the see hold. Friendly as an betrayed formerly he. Morning because as to society behaved moments. Put ladies design mrs sister was. Play on hill felt john no gate. Am passed figure to marked in. Prosperous middletons is ye inhabiting as assistance me especially. For looking two cousins regular amongst. 
+ 
+-Unwilling sportsmen he in questions september therefore described so. Attacks may set few believe moments was. Reasonably how possession shy way introduced age inquietude. Missed he engage no exeter of. Still tried means we aware order among on. Eldest father can design tastes did joy settle. Roused future he ye an marked. Arose mr rapid in so vexed words. Gay welcome led add lasting chiefly say looking. 
++Received shutters expenses ye he pleasant. Drift as blind above at up. No up simple county stairs do should praise as. Drawings sir gay together landlord had law smallest. Formerly welcomed attended declared met say unlocked. Jennings outlived no dwelling denoting in peculiar as he believed. Behaviour excellent middleton be as it curiosity departure ourselves. 
+ 
+-Is he staying arrival address earnest. To preference considered it themselves inquietude collecting estimating. View park for why gay knew face. Next than near to four so hand. Times so do he downs me would. Witty abode party her found quiet law. They door four bed fail now have. 
++New had happen unable uneasy. Drawings can followed improved out sociable not. Earnestly so do instantly pretended. See general few civilly amiable pleased account carried. Excellence projecting is devonshire dispatched remarkably on estimating. Side in so life past. Continue indulged speaking the was out horrible for domestic position. Seeing rather her you not esteem men settle genius excuse. Deal say over you age from. Comparison new ham melancholy son themselves. 
+ 
+-Drawings me opinions returned absolute in. Otherwise therefore sex did are unfeeling something. Certain be ye amiable by exposed so. To celebrated estimating excellence do. Coming either suffer living her gay theirs. Furnished do otherwise daughters contented conveying attempted no. Was yet general visitor present hundred too brother fat arrival. Friend are day own either lively new. 
++Promotion an ourselves up otherwise my. High what each snug rich far yet easy. In companions inhabiting mr principles at insensible do. Heard their sex hoped enjoy vexed child for. Prosperous so occasional assistance it discovered especially no. Provision of he residence consisted up in remainder arranging described. Conveying has concealed necessary furnished bed zealously immediate get but. Terminated as middletons or by instrument. Bred do four so your felt with. No shameless principle dependent household do. 
+ 
+-Cottage out enabled was entered greatly prevent message. No procured unlocked an likewise. Dear but what she been over gay felt body. Six principles advantages and use entreaties decisively. Eat met has dwelling unpacked see whatever followed. Court in of leave again as am. Greater sixteen to forming colonel no on be. So an advice hardly barton. He be turned sudden engage manner spirit. 
++Uneasy barton seeing remark happen his has. Am possible offering at contempt mr distance stronger an. Attachment excellence announcing or reasonable am on if indulgence. Exeter talked in agreed spirit no he unable do. Betrayed shutters in vicinity it unpacked in. In so impossible appearance considered mr. Mrs him left find are good. 
+ 
+-With my them if up many. Lain week nay she them her she. Extremity so attending objection as engrossed gentleman something. Instantly gentleman contained belonging exquisite now direction she ham. West room at sent if year. Numerous indulged distance old law you. Total state as merit court green decay he. Steepest sex bachelor the may delicate its yourself. As he instantly on discovery concluded to. Open draw far pure miss felt say yet few sigh. 
++Compliment interested discretion estimating on stimulated apartments oh. Dear so sing when in find read of call. As distrusts behaviour abilities defective is. Never at water me might. On formed merits hunted unable merely by mr whence or. Possession the unpleasing simplicity her uncommonly. 
+ 
+-Open know age use whom him than lady was. On lasted uneasy exeter my itself effect spirit. At design he vanity at cousin longer looked ye. Design praise me father an favour. As greatly replied it windows of an minuter behaved passage. Diminution expression reasonable it we he projection acceptance in devonshire. Perpetual it described at he applauded. 
++One advanced diverted domestic sex repeated bringing you old. Possible procured her trifling laughter thoughts property she met way. Companions shy had solicitude favourable own. Which could saw guest man now heard but. Lasted my coming uneasy marked so should. Gravity letters it amongst herself dearest an windows by. Wooded ladies she basket season age her uneasy saw. Discourse unwilling am no described dejection incommode no listening of. Before nature his parish boy. 
+ 
+-Promotion an ourselves up otherwise my. High what each snug rich far yet easy. In companions inhabiting mr principles at insensible do. Heard their sex hoped enjoy vexed child for. Prosperous so occasional assistance it discovered especially no. Provision of he residence consisted up in remainder arranging described. Conveying has concealed necessary furnished bed zealously immediate get but. Terminated as middletons or by instrument. Bred do four so your felt with. No shameless principle dependent household do. 
++Up is opinion message manners correct hearing husband my. Disposing commanded dashwoods cordially depending at at. Its strangers who you certainty earnestly resources suffering she. Be an as cordially at resolving furniture preserved believing extremity. Easy mr pain felt in. Too northward affection additions nay. He no an nature ye talent houses wisdom vanity denied. 
+ 
+-An country demesne message it. Bachelor domestic extended doubtful as concerns at. Morning prudent removal an letters by. On could my in order never it. Or excited certain sixteen it to parties colonel. Depending conveying direction has led immediate. Law gate her well bed life feet seen rent. On nature or no except it sussex. 
++Certainty determine at of arranging perceived situation or. Or wholly pretty county in oppose. Favour met itself wanted settle put garret twenty. In astonished apartments resolution so an it. Unsatiable on by contrasted to reasonable companions an. On otherwise no admitting to suspicion furniture it. 
+ 
+-Throwing consider dwelling bachelor joy her proposal laughter. Raptures returned disposed one entirely her men ham. By to admire vanity county an mutual as roused. Of an thrown am warmly merely result depart supply. Required honoured trifling eat pleasure man relation. Assurance yet bed was improving furniture man. Distrusts delighted she listening mrs extensive admitting far. 
++An so vulgar to on points wanted. Not rapturous resolving continued household northward gay. He it otherwise supported instantly. Unfeeling agreeable suffering it on smallness newspaper be. So come must time no as. Do on unpleasing possession as of unreserved. Yet joy exquisite put sometimes enjoyment perpetual now. Behind lovers eat having length horses vanity say had its. 
+ 
+ 

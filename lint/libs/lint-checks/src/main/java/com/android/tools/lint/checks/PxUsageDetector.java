@@ -181,6 +181,16 @@ public class PxUsageDetector extends LayoutDetector {
                             Location secondary = mTextSizeUsage.get(name).resolve();
                             secondary.setMessage("Dimension used as a text size here");
                             location.setSecondary(secondary);
+
+                            if (secondary.getSource() instanceof Node) {
+                                if (context.getDriver()
+                                        .isSuppressed(
+                                                context, DP_ISSUE, (Node) secondary.getSource())) {
+                                    // Suppressed at the usage site
+                                    break;
+                                }
+                            }
+
                             context.report(
                                     DP_ISSUE, attribute, location, message, createDpToSpFix());
                             break;

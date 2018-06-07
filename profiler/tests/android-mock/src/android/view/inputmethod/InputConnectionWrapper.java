@@ -11,15 +11,15 @@ public class InputConnectionWrapper implements InputConnection {
 
     public InputConnectionWrapper() {
         mMockConnection = new MockInputConnection();
-        mInputConnection = new WeakReference<>(mMockConnection);
+        mInputConnection = new WeakReference<InputConnection>(mMockConnection);
     }
 
     public InputConnectionWrapper(InputConnection ic, boolean mutable) {
-        mInputConnection = new WeakReference<>(ic);
+        mInputConnection = new WeakReference<InputConnection>(ic);
     }
 
     public void setTarget(InputConnection connection) {
-        mInputConnection = new WeakReference<>(connection);
+        mInputConnection = new WeakReference<InputConnection>(connection);
     }
 
     public boolean setComposingText(CharSequence charSequence, int i) {
@@ -28,6 +28,11 @@ public class InputConnectionWrapper implements InputConnection {
 
     public boolean commitText(CharSequence charSequence, int i) {
         return false;
+    }
+
+    @Override
+    public void closeConnection() {
+        mInputConnection.get().closeConnection();
     }
 
     // Function to expose underlaying InputConnection used only by test

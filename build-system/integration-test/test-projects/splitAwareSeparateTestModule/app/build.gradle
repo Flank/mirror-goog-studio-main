@@ -10,6 +10,7 @@ android {
   defaultConfig {
     versionCode 12
     minSdkVersion 21
+    //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
     targetSdkVersion 21
   }
 

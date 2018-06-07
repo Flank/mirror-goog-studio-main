@@ -8,6 +8,7 @@ android {
 
     defaultConfig {
         minSdkVersion 23
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 23
     }
 }

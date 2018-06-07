@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -46,29 +47,21 @@ public class OkHttpTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
 
-    private int mySdkLevel;
-    private PerfDriver myPerfDriver;
+    @Rule public final PerfDriver myPerfDriver;
+
     private FakeAndroidDriver myAndroidDriver;
     private GrpcUtils myGrpc;
     private Session mySession;
 
     public OkHttpTest(int sdkLevel) {
-        mySdkLevel = sdkLevel;
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void before() throws IOException {
-        myPerfDriver = new PerfDriver(mySdkLevel);
-        myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
-
-        // Invoke beginSession to establish a session we can use to query data
-        mySession =
-                TestUtils.isOPlusDevice(mySdkLevel)
-                        ? myGrpc.beginSessionWithAgent(
-                                myPerfDriver.getPid(), myPerfDriver.getCommunicationPort())
-                        : myGrpc.beginSession(myPerfDriver.getPid());
+        mySession = myPerfDriver.getSession();
     }
 
     @Test

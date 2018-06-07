@@ -22,8 +22,11 @@ import com.android.SdkConstants;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
+import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -34,6 +37,7 @@ import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +69,6 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         SdkHandler.setTestSdkFolder(TestUtils.getSdk());
 
         sdkDirectory = TestUtils.getSdk();
-        ndkHandler = Mockito.mock(NdkHandler.class);
         minSdkVersion = 123;
         variantName = "dummy variant name";
         abis = Lists.newArrayList();
@@ -104,25 +107,24 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
 
     @Test
     public void testGetCacheArguments() {
-        CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
-                new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                        ndkHandler,
+        JsonGenerationVariantConfiguration config =
+                new JsonGenerationVariantConfiguration(
+                        new NativeBuildSystemVariantConfig(
+                                new HashSet<>(), new HashSet<>(), buildArguments, cFlags, cppFlags),
                         variantName,
-                        abis,
-                        androidBuilder,
+                        makeFile,
                         sdkFolder,
                         ndkFolder,
                         soFolder,
                         objFolder,
                         jsonFolder,
-                        makeFile,
-                        cmakeFolder,
                         debuggable,
-                        buildArguments,
-                        cFlags,
-                        cppFlags,
-                        nativeBuildConfigurationsJsons,
-                        stats);
+                        abis,
+                        Revision.parseRevision("15"),
+                        nativeBuildConfigurationsJsons);
+        CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
+                new CmakeAndroidNinjaExternalNativeJsonGenerator(
+                        config, androidBuilder, cmakeFolder, stats);
         List<String> cacheArguments =
                 cmakeAndroidNinjaStrategy.getProcessBuilderArgs("x86", 12, jsonFolder);
 

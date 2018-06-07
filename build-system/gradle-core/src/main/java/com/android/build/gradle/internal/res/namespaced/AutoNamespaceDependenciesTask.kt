@@ -63,7 +63,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     @InputFiles fun getClassesJarFiles(): FileCollection = jarFiles.artifactFiles
     @InputFiles fun getDependenciesFiles(): FileCollection = dependencies.files
 
-    @VisibleForTesting var log: Logger? = null
+    @VisibleForTesting internal var log: Logger? = null
     private var symbolTablesCache: HashMap<File, SymbolTable> = HashMap()
     private var usedSanitizedDependencyNames: HashSet<String> = HashSet()
 
@@ -215,7 +215,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             for (rFile in node.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)) {
                 if (!symbolTablesCache.contains(rFile)) {
                     val table = SymbolIo.readRDef(rFile.toPath())
-                    symbolTablesCache.put(rFile, table)
+                    symbolTablesCache[rFile] = table
                 }
                 builder.add(symbolTablesCache[rFile]!!)
             }

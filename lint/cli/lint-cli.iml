@@ -27,7 +27,7 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="module" module-name="lint-kotlin" />
-    <orderEntry type="module" module-name="analytics-protos-base" />
+    <orderEntry type="library" name="studio-analytics-proto" level="project" />
     <orderEntry type="module" module-name="analytics-shared-base" />
     <orderEntry type="module" module-name="analytics-tracker-base" />
   </component>

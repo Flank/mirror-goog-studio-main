@@ -112,7 +112,7 @@ public class DexMergerTransform extends Transform {
     private final int minSdkVersion;
     private final boolean isDebuggable;
     @NonNull private final MessageReceiver messageReceiver;
-    @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
+    @NonNull private final ForkJoinPool forkJoinPool = new ForkJoinPool();
     private final boolean includeFeaturesInScopes;
 
     public DexMergerTransform(

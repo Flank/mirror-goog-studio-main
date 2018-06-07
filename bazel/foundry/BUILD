@@ -4,6 +4,6 @@ java_test(
     name = "test",
     srcs = ["FoundryTest.java"],
     jvm_flags = ["-Djava.security.debug=all"],
-    tags = ["no_test_local"],
+    tags = ["manual"],
     test_class = "FoundryTest",
 )

@@ -51,7 +51,7 @@ class ExternalLibsMergerTransform(
         private val callableFactory : DexMergerTransformCallable.Factory) : Transform() {
 
     private val logger = LoggerWrapper.getLogger(ExternalLibsMergerTransform::class.java)
-    private val forkJoinPool = ForkJoinPool.commonPool()
+    private val forkJoinPool = ForkJoinPool()
 
     override fun getName() = "externalLibsDexMerger"
 
@@ -75,9 +75,8 @@ class ExternalLibsMergerTransform(
                 .flatMap { it.jarInputs }
 
         // if we are in incremental mode and none of our inputs have changed, return immediately.
-        if (transformInvocation.isIncremental && flattenInputs
-                .filter { it.status != Status.NOTCHANGED }
-                .isEmpty()) {
+        if (transformInvocation.isIncremental
+            && flattenInputs.none { it.status != Status.NOTCHANGED }) {
             return
         }
 

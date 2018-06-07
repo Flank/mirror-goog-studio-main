@@ -92,7 +92,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
                 }
                 merger =
                         DexArchiveMerger.createD8DexMerger(
-                                messageReceiver, d8MinSdkVersion, isDebuggable);
+                                messageReceiver, d8MinSdkVersion, isDebuggable, forkJoinPool);
                 break;
             default:
                 throw new AssertionError("Unknown dex merger " + dexMerger.name());

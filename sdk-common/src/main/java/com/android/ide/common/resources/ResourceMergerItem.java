@@ -53,6 +53,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.util.PathString;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
+import com.android.utils.HashCodes;
 import com.android.utils.XmlUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -142,13 +143,18 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     /**
-     * Returns the optional string value of the resource. Can be null
+     * Returns the optional string value of the resource.
      *
      * @return the value or null.
      */
     @Nullable
     public String getValueText() {
-        return mValue != null ? mValue.getTextContent() : null;
+        if (mValue == null) {
+            return null;
+        }
+        synchronized (mValue.getOwnerDocument()) {
+            return mValue.getTextContent();
+        }
     }
 
     @Override
@@ -235,7 +241,10 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
         String typeName = mType.getName();
         if (mType == ResourceType.PUBLIC && mValue != null) {
-            String typeAttribute = ((Element) mValue).getAttribute(ATTR_TYPE);
+            String typeAttribute;
+            synchronized (mValue.getOwnerDocument()) {
+                typeAttribute = ((Element) mValue).getAttribute(ATTR_TYPE);
+            }
             if (typeAttribute != null) {
                 typeName += "_" + typeAttribute;
             }
@@ -378,31 +387,48 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
     @Override
     public int hashCode() {
-        return (31 * super.hashCode() + mType.hashCode()) * 31 + mNamespace.hashCode();
+        return HashCodes.mix(super.hashCode(), mType.hashCode(), mNamespace.hashCode());
     }
 
     @NonNull
     private ResourceValue parseXmlToResourceValue() {
         assert mValue != null;
 
-        final NamedNodeMap attributes = mValue.getAttributes();
-
         ResourceValue value;
+
+        Document document = mValue.getOwnerDocument();
+        // XML nodes used by FrameworkResourceRepository don't maintain document references
+        // but they are thread-safe.
+        if (document == null) {
+            value = doParseXmlToResourceValue();
+        } else {
+            // Apache Xerces XML DOM is not thread-safe even for reading.
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
+            synchronized (document) {
+                value = doParseXmlToResourceValue();
+            }
+        }
+
+        value.setNamespaceResolver(getNamespaceResolver(this.mValue));
+        return value;
+    }
+
+    @NonNull
+    private ResourceValue doParseXmlToResourceValue() {
+        NamedNodeMap attributes = mValue.getAttributes();
 
         switch (mType) {
             case STYLE:
                 String parent = getAttributeValue(attributes, ATTR_PARENT);
-                value =
-                        parseStyleValue(
-                                new StyleResourceValueImpl(
-                                        mNamespace, mType, getName(), parent, mLibraryName));
-                break;
+                return parseStyleValue(
+                        new StyleResourceValueImpl(
+                                mNamespace, mType, getName(), parent, mLibraryName));
+
             case DECLARE_STYLEABLE:
-                value =
-                        parseDeclareStyleable(
-                                new DeclareStyleableResourceValueImpl(
-                                        mNamespace, mType, getName(), null, mLibraryName));
-                break;
+                return parseDeclareStyleable(
+                        new DeclareStyleableResourceValueImpl(
+                                mNamespace, mType, getName(), null, mLibraryName));
+
             case ARRAY:
                 ArrayResourceValueImpl arrayValue =
                         new ArrayResourceValueImpl(mNamespace, mType, getName(), mLibraryName) {
@@ -421,8 +447,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                                 return super.getDefaultIndex();
                             }
                         };
-                value = parseArrayValue(arrayValue);
-                break;
+                return parseArrayValue(arrayValue);
+
             case PLURALS:
                 PluralsResourceValueImpl pluralsResourceValue =
                         new PluralsResourceValueImpl(
@@ -441,20 +467,17 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                                 return super.getValue();
                             }
                         };
-                value = parsePluralsValue(pluralsResourceValue);
-                break;
+                return parsePluralsValue(pluralsResourceValue);
+
             case ATTR:
-                value =
-                        parseAttrValue(
-                                new AttrResourceValueImpl(
-                                        mNamespace, mType, getName(), mLibraryName));
-                break;
+                return parseAttrValue(
+                        new AttrResourceValueImpl(mNamespace, mType, getName(), mLibraryName));
+
             case STRING:
-                value =
-                        parseTextValue(
-                                new TextResourceValueImpl(
-                                        mNamespace, mType, getName(), null, null, mLibraryName));
-                break;
+                return parseTextValue(
+                        new TextResourceValueImpl(
+                                mNamespace, mType, getName(), null, null, mLibraryName));
+
             case ANIMATOR:
             case DRAWABLE:
             case INTERPOLATOR:
@@ -462,21 +485,13 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             case MENU:
             case MIPMAP:
             case TRANSITION:
-                value =
-                        parseFileName(
-                                new ResourceValueImpl(
-                                        mNamespace, mType, getName(), null, mLibraryName));
-                break;
-            default:
-                value =
-                        parseValue(
-                                new ResourceValueImpl(
-                                        mNamespace, mType, getName(), null, mLibraryName));
-                break;
-        }
+                return parseFileName(
+                        new ResourceValueImpl(mNamespace, mType, getName(), null, mLibraryName));
 
-        value.setNamespaceResolver(getNamespaceResolver(this.mValue));
-        return value;
+            default:
+                return parseValue(
+                        new ResourceValueImpl(mNamespace, mType, getName(), null, mLibraryName));
+        }
     }
 
     @NonNull
@@ -486,13 +501,35 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             @Nullable
             @Override
             public String uriToPrefix(@NonNull String namespaceUri) {
-                return node.lookupPrefix(namespaceUri);
+                Document document = node.getOwnerDocument();
+                // XML nodes used by FrameworkResourceRepository don't maintain document references
+                // but they are thread-safe.
+                if (document == null) {
+                    return node.lookupPrefix(namespaceUri);
+                } else {
+                    // Apache Xerces XML DOM is not thread-safe even for reading.
+                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                    synchronized (document) {
+                        return node.lookupPrefix(namespaceUri);
+                    }
+                }
             }
 
             @Nullable
             @Override
             public String prefixToUri(@NonNull String namespacePrefix) {
-                return node.lookupNamespaceURI(namespacePrefix);
+                Document document = node.getOwnerDocument();
+                // XML nodes used by FrameworkResourceRepository don't maintain document references
+                // but they are thread-safe.
+                if (document == null) {
+                    return node.lookupNamespaceURI(namespacePrefix);
+                } else {
+                    // Apache Xerces XML DOM is not thread-safe even for reading.
+                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                    synchronized (document) {
+                        return node.lookupNamespaceURI(namespacePrefix);
+                    }
+                }
             }
         };
     }

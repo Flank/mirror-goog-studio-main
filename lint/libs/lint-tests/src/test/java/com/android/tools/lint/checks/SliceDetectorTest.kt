@@ -950,6 +950,100 @@ class SliceDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test79784005_part1() {
+        // Regression test for
+        // 79784005: "at least one item in row" Lint check false positive in Kotlin when using apply
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.net.Uri
+                import androidx.slice.Slice
+                import androidx.slice.builders.ListBuilder
+                import androidx.slice.builders.SliceAction
+
+                internal fun createDemoSlice1(
+                        context: Context,
+                        sliceUri: Uri,
+                        primary: SliceAction): Slice = ListBuilder(context, sliceUri, 5L)
+                        .apply {
+                            addRow(ListBuilder.RowBuilder(context, sliceUri)
+                                    .setTitle("URI found.")
+                                    .setPrimaryAction(primary))
+                        }.build()
+
+                internal fun createDemoSlice2(
+                        context: Context,
+                        sliceUri: Uri,
+                        primary: SliceAction): Slice = ListBuilder(context, sliceUri, 5L)
+                        .run {
+                            addRow(ListBuilder.RowBuilder(context, sliceUri)
+                                    .setTitle("URI found.")
+                                    .setPrimaryAction(primary))
+                        }.build()
+
+                internal fun createDemoSlice3(
+                        context: Context,
+                        sliceUri: Uri,
+                        primary: SliceAction): Slice = with(ListBuilder(context, sliceUri, 5L)) {
+                    addRow(ListBuilder.RowBuilder(context, sliceUri)
+                            .setTitle("URI found.")
+                            .setPrimaryAction(primary))
+                }.build()
+                """
+            ).indented(),
+            *stubs
+        ).run().expectClean()
+    }
+
+    fun test79784005_part2() {
+        // Regression test for comment #2 of
+        // 79784005: "at least one item in row" Lint check false positive in Kotlin when using apply
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+                import android.net.Uri;
+
+                import androidx.slice.Slice;
+                import androidx.slice.builders.ListBuilder;
+                import androidx.slice.builders.ListBuilder.RowBuilder;
+                import androidx.slice.builders.SliceAction;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public class SliceTest {
+                    Slice createSlice1(Uri sliceUri, Context context, SliceAction primary) {
+                        return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
+                                .addRow(new RowBuilder(context, sliceUri).setTitle("URI found.").setSubtitle("Subtitle").setPrimaryAction(primary))
+                                .build();
+                    }
+
+                    Slice createSlice2(Uri sliceUri, Context context, SliceAction primary) {
+                        return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
+                                .addRow(new ListBuilder.RowBuilder(context, sliceUri).setPrimaryAction(primary))
+                                .build();
+                    }
+
+                    Slice createSlice3(Uri sliceUri, Context context, SliceAction primary) {
+                        return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
+                                .addRow(b -> b
+                                        .setTitle("My title")
+                                        .setPrimaryAction(primary))
+                                .build();
+                    }
+                }
+                """
+            ).indented(),
+            *stubs
+        ).run().expectClean()
+    }
+
+    // Stubs:
+
     private val listBuilder: TestFile = java(
         """
             package androidx.slice.builders;

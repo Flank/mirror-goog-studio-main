@@ -46,10 +46,15 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     public static final ResourceNamespace RES_AUTO = new ResAutoNamespace();
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
     public static final ResourceNamespace AAPT = new AaptNamespace();
+    /** The namespace of the Androidx appcompat library when namespaces are used. */
+    public static final ResourceNamespace APPCOMPAT = fromPackageName("androidx.appcompat");
+    /** The namespace of the old appcompat library when namespaces are used. */
+    public static final ResourceNamespace APPCOMPAT_LEGACY =
+            fromPackageName("android.support.v7.appcompat"); //
 
     private static final Logger LOG = Logger.getLogger(ResourceNamespace.class.getSimpleName());
 
-    @SuppressWarnings("StaticNonFinalField")
+    @SuppressWarnings("StaticNonFinalField") // Non-final to be able to set in code.
     public static boolean noncomplianceLogging = false;
 
     /**

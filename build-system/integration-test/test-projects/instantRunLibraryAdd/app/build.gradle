@@ -6,6 +6,7 @@ android {
     defaultConfig {
         applicationId "noapkrebuilt.tests.android.com.b220425"
         minSdkVersion 19
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"

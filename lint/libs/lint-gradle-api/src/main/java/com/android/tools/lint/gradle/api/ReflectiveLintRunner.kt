@@ -62,6 +62,8 @@ class ReflectiveLintRunner {
                 ExtractAnnotationRequest::class.java
             )
             analyzeMethod.invoke(driver, request)
+        } catch (e: ExtractErrorException) {
+            throw GradleException(e.message)
         } catch (e: InvocationTargetException) {
             if (e.targetException is GradleException) {
                 // Build error from lint -- pass it on
@@ -207,4 +209,6 @@ class ReflectiveLintRunner {
             return urls
         }
     }
+
+    class ExtractErrorException(override val message: String) : RuntimeException(message)
 }

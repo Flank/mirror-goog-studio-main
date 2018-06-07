@@ -76,6 +76,7 @@ class FakeAtraceManager final : public AtraceManager {
     } else if (command.compare("--async_dump") == 0) {
       EXPECT_TRUE(start_profiling_captured_);
       EXPECT_FALSE(stop_profiling_captured_);
+      EXPECT_THAT(additional_args, testing::Eq("-b 8192"));
       ValidatePath(path);
       write_data_callback_(path, profiling_dumps_captured_);
       profiling_dumps_captured_++;

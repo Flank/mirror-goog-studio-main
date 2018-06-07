@@ -37,9 +37,10 @@ void Daemon::RegisterComponent(ProfilerComponent* component) {
 }
 
 void Daemon::RunServer(const string& server_address) {
-  builder_.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  int port = 0;
+  builder_.AddListeningPort(server_address, grpc::InsecureServerCredentials(), &port);
   std::unique_ptr<grpc::Server> server(builder_.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
+  std::cout << "Server listening on " << server_address << " port:" << port << std::endl;
   server->Wait();
 }
 }  // namespace profiler

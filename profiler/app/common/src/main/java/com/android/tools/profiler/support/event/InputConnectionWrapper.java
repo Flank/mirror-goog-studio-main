@@ -43,4 +43,10 @@ public class InputConnectionWrapper extends android.view.inputmethod.InputConnec
         sendKeyboardEvent(charSequence.toString());
         return super.commitText(charSequence, i);
     }
+
+    @Override
+    public void closeConnection() {
+        super.closeConnection();
+        setTarget(null);
+    }
 }

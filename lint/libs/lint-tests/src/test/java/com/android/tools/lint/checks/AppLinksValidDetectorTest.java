@@ -24,7 +24,6 @@ import com.android.utils.XmlUtils;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -1311,6 +1310,49 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test79995047() {
+        // Regression test for https://issuetracker.google.com/issues/79995047
+
+        //noinspection all // Sample code
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
+                                        + "    package=\"test.pkg\" >\n"
+                                        + "\n"
+                                        + "    <application>\n"
+                                        + "        <activity>\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <!-- Following https://developer.android.com/guide/topics/providers/content-provider-basics#MIMETypeReference -->\n"
+                                        + "                <data android:mimeType=\"vnd.android.cursor.item/vnd.${applicationId}.item\" /> <!-- OK -->\n"
+                                        + "            </intent-filter>\n"
+                                        + "            <intent-filter>\n"
+                                        // Try with place holder that has capitalized text
+                                        + "                <data android:mimeType=\"vnd.android.cursor.item/vnd.${placeholder}.item\" /> <!-- WARN -->\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"),
+                        gradle(
+                                ""
+                                        + "android {\n"
+                                        + "    defaultConfig {\n"
+                                        + "        manifestPlaceholders = [ placeholder:\"ABC\"]\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/main/AndroidManifest.xml:12: Error: Mime-type matching is case sensitive and should only use lower-case characters (without placeholders, value is vnd.android.cursor.item/vnd.ABCitem) [AppLinkUrlError]\n"
+                                + "                <data android:mimeType=\"vnd.android.cursor.item/vnd.${placeholder}.item\" /> <!-- WARN -->\n"
+                                + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void test68322249() {
         // Regression test for https://issuetracker.google.com/issues/68322249
 
@@ -1340,8 +1382,7 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testStaticValidation()
-            throws IOException, SAXException, ParserConfigurationException {
+    public void testStaticValidation() throws IOException, SAXException {
         // Usage outside of lint
         Document document =
                 XmlUtils.parseDocument(

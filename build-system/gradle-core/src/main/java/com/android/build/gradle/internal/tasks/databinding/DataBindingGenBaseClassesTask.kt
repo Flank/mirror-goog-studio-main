@@ -65,7 +65,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         private set
     // list of v1 artifacts from dependencies
     @get:Optional
-    @get:InputFiles lateinit var v1Artifacts: BuildableArtifact
+    @get:InputFiles
+    lateinit var v1Artifacts: BuildableArtifact
+        private set
     // where to keep the log of the task
     @get:OutputDirectory lateinit var logOutFolder: File
         private set

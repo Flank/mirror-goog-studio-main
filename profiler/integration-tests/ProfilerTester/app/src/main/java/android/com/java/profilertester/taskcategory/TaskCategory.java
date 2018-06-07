@@ -18,6 +18,12 @@ public abstract class TaskCategory {
         /** Method that is called just prior to {@link Task#execute()} begins running. */
         public void preExecute() {}
 
+        /**
+         * Main execution logic for the task.
+         *
+         * @return A displayable string describing the results of the execution. {@code null} is OK
+         *     to return, if there's no useful message to show after the task completes.
+         */
         @Nullable
         protected abstract String execute() throws Exception;
 

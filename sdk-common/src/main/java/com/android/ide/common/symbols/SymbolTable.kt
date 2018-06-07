@@ -22,6 +22,7 @@ import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -237,6 +238,8 @@ abstract class SymbolTable protected constructor() {
                 } else {
                     val existing = this.symbols.get(it.resourceType, it.name)
                     // If we already encountered it, check the qualifiers.
+                    // - if it's a styleable and visibilities don't conflict, merge them into one
+                    //   with the highest visibility of the two
                     // - if they're the same, leave the existing one (the existing one overrode the
                     //   new one)
                     // - if the existing one is PRIVATE_XML_ONLY, use the new one (overriding
@@ -244,17 +247,49 @@ abstract class SymbolTable protected constructor() {
                     // - if the new one is PRIVATE_XML_ONLY, leave the existing one (overridden
                     //   resource was defined as PRIVATE or PUBLIC)
                     // - if neither of them is PRIVATE_XML_ONLY and they differ, that's an error
-                    if (existing.resourceVisibility != it.resourceVisibility) {
-                        if (existing.resourceVisibility == ResourceVisibility.PRIVATE_XML_ONLY) {
+                    if (existing.resourceVisibility != it.resourceVisibility
+                            && existing.resourceVisibility != ResourceVisibility.PRIVATE_XML_ONLY
+                            && it.resourceVisibility != ResourceVisibility.PRIVATE_XML_ONLY) {
+                        // Conflicting visibilities.
+                        throw IllegalResourceVisibilityException(
+                                "Symbol with resource type ${it.resourceType} and name " +
+                                        "${it.name} defined both as ${it.resourceVisibility} and " +
+                                        "${existing.resourceVisibility}.")
+                    }
+                    if (it.resourceType == ResourceType.STYLEABLE) {
+                        // Merge the styleables. Join the children and sort by name, do not keep
+                        // duplicates.
+                        it as Symbol.StyleableSymbol
+                        existing as Symbol.StyleableSymbol
+
+                        val children =
+                                ImmutableList.copyOf(
+                                        mutableSetOf<String>()
+                                                .plus(it.children)
+                                                .plus(existing.children)
+                                                .sorted())
+                        val visibility =
+                                ResourceVisibility.max(
+                                        it.resourceVisibility, existing.resourceVisibility)
+
+                        this.symbols.remove(existing.resourceType, existing.name)
+                        this.symbols.put(
+                                it.resourceType,
+                                it.name,
+                                Symbol.StyleableSymbol(
+                                        it.name,
+                                        ImmutableList.of(),
+                                        children,
+                                        visibility))
+                    } else {
+                        // We only need to replace the existing symbol with the new one if the
+                        // visibilities differ and the new visibility is higher than the old one.
+                        if (it.resourceVisibility > existing.resourceVisibility) {
                             this.symbols.remove(existing.resourceType, existing.name)
                             this.symbols.put(it.resourceType, it.name, it)
-                        } else if (it.resourceVisibility != ResourceVisibility.PRIVATE_XML_ONLY) {
-                            // they differ and neither is PRIVATE_XML_ONLY
-                            throw IllegalResourceVisibilityException(
-                                    "Symbol with resource type ${it.resourceType} and name " +
-                                            "${it.name} defined both as private and public.")
                         }
                     }
+
                 }
             }
             return this

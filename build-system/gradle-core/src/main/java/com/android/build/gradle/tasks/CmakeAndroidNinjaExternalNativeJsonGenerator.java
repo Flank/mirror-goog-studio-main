@@ -19,9 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
-import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
@@ -36,41 +34,11 @@ import java.util.List;
 class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJsonGenerator {
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
-            @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
             @NonNull File cmakeInstallFolder,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                cmakeInstallFolder,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+        super(config, androidBuilder, cmakeInstallFolder, stats);
     }
 
     @NonNull
@@ -91,7 +59,7 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     public String executeProcessAndGetOutput(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
-        String logPrefix = "Variant=" + variantName + " ABI=" + abi + " :";
+        String logPrefix = "Variant=" + config.variantName + " ABI=" + abi + " :";
         return executeBuildProcessAndLogError(
                 androidBuilder,
                 getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
@@ -107,4 +75,4 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
         }
         return new File(getCmakeBinFolder(), "ninja");
     }
-};
+}

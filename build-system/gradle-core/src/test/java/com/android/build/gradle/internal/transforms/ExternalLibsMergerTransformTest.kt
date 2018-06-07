@@ -136,7 +136,7 @@ open class ExternalLibsMergerTransformTest {
                 Mockito.any(),
                 Mockito.any(),
                 Mockito.isNull(),
-                Mockito.eq(ForkJoinPool.commonPool()),
+                Mockito.any(),
                 Mockito.eq(DexMergerTool.D8),
                 Mockito.eq(21),
                 Mockito.eq(true))).thenReturn(callable)
@@ -149,7 +149,7 @@ open class ExternalLibsMergerTransformTest {
                 outputDirCaptor.capture(),
                 outputListCaptor.capture(),
                 Mockito.isNull(),
-                Mockito.eq(ForkJoinPool.commonPool()),
+                Mockito.any(),
                 Mockito.eq(DexMergerTool.D8),
                 Mockito.eq(21),
                 Mockito.eq(true))

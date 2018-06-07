@@ -30,9 +30,11 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
@@ -41,6 +43,7 @@ import com.android.testutils.MockLog;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -372,6 +375,81 @@ public class AvdManagerCliTest {
     }
 
     @Test
+    public void validateResponse() {
+        // Create a representative hardware configuration file
+        File hardwareDefs = new File(SDK_LOCATION, SdkConstants.FN_HARDWARE_INI);
+        createHardwarePropertiesFile(hardwareDefs.getAbsolutePath());
+        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
+          .parseHardwareDefinitions(
+            new FileOpFileWrapper(hardwareDefs, mFileOp, false), mLogger);
+
+        //HardwareProperties.HardwareProperty[] hwProperties = hwMap.values().toArray(
+        //  new HardwareProperties.HardwareProperty[hwMap.size()]);
+
+        HardwareProperties.HardwareProperty[] hwProperties = hwMap.values().toArray(
+          new HardwareProperties.HardwareProperty[0]);
+
+        for (HardwareProperties.HardwareProperty aProperty : hwProperties) {
+            switch (aProperty.getName()) {
+                case "booleanPropName":
+                    assertEquals("Boolean 'yes' should be valid",
+                               "yes", AvdManagerCli.validateResponse("yes", aProperty, mLogger));
+                    assertEquals("Boolean 'Yes' should be valid",
+                               "yes", AvdManagerCli.validateResponse("Yes", aProperty, mLogger));
+                    assertEquals("Boolean 'no' should be valid",
+                               "no", AvdManagerCli.validateResponse("no", aProperty, mLogger));
+                    assertEquals("Boolean 'true' should be invalid",
+                                 null, AvdManagerCli.validateResponse("true", aProperty, mLogger));
+                    assertEquals("Boolean 'maybe' should be invalid",
+                               null, AvdManagerCli.validateResponse("maybe", aProperty, mLogger));
+                    break;
+                case "integerPropName":
+                    assertEquals("Integer '123' should be valid",
+                                 "123", AvdManagerCli.validateResponse("123", aProperty, mLogger));
+                    assertEquals("Integer '123x' should be invalid",
+                                 null, AvdManagerCli.validateResponse("123x", aProperty, mLogger));
+                    break;
+                case "integerEnumPropName":
+                    assertEquals("Integer enum '40' should be valid",
+                                 "40", AvdManagerCli.validateResponse("40", aProperty, mLogger));
+                    assertEquals("Integer enum '45' should be invalid",
+                                 null, AvdManagerCli.validateResponse("45", aProperty, mLogger));
+                    break;
+                case "stringPropName":
+                    assertEquals("String 'Whatever$^*)#?!' should be valid",
+                                 "Whatever$^*)#?!", AvdManagerCli.validateResponse("Whatever$^*)#?!", aProperty, mLogger));
+                    break;
+                case "stringEnumPropName":
+                    assertEquals("String enum 'okString0' should be valid",
+                                 "okString0", AvdManagerCli.validateResponse("okString0", aProperty, mLogger));
+                    assertEquals("String enum 'okString3' should be invalid",
+                                 null, AvdManagerCli.validateResponse("okString3", aProperty, mLogger));
+                    break;
+                case "stringEnumTemplatePropName":
+                    assertEquals("String enum 'fixedString' should be valid",
+                                 "fixedString", AvdManagerCli.validateResponse("fixedString", aProperty, mLogger));
+                    assertEquals("String enum 'extensibleString0' should be valid",
+                                 "extensibleString0", AvdManagerCli.validateResponse("extensibleString0", aProperty, mLogger));
+                    assertEquals("String enum 'extensibleString123' should be valid",
+                                 "extensibleString123", AvdManagerCli.validateResponse("extensibleString123", aProperty, mLogger));
+                    assertEquals("String enum 'extensibleStringPlus' should be invalid",
+                                 null, AvdManagerCli.validateResponse("extensibleStringPlus", aProperty, mLogger));
+                    assertEquals("String enum '...' should be invalid",
+                                 null, AvdManagerCli.validateResponse("...", aProperty, mLogger));
+                    assertEquals("String enum 'fixedString3' should be invalid",
+                                 null, AvdManagerCli.validateResponse("fixedString3", aProperty, mLogger));
+                    break;
+                case "diskSizePropName":
+                    assertEquals("Disk size '50MB' should be valid",
+                                 "50MB", AvdManagerCli.validateResponse("50MB", aProperty, mLogger));
+                    break;
+                default:
+                    fail("Unexpected hardware property type: " + aProperty.getName());
+            }
+        }
+    }
+
+    @Test
     public void packageHelp() throws Exception {
         try {
             mCli.run(new String[] {"create", "avd", "--name", "testAvd", "-d", "Nexus 6P"});
@@ -427,5 +505,53 @@ public class AvdManagerCliTest {
         assertEquals(
                 "E Invalid --tag foo for the selected package. Valid tags are:\n" + "android-wear",
                 Joiner.on("").join(mLogger.getMessages()));
+    }
+
+    private void createHardwarePropertiesFile(String filePath) {
+        mFileOp.recordExistingFile(filePath,
+                                   "name        = booleanPropName\n"
+                                   + "type        = boolean\n"
+                                   + "default     = yes\n"
+                                   + "abstract    = A bool\n"
+                                   + "description = A bool value\n"
+
+                                   + "name        = integerPropName\n"
+                                   + "type        = integer\n"
+                                   + "default     = 123\n"
+                                   + "abstract    = An integer\n"
+                                   + "description = A value that is integral\n"
+
+                                   + "name        = integerEnumPropName\n"
+                                   + "type        = integer\n"
+                                   + "enum        = 10, 20, 30, 40\n"
+                                   + "default     = 10\n"
+                                   + "abstract    = An integer enum\n"
+                                   + "description = One of a set of allowed integer values\n"
+
+                                   + "name        = stringPropName\n"
+                                   + "type        = string\n"
+                                   + "default     = defString\n"
+                                   + "abstract    = A string\n"
+                                   + "description = A property that is a string\n"
+
+                                   + "name        = stringEnumPropName\n"
+                                   + "type        = string\n"
+                                   + "enum        = okString0, okString1\n"
+                                   + "default     = okString1\n"
+                                   + "abstract    = A restricted string\n"
+                                   + "description = One of a set of allowed values\n"
+
+                                   + "name        = stringEnumTemplatePropName\n"
+                                   + "type        = string\n"
+                                   + "enum        = fixedString, anotherFixedString, extensibleString0, ...\n"
+                                   + "default     = fixedString\n"
+                                   + "abstract    = An extensible string\n"
+                                   + "description = One of a set of extensible allowed values\n"
+
+                                   + "name        = diskSizePropName\n"
+                                   + "type        = diskSize\n"
+                                   + "default     = 50MB\n"
+                                   + "abstract    = A size with units\n"
+                                   + "description = A string-like size with units\n");
     }
 }

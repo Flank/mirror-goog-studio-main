@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 339;
+    public static final int INITIAL_CAPACITY = 340;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -366,6 +366,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE);
         issues.add(WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE);
         issues.add(WebViewDetector.ISSUE);
+        issues.add(WorkManagerDetector.ISSUE);
         issues.add(WrongCallDetector.ISSUE);
         issues.add(WrongCaseDetector.WRONG_CASE);
         issues.add(WrongIdDetector.INVALID);

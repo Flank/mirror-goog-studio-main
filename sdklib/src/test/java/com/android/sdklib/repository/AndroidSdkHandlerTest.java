@@ -19,9 +19,15 @@ import static com.android.repository.testframework.FakePackage.FakeLocalPackage;
 
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
+import com.android.repository.api.RepositorySource;
+import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.impl.meta.RepositoryPackages;
+import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
+import java.util.Locale;
+import java.util.Set;
 import junit.framework.TestCase;
 
 /**
@@ -128,6 +134,38 @@ public class AndroidSdkHandlerTest extends TestCase {
                     Comparator.<Revision>naturalOrder());
             fail();
         } catch (NumberFormatException ignored) {
+        }
+    }
+
+    public void testLocale() {
+        Locale origDefault = Locale.getDefault();
+        Locale.setDefault(new Locale("hi", "IN"));
+        try {
+            Set<RepositorySourceProvider> providers =
+                    AndroidSdkHandler.getInstance(TestUtils.getSdk())
+                            .getSdkManager(new FakeProgressIndicator())
+                            .getSourceProviders();
+            boolean found = false;
+            StringBuilder urls = new StringBuilder();
+            for (RepositorySourceProvider provider : providers) {
+                try {
+                    for (RepositorySource source :
+                            provider.getSources(null, new FakeProgressIndicator(), false)) {
+                        String url = source.getUrl();
+                        if (url.equals(
+                                "https://dl.google.com/android/repository/repository2-1.xml")) {
+                            found = true;
+                            break;
+                        }
+                        urls.append(url + "\n");
+                    }
+                } catch (Exception e) {
+                    // ignore, remote providers will throw.
+                }
+            }
+            assertTrue(urls.toString(), found);
+        } finally {
+            Locale.setDefault(origDefault);
         }
     }
 }

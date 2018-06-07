@@ -20,13 +20,11 @@ import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -53,40 +51,11 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     @NonNull private final File projectDir;
 
     NdkBuildExternalNativeJsonGenerator(
-            @NonNull NdkHandler ndkHandler,
-            @NonNull String variantName,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull JsonGenerationVariantConfiguration config,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File projectDir,
-            @NonNull File sdkFolder,
-            @NonNull File ndkFolder,
-            @NonNull File soFolder,
-            @NonNull File objFolder,
-            @NonNull File jsonFolder,
-            @NonNull File makeFile,
-            boolean debuggable,
-            @Nullable List<String> buildArguments,
-            @Nullable List<String> cFlags,
-            @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(
-                ndkHandler,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons,
-                stats);
+        super(config, androidBuilder, stats);
         this.projectDir = projectDir;
         this.stats.setNativeBuildSystemType(
                 GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD);
@@ -116,7 +85,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         //   project/app/build.gradle
         //
         // Then, right now, the current folder is 'project/' but ndk-build -n was executed in
-        // 'project/app/'. For this reason, any relative paths in the ndk-build -n ouput will be
+        // 'project/app/'. For this reason, any relative paths in the ndk-build -n output will be
         // relative to 'project/app/' but a direct call now to getAbsolutePath() would produce a
         // path relative to 'project/' which is wrong.
         //
@@ -140,7 +109,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                                                 applicationMk,
                                                 true /* removeJobsFlag */)
                                         + " clean",
-                                variantName,
+                                config.variantName,
                                 buildOutput)
                         .build();
 

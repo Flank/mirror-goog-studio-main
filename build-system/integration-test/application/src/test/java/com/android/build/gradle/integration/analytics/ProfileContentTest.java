@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.performance;
+package com.android.build.gradle.integration.analytics;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
-import java.util.Collection;
+import java.util.HashSet;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,17 +46,28 @@ public class ProfileContentTest {
     public void testProfileProtoContentMakesSense() throws Exception {
         ProfileCapturer capturer = new ProfileCapturer(project);
 
-        Collection<GradleBuildProfile> profiles =
-                capturer.capture(
-                        () -> {
-                            project.model().fetchAndroidProjects();
-                            project.execute("assembleDebug");
-                            project.execute("assembleDebug");
-                        });
+        GradleBuildProfile getModel =
+                Iterables.getOnlyElement(
+                        capturer.capture(
+                                () -> {
+                                    project.model().fetchAndroidProjects();
+                                }));
 
-        assertThat(profiles).hasSize(3);
+        GradleBuildProfile cleanBuild =
+                Iterables.getOnlyElement(
+                        capturer.capture(
+                                () -> {
+                                    project.execute("assembleDebug");
+                                }));
 
-        for (GradleBuildProfile profile : profiles) {
+        GradleBuildProfile noOpBuild =
+                Iterables.getOnlyElement(
+                        capturer.capture(
+                                () -> {
+                                    project.execute("assembleDebug");
+                                }));
+
+        for (GradleBuildProfile profile : ImmutableList.of(getModel, cleanBuild, noOpBuild)) {
             assertThat(profile.getSpanCount()).isGreaterThan(0);
 
             assertThat(profile.getProjectCount()).isGreaterThan(0);
@@ -67,6 +80,8 @@ public class ProfileContentTest {
             assertThat(gbv.getMinSdkVersion().getApiLevel()).isEqualTo(3);
             assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isFalse();
             assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse();
+            assertThat(new HashSet<>(getModel.getRawProjectIdList()))
+                    .containsExactly("com.example.helloworld");
         }
     }
 }

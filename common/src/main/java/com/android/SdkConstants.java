@@ -2442,6 +2442,8 @@ public final class SdkConstants {
             "androidx.widget.recyclerview:recyclerview";
     public static final String ANDROIDX_LEANBACK_ARTIFACT = "androidx.leanback:leanback";
     public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotations:annotations";
+    public static final String ANDROIDX_SUPPORT_LIB_ARTIFACT = "androidx.legacy:legacy-support-v4";
+    public static final String ANDROIDX_APPCOMPAT_LIB_ARTIFACT = "androidx.appcompat:appcompat";
 
     // Annotations
     public static final AndroidxName SUPPORT_ANNOTATIONS_PREFIX =
