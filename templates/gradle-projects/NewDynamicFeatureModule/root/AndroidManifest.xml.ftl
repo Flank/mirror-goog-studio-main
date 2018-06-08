@@ -4,7 +4,7 @@
     <dist:module
         dist:onDemand="${dynamicFeatureOnDemand?c}"
         dist:title="@string/title_${projectSimpleName}">
-        <dist:fusing include="${dynamicFeatureFusing?c}" />
+        <dist:fusing dist:include="${dynamicFeatureFusing?c}" />
     </dist:module>
 </manifest>
 
