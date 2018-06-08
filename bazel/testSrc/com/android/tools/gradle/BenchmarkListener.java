@@ -17,7 +17,6 @@
 package com.android.tools.gradle;
 
 import com.android.tools.perflogger.Benchmark;
-import com.android.tools.perflogger.Metric;
 import java.io.File;
 
 /**
@@ -42,7 +41,7 @@ public interface BenchmarkListener {
      * notification of benchmark creation with the {@link Benchmark} instance and the {#link Metric}
      * that will log all the benchmark metrics.
      */
-    void benchmarkStarting(Benchmark benchmark, Metric logger);
+    void benchmarkStarting(Benchmark benchmark);
 
     /** notification of benchmark completion */
     void benchmarkDone();

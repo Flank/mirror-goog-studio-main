@@ -38,7 +38,7 @@ public class BenchmarkTest {
         File distribution = null;
         File repo = null;
         String project = null;
-        String metric = null;
+        String benchmarkName = null;
         int warmUps = 0;
         int iterations = 0;
         List<String> tasks = new ArrayList<>();
@@ -66,8 +66,8 @@ public class BenchmarkTest {
                 tasks.add(it.next());
             } else if (arg.equals("--cleanup_task") && it.hasNext()) {
                 cleanups.add(it.next());
-            } else if (arg.equals("--metric") && it.hasNext()) {
-                metric = it.next();
+            } else if (arg.equals("--benchmark") && it.hasNext()) {
+                benchmarkName = it.next();
             } else if (arg.equals("--mutation") && it.hasNext()) {
                 mutations.add(new File(it.next()));
             } else if (arg.equals("--listener") && it.hasNext()) {
@@ -80,7 +80,7 @@ public class BenchmarkTest {
         new BenchmarkTest()
                 .run(
                         project,
-                        metric,
+                        benchmarkName,
                         distribution,
                         repo,
                         warmUps,
@@ -114,7 +114,7 @@ public class BenchmarkTest {
 
     public void run(
             String project,
-            String metric,
+            String benchmarkName,
             File distribution,
             File repo,
             int warmUps,
@@ -127,9 +127,7 @@ public class BenchmarkTest {
             throws Exception {
 
         Benchmark benchmark =
-                new Benchmark.Builder("GradleBenchmark [" + project + "]")
-                        .setProject("Android Studio Gradle")
-                        .build();
+                new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle").build();
         File data = new File(ROOT + "buildbenchmarks/" + project);
         File out = new File(System.getenv("TEST_TMPDIR"), ".gradle_out");
         File src = new File(System.getenv("TEST_TMPDIR"), ".gradle_src");
@@ -154,8 +152,8 @@ public class BenchmarkTest {
 
             gradle.run(startups);
 
-            Metric logger = new Metric(metric);
-            listeners.forEach(it -> it.benchmarkStarting(benchmark, logger));
+            Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
+            listeners.forEach(it -> it.benchmarkStarting(benchmark));
             for (int i = 0; i < warmUps + iterations; i++) {
                 gradle.run(cleanups);
 
@@ -169,13 +167,13 @@ public class BenchmarkTest {
                 long start = System.currentTimeMillis();
                 gradle.run(tasks);
                 if (i >= warmUps) {
-                    logger.addSamples(
+                    totalBuildTime.addSamples(
                             benchmark, new MetricSample(start, System.currentTimeMillis() - start));
                     listeners.forEach(BenchmarkListener::iterationDone);
                 }
             }
             listeners.forEach(BenchmarkListener::benchmarkDone);
-            logger.commit();
+            totalBuildTime.commit();
         }
     }
 }
