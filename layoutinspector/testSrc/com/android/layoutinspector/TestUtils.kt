@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.layoutinspector.model
+package com.android.layoutinspector
 
 import com.android.testutils.TestUtils
 import java.io.File
 
-fun getTestFile() : File =
-    TestUtils.getWorkspaceFile("tools/base/layoutinspector/testData/LayoutCaptureV1.li")
-
-fun getTestFileV2() : File =
-    TestUtils.getWorkspaceFile("tools/base/layoutinspector/testData/LayoutCaptureV2.li")
+fun getTestFile(fileName: String) : File =
+    TestUtils.getWorkspaceFile("tools/base/layoutinspector/testData/$fileName")

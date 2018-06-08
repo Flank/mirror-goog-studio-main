@@ -22,6 +22,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import java.nio.ByteBuffer
 import java.util.HashMap
+import kotlin.test.assertEquals
 
 private const val META_KEY = "meta"
 private const val HASH_KEY = "$META_KEY:__hash__"
@@ -149,12 +150,8 @@ class ViewNodeV2Parser {
         // no children if there is no matching prop
         val childCountProp = metaProps.find { it.name == CHILD_COUNT_KEY } ?: return
         val childCount = childCountProp.value.toInt()
-        val children = ArrayList<ViewNode>(childCount)
-        childrenProps.entries.sortedBy { it.key }.forEach {
-            val childIndex = getChildIndex(it.key)
-            val childNode = createViewNode(it.value as Map<Short, Any>, parent)
-            children.add(childIndex, childNode)
-        }
+        val children = childrenProps.entries.sortedBy { getChildIndex(it.key) }.map { createViewNode(it.value as Map<Short, Any>, parent) }
+        assertEquals(childCount, children.size)
         parent.children.addAll(children)
     }
 }

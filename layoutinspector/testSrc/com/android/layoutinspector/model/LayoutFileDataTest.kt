@@ -15,6 +15,7 @@
  */
 package com.android.layoutinspector.model
 
+import com.android.layoutinspector.getTestFile
 import com.android.layoutinspector.parser.LayoutFileDataParser
 import org.junit.Test
 import java.io.IOException
@@ -25,7 +26,7 @@ class LayoutFileDataTest {
     @Test
     @Throws(IOException::class)
     fun testParsingLayoutFile() {
-        val file = getTestFile()
+        val file = getTestFile("LayoutCaptureV1.li")
         assert(file.exists())
 
         val fileData = LayoutFileDataParser.parseFromFile(file)
@@ -41,7 +42,7 @@ class LayoutFileDataTest {
     @Test
     @Throws(IOException::class)
     fun testParsingLayoutFileV2() {
-        val file = getTestFileV2()
+        val file = getTestFile("LayoutCaptureV2.li")
         assert(file.exists())
 
         val fileData = LayoutFileDataParser.parseFromFile(file)

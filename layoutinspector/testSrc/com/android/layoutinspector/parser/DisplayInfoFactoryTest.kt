@@ -16,9 +16,7 @@
 
 package com.android.layoutinspector.parser
 
-import com.android.layoutinspector.model.LayoutFileData
-import com.android.layoutinspector.model.getTestFile
-import com.android.layoutinspector.model.getTestFileV2
+import com.android.layoutinspector.getTestFile
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -26,7 +24,7 @@ import kotlin.test.assertTrue
 class DisplayInfoFactoryTest {
     @Test
     fun testV1ViewNodeParsing() {
-        val file = getTestFile()
+        val file = getTestFile("LayoutCaptureV1.li")
         val node = LayoutFileDataParser.parseFromFile(file).node!!
 
         val displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
@@ -37,7 +35,7 @@ class DisplayInfoFactoryTest {
 
     @Test
     fun testV2ViewNodeParsing() {
-        val file = getTestFileV2()
+        val file = getTestFile("LayoutCaptureV2.li")
         val node = LayoutFileDataParser.parseFromFile(file).node!!
 
         val displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)

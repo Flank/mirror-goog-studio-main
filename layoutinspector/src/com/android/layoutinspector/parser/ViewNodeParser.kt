@@ -24,6 +24,11 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Stack
+import java.util.function.BiConsumer
+import java.util.function.BinaryOperator
+import java.util.function.Function
+import java.util.function.Supplier
+import java.util.stream.Collector
 
 object ViewNodeParser {
     /** Parses the flat string representation of a view node and returns the root node.  */
@@ -54,10 +59,11 @@ object ViewNodeParser {
             InputStreamReader(ByteArrayInputStream(bytes), Charsets.UTF_8)
         )
 
-        for (line in input.lines()) {
+        for (line in input.lines().collect(MergeNewLineCollector)) {
             if ("DONE.".equals(line, ignoreCase = true)) {
                 break
             }
+            // determine parent through the level of nesting by counting whitespaces
             var whitespaceCount = 0
             while (line[whitespaceCount] == ' ') {
                 whitespaceCount++
@@ -77,7 +83,7 @@ object ViewNodeParser {
             if (!stack.isEmpty()) {
                 parent = stack.peek()
             }
-            lastNode = createViewNode(parent, line.trim { it <= ' ' })
+            lastNode = createViewNode(parent, line.trim())
             if (root == null) {
                 root = lastNode
             }
@@ -101,7 +107,7 @@ object ViewNodeParser {
         node.index = if (parent == null) 0 else parent!!.children.size
 
         if (data.length > delimIndex + 1) {
-            loadProperties(node, data.substring(delimIndex + 1).trim { it <= ' ' })
+            loadProperties(node, data.substring(delimIndex + 1))
             node.id = node.getProperty("mID", "id")!!.value
         }
         node.displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
@@ -138,5 +144,32 @@ object ViewNodeParser {
         } while (!stop)
 
         node.properties.sort()
+    }
+
+    /**
+     * A custom collector that handles a special case see b/79183623
+     * If a text field has text containing a new line it'll cause the view node output to be split
+     * across multiple lines so the collector processes the file output and merges those back into a
+     * single line so we can correctly create view nodes.
+     */
+    private object MergeNewLineCollector : Collector<String, MutableList<String>, List<String>> {
+        override fun characteristics(): Set<Collector.Characteristics> {
+            return setOf(Collector.Characteristics.CONCURRENT)
+        }
+
+        override fun supplier() = Supplier<MutableList<String>> { ArrayList() }
+        override fun finisher() = Function<MutableList<String>, List<String>> { it.toList() }
+        override fun combiner() =
+            BinaryOperator<MutableList<String>> { t, u -> t.apply { addAll(u) } }
+
+        override fun accumulator() = BiConsumer<MutableList<String>, String> { stringGroup, line ->
+            val newLine = line.trim()
+            // add the original line because we need to keep the spacing to determine hierarchy
+            if (newLine.startsWith("\\n")) {
+                stringGroup[stringGroup.lastIndex] = stringGroup.last() + line
+            } else {
+                stringGroup.add(line)
+            }
+        }
     }
 }
