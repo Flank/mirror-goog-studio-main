@@ -346,12 +346,11 @@ public class ResourceResolver extends RenderResources {
         for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
             StyleItemResourceValueImpl item = style.getItem(attr);
 
-            // if we didn't find it, we look in the parent style (if applicable)
-            //noinspection VariableNotUsedInsideIf
             if (item != null) {
                 return item;
             }
 
+            // If we didn't find it, we look in the parent style (if applicable).
             style = mStyleInheritanceMap.get(style);
             if (style == null) {
                 return null;
