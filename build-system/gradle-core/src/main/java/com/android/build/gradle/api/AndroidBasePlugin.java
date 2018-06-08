@@ -24,10 +24,7 @@ import org.gradle.api.Project;
  *
  * <p>The purpose of this no-op plugin is to allow other plugin authors to determine if an Android
  * plugin was applied.
- *
- * @deprecated Use {@link com.android.build.api.plugin.AndroidBasePlugin} instead.
  */
-@Deprecated
 public class AndroidBasePlugin implements Plugin<Project> {
 
     @Override

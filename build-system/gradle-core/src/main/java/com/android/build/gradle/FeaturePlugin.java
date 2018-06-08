@@ -36,7 +36,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
-import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -92,12 +91,6 @@ public class FeaturePlugin extends LibraryPlugin {
     @Override
     protected int getProjectType() {
         return AndroidProject.PROJECT_TYPE_FEATURE;
-    }
-
-    @NonNull
-    @Override
-    Class<? extends Plugin<Project>> getApiPluginClass() {
-        return com.android.build.api.plugin.FeaturePlugin.class;
     }
 
     @NonNull

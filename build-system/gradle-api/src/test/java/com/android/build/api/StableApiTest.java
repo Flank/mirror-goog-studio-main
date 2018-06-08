@@ -53,17 +53,22 @@ import org.junit.Test;
  */
 public class StableApiTest {
 
+    private static final URL STABLE_API_URL =
+            Resources.getResource(StableApiTest.class, "stable-api.txt");
+
+    private static final URL INCUBATING_API_URL =
+            Resources.getResource(StableApiTest.class, "incubating-api.txt");
+
     private static final String INCUBATING_ANNOTATION = "@org.gradle.api.Incubating()";
 
     @Test
     public void stableApiElements() throws Exception {
         List<String> apiElements = getStableApiElements();
 
-        URL stableApiUrl = Resources.getResource(StableApiTest.class, "stable-api.txt");
         List<String> expectedApiElements =
                 Splitter.on("\n")
                         .omitEmptyStrings()
-                        .splitToList(Resources.toString(stableApiUrl, Charsets.UTF_8));
+                        .splitToList(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
 
         failOnApiChange("stable", expectedApiElements, apiElements);
     }
@@ -79,11 +84,10 @@ public class StableApiTest {
     public void incubatingApiElements() throws Exception {
         List<String> apiElements = getIncubatingApiElements();
 
-        URL incubatingApiUrl = Resources.getResource(StableApiTest.class, "incubating-api.txt");
         List<String> expectedApiElements =
                 Splitter.on("\n")
                         .omitEmptyStrings()
-                        .splitToList(Resources.toString(incubatingApiUrl, Charsets.UTF_8));
+                        .splitToList(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
 
         failOnApiChange("incubating", expectedApiElements, apiElements);
     }
