@@ -34,6 +34,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -241,7 +242,14 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
             @NonNull File toFile,
             @Nullable Predicate<String> filter)
             throws IOException {
-        if (inputs.size() == 1) {
+        if (inputs.isEmpty()) {
+            try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
+                // At configuration time, we don't know whether file will exist, so we need to
+                // create it always, because we publish it. Creating an empty jar was causing issues
+                // on windows, because javac would not release the file handle, so add an entry.
+                jarMerger.addEntry("META-INF/", new ByteArrayInputStream(new byte[0]));
+            }
+        } else if (inputs.size() == 1) {
             QualifiedContent content = inputs.get(0);
 
             if (content instanceof JarInput) {
