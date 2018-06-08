@@ -1599,7 +1599,7 @@ public class LintCliClient extends LintClient {
                                     Feature.SKIP_BLAME,
                                     Feature.SKIP_XML_STRING,
                                     Feature.NO_PLACEHOLDER_REPLACEMENT)
-                            .addLibraryManifests(manifests.toArray(new File[manifests.size()]))
+                            .addLibraryManifests(manifests.toArray(new File[0]))
                             .withFileStreamProvider(
                                     new ManifestMerger2.FileStreamProvider() {
                                         @Override

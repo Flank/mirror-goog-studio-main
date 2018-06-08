@@ -101,7 +101,7 @@ public class AddonTarget implements IAndroidTarget {
                 .parseSkinFolder(new File(p.getLocation(), SdkConstants.FD_SKINS), fop)) {
             skins.put(skin.getName(), skin);
         }
-        mSkins = skins.values().toArray(new File[skins.size()]);
+        mSkins = skins.values().toArray(new File[0]);
 
         String defaultSkinName = mDetails.getDefaultSkin();
         if (defaultSkinName != null) {

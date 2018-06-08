@@ -302,9 +302,9 @@ public class ManifestMergerTestUtil {
 
             return new ManifestMergerTestUtil.TestFiles(
                     shouldFail,
-                    overlayFiles.toArray(new File[overlayFiles.size()]),
+                    overlayFiles.toArray(new File[0]),
                     mainFile,
-                    libFiles.toArray(new File[libFiles.size()]),
+                    libFiles.toArray(new File[0]),
                     navigationFiles,
                     features,
                     injectAttributes,

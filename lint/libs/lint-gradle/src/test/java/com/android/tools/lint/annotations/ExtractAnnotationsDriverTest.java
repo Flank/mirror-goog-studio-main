@@ -72,7 +72,7 @@ public class ExtractAnnotationsDriverTest {
                         "--quiet",
                         "--proguard",
                         output.getPath());
-        String[] args = list.toArray(new String[list.size()]);
+        String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
         new ExtractAnnotationsDriver().run(args);
@@ -130,7 +130,7 @@ public class ExtractAnnotationsDriverTest {
                         output.getPath(),
                         "--proguard",
                         proguard.getPath());
-        String[] args = list.toArray(new String[list.size()]);
+        String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
         new ExtractAnnotationsDriver().run(args);
@@ -236,7 +236,7 @@ public class ExtractAnnotationsDriverTest {
                         output.getPath(),
                         "--proguard",
                         proguard.getPath());
-        String[] args = list.toArray(new String[list.size()]);
+        String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
         new ExtractAnnotationsDriver().run(args);
@@ -367,7 +367,7 @@ public class ExtractAnnotationsDriverTest {
                         proguard.getPath(),
                         "--typedef-file",
                         typedefFile.getPath());
-        String[] args = list.toArray(new String[list.size()]);
+        String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
         new ExtractAnnotationsDriver().run(args);

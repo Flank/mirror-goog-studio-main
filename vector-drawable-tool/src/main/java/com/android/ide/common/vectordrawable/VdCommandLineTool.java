@@ -147,7 +147,7 @@ public class VdCommandLineTool {
         }
         System.out.println("Showing " + validXmlFileCounter + " valid icons");
 
-        MyTableModel model = new MyTableModel(iconList.toArray(new VdIcon[iconList.size()]));
+        MyTableModel model = new MyTableModel(iconList.toArray(new VdIcon[0]));
 
         JTable table = new JTable(model) {
             @Override
@@ -261,6 +261,6 @@ public class VdCommandLineTool {
 
         System.out.println("Convert " + totalSvgFileCounter + " SVG files in total, errors found in "
                 + errorSvgFileCounter + " files");
-        return allOutputFiles.toArray(new File[allOutputFiles.size()]);
+        return allOutputFiles.toArray(new File[0]);
     }
 }

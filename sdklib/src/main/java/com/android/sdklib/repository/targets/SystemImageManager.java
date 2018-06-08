@@ -217,7 +217,7 @@ public class SystemImageManager {
         File[] skins;
         if (skinDir != null) {
             List<File> skinList = PackageParserUtils.parseSkinFolder(skinDir, mFop);
-            skins = skinList.toArray(new File[skinList.size()]);
+            skins = skinList.toArray(new File[0]);
         } else {
             skins = new File[0];
         }

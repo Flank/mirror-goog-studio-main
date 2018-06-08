@@ -77,7 +77,7 @@ public class InvokeManifestMerger extends AndroidVariantTask implements Supplier
         ManifestMerger2.Invoker mergerInvoker = ManifestMerger2.
                 newMerger(getMainManifestFile(), iLogger, ManifestMerger2.MergeType.APPLICATION);
         List<File> secondaryManifestFiles = getSecondaryManifestFiles();
-        mergerInvoker.addLibraryManifests(secondaryManifestFiles.toArray(new File[secondaryManifestFiles.size()]));
+        mergerInvoker.addLibraryManifests(secondaryManifestFiles.toArray(new File[0]));
         MergingReport mergingReport = mergerInvoker.merge();
         if (mergingReport.getResult().isError()) {
             getLogger().error(mergingReport.getReportString());

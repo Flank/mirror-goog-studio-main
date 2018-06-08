@@ -21,15 +21,20 @@ import com.android.tools.chunkio.ChunkUtils;
 import com.android.tools.chunkio.RangedInputStream;
 import com.android.tools.chunkio.codegen.ClassDef;
 import com.android.tools.chunkio.codegen.JavaFile;
+import com.android.tools.chunkio.codegen.MethodDef;
+import com.android.tools.chunkio.codegen.TypeDef;
 import com.android.tools.chunkio.reader.ArrayChunkReader;
 import com.android.tools.chunkio.reader.ChunkReader;
 import com.android.tools.chunkio.reader.CollectionChunkReader;
 import com.android.tools.chunkio.reader.DynamicTypeChunkReader;
 import com.android.tools.chunkio.reader.EnumChunkReader;
-import com.android.tools.chunkio.codegen.MethodDef;
-import com.android.tools.chunkio.codegen.TypeDef;
 import com.android.tools.chunkio.reader.PrimitiveChunkReader;
-
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -39,12 +44,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
 
 public class ClassEmitter {
     private final TypeElement typeElement;
@@ -417,7 +416,7 @@ public class ClassEmitter {
 
     private static Object[] typesFromException(MirroredTypesException e) {
         Object[] params;List<? extends TypeMirror> typeMirrors = e.getTypeMirrors();
-        params = typeMirrors.toArray(new TypeMirror[typeMirrors.size()]);
+        params = typeMirrors.toArray(new TypeMirror[0]);
         return params;
     }
 

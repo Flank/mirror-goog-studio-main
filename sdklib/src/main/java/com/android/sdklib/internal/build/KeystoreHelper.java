@@ -105,7 +105,7 @@ public final class KeystoreHelper {
             commandList.add(storeType);
         }
 
-        String[] commandArray = commandList.toArray(new String[commandList.size()]);
+        String[] commandArray = commandList.toArray(new String[0]);
 
         // launch the command line process
         int result = 0;

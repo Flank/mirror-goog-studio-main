@@ -370,7 +370,7 @@ public class SyncService {
         }
 
         // get the total count of the bytes to transfer
-        File[] fileArray = files.toArray(new File[files.size()]);
+        File[] fileArray = files.toArray(new File[0]);
         int total = getTotalLocalFileSize(fileArray);
 
         monitor.start(total);

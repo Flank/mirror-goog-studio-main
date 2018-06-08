@@ -523,7 +523,7 @@ public class AvdManager {
     @NonNull
     public AvdInfo[] getAllAvds() {
         synchronized (mAllAvdList) {
-            return mAllAvdList.toArray(new AvdInfo[mAllAvdList.size()]);
+            return mAllAvdList.toArray(new AvdInfo[0]);
         }
     }
 
@@ -542,7 +542,7 @@ public class AvdManager {
                     }
                 }
 
-                mValidAvdList = list.toArray(new AvdInfo[list.size()]);
+                mValidAvdList = list.toArray(new AvdInfo[0]);
             }
             return mValidAvdList;
         }

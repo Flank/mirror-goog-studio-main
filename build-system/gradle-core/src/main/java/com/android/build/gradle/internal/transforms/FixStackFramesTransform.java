@@ -207,7 +207,7 @@ public class FixStackFramesTransform extends Transform {
             }
 
             ImmutableList<URL> allUrls = urls.build();
-            URL[] classLoaderUrls = allUrls.toArray(new URL[allUrls.size()]);
+            URL[] classLoaderUrls = allUrls.toArray(new URL[0]);
             classLoader = new URLClassLoader(classLoaderUrls);
         }
         return classLoader;

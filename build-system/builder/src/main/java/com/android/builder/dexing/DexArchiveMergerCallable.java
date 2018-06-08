@@ -54,9 +54,7 @@ public class DexArchiveMergerCallable implements Callable<Void> {
 
             DexMerger dexMerger =
                     new DexMerger(
-                            dexesToMerge.toArray(new Dex[dexesToMerge.size()]),
-                            CollisionPolicy.FAIL,
-                            dxContext);
+                            dexesToMerge.toArray(new Dex[0]), CollisionPolicy.FAIL, dxContext);
 
             Dex output = dexMerger.merge();
             Verify.verifyNotNull(

@@ -706,7 +706,7 @@ public class ClientData {
      */
     public synchronized ThreadInfo[] getThreads() {
         Collection<ThreadInfo> threads = mThreadMap.values();
-        return threads.toArray(new ThreadInfo[threads.size()]);
+        return threads.toArray(new ThreadInfo[0]);
     }
 
     /**

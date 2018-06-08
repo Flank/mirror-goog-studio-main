@@ -177,9 +177,7 @@ public class ManifestMerger2Test {
                         .addFlavorAndBuildTypeManifests(testFiles.getOverlayFiles())
                         .addNavigationFiles(testFiles.getNavigationFiles())
                         .withFeatures(
-                                optionalFeatures.toArray(
-                                        new ManifestMerger2.Invoker.Feature
-                                                [optionalFeatures.size()]));
+                                optionalFeatures.toArray(new ManifestMerger2.Invoker.Feature[0]));
 
         if (!Strings.isNullOrEmpty(testFiles.getPackageOverride())) {
             invoker.setOverride(ManifestSystemProperty.PACKAGE, testFiles.getPackageOverride());

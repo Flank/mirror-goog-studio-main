@@ -29,12 +29,10 @@ import com.android.sdklib.repository.legacy.remote.internal.archives.Archive;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemotePackageParserUtils;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkRepoConstants;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkSource;
-
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import org.w3c.dom.Node;
 
 
 /**
@@ -164,7 +162,7 @@ public abstract class RemotePkgInfo implements Comparable<RemotePkgInfo> {
             }
         }
 
-        return archives.toArray(new Archive[archives.size()]);
+        return archives.toArray(new Archive[0]);
     }
 
     /**

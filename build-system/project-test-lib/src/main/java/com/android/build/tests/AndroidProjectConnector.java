@@ -68,8 +68,11 @@ public class AndroidProjectConnector {
                 args.add("-u");
                 args.addAll(arguments);
 
-                BuildLauncher build = connection.newBuild().forTasks(tasks).withArguments(
-                        args.toArray(new String[args.size()]));
+                BuildLauncher build =
+                        connection
+                                .newBuild()
+                                .forTasks(tasks)
+                                .withArguments(args.toArray(new String[0]));
 
                 if (!jvmDefines.isEmpty()) {
                     String[] jvmArgs = new String[jvmDefines.size()];

@@ -427,7 +427,7 @@ public class JarListSanitizer {
             result.add("\tSHA-1: " + entity.getSha1());
         }
 
-        return result.toArray(new String[result.size()]);
+        return result.toArray(new String[0]);
     }
 
     /**

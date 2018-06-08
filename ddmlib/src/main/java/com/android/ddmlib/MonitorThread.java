@@ -166,7 +166,7 @@ final class MonitorThread extends Thread {
      */
     Client[] getClients() {
         synchronized (mClientList) {
-            return mClientList.toArray(new Client[mClientList.size()]);
+            return mClientList.toArray(new Client[0]);
         }
     }
 

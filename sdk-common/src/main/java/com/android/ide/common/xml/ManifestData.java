@@ -602,7 +602,7 @@ public final class ManifestData {
      * @return An array of fully qualified class names, or empty if no activity were found.
      */
     public Activity[] getActivities() {
-        return mActivities.toArray(new Activity[mActivities.size()]);
+        return mActivities.toArray(new Activity[0]);
     }
 
     /**
@@ -611,7 +611,7 @@ public final class ManifestData {
      * @return An array of fully qualified class names, or empty if no classes to keep were found.
      */
     public KeepClass[] getKeepClasses() {
-        return mKeepClasses.toArray(new KeepClass[mKeepClasses.size()]);
+        return mKeepClasses.toArray(new KeepClass[0]);
     }
 
     /**
@@ -629,7 +629,7 @@ public final class ManifestData {
      */
     public String[] getProcesses() {
         if (mProcesses != null) {
-            return mProcesses.toArray(new String[mProcesses.size()]);
+            return mProcesses.toArray(new String[0]);
         }
 
         return new String[0];
@@ -710,7 +710,7 @@ public final class ManifestData {
      * found.
      */
     public Instrumentation[] getInstrumentations() {
-        return mInstrumentations.toArray(new Instrumentation[mInstrumentations.size()]);
+        return mInstrumentations.toArray(new Instrumentation[0]);
     }
 
     /**
@@ -718,7 +718,7 @@ public final class ManifestData {
      * @return An array of {@link UsesLibrary} objects, or empty if no libraries were found.
      */
     public UsesLibrary[] getUsesLibraries() {
-        return mLibraries.toArray(new UsesLibrary[mLibraries.size()]);
+        return mLibraries.toArray(new UsesLibrary[0]);
     }
 
     /**
@@ -726,7 +726,7 @@ public final class ManifestData {
      * @return An array of {@link UsesFeature} objects, or empty if no libraries were found.
      */
     public UsesFeature[] getUsesFeatures() {
-        return mFeatures.toArray(new UsesFeature[mFeatures.size()]);
+        return mFeatures.toArray(new UsesFeature[0]);
     }
 
     /**

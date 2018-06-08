@@ -903,7 +903,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
                 }
             }
 
-            setPackages(packages.toArray(new RemotePkgInfo[packages.size()]));
+            setPackages(packages.toArray(new RemotePkgInfo[0]));
 
             return true;
         }

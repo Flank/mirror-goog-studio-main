@@ -126,7 +126,7 @@ public class ConnectedDevice extends DeviceConnector {
             iDevice.installPackage(
                     apkFile.getAbsolutePath(),
                     true /*reinstall*/,
-                    installOptions.toArray(new String[installOptions.size()]));
+                    installOptions.toArray(new String[0]));
         } catch (Exception e) {
             logger.error(e, "Unable to install " + apkFile.getAbsolutePath());
             throw new DeviceException(e);

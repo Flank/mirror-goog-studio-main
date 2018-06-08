@@ -548,7 +548,7 @@ public class InstantRunTransform extends Transform {
     private static class NonDelegatingUrlClassloader extends URLClassLoader {
 
         public NonDelegatingUrlClassloader(@NonNull List<URL> urls) {
-            super(urls.toArray(new URL[urls.size()]), null);
+            super(urls.toArray(new URL[0]), null);
         }
 
         @Override

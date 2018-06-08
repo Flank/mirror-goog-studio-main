@@ -574,7 +574,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         for (String relativePath : relativePaths) {
             testFiles.add(file().copy(relativePath, this));
         }
-        return getProjectDir(name, testFiles.toArray(new TestFile[testFiles.size()]));
+        return getProjectDir(name, testFiles.toArray(new TestFile[0]));
     }
 
     /** Creates a project directory structure from the given files */

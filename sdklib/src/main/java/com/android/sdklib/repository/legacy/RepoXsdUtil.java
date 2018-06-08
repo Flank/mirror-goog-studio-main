@@ -98,6 +98,6 @@ public class RepoXsdUtil {
             // others throw an exception. We want to return null.
             return null;
         }
-        return streams.toArray(new StreamSource[streams.size()]);
+        return streams.toArray(new StreamSource[0]);
     }
 }

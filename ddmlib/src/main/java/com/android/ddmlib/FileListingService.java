@@ -274,7 +274,7 @@ public final class FileListingService {
             ArrayList<String> list = new ArrayList<String>();
             fillPathSegments(list);
 
-            return list.toArray(new String[list.size()]);
+            return list.toArray(new String[0]);
         }
 
         /**
@@ -310,7 +310,7 @@ public final class FileListingService {
          * <code>FileListingService.getChildren()</code>.
          */
         public FileEntry[] getCachedChildren() {
-            return mChildren.toArray(new FileEntry[mChildren.size()]);
+            return mChildren.toArray(new FileEntry[0]);
         }
 
         /**

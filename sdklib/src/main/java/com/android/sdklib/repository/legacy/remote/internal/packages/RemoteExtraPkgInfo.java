@@ -171,7 +171,7 @@ public class RemoteExtraPkgInfo extends RemotePkgInfo
             }
         }
 
-        return paths.toArray(new String[paths.size()]);
+        return paths.toArray(new String[0]);
     }
 
     /**

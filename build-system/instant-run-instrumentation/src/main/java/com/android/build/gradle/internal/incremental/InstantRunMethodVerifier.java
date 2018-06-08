@@ -54,8 +54,13 @@ public class InstantRunMethodVerifier {
         Optional<InstantRunVerifierStatus> incompatibleChange = Optional.absent();
 
         public VerifierMethodVisitor(MethodNode method) {
-            super(Opcodes.ASM5, method.access, method.name, method.desc, method.signature,
-                    (String[]) method.exceptions.toArray(new String[method.exceptions.size()]));
+            super(
+                    Opcodes.ASM5,
+                    method.access,
+                    method.name,
+                    method.desc,
+                    method.signature,
+                    (String[]) method.exceptions.toArray(new String[0]));
         }
 
         @Override

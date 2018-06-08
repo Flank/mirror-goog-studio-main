@@ -181,6 +181,6 @@ public class PathParser {
         if (end - start == 1 && start < value.length()) {
             addNode(list, value.charAt(start), EMPTY_FLOAT_ARRAY);
         }
-        return list.toArray(new VdPath.Node[list.size()]);
+        return list.toArray(new VdPath.Node[0]);
     }
 }

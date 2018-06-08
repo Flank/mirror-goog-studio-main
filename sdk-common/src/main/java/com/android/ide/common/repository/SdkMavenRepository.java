@@ -186,8 +186,10 @@ public enum SdkMavenRepository {
         String group = String.join(".", components.subList(2, components.size()));
         List<GradleCoordinate.RevisionComponent> revisionComponents = GradleCoordinate
           .parseRevisionNumber(version);
-        return new GradleCoordinate(group, artifact, revisionComponents
-          .toArray(new GradleCoordinate.RevisionComponent[revisionComponents.size()]));
+        return new GradleCoordinate(
+                group,
+                artifact,
+                revisionComponents.toArray(new GradleCoordinate.RevisionComponent[0]));
     }
 
     /**

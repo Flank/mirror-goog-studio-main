@@ -58,7 +58,7 @@ public class AllTests extends Suite {
                 findTestClassesInDirectory(classes, classPathDir);
             }
         }
-        return classes.toArray(new Class<?>[classes.size()]);
+        return classes.toArray(new Class<?>[0]);
     }
 
     /** Find all test classes in a directory. */

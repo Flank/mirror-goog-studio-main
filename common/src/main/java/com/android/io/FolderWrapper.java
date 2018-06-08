@@ -154,7 +154,7 @@ public class FolderWrapper extends File implements IAbstractFolder {
                 }
             }
 
-            return list.toArray(new String[list.size()]);
+            return list.toArray(new String[0]);
         }
 
         return new String[0];

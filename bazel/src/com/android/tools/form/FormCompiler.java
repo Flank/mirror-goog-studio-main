@@ -88,7 +88,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
             }
         }
 
-        mFinder = new InstrumentationClassFinder(urls.toArray(new URL[urls.size()]));
+        mFinder = new InstrumentationClassFinder(urls.toArray(new URL[0]));
         try {
             instrumentForms(mFinder, mForms);
         } finally {

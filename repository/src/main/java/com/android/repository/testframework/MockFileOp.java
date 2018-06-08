@@ -27,7 +27,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -255,7 +254,7 @@ public class MockFileOp extends FileSystemFileOp {
                 assert false : e.getMessage();
             }
         });
-        return result.toArray(new String[result.size()]);
+        return result.toArray(new String[0]);
     }
 
     /**
@@ -275,7 +274,7 @@ public class MockFileOp extends FileSystemFileOp {
                 assert false : e.getMessage();
             }
         });
-        return result.toArray(new String[result.size()]);
+        return result.toArray(new String[0]);
     }
 
     @Override

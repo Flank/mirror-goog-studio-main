@@ -592,7 +592,7 @@ public class LocalSdk {
         }
 
         Collections.sort(list);
-        return list.toArray(new LocalPkgInfo[list.size()]);
+        return list.toArray(new LocalPkgInfo[0]);
     }
 
     //---------- Package-specific querying --------

@@ -667,7 +667,7 @@ final class Device implements IDevice {
     @Override
     public Client[] getClients() {
         synchronized (mClients) {
-            return mClients.toArray(new Client[mClients.size()]);
+            return mClients.toArray(new Client[0]);
         }
     }
 

@@ -139,8 +139,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -169,8 +168,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -207,8 +205,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -249,8 +246,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -308,8 +304,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -336,8 +331,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
         assertThat(configureCommandResult).isNull();
     }
 
@@ -358,8 +352,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -383,8 +376,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
@@ -610,8 +602,7 @@ public class ServerProtocolV1Test {
                         ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
-                serverProtocolV1.configure(
-                        cacheArguments.toArray(new String[cacheArguments.size()]));
+                serverProtocolV1.configure(cacheArguments.toArray(new String[0]));
 
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();

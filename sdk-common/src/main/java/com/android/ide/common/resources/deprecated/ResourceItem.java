@@ -154,7 +154,7 @@ public class ResourceItem implements Comparable<ResourceItem> {
 
         Collections.sort(list, sComparator);
 
-        return list.toArray(new ResourceFile[list.size()]);
+        return list.toArray(new ResourceFile[0]);
     }
 
     /**

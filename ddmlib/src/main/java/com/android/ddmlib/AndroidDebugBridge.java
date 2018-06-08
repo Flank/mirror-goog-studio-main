@@ -964,7 +964,7 @@ public class AndroidDebugBridge {
             command.add(Integer.toString(sAdbServerPort));
         }
         command.add(option);
-        return command.toArray(new String[command.size()]);
+        return command.toArray(new String[0]);
     }
 
     /**

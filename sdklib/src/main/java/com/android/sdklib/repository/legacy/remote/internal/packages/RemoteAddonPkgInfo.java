@@ -217,7 +217,7 @@ public class RemoteAddonPkgInfo extends RemotePkgInfo {
             }
         }
 
-        return libs.toArray(new Lib[libs.size()]);
+        return libs.toArray(new Lib[0]);
     }
 
     /**

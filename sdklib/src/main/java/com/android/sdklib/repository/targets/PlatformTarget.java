@@ -358,7 +358,7 @@ public class PlatformTarget implements IAndroidTarget {
     @NonNull
     @Override
     public File[] getSkins() {
-        return mSkins.toArray(new File[mSkins.size()]);
+        return mSkins.toArray(new File[0]);
     }
 
     public int getLayoutlibApi() {

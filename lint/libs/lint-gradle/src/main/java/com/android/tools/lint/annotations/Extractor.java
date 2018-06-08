@@ -1624,9 +1624,7 @@ public class Extractor {
                 attributeStrings.add(valueElement.getAttribute(ATTR_NAME));
                 attributeStrings.add(valueElement.getAttribute(ATTR_VAL));
             }
-            annotation =
-                    new AnnotationData(
-                            name, attributeStrings.toArray(new String[attributeStrings.size()]));
+            annotation = new AnnotationData(name, attributeStrings.toArray(new String[0]));
         }
         return annotation;
     }

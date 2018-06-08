@@ -458,7 +458,7 @@ public class DownloadCache {
                                             urlString,
                                             cached,
                                             info,
-                                            headers.toArray(new Header[headers.size()]),
+                                            headers.toArray(new Header[0]),
                                             statusCode);
                         }
 

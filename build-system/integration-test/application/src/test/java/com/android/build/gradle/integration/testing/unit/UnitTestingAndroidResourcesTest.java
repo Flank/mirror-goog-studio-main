@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.testing.unit;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -266,6 +265,6 @@ public class UnitTestingAndroidResourcesTest {
                         .stream()
                         .map(IOExceptionFunction.asFunction(SdkUtils::fileToUrl))
                         .collect(Collectors.toList());
-        return new URLClassLoader(urls.toArray(new URL[urls.size()]));
+        return new URLClassLoader(urls.toArray(new URL[0]));
     }
 }

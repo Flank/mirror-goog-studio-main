@@ -91,7 +91,7 @@ public final class DesugarWorkerItem {
                 Method mainMethod = clazz.getMethod("main", String[].class);
                 mainMethod.setAccessible(true);
 
-                mainMethod.invoke(null, (Object) args.toArray(new String[args.size()]));
+                mainMethod.invoke(null, (Object) args.toArray(new String[0]));
             } catch (Exception e) {
                 LOGGER.error("Error while running desugar ", e);
             }

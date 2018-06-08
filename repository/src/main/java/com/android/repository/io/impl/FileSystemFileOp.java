@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -84,7 +83,7 @@ public abstract class FileSystemFileOp implements FileOp {
                 result.add(name);
             }
         }
-        return result.toArray(new String[result.size()]);
+        return result.toArray(new String[0]);
 
     }
 
@@ -101,7 +100,7 @@ public abstract class FileSystemFileOp implements FileOp {
                 result.add(f);
             }
         }
-        return result.toArray(new File[result.size()]);
+        return result.toArray(new File[0]);
 
     }
 

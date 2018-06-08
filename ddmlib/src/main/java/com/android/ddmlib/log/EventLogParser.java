@@ -251,7 +251,7 @@ public final class EventLogParser {
             return null;
         }
 
-        return list.toArray(new EventValueDescription[list.size()]);
+        return list.toArray(new EventValueDescription[0]);
 
     }
 
