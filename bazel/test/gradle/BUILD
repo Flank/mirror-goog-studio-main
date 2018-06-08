@@ -13,7 +13,7 @@ gradle_build(
     output_file = "outputs/aar/library-release.aar",
     output_file_source = "outputs/aar/library-release.aar",
     repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo.zip",
+        "//tools/base/build-system:gradle_plugin_repo.zip",
         "//tools/adt/idea/android:test_deps.zip",
     ],
     tags = ["no_windows"],  # There is a bug in aapt2 that breaks with bazel paths (>260 chars)

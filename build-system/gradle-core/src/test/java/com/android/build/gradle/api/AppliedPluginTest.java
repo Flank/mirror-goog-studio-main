@@ -34,49 +34,26 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-/** Test to ensure all plugins applies the AndroidBasePlugin and the API plugins. */
+/** Test to ensure all plugins applies the AndroidBasePlugin. */
 @RunWith(Parameterized.class)
 public class AppliedPluginTest {
 
-    @Parameterized.Parameters(name = "plugin_{2}")
+    @Parameterized.Parameters(name = "plugin_{1}")
     public static List<Object[]> parameters() {
         return Arrays.asList(
                 new Object[][] {
-                    {
-                        AppPlugin.class,
-                        com.android.build.api.plugin.AppPlugin.class,
-                        "com.android.application"
-                    },
-                    {AppPlugin.class, com.android.build.api.plugin.AppPlugin.class, "android"},
-                    {
-                        LibraryPlugin.class,
-                        com.android.build.api.plugin.LibraryPlugin.class,
-                        "com.android.library"
-                    },
-                    {
-                        LibraryPlugin.class,
-                        com.android.build.api.plugin.LibraryPlugin.class,
-                        "android-library"
-                    },
-                    {
-                        FeaturePlugin.class,
-                        com.android.build.api.plugin.FeaturePlugin.class,
-                        "com.android.feature"
-                    },
-                    {
-                        TestPlugin.class,
-                        com.android.build.api.plugin.TestPlugin.class,
-                        "com.android.test"
-                    },
+                    {AppPlugin.class, "com.android.application"},
+                    {AppPlugin.class, "android"},
+                    {LibraryPlugin.class, "com.android.library"},
+                    {LibraryPlugin.class, "android-library"},
+                    {FeaturePlugin.class, "com.android.feature"},
+                    {TestPlugin.class, "com.android.test"},
                 });
     }
 
     @Parameterized.Parameter public Class<? extends Plugin> pluginClass;
 
     @Parameterized.Parameter(1)
-    public Class<? extends Plugin> apiPluginClass;
-
-    @Parameterized.Parameter(2)
     public String pluginName;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -88,12 +65,7 @@ public class AppliedPluginTest {
         project.getPluginManager().apply(pluginName);
         assertThat(project.getPlugins().findPlugin(pluginName)).isNotNull();
         assertThat(project.getPlugins().findPlugin(pluginClass)).isNotNull();
-        assertThat(project.getPlugins().findPlugin(apiPluginClass)).isNotNull();
         assertThat(project.getPlugins().findPlugin(AndroidBasePlugin.class)).isNotNull();
-        assertThat(
-                        project.getPlugins()
-                                .findPlugin(com.android.build.api.plugin.AndroidBasePlugin.class))
-                .isNotNull();
         assertThat(project.getPlugins().findPlugin("com.android.base")).isNotNull();
     }
 }
