@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d23e12262bd21776f29e92a1222a6420f8ce89e551f9c0cefbe65f5e82ca3c7b
+378239fcee83f287e7cc2d7431c5ce5942cb384824880d997d12d04f5ac6b779
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -598,38 +598,6 @@ com.android.build.api.dsl.variant.VariantFilter.ignoreAll: void ()
 com.android.build.api.dsl.variant.VariantFilter.ignoreAndroidTests: void ()
 com.android.build.api.dsl.variant.VariantFilter.ignoreTests: void ()
 com.android.build.api.dsl.variant.VariantFilter.ignoreUnitTests: void ()
-com.android.build.api.plugin.AndroidBasePlugin
-com.android.build.api.plugin.AndroidBasePlugin.<init>: com.android.build.api.plugin.AndroidBasePlugin ()
-com.android.build.api.plugin.AndroidBasePlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.AndroidBasePlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.AppPlugin
-com.android.build.api.plugin.AppPlugin.<init>: com.android.build.api.plugin.AppPlugin ()
-com.android.build.api.plugin.AppPlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.AppPlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.DynamicFeaturePlugin
-com.android.build.api.plugin.DynamicFeaturePlugin.<init>: com.android.build.api.plugin.DynamicFeaturePlugin ()
-com.android.build.api.plugin.DynamicFeaturePlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.DynamicFeaturePlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.FeaturePlugin
-com.android.build.api.plugin.FeaturePlugin.<init>: com.android.build.api.plugin.FeaturePlugin ()
-com.android.build.api.plugin.FeaturePlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.FeaturePlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.InstantAppPlugin
-com.android.build.api.plugin.InstantAppPlugin.<init>: com.android.build.api.plugin.InstantAppPlugin ()
-com.android.build.api.plugin.InstantAppPlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.InstantAppPlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.LibraryPlugin
-com.android.build.api.plugin.LibraryPlugin.<init>: com.android.build.api.plugin.LibraryPlugin ()
-com.android.build.api.plugin.LibraryPlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.LibraryPlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.LintPlugin
-com.android.build.api.plugin.LintPlugin.<init>: com.android.build.api.plugin.LintPlugin ()
-com.android.build.api.plugin.LintPlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.LintPlugin.apply: void (org.gradle.api.Project)
-com.android.build.api.plugin.TestPlugin
-com.android.build.api.plugin.TestPlugin.<init>: com.android.build.api.plugin.TestPlugin ()
-com.android.build.api.plugin.TestPlugin.apply: void (java.lang.Object)
-com.android.build.api.plugin.TestPlugin.apply: void (org.gradle.api.Project)
 com.android.build.api.sourcesets.AndroidSourceDirectorySet
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getFilter: org.gradle.api.tasks.util.PatternFilterable ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceDirectoryTrees: java.util.List<org.gradle.api.file.ConfigurableFileTree> ()

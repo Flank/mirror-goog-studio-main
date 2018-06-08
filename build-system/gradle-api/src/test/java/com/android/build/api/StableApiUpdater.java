@@ -17,7 +17,6 @@
 package com.android.build.api;
 
 import com.android.testutils.TestUtils;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,12 +40,7 @@ public class StableApiUpdater {
     }
 
     private static void updateFile(Path file, List<String> content) throws IOException {
-        List<String> previous;
-        if (Files.exists(file)) {
-            previous = Files.readAllLines(file);
-        } else {
-            previous = ImmutableList.of();
-        }
+        List<String> previous = Files.readAllLines(file);
         Files.write(file, content, StandardCharsets.UTF_8);
         if (!previous.equals(content)) {
             System.out.println();
