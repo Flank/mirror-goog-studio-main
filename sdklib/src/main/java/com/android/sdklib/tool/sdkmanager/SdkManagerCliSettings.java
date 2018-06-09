@@ -150,6 +150,7 @@ class SdkManagerCliSettings implements SettingsController {
     }
 
     private boolean setAction(@NonNull SdkAction action, @NonNull ProgressIndicator progress) {
+        //noinspection VariableNotUsedInsideIf
         if (mAction != null) {
             progress.logError(
                     "Only one of "
@@ -315,7 +316,7 @@ class SdkManagerCliSettings implements SettingsController {
     private SdkManagerCliSettings(
             @NonNull List<String> args,
             @NonNull FileSystem fileSystem,
-            @Nullable Map<String, String> environment,
+            @NonNull Map<String, String> environment,
             @NonNull ProgressIndicator progress) {
         mFileSystem = fileSystem;
         mEnvironment = environment;
