@@ -26,7 +26,7 @@ import java.io.IOException;
 @SuppressWarnings("unused")
 public class GradleProfileLogger implements BenchmarkListener {
     File testLogsDir;
-    Benchmark benchmark;
+    ProfilerToBenchmarkAdapter profilerToBenchmarkAdapter;
 
     @Override
     public void configure(File home, Gradle gradle) {
@@ -36,11 +36,13 @@ public class GradleProfileLogger implements BenchmarkListener {
 
     @Override
     public void benchmarkStarting(Benchmark benchmark) {
-        this.benchmark = benchmark;
+        this.profilerToBenchmarkAdapter = new ProfilerToBenchmarkAdapter(benchmark);
     }
 
     @Override
-    public void benchmarkDone() {}
+    public void benchmarkDone() {
+        profilerToBenchmarkAdapter.commit();
+    }
 
     @Override
     public void iterationStarting() {
@@ -67,7 +69,7 @@ public class GradleProfileLogger implements BenchmarkListener {
             throw new RuntimeException(e);
         }
 
-        new ProfilerToBenchmarkAdapter().adapt(gradleBuildProfile, benchmark);
+        profilerToBenchmarkAdapter.adapt(gradleBuildProfile);
     }
 
     private static void cleanOutputDir(File outputDir) {

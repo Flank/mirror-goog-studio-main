@@ -19,8 +19,10 @@ package com.android.tools.gradle;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.android.tools.perflogger.Benchmark;
+import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,15 +32,30 @@ import java.util.Map;
  */
 public class ProfilerToBenchmarkAdapter {
 
-    public void adapt(GradleBuildProfile profile, Benchmark benchmark) {
+    private Benchmark benchmark;
+    private Map<String, Metric> metrics;
+
+    public ProfilerToBenchmarkAdapter(Benchmark benchmark) {
+        this.benchmark = benchmark;
+        metrics = new HashMap<>();
+    }
+
+    public void adapt(GradleBuildProfile profile) {
         Map<Integer, Long> timingsPerTask = consolidate(profile);
 
         timingsPerTask.forEach(
                 (type, timings) -> {
                     GradleTaskExecutionType gradleTaskExecutionType =
                             GradleTaskExecutionType.forNumber(type);
-                    benchmark.log(gradleTaskExecutionType.name(), timings);
+                    Metric metric =
+                            metrics.computeIfAbsent(gradleTaskExecutionType.name(), Metric::new);
+                    long utcMs = Instant.now().toEpochMilli();
+                    metric.addSamples(benchmark, new Metric.MetricSample(utcMs, timings));
                 });
+    }
+
+    public void commit() {
+        metrics.values().forEach(Metric::commit);
     }
 
     private Map<Integer, Long> consolidate(GradleBuildProfile profile) {
