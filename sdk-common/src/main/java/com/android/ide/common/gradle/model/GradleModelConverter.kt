@@ -45,6 +45,7 @@ import com.android.projectmodel.matchArtifactsWith
 import com.android.projectmodel.matchDimension
 import com.android.resources.ResourceType
 import com.android.sdklib.AndroidVersion
+import com.google.common.collect.ImmutableMap
 import java.io.File
 
 // This file contains utilities for converting Gradle model types (from builder-model) into project model types.
@@ -499,5 +500,5 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Ma
             result[field.name] = DynamicResourceValue(resourceType, field.value)
         }
     }
-    return result
+    return ImmutableMap.copyOf(result)
 }
