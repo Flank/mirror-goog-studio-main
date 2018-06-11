@@ -17,8 +17,8 @@ public interface DexArchiveMerger {
     /** Creates an instance of dex archive merger that is using dx to merge dex files. */
     @NonNull
     static DexArchiveMerger createDxDexMerger(
-            @NonNull DxContext dxContext, @NonNull ForkJoinPool executor) {
-        return new DxDexArchiveMerger(dxContext, executor);
+            @NonNull DxContext dxContext, @NonNull ForkJoinPool executor, boolean isDebuggable) {
+        return new DxDexArchiveMerger(dxContext, executor, isDebuggable);
     }
 
     /** Creates an instance of dex archive merger that is using d8 to merge dex files. */

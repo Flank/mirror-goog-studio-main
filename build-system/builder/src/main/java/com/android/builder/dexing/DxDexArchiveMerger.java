@@ -24,7 +24,6 @@ import com.android.dx.command.dexer.DxContext;
 import com.android.dx.merge.DexMerger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
@@ -34,7 +33,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,8 +53,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class DxDexArchiveMerger implements DexArchiveMerger {
 
     @NonNull private final DxContext dxContext;
-    @NonNull private final DexMergingStrategy mergingStrategy;
     @NonNull private final ForkJoinPool forkJoinPool;
+    private final boolean isDebuggable;
 
     /**
      * Creates an instance of merger. The executor that is specified in parameters will be used to
@@ -67,18 +65,15 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
      *
      * @param dxContext dx context necessary for the merging process
      * @param forkJoinPool executor used to schedule tasks in the merging process
+     * @param isDebuggable if we are merging debuggable variant
      */
-    public DxDexArchiveMerger(@NonNull DxContext dxContext, @NonNull ForkJoinPool forkJoinPool) {
-        this(dxContext, new ReferenceCountMergingStrategy(), forkJoinPool);
-    }
-
     public DxDexArchiveMerger(
             @NonNull DxContext dxContext,
-            @NonNull DexMergingStrategy mergingStrategy,
-            @NonNull ForkJoinPool forkJoinPool) {
+            @NonNull ForkJoinPool forkJoinPool,
+            boolean isDebuggable) {
         this.dxContext = dxContext;
-        this.mergingStrategy = mergingStrategy;
         this.forkJoinPool = forkJoinPool;
+        this.isDebuggable = isDebuggable;
     }
 
     /**
@@ -94,8 +89,10 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
      * <p>When merging native multidex, multiple DEX files might be created.
      *
      * <p>In case of legacy multidex, list of classes in the main dex should be specified as well.
-     * When using legacy multidex mode, only classes explicitly specified in this list will be in
-     * the main dex file. This is equivalent of invoking dx with --minimal-main-dex option.
+     * When using legacy multidex mode in debug mode, only classes explicitly specified in this list
+     * will be in the main dex file. This is equivalent of invoking dx with --minimal-main-dex
+     * option. When in release mode, remaining space in the main dex will be used to add additional
+     * classes.
      */
     @Override
     public void mergeDexArchives(
@@ -193,9 +190,10 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
      * Merges all DEX files from the dex archives into DEX file(s). It does so by using {@link
      * DexMergingStrategy} which specifies when a DEX file should be started.
      *
-     * <p>For {@link DexingType#LEGACY_MULTIDEX} mode, only classes specified in the main dex
-     * classes list will be packaged in the classes.dex, thus creating a minimal main DEX. Remaining
-     * DEX classes will be placed in other DEX files.
+     * <p>For {@link DexingType#LEGACY_MULTIDEX} mode, in debug mode, only classes specified in the
+     * main dex classes list will be packaged in the classes.dex, thus creating a minimal main DEX.
+     * Remaining DEX classes will be placed in other DEX files. In release mode, all remaining space
+     * in the main dex will be used to add additional classes.
      *
      * @throws IOException if dex archive cannot be read, or merged DEX file(s) cannot be written
      */
@@ -205,9 +203,8 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
             @NonNull Set<String> mainDexClasses,
             @NonNull DexingType dexingType)
             throws IOException, DexArchiveMergerException {
-        Iterator<DexArchiveEntry> entries =
-                DexArchives.getAllEntriesFromArchives(inputs).iterator();
-        if (!entries.hasNext()) {
+        List<DexArchiveEntry> entries = DexArchives.getAllEntriesFromArchives(inputs);
+        if (entries.isEmpty()) {
             // nothing to do
             return;
         }
@@ -220,20 +217,35 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
             classesDexSuffix = 0;
         }
 
+        DexMergingStrategy mainDexTracker = new ReferenceCountMergingStrategy();
+        mainDexTracker.startNewDex();
+        for (DexArchiveEntry entry : entries) {
+            String relativeUnixPath =
+                    DexArchiveEntry.withClassExtension(entry.getRelativePathInArchive());
+            if (mainDexClasses.contains(relativeUnixPath)) {
+                Preconditions.checkState(
+                        mainDexTracker.tryToAddForMerging(new Dex(entry.getDexFileContent())),
+                        "Main dex list too large.");
+            }
+        }
+
+        DexMergingStrategy mergingStrategy = new ReferenceCountMergingStrategy();
         List<ForkJoinTask<Void>> subTasks = new ArrayList<>();
-        List<Dex> toMergeInMain = Lists.newArrayList();
         mergingStrategy.startNewDex();
 
-        while (entries.hasNext()) {
-            DexArchiveEntry entry = entries.next();
+        for (DexArchiveEntry entry : entries) {
             Dex dex = new Dex(entry.getDexFileContent());
 
             if (dexingType == DexingType.LEGACY_MULTIDEX) {
-                // check if this should go to the main dex
                 String relativeUnixPath =
                         DexArchiveEntry.withClassExtension(entry.getRelativePathInArchive());
                 if (mainDexClasses.contains(relativeUnixPath)) {
-                    toMergeInMain.add(dex);
+                    // skip this one, it is added already
+                    continue;
+                }
+
+                // for release build, fill up the main dex as much as possible
+                if (!isDebuggable && mainDexTracker.tryToAddForMerging(dex)) {
                     continue;
                 }
             }
@@ -253,7 +265,9 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
 
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
             // write the main dex file
-            subTasks.add(submitForMerging(toMergeInMain, output.resolve(getDexFileName(0))));
+            subTasks.add(
+                    submitForMerging(
+                            mainDexTracker.getAllDexToMerge(), output.resolve(getDexFileName(0))));
         }
 
         // if there are some remaining unprocessed dex files, merge them

@@ -374,6 +374,50 @@ public class DexMergerTransformTest {
         Truth.assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1);
     }
 
+    @Test
+    public void test_legacyInDebug() throws Exception {
+        List<String> secondaryClasses = Lists.newArrayList();
+        for (int i = 1; i < NUM_INPUTS; i++) {
+            secondaryClasses.add("L" + PKG + "/A" + i + ";");
+        }
+
+        Set<TransformInput> inputs =
+                getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+
+        getTransform(DexingType.LEGACY_MULTIDEX, ImmutableSet.of(PKG + "/A0.class"), true)
+                .transform(
+                        TransformTestHelper.invocationBuilder()
+                                .setTransformOutputProvider(outputProvider)
+                                .setInputs(inputs)
+                                .build());
+
+        assertThat(new Dex(out.resolve("main/classes.dex")))
+                .containsExactlyClassesIn(ImmutableList.of("L" + PKG + "/A0;"));
+        assertThat(new Dex(out.resolve("main/classes2.dex")))
+                .containsExactlyClassesIn(secondaryClasses);
+    }
+
+    @Test
+    public void test_legacyInRelease() throws Exception {
+        List<String> expectedClasses = Lists.newArrayList();
+        for (int i = 0; i < NUM_INPUTS; i++) {
+            expectedClasses.add("L" + PKG + "/A" + i + ";");
+        }
+
+        Set<TransformInput> inputs =
+                getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+
+        getTransform(DexingType.LEGACY_MULTIDEX, ImmutableSet.of(PKG + "/A0.class"), false)
+                .transform(
+                        TransformTestHelper.invocationBuilder()
+                                .setTransformOutputProvider(outputProvider)
+                                .setInputs(inputs)
+                                .build());
+
+        assertThat(new Dex(out.resolve("main/classes.dex")))
+                .containsExactlyClassesIn(expectedClasses);
+    }
+
     private DexMergerTransform getTransform(@NonNull DexingType dexingType) throws IOException {
         Preconditions.check(
                 dexingType != DexingType.LEGACY_MULTIDEX,

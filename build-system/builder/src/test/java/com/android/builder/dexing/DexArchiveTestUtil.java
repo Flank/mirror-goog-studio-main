@@ -208,7 +208,9 @@ public final class DexArchiveTestUtil {
         DexArchiveMerger merger;
         switch (dexMergerTool) {
             case DX:
-                merger = DexArchiveMerger.createDxDexMerger(dxContext, ForkJoinPool.commonPool());
+                merger =
+                        DexArchiveMerger.createDxDexMerger(
+                                dxContext, ForkJoinPool.commonPool(), true);
                 break;
             case D8:
                 merger =
