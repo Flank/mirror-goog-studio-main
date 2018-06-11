@@ -47,10 +47,6 @@ enum class BooleanOption(
             DeprecationReporter.DeprecationTarget.INCREMENTAL_DESUGARING),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true),
-    ENABLE_CORE_LAMBDA_STUBS(
-            "android.enableCoreLambdaStubs",
-            true,
-            DeprecationReporter.DeprecationTarget.CORE_LAMBDA_STUBS),
 
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", true),

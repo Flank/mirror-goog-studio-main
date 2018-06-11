@@ -17,7 +17,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -71,16 +70,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         }
 
         javacTask.getOptions().setBootstrapClasspath(scope.getBootClasspath());
-
-        FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
-        if (!globalScope.getProjectOptions().get(BooleanOption.ENABLE_CORE_LAMBDA_STUBS)
-                && scope.keepDefaultBootstrap()) {
-            // adding android.jar to classpath, as it is not in the bootclasspath
-            classpath =
-                    classpath.plus(
-                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
-        }
-        javacTask.setClasspath(classpath);
+        javacTask.setClasspath(scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES));
 
         javacTask.setDestinationDir(
                 artifacts
