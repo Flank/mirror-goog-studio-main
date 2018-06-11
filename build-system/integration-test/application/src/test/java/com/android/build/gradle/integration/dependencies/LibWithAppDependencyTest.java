@@ -65,7 +65,7 @@ public class LibWithAppDependencyTest {
                 project.executor().expectFailure().run("clean", ":library:assembleDebug");
 
         // Gradle detects this for us. Unfortunately there's no mention of ":lib" in the error message.
-        assertThat(result.getStderr())
+        assertThat(result.getStdout())
                 .contains(
                         "library/src/main/java/com/example/library/Lib.java:3: error: package com.example.app does not exist");
     }

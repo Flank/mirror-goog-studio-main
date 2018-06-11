@@ -55,7 +55,7 @@ public class DataBindingMessageRewriteTest {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("processDebugResources");
-                    assertThat(result.getStderr())
+                    assertThat(result.getStdout())
                             .contains(
                                     FileUtils.join(
                                             "src", "main", "res", "layout", "activity_main.xml"));
@@ -76,7 +76,7 @@ public class DataBindingMessageRewriteTest {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("processDebugResources");
-                    assertThat(result.getStderr())
+                    assertThat(result.getStdout())
                             .contains(
                                     FileUtils.join(
                                             "src", "main", "res", "layout", "activity_main.xml"));

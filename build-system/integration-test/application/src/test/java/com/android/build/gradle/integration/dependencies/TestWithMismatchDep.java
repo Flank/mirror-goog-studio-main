@@ -68,7 +68,7 @@ public class TestWithMismatchDep {
         assertThat(t.getMessage()).isEqualTo(ERROR_MSG);
 
         // check there is a version of the error, after the task name:
-        assertThat(result.getStderr()).named("stderr").contains(ERROR_MSG);
+        assertThat(result.getStdout()).contains(ERROR_MSG);
     }
 
     @Test

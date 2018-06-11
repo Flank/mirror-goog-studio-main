@@ -53,7 +53,7 @@ public class LibWithResourcesTest {
                         .expectFailure()
                         .run("clean", "lib:assembleRelease");
 
-        assertThat(result.getStderr())
+        assertThat(result.getStdout())
                 .contains(
                         "AAPT: No resource found that matches the given name "
                                 + "(at 'oops' with value '@string/invalid')");
@@ -88,7 +88,7 @@ public class LibWithResourcesTest {
                         .expectFailure()
                         .run("clean", "lib:assembleRelease");
 
-        assertThat(result.getStderr())
+        assertThat(result.getStdout())
                 .contains(
                         "resource string/invalid "
                                 + "(aka com.android.tests.libstest.lib:string/invalid) not found");
@@ -127,7 +127,7 @@ public class LibWithResourcesTest {
                         .expectFailure()
                         .run("clean", "lib:assembleRelease");
 
-        assertThat(result.getStderr())
+        assertThat(result.getStdout())
                 .contains(
                         "resource string/invalid "
                                 + "(aka com.android.tests.libstest.lib:string/invalid) not found");

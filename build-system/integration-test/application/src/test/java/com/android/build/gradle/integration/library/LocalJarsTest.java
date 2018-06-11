@@ -46,7 +46,7 @@ public class LocalJarsTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        result = project.executor().allowStderr(false).run("clean", "assembleDebug");
+        result = project.executor().run("clean", "assembleDebug");
         models = project.model().fetchAndroidProjects();
     }
 

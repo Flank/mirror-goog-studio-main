@@ -173,7 +173,7 @@ public class DesugarAppTest {
                         + "}");
         createLibToDesugarAndGetClasses();
         GradleBuildResult result = getProjectExecutor().expectFailure().run("assembleDebug");
-        assertThat(result.getStderr())
+        assertThat(result.getStdout())
                 .contains(
                         "The dependency contains Java 8 bytecode. Please enable desugaring by "
                                 + "adding the following to build.gradle\n"

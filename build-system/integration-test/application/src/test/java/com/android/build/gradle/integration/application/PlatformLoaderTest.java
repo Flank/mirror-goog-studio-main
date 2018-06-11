@@ -92,7 +92,6 @@ public class PlatformLoaderTest {
 
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertNull(result.getException());
-        assertThat(result.getStderr()).isEmpty();
     }
 
     private String getPlatform() {

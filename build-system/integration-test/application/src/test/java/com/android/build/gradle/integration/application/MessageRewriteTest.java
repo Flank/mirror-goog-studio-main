@@ -46,7 +46,7 @@ public class MessageRewriteTest {
                                     .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
                                     .expectFailure()
                                     .run("assembleF1Debug");
-                    assertThat(result.getStderr())
+                    assertThat(result.getStdout())
                             .contains(FileUtils.join("src", "main", "res", "layout", "main.xml"));
                 });
 

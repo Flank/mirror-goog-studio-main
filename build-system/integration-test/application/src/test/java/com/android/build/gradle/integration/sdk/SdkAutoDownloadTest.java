@@ -326,10 +326,10 @@ public class SdkAutoDownloadTest {
 
         GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
 
-        assertThat(result.getStderr())
+        assertThat(result.getStdout())
                 .contains(
                         "Failed to install the following Android SDK packages as some licences have not been accepted");
-        assertThat(result.getStderr()).contains("CMake");
+        assertThat(result.getStdout()).contains("CMake");
     }
 
     @Test

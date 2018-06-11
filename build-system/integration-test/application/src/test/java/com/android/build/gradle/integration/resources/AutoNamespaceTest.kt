@@ -112,8 +112,8 @@ class AutoNamespaceTest {
                 .expectFailure()
                 .run("assembleDebug")
 
-        Truth.assertThat(result.stderr).contains("error: cannot find symbol")
-        Truth.assertThat(result.stderr)
+        Truth.assertThat(result.stdout).contains("error: cannot find symbol")
+        Truth.assertThat(result.stdout)
                 .contains("int resRef = android.support.constraint.R.attr.invalid_reference;")
     }
 }

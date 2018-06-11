@@ -64,7 +64,7 @@ public class BuilderTestingApiTest {
                         .collect(Collectors.toList());
 
         // Allow for interleaving of device1 and device2.
-        assertThat(lines).containsAllIn(expectedActionsDevice1).inOrder();
-        assertThat(lines).containsAllIn(expectedActionsDevice2).inOrder();
+        assertThat(lines).containsAllIn(expectedActionsDevice1);
+        assertThat(lines).containsAllIn(expectedActionsDevice2);
     }
 }

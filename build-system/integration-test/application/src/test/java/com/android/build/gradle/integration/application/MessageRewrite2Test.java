@@ -54,7 +54,7 @@ public class MessageRewrite2Test {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("assembleDebug");
-                    assertThat(result.getStderr())
+                    assertThat(result.getStdout())
                             .contains(
                                     FileUtils.join("src", "main", "res", "values", "strings.xml"));
                 });
@@ -73,7 +73,7 @@ public class MessageRewrite2Test {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("assembleDebug");
-                    assertThat(result.getStderr())
+                    assertThat(result.getStdout())
                             .contains(
                                     FileUtils.join("src", "main", "res", "values", "strings.xml"));
                 });

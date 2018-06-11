@@ -56,7 +56,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
     @Nullable private final String buildToolsVersion;
 
     private boolean isExpectingFailure = false;
-    private boolean allowStderr = true; // TODO: change default to false.
 
     GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
@@ -78,13 +77,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
      */
     public GradleTaskExecutor expectFailure() {
         isExpectingFailure = true;
-        allowStderr(true);
-        return this;
-    }
-
-    /** Disable or enable the assertion that there is no stderr. */
-    public GradleTaskExecutor allowStderr(boolean allowStderr) {
-        this.allowStderr = allowStderr;
         return this;
     }
 
@@ -182,9 +174,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         } else if (!isExpectingFailure && failure != null) {
             maybePrintJvmLogs(failure);
             throw failure;
-        }
-        if (!allowStderr && !result.getStderr().isEmpty()) {
-            throw new AssertionError("Unexpected stderr: " + stderr);
         }
         return result;
     }

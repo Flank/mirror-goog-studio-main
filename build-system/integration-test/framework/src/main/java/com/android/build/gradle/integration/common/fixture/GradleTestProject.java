@@ -424,6 +424,8 @@ public final class GradleTestProject implements TestRule {
                         System.err.println("= Test " + description + " failed. Last build:");
                         System.err.println("==============================================");
                         System.err.println("=================== Stderr ===================");
+                        // All output produced during build execution is written to the standard
+                        // output file handle since Gradle 4.7. This should be empty.
                         System.err.print(lastBuildResult.getStderr());
                         System.err.println("=================== Stdout ===================");
                         System.err.print(lastBuildResult.getStdout());
