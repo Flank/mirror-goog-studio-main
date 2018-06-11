@@ -16,6 +16,7 @@
 package com.android.projectmodel
 
 import com.android.ide.common.util.PathString
+
 /**
  * Represents a dependency for a [Variant].
  */
@@ -30,35 +31,75 @@ sealed class Library {
  * Represents a dependency on an .AAR file.
  */
 data class AarLibrary(
-        override val address: String,
-        /**
-         * Path to the .aar file on the filesystem.
-         */
-        val location: PathString
+    override val address: String,
+
+    /**
+     * Path to the .aar file on the filesystem, if known.
+     *
+     * The IDE doesn't work with whole AAR files and instead relies on the build system to extract
+     * necessary files to disk. Location of the original AAR files is not always known.
+     */
+    val location: PathString?,
+
+    /**
+     * Location of the manifest.
+     */
+    val manifestFile: PathString,
+
+    /**
+     * Path to .jar file containing the library classes.
+     */
+    val classesJar: PathString,
+
+    /**
+     * Paths to jars that were packaged inside the AAR and are dependencies of it.
+     *
+     * This used by Gradle when a library depends on a local jar file that has no Maven coordinates,
+     * so needs to be packaged together with the AAR to be accessible to client apps.
+     */
+    val dependencyJars: Collection<PathString>,
+
+    /**
+     * Path to the folder containing unzipped, plain-text, non-namespaced resources.
+     */
+    val resFolder: PathString,
+
+    /**
+     * Path to the symbol file (`R.txt`) containing information necessary to generate the
+     * non-namespaced R class for this library.
+     */
+    val symbolFile: PathString,
+
+    /**
+     * Path to the aapt static library (`res.apk`) containing namespaced resources in proto format.
+     *
+     * This is only known for "AARv2" files, built from namespaced sources.
+     */
+    val resApkFile: PathString?
 ) : Library()
 
 /**
  * Represents a dependency on a Java artifact (either a .jar file or a folder containing .class files).
  */
 data class JavaLibrary(
-        override val address: String,
-        /**
-         * Path to the file or folder corresponding to this dependency.
-         */
-        val location: PathString
+    override val address: String,
+    /**
+     * Path to the file or folder corresponding to this dependency.
+     */
+    val location: PathString
 ) : Library()
 
 /**
  * Represents a dependency on another [AndroidProject].
  */
 data class ProjectLibrary(
-        override val address: String,
-        /**
-         * Name of the project (matches the project's [AndroidProject.name] attribute).
-         */
-        val projectName: String,
-        /**
-         * Variant of the project being depended upon (matches the variant's [Variant.name] attribute).
-         */
-        val variant: String
+    override val address: String,
+    /**
+     * Name of the project (matches the project's [AndroidProject.name] attribute).
+     */
+    val projectName: String,
+    /**
+     * Variant of the project being depended upon (matches the variant's [Variant.name] attribute).
+     */
+    val variant: String
 ) : Library()
