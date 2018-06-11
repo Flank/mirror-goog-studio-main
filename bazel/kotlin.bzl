@@ -81,7 +81,7 @@ kotlin_jar = rule(
             allow_files = True,
         ),
         "_kotlin": attr.label(
-            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"),
+            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
             allow_files = True,
         ),
     },
@@ -145,7 +145,7 @@ def kotlin_library(
   singlejar(
       name = name,
       jar_name = jar_name,
-      runtime_deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"],
+      runtime_deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
       jars = [":lib" + target + ".jar" for target in targets],
       visibility = visibility,
   )
