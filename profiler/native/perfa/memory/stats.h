@@ -180,7 +180,7 @@ using unordered_set =
 
 template <class T, MemTag TAG>
 using vector = std::vector<T, TrackingAllocator<T, TAG>>;
-}
+}  // namespace tracking
 
 }  // namespace profiler
 

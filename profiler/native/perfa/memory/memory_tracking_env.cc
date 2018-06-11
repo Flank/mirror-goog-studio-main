@@ -580,7 +580,7 @@ void MemoryTrackingEnv::HandleControlSignal(
       SetSamplingRate(new_sampling_num_interval);
       break;
     case MemoryControlRequest::CONTROL_NOT_SET:
-      // Fall through.
+    // Fall through.
     default:
       Log::V("Unknown memory control signal.");
   }
@@ -612,7 +612,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
   alloc->set_length(length);
   alloc->set_heap_id(heap_id);
 
-  g_env->allocation_event_queue_.Push(event);
+  g_env->allocation_event_queue_.Push(std::move(event));
   g_env->total_alloc_count_++;
   g_env->tagged_alloc_count_++;
 
@@ -629,7 +629,7 @@ void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
   // Note, the same class could have been pushed during the GetLoadedClasses
   // logic already so this could be a duplicate. De-dup is done on Studio-side
   // database logic based on tag uniqueness.
-  g_env->allocation_event_queue_.Push(klass_event);
+  g_env->allocation_event_queue_.Push(std::move(klass_event));
 
   // Create and send a matching Allocation event for the class object.
   AllocationEvent alloc_event;
@@ -646,7 +646,7 @@ void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
   FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
   alloc_event.set_timestamp(g_env->clock_.GetCurrentTime());
   // This can be duplicated as well and de-dup is done on Studio-side.
-  g_env->allocation_event_queue_.Push(alloc_event);
+  g_env->allocation_event_queue_.Push(std::move(alloc_event));
 }
 
 void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
@@ -688,7 +688,7 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     alloc_data->set_heap_id(kAppHeapId);
     FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
     event.set_timestamp(g_env->clock_.GetCurrentTime());
-    g_env->allocation_event_queue_.Push(event);
+    g_env->allocation_event_queue_.Push(std::move(event));
   }
   g_env->timing_stats_.Track(TimingStats::kAllocate, stopwatch.GetElapsed());
 }
@@ -703,7 +703,7 @@ void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
     free_data->set_tag(tag);
     // Associate the free event with the last gc that occurred.
     event.set_timestamp(g_env->last_gc_start_ns_);
-    g_env->allocation_event_queue_.Push(event);
+    g_env->allocation_event_queue_.Push(std::move(event));
   }
   g_env->timing_stats_.Track(TimingStats::kFree, stopwatch.GetElapsed());
 }
