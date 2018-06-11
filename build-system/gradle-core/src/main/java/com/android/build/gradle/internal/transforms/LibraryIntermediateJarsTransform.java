@@ -247,11 +247,9 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 // At configuration time, we don't know whether file will exist, so we need to
                 // create it always, because we publish it. Creating an empty jar was causing issues
                 // on windows, because javac would not release the file handle, so add an entry.
-                jarMerger.addEntry("empty", new ByteArrayInputStream(new byte[0]));
+                jarMerger.addEntry("META-INF/", new ByteArrayInputStream(new byte[0]));
             }
-        }
-
-        if (inputs.size() == 1) {
+        } else if (inputs.size() == 1) {
             QualifiedContent content = inputs.get(0);
 
             if (content instanceof JarInput) {
