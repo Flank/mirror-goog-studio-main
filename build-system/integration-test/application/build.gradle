@@ -323,7 +323,7 @@ automaticTest.dependsOn ':publishLocal'
 onlineTest.dependsOn ':publishLocal'
 test.dependsOn buildTestDependencies, ':publishAndroidGradleLocal'
 testPrebuilts.dependsOn buildTestDependencies
-allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool})
+allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool, ':base:testing-infrastructure:device-pool:device-provider:publishLocal'})
 connectedIntegrationTest.dependsOn ':publishLocal'
 connectedIntegrationTestQuarantine.dependsOn ':publishLocal'
 performanceTest.dependsOn ':publishLocal'
