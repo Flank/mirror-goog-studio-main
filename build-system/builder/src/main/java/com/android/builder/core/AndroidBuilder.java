@@ -40,7 +40,6 @@ import com.android.builder.internal.aapt.v2.Aapt2Exception;
 import com.android.builder.internal.aapt.v2.Aapt2InternalException;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.DirectoryWalker;
-import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -117,7 +116,6 @@ import java.util.zip.ZipFile;
  *   <li>{@link #mergeManifestsForTestVariant }
  *   <li>{@link #processResources }
  *   <li>{@link #compileAllAidlFiles }
- *   <li>{@link #getDexByteCodeConverter() }
  * </ol>
  *
  * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
@@ -163,8 +161,6 @@ public class AndroidBuilder {
     @NonNull
     private List<LibraryRequest> mLibraryRequests = ImmutableList.of();
 
-    private DexByteCodeConverter mDexByteCodeConverter = null;
-
     /**
      * Creates an AndroidBuilder.
      *
@@ -202,9 +198,6 @@ public class AndroidBuilder {
      */
     public void setTargetInfo(@NonNull TargetInfo targetInfo) {
         mTargetInfo = targetInfo;
-        mDexByteCodeConverter =
-                new DexByteCodeConverter(
-                        getLogger(), mTargetInfo, mJavaProcessExecutor, mVerboseExec);
 
         if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
             issueReporter.reportError(
@@ -1197,197 +1190,6 @@ public class AndroidBuilder {
                         abiFilters,
                         mLogger);
         processor.build(mProcessExecutor, processOutputHandler);
-    }
-
-    @NonNull
-    public DexByteCodeConverter getDexByteCodeConverter() {
-        checkState(
-                mDexByteCodeConverter != null,
-                "Cannot call getDexByteCodeConverter() before setTargetInfo() is called.");
-        return mDexByteCodeConverter;
-    }
-
-    public enum MainDexListOption {
-        DISABLE_ANNOTATION_RESOLUTION_WORKAROUND,
-    }
-
-    public Set<String> createMainDexList(
-            @NonNull File allClassesJarFile,
-            @NonNull File jarOfRoots,
-            @NonNull EnumSet<MainDexListOption> options) throws ProcessException {
-
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-
-        String dx = buildToolInfo.getPath(BuildToolInfo.PathId.DX_JAR);
-        if (dx == null || !new File(dx).isFile()) {
-            throw new IllegalStateException("dx.jar is missing");
-        }
-
-        builder.setClasspath(dx);
-        builder.setMain("com.android.multidex.ClassReferenceListBuilder");
-
-        if (options.contains(MainDexListOption.DISABLE_ANNOTATION_RESOLUTION_WORKAROUND)) {
-            builder.addArgs("--disable-annotation-resolution-workaround");
-        }
-
-        builder.addArgs(jarOfRoots.getAbsolutePath());
-        builder.addArgs(allClassesJarFile.getAbsolutePath());
-
-        CachedProcessOutputHandler processOutputHandler = new CachedProcessOutputHandler();
-
-        mJavaProcessExecutor.execute(builder.createJavaProcess(), processOutputHandler)
-                .rethrowFailure()
-                .assertNormalExitValue();
-
-        LineCollector lineCollector = new LineCollector();
-        processOutputHandler.getProcessOutput().processStandardOutputLines(lineCollector);
-        return ImmutableSet.copyOf(lineCollector.getResult());
-    }
-
-    /**
-     * Converts the bytecode to Dalvik format, using the {@link PreDexCache} layer.
-     *
-     * @param inputFile the input file
-     * @param outFile the output file or folder if multi-dex is enabled
-     * @param multiDex whether multidex is enabled
-     * @param dexOptions dex options
-     * @param processOutputHandler output handler to use
-     * @param minSdkVersion min sdk version passed to dx
-     * @throws IOException failed
-     * @throws InterruptedException failed
-     * @throws ProcessException failed
-     */
-    public void preDexLibrary(
-            @NonNull File inputFile,
-            @NonNull File outFile,
-            boolean multiDex,
-            @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            int minSdkVersion)
-            throws IOException, InterruptedException, ProcessException {
-        checkState(mTargetInfo != null,
-                "Cannot call preDexLibrary() before setTargetInfo() is called.");
-
-        getLogger().verbose("AndroidBuilder::preDexLibrary %1$s", inputFile.getAbsolutePath());
-        if (inputFile.isFile()) {
-            PreDexCache.getCache()
-                    .preDexLibrary(
-                            this,
-                            inputFile,
-                            outFile,
-                            multiDex,
-                            dexOptions,
-                            processOutputHandler,
-                            minSdkVersion);
-        } else {
-            preDexLibraryNoCache(
-                    inputFile, outFile, multiDex, dexOptions, processOutputHandler, minSdkVersion);
-        }
-    }
-
-    /**
-     * Converts the bytecode to Dalvik format, ignoring the {@link PreDexCache} layer.
-     *
-     * @param inputFile the input file
-     * @param outFile the output file or folder if multi-dex is enabled.
-     * @param multiDex whether multidex is enabled.
-     * @param dexOptions the dex options
-     * @param processOutputHandler handles the logging output
-     * @param minSdkVersion min sdk passed to dx
-     * @return the list of generated files.
-     * @throws ProcessException failed
-     */
-    @NonNull
-    public ImmutableList<File> preDexLibraryNoCache(
-            @NonNull File inputFile,
-            @NonNull File outFile,
-            boolean multiDex,
-            @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            int minSdkVersion)
-            throws ProcessException, IOException, InterruptedException {
-        checkNotNull(inputFile, "inputFile cannot be null.");
-        checkNotNull(outFile, "outFile cannot be null.");
-        checkNotNull(dexOptions, "dexOptions cannot be null.");
-        getLogger().verbose("AndroidBuilder::preDexLibraryNoCache %1$s", inputFile.getAbsolutePath());
-
-        try {
-            if (!checkLibraryClassesJar(inputFile)) {
-                return ImmutableList.of();
-            }
-        } catch(IOException e) {
-            throw new RuntimeException("Exception while checking library jar", e);
-        }
-        DexProcessBuilder builder = new DexProcessBuilder(outFile);
-
-        builder.setVerbose(mVerboseExec)
-                .setMultiDex(multiDex)
-                .addInput(inputFile)
-                .setMinSdkVersion(minSdkVersion);
-
-        getDexByteCodeConverter().runDexer(builder, dexOptions, processOutputHandler);
-
-        if (multiDex) {
-            File[] files = outFile.listFiles((file, name) -> name.endsWith(DOT_DEX));
-
-            if (files == null || files.length == 0) {
-                throw new RuntimeException("No dex files created at " + outFile.getAbsolutePath());
-            }
-
-            return ImmutableList.copyOf(files);
-        } else {
-            return ImmutableList.of(outFile);
-        }
-    }
-
-    /**
-     * Returns true if the library (jar or folder) contains class files, false otherwise.
-     */
-    private static boolean checkLibraryClassesJar(@NonNull File input) throws IOException {
-
-        if (!input.exists()) {
-            return false;
-        }
-
-        if (input.isDirectory()) {
-            return checkFolder(input);
-        }
-
-        try (ZipFile zipFile = new ZipFile(input)) {
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            while (entries.hasMoreElements()) {
-                String name = entries.nextElement().getName();
-                if (name.endsWith(DOT_CLASS) || name.endsWith(DOT_DEX)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Returns true if this folder or one of its subfolder contains a class file, false otherwise.
-     */
-    private static boolean checkFolder(@NonNull File folder) {
-        File[] subFolders = folder.listFiles();
-        if (subFolders != null) {
-            for (File childFolder : subFolders) {
-                if (childFolder.isFile()) {
-                    String name = childFolder.getName();
-                    if (name.endsWith(DOT_CLASS) || name.endsWith(DOT_DEX)) {
-                        return true;
-                    }
-                }
-                if (childFolder.isDirectory()) {
-                    // if childFolder returns false, continue search otherwise return success.
-                    if (checkFolder(childFolder)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     /**

@@ -96,59 +96,6 @@ public class DesugarAppWithDesugarToolTest {
     }
 
     @Test
-    public void testWithoutDexArchives()
-            throws IOException, InterruptedException, ProcessException {
-        enableJava8();
-        TestFileUtils.appendToFile(
-                project.getBuildFile(), "\nandroid.defaultConfig.minSdkVersion 24");
-
-        Files.write(
-                project.getMainSrcDir().toPath().resolve("com/example/helloworld/Data.java"),
-                ImmutableList.of(
-                        "package com.example.helloworld;",
-                        "interface Data {",
-                        "    static void staticMethod() {",
-                        "    }",
-                        "    default void defaultMethod() {",
-                        "    }",
-                        "}"));
-
-        getProjectExecutor().withUseDexArchive(false).run("assembleDebug");
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .containsClass("Lcom/example/helloworld/Data;");
-    }
-
-    @Test
-    public void testWithoutDexArchivesNoPredexing()
-            throws IOException, InterruptedException, ProcessException {
-        enableJava8();
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.defaultConfig.minSdkVersion 24\n"
-                        + "android.dexOptions.preDexLibraries false\n"
-                        + "dependencies {\n"
-                        + "    compile 'com.android.support:support-v4:"
-                        + TestVersions.SUPPORT_LIB_VERSION
-                        + "'\n"
-                        + "}");
-
-        Files.write(
-                project.getMainSrcDir().toPath().resolve("com/example/helloworld/Data.java"),
-                ImmutableList.of(
-                        "package com.example.helloworld;",
-                        "interface Data {",
-                        "    static void staticMethod() {",
-                        "    }",
-                        "    default void defaultMethod() {",
-                        "    }",
-                        "}"));
-
-        getProjectExecutor().withUseDexArchive(false).run("assembleDebug");
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .containsClass("Lcom/example/helloworld/Data;");
-    }
-
-    @Test
     public void testTryWithResourcesPlatformUnsupported()
             throws IOException, InterruptedException, ProcessException {
         enableJava8();

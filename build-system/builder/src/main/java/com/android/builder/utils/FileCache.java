@@ -1054,9 +1054,6 @@ public class FileCache {
         /** Command used for testing only. */
         TEST,
 
-        /** Pre-dex a library. */
-        PREDEX_LIBRARY,
-
         /** Mockable jars used for unit testing. */
         GENERATE_MOCKABLE_JAR,
 

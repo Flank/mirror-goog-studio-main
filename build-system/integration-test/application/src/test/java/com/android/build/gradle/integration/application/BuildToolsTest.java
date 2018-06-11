@@ -40,10 +40,11 @@ public class BuildToolsTest {
     private static final List<String> JAVAC_TASKS =
             ImmutableList.<String>builder()
                     .addAll(COMMON_TASKS)
-                    .add(":transformClassesWithPreDexForDebug")
-                    .add(":transformClassesWithPreDexForRelease")
-                    .add(":transformDexWithDexForDebug")
-                    .add(":transformDexWithDexForRelease")
+                    .add(":transformClassesWithDexBuilderForDebug")
+                    .add(":transformDexArchiveWithExternalLibsDexMergerForDebug")
+                    .add(":transformClassesWithDexBuilderForRelease")
+                    .add(":transformDexArchiveWithDexMergerForDebug")
+                    .add(":transformDexArchiveWithDexMergerForRelease")
                     .build();
 
     @Rule
@@ -76,8 +77,8 @@ public class BuildToolsTest {
 
     @Test
     public void nullBuild() throws IOException, InterruptedException {
-        project.executor().withUseDexArchive(false).run("assemble");
-        GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble");
+        project.executor().run("assemble");
+        GradleBuildResult result = project.executor().run("assemble");
 
         assertThat(result.getUpToDateTasks()).containsAllIn(JAVAC_TASKS);
     }
@@ -101,7 +102,7 @@ public class BuildToolsTest {
                         + "'\n"
                         + "}\n");
 
-        project.executor().withUseDexArchive(false).run("assemble");
+        project.executor().run("assemble");
 
         String otherBuildToolsVersion = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
         // Sanity check:
@@ -120,7 +121,7 @@ public class BuildToolsTest {
                         + "'\n"
                         + "}\n");
 
-        GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble");
+        GradleBuildResult result = project.executor().run("assemble");
 
         assertThat(result.getDidWorkTasks()).containsAllIn(JAVAC_TASKS);
     }

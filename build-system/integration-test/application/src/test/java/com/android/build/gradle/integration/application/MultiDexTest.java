@@ -202,49 +202,6 @@ public class MultiDexTest {
     }
 
     @Test
-    public void checkAdditionalParameters() throws Exception {
-        Assume.assumeTrue(
-                "Only DX main dex list supports additional parameters.",
-                tool == MainDexListTool.DX);
-        FileUtils.deletePath(
-                FileUtils.join(
-                        project.getTestDir(),
-                        "src",
-                        "main",
-                        "java",
-                        "com",
-                        "android",
-                        "tests",
-                        "basic",
-                        "manymethods"));
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.dexOptions.additionalParameters = ['--minimal-main-dex']\n");
-
-        GradleTaskExecutor executor = executor().withUseDexArchive(false);
-        executor.run("assembleIcsDebug", "assembleIcsDebugAndroidTest");
-
-        assertThat(project.getApk(ApkType.DEBUG, "ics"))
-                .containsClass("Lcom/android/tests/basic/NotUsed;");
-        assertThat(project.getApk(ApkType.DEBUG, "ics"))
-                .doesNotContainMainClass("Lcom/android/tests/basic/NotUsed;");
-
-        // Make sure --minimal-main-dex was not used for the test APK.
-        assertThat(project.getTestApk("ics")).contains("classes.dex");
-        assertThat(project.getTestApk("ics")).doesNotContain("classes2.dex");
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid.dexOptions.additionalParameters '--set-max-idx-number=10'\n");
-
-        GradleBuildResult result =
-                executor().expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
-
-        assertThat(result.getStderr()).contains("main dex capacity exceeded");
-    }
-
-    @Test
     public void checkNativeMultidexAndroidTest() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

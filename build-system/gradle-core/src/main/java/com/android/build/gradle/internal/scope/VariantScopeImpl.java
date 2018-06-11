@@ -40,7 +40,6 @@ import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
-import static com.android.build.gradle.options.BooleanOption.ENABLE_DEX_ARCHIVE;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
@@ -1822,13 +1821,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         CodeShrinker shrinker = getCodeShrinker();
         if (shrinker == R8) {
             if (globalScope.getProjectOptions().get(ENABLE_R8_DESUGARING)
-                    && isValidJava8Flag(ENABLE_R8_DESUGARING, ENABLE_R8, ENABLE_DEX_ARCHIVE)) {
+                    && isValidJava8Flag(ENABLE_R8_DESUGARING, ENABLE_R8)) {
                 return Java8LangSupport.R8;
             }
         } else {
             // D8 cannot be used if R8 is used
             if (globalScope.getProjectOptions().get(ENABLE_D8_DESUGARING)
-                    && isValidJava8Flag(ENABLE_D8_DESUGARING, ENABLE_D8, ENABLE_DEX_ARCHIVE)) {
+                    && isValidJava8Flag(ENABLE_D8_DESUGARING, ENABLE_D8)) {
                 return Java8LangSupport.D8;
             }
         }

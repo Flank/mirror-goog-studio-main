@@ -103,9 +103,7 @@ class DexArchiveBuilderCacheHandler {
     @Nullable
     File getCachedVersionIfPresent(@NonNull JarInput input, @NonNull List<Path> dependencies)
             throws IOException {
-        FileCache cache =
-                PreDexTransform.getBuildCache(
-                        input.getFile(), isExternalLib(input), userLevelCache);
+        FileCache cache = getBuildCache(input.getFile(), isExternalLib(input), userLevelCache);
 
         if (cache == null) {
             return null;
@@ -130,7 +128,7 @@ class DexArchiveBuilderCacheHandler {
 
         for (CacheableItem cacheableItem : cacheableItems) {
             FileCache cache =
-                    PreDexTransform.getBuildCache(
+                    getBuildCache(
                             cacheableItem.input.getFile(),
                             isExternalLib(cacheableItem.input),
                             userLevelCache);
@@ -307,5 +305,30 @@ class DexArchiveBuilderCacheHandler {
     /** Jumbo mode is always enabled for dex archives - see http://b.android.com/321744 */
     static boolean isJumboModeEnabledForDx() {
         return true;
+    }
+
+    /**
+     * Returns the build cache if it should be used for the predex-library task, and {@code null}
+     * otherwise.
+     */
+    @Nullable
+    static FileCache getBuildCache(
+            @NonNull File inputFile, boolean isExternalLib, @Nullable FileCache buildCache) {
+        // We use the build cache only when it is enabled and the input file is a (non-snapshot)
+        // external-library jar file
+        if (buildCache == null || !isExternalLib) {
+            return null;
+        }
+        // After the check above, here the build cache should be enabled and the input file is an
+        // external-library jar file. We now check whether it is a snapshot version or not (to
+        // address http://b.android.com/228623).
+        // Note that the current check is based on the file path; if later on there is a more
+        // reliable way to verify whether an input file is a snapshot, we should replace this check
+        // with that.
+        if (inputFile.getPath().contains("-SNAPSHOT")) {
+            return null;
+        } else {
+            return buildCache;
+        }
     }
 }

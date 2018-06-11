@@ -28,9 +28,7 @@ import java.util.function.Supplier
 class MediumGradleProjectBenchmarks(private val benchmarkEnvironment: BenchmarkEnvironment) : Supplier<List<Benchmark>> {
     companion object {
         private val SCENARIOS = listOf(
-            ProjectScenario.LEGACY_MULTIDEX,
             ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
-            ProjectScenario.NATIVE_MULTIDEX,
             ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
             ProjectScenario.D8_NATIVE_MULTIDEX,
             ProjectScenario.D8_LEGACY_MULTIDEX)

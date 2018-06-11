@@ -29,9 +29,6 @@ import java.util.function.Consumer;
  */
 public enum ProjectScenario {
     NORMAL(flags -> {}),
-    DEX_OUT_OF_PROCESS(flags -> flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS)),
-    NATIVE_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.NATIVE)),
-    LEGACY_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.LEGACY)),
     DEX_ARCHIVE_MONODEX(
             flags -> {
                 flags.setCompiler(Flags.Compiler.DEX_ARCHIVE);
@@ -46,12 +43,6 @@ public enum ProjectScenario {
             flags -> {
                 flags.setCompiler(Flags.Compiler.DEX_ARCHIVE);
                 flags.setMultiDex(Flags.MultiDexMode.LEGACY);
-            }),
-    NORMAL_J8(flags -> flags.setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL)),
-    DEX_OUT_OF_PROCESS_J8(
-            flags -> {
-                flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS);
-                flags.setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL);
             }),
     DEX_ARCHIVE_MONODEX_J8(
             flags -> {
@@ -95,10 +86,6 @@ public enum ProjectScenario {
         return flags;
     }
 
-    public boolean useDexArchive() {
-        return flags.getCompiler() == Flags.Compiler.DEX_ARCHIVE || useD8();
-    }
-
     public boolean useD8() {
         return flags.getCompiler() == Flags.Compiler.D8;
     }
@@ -111,7 +98,6 @@ public enum ProjectScenario {
         return executor.withEnableInfoLogging(false)
                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_D8, useD8())
-                .with(BooleanOption.ENABLE_D8_DESUGARING, useD8())
-                .withUseDexArchive(useDexArchive());
+                .with(BooleanOption.ENABLE_D8_DESUGARING, useD8());
     }
 }

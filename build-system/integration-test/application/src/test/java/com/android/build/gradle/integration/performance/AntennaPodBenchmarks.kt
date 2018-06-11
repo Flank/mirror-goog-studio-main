@@ -32,7 +32,6 @@ import java.util.function.Supplier
 class AntennaPodBenchmarks(private val benchmarkEnvironment: BenchmarkEnvironment) : Supplier<List<Benchmark>> {
     companion object {
         private val SCENARIOS = listOf(
-            ProjectScenario.NORMAL_J8,
             ProjectScenario.DEX_ARCHIVE_MONODEX_J8,
             ProjectScenario.D8_MONODEX_J8)
 

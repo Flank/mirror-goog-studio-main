@@ -65,6 +65,8 @@ enum class RemovedOptions(
     ENABLE_CORE_LAMBDA_STUBS(
         "android.enableCoreLambdaStubs",
         "This property has no effect, core-lambda-stubs.jar is always in the bootclasspath."),
+    ENABLE_DEX_ARCHIVE(
+        "android.useDexArchive", "This property has no effect, incremental dexing is always used."),
     ;
 
     override val status: Option.Status

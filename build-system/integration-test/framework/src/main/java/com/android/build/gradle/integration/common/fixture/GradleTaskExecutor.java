@@ -206,12 +206,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         }
     }
 
-    public GradleTaskExecutor withUseDexArchive(boolean useDexArchive) {
-        with(BooleanOption.ENABLE_DEX_ARCHIVE, useDexArchive);
-        return this;
-    }
-
-
     /** Makes the project execute with AAPT2 flag set to {@param enableAapt2}. */
     public GradleTaskExecutor withEnabledAapt2(boolean enableAapt2) {
         with(enableAapt2 ? AaptGeneration.AAPT_V2_DAEMON_MODE : AaptGeneration.AAPT_V1);

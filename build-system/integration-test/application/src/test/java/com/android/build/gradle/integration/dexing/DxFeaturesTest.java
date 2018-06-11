@@ -20,8 +20,8 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -37,14 +37,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test dx features allowing default and static interface methods, and signature-polymorphic
  * methods.
  */
-@RunWith(FilterableParameterized.class)
 public class DxFeaturesTest {
 
     private static class SignaturePolymorphicUsage {
@@ -73,13 +70,6 @@ public class DxFeaturesTest {
         }
     }
 
-    @Parameterized.Parameters
-    public static List<Boolean> withDexArchives() {
-        return ImmutableList.of(true, false);
-    }
-
-    @Parameterized.Parameter public boolean useDexArchives;
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -97,7 +87,7 @@ public class DxFeaturesTest {
                         + "dependencies {\n"
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
-        project.executor().withUseDexArchive(useDexArchives).run("assembleDebug");
+        project.executor().with(BooleanOption.ENABLE_D8, false).run("assembleDebug");
     }
 
     @Test
@@ -111,7 +101,7 @@ public class DxFeaturesTest {
                         + "dependencies {\n"
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
-        project.executor().withUseDexArchive(useDexArchives).run("assembleDebug");
+        project.executor().with(BooleanOption.ENABLE_D8, false).run("assembleDebug");
     }
 
     @NonNull

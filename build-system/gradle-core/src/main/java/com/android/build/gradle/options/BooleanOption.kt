@@ -32,8 +32,6 @@ enum class BooleanOption(
     // Used by Studio as workaround for b/71054106, b/75955471
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true, status = Option.Status.STABLE),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
-    ENABLE_DEX_ARCHIVE(
-            "android.useDexArchive", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
 
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true),

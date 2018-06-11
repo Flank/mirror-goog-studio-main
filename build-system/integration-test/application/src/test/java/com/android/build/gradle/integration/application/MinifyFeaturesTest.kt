@@ -56,15 +56,10 @@ import org.junit.runners.Parameterized
 @RunWith(FilterableParameterized::class)
 class MinifyFeaturesTest(
         val codeShrinker: CodeShrinker,
-        val multiApkMode: MultiApkMode,
-        val dexArchiveMode: DexArchiveMode) {
+        val multiApkMode: MultiApkMode) {
 
     enum class MultiApkMode {
         DYNAMIC_APP, INSTANT_APP
-    }
-
-    enum class DexArchiveMode {
-        ENABLED, DISABLED
     }
 
     companion object {
@@ -73,22 +68,18 @@ class MinifyFeaturesTest(
         @Parameterized.Parameters(name = "codeShrinker {0}, {1}, dexArchive {2}")
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, DexArchiveMode.ENABLED),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP, DexArchiveMode.DISABLED),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, DexArchiveMode.ENABLED),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP, DexArchiveMode.DISABLED),
-                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, DexArchiveMode.ENABLED),
-                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP, DexArchiveMode.DISABLED),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, DexArchiveMode.ENABLED),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP, DexArchiveMode.DISABLED),
-                arrayOf(
-                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP, DexArchiveMode.ENABLED),
-                arrayOf(
-                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP, DexArchiveMode.DISABLED),
-                arrayOf(
-                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP, DexArchiveMode.ENABLED),
-                arrayOf(
-                    CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP, DexArchiveMode.DISABLED)
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP),
+                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP),
+                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP),
+                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP),
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP),
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP),
+                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP),
+                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP),
+                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP),
+                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP)
             )
     }
 
@@ -646,9 +637,6 @@ class MinifyFeaturesTest(
     val project =
         GradleTestProject.builder()
             .fromTestApp(testApp)
-            .addGradleProperties(
-                "${BooleanOption.ENABLE_DEX_ARCHIVE.propertyName}="
-                        + "${dexArchiveMode == DexArchiveMode.ENABLED}")
             .create()
 
     @Test
@@ -790,7 +778,6 @@ class MinifyFeaturesTest(
     @Test
     fun testMinifyEnabledSyncError() {
         Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
-        Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
         project.getSubproject(":foo:otherFeature1")
             .buildFile
             .appendText("android.buildTypes.minified.minifyEnabled true")
@@ -804,7 +791,6 @@ class MinifyFeaturesTest(
     @Test
     fun testDefaultProguardFilesSyncError() {
         Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
-        Assume.assumeTrue(dexArchiveMode == DexArchiveMode.ENABLED)
         project.getSubproject(otherFeature2GradlePath)
             .buildFile
             .appendText(

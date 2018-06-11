@@ -154,18 +154,12 @@ public class DexArchivesTest {
 
     @Test
     public void testForReleaseVariants() throws IOException, InterruptedException {
-        TestFileUtils.appendToFile(project.getBuildFile(), "android.dexOptions.dexInProcess false");
         GradleBuildResult result = runTask("assembleRelease");
-        if (dexerTool == DexerTool.D8) {
-            assertThat(result.getNotUpToDateTasks())
-                    .contains(":transformClassesWithDexBuilderForRelease");
-            assertThat(result.getNotUpToDateTasks())
-                    .contains(":transformDexArchiveWithDexMergerForRelease");
-        } else {
-            assertThat(result.getNotUpToDateTasks())
-                    .contains(":transformClassesWithPreDexForRelease");
-            assertThat(result.getNotUpToDateTasks()).contains(":transformDexWithDexForRelease");
-        }
+
+        assertThat(result.getNotUpToDateTasks())
+                .contains(":transformClassesWithDexBuilderForRelease");
+        assertThat(result.getNotUpToDateTasks())
+                .contains(":transformDexArchiveWithDexMergerForRelease");
     }
 
     /** Regression test for http://b/68144982. */
@@ -244,7 +238,6 @@ public class DexArchivesTest {
     private GradleBuildResult runTask(@NonNull String taskName)
             throws IOException, InterruptedException {
         return project.executor()
-                .withUseDexArchive(true)
                 .withEnabledAapt2(true)
                 .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
                 .run(taskName);
