@@ -25,12 +25,18 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 /**
  * Translates a {@link com.google.wireless.android.sdk.stats.GradleBuildProfileSpan} into a {link
  * BenchmarkLogger}
  */
 public class ProfilerToBenchmarkAdapter {
+
+    private static final Logger LOGGER =
+            Logger.getLogger(ProfilerToBenchmarkAdapter.class.getName());
 
     private Benchmark benchmark;
     private Map<String, Metric> metrics;
@@ -40,48 +46,69 @@ public class ProfilerToBenchmarkAdapter {
         metrics = new HashMap<>();
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     public void adapt(GradleBuildProfile profile) {
-        Map<Integer, Long> timingsPerTask = consolidate(profile);
 
-        timingsPerTask.forEach(
-                (type, timings) -> {
-                    GradleTaskExecutionType gradleTaskExecutionType =
-                            GradleTaskExecutionType.forNumber(type);
-                    Metric metric =
-                            metrics.computeIfAbsent(gradleTaskExecutionType.name(), Metric::new);
-                    long utcMs = Instant.now().toEpochMilli();
-                    metric.addSamples(benchmark, new Metric.MetricSample(utcMs, timings));
-                });
+        consolidate(profile, isTransform.negate(), (it) -> it.getTask().getType())
+                .forEach(
+                        (type, timings) ->
+                                addMetric(GradleTaskExecutionType.forNumber(type).name(), timings));
+
+        consolidate(profile, isTransform, (it) -> it.getTransform().getType())
+                .forEach(
+                        (type, timings) ->
+                                addMetric(
+                                        GradleTransformExecutionType.forNumber(type).name(),
+                                        timings));
     }
 
     public void commit() {
         metrics.values().forEach(Metric::commit);
     }
 
-    private Map<Integer, Long> consolidate(GradleBuildProfile profile) {
-        Map<Integer, Long> timingsPerTask = new HashMap<>();
-
-        for (GradleBuildProfileSpan span : profile.getSpanList()) {
-            if (span.getType() == GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION) {
-                int taskType = span.getTask().getType();
-                if (taskType == GradleTaskExecutionType.TRANSFORM_VALUE) {
-                    // find out why this type is always 0 and publish once resolved.
-                    System.out.println(
-                            "Transform "
-                                    + GradleTransformExecutionType.forNumber(
-                                            span.getTransform().getType())
-                                    + "("
-                                    + span.getTransform().getType()
-                                    + ")"
-                                    + " : "
-                                    + span.getDurationInMs());
-                } else {
-                    timingsPerTask.put(
-                            taskType,
-                            timingsPerTask.getOrDefault(taskType, 0L) + span.getDurationInMs());
-                }
-            }
-        }
-        return timingsPerTask;
+    /**
+     * Add a metric
+     *
+     * @param metricName
+     * @param timing
+     */
+    private void addMetric(String metricName, long timing) {
+        Metric metric = metrics.computeIfAbsent(metricName, Metric::new);
+        long utcMs = Instant.now().toEpochMilli();
+        metric.addSamples(benchmark, new Metric.MetricSample(utcMs, timing));
+        LOGGER.info(metricName + " : " + timing);
     }
+
+    /**
+     * Consolidate all tasks or transforms of the same type under a single value by adding each
+     * element duration together.
+     *
+     * @param profile the profile information
+     * @param predicate predicate to filter spans from the passed profile
+     * @param idProvider function to return the id to consolidate a particular task or transform
+     *     type under.
+     * @return a map of id to consolidated duration.
+     */
+    private static Map<Integer, Long> consolidate(
+            GradleBuildProfile profile,
+            Predicate<GradleBuildProfileSpan> predicate,
+            Function<GradleBuildProfileSpan, Integer> idProvider) {
+        Map<Integer, Long> consolidatedTimings = new HashMap<>();
+        profile.getSpanList()
+                .stream()
+                .filter(predicate)
+                .forEach(
+                        it -> {
+                            consolidatedTimings.put(
+                                    idProvider.apply(it),
+                                    consolidatedTimings.getOrDefault(idProvider.apply(it), 0L)
+                                            + it.getDurationInMs());
+                        });
+        return consolidatedTimings;
+    }
+
+    private static final Predicate<GradleBuildProfileSpan> isTransform =
+            gradleBuildProfileSpan ->
+                    gradleBuildProfileSpan.getType()
+                            == GradleBuildProfileSpan.ExecutionType.TASK_TRANSFORM;
 }
