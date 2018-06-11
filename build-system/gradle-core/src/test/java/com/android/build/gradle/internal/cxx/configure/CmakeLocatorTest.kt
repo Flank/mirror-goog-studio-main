@@ -26,6 +26,7 @@ import java.io.IOException
 
 class CmakeLocatorTest {
     private val newline = System.lineSeparator()
+    private val slash = File.separator
 
     private fun fakeLocalPackageOf(path: String, revision: String): FakePackage.FakeLocalPackage {
         // path is like p;1.1
@@ -41,7 +42,7 @@ class CmakeLocatorTest {
         var environmentPathsRetrieved: Boolean = false,
         var sdkPackagesRetrieved: Boolean = false,
         var downloadRemote: Boolean = false,
-        var result: File? = null,
+        var result: String? = null,
         var downloadAttempts: Int = 0
     )
 
@@ -53,7 +54,7 @@ class CmakeLocatorTest {
         repositoryPackages: () -> List<LocalPackage>
     ): FindCmakeEncounter {
         val encounter = FindCmakeEncounter()
-        encounter.result = findCmakePathLogic(
+        var fileResult = findCmakePathLogic(
             cmakeVersionFromDsl = cmakeVersionFromDsl,
             cmakePathFromLocalProperties = cmakePathFromLocalProperties,
             error = { message -> encounter.errors += message },
@@ -69,11 +70,13 @@ class CmakeLocatorTest {
                 repositoryPackages()
             },
             downloader = { _ -> encounter.downloadAttempts = encounter.downloadAttempts + 1 }
-
         )
+        if (fileResult != null) {
+            encounter.result = fileResult.toString().replace("\\", "/")
+        }
         if (encounter.result != null) {
             // Should be the cmake install folder without the "bin"
-            assertThat(encounter.result!!.name).isNotEqualTo("bin")
+            assertThat(encounter.result!!.endsWith("bin")).isFalse()
         }
         return encounter
     }
@@ -83,6 +86,10 @@ class CmakeLocatorTest {
             action()
             throw RuntimeException("expected exception")
         } catch (e: Throwable) {
+            if (message != e.message) {
+                println("Expected: $message")
+                println("Actual: ${e.message}")
+            }
             assertThat(e).hasMessageThat().isEqualTo(message)
         }
     }
@@ -363,7 +370,7 @@ class CmakeLocatorTest {
             },
             repositoryPackages = { listOf(threeTen, threeSix) })
         assertThat(encounter.result).isNotNull()
-        assertThat(encounter.result!!.toString()).isEqualTo(
+        assertThat(encounter.result!!).isEqualTo(
             "/sdk/cmake/3.6.4111459"
         )
         assertThat(encounter.warnings).hasSize(0)
@@ -445,7 +452,7 @@ class CmakeLocatorTest {
             },
             repositoryPackages = { listOf(threeTen, threeSix) },
             cmakeVersion = { folder ->
-                if (folder.toString() == "/a/b/c/cmake/bin") {
+                if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/bin") {
                     Revision.parseRevision("3.12")
                 } else {
                     null
@@ -469,7 +476,7 @@ class CmakeLocatorTest {
          */
         expectException("CMake '3.6.4111459' is required but has not yet been downloaded " +
                 "from the SDK.$newline" +
-                "- CMake found in PATH at '/a/b/c/cmake' had version '3.12'.", {
+                "- CMake found in PATH at '${slash}a${slash}b${slash}c${slash}cmake' had version '3.12'.", {
             findCmakePath(
                 cmakeVersionFromDsl = null,
                 environmentPaths = {
@@ -480,10 +487,11 @@ class CmakeLocatorTest {
                 },
                 repositoryPackages = { listOf() },
                 cmakeVersion = { folder ->
+                    var folderPath = folder.toString().replace("\\", "/")
                     when {
-                        folder.toString() == "/a/b/c/cmake/bin" ->
+                        folderPath == "/a/b/c/cmake/bin" ->
                             Revision.parseRevision("3.12")
-                        folder.toString() == "/d/e/f/cmake/bin" ->
+                        folderPath == "/d/e/f/cmake/bin" ->
                             Revision.parseRevision("3.13")
                         else -> null
                     }
@@ -510,7 +518,7 @@ class CmakeLocatorTest {
             },
             repositoryPackages = { listOf(threeTen, threeSix) },
             cmakeVersion = { folder ->
-                if (folder.toString() == "/d/e/f/cmake/bin") {
+                if (folder.toString().replace("\\", "/") == "/d/e/f/cmake/bin") {
                     Revision.parseRevision("3.12")
                 } else {
                     throw IOException("Problem executing CMake.exe")
@@ -522,7 +530,7 @@ class CmakeLocatorTest {
         )
         assertThat(encounter.warnings).containsExactly(
             "Could not execute cmake at " +
-                    "'/a/b/c/cmake/bin' to get version. Skipping."
+                    "'${slash}a${slash}b${slash}c${slash}cmake${slash}bin' to get version. Skipping."
         )
         assertThat(encounter.errors).hasSize(0)
         assertThat(encounter.downloadAttempts).isEqualTo(0)
@@ -542,7 +550,7 @@ class CmakeLocatorTest {
             environmentPaths = { listOf(File("/d/e/f")) },
             repositoryPackages = { listOf(threeTen, threeSix) },
             cmakeVersion = { folder ->
-                if (folder.toString() == "/a/b/c/cmake/bin") {
+                if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/bin") {
                     Revision.parseRevision("3.12")
                 } else {
                     null
@@ -565,7 +573,7 @@ class CmakeLocatorTest {
          */
         val threeSix = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
         val threeTen = fakeLocalPackageOf("cmake;3.10.4111459", "3.10.4111459")
-        expectException("CMake '3.12' found via cmake.dir='/a/b/c/cmake' does not match " +
+        expectException("CMake '3.12' found via cmake.dir='${slash}a${slash}b${slash}c${slash}cmake' does not match " +
                 "requested version '3.13'.$newline" +
                 "- CMake '3.10.4111459' found in SDK was not the requested version " +
                 "'3.13'.$newline" +
@@ -576,7 +584,7 @@ class CmakeLocatorTest {
                 environmentPaths = { listOf(File("/d/e/f")) },
                 repositoryPackages = { listOf(threeTen, threeSix) },
                 cmakeVersion = { folder ->
-                    if (folder.toString() == "/a/b/c/cmake/bin") {
+                    if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/bin") {
                         Revision.parseRevision("3.12")
                     } else {
                         null
@@ -598,7 +606,7 @@ class CmakeLocatorTest {
             environmentPaths = { listOf(File("/d/e/f")) },
             repositoryPackages = { listOf(threeTen, threeSix) },
             cmakeVersion = { folder ->
-                if (folder.toString() == "/a/b/c/cmake/bin") {
+                if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/bin") {
                     Revision.parseRevision("3.12")
                 } else {
                     null
@@ -634,13 +642,13 @@ class CmakeLocatorTest {
                 }
             })
         assertThat(encounter.result).isNotNull()
-        assertThat(encounter.result!!.toString()).isEqualTo(
+        assertThat(encounter.result!!).isEqualTo(
             "/sdk/cmake/3.6.4111459"
         ) // This is a fallback
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors).containsExactly(
             "Could not get version from " +
-                    "cmake.dir path '/a/b/c/cmake/bin-mistake'."
+                    "cmake.dir path '${slash}a${slash}b${slash}c${slash}cmake${slash}bin-mistake'."
         )
         assertThat(encounter.downloadAttempts).isEqualTo(0)
     }
