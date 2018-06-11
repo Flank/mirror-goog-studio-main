@@ -2398,7 +2398,6 @@ public abstract class TaskManager {
                             projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                             variantScope.getGlobalScope().getTmpFolder().toPath(),
                             getProjectVariantId(variantScope),
-                            projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING),
                             enableDesugarBugFixForJacoco(variantScope));
             transformManager.addTransform(taskFactory, variantScope, desugarTransform);
 
@@ -2480,8 +2479,6 @@ public abstract class TaskManager {
                                         .getBuildType()
                                         .isDebuggable())
                         .setJava8LangSupportType(variantScope.getJava8LangSupportType())
-                        .setEnableIncrementalDesugaring(
-                                projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING))
                         .setProjectVariant(getProjectVariantId(variantScope))
                         .setNumberOfBuckets(
                                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))

@@ -158,7 +158,6 @@ public class DesugarTransform extends Transform {
     private boolean verbose;
     private final boolean enableGradleWorkers;
     @NonNull private final String projectVariant;
-    private final boolean enableIncrementalDesugaring;
     // If a flag should be passed to handle http://b/62623509, for JaCoCo older than 0.7.8
     private final boolean enableBugFixForJacoco;
 
@@ -173,7 +172,6 @@ public class DesugarTransform extends Transform {
             boolean enableGradleWorkers,
             @NonNull Path tmpDir,
             @NonNull String projectVariant,
-            boolean enableIncrementalDesugaring,
             boolean enableBugFixForJacoco) {
         this(
                 bootClasspath,
@@ -184,7 +182,6 @@ public class DesugarTransform extends Transform {
                 enableGradleWorkers,
                 tmpDir,
                 projectVariant,
-                enableIncrementalDesugaring,
                 WaitableExecutor.useGlobalSharedThreadPool(),
                 enableBugFixForJacoco);
     }
@@ -199,7 +196,6 @@ public class DesugarTransform extends Transform {
             boolean enableGradleWorkers,
             @NonNull Path tmpDir,
             @NonNull String projectVariant,
-            boolean enableIncrementalDesugaring,
             @NonNull WaitableExecutor waitableExecutor,
             boolean enableBugFixForJacoco) {
         this.bootClasspath = bootClasspath;
@@ -211,7 +207,6 @@ public class DesugarTransform extends Transform {
         this.enableGradleWorkers = enableGradleWorkers;
         this.tmpDir = tmpDir;
         this.projectVariant = projectVariant;
-        this.enableIncrementalDesugaring = enableIncrementalDesugaring;
         this.enableBugFixForJacoco = enableBugFixForJacoco;
     }
 
@@ -253,7 +248,7 @@ public class DesugarTransform extends Transform {
 
     @Override
     public boolean isIncremental() {
-        return enableIncrementalDesugaring;
+        return true;
     }
 
     @Override
@@ -295,10 +290,6 @@ public class DesugarTransform extends Transform {
     @NonNull
     private Set<File> incrementalAnalysis(@NonNull TransformInvocation invocation)
             throws InterruptedException {
-        if (!enableIncrementalDesugaring) {
-            return ImmutableSet.of();
-        }
-
         DesugarIncrementalTransformHelper helper =
                 new DesugarIncrementalTransformHelper(projectVariant, invocation, waitableExecutor);
         Set<Path> additionalPaths = helper.getAdditionalPaths();

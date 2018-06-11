@@ -481,7 +481,6 @@ public class DexArchiveBuilderTransformDesugaringTest {
                 .setIsDebuggable(isDebuggable)
                 .setJava8LangSupportType(VariantScope.Java8LangSupport.D8)
                 .setProjectVariant("myVariant")
-                .setEnableIncrementalDesugaring(true)
                 .setIncludeFeaturesInScope(false)
                 .createDexArchiveBuilderTransform();
     }

@@ -41,7 +41,6 @@ public class DexArchiveBuilderTransformBuilder {
     private boolean isDebuggable;
     private VariantScope.Java8LangSupport java8LangSupportType;
     private String projectVariant;
-    private boolean enableIncrementalDesugaring;
     private Integer numberOfBuckets;
     private boolean includeFeaturesInScopes;
     private boolean isInstantRun;
@@ -122,13 +121,6 @@ public class DexArchiveBuilderTransformBuilder {
     }
 
     @NonNull
-    public DexArchiveBuilderTransformBuilder setEnableIncrementalDesugaring(
-            boolean enableIncrementalDesugaring) {
-        this.enableIncrementalDesugaring = enableIncrementalDesugaring;
-        return this;
-    }
-
-    @NonNull
     public DexArchiveBuilderTransformBuilder setNumberOfBuckets(@Nullable Integer numberOfBuckets) {
         this.numberOfBuckets = numberOfBuckets;
         return this;
@@ -168,7 +160,6 @@ public class DexArchiveBuilderTransformBuilder {
                 isDebuggable,
                 java8LangSupportType,
                 projectVariant,
-                enableIncrementalDesugaring,
                 numberOfBuckets,
                 includeFeaturesInScopes,
                 isInstantRun);

@@ -41,10 +41,6 @@ enum class BooleanOption(
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
     ENABLE_DESUGAR(
             "android.enableDesugar", true, DeprecationReporter.DeprecationTarget.DESUGAR_TOOL),
-    ENABLE_INCREMENTAL_DESUGARING(
-            "android.enableIncrementalDesugaring",
-            true,
-            DeprecationReporter.DeprecationTarget.INCREMENTAL_DESUGARING),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true),
 

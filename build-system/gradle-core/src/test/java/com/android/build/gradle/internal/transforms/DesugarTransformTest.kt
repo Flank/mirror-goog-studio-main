@@ -332,7 +332,6 @@ class DesugarTransformTest {
             false,
             tmp.newFolder().toPath(),
             "debug",
-            true,
             executor,
             true
         )

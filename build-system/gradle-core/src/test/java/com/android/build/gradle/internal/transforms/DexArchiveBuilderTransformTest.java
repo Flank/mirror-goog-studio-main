@@ -347,8 +347,6 @@ public class DexArchiveBuilderTransformTest {
                         .setIsDebuggable(false)
                         .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
                         .setProjectVariant("myVariant")
-                        // Should not matter but for the sake of completeness.
-                        .setEnableIncrementalDesugaring(true)
                         .setIncludeFeaturesInScope(false)
                         .createDexArchiveBuilderTransform();
         useDifferentDexerTransform.transform(invocation);
@@ -686,7 +684,6 @@ public class DexArchiveBuilderTransformTest {
                         .setDexer(dexerTool)
                         .setIsDebuggable(true)
                         .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
-                        .setEnableIncrementalDesugaring(true)
                         .setProjectVariant("myVariant")
                         .setIsInstantRun(true)
                         .createDexArchiveBuilderTransform();
@@ -722,7 +719,6 @@ public class DexArchiveBuilderTransformTest {
                         .setDexer(dexerTool)
                         .setIsDebuggable(true)
                         .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
-                        .setEnableIncrementalDesugaring(true)
                         .setProjectVariant("myVariant")
                         .setIsInstantRun(true)
                         .createDexArchiveBuilderTransform();
@@ -776,7 +772,6 @@ public class DexArchiveBuilderTransformTest {
                 .setOutBufferSize(10)
                 .setIsDebuggable(isDebuggable)
                 .setJava8LangSupportType(java8Support)
-                .setEnableIncrementalDesugaring(true)
                 .setProjectVariant("myVariant")
                 .setIncludeFeaturesInScope(false)
                 .createDexArchiveBuilderTransform();

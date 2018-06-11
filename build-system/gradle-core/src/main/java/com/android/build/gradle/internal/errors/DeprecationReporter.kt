@@ -45,8 +45,6 @@ interface DeprecationReporter {
                     "https://d.android.com/r/studio-ui/d8-overview.html"),
         // Deprecation of disabling Desugar
         DESUGAR_TOOL("in AGP version 3.3."),
-        // Deprecation of disabling incremental desugaring
-        INCREMENTAL_DESUGARING("in AGP version 3.3."),
     }
 
     /**

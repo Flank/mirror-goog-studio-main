@@ -185,7 +185,6 @@ public class DexArchiveBuilderTransform extends Transform {
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
     @NonNull private String projectVariant;
-    private boolean enableIncrementalDesugaring;
     @NonNull private final DexArchiveBuilderCacheHandler cacheHandler;
     private final boolean useGradleWorkers;
     private final int inBufferSize;
@@ -209,7 +208,6 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isDebuggable,
             @NonNull VariantScope.Java8LangSupport java8LangSupportType,
             @NonNull String projectVariant,
-            boolean enableIncrementalDesugaring,
             @Nullable Integer numberOfBuckets,
             boolean includeFeaturesInScopes,
             boolean isInstantRun) {
@@ -219,7 +217,6 @@ public class DexArchiveBuilderTransform extends Transform {
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
         this.projectVariant = projectVariant;
-        this.enableIncrementalDesugaring = enableIncrementalDesugaring;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
         this.cacheHandler =
                 new DexArchiveBuilderCacheHandler(
@@ -312,8 +309,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
         Set<File> additionalPaths;
         DesugarIncrementalTransformHelper desugarIncrementalTransformHelper;
-        if (!enableIncrementalDesugaring
-                || java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
             additionalPaths = ImmutableSet.of();
             desugarIncrementalTransformHelper = null;
         } else {
@@ -444,15 +440,6 @@ public class DexArchiveBuilderTransform extends Transform {
 
         if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
             return D8DesugaringCacheInfo.NO_INFO;
-        }
-
-        if (!enableIncrementalDesugaring) {
-            // Dependency graph is not available: lets state that we depend on all bootclasspath and
-            // classpath.
-            return new D8DesugaringCacheInfo(
-                    Stream.concat(bootclasspath.stream(), classpath.stream())
-                            .distinct()
-                            .collect(Collectors.toList()));
         }
 
         Preconditions.checkNotNull(desugarIncrementalTransformHelper);

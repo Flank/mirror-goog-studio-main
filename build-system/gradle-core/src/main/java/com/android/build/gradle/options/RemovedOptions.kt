@@ -58,7 +58,14 @@ enum class RemovedOptions(
             "This property has been replaced by android.overridePathCheck"),
     AAPT_NAMESPACING(
             "android.aaptNamespacing",
-            "This property has been replaced by android.aaptOptions.namespaced");
+            "This property has been replaced by android.aaptOptions.namespaced"),
+    ENABLE_INCREMENTAL_DESUGARING(
+        "android.enableIncrementalDesugaring",
+        "This property has no effect, incremental desugaring is always enabled."),
+    ENABLE_CORE_LAMBDA_STUBS(
+        "android.enableCoreLambdaStubs",
+        "This property has no effect, core-lambda-stubs.jar is always in the bootclasspath."),
+    ;
 
     override val status: Option.Status
         get() = Option.Status.REMOVED
