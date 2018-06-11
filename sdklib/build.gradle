@@ -215,7 +215,7 @@ task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
     args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
             '--channel=2',
             '--verbose',
-            'platforms;android-P',
+            'platforms;android-28',
     ]
 }
 
