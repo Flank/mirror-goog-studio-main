@@ -69,6 +69,8 @@ public class NativeBuildOutputTest {
                                     .withNativeDir("cpp")
                                     .useCppSource(true)
                                     .build())
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @Before

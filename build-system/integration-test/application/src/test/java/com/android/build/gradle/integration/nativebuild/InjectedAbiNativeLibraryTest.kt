@@ -33,7 +33,10 @@ class InjectedAbiNativeLibraryTest {
 
     val testapp = HelloWorldLibraryApp.create()
     @Rule @JvmField
-    val project = GradleTestProject.builder().fromTestApp(testapp).create()
+    val project = GradleTestProject.builder().fromTestApp(testapp)
+        .setCmakeVersion("3.10.4819442")
+        .setWithCmakeDirInLocalProp(true)
+        .create()
 
     init {
         val lib = testapp.getSubproject(":lib") as AndroidTestApp

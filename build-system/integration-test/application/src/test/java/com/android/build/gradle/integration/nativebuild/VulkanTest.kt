@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.integration.nativebuild
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,6 +29,12 @@ class VulkanTest {
 
     @Test
     fun assembleDebug() {
+        // This test uses 3.6 CMake whose ninja doesn't support long enough paths to work on
+        // some buildbot.
+        Assume.assumeFalse(
+            SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN
+                    && System.getenv("BUILDBOT_BUILDERNAME") != null
+        )
         project.executor().run("assembleDebug")
 
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->

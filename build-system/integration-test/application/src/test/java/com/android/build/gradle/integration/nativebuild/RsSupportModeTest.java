@@ -43,6 +43,8 @@ public class RsSupportModeTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("rsSupportMode")
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     private static ModelContainer<AndroidProject> model;

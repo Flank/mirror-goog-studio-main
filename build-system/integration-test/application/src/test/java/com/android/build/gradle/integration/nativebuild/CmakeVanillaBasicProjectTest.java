@@ -42,9 +42,6 @@ import org.junit.Test;
 
 /** Assemble tests for Vanilla-Cmake. */
 public class CmakeVanillaBasicProjectTest {
-    // Test vanilla-cmake versio to use.
-    private static String VANILLA_CMAKE_VERSION = "3.8.2";
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -52,14 +49,14 @@ public class CmakeVanillaBasicProjectTest {
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     // Set the cmake version and set the local properties with the path to the cmake
                     // binary.
-                    .setCmakeVersion(VANILLA_CMAKE_VERSION)
+                    .setCmakeVersion("3.10.4819442")
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @Before
     public void setUp() throws IOException {
         File cmakeBinFolder =
-                new File(GradleTestProject.getCmakeVersionFolder(VANILLA_CMAKE_VERSION), "bin");
+                new File(GradleTestProject.getCmakeVersionFolder("3.10.4819442"), "bin");
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -89,7 +86,7 @@ public class CmakeVanillaBasicProjectTest {
                         + "        externalNativeBuild {\n"
                         + "          cmake {\n"
                         + "            path \"CMakeLists.txt\"\n"
-                        + "            version \"3.8.2\""
+                        + "            version \"3.10.2\""
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"

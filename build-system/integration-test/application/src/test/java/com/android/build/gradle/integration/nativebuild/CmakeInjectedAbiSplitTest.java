@@ -41,6 +41,8 @@ public class CmakeInjectedAbiSplitTest {
     public static GradleTestProject sProject =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @BeforeClass

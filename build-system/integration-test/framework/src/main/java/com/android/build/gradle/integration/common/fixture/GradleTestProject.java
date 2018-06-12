@@ -734,96 +734,20 @@ public final class GradleTestProject implements TestRule {
         return BuildSystem.get().getLocalRepositories();
     }
 
-    private enum BuildSystem {
-        GRADLE {
-            @NonNull
-            @Override
-            List<Path> getLocalRepositories() {
-                String customRepo = System.getenv(ENV_CUSTOM_REPO);
-                // TODO: support USE_EXTERNAL_REPO
-                ImmutableList.Builder<Path> repos = ImmutableList.builder();
-                for (String path : Splitter.on(File.pathSeparatorChar).split(customRepo)) {
-                    repos.add(Paths.get(path));
-                }
-                return repos.build();
-            }
-        },
-        BAZEL {
-            @NonNull
-            @Override
-            List<Path> getLocalRepositories() {
-                return BazelIntegrationTestsSuite.MAVEN_REPOS;
-            }
-        },
-        IDEA {
-            @NonNull
-            @Override
-            List<Path> getLocalRepositories() {
-                return ImmutableList.of(
-                        TestUtils.getWorkspaceFile("prebuilts/tools/common/m2/repository")
-                                .toPath());
-                // The classes build by idea and jars are added separately.
-            }
-
-            @Override
-            String getCommonBuildScriptContent(
-                    boolean withAndroidGradlePlugin, boolean withDeviceProvider)
-                    throws IOException {
-                StringBuilder buildScript =
-                        new StringBuilder(
-                                "\n"
-                                        + "def commonScriptFolder = buildscript.sourceFile.parent\n"
-                                        + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
-                                        + "\n"
-                                        + "project.buildscript { buildscript ->\n"
-                                        + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
-                                        + "    dependencies {"
-                                        + "        classpath files(");
-
-                for (URL url :
-                        ((URLClassLoader) GradleTestProject.class.getClassLoader()).getURLs()) {
-                    buildScript.append("                '").append(url.getFile()).append("',\n");
-                }
-                buildScript.append("        )\n" + "    }\n" + "}");
-                return buildScript.toString();
-            }
-        },
-        ;
-
-        @NonNull
-        abstract List<Path> getLocalRepositories();
-
-        String getCommonBuildScriptContent(
-                boolean withAndroidGradlePlugin, boolean withDeviceProvider) throws IOException {
-            StringBuilder stringBuilder =
-                    new StringBuilder(
-                            "def commonScriptFolder = buildscript.sourceFile.parent\n"
-                                    + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
-                                    + "\n"
-                                    + "project.buildscript { buildscript ->\n"
-                                    + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
-                                    + "    dependencies {\n");
-            if (withAndroidGradlePlugin) {
-                stringBuilder.append(
-                        "        classpath \"com.android.tools.build:gradle:$rootProject.buildVersion\"\n");
-            }
-            if (withDeviceProvider) {
-                stringBuilder.append(
-                        "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n");
-            }
-            stringBuilder.append("    }\n" + "}");
-            return stringBuilder.toString();
+    /**
+     * Returns the prebuilts CMake folder for the requested version of CMake. Note: This function
+     * returns a path within the Android SDK which is expected to be used in cmake.dir.
+     */
+    @NonNull
+    public static File getCmakeVersionFolder(@NonNull String cmakeVersion) {
+        File cmakeVersionFolderInSdk =
+                new File(TestUtils.getSdk(), String.format("cmake/%s", cmakeVersion));
+        if (!cmakeVersionFolderInSdk.isDirectory()) {
+            throw new RuntimeException(
+                    String.format("Could not find CMake in %s", cmakeVersionFolderInSdk));
         }
 
-        static BuildSystem get() {
-            if (TestUtils.runningFromBazel()) {
-                return BAZEL;
-            } else if (System.getenv(ENV_CUSTOM_REPO) != null) {
-                return GRADLE;
-            } else {
-                return IDEA;
-            }
-        }
+        return cmakeVersionFolderInSdk;
     }
 
     public String generateCommonBuildScript() throws IOException {
@@ -1484,22 +1408,95 @@ public final class GradleTestProject implements TestRule {
         return (File) localProp.getFile();
     }
 
-    /**
-     * Returns the prebuilts CMake folder for the requested version of CMake. Note: This returns the
-     * temporary CMake folder found within prebuilts/cmake/OS, ideally, CMake would reside
-     * withinMinimum supported Gradle version the prebuilts/studio/sdk/OS/cmake/, until we make the
-     * move, this is considered a hack/temp solution, hence this function is not in TestUtils.
-     */
-    @NonNull
-    public static File getCmakeVersionFolder(@NonNull String cmakeVersion) {
-        OsType osType = OsType.getHostOs();
-        File cmakeVersionFolder =
-                new File(
-                        TestUtils.getWorkspaceRoot(),
-                        String.format(
-                                "prebuilts/tools/common/cmake/%s/%s",
-                                osType.getFolderName(), cmakeVersion));
-        return cmakeVersionFolder;
+    private enum BuildSystem {
+        GRADLE {
+            @NonNull
+            @Override
+            List<Path> getLocalRepositories() {
+                String customRepo = System.getenv(ENV_CUSTOM_REPO);
+                // TODO: support USE_EXTERNAL_REPO
+                ImmutableList.Builder<Path> repos = ImmutableList.builder();
+                for (String path : Splitter.on(File.pathSeparatorChar).split(customRepo)) {
+                    repos.add(Paths.get(path));
+                }
+                return repos.build();
+            }
+        },
+        BAZEL {
+            @NonNull
+            @Override
+            List<Path> getLocalRepositories() {
+                return BazelIntegrationTestsSuite.MAVEN_REPOS;
+            }
+        },
+        IDEA {
+            @NonNull
+            @Override
+            List<Path> getLocalRepositories() {
+                return ImmutableList.of(
+                        TestUtils.getWorkspaceFile("prebuilts/tools/common/m2/repository")
+                                .toPath());
+                // The classes build by idea and jars are added separately.
+            }
+
+            @Override
+            String getCommonBuildScriptContent(
+                    boolean withAndroidGradlePlugin, boolean withDeviceProvider) {
+                StringBuilder buildScript =
+                        new StringBuilder(
+                                "\n"
+                                        + "def commonScriptFolder = buildscript.sourceFile.parent\n"
+                                        + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
+                                        + "\n"
+                                        + "project.buildscript { buildscript ->\n"
+                                        + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
+                                        + "    dependencies {"
+                                        + "        classpath files(");
+
+                for (URL url :
+                        ((URLClassLoader) GradleTestProject.class.getClassLoader()).getURLs()) {
+                    buildScript.append("                '").append(url.getFile()).append("',\n");
+                }
+                buildScript.append("        )\n" + "    }\n" + "}");
+                return buildScript.toString();
+            }
+        },
+        ;
+
+        static BuildSystem get() {
+            if (TestUtils.runningFromBazel()) {
+                return BAZEL;
+            } else if (System.getenv(ENV_CUSTOM_REPO) != null) {
+                return GRADLE;
+            } else {
+                return IDEA;
+            }
+        }
+
+        @NonNull
+        abstract List<Path> getLocalRepositories();
+
+        String getCommonBuildScriptContent(
+                boolean withAndroidGradlePlugin, boolean withDeviceProvider) {
+            StringBuilder stringBuilder =
+                    new StringBuilder(
+                            "def commonScriptFolder = buildscript.sourceFile.parent\n"
+                                    + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
+                                    + "\n"
+                                    + "project.buildscript { buildscript ->\n"
+                                    + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
+                                    + "    dependencies {\n");
+            if (withAndroidGradlePlugin) {
+                stringBuilder.append(
+                        "        classpath \"com.android.tools.build:gradle:$rootProject.buildVersion\"\n");
+            }
+            if (withDeviceProvider) {
+                stringBuilder.append(
+                        "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n");
+            }
+            stringBuilder.append("    }\n" + "}");
+            return stringBuilder.toString();
+        }
     }
 
     private void createSettingsFile() throws IOException {

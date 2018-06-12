@@ -45,6 +45,8 @@ public class CmakeJniLibTest {
             GradleTestProject.builder()
                     .fromTestProject("ndkJniLib")
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @BeforeClass
@@ -104,7 +106,7 @@ public class CmakeJniLibTest {
         NativeAndroidProject model =
                 project.model().fetchMulti(NativeAndroidProject.class).get(":lib");
         assertThat(model).isNotNull();
-        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getBuildFiles()).hasSize(2);
         assertThat(model.getName()).isEqualTo("lib");
         assertThat(model.getArtifacts())
                 .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 2);

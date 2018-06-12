@@ -56,6 +56,8 @@ public class CmakeStlMatrixTest {
             GradleTestProject.builder()
                     .fromTestApp(
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @Parameterized.Parameters(name = "stl = {0}")
@@ -125,7 +127,6 @@ public class CmakeStlMatrixTest {
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
 
-
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
     }
@@ -148,7 +149,7 @@ public class CmakeStlMatrixTest {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getBuildFiles()).hasSize(2);
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);

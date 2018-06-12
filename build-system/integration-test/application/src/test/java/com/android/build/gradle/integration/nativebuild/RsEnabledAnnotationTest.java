@@ -29,7 +29,11 @@ import org.junit.Test;
 public class RsEnabledAnnotationTest {
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("extractRsEnabledAnnotations").create();
+            GradleTestProject.builder()
+                    .fromTestProject("extractRsEnabledAnnotations")
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
+                    .create();
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {

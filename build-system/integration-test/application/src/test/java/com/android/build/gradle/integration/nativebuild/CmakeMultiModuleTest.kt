@@ -38,6 +38,8 @@ class CmakeMultiModuleTest {
                                     mapOf(
                                             "app" to HelloWorldJniApp.builder().withCmake().build(),
                                             "lib" to SimpleNativeLib())))
+                .setCmakeVersion("3.10.4819442")
+                .setWithCmakeDirInLocalProp(true)
                     .create()
 
     @Before
@@ -91,7 +93,7 @@ android {
 
     @Test
     fun checkTaskExecutionOrder() {
-        val result = project.executor().run("clean", ":app:assembleDebug");
+        val result = project.executor().run("clean", ":app:assembleDebug")
         assertThat(result.getTask(":lib:externalNativeBuildDebug")).wasExecuted()
         assertThat(result.getTask(":app:externalNativeBuildDebug"))
                 .ranAfter(":lib:externalNativeBuildDebug")

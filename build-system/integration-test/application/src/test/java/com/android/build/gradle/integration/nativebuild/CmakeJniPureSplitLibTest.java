@@ -37,6 +37,8 @@ public class CmakeJniPureSplitLibTest {
             GradleTestProject.builder()
                     .fromTestProject("ndkJniPureSplitLib")
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @BeforeClass
