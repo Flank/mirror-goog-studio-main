@@ -18,8 +18,8 @@ package com.android.ide.common.symbols
 
 import com.android.SdkConstants
 import com.android.annotations.concurrency.Immutable
-import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
+import com.android.resources.ResourceVisibility
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
@@ -29,7 +29,6 @@ import com.google.common.collect.Maps
 import com.google.common.collect.Table
 import com.google.common.collect.Tables
 import java.io.File
-import java.util.Arrays
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet
@@ -94,7 +93,7 @@ abstract class SymbolTable protected constructor() {
      * @return the result of merging `this` with `m`
      */
     fun merge(m: SymbolTable): SymbolTable {
-        return merge(Arrays.asList(this, m))
+        return merge(listOf(this, m))
     }
 
     /**
@@ -183,15 +182,16 @@ abstract class SymbolTable protected constructor() {
         return found
     }
 
+    /** [ResourceType]s present in the table. */
+    val resourceTypes: Set<ResourceType> get() = symbols.rowKeySet()
+
     /** Builder that creates a symbol table.  */
     class Builder {
 
         private var tablePackage = ""
 
         private val symbols: Table<ResourceType, String, Symbol> =
-                Tables.newCustomTable(
-                        Maps.newEnumMap<ResourceType, Map<String, Symbol>>(ResourceType::class.java),
-                        { HashMap() })
+                Tables.newCustomTable(Maps.newEnumMap(ResourceType::class.java), ::HashMap)
 
         /**
          * Adds a symbol to the table to be built. The table must not contain a symbol with the same
