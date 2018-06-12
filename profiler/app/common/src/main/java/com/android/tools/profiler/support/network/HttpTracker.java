@@ -201,6 +201,7 @@ public final class HttpTracker {
     private static final class Connection implements HttpConnectionTracker {
 
         private long myId;
+        private Thread myLastThread = null;
 
         private Connection(String url, StackTraceElement[] callstack) {
             myId = nextId();
@@ -276,7 +277,10 @@ public final class HttpTracker {
 
         void trackThread() {
             Thread thread = Thread.currentThread();
-            trackThread(myId, thread.getName(), thread.getId());
+            if (thread != myLastThread) {
+                trackThread(myId, thread.getName(), thread.getId());
+                myLastThread = thread;
+            }
         }
 
         private native long nextId();
