@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
+import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
@@ -256,12 +257,14 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     @Override
     public void validateModel(@NonNull VariantModel model) {
+
+        validateVersionCodes(model);
+
         if (getVariantConfigurationTypes().stream().noneMatch(VariantType::isFeatureSplit)) {
             return;
         }
 
         EvalIssueReporter issueReporter = androidBuilder.getIssueReporter();
-
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
@@ -286,5 +289,40 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         signingConfigs.create(DEBUG);
         buildTypes.create(DEBUG);
         buildTypes.create(RELEASE);
+    }
+
+    private void validateVersionCodes(@NonNull VariantModel model) {
+
+        EvalIssueReporter issueReporter = androidBuilder.getIssueReporter();
+
+        Integer versionCode = model.getDefaultConfig().getProductFlavor().getVersionCode();
+        if (versionCode != null && versionCode < 1) {
+            issueReporter.reportError(
+                    Type.GENERIC,
+                    new EvalIssueException(
+                            "android.defaultConfig.versionCode is set to "
+                                    + versionCode
+                                    + ", but it should be a positive integer.\n"
+                                    + "See https://developer.android.com/studio/publish/versioning#appversioning"
+                                    + " for more information."));
+            return;
+        }
+
+        for (ProductFlavorData flavorData : model.getProductFlavors().values()) {
+            Integer flavorVersionCode = flavorData.getProductFlavor().getVersionCode();
+            if (flavorVersionCode == null || flavorVersionCode > 0) {
+                return;
+            }
+            issueReporter.reportError(
+                    Type.GENERIC,
+                    new EvalIssueException(
+                            "versionCode is set to "
+                                    + flavorVersionCode
+                                    + " in product flavor "
+                                    + flavorData.getProductFlavor().getName()
+                                    + ", but it should be a positive integer.\n"
+                                    + "See https://developer.android.com/studio/publish/versioning#appversioning"
+                                    + " for more information."));
+        }
     }
 }

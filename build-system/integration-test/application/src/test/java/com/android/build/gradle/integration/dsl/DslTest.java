@@ -144,4 +144,42 @@ public class DslTest {
 
         assertThat(actual).named("BuildConfig.java").isEqualTo(expected);
     }
+
+    @Test
+    public void testValidateVersionCodes() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        versionCode 0\n"
+                        + "    }\n"
+                        + "}\n");
+        final ModelContainer<AndroidProject> model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        Collection<SyncIssue> syncIssues = model.getOnlyModel().getSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
+                .contains("android.defaultConfig.versionCode is set to 0");
+
+        TestFileUtils.searchAndReplace(project.getBuildFile(), "versionCode 0", "versionCode 1");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    flavorDimensions \"color\"\n"
+                        + "    productFlavors {\n"
+                        + "        red {\n"
+                        + "            versionCode = -1\n"
+                        + "            dimension \"color\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        final ModelContainer<AndroidProject> flavoredModel =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        Collection<SyncIssue> flavoredSyncIssues = flavoredModel.getOnlyModel().getSyncIssues();
+        assertThat(flavoredSyncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(flavoredSyncIssues).getMessage())
+                .contains("versionCode is set to -1 in product flavor red");
+    }
 }
