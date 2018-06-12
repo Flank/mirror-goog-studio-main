@@ -382,20 +382,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                         PsiMethod method = call.resolve();
                         if (method != null) {
                             PsiClass containingClass = method.getContainingClass();
-                            if (context.getEvaluator()
-                                    .extendsClass(containingClass, recycleType, false)) {
-                                // Yes, called the right recycle() method; now make sure
-                                // we're calling it on the right variable
-                                UExpression operand = call.getReceiver();
-                                if (operand instanceof UReferenceExpression) {
-                                    PsiElement resolved =
-                                            ((UReferenceExpression) operand).resolve();
-                                    //noinspection SuspiciousMethodCalls
-                                    if (resolved != null && getReferences().contains(resolved)) {
-                                        return true;
-                                    }
-                                }
-                            }
+                            return context.getEvaluator()
+                                    .extendsClass(containingClass, recycleType, false);
                         }
                         return false;
                     }
