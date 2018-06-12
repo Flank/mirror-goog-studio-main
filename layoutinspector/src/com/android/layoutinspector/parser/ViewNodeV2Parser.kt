@@ -18,11 +18,11 @@ package com.android.layoutinspector.parser
 
 import com.android.layoutinspector.model.ViewNode
 import com.android.layoutinspector.model.ViewProperty
+import com.google.common.base.Verify.verify
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import java.nio.ByteBuffer
 import java.util.HashMap
-import kotlin.test.assertEquals
 
 private const val META_KEY = "meta"
 private const val HASH_KEY = "$META_KEY:__hash__"
@@ -151,7 +151,10 @@ class ViewNodeV2Parser {
         val childCountProp = metaProps.find { it.name == CHILD_COUNT_KEY } ?: return
         val childCount = childCountProp.value.toInt()
         val children = childrenProps.entries.sortedBy { getChildIndex(it.key) }.map { createViewNode(it.value as Map<Short, Any>, parent) }
-        assertEquals(childCount, children.size)
+        verify(childCount == children.size, String.format(
+            "Expect view node %s to have %d children but instead found %d",
+            parent, childCount, children.size
+        ))
         parent.children.addAll(children)
     }
 }
