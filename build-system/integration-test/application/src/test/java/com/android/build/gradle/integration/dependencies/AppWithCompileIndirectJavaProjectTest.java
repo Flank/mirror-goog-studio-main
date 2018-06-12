@@ -84,7 +84,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
         appendToFile(
                 project.getSubproject("jar").getBuildFile(),
-                "\ndependencies { compile 'com.google.guava:guava:18.0' }");
+                "\ndependencies { compile 'com.google.guava:guava:19.0' }");
     }
 
     @AfterClass
@@ -136,7 +136,8 @@ public class AppWithCompileIndirectJavaProjectTest {
         Collection<JavaLibrary> appJavaLibDeps = appDeps.getJavaLibraries();
         assertThat(appJavaLibDeps).named("app(javalibs) count").hasSize(1);
         JavaLibrary javaLibrary = Iterables.getOnlyElement(appJavaLibDeps);
-        assertThat(javaLibrary.getResolvedCoordinates()).isEqualTo("com.google.guava", "guava", "18.0", "jar", null);
+        assertThat(javaLibrary.getResolvedCoordinates())
+                .isEqualTo("com.google.guava", "guava", "19.0", "jar", null);
 
         // ---
         // test the dependencies on the :library module.
@@ -156,7 +157,8 @@ public class AppWithCompileIndirectJavaProjectTest {
         Collection<JavaLibrary> libJavaLibDeps = appDeps.getJavaLibraries();
         assertThat(libJavaLibDeps).named("lib(javalibs) count").hasSize(1);
         javaLibrary = Iterables.getOnlyElement(libJavaLibDeps);
-        assertThat(javaLibrary.getResolvedCoordinates()).isEqualTo("com.google.guava", "guava", "18.0", "jar", null);
+        assertThat(javaLibrary.getResolvedCoordinates())
+                .isEqualTo("com.google.guava", "guava", "19.0", "jar", null);
     }
 
     @Test
@@ -191,7 +193,7 @@ public class AppWithCompileIndirectJavaProjectTest {
             // no direct java library
             assertThat(helper.on(dependencyGraph).withType(JAVA).mapTo(COORDINATES))
                     .named(":app compile Java")
-                    .containsExactly("com.google.guava:guava:18.0@jar");
+                    .containsExactly("com.google.guava:guava:19.0@jar");
 
             // look at direct modules
             Items moduleItems = helper.on(dependencyGraph).withType(MODULE);
@@ -245,7 +247,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
                 assertThat(libraryToJarItems.withType(JAVA).mapTo(COORDINATES))
                         .named(":app->:lib->:jar compile java")
-                        .containsExactly("com.google.guava:guava:18.0@jar");
+                        .containsExactly("com.google.guava:guava:19.0@jar");
             }
         }
 
@@ -339,7 +341,7 @@ public class AppWithCompileIndirectJavaProjectTest {
             // Right now guava shows up directly due to lack for graph
             assertThat(helper.on(compileGraph).withType(JAVA).mapTo(COORDINATES))
                     .named(":lib compile Java")
-                    .containsExactly("com.google.guava:guava:18.0@jar");
+                    .containsExactly("com.google.guava:guava:19.0@jar");
 
             // look at direct module
             Items moduleItems = helper.on(compileGraph).withType(MODULE);
@@ -369,7 +371,7 @@ public class AppWithCompileIndirectJavaProjectTest {
 
                 assertThat(jarItems.withType(JAVA).mapTo(COORDINATES))
                         .named(":lib->:jar compile java")
-                        .containsExactly("com.google.guava:guava:18.0@jar");
+                        .containsExactly("com.google.guava:guava:19.0@jar");
             }
         }
     }

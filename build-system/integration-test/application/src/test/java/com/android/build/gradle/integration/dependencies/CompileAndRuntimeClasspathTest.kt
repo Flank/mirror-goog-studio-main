@@ -39,7 +39,7 @@ class CompileAndRuntimeClasspathTest {
             |}""".trimMargin()
         )
 
-        val result = project.executor().run("checkDebugClasspath")
-        assertThat(result.stdout).contains("Resolved versions for runtime classpath (20.0) and compile classpath (19.0) differ.")
+        val result = project.executor().expectFailure().run("checkDebugClasspath")
+        assertThat(result.stderr).contains("Resolved versions for runtime classpath (20.0) and compile classpath (19.0) differ.")
     }
 }

@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.utils.FileUtils;
@@ -79,7 +80,7 @@ public class AppClasspathCheckTask extends ClasspathComparisionTask {
                         getProject().getBuildFile(),
                         suggestedVersion);
 
-        reporter.reportWarning(EvalIssueReporter.Type.GENERIC, message);
+        reporter.reportError(EvalIssueReporter.Type.GENERIC, new EvalIssueException(message));
     }
 
     @TaskAction
