@@ -25,8 +25,11 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.RegularFile
+import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 
 open class GatherModuleInfoTask : DefaultTask() {
     private lateinit var sourceProjectName : String
@@ -39,6 +42,7 @@ open class GatherModuleInfoTask : DefaultTask() {
         AndroidCollector().collectInto(moduleDataHolder, this)
         DependencyCollector().collectInto(moduleDataHolder, this)
         KotlinUsageCollector().collectInto(moduleDataHolder, this)
+        SourceFilesCollector().collectInto(moduleDataHolder, this)
 
         moduleDataHolder.path = sourceProjectName
         moduleDataHolder.saveAsJsonTo(outputProvider.get().asFile)
@@ -66,14 +70,67 @@ private class AndroidCollector : DataCollector {
     fun collectBuildConfig(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
         task.project.plugins.withType(BasePlugin::class.java).firstOrNull()?.let {
             it.extension.defaultConfig.minSdkVersion?.apiLevel?.let {
-                dataHolder.androidBuildConfig.minSdkVersion = it }
+                dataHolder.androidBuildConfig.minSdkVersion = it
+            }
             it.extension.defaultConfig.targetSdkVersion?.apiLevel?.let {
-                dataHolder.androidBuildConfig.targetSdkVersion = it }
+                dataHolder.androidBuildConfig.targetSdkVersion = it
+            }
 
             // extension.compileSdkVersion returns "android-27", we want just "27".
             dataHolder.androidBuildConfig.compileSdkVersion =
                     AndroidTargetHash.getPlatformVersion(it.extension.compileSdkVersion)!!.apiLevel
         }
+    }
+}
+
+private class SourceFilesCollector : DataCollector {
+    override fun collectInto(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
+        // Get the java sources from main (excludes tests for now) or just return if they are
+        // not there, since we do not have anything else to do.
+        val javaPackageMap = mutableMapOf<String, Int>()
+        val kotlinPackageMap = mutableMapOf<String, Int>()
+
+        task.project.findMainSourceSet().forEach {
+            it.walkBottomUp().toList().filter { !it.isDirectory }
+                .forEach {
+                    val dirPackage = it.parent
+                    when (it.extension) {
+                        "java" -> javaPackageMap.increment(dirPackage)
+                        "kt" -> kotlinPackageMap.increment(dirPackage)
+                    }
+                }
+        }
+
+        dataHolder.javaPackageCount = javaPackageMap.size
+        if (javaPackageMap.isNotEmpty()) {
+            // Since ASPoet doesn't support count per package, we pick the biggest.
+            dataHolder.javaClassCount = javaPackageMap.values.max() ?: 0
+            dataHolder.javaMethodsPerClass = 10 // TODO actually count the methods
+        }
+
+        dataHolder.kotlinPackageCount = kotlinPackageMap.size
+        if (kotlinPackageMap.isNotEmpty()) {
+            // Since ASPoet doesn't support count per package, we pick the biggest.
+            dataHolder.kotlinClassCount = kotlinPackageMap.values.max() ?: 0
+            dataHolder.kotlinMethodsPerClass = 10 // TODO actually count the methods
+        }
+    }
+
+    private fun Project.findMainSourceSet(): Set<File> {
+        if (isAndroidProject()) {
+            val androidPlugin = plugins.withType(BasePlugin::class.java).first()
+            return androidPlugin.extension.sourceSets
+                .findByName(SourceSet.MAIN_SOURCE_SET_NAME)?.java?.srcDirs ?: emptySet()
+        } else {
+            val javaPlugin =
+                convention.findPlugin(JavaPluginConvention::class.java) ?: return emptySet()
+            return javaPlugin.sourceSets
+                .findByName(SourceSet.MAIN_SOURCE_SET_NAME)?.allSource?.srcDirs ?: emptySet()
+        }
+    }
+
+    private fun MutableMap<String, Int>.increment(key: String) {
+        this[key] = (this[key] ?: 0) + 1
     }
 }
 
