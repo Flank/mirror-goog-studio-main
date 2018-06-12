@@ -179,8 +179,8 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             val rewriter = NamespaceRewriter(symbolTables, log ?: logger)
             rewriter.rewriteJar(input, out)
             rewriter.rewriteManifest(
-                    manifest!!,
-                    File(outputManifests, "${sanitizedDependencyName}_AndroidManifest.xml"))
+                    manifest!!.toPath(),
+                    outputManifests.toPath().resolve("${sanitizedDependencyName}_AndroidManifest.xml"))
             logger.info("Finished rewriting $dependencyName")
 
             // Also generate fake R classes for compilation.

@@ -24,6 +24,7 @@ import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.resources.ResourceType
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.utils.PathUtils
 import com.android.utils.PositionXmlParser
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -41,8 +42,8 @@ import org.w3c.dom.Element
 import org.w3c.dom.NamedNodeMap
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
-import java.io.BufferedInputStream
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.HashSet
@@ -106,8 +107,8 @@ class NamespaceRewriter(
      * Rewrites the input file to be fully namespaced using the provided method. Writes fully
      * namespaced document to the output.
      */
-    private fun rewriteFile(input: File, output: File, method: (node: Document) -> Unit) {
-        BufferedInputStream(Files.newInputStream(input.toPath())).use {
+    private fun rewriteFile(input: Path, output: Path, method: (node: Document) -> Unit) {
+        Files.newInputStream(input).buffered().use {
             // Read the file.
             val doc = PositionXmlParser.parse(it)
 
@@ -116,15 +117,18 @@ class NamespaceRewriter(
 
             // Write the new file. The PositionXmlParser uses UTF_8 when reading the file, so it
             // should be fine to write as UTF_8 too.
-            output.writeText(
+            Files.newOutputStream(output).bufferedWriter(Charsets.UTF_8).use {
+                it.write(
                     XmlPrettyPrinter
-                            .prettyPrint(
-                                    doc,
-                                    XmlFormatPreferences.defaults(),
-                                    XmlFormatStyle.get(doc),
-                                    System.lineSeparator(),
-                                    false),
-                    Charsets.UTF_8)
+                        .prettyPrint(
+                            doc,
+                            XmlFormatPreferences.defaults(),
+                            XmlFormatStyle.get(doc),
+                            System.lineSeparator(),
+                            false
+                        )
+                )
+            }
         }
     }
 
@@ -135,7 +139,7 @@ class NamespaceRewriter(
      * This will also append the package to the references to resources from this library - it is
      * not necessary, but saves us from comparing the package names.
      */
-    fun rewriteManifest(inputManifest: File, outputManifest: File) {
+    fun rewriteManifest(inputManifest: Path, outputManifest: Path) {
         rewriteFile(inputManifest, outputManifest, this::rewriteManifestNode)
     }
 
@@ -171,7 +175,7 @@ class NamespaceRewriter(
      * This will also append the package to the references to resources from this library - it is
      * not necessary, but saves us from comparing the package names.
      */
-    fun rewriteValuesFile(input: File, output: File) {
+    fun rewriteValuesFile(input: Path, output: Path) {
         rewriteFile(input, output, this::rewriteValuesNode)
     }
 
@@ -275,8 +279,59 @@ class NamespaceRewriter(
      * This will also append the package to the references to resources from this library - it is
      * not necessary, but saves us from comparing the package names.
      */
-    fun rewriteXmlFile(input: File, output: File) {
+    fun rewriteXmlFile(input: Path, output: Path) {
         rewriteFile(input, output, this::rewriteXmlDoc)
+    }
+
+    /**
+     * Rewrites all the resources from an exploded-aar input directory as passed in input to the
+     * output directory.
+     *
+     * * Values files are processed with [#rewriteValuesFile]
+     * * XML files not in raw (such as layouts) are processed with [#rewriteXmlFile]
+     * * Everything else is copied as-is
+     */
+    fun rewriteAarResources(input: Path, output: Path) {
+        if (!Files.isDirectory(input)) {
+            throw IOException("expected $input to be a directory")
+        }
+        PathUtils.deleteRecursivelyIfExists(output)
+        Files.createDirectories(output)
+        Files.list(input).use {
+            it.forEach { resSubdirectory ->
+                val name = resSubdirectory.fileName.toString()
+                val outputDir = output.resolve(name)
+                Files.createDirectory(outputDir)
+                if (name == "values" || name.startsWith("values-")) {
+                    resSubdirectory.forEachFile(outputDir) { from, to ->
+                        rewriteValuesFile(from, to)
+                    }
+                } else if (name == "raw" || name.startsWith("raw-")) {
+                    resSubdirectory.forEachFile(outputDir) { from, to ->
+                        Files.copy(from, to)
+                    }
+                } else {
+                    resSubdirectory.forEachFile(outputDir) { from, to ->
+                        if (from.fileName.toString().endsWith(".xml")) {
+                            rewriteXmlFile(from, to)
+                        } else {
+                            Files.copy(from, to)
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private inline fun Path.forEachFile(outdir: Path, crossinline action: (Path, Path) -> Unit) {
+        Files.list(this).use {
+            it.forEach { file ->
+                if (Files.isRegularFile(file)) {
+                    action.invoke(file, outdir.resolve(file.fileName))
+                }
+            }
+        }
     }
 
     private fun rewriteXmlDoc(document: Document) {

@@ -18,16 +18,22 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.ide.common.symbols.SymbolTable
 import com.android.testutils.TestResources
+import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.net.URLClassLoader
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.stream.Collectors
 import kotlin.test.assertFailsWith
 
 class NamespaceRewriterTest {
@@ -266,7 +272,7 @@ class NamespaceRewriterTest {
                 .build()
 
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
-                .rewriteManifest(originalManifest, outputManifest)
+            .rewriteManifest(originalManifest.toPath(), outputManifest.toPath())
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(outputManifest)).contains(
             """<?xml version="1.0" encoding="utf-8"?>
@@ -346,7 +352,7 @@ class NamespaceRewriterTest {
                 .build()
 
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
-                .rewriteValuesFile(original, namespaced)
+            .rewriteValuesFile(original.toPath(), namespaced.toPath())
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
                 """<?xml version="1.0" encoding="utf-8"?>
@@ -437,7 +443,7 @@ class NamespaceRewriterTest {
         NamespaceRewriter(
                 ImmutableList.of(
                         moduleTable, dependencyTable, coordinatorlayoutTable, constraintTable))
-                .rewriteXmlFile(original, namespaced)
+            .rewriteXmlFile(original.toPath(), namespaced.toPath())
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
                 """<?xml version="1.0" encoding="utf-8"?>
@@ -469,4 +475,119 @@ class NamespaceRewriterTest {
 
 </LinearLayout>""")
     }
+
+    @Test
+    fun rewriteAarResourcesEmpty() {
+        val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of())
+
+        val emptyRes = fileSystem.getPath("/tmp/aar/emptyRes")
+        Files.createDirectories(emptyRes)
+        val outputDir = fileSystem.getPath("/tmp/rewrittenAar")
+        namespaceRewriter.rewriteAarResources(emptyRes, outputDir)
+        PathSubject.assertThat(outputDir).isDirectory()
+        val rewrittenEmpty = Files.list(outputDir).use { it.collect(Collectors.toList()) }
+        assertThat(rewrittenEmpty).isEmpty()
+    }
+
+    @Test
+    fun checkAarValueRewrite() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("string", "text"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+
+        val from = """<?xml version="1.0" encoding="utf-8"?>
+                <resources>
+                <string name="app_name">@string/text</string> </resources>"""
+        val to = """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">@com.example.module:string/text</string>
+
+</resources>"""
+        checkAarRewrite(namespaceRewriter, "values/strings.xml", from, to)
+        checkAarRewrite(namespaceRewriter, "values-en/strings.xml", from, to)
+    }
+
+    @Test
+    fun checkAarRawCopy() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("string", "text"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+
+        val raw = """<?notxml"""
+        checkAarRewrite(namespaceRewriter, "raw/strings.xml", raw, raw)
+        checkAarRewrite(namespaceRewriter, "raw-en/strings.xml", raw, raw)
+    }
+
+    @Test
+    fun checkAarDrawableProcessCopy() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("color", "dotfill"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+
+        val vector = """<vector xmlns:android="http://schemas.android.com/apk/res/android"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24.0"
+            android:viewportHeight="24.0">
+                <path
+                    android:fillColor="@color/dotfill"
+                    android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"/>
+            </vector>"""
+        val rewritten = """<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:com_example_module="http://schemas.android.com/apk/res/com.example.module"
+    android:height="24dp"
+    android:viewportHeight="24.0"
+    android:viewportWidth="24.0"
+    android:width="24dp" >
+
+    <path
+        android:fillColor="@com.example.module:color/dotfill"
+        android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+
+</vector>
+        """.trimIndent()
+        checkAarRewrite(namespaceRewriter, "drawable/vd.xml", vector, rewritten)
+        checkAarRewrite(namespaceRewriter, "drawable-en/vd.xml", vector, rewritten)
+    }
+
+    @Test
+    fun checkAarNonXmlFileResourceCopy() {
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of())
+
+        val raw = """<?notxml"""
+        checkAarRewrite(namespaceRewriter, "drawable/my.foo", raw, raw)
+        checkAarRewrite(namespaceRewriter, "drawable/my.foo2", raw, raw)
+    }
+
+
+
+    private fun checkAarRewrite(namespaceRewriter: NamespaceRewriter, path: String, from: String, to: String) {
+        val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+        val outputDir = fileSystem.getPath("/tmp/rewrittenAar")
+        val aarRes = fileSystem.getPath("/tmp/aars/someRes")
+        val inputFile = aarRes.resolve(path)
+        Files.createDirectories(inputFile.parent)
+        Files.write(inputFile, from.toByteArray())
+        namespaceRewriter.rewriteAarResources(aarRes, outputDir)
+        val outputFile = outputDir.resolve(path)
+        assertThat(outputFile).exists()
+        assertThat(outputFile.parent.list()).hasSize(1)
+        assertThat(outputDir.list()).hasSize(1)
+        assertThat(Files.readAllLines(outputFile).joinToString("\n").trim()).isEqualTo(to.trim())
+    }
+
+    private fun Path.list() : List<Path> =
+        Files.list(this).use { it.collect(ImmutableList.toImmutableList()) }
 }
