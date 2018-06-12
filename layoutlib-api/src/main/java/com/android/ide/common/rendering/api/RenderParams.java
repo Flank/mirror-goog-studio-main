@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.SessionParams.Key;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
@@ -27,7 +27,6 @@ import java.util.Map;
  * to be rendered or additional parameters.
  */
 public abstract class RenderParams {
-
     public static final long DEFAULT_TIMEOUT = 250; //ms
 
     private final Object mProjectKey;
@@ -45,7 +44,7 @@ public abstract class RenderParams {
     private AssetRepository mAssetRepository;
     private IImageFactory mImageFactory;
 
-    private String mAppIcon;
+    private ResourceValue mAppIcon;
     private String mAppLabel;
     private String mLocale;
     private String mActivityName;
@@ -110,8 +109,9 @@ public abstract class RenderParams {
         mForceNoDecor = params.mForceNoDecor;
         mSupportsRtl = params.mSupportsRtl;
         if (params.mFlags != null) {
-            mFlags = new HashMap<Key, Object>(params.mFlags);
+            mFlags = new HashMap<>(params.mFlags);
         }
+        mEnableQuickStep = params.mEnableQuickStep;
     }
 
     public void setOverrideBgColor(int color) {
@@ -127,11 +127,16 @@ public abstract class RenderParams {
         mImageFactory = imageFactory;
     }
 
-    public void setAppIcon(String appIcon) {
+    /** Sets the application icon resource, or null if there is no icon. */
+    public void setAppIcon(@Nullable ResourceValue appIcon) {
         mAppIcon = appIcon;
     }
 
-    public void setAppLabel(String appLabel) {
+    /**
+     * Sets the application label, or null if there is no label. The label string has to be resolved
+     * and should not require further resource resolution.
+     */
+    public void setAppLabel(@Nullable String appLabel) {
         mAppLabel = appLabel;
     }
 
@@ -265,10 +270,24 @@ public abstract class RenderParams {
         return mHardwareConfig.getScreenSize();
     }
 
-    public String getAppIcon() {
+    /** Returns the application icon resource, or null if there is no icon. */
+    @Nullable
+    public ResourceValue getAppIconResource() {
         return mAppIcon;
     }
 
+    /** @deprecated Use {@link #getAppIconResource()}. */
+    @Deprecated
+    @Nullable
+    public String getAppIcon() {
+        return mAppIcon == null ? null : mAppIcon.getValue();
+    }
+
+    /**
+     * Returns the application label, or null if there is no label. The label is already resolved
+     * and does not require further resource resolution.
+     */
+    @Nullable
     public String getAppLabel() {
         return mAppLabel;
     }
@@ -295,7 +314,7 @@ public abstract class RenderParams {
 
     public <T> void setFlag(Key<T> key, T value) {
         if (mFlags == null) {
-            mFlags = new HashMap<Key, Object>();
+            mFlags = new HashMap<>();
         }
         mFlags.put(key, value);
     }
