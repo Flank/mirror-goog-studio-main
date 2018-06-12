@@ -16,6 +16,7 @@
 package com.android.tools.deploy.swapper;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
+import com.android.tools.fakeandroid.ProcessRunner;
 import com.sun.jdi.ReferenceType;
 import java.net.ServerSocket;
 import org.junit.Assert;
@@ -31,8 +32,12 @@ import org.junit.Test;
 public class JdiBasedClassRedefinerTest {
     private FakeAndroidDriver android;
 
-    public static final String LOCAL_HOST = "127.0.0.1";
-    public int debuggerPort;
+    private static final String ACTIVITY_CLASS =
+            "com.android.tools.deploy.swapper.testapp.TestActivity";
+    private static final String LOCAL_HOST = "127.0.0.1";
+    private static final int RETURN_VALUE_TIMEOUT = 1000;
+
+    private int debuggerPort;
 
     @Before
     public void setUp() throws Exception {
@@ -48,6 +53,44 @@ public class JdiBasedClassRedefinerTest {
                         JdiBasedClassRedefiner.attach("localhost", debuggerPort));
         ReferenceType objRef = redefiner.getReferenceTypeByName("java.lang.Object").get(0);
         Assert.assertEquals("Ljava/lang/Object;", objRef.signature());
+    }
+
+    @Test
+    public void testCheckForRedefineClassesCapabilities() throws Exception {
+        JdiBasedClassRedefiner redefiner =
+                new JdiBasedClassRedefiner(
+                        JdiBasedClassRedefiner.attach("localhost", debuggerPort));
+
+        // TODO(acleung): This is expected since by default, ART will always state that it is
+        // incapable of redefining classes to avoid debugger feed it ".class" files.
+        Assert.assertFalse(redefiner.hasRedefineClassesCapabilities());
+    }
+
+    @Test
+    public void testSimpleClassRedefinition() throws Exception {
+        JdiBasedClassRedefiner redefiner =
+                new JdiBasedClassRedefiner(
+                        JdiBasedClassRedefiner.attach("localhost", debuggerPort));
+        android.start();
+
+        // TODO(acleung): We should not need to trigger the profiler instrumentation. This
+        // will be changed when perf_test gen_rule is refactored.
+        android.loadDex(ProcessRunner.getProcessPath("profiler.service.location"));
+        android.loadDex(ProcessRunner.getProcessPath("instrumented.app.dex.location"));
+        android.launchActivity(ACTIVITY_CLASS);
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
+        Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
+
+        // TODO(acleung): JDI Checks for redefiner.hasRedefineClassesCapabilities() before
+        // we can invoke the redefine classes command so we cannot test hotswap yet.
+
+        // redefiner.redefineClass("com.android.tools.deploy.swapper.testapp", new byte[0]);
+        // redefiner.commit();
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
+        // TODO(acleung): It should have the new return value that is swapped.
+        Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
     }
 
     /**

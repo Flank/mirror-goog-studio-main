@@ -89,4 +89,8 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
     List<ReferenceType> getReferenceTypeByName(String name) {
         return vm.classesByName(name);
     }
+
+    boolean hasRedefineClassesCapabilities() {
+        return vm.canRedefineClasses();
+    }
 }
