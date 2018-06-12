@@ -18,7 +18,6 @@ package com.android.sdklib.devices;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -199,9 +198,11 @@ public class Storage {
     }
 
     /**
-     * Finds the largest {@link Unit} which can display the storage value as a positive integer
-     * with no loss of accuracy.
+     * Finds the largest {@link Unit} which can display the storage value as a positive integer with
+     * no loss of accuracy.
+     *
      * @return The most appropriate {@link Unit}.
+     * @see {@link #getLargestReasonableUnits()}
      */
     @NonNull
     public Unit getAppropriateUnits() {
@@ -212,6 +213,26 @@ public class Storage {
             } else {
                 break;
             }
+        }
+        return optimalUnit;
+    }
+
+    /**
+     * Finds the largest {@link Unit} which can display the storage value with non-zero integer
+     * part. This might be useful for displaying in user interface where full precision is not
+     * critical and can be sacrificed in favor of better UX.
+     *
+     * @return The largest {@link Unit} such that getSize()/Unit.getNumberOfBytes() is not zero.
+     * @see {@link #getAppropriateUnits()}
+     */
+    @NonNull
+    public Unit getLargestReasonableUnits() {
+        Unit optimalUnit = Unit.B;
+        for (Unit unit : Unit.values()) {
+            if (mNoBytes / unit.getNumberOfBytes() == 0) {
+                break;
+            }
+            optimalUnit = unit;
         }
         return optimalUnit;
     }

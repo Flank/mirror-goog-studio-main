@@ -46,6 +46,15 @@ class StorageTest {
   }
 
   @Test
+  fun testLargestReasonableUnits() {
+    assertThat(Storage(2048, Storage.Unit.KiB).largestReasonableUnits).isEqualTo(Storage.Unit.MiB)
+    assertThat(Storage(2049, Storage.Unit.KiB).largestReasonableUnits).isEqualTo(Storage.Unit.MiB)
+    assertThat(Storage(500).largestReasonableUnits).isEqualTo(Storage.Unit.B)
+    assertThat(Storage(500, Storage.Unit.GiB).largestReasonableUnits).isEqualTo(Storage.Unit.GiB)
+    assertThat(Storage(1025, Storage.Unit.GiB).largestReasonableUnits).isEqualTo(Storage.Unit.TiB)
+  }
+
+  @Test
   fun testEquals() {
     val storageNoUnits = Storage(1025 * 1024L)
     val storageBytes = Storage(1025 * 1024L, Storage.Unit.B)
