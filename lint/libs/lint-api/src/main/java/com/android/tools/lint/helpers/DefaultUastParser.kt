@@ -118,16 +118,26 @@ open class DefaultUastParser(
             return null
         }
 
-        val virtualFile = StandardFileSystems.local()
-            .findFileByPath(context.file.absolutePath) ?: return null
+        val file = context.file
+        val path = file.path
+        val srcJarIndex = path.indexOf("srcjar!/")
+        val virtualFile =
+            if (srcJarIndex != -1) {
+                val jarFile = path.substring(0, srcJarIndex + 8)
+                val name = path.substring(srcJarIndex + 8).replace(File.separatorChar, '/')
+                val root = StandardFileSystems.jar().findFileByPath(jarFile) ?: return null
+                root.findFileByRelativePath(name) ?: return null
+            } else {
+                StandardFileSystems.local().findFileByPath(file.absolutePath) ?: return null
+            }
 
         val psiFile = PsiManager.getInstance(ideaProject).findFile(virtualFile) ?: return null
 
-        if (psiFile.language == Language.ANY && context.file.path.endsWith(DOT_KT)) {
+        if (psiFile.language == Language.ANY && file.path.endsWith(DOT_KT)) {
             // Expected to get Kotlin language back here!
             context.client.log(
                 Severity.ERROR, null, "Could not process " +
-                        context.project.getRelativePath(context.file) +
+                        context.project.getRelativePath(file) +
                         ": Kotlin not configured correctly"
             )
         }
@@ -136,14 +146,14 @@ open class DefaultUastParser(
             if (!warnedAboutLargeFiles) {
                 warnedAboutLargeFiles = true
                 val max = FileUtilRt.getUserFileSizeLimit()
-                val size = context.file.length() / 1024
+                val size = file.length() / 1024
                 val sizeRoundedUp = Math.pow(
                     2.0,
                     Math.ceil(Math.log10(size.toDouble()) / Math.log10(2.0) + 0.2)
                 ).toInt()
                 context.report(
                     issue = IssueRegistry.LINT_ERROR,
-                    location = Location.create(context.file),
+                    location = Location.create(file),
                     message = "Source file too large for lint to process (${size}KB); the " +
                             "current max size is ${max}KB. You can increase the limit by " +
                             "setting this system property: " +

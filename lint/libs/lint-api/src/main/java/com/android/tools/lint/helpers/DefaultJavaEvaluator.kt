@@ -43,6 +43,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.MethodSignatureUtil
 import com.intellij.psi.util.TypeConversionUtil
+import com.intellij.util.io.URLUtil
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
@@ -212,9 +213,9 @@ open class DefaultJavaEvaluator(
             // VirtualFile lookup which we don't actually need (we're just after the
             // raw URL suffix)
             val file = containingFile.virtualFile
-            if (file != null && file.fileSystem.protocol == "jar") {
+            if (file != null && file.fileSystem.protocol == URLUtil.JAR_PROTOCOL) {
                 val path = file.path
-                val separatorIndex = path.indexOf("!/")
+                val separatorIndex = path.indexOf(URLUtil.JAR_SEPARATOR)
                 if (separatorIndex >= 0) {
                     return path.substring(0, separatorIndex)
                 }
@@ -229,24 +230,23 @@ open class DefaultJavaEvaluator(
         if (containingFile != null) {
             // Optimization: JavaDirectoryService can be slow so try to compute it directly
             if (containingFile is PsiJavaFile) {
-                return packageInfoCache.computeIfAbsent(containingFile.packageName,
-                    { name ->
-                        val cls = findClass(name + '.' + PsiPackage.PACKAGE_INFO_CLASS)
-                        val modifierList = cls?.modifierList
-                        object : PsiPackageImpl(node.manager, name) {
-                            override fun getAnnotationList(): PsiModifierList? {
-                                return if (modifierList != null) {
-                                    // Use composite even if we just have one such that we don't
-                                    // pass a modifier list tied to source elements in the class
-                                    // (modifier lists can be part of the AST)
-                                    PsiCompositeModifierList(
-                                        manager,
-                                        listOf(modifierList)
-                                    )
-                                } else null
-                            }
+                return packageInfoCache.computeIfAbsent(containingFile.packageName) { name ->
+                    val cls = findClass(name + '.' + PsiPackage.PACKAGE_INFO_CLASS)
+                    val modifierList = cls?.modifierList
+                    object : PsiPackageImpl(node.manager, name) {
+                        override fun getAnnotationList(): PsiModifierList? {
+                            return if (modifierList != null) {
+                                // Use composite even if we just have one such that we don't
+                                // pass a modifier list tied to source elements in the class
+                                // (modifier lists can be part of the AST)
+                                PsiCompositeModifierList(
+                                    manager,
+                                    listOf(modifierList)
+                                )
+                            } else null
                         }
-                    })
+                    }
+                }
             }
 
             val dir = containingFile.parent

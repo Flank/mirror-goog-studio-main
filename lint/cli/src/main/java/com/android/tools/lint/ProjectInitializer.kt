@@ -19,7 +19,11 @@ package com.android.tools.lint
 import com.android.SdkConstants
 import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.ATTR_PATH
+import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
+import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KT
+import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_JARS
 import com.android.SdkConstants.FD_RES
 import com.android.SdkConstants.FN_PUBLIC_TXT
@@ -41,6 +45,7 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
+import com.intellij.util.io.URLUtil
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
@@ -83,6 +88,8 @@ private const val ATTR_ANDROID = "android"
 private const val ATTR_LIBRARY = "library"
 private const val ATTR_MODULE = "module"
 private const val ATTR_INCOMPLETE = "incomplete"
+private const val DOT_SRCJAR = ".srcjar"
+
 /**
  * Compute a list of lint [Project] instances from the given XML descriptor files.
  * Each descriptor is considered completely separate from the other (e.g. you can't
@@ -471,6 +478,8 @@ private class ProjectInitializer(
             }
         }
 
+        handleSrcJars(sources, resources, manifests, classes, sourceRoots)
+
         module.setManifests(manifests)
         module.setResources(resourceRoots, resources)
         module.setTestSources(testSourceRoots, testSources)
@@ -486,6 +495,63 @@ private class ProjectInitializer(
         this.baselines[module] = baseline
 
         client.registerProject(module.dir, module)
+    }
+
+    private fun handleSrcJars(
+        sources: MutableList<File>,
+        resources: MutableList<File>,
+        manifests: MutableList<File>,
+        classes: MutableList<File>,
+        sourceRoots: MutableList<File>
+    ) {
+        // Finds any .srcjar files in the first parameter, and if so, removes it, and
+        // then expands the contents (based on the file type) into all the individual lists --
+        // sources, manifests, bytecode, etc:
+        handleSrcJars(sources, sources, resources, manifests, classes, sourceRoots)
+        handleSrcJars(resources, sources, resources, manifests, classes, sourceRoots)
+        handleSrcJars(manifests, sources, resources, manifests, classes, sourceRoots)
+        handleSrcJars(classes, sources, resources, manifests, classes, sourceRoots)
+    }
+
+    private fun handleSrcJars(
+        list: MutableList<File>,
+        sources: MutableList<File>,
+        resources: MutableList<File>,
+        manifests: MutableList<File>,
+        classes: MutableList<File>,
+        sourceRoots: MutableList<File>
+    ) {
+        val iterator = list.listIterator()
+        if (iterator.hasNext()) {
+            val file = iterator.next()
+            if (file.path.endsWith(DOT_SRCJAR)) {
+                iterator.remove()
+
+                sourceRoots.add(file)
+
+                // Expand into child content
+                ZipFile(file).use { zipFile ->
+                    val entries = zipFile.entries()
+                    while (entries.hasMoreElements()) {
+                        val zipEntry = entries.nextElement()
+                        if (zipEntry.isDirectory) {
+                            continue
+                        }
+                        val path = file.path + URLUtil.JAR_SEPARATOR + zipEntry.name
+                        val newFile = File(path)
+                        if (path.endsWith(ANDROID_MANIFEST_XML)) {
+                            manifests.add(newFile)
+                        } else if (path.endsWith(DOT_XML)) {
+                            resources.add(newFile)
+                        } else if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
+                            sources.add(newFile)
+                        } else if (path.endsWith(DOT_CLASS)) {
+                            classes.add(newFile)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun parseAar(element: Element, dir: File): String? {

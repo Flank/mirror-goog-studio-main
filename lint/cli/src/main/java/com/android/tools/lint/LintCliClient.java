@@ -19,6 +19,7 @@ package com.android.tools.lint;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
+import static com.android.SdkConstants.DOT_SRCJAR;
 import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_SOURCE_PROP;
 import static com.android.SdkConstants.VALUE_NONE;
@@ -98,6 +99,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
+import com.intellij.util.io.URLUtil;
 import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -1303,6 +1305,17 @@ public class LintCliClient extends LintClient {
                 VirtualFile vFile = StandardFileSystems.local().findFileByPath(file.getPath());
                 if (vFile != null) {
                     roots.add(new JavaRoot(vFile, JavaRoot.RootType.SOURCE, null));
+                }
+            } else {
+                String pathString = file.getPath();
+                if (pathString.endsWith(DOT_SRCJAR)) {
+                    // Mount as source files
+                    VirtualFile root =
+                            StandardFileSystems.jar()
+                                    .findFileByPath(pathString + URLUtil.JAR_SEPARATOR);
+                    if (root != null) {
+                        roots.add(new JavaRoot(root, JavaRoot.RootType.SOURCE, null));
+                    }
                 }
             }
         }

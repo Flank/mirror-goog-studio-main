@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
-import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 
@@ -264,7 +263,7 @@ public class TestFiles {
     @NonNull
     public static TestFile.JarTestFile jar(
             @NonNull String to, @NonNull LintDetectorTest.TestFile... files) {
-        if (!to.endsWith(DOT_JAR)) {
+        if (!to.endsWith("jar")) { // don't insist on .jar since we're also supporting .srcjar etc
             throw new IllegalArgumentException("Expected .jar suffix for jar test file");
         }
 

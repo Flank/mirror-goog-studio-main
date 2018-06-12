@@ -329,7 +329,10 @@ class ProjectInitializerTest {
                 File(root, "project.xml").path
             ),
 
-            { it.replace(canonicalRoot, "ROOT").replace(baseline.parentFile.path, "TESTROOT").replace('\\', '/') },
+            {
+                it.replace(canonicalRoot, "ROOT").replace(baseline.parentFile.path, "TESTROOT")
+                    .replace('\\', '/')
+            },
             listener
         )
 
@@ -737,6 +740,64 @@ class ProjectInitializerTest {
                 "--quiet",
                 "--check",
                 "NewApi",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
+    @Test
+    fun testSrcJar() {
+        // Checks that source files can be read from srcjar files as well
+        val root = temp.newFolder()
+        val projects = lint().files(
+            jar(
+                "src/my.srcjar",
+                java(
+                    "test/pkg/Test.java", """
+                    package test.pkg;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class Test {
+                        public String path = "/sdcard/my.path";
+                    }
+                    """
+                ).indented()
+            )
+        ).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor = """
+            <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir" />
+                <module name="M" android="true" library="false">
+                <src file="src/my.srcjar" />
+            </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "project.xml")
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            """
+                src/my.srcjar!/test/pkg/Test.java:5: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+                    public String path = "/sdcard/my.path";
+                                         ~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "SdCardPath",
                 "--project",
                 descriptorFile.path
             ),

@@ -32,6 +32,7 @@ import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiManager;
+import com.intellij.util.io.URLUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -113,13 +114,14 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             VirtualFile virtualFile;
             boolean isZip = file.getName().equals(FN_ANNOTATIONS_ZIP);
             if (isZip) {
-                virtualFile = jar.findFileByPath(file.getPath() + "!/");
+                virtualFile = jar.findFileByPath(file.getPath() + URLUtil.JAR_SEPARATOR);
             } else {
                 virtualFile = local.findFileByPath(file.getPath());
             }
             if (virtualFile == null) {
                 if (isZip) {
-                    virtualFile = jar.findFileByPath(file.getAbsolutePath() + "!/");
+                    virtualFile =
+                            jar.findFileByPath(file.getAbsolutePath() + URLUtil.JAR_SEPARATOR);
                 } else {
                     virtualFile = local.findFileByPath(file.getAbsolutePath());
                 }

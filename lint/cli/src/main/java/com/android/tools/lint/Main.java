@@ -49,10 +49,13 @@ import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Charsets;
+import com.google.common.io.ByteStreams;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -64,6 +67,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -245,9 +252,45 @@ public class Main {
                         return super.getConfiguration(project, driver);
                     }
 
+                    private byte[] readSrcJar(@NonNull File file) {
+                        String path = file.getPath();
+                        int srcJarIndex = path.indexOf("srcjar!/");
+                        if (srcJarIndex != -1) {
+                            File jarFile = new File(path.substring(0, srcJarIndex + 6));
+                            if (jarFile.exists()) {
+                                try (ZipFile zipFile = new ZipFile(jarFile)) {
+                                    String name =
+                                            path.substring(srcJarIndex + 8)
+                                                    .replace(File.separatorChar, '/');
+                                    ZipEntry entry = zipFile.getEntry(name);
+                                    if (entry != null) {
+                                        try (InputStream is = zipFile.getInputStream(entry)) {
+                                            byte[] bytes = ByteStreams.toByteArray(is);
+                                            return bytes;
+                                        } catch (Exception e) {
+                                            log(e, null);
+                                        }
+                                    }
+                                } catch (ZipException e) {
+                                    Main.this.log(e, "Could not unzip %1$s", jarFile);
+                                } catch (IOException e) {
+                                    Main.this.log(e, "Could not read %1$s", jarFile);
+                                }
+                            }
+                        }
+
+                        return null;
+                    }
+
                     @NonNull
                     @Override
                     public CharSequence readFile(@NonNull File file) {
+                        // .srcjar file handle?
+                        byte[] srcJarBytes = readSrcJar(file);
+                        if (srcJarBytes != null) {
+                            return new String(srcJarBytes, Charsets.UTF_8);
+                        }
+
                         CharSequence contents = super.readFile(file);
                         if (Project.isAospBuildEnvironment()
                                 && file.getPath().endsWith(SdkConstants.DOT_JAVA)) {
@@ -260,6 +303,18 @@ public class Main {
                         } else {
                             return contents;
                         }
+                    }
+
+                    @NonNull
+                    @Override
+                    public byte[] readBytes(@NotNull File file) throws IOException {
+                        // .srcjar file handle?
+                        byte[] srcJarBytes = readSrcJar(file);
+                        if (srcJarBytes != null) {
+                            return srcJarBytes;
+                        }
+
+                        return super.readBytes(file);
                     }
 
                     private ProjectMetadata metadata;

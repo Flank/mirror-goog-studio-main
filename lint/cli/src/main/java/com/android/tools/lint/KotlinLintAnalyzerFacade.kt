@@ -16,6 +16,7 @@
 
 package com.android.tools.lint
 
+import com.android.SdkConstants.DOT_SRCJAR
 import com.intellij.core.CoreJavaFileManager
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.mock.MockProject
@@ -107,13 +108,23 @@ class KotlinLintAnalyzerFacade {
         // We can't figure out if the given directory is a binary or a source root, so we add
         // it to both lists
         val javaBinaryRoots = contentRoots
-            .mapNotNull { contentRootToVirtualFile(JvmClasspathRoot(it)) }
+            .mapNotNull {
+                if (it.name.endsWith(DOT_SRCJAR)) {
+                    null
+                } else {
+                    contentRootToVirtualFile(JvmClasspathRoot(it))
+                }
+            }
             .map { JavaRoot(it, JavaRoot.RootType.BINARY) }
 
         val javaSourceRoots = contentRoots
             .filter { it.isDirectory }
             .mapNotNull { localFs.findFileByPath(it.absolutePath) }
-            .map { JavaRoot(it, JavaRoot.RootType.SOURCE) }
+            .map { JavaRoot(it, JavaRoot.RootType.SOURCE) } +
+                contentRoots
+                    .filter { it.name.endsWith(DOT_SRCJAR) }
+                    .mapNotNull { findJarRoot(it.absoluteFile) }
+                    .map { JavaRoot(it, JavaRoot.RootType.SOURCE) }
 
         // If project already depends on Kotlin, there should already be the correct standard
         // libraries on the classpath. But if not (e.g. tests), use them from lint's own
