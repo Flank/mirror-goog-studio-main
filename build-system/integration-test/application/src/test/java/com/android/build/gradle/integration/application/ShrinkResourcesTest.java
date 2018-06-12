@@ -64,7 +64,7 @@ public class ShrinkResourcesTest {
 
     @Parameterized.Parameters(name = "shrinker {0}")
     public static CodeShrinker[] data() {
-        return CodeShrinker.values();
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker shrinker;

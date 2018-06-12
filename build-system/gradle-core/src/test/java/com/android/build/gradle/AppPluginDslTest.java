@@ -54,6 +54,8 @@ public class AppPluginDslTest {
     public static final String PROGUARD_RELEASE =
             "transformClassesAndResourcesWithProguardForRelease";
     public static final String R8_RELEASE = "transformClassesAndResourcesWithR8ForRelease";
+    public static final String R8_DEBUG_ANDROID_TEST =
+            "transformClassesAndResourcesWithR8ForDebugAndroidTest";
 
     @Rule public final TemporaryFolder projectDirectory = new TemporaryFolder();
 
@@ -385,8 +387,6 @@ public class AppPluginDslTest {
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-
-        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
     }
 
     @Test
@@ -485,8 +485,7 @@ public class AppPluginDslTest {
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-
-        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -567,7 +566,7 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testApkShrinker_oldDsl_builtInShrinker() throws Exception {
+    public void testApkShrinker_oldDsl_useProguardFalse() throws Exception {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_builtInShrinker").toPath())
                         .withPlugin(pluginType)
@@ -580,8 +579,8 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG_ANDROID_TEST);
+        assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
+        assertThat(project.getTasks().getNames()).contains(R8_DEBUG_ANDROID_TEST);
     }
 
     @Test

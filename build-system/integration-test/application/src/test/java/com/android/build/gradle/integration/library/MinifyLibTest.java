@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
@@ -46,7 +45,7 @@ import org.junit.runners.Parameterized;
 public class MinifyLibTest {
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] data() {
-        return CodeShrinker.values();
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
@@ -57,10 +56,6 @@ public class MinifyLibTest {
 
     @Test
     public void consumerProguardFile() throws Exception {
-        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject(":app"), "debug");
-        }
-
         getExecutor().run(":app:assembleDebug");
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
@@ -181,10 +176,6 @@ public class MinifyLibTest {
                         + "        proguardFiles getDefaultProguardFile('proguard-android.txt')\n"
                         + "    }\n"
                         + "}\n");
-
-        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject(":lib"), "release");
-        }
     }
 
     @NonNull

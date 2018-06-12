@@ -470,7 +470,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             } else if (useProguard == null) {
                 shrinkerForBuildType = getDefaultCodeShrinker();
             } else {
-                shrinkerForBuildType = useProguard ? PROGUARD : ANDROID_GRADLE;
+                shrinkerForBuildType = useProguard ? PROGUARD : R8;
             }
 
             if (!isTestComponent) {
@@ -599,22 +599,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     private CodeShrinker getDefaultCodeShrinker() {
-        if (defaultCodeShrinker == null) {
-            if (getInstantRunBuildContext().isInInstantRunMode()) {
-                String message = "Using the built-in class shrinker for an Instant Run build.";
-                PostprocessingFeatures postprocessingFeatures = getPostprocessingFeatures();
-                if (postprocessingFeatures == null || postprocessingFeatures.isObfuscate()) {
-                    message += " Build won't be obfuscated.";
-                }
-                LOGGER.warning(message);
-
-                defaultCodeShrinker = ANDROID_GRADLE;
-            } else {
-                defaultCodeShrinker = PROGUARD;
-            }
-        }
-
-        return defaultCodeShrinker;
+        return CodeShrinker.PROGUARD;
     }
 
     /**

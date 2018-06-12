@@ -39,7 +39,7 @@ public class AllTasksUpToDateTest {
                 project.getBuildFile(),
                 "android.buildTypes {\n"
                         + "  release { minifyEnabled true }\n"
-                        + "  shrinker { minifyEnabled true; useProguard false }\n"
+                        + "  r8 { minifyEnabled true; useProguard false }\n"
                         + "}");
     }
 

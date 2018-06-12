@@ -71,9 +71,7 @@ class MinifyFeaturesTest(
                 arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
                 arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP),
                 arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP),
-                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP)
+                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP)
             )
     }
 
@@ -685,18 +683,10 @@ class MinifyFeaturesTest(
                     }
                 }
         assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/Main;")
-        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/StringProvider;")
-        } else {
-            assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/a;")
-        }
+        assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/a;")
         assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
         assertThat(baseModuleApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
-        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            assertThat(baseModuleApk).containsClass("Lcom/example/lib1/Lib1Class;")
-        } else {
-            assertThat(baseModuleApk).containsClass("Lcom/example/lib1/a;")
-        }
+        assertThat(baseModuleApk).containsClass("Lcom/example/lib1/a;")
         assertThat(baseModuleApk).containsJavaResource("base_java_res.txt")
         assertThat(baseModuleApk).containsJavaResource("other_java_res_1.txt")
         assertThat(baseModuleApk).containsJavaResource("other_java_res_2.txt")
@@ -723,11 +713,7 @@ class MinifyFeaturesTest(
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/FooView;")
-        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/Lib2Class;")
-        } else {
-            assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/a;")
-        }
+        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/a;")
         assertThat(otherFeature1Apk).doesNotContainJavaResource("other_java_res_1.txt")
         assertThat(otherFeature1Apk).doesNotContainClass(
             "Lcom/example/otherFeature1/EmptyClassToRemove;")

@@ -184,7 +184,7 @@ public class MultiDexTest {
 
     @Test
     public void checkShrinker() throws Exception {
-        checkMinifiedBuild("shrinker");
+        checkMinifiedBuild("r8");
     }
 
     public void checkMinifiedBuild(String buildType) throws Exception {

@@ -17,25 +17,21 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
-import com.android.testutils.apk.SplitApks;
 import com.google.common.truth.Expect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * Check that the shrinker keeps a custom application class.
- */
+/** Check that the shrinker does not run when Instant run is used. */
 public class InstantRunShrinkerTest {
 
     private static final AndroidTestApp TEST_APP = HelloWorldApp.forPlugin("com.android.application");
@@ -93,18 +89,13 @@ public class InstantRunShrinkerTest {
     @Test
     public void checkApplicationIsNotRemoved() throws Exception {
         project.execute("clean");
-        project.executor()
-                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
-                .run("assembleDebug");
+        GradleBuildResult result =
+                project.executor()
+                        .withInstantRun(
+                                new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
+                        .run("assembleDebug");
 
-        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
-
-        SplitApks apks =
-                InstantRunTestUtils.getCompiledColdSwapChange(
-                        InstantRunTestUtils.getInstantRunModel(model));
-
-        // Check the custom application class was included.
-        assertThat(apks).hasClass("Lcom/example/helloworld/MyApplication;");
+        assertThat(result.getStdout()).contains("R8 is disabled for variant");
     }
 
 }

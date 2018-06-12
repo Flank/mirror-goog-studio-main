@@ -34,7 +34,7 @@ android {
             minifyEnabled true
             proguardFile file('proguard-android.txt')
         }
-        shrinker {
+        r8 {
             initWith proguard
             useProguard false
         }

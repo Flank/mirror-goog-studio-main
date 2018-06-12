@@ -22,11 +22,9 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +40,7 @@ public class MinifyLibAndAppWithJavaResTest {
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] data() {
         // enable for R8 once http://b/36847655 is fixed
-        return new CodeShrinker[] {CodeShrinker.ANDROID_GRADLE, CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
     }
 
     @Rule
@@ -50,13 +48,6 @@ public class MinifyLibAndAppWithJavaResTest {
             GradleTestProject.builder().fromTestProject("minifyLibWithJavaRes").create();
 
     @Parameterized.Parameter() public CodeShrinker codeShrinker;
-
-    @Before
-    public void setUp() throws Exception {
-        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject("app"), "release");
-        }
-    }
 
     @Test
     public void testDebugPackaging() throws Exception {
