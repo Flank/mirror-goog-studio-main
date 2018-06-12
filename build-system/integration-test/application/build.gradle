@@ -55,16 +55,14 @@ def testEnvironment =
          * - starting with CUSTOM_ e.g. CUSTOM_ANDROID_HOME
          * - DEBUG_INNER_TEST: to allow us to debug tests
          * - starting with LC_ or LANG_, so the locale is set up correctly
-         * - BUILDBOT_: to get BuildBot specific information e.g. buildId used for performance tests
+         * - BUILDBOT_: to get BuildBot specific information
          */
         System.getenv().findAll { entry ->
             String key = entry.key
             key.startsWith("CUSTOM_") ||
                     key.startsWith("ACTD_") || // environment variables for uploading to Dana
                     key.startsWith("PERF_") || // environment variables for controlling perf tests
-                    key == "RUNS_PER_BENCHMARK" || // part of perf test controls
                     key == "USE_GRADLE_NIGHTLY" ||
-                    key == "BENCHMARK_EXPERIMENT" ||
                     key == "DEBUG_INNER_TEST" ||
                     // For NDK tests on Windows. See init.mk.
                     key == "OS" ||
@@ -76,9 +74,7 @@ def testEnvironment =
                     // For AccentCharacterAndProguardTest
                     key.startsWith("LC_") ||
                     key.startsWith("LANG") ||
-                    key.startsWith("BUILDBOT_") ||
-                    // For local benchmarking
-                    key == "LOCAL_BENCHMARK_LOCATION"
+                    key.startsWith("BUILDBOT_")
         }
 
 testEnvironment << [
@@ -128,7 +124,6 @@ configure([test, testPrebuilts]) {
         excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
     }
 
-    exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
     exclude "com/android/build/gradle/integration/sanity/**"
     exclude "**/BazelIntegrationTestsSuite*"
@@ -195,7 +190,6 @@ configure(allConnectedTestTasks) {
     }
     maxParallelForks = count
 
-    exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
 }
 
@@ -212,87 +206,8 @@ configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuilts
     }
 }
 
-task tarSdk(type: Tar) {
-    from('../../../../../prebuilts/studio/sdk/linux/') {
-        exclude 'ndk-bundle/**'
-    }
-
-    archiveName "android_sdk.tar"
-}
-
-task tarPrebuiltsRepo(type: Tar) {
-    from '../../../../../prebuilts/tools/common/m2/repository/'
-    archiveName "prebuilts_repo.tar"
-}
-
-task tarProjects(type: Tar) {
-    from('../../../../../external/') {
-        include 'AntennaPod/**'
-        include 'gradle-perf-android-medium/**'
-        include 'android-studio-gradle-test/**'
-    }
-    archiveName "projects.tar"
-}
-
-task tarGradle(type: Tar) {
-    from('../../../../../tools/external/gradle/') {
-        include 'gradle-' + gradle.gradleVersion + '-bin.zip'
-    }
-    archiveName "gradle.tar"
-}
-
-task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', tarPrebuiltsRepo, tarSdk, tarProjects, tarGradle]) {
-    from sourceSets.test.runtimeClasspath
-    from(configurations.testCompile.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/MANIFEST.MF'
-        exclude 'META-INF/*.SF'
-        exclude 'META-INF/*.DSA'
-        exclude 'META-INF/*.RSA'
-    }
-    from tarPrebuiltsRepo
-    from tarSdk
-    from tarProjects
-    from tarGradle
-    doFirst {
-        // currently the zipOfflineRepo task lists its zip file twice, so we take only one of them.
-        // They're identical and this is a bug we should fix at some point in
-        // OfflineRepoPlugin.groovy.
-        from rootProject.getTasksByName('zipOfflineRepo', false).outputs[0]
-    }
-
-    zip64 = true
-
-    baseName = "performance-test"
-
-    manifest {
-        attributes(
-                'Main-Class': 'com.android.build.gradle.integration.performance.BenchmarkTest'
-        )
-    }
-}
-
-task performanceTest(type: Test) {
-    include "com/android/build/gradle/integration/performance/**"
-
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-
-    description =
-            "Runs the project performance tests. This requires an SDK either " +
-                    "from the Android source tree, under out/..., or an env var ANDROID_HOME."
-    group = "verification"
-    systemProperties['jar.path'] = jar.archivePath
-    environment = testEnvironment
-
-    reports {
-        junitXml.destination project.file("${project.buildDir}/perf-results")
-    }
-    outputs.upToDateWhen { false }
-
-}
-
 configure([test, testPrebuilts, onlineTest, connectedIntegrationTest,
-           connectedIntegrationTestPrebuilts, performanceTest]) {
+           connectedIntegrationTestPrebuilts]) {
     testLogging {
         events = ['FAILED', 'SKIPPED', 'STANDARD_ERROR']
         displayGranularity = 2 // Show test class and method.
@@ -326,8 +241,6 @@ testPrebuilts.dependsOn buildTestDependencies
 allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool, ':base:testing-infrastructure:device-pool:device-provider:publishLocal'})
 connectedIntegrationTest.dependsOn ':publishLocal'
 connectedIntegrationTestQuarantine.dependsOn ':publishLocal'
-performanceTest.dependsOn ':publishLocal'
-
 
 if (tasks.findByName("jacocoTestReport") != null) {
     jacocoTestReport {

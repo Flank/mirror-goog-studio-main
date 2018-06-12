@@ -336,18 +336,6 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    /**
-     * Enable profile output generation in the given folder. Typically used in benchmark tests.
-     *
-     * <p>Allows both absolute and relative paths. If a relative path is given, the path will be
-     * resolved against the root directory of the project.
-     */
-    public GradleTestProjectBuilder enableProfileOutputInDirectory(
-            @Nullable Path profileDirectory) {
-        this.profileDirectory = profileDirectory;
-        return this;
-    }
-
     /** Enables setting cmake.dir in local.properties */
     public GradleTestProjectBuilder setWithCmakeDirInLocalProp(boolean withCmakeDirInLocalProp) {
         this.withCmakeDirInLocalProp = withCmakeDirInLocalProp;

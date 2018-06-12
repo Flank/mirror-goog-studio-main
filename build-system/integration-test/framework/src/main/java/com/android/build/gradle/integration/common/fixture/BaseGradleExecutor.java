@@ -28,7 +28,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -76,7 +75,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
     @NonNull final Path projectDirectory;
     @Nullable private final String heapSize;
-    @Nullable Logging.BenchmarkMode benchmarkMode;
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean sdkInLocalProperties = false;

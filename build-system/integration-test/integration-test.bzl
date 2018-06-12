@@ -66,7 +66,7 @@ def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test
           '-Dfile.encoding=UTF-8',
           '-Dsun.jnu.encoding=UTF-8',
           '-Dmaven.repo.local=/tmp/localMavenRepo',  # For gradle publishing, writing to ~/.m2
-          '-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests,com.android.build.gradle.integration.common.category.PerformanceTests',
+          '-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests',
           '-Dtest.android.build.gradle.integration.repos=' + zip_file_names,
       ],
       resources = resources,

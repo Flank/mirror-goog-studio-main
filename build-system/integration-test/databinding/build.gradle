@@ -53,7 +53,7 @@ def testEnvironment =
          * - starting with CUSTOM_ e.g. CUSTOM_ANDROID_HOME
          * - DEBUG_INNER_TEST: to allow us to debug tests
          * - starting with LC_ or LANG_, so the locale is set up correctly
-         * - BUILDBOT_: to get BuildBot specific information e.g. buildId used for performance tests
+         * - BUILDBOT_: to get BuildBot specific information
          */
         System.getenv().findAll { entry ->
             String key = entry.key
@@ -61,7 +61,6 @@ def testEnvironment =
                     key.startsWith("ACTD_") || // environment variables for uploading to Dana
                     key.startsWith("PERF_") || // environment variables for controlling perf tests
                     key == "USE_GRADLE_NIGHTLY" ||
-                    key == "BENCHMARK_EXPERIMENT" ||
                     key == "DEBUG_INNER_TEST" ||
                     // For NDK tests on Windows. See init.mk.
                     key == "OS" ||
