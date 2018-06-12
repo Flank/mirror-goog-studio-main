@@ -69,16 +69,10 @@ class MinifyFeaturesTest(
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
                 arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP),
                 arrayOf(CodeShrinker.PROGUARD, MultiApkMode.INSTANT_APP),
                 arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.R8, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP),
                 arrayOf(CodeShrinker.R8, MultiApkMode.INSTANT_APP),
                 arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.DYNAMIC_APP),
-                arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP),
                 arrayOf(CodeShrinker.ANDROID_GRADLE, MultiApkMode.INSTANT_APP)
             )
     }
