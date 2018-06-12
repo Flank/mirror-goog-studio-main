@@ -1664,6 +1664,30 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testKotlinRunStatements() {
+        // Regression test for 79905342: recycle() lint warning not detecting call
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.util.AttributeSet
+
+                @Suppress("unused", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+                fun test(context: Context, attrs: AttributeSet, id: Int) {
+                    var columnWidth = 0
+                    context.obtainStyledAttributes(attrs, intArrayOf(id)).run {
+                        columnWidth = getDimensionPixelSize(0, -1)
+                        recycle()
+                    }
+                }
+
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;
