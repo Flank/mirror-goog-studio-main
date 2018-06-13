@@ -109,6 +109,11 @@ private fun getBaseAndroidAppModule(): ModuleInfo {
     module.androidBuildConfig.targetSdkVersion = 27
     module.androidBuildConfig.compileSdkVersion = 27
 
+    module.resources.stringCount = 2
+    module.resources.imageCount = 3
+    module.resources.layoutCount = 4
+
+
     module.javaClassCount = 5
     module.javaPackageCount = 5
     module.javaMethodsPerClass = 5

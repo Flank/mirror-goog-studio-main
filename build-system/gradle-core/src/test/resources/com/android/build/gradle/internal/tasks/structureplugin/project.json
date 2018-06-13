@@ -67,9 +67,9 @@
         "activityCount": 0,
         "hasLaunchActivity": false,
         "resourcesConfig": {
-          "stringCount": 0,
-          "imageCount": 0,
-          "layoutCount": 0
+          "stringCount": 2,
+          "imageCount": 3,
+          "layoutCount": 4
         },
         "dependencies": [
           {

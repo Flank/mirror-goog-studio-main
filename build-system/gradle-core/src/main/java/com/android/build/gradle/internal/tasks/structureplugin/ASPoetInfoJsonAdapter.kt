@@ -135,7 +135,7 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
                 "activityCount" -> data.activityCount = nextInt()
                 "hasLaunchActivity" -> data.hasLaunchActivity = nextBoolean()
                 "androidBuildConfig" -> data.androidBuildConfig = readAndroidBuildConfig(this)
-                "resources" -> data.resources = readResources(this)
+                "resourcesConfig" -> data.resources = readResources(this)
                 else -> skipValue()
             }
         }
