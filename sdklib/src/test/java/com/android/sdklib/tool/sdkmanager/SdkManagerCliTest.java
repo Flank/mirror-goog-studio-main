@@ -34,11 +34,13 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RemoteRepoLoader;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.CommonFactory;
+import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeLoader;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
@@ -60,15 +62,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Tests for {@link SdkManagerCli}
- */
+/** Tests for {@link SdkManagerCli} */
+@SuppressWarnings("resource")
 public class SdkManagerCliTest {
 
     private static final String SDK_LOCATION = "/sdk";
@@ -336,11 +338,9 @@ public class SdkManagerCliTest {
         assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
     }
 
-    /**
-     * Verify that the --channel sets us up with the right channel.
-     */
+    /** Verify that the --channel sets us up with the right channel. */
     @Test
-    public void channel() throws Exception {
+    public void channel() {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list", "--channel=1", "--sdk_root=/sdk"),
@@ -831,6 +831,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=/sdk", "--version"), mFileOp.getFileSystem());
+        assertNotNull(settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli sdkmanager =
                 new SdkManagerCli(
@@ -877,7 +878,7 @@ public class SdkManagerCliTest {
     }
 
     @Test
-    public void unknownArgument() throws Exception {
+    public void unknownArgument() {
         assertNull(
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=/sdk", "--foo"), mFileOp.getFileSystem()));
@@ -989,5 +990,26 @@ public class SdkManagerCliTest {
                             environmentInvalidProxyUrl);
             assertNull(settings);
         }
+    }
+
+    @Test
+    public void packageFile() {
+        mFileOp.recordExistingFile("/foo.bar", "package1\r\npackage2\r\n");
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--package_file=/foo.bar", "--sdk_root=/sdk"),
+                        mFileOp.getFileSystem());
+
+        assertNotNull(settings);
+        SdkAction action = settings.getAction();
+        assertNotNull(action);
+        assertTrue(action instanceof SdkPackagesAction);
+        SdkPackagesAction packagesAction = (SdkPackagesAction) action;
+
+        FakeRepoManager fakeRepoManager = new FakeRepoManager(new RepositoryPackages());
+        List<String> packages = packagesAction.getPaths(fakeRepoManager);
+        assertEquals(2, packages.size());
+        assertEquals("package1", packages.get(0));
+        assertEquals("package2", packages.get(1));
     }
 }

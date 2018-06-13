@@ -295,7 +295,7 @@ class SdkManagerCliSettings implements SettingsController {
         return mHandler;
     }
 
-    @Nullable
+    @NonNull
     public FileSystem getFileSystem() {
         return mFileSystem;
     }

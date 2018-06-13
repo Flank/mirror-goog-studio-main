@@ -51,13 +51,13 @@ public abstract class SdkPackagesAction extends SdkAction {
                         String.format(
                                 "Invalid package file \"%s\" threw exception:%n%s%n",
                                 packageFile, e));
-                return true;
             }
         } else if (!arg.startsWith("--")) {
             mPackages.add(arg);
-            return true;
+        } else {
+            return false;
         }
-        return false;
+        return true;
     }
 
     @NonNull
