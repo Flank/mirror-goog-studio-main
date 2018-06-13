@@ -8,6 +8,7 @@ iml_module(
     name = "studio.android.sdktools.sdklib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdklib.iml"],
+    tags = ["no_test_windows"],  # b/110149169
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -105,6 +106,7 @@ kotlin_test(
             "src/test/java/**/*.kt",
         ],
     ),
+    tags = ["no_test_windows"],  # b/110149169
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
