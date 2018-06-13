@@ -1,0 +1,13 @@
+WHAT ARE THE COMPONENTS
+  FAKE-ANDROID
+  srcs/com/android/tools/fakeandroid/**
+  A wrapper to the host ART runtime that provide a bare minimal virtual
+  device for testing.
+
+  ANDROID-MOCK
+  srcs/android/**
+  srcs/com/google/android/**
+  The android-mock module is a very striped down set of libraries that
+  mock out the android framework classes. Some test will require us to
+  mock out behaviors of the android frame work this is the library that
+  we would do that in.

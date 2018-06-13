@@ -14,6 +14,6 @@ java_binary(
     srcs = ["src/com/android/tools/profiler/FakeAndroid.java"],
     main_class = "com.android.tools.profiler.FakeAndroid",
     deps = [
-        "//tools/base/profiler/tests/android-mock",
+        "//tools/base/fakeandroid:android-mock",
     ],
 )

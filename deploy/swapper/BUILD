@@ -31,5 +31,5 @@ java_binary(
     name = "test-app_java",
     srcs = glob(["src/test/com/android/tools/deploy/swapper/testapp/**/*.java"]),
     create_executable = 0,
-    deps = ["//tools/base/profiler/tests/android-mock"],
+    deps = ["//tools/base/fakeandroid:android-mock"],
 )

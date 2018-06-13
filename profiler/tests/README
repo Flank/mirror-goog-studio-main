@@ -43,11 +43,6 @@ WHAT ARE THE COMPONENTS
   use android apis that we are known to capture from our instrumentation.
   We should be modifying the app, or adding additional test apps or
   activities to emulate the behavior we want to simulate from our test.
-  ANDROID-MOCK
-  The android-mock module is a very striped down set of libraries that
-  mock out the android framework classes. Some test will require us to
-  mock out behaviors of the android frame work this is the library that
-  we would do that in.
 
 HOW DO I ADD NEW TEST
   NEW TEST CASE

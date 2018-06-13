@@ -19,7 +19,7 @@ sh_binary(
             "//tools/base/profiler/app:perfa_java",
             "//tools/base/profiler/app:perfa_okhttp",
             "//tools/base/profiler/native/perfa:libperfa.so",
-            "//tools/base/profiler/tests/android-mock:android-mock-dex",
+            "//tools/base/fakeandroid:android-mock-dex",
             "//tools/base/profiler/tests/app-launcher:app-launcher-dex",
         ],
     }),
