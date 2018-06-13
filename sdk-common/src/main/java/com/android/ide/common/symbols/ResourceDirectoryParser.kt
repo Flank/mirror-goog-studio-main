@@ -27,9 +27,7 @@ import com.android.utils.SdkUtils
 import com.google.common.base.Preconditions
 import com.google.common.io.Files
 import org.w3c.dom.Document
-import org.xml.sax.SAXException
 import java.io.File
-import java.io.IOException
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
