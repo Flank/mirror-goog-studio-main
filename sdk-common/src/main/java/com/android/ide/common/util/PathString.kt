@@ -363,6 +363,16 @@ class PathString private constructor(
     }
 
     /**
+     * Returns a [PathString] that is the same as this one, but without a trailing separator.
+     * Returns this if it doesn't have a trailing separator.
+     */
+    fun withoutTrailingSeparator(): PathString {
+        return if (hasTrailingSeparator) {
+            PathString(filesystemUri, path, startIndex, endIndex, prefixEndIndex, separator)
+        } else this
+    }
+
+    /**
      * True iff the path contains a trailing separator.
      */
     @get:JvmName("hasTrailingSeparator")

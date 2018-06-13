@@ -65,6 +65,15 @@ class PathStringTest {
     }
 
     @Test
+    fun testWithoutTrailingSeparator() {
+        val withSlash = PathString("/foo/bar/")
+        val withoutSlash = PathString("/foo/bar")
+        assertThat(withSlash.withoutTrailingSeparator()).isEqualTo(withoutSlash)
+        assertThat(withSlash).isNotEqualTo(withoutSlash)
+        assertThat(withoutSlash.withoutTrailingSeparator()).isSameAs(withoutSlash)
+    }
+
+    @Test
     fun testToPath() {
         assertThat(PathString("/foo").toPath()).isEqualTo(Paths.get("/foo"))
     }
