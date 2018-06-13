@@ -620,6 +620,30 @@ class PathStringTest {
     }
 
     @Test
+    fun testEmptySegments() {
+        val emptyPath = PathString("")
+        assertThat(emptyPath.segments).isEqualTo(listOf<String>())
+        val rootPath = PathString("/")
+        assertThat(emptyPath.segments).isEqualTo(listOf<String>())
+        val windowsRootPath = PathString("C:\\")
+        assertThat(emptyPath.segments).isEqualTo(listOf<String>())
+    }
+
+    @Test
+    fun testSegments() {
+        val path1 = PathString("/foo/bar/baz")
+        val path2 = PathString("/foo/bar/baz/")
+        val path3 = PathString("foo/bar/baz")
+        val path4 = PathString("foo/bar/baz/")
+        val expected = listOf("foo", "bar", "baz")
+
+        assertThat(path1.segments).isEqualTo(expected)
+        assertThat(path2.segments).isEqualTo(expected)
+        assertThat(path3.segments).isEqualTo(expected)
+        assertThat(path4.segments).isEqualTo(expected)
+    }
+
+    @Test
     fun testFilesystemUri() {
         val path = PathString("/")
         assertThat(path.filesystemUri).isEqualTo(File(File.separator).toURI())

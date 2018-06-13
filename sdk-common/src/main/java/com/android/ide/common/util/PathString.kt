@@ -492,6 +492,28 @@ class PathString private constructor(
                 separator)
     }
 
+    /**
+     * The segments of this path, as a list of strings.
+     */
+    val segments: List<String>
+        get() {
+            val result = ArrayList<String>()
+
+            var lastSegment = startIndex
+
+            startIndex.until(endIndex).forEach {
+                if (isSeparator(path[it])) {
+                    result.add(path.substring(lastSegment, it))
+                    lastSegment = it + 1
+                }
+            }
+
+            if (lastSegment < endIndex) {
+                result.add(path.substring(lastSegment, endIndex))
+            }
+            return result
+        }
+
     override fun compareTo(other: PathString): Int {
         val schemeResult = filesystemUri.compareTo(other.filesystemUri)
 
@@ -602,25 +624,6 @@ class PathString private constructor(
             end - startIndex.until(end).reversed().countUntil {
                 isSeparator(path[it])
             }
-
-    private val segments: List<String>
-        get() {
-            val result = ArrayList<String>()
-
-            var lastSegment = startIndex
-
-            startIndex.until(endIndex).forEach {
-                if (isSeparator(path[it])) {
-                    result.add(path.substring(lastSegment, it))
-                    lastSegment = it + 1
-                }
-            }
-
-            if (lastSegment < endIndex) {
-                result.add(path.substring(lastSegment, endIndex))
-            }
-            return result
-        }
 }
 
 fun Path.toPathString() : PathString = PathString(this)
