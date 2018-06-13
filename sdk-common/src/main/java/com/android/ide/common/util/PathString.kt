@@ -233,6 +233,52 @@ class PathString private constructor(
             endIndex - beginIndex)
 
     /**
+     * Returns true iff this [PathString] starts with the given prefix. That is, it returns true
+     * if this path has the same filesystem and root, and begins with all of the segments
+     * in the possible prefix. This is different from checking for a string prefix. For example,
+     * foo/bar/baz starts with foo/bar but not foo/b.
+     */
+    fun startsWith(possiblePrefix: PathString): Boolean {
+        val toTest = possiblePrefix.withoutTrailingSeparator()
+
+        if (!sameRootAs(toTest)) {
+            return false
+        }
+
+        val ourEnd = endIndex
+        val thisLength = ourEnd - startIndex
+        val prefixLength = toTest.endIndex - toTest.startIndex
+        if (prefixLength > thisLength) {
+            return false
+        }
+
+        if (prefixLength == 0) {
+            return true
+        }
+
+        val requiredSeparatorPosition = startIndex + prefixLength
+
+        if (requiredSeparatorPosition > ourEnd || (requiredSeparatorPosition < ourEnd && !isSeparator(path[requiredSeparatorPosition]))) {
+            return false
+        }
+
+        for (idx in 0 until prefixLength) {
+            val thisChar = path[startIndex + idx]
+            val otherChar = toTest.path[toTest.startIndex + idx]
+
+            if (thisChar == otherChar) {
+                continue
+            }
+
+            if (!(isSeparator(thisChar) && isSeparator(otherChar))) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    /**
      * Returns the parent of this path, or null if this is a root path.
      */
     val parent: PathString?
@@ -548,6 +594,23 @@ class PathString private constructor(
         }
 
         return length.compareTo(otherLength)
+    }
+
+    private fun sameRootAs(other: PathString): Boolean {
+        if (filesystemUri != other.filesystemUri) {
+            return false
+        }
+
+        if (prefixEndIndex != other.prefixEndIndex) {
+            return false
+        }
+
+        for (idx in 0 until prefixEndIndex) {
+            if (path[idx] != other.path[idx]) {
+                return false
+            }
+        }
+        return true
     }
 
     private fun compatibleRoots(root1: PathString?, root2: PathString?): Boolean {

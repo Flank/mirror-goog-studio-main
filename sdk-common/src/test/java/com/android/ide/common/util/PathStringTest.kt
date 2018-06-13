@@ -58,6 +58,36 @@ class PathStringTest {
     }
 
     @Test
+    fun testStartsWith() {
+        val a = PathString("/a")
+        val fooBar = PathString("/foo/bar")
+        val root = PathString("/")
+        val emptyString = PathString("")
+        val foo = PathString("/foo")
+        val fooBa = PathString("/foo/ba")
+        val fooBarSlash = PathString("/foo/bar/")
+
+        val barBar = PathString("/bar/bar/")
+        val noSlashFooBar = PathString("foo/bar")
+
+        assertThat(fooBar.startsWith(root)).isTrue()
+        assertThat(a.startsWith(a)).isTrue()
+        assertThat(fooBar.startsWith(fooBar)).isTrue()
+        assertThat(fooBar.startsWith(fooBarSlash)).isTrue()
+        assertThat(fooBarSlash.startsWith(fooBar)).isTrue()
+        assertThat(fooBar.startsWith(foo)).isTrue()
+        assertThat(emptyString.startsWith(emptyString)).isTrue()
+        assertThat(noSlashFooBar.startsWith(emptyString)).isTrue()
+
+        assertThat(fooBar.startsWith(emptyString)).isFalse()
+        assertThat(root.startsWith(emptyString)).isFalse()
+        assertThat(fooBar.startsWith(barBar)).isFalse()
+        assertThat(fooBar.startsWith(fooBa)).isFalse()
+        assertThat(fooBar.startsWith(noSlashFooBar)).isFalse()
+        assertThat(foo.startsWith(fooBar)).isFalse()
+    }
+
+    @Test
     fun testDefaultFilesystem() {
         val defaultFilesystemUri = PathString("").filesystemUri
         val fileSystem = Paths.get(defaultFilesystemUri).fileSystem
