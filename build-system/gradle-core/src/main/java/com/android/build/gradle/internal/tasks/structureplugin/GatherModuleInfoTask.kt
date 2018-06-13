@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.tasks.structureplugin
 
 import com.android.build.gradle.BasePlugin
+import com.android.ide.common.symbols.IdProvider
+import com.android.ide.common.symbols.parseResourceSourceSetDirectory
+import com.android.resources.ResourceType
 import com.android.sdklib.AndroidTargetHash
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -64,21 +67,37 @@ private class AndroidCollector : DataCollector {
     override fun collectInto(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
         if (!task.project.isAndroidProject()) return
         dataHolder.type = ModuleType.ANDROID
-        collectBuildConfig(dataHolder, task)
+        task.project.plugins.withType(BasePlugin::class.java).firstOrNull()?.let {
+            collectBuildConfig(dataHolder, it)
+            collectResources(dataHolder, it)
+        }
     }
 
-    fun collectBuildConfig(dataHolder: ModuleInfo, task: GatherModuleInfoTask) {
-        task.project.plugins.withType(BasePlugin::class.java).firstOrNull()?.let {
-            it.extension.defaultConfig.minSdkVersion?.apiLevel?.let {
-                dataHolder.androidBuildConfig.minSdkVersion = it
-            }
-            it.extension.defaultConfig.targetSdkVersion?.apiLevel?.let {
-                dataHolder.androidBuildConfig.targetSdkVersion = it
-            }
+    private fun collectBuildConfig(dataHolder: ModuleInfo, plugin: BasePlugin<*>) {
+        plugin.extension.defaultConfig.minSdkVersion?.apiLevel?.let {
+            dataHolder.androidBuildConfig.minSdkVersion = it }
+        plugin.extension.defaultConfig.targetSdkVersion?.apiLevel?.let {
+            dataHolder.androidBuildConfig.targetSdkVersion = it }
 
-            // extension.compileSdkVersion returns "android-27", we want just "27".
-            dataHolder.androidBuildConfig.compileSdkVersion =
-                    AndroidTargetHash.getPlatformVersion(it.extension.compileSdkVersion)!!.apiLevel
+        // extension.compileSdkVersion returns "android-27", we want just "27".
+        dataHolder.androidBuildConfig.compileSdkVersion =
+                AndroidTargetHash.getPlatformVersion(plugin.extension.compileSdkVersion)!!.apiLevel
+    }
+
+    private fun collectResources(dataHolder: ModuleInfo, plugin: BasePlugin<*>) {
+        val resources = plugin.extension.sourceSets
+            .findByName(SourceSet.MAIN_SOURCE_SET_NAME)?.res ?: return
+
+        resources.srcDirs.forEach {
+            val symbolTable = parseResourceSourceSetDirectory(it, IdProvider.constant(), null)
+
+            // TODO add more resource types as ASPoet supports them
+            dataHolder.resources.imageCount +=
+                    symbolTable.getSymbolByResourceType(ResourceType.DRAWABLE).size
+            dataHolder.resources.layoutCount +=
+                    symbolTable.getSymbolByResourceType(ResourceType.LAYOUT).size
+            dataHolder.resources.stringCount +=
+                    symbolTable.getSymbolByResourceType(ResourceType.STRING).size
         }
     }
 }
