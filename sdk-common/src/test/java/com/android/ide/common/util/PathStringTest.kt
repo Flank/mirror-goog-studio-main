@@ -35,6 +35,15 @@ class PathStringTest {
     }
 
     @Test
+    fun testTrailingSlashesAreIgnoredWhenComputingParent() {
+        val withTrailing = PathString("/var/log/")
+        val withoutTrailing = PathString("/var/log")
+        assertThat(withTrailing.parent).isEqualTo(PathString("/var"))
+        assertThat(withoutTrailing.parent).isEqualTo(PathString("/var"))
+        assertThat(withTrailing).isNotEqualTo(withoutTrailing)
+    }
+
+    @Test
     fun testRoot() {
         assertThat(PathString("/").root).isEqualTo(PathString("/"))
         assertThat(PathString("foo").root).isNull()
