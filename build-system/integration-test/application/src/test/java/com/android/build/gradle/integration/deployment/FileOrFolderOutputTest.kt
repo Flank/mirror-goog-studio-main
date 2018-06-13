@@ -17,12 +17,16 @@
 package com.android.build.gradle.integration.deployment
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.internal.incremental.FolderBasedApkChangeList
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.io.FileReader
+import java.util.Arrays
 import java.util.zip.ZipFile
 
 class FileOrFolderOutputTest {
@@ -58,6 +62,11 @@ class FileOrFolderOutputTest {
             apkContentCopy.putAll(apkContent)
             compareContent(apkContentCopy, it.file.toFile(), it.file.toFile())
             assertThat(apkContentCopy.isEmpty())
+
+            val changeListFile = File(it.file.toFile(), FolderBasedApkChangeList.CHANGE_LIST_FN)
+            FileSubject.assertThat(changeListFile).exists()
+            val changeList = FolderBasedApkChangeList.read(FileReader(changeListFile))
+            assertThat(changeList.changes).containsExactlyElementsIn(apkContent.keys)
         }
 
         // now rebuild incrementally looking for the APK rather than folder.
@@ -73,10 +82,13 @@ class FileOrFolderOutputTest {
     }
 
     private fun getZipContent(zip: File) : Map<String, Long> {
+        // so far we are not signing the folder based APK so ignore those.
+        val ignoredContents = listOf(
+            "META-INF/CERT.RSA",  "META-INF/CERT.SF", "META-INF/MANIFEST.MF")
         val apkContent = mutableMapOf<String, Long>()
         val zipFile = ZipFile(zip)
         for (entry in zipFile.entries()) {
-            if (!entry.isDirectory) {
+            if (!entry.isDirectory && !ignoredContents.contains(entry.name)) {
                 apkContent[entry.name] = entry.size
             }
         }
@@ -84,19 +96,21 @@ class FileOrFolderOutputTest {
     }
 
     /**
-     * Compare recursively the directory structure starting a 'folder' with the passed map
+     * Compare recursively the directory structure starting at 'folder' with the passed map
      * of relative file path and file length.
      */
     private fun compareContent(content: MutableMap<String, Long>, folder: File, base: File) {
 
-        folder.listFiles().forEach { file ->
-            if (file.isDirectory) {
-                compareContent(content, file, base)
-            } else {
-                val entryName = file.toRelativeString(base)
-                assertThat(content.containsKey(entryName)).isTrue()
-                content.remove(entryName)
-            }
+        folder.listFiles()
+            .filter{ it.name != FolderBasedApkChangeList.CHANGE_LIST_FN }
+            .forEach { file ->
+                if (file.isDirectory) {
+                    compareContent(content, file, base)
+                } else {
+                    val entryName = file.toRelativeString(base)
+                    assertThat(content.containsKey(entryName)).isTrue()
+                    content.remove(entryName)
+                }
         }
     }
 }

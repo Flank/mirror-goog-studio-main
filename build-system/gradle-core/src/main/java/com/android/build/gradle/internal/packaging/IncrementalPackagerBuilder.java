@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.tasks.FolderBasedApkCreator;
+import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;

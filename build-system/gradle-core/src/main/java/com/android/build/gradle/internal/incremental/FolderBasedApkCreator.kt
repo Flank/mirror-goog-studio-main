@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks
+package com.android.build.gradle.internal.incremental
 
 import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zip.ZFile
 import java.io.File
+import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.function.Function
@@ -29,6 +30,9 @@ import java.util.function.Predicate
  * Implementation of [ApkCreator] that outputs to a folder.
  */
 class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.CreationData) : ApkCreator {
+
+    val changedItems = mutableListOf<String>()
+    val deletedItems = mutableListOf<String>()
 
     init {
         val apkPath = creationData.apkPath
@@ -57,6 +61,7 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
                                 destinationFile.toPath(),
                                 StandardCopyOption.REPLACE_EXISTING
                             )
+                            changedItems.add(entry.centralDirectoryHeader.name)
                         }
                     }
                 }
@@ -64,23 +69,26 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
         }
     }
 
-    override fun writeFile(inputFile: File?, entryPath: String?) {
-        if (inputFile == null) return
-
+    override fun writeFile(inputFile: File, entryPath: String) {
         val destinationFile = File(creationData.apkPath, entryPath)
         destinationFile.parentFile.mkdirs()
         Files.copy(
             inputFile.toPath(),
             destinationFile.toPath(),
             StandardCopyOption.REPLACE_EXISTING)
+        changedItems.add(entryPath)
     }
 
-    override fun deleteFile(entryPath: String?) {
+    override fun deleteFile(entryPath: String) {
         Files.deleteIfExists(File(creationData.apkPath, entryPath).toPath())
+        deletedItems.add(entryPath)
     }
 
     override fun hasPendingChangesWithWait(): Boolean = false
 
     override fun close() {
+        FileWriter(File(creationData.apkPath, FolderBasedApkChangeList.CHANGE_LIST_FN))
+            .buffered()
+            .use { FolderBasedApkChangeList.write(this, it) }
     }
 }

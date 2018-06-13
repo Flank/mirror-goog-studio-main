@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks
+package com.android.build.gradle.internal.incremental
 
+import com.android.testutils.truth.FileSubject
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.utils.FileUtils
 import com.google.common.io.Files
@@ -30,6 +31,7 @@ import org.mockito.MockitoAnnotations
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.FileReader
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 
@@ -48,7 +50,8 @@ class FolderBasedApkCreatorTest {
     fun setUp() {
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(creationData.apkPath).thenReturn(destFolder.root)
-        apkCreator = FolderBasedApkCreator(creationData)
+        apkCreator =
+                FolderBasedApkCreator(creationData)
     }
 
     @Test
@@ -84,10 +87,32 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
         checkFolderContent(destFolder.root, listOfEntries)
 
+        apkCreator =
+                FolderBasedApkCreator(creationData)
         apkCreator.deleteFile("foo/bar/inFile3")
         apkCreator.close()
         checkFolderContent(destFolder.root,
             listOf("inFile1", "foo/inFile2", "foo/bar/inFile4"))
+        testChangesList(destFolder.root, listOf(), listOf("foo/bar/inFile3"))
+    }
+
+    @Test
+    fun addAndRemoving() {
+        val listOfEntries =
+            listOf("inFile1", "foo/inFile2", "foo/bar/inFile3", "foo/bar/inFile4")
+        listOfEntries.forEach { writeFile(it) }
+
+        apkCreator.close()
+        checkFolderContent(destFolder.root, listOfEntries)
+
+        apkCreator =
+                FolderBasedApkCreator(creationData)
+        writeFile("new/file")
+        apkCreator.deleteFile("foo/bar/inFile3")
+        apkCreator.close()
+        checkFolderContent(destFolder.root,
+            listOf("inFile1", "new/file", "foo/inFile2", "foo/bar/inFile4"))
+        testChangesList(destFolder.root, listOf("new/file"), listOf("foo/bar/inFile3"))
     }
 
     @Test
@@ -101,6 +126,7 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOf("inFile1"))
+        testChangesList(destFolder.root, listOf("inFile1"), listOf())
     }
 
     @Test
@@ -113,6 +139,7 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOfEntries)
+        testChangesList(destFolder.root, listOfEntries, listOf())
     }
 
     @Test
@@ -145,6 +172,7 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, firstEntries.plus(secondEntries))
+        testChangesList(destFolder.root, firstEntries.plus(secondEntries), listOf())
     }
 
     @Test
@@ -156,10 +184,13 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
         checkFolderContent(destFolder.root, zipEntries)
 
+        apkCreator =
+                FolderBasedApkCreator(creationData)
         apkCreator.deleteFile("foo/inFile3")
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOf("inFile1", "inFile2", "foo/inFile4"))
+        testChangesList(destFolder.root, listOf(), listOf("foo/inFile3"))
     }
 
     @Test(expected = AssertionError::class)
@@ -183,11 +214,13 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOf("inFile1.dex", "inFile2.dex", "foo/inFile4.dex"))
+
     }
 
     private fun getFilesInFolder(folder: File) =
         Files.fileTreeTraverser().breadthFirstTraversal(folder)
             .filter(File::isFile)
+            .filter{it.name != FolderBasedApkChangeList.CHANGE_LIST_FN}
             .map(File::getAbsolutePath)
             .toList()
 
@@ -220,4 +253,13 @@ class FolderBasedApkCreatorTest {
         jar.closeEntry()
     }
 
+    private fun testChangesList(folder: File, changes: List<String>, deletions: List<String>) {
+        val changesFile = File(folder, FolderBasedApkChangeList.CHANGE_LIST_FN)
+        FileSubject.assertThat(changesFile).exists()
+
+        val changeList = FolderBasedApkChangeList.read(FileReader(changesFile))
+
+        assertThat(changeList.changes).containsExactlyElementsIn(changes)
+        assertThat(changeList.deletions).containsExactlyElementsIn(deletions)
+    }
 }
