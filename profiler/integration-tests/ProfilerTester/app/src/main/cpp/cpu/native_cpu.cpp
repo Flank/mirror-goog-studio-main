@@ -13,24 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <jni.h>
+#include <cmath>
+#include <chrono>
 
-jint DoFibonacciRecursively(jint index) {
-    if (index <= 0) {
-        return 0;
-    }
-    if (index == 1) {
-        return 1;
-    }
+const double MATH_E = 2.71828182845904523536;
 
-    return DoFibonacciRecursively(index - 1) + DoFibonacciRecursively(index - 2);
+void DoExpensiveFpuCalculation(int iterations) {
+    double value = MATH_E;
+    for (int i = 0; i < iterations; i++) {
+        value += sin(value) + cos(value);
+    }
 }
 
 extern "C"
-JNIEXPORT jint JNICALL
-Java_android_com_java_profilertester_taskcategory_CpuTaskCategory_fib(JNIEnv *env,
-                                                                      jobject instance,
-                                                                      jint index) {
-    return DoFibonacciRecursively(index);
+JNIEXPORT void JNICALL
+Java_android_com_java_profilertester_taskcategory_CpuTaskCategory_fpuCalc(JNIEnv *env,
+                                                                          jobject instance,
+                                                                          jint run_at_least_ms) {
+  using namespace std::chrono;
+  auto start = system_clock::now();
+  while (duration_cast<milliseconds>(system_clock::now() - start).count() < run_at_least_ms) {
+      DoExpensiveFpuCalculation(10000);
+  }
 }
 

@@ -12,7 +12,6 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,18 +30,18 @@ public class CpuTaskCategory extends TaskCategory {
         System.loadLibrary("native_cpu");
     }
 
-    public native int fib(int index);
+    public native void fpuCalc(int runAtLeastMs);
 
     public CpuTaskCategory(@NonNull File filesDir) {
         mTasks =
                 Arrays.asList(
                         new PeriodicRunningTask(),
                         new FileWritingTask(filesDir),
-                        new MaximumPowerTask(new SingleThreadIntegerTask(RUNNING_TIME_S)),
-                        new MaximumPowerTask(new SingleThreadFpuTask(RUNNING_TIME_S)),
-                        new MaximumPowerTask(new SingleThreadMemoryTask(RUNNING_TIME_S)),
-                        new RunNativeCodeTask(),
-                        new RunCodeWithTraceMarkersTask(),
+                        new MaximumPowerTask(new SingleThreadIntegerComputation(RUNNING_TIME_S)),
+                        new MaximumPowerTask(new SingleThreadFpuComputation(RUNNING_TIME_S)),
+                        new MaximumPowerTask(new SingleThreadMemoryComputation(RUNNING_TIME_S)),
+                        new NativeCodeTask(),
+                        new CodeWithTraceMarkersTask(),
                         new AutomaticRecordingTask());
     }
 
@@ -220,7 +219,7 @@ public class CpuTaskCategory extends TaskCategory {
                     threadPoolExecutor = getDefaultThreadPoolExecutor(singleTaskNumber);
 
                     for (int k = 0; k < singleTaskNumber; ++k) {
-                        threadPoolExecutor.execute(new SingleThreadFpuTask(PERIOD_TIME_S));
+                        threadPoolExecutor.execute(new SingleThreadFpuComputation(PERIOD_TIME_S));
                     }
 
                     TimeUnit.SECONDS.sleep(PERIOD_TIME_S);
@@ -251,11 +250,10 @@ public class CpuTaskCategory extends TaskCategory {
 
     private static class MaximumPowerTask extends Task {
         private static final int NUM_CORES = Runtime.getRuntime().availableProcessors();
-        @NonNull
-        private final ComputationTask mComputationTask;
+        @NonNull private final Computation mComputation;
 
-        private MaximumPowerTask(@NonNull ComputationTask computationTask) {
-            mComputationTask = computationTask;
+        private MaximumPowerTask(@NonNull Computation computation) {
+            mComputation = computation;
         }
 
         @Nullable
@@ -264,7 +262,7 @@ public class CpuTaskCategory extends TaskCategory {
             ThreadPoolExecutor executor = getDefaultThreadPoolExecutor(NUM_CORES);
             List<Future<?>> futures = new ArrayList<>(NUM_CORES);
             for (int i = 0; i < NUM_CORES; i++) {
-                futures.add(executor.submit(mComputationTask));
+                futures.add(executor.submit(mComputation));
             }
             for (Future<?> future : futures) {
                 future.get();
@@ -275,15 +273,15 @@ public class CpuTaskCategory extends TaskCategory {
         @NonNull
         @Override
         protected String getTaskDescription() {
-            return mComputationTask.getTaskDescription();
+            return mComputation.getTaskDescription();
         }
     }
 
-    private abstract static class ComputationTask implements Runnable {
+    private abstract static class Computation implements Runnable {
         protected static final int NUM_ITERATIONS = 10000;
         private final int mSecondsToRun;
 
-        protected ComputationTask(int secondsToRun) {
+        protected Computation(int secondsToRun) {
             mSecondsToRun = secondsToRun;
         }
 
@@ -301,8 +299,8 @@ public class CpuTaskCategory extends TaskCategory {
         }
     }
 
-    private static final class SingleThreadFpuTask extends ComputationTask {
-        private SingleThreadFpuTask(int secondsToRun) {
+    private static final class SingleThreadFpuComputation extends Computation {
+        private SingleThreadFpuComputation(int secondsToRun) {
             super(secondsToRun);
         }
 
@@ -321,11 +319,11 @@ public class CpuTaskCategory extends TaskCategory {
         }
     }
 
-    private static final class SingleThreadIntegerTask extends ComputationTask {
+    private static final class SingleThreadIntegerComputation extends Computation {
         private final int[] mValues;
         private int mSeed = 0;
 
-        private SingleThreadIntegerTask(int secondsToRun) {
+        private SingleThreadIntegerComputation(int secondsToRun) {
             super(secondsToRun);
             mValues = new int[NUM_ITERATIONS];
             for (int i = 0; i < mValues.length; i++) {
@@ -345,12 +343,12 @@ public class CpuTaskCategory extends TaskCategory {
         }
     }
 
-    private static final class SingleThreadMemoryTask extends ComputationTask {
+    private static final class SingleThreadMemoryComputation extends Computation {
         private static final int INT_COUNT = 4 * 1024 * 1024;
         private final int[] mValues;
         private int mIndex = 0;
 
-        private SingleThreadMemoryTask(int secondsToRun) {
+        private SingleThreadMemoryComputation(int secondsToRun) {
             super(secondsToRun);
 
             if ((INT_COUNT & (INT_COUNT - 1)) > 0) {
@@ -386,71 +384,53 @@ public class CpuTaskCategory extends TaskCategory {
         }
     }
 
-    public class RunNativeCodeTask extends Task {
-        private static final int FIB_INDEX = 40;
+    public class NativeCodeTask extends Task {
+        private final int RUN_FOR_MS = (int) TimeUnit.SECONDS.toMillis(5);
 
         @Nullable
         public String execute() {
-            int result = CpuTaskCategory.this.fib(FIB_INDEX);
-            return String.format(
-                    Locale.getDefault(),
-                    "Calling native method fib(%d), returned %d",
-                    FIB_INDEX,
-                    result);
+            CpuTaskCategory.this.fpuCalc(RUN_FOR_MS);
+            return "Finished calling native code";
         }
 
         @NonNull
         @Override
         protected String getTaskDescription() {
-            return "Run Native Code Task";
+            return "Native Code Task";
         }
     }
 
-    public class RunCodeWithTraceMarkersTask extends Task {
-        private static final int FIB_INDEX = 20;
+    public class CodeWithTraceMarkersTask extends Task {
+        private final int RUN_FOR_S = 5;
+        private MaximumPowerTask mInnerTask =
+                new MaximumPowerTask(new SingleThreadFpuComputation(RUN_FOR_S));
 
-        private int doFibonacciRecursively(int index) {
-            Trace.beginSection("doFibonacciRecursively");
-
+        @Nullable
+        public String execute() throws Exception {
             try {
-                if (index <= 0) {
-                    return 0;
-                }
-                if (index == 1) {
-                    return 1;
-                }
-
-                return doFibonacciRecursively(index - 1) + doFibonacciRecursively(index - 2);
+                Trace.beginSection("CodeWithTraceMarkersTask#execute");
+                return mInnerTask.execute();
             } finally {
                 Trace.endSection();
             }
-        }
 
-        @Nullable
-        public String execute() {
-            int result = doFibonacciRecursively(FIB_INDEX);
-            return String.format(
-                    Locale.getDefault(),
-                    "Calling Java method fib(%d), returned %d",
-                    FIB_INDEX,
-                    result);
         }
 
         @NonNull
         @Override
         protected String getTaskDescription() {
-            return "Run Code With Trace Markers Task";
+            return "Code With Trace Markers Task";
         }
     }
 
     public class AutomaticRecordingTask extends Task {
-        RunCodeWithTraceMarkersTask innerTask = new RunCodeWithTraceMarkersTask();
+        CodeWithTraceMarkersTask mInnerTask = new CodeWithTraceMarkersTask();
 
         @Nullable
-        public String execute() {
+        public String execute() throws Exception {
             try {
                 Debug.startMethodTracing("AutomaticRecordingTask#execute");
-                return innerTask.execute();
+                return mInnerTask.execute();
             } finally {
                 Debug.stopMethodTracing();
             }
