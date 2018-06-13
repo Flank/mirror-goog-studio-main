@@ -16,6 +16,8 @@
 
 package com.android.tools.profiler;
 
+import com.android.tools.fakeandroid.FakeAndroidDriver;
+import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.proto.Agent;
 import com.android.tools.profiler.proto.Common.*;
 import java.io.File;

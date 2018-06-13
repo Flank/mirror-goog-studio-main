@@ -32,8 +32,10 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.SocketAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -56,10 +58,16 @@ class SdkManagerCliSettings implements SettingsController {
     private static final String PROXY_TYPE_ARG = "--proxy=";
     private static final String PROXY_HOST_ARG = "--proxy_host=";
     private static final String PROXY_PORT_ARG = "--proxy_port=";
+    private static final String NO_PROXY_ARG = "--no_proxy";
     private static final String TOOLSDIR = "com.android.sdklib.toolsdir";
 
     private static final Map<String, Function<SdkManagerCliSettings, SdkAction>> ARG_TO_ACTION =
             new HashMap<>();
+
+    public static final String STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY_ENV =
+            "STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY";
+    public static final String HTTP_PROXY_ENV = "HTTP_PROXY";
+    public static final String HTTPS_PROXY_ENV = "HTTPS_PROXY";
 
     static {
         InstallAction.register(ARG_TO_ACTION);
@@ -77,15 +85,18 @@ class SdkManagerCliSettings implements SettingsController {
     private int mChannel = 0;
     private boolean mIncludeObsolete = false;
     private boolean mForceHttp = false;
+    private boolean mForceNoProxy = false;
     private boolean mVerbose = false;
     private Proxy.Type mProxyType;
     private SocketAddress mProxyHost;
+    private String mProxyHostStr;
     private AndroidSdkHandler mHandler;
     private RepoManager mRepoManager;
     private PrintStream mOut;
     private BufferedReader mIn;
     private Downloader mDownloader;
     private FileSystem mFileSystem;
+    private Map<String, String> mEnvironment;
 
     public void setDownloader(@Nullable Downloader downloader) {
         mDownloader = downloader;
@@ -113,6 +124,15 @@ class SdkManagerCliSettings implements SettingsController {
     @Nullable
     public static SdkManagerCliSettings createSettings(
             @NonNull List<String> args, @NonNull FileSystem fileSystem) {
+        return createSettings(args, fileSystem, System.getenv());
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static SdkManagerCliSettings createSettings(
+            @NonNull List<String> args,
+            @NonNull FileSystem fileSystem,
+            @NonNull Map<String, String> environment) {
         ProgressIndicator progress =
                 new ConsoleProgressIndicator() {
                     @Override
@@ -122,8 +142,9 @@ class SdkManagerCliSettings implements SettingsController {
                     public void logVerbose(@NonNull String s) {}
                 };
         try {
-            return new SdkManagerCliSettings(args, fileSystem, progress);
+            return new SdkManagerCliSettings(args, fileSystem, environment, progress);
         } catch (Exception e) {
+            progress.logWarning("Could not create settings", e);
             return null;
         }
     }
@@ -142,11 +163,15 @@ class SdkManagerCliSettings implements SettingsController {
 
     @Nullable
     private SocketAddress createAddress(@NonNull String host, int port) {
+        if ("1".equals(mEnvironment.get(STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY_ENV))) {
+            return InetSocketAddress.createUnresolved(host, port);
+        }
+
         try {
             InetAddress address = InetAddress.getByName(host);
             return new InetSocketAddress(address, port);
         } catch (UnknownHostException e) {
-            getProgressIndicator().logWarning("Failed to parse host " + host);
+            getProgressIndicator().logWarning("Failed to resolve host " + host);
             return null;
         }
     }
@@ -165,6 +190,11 @@ class SdkManagerCliSettings implements SettingsController {
     @Override
     public void setForceHttp(boolean force) {
         mForceHttp = force;
+    }
+
+    @VisibleForTesting
+    public boolean getForceNoProxy() {
+        return mForceNoProxy;
     }
 
     @NonNull
@@ -233,6 +263,12 @@ class SdkManagerCliSettings implements SettingsController {
         return mProxyType == null ? Proxy.NO_PROXY : new Proxy(mProxyType, mProxyHost);
     }
 
+    @VisibleForTesting
+    @Nullable
+    String getProxyHostStr() {
+        return mProxyHostStr;
+    }
+
     @Nullable
     public RepoManager getRepoManager() {
         return mRepoManager;
@@ -263,11 +299,26 @@ class SdkManagerCliSettings implements SettingsController {
         return mFileSystem;
     }
 
+    @NonNull
+    private static Proxy.Type extractProxyType(
+            @NonNull String type, @NonNull ProgressIndicator progress) {
+        if (type.equals("socks")) {
+            return Proxy.Type.SOCKS;
+        } else if (type.equals("http") || type.equals("https")) {
+            return Proxy.Type.HTTP;
+        }
+
+        progress.logWarning("Valid proxy types are \"socks\" and \"http\".");
+        throw new IllegalArgumentException();
+    }
+
     private SdkManagerCliSettings(
             @NonNull List<String> args,
             @NonNull FileSystem fileSystem,
+            @Nullable Map<String, String> environment,
             @NonNull ProgressIndicator progress) {
         mFileSystem = fileSystem;
+        mEnvironment = environment;
 
         String proxyHost = null;
         int proxyPort = -1;
@@ -291,6 +342,9 @@ class SdkManagerCliSettings implements SettingsController {
             } else if (arg.equals(NO_HTTPS_ARG)) {
                 setForceHttp(true);
                 argIter.remove();
+            } else if (arg.equals(NO_PROXY_ARG)) {
+                mForceNoProxy = true;
+                argIter.remove();
             } else if (arg.equals(VERBOSE_ARG)) {
                 mVerbose = true;
                 argIter.remove();
@@ -311,14 +365,7 @@ class SdkManagerCliSettings implements SettingsController {
                 argIter.remove();
             } else if (arg.startsWith(PROXY_TYPE_ARG)) {
                 String type = arg.substring(PROXY_TYPE_ARG.length());
-                if (type.equals("socks")) {
-                    mProxyType = Proxy.Type.SOCKS;
-                } else if (type.equals("http")) {
-                    mProxyType = Proxy.Type.HTTP;
-                } else {
-                    progress.logWarning("Valid proxy types are \"socks\" and \"http\".");
-                    throw new IllegalArgumentException();
-                }
+                mProxyType = extractProxyType(type, progress);
                 argIter.remove();
             } else if (arg.startsWith(CHANNEL_ARG)) {
                 String value = arg.substring(CHANNEL_ARG.length());
@@ -354,18 +401,57 @@ class SdkManagerCliSettings implements SettingsController {
             throw new IllegalArgumentException();
         }
 
-        if (proxyHost == null ^ mProxyType == null || proxyPort == -1 ^ mProxyType == null) {
+        if (mForceNoProxy && (proxyHost != null || proxyPort != -1 || mProxyType != null)) {
+            progress.logWarning(
+                    String.format(
+                            "None of %1$s, %2$s, and %3$s must be specified if %4$s is.",
+                            PROXY_HOST_ARG, PROXY_PORT_ARG, PROXY_TYPE_ARG, NO_PROXY_ARG));
+            throw new IllegalArgumentException();
+        } else if (proxyHost == null ^ mProxyType == null || proxyPort == -1 ^ mProxyType == null) {
             progress.logWarning(
                     String.format(
                             "All of %1$s, %2$s, and %3$s must be specified if any are.",
                             PROXY_HOST_ARG, PROXY_PORT_ARG, PROXY_TYPE_ARG));
             throw new IllegalArgumentException();
-        } else if (mProxyType != null) {
-            SocketAddress address = createAddress(proxyHost, proxyPort);
-            if (address == null) {
-                throw new IllegalArgumentException();
+        } else {
+            if (mForceNoProxy) {
+                return;
             }
-            mProxyHost = address;
+            if (proxyHost == null) {
+                // Try to take values from the HTTP_PROXY / HTTPS_PROXY environment variables.
+                String proxyEnv;
+                if (mForceHttp) {
+                    proxyEnv = mEnvironment.get(HTTP_PROXY_ENV);
+                } else {
+                    proxyEnv = mEnvironment.get(HTTPS_PROXY_ENV);
+                    if (proxyEnv == null) {
+                        proxyEnv = mEnvironment.get(HTTP_PROXY_ENV);
+                    }
+                }
+                if (proxyEnv != null) {
+                    try {
+                        URL url = new URL(proxyEnv);
+                        mProxyType = extractProxyType(url.getProtocol(), progress);
+                        proxyHost = url.getHost();
+                        proxyPort = url.getPort();
+                    } catch (MalformedURLException e) {
+                        progress.logWarning(
+                                "The proxy server URL extracted from HTTP_PROXY or "
+                                        + "HTTPS_PROXY environment variable could not be parsed. "
+                                        + "Either specify the correct URL or unset the environment variable.",
+                                e);
+                        throw new IllegalArgumentException();
+                    }
+                }
+            }
+            if (proxyHost != null) {
+                SocketAddress address = createAddress(proxyHost, proxyPort);
+                if (address == null) {
+                    throw new IllegalArgumentException();
+                }
+                mProxyHost = address;
+                mProxyHostStr = proxyHost;
+            }
         }
     }
 }

@@ -91,7 +91,9 @@ class DexSplitterTransform(
             }
 
             featureJars.files.forEach { file ->
-                val modulePath = getModulePath(file).removePrefix(":").replace(":", "/")
+                // Prepend "features" to the module paths in case a non-base feature has module path
+                // ":base".
+                val modulePath = "features${getModulePath(file).replace(":", "/")}"
                 builder.addFeatureJar(file.toPath(), modulePath)
                 Files.createDirectories(File(outputDir, modulePath).toPath())
             }

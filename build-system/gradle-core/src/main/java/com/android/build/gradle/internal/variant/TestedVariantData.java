@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.VariantConfiguration;
+import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
 
@@ -37,4 +38,6 @@ public interface TestedVariantData {
     VariantConfiguration getVariantConfiguration();
 
     VariantScope getScope();
+
+    TaskContainer getTaskContainer();
 }

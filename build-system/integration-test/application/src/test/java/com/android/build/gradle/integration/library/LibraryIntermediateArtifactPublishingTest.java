@@ -84,9 +84,11 @@ public class LibraryIntermediateArtifactPublishingTest {
         assertThatZip(fullJar).contains("com/example/helloworld/HelloWorld.class");
         assertThatZip(fullJar).contains("foo.txt");
 
-        File classesJar = getOldLocationJar("classes.jar");
-        assertThatZip(classesJar).contains("com/example/helloworld/HelloWorld.class");
-        assertThatZip(classesJar).doesNotContain("foo.txt");
+        File fullDir =
+                project.getSubproject(":lib")
+                        .file("build/intermediates/intermediate-jars/debug/classes/dir");
+        assertThat(new File(fullDir, "com/example/helloworld/HelloWorld.class")).exists();
+        assertThat(new File(fullDir, "foo.txt")).doesNotExist();
 
         File resJar = getOldLocationJar("res.jar");
         assertThatZip(resJar).doesNotContain("com/example/helloworld/HelloWorld.class");

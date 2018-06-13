@@ -141,7 +141,7 @@ public class DesugaringClassAnalyzer {
     static DesugaringData analyze(@NonNull Path path, @NonNull InputStream is) throws IOException {
         ClassReader reader = new ClassReader(is);
         Visitor visitor = new Visitor(path);
-        reader.accept(visitor, 0);
+        reader.accept(visitor, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 
         return new DesugaringData(visitor.getPath(), visitor.getType(), visitor.getDependencies());
     }

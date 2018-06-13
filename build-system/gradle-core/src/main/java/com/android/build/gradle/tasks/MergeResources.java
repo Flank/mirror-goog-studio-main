@@ -880,8 +880,8 @@ public class MergeResources extends IncrementalTask {
                     project.files(scope.getRenderscriptResOutputDir());
             mergeResourcesTask.generatedResOutputDir =
                     project.files(scope.getGeneratedResOutputDir());
-            if (scope.getMicroApkTask() != null &&
-                    variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
+            if (scope.getTaskContainer().getMicroApkTask() != null
+                    && variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
                 mergeResourcesTask.microApkResDirectory =
                         project.files(scope.getMicroApkResDirectory());
             }
@@ -890,7 +890,7 @@ public class MergeResources extends IncrementalTask {
             if (!mergeResourcesTask.disableVectorDrawables) {
                 mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
             }
-            variantData.mergeResourcesTask = mergeResourcesTask;
+            scope.getTaskContainer().setMergeResourcesTask(mergeResourcesTask);
 
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
                 // Keep as an output.

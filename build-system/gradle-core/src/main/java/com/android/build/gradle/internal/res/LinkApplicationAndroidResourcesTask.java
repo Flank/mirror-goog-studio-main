@@ -56,7 +56,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -701,7 +700,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
 
-            variantData.addTask(TaskContainer.TaskKind.PROCESS_ANDROID_RESOURCES, processResources);
+            variantScope.getTaskContainer().setProcessAndroidResTask(processResources);
 
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 

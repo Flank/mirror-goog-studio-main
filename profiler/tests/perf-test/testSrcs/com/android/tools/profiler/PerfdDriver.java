@@ -2,6 +2,7 @@ package com.android.tools.profiler;
 
 import static org.junit.Assert.assertTrue;
 
+import com.android.tools.fakeandroid.ProcessRunner;
 import java.io.IOException;
 import java.util.regex.Pattern;
 

@@ -18,7 +18,7 @@ package com.android.tools.profiler.network;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.profiler.FakeAndroidDriver;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
@@ -191,29 +191,6 @@ public class OkHttpTest {
     }
 
     @Test
-    public void testOkHttp2AndOkHttp3WithThreadClassLoaderIsNull() {
-        String nullThreadClassLoader = "NULLTHREADCLASSLOADER";
-        myAndroidDriver.triggerMethod(
-                ACTIVITY_CLASS, "runOkHttp2AndOkHttp3WithThreadClassLoaderIsNull");
-        assertThat(myAndroidDriver.waitForInput(nullThreadClassLoader)).isTrue();
-
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
-        NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                TestUtils.waitForAndReturn(
-                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
-                        resp -> resp.getDataList().size() == 2);
-
-        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
-        String urlQuery = "?method=" + nullThreadClassLoader;
-        assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
-
-        connectionId = httpRangeResponse.getDataList().get(1).getConnId();
-        requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
-        assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
-    }
-
-    @Test
     public void testOkHttp2GetAbortedByError() throws Exception {
         String okHttp2Error = "OKHTTP2ERROR";
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
@@ -238,7 +215,7 @@ public class OkHttpTest {
         // Both failed and successful requests should have valid time ranges.
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
                 TestUtils.waitForAndReturn(
-                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        stubWrapper.getHttpRangeSupplier(mySession),
                         resp ->
                                 resp.getDataList().size() == 2
                                         && resp.getDataList()
@@ -253,9 +230,13 @@ public class OkHttpTest {
         // TODO(b/69328111): Once the error message is being propagated through, check it here.
 
         // Even though the request was aborted, it should still have thread information available
-        HttpDetailsResponse threadDetails =
-                stubWrapper.getHttpDetails(connectionAborted.getConnId(), Type.ACCESSING_THREADS);
-        assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
+        TestUtils.waitFor(
+                () -> {
+                    HttpDetailsResponse threadDetails =
+                            stubWrapper.getHttpDetails(
+                                    connectionAborted.getConnId(), Type.ACCESSING_THREADS);
+                    return threadDetails.getAccessingThreads().getThreadList().size() == 1;
+                });
 
         // The second request should have completed normally
         HttpConnectionData connectionSuccess = httpRangeResponse.getDataList().get(1);

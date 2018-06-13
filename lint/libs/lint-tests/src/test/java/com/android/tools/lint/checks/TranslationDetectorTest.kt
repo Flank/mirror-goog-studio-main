@@ -1270,4 +1270,26 @@ class TranslationDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testSuppress() {
+        // Regression test for
+        // 80346518: tools:ignore="MissingTranslation" doesn't work for <resource element>
+
+        lint().files(
+            xml(
+                "res/values/strings.xml", """
+                    <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+                      <string name="foo">Foo</string>
+                    </resources>
+                    """
+            ),
+            xml(
+                "res/values-nb/strings.xml", """
+                    <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ExtraTranslation">
+                      <string name="bar">Bar</string>
+                    </resources>
+                    """
+            )
+        ).run().expectClean()
+    }
 }

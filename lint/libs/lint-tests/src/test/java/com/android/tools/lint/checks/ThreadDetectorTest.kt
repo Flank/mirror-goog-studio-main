@@ -700,9 +700,15 @@ class ThreadDetectorTest : AbstractCheckTest() {
             java(
                 """
                     package androidx.annotation;
-                    import static java.lang.annotation.ElementType.*;
+
+                    import static java.lang.annotation.ElementType.METHOD;
+                    import static java.lang.annotation.ElementType.CONSTRUCTOR;
+                    import static java.lang.annotation.ElementType.TYPE;
+                    import static java.lang.annotation.ElementType.PARAMETER;
                     import static java.lang.annotation.RetentionPolicy.CLASS;
-                    import java.lang.annotation.*;
+                    import java.lang.annotation.Documented;
+                    import java.lang.annotation.Retention;
+                    import java.lang.annotation.Target;
                     @SuppressWarnings("ALL")
                     @Documented
                     @Retention(CLASS)
@@ -714,9 +720,14 @@ class ThreadDetectorTest : AbstractCheckTest() {
             java(
                 """
                     package android.support.annotation;
-                    import static java.lang.annotation.ElementType.*;
+                    import static java.lang.annotation.ElementType.METHOD;
+                    import static java.lang.annotation.ElementType.CONSTRUCTOR;
+                    import static java.lang.annotation.ElementType.TYPE;
+                    import static java.lang.annotation.ElementType.PARAMETER;
                     import static java.lang.annotation.RetentionPolicy.CLASS;
-                    import java.lang.annotation.*;
+                    import java.lang.annotation.Documented;
+                    import java.lang.annotation.Retention;
+                    import java.lang.annotation.Target;
                     @SuppressWarnings("ALL")
                     @Documented
                     @Retention(CLASS)
@@ -725,6 +736,97 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     }
                 """
             )
+        ).run().expectClean()
+    }
+
+    fun testAnyThread80002895() {
+        // Regression test for
+        // 80002895 : WrongThread doesn't support @AnyThread
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Handler;
+                import android.os.Looper;
+                import android.support.annotation.AnyThread;
+                import android.support.annotation.MainThread;
+                import android.support.annotation.NonNull;
+                import android.support.annotation.WorkerThread;
+
+                import java.util.Collection;
+                import java.util.LinkedList;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public class BackgroundSomething {
+                    private final BackupListeners listeners = new BackupListeners();
+
+                    @WorkerThread
+                    private void someBackgroundThing() {
+                        listeners.started();
+                        // do stuff
+                        listeners.finished();
+                    }
+                }
+
+                @MainThread
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                interface BackupListener {
+                    void started();
+
+                    void finished();
+                }
+
+                @SuppressWarnings({"Convert2Lambda", "unused", "Anonymous2MethodRef", "ClassNameDiffersFromFileName"})
+                @AnyThread
+                class BackupListeners implements BackupListener {
+                    private final Collection<BackupListener> listeners = new LinkedList<>();
+                    private final Handler main = new Handler(Looper.getMainLooper());
+
+                    public void add(@NonNull BackupListener listener) {
+                        synchronized (listeners) {
+                            listeners.add(listener);
+                        }
+                    }
+
+                    public void remove(@NonNull BackupListener listener) {
+                        synchronized (listeners) {
+                            listeners.remove(listener);
+                        }
+                    }
+
+                    @Override
+                    public void started() {
+                        synchronized (listeners) {
+                            for (final BackupListener listener : listeners) {
+                                main.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        listener.started();
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void finished() {
+                        synchronized (listeners) {
+                            for (final BackupListener listener : listeners) {
+                                main.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        listener.finished();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 }

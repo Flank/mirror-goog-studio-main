@@ -33,6 +33,7 @@ import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_CATEGORY;
 import static com.android.SdkConstants.TAG_INTENT_FILTER;
 import static com.android.SdkConstants.TAG_PERMISSION;
+import static com.android.SdkConstants.TAG_PERMISSION_GROUP;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
@@ -81,6 +82,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.utils.StringHelper;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -996,8 +998,8 @@ public class ManifestDetector extends Detector implements XmlScanner {
             }
         }
 
-        if (tag.equals(TAG_PERMISSION)) {
-            ensureUniquePermission(context, element);
+        if (tag.equals(TAG_PERMISSION) || tag.equals(TAG_PERMISSION_GROUP)) {
+            ensureUniquePermission(context);
         }
 
         if (tag.equals(TAG_USES_PERMISSION)) {
@@ -1059,8 +1061,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
     private boolean checkedUniquePermissions;
 
-    private void ensureUniquePermission(
-            @NonNull XmlContext context, @NonNull Element sourceElement) {
+    private void ensureUniquePermission(@NonNull XmlContext context) {
         // Only check this for the first encountered manifest permission tag; it will consult
         // the merged manifest to perform a global check and report errors it finds, so we don't
         // need to repeat that for each sibling permission element
@@ -1070,17 +1071,29 @@ public class ManifestDetector extends Detector implements XmlScanner {
         checkedUniquePermissions = true;
 
         Project mainProject = context.getMainProject();
-        Document merge = mainProject.getMergedManifest();
-        if (merge == null) {
+        Document mergedManifest = mainProject.getMergedManifest();
+        if (mergedManifest == null) {
             // This only happens when there is a parse error, for example if user
             // is editing the manifest in the IDE and it's currently invalid
             return;
         }
 
+        lookForNonUniqueNames(context, mainProject, mergedManifest, "permission", TAG_PERMISSION);
+
+        lookForNonUniqueNames(
+                context, mainProject, mergedManifest, "permission group", TAG_PERMISSION_GROUP);
+    }
+
+    private static void lookForNonUniqueNames(
+            @NonNull XmlContext context,
+            @NonNull Project mainProject,
+            @NonNull Document mergedManifest,
+            @NonNull String humanReadableName,
+            @NonNull String tagName) {
         Map<String, String> nameToFull = null;
-        for (Element element = getFirstSubTagByName(merge.getDocumentElement(), TAG_PERMISSION);
+        for (Element element = getFirstSubTagByName(mergedManifest.getDocumentElement(), tagName);
                 element != null;
-                element = getNextTagByName(element, TAG_PERMISSION)) {
+                element = getNextTagByName(element, tagName)) {
 
             Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
             if (nameNode == null) {
@@ -1119,11 +1132,11 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     } else if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element sibling = (Element) node;
                         String suffix = '.' + base;
-                        if (sibling.getTagName().equals(TAG_PERMISSION)) {
+                        if (sibling.getTagName().equals(tagName)) {
                             String b = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
                             if (b.endsWith(suffix)) {
                                 Location prevLocation = context.getLocation(node);
-                                prevLocation.setMessage("Previous permission here");
+                                prevLocation.setMessage("Previous " + humanReadableName + " here");
                                 location.setSecondary(prevLocation);
                                 break;
                             }
@@ -1133,9 +1146,9 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
                 String message =
                         String.format(
-                                "Permission name `%1$s` is not unique "
-                                        + "(appears in both `%2$s` and `%3$s`)",
-                                base, prevName, name);
+                                "%1$s name `%2$s` is not unique "
+                                        + "(appears in both `%3$s` and `%4$s`)",
+                                StringHelper.capitalize(humanReadableName), base, prevName, name);
                 context.report(UNIQUE_PERMISSION, element, location, message);
             }
 

@@ -30,6 +30,7 @@ import static com.android.tools.lint.checks.IconDetector.ICON_MISSING_FOLDER;
 import static com.android.tools.lint.checks.IconDetector.ICON_MIX_9PNG;
 import static com.android.tools.lint.checks.IconDetector.ICON_NODPI;
 import static com.android.tools.lint.checks.IconDetector.ICON_XML_AND_PNG;
+import static com.android.tools.lint.checks.IconDetector.NOTIFICATION_ICON_COMPATIBILITY;
 import static com.android.tools.lint.checks.IconDetector.WEBP_ELIGIBLE;
 import static com.android.tools.lint.checks.IconDetector.WEBP_UNSUPPORTED;
 
@@ -58,6 +59,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 ICON_XML_AND_PNG,
                 ICON_LAUNCHER_SHAPE,
                 ICON_MIX_9PNG,
+                NOTIFICATION_ICON_COMPATIBILITY,
                 WEBP_ELIGIBLE,
                 WEBP_UNSUPPORTED
             };
@@ -529,6 +531,32 @@ public class IconDetectorTest extends AbstractCheckTest {
                         image("res/drawable-mdpi/icon5.png", 32, 32)
                                 .fill(10, 10, 20, 20, 0xFFFFFFFF))
                 .issues(ICON_COLORS)
+                .run()
+                .expectClean();
+    }
+
+    public void testNotificationIconCompatibility() {
+        String expected =
+                ""
+                        + "res/drawable/icon1.xml: Warning: Notification icon icon1 has to have a raster image to support Android versions below 5.0 (API 21) [NotificationIconCompatibility]\n"
+                        + "0 errors, 1 warnings\n";
+        lint().files(
+                        manifest().minSdk(14),
+                        mNotificationTest,
+                        xml("res/drawable/icon1.xml", "<vector/>"))
+                .issues(NOTIFICATION_ICON_COMPATIBILITY)
+                .run()
+                .expect(expected);
+    }
+
+    public void testOkNotificationIconCompatibility() {
+        lint().files(
+                        manifest().minSdk(14),
+                        mNotificationTest,
+                        xml("res/drawable/icon1.xml", "<vector/>"),
+                        image("res/drawable-mdpi/icon1.png", 32, 32)
+                                .fill(10, 10, 20, 20, 0xFFFFFFFF))
+                .issues(NOTIFICATION_ICON_COMPATIBILITY)
                 .run()
                 .expectClean();
     }

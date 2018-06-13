@@ -169,7 +169,6 @@ public class FeatureAndAbiPureSplitsTest {
                         + "    buildTypes {\n"
                         + "        release {\n"
                         + "            signingConfig signingConfigs.myConfig\n"
-                        + "            proguardFile getDefaultProguardFile('proguard-android.txt')\n"
                         + "        }\n"
                         + "    }\n"
                         + "}\n";

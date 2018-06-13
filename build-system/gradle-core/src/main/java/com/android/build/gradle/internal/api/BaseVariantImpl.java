@@ -24,14 +24,12 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -210,69 +208,69 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Task getPreBuild() {
-        return getVariantData().preBuildTask;
+        return getVariantData().getTaskContainer().getPreBuildTask();
     }
 
     @Override
     @NonNull
     public Task getCheckManifest() {
-        return getVariantData().checkManifestTask;
+        return getVariantData().getTaskContainer().getCheckManifestTask();
     }
 
     @Override
     @NonNull
     public AidlCompile getAidlCompile() {
-        return getVariantData().aidlCompileTask;
+        return getVariantData().getTaskContainer().getAidlCompileTask();
     }
 
     @Override
     @NonNull
     public RenderscriptCompile getRenderscriptCompile() {
-        return getVariantData().renderscriptCompileTask;
+        return getVariantData().getTaskContainer().getRenderscriptCompileTask();
     }
 
     @Override
     public MergeResources getMergeResources() {
-        return getVariantData().mergeResourcesTask;
+        return getVariantData().getTaskContainer().getMergeResourcesTask();
     }
 
     @Override
     public MergeSourceSetFolders getMergeAssets() {
-        return getVariantData().mergeAssetsTask;
+        return getVariantData().getTaskContainer().getMergeAssetsTask();
     }
 
     @Override
     public GenerateBuildConfig getGenerateBuildConfig() {
-        return getVariantData().generateBuildConfigTask;
+        return getVariantData().getTaskContainer().getGenerateBuildConfigTask();
     }
 
     @Override
     @Nullable
     public JavaCompile getJavaCompile() {
-        return getVariantData().javacTask;
+        return getVariantData().getTaskContainer().getJavacTask();
     }
 
     @NonNull
     @Override
     public Task getJavaCompiler() {
-        return getVariantData().javacTask;
+        return getVariantData().getTaskContainer().getJavacTask();
     }
 
     @NonNull
     @Override
     public NdkCompile getNdkCompile() {
-        return getVariantData().ndkCompileTask;
+        return getVariantData().getTaskContainer().getNdkCompileTask();
     }
 
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
-        return getVariantData().externalNativeBuildTasks;
+        return getVariantData().getTaskContainer().getExternalNativeBuildTasks();
     }
 
     @Nullable
     @Override
     public Task getObfuscation() {
-        return getVariantData().obfuscationTask;
+        return getVariantData().getTaskContainer().getObfuscationTask();
     }
 
     @Nullable
@@ -291,13 +289,13 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Sync getProcessJavaResources() {
-        return getVariantData().processJavaResourcesTask;
+        return getVariantData().getTaskContainer().getProcessJavaResourcesTask();
     }
 
     @Override
     @Nullable
     public Task getAssemble() {
-        return getVariantData().getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
+        return getVariantData().getTaskContainer().getAssembleTask();
     }
 
     @Override

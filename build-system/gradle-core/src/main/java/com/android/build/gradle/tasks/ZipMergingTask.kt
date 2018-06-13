@@ -23,21 +23,17 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
-import com.google.common.collect.Sets
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
+import java.util.function.Predicate
 
 /** Task to merge the res/classes intermediate jars from a library into a single one  */
 @CacheableTask
@@ -45,8 +41,14 @@ open class ZipMergingTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var libraryInputFiles: BuildableArtifact
+    lateinit var classesJar: BuildableArtifact
         private set
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var classesDir: BuildableArtifact
+        private set
+
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -55,14 +57,15 @@ open class ZipMergingTask : AndroidVariantTask() {
 
     @get:OutputFile
     private lateinit var outputFile: File
-        private set
 
     @VisibleForTesting
     internal fun init(
-            libraryInputFiles: BuildableArtifact,
-            javaResInputFiles: BuildableArtifact,
-            outputFile: File) {
-        this.libraryInputFiles = libraryInputFiles
+        classesJar: BuildableArtifact,
+        classesDir: BuildableArtifact,
+        javaResInputFiles: BuildableArtifact,
+        outputFile: File) {
+        this.classesJar = classesJar
+        this.classesDir= classesDir
         this.javaResInputFiles = javaResInputFiles
         this.outputFile = outputFile
     }
@@ -70,52 +73,19 @@ open class ZipMergingTask : AndroidVariantTask() {
     @TaskAction
     @Throws(IOException::class)
     fun merge() {
-        val buffer = ByteArray(8192)
         FileUtils.cleanOutputDir(outputFile.parentFile)
-        FileOutputStream(outputFile).use { fos ->
-            BufferedOutputStream(fos).use { bos ->
-                ZipOutputStream(bos).use { zos ->
+        val usedNamesPredicate = object:Predicate<String> {
+            val usedNames = mutableSetOf<String>()
 
-                    val entries = Sets.newHashSet<String>()
-
-                    for (inputFile in libraryInputFiles.files.union(javaResInputFiles.files)) {
-                        FileInputStream(inputFile).use { fis ->
-                            ZipInputStream(fis).use { zis ->
-                                while (true) {
-                                    val entry = zis.nextEntry ?: break
-                                    if (entry.isDirectory) {
-                                        continue
-                                    }
-
-                                    val entryName = entry.name
-                                    if (entries.contains(entryName)) {
-                                        // non class files can be duplicated between res and classes jar
-                                        // due to annotation processor or other compiler (kotlin) generating
-                                        // resources
-                                        continue
-                                    } else {
-                                        entries.add(entryName)
-                                    }
-
-                                    zos.putNextEntry(entry)
-
-                                    // read the content of the entry from the input stream, and write it into
-                                    // the archive.
-                                    var count = zis.read(buffer)
-                                    while (count != -1) {
-                                        zos.write(buffer, 0, count)
-                                        count = zis.read(buffer)
-                                    }
-
-                                    // close the entries for this file
-                                    zos.closeEntry()
-                                    zis.closeEntry()
-                                }
-                            }
-                        }
-                    }
-                }
+            override fun test(t: String): Boolean {
+                return usedNames.add(t)
             }
+        }
+
+        JarMerger(outputFile.toPath(), usedNamesPredicate).use {
+            classesJar.files.forEach { jar -> it.addJar(jar.toPath()) }
+            classesDir.files.forEach { dir -> it.addDirectory(dir.toPath()) }
+            javaResInputFiles.files.forEach { jar -> it.addJar(jar.toPath()) }
         }
     }
 
@@ -129,7 +99,8 @@ open class ZipMergingTask : AndroidVariantTask() {
             val mainFullJar = buildArtifacts.appendArtifact(InternalArtifactType.FULL_JAR,
                     task, FN_INTERMEDIATE_FULL_JAR)
             task.init(
-                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES),
+                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES_JAR),
+                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES_DIR),
                     buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_JAVA_RES),
                     mainFullJar)
             task.variantName = scope.fullVariantName

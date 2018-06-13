@@ -49,7 +49,6 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -74,7 +73,6 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import org.w3c.dom.Document;
@@ -167,7 +165,7 @@ public class LintGradleProject extends Project {
     protected void readManifest(File manifest) {
         if (manifest.exists()) {
             try {
-                String xml = Files.toString(manifest, Charsets.UTF_8);
+                String xml = Files.asCharSource(manifest, Charsets.UTF_8).read();
                 Document document = XmlUtils.parseDocumentSilently(xml, true);
                 if (document != null) {
                     readManifest(document);
@@ -240,7 +238,7 @@ public class LintGradleProject extends Project {
 
         @Override
         public boolean isLibrary() {
-            return mProject.isLibrary();
+            return mProject.getProjectType() == AndroidProject.PROJECT_TYPE_LIBRARY;
         }
 
         @Override
@@ -322,6 +320,7 @@ public class LintGradleProject extends Project {
                     //   org.gradle.tooling.model.UnsupportedMethodException:
                     //    Unsupported method: BaseConfig.getConsumerProguardFiles().
                     // Playing it safe for a while.
+                    proguardFiles = Collections.emptyList();
                 }
             }
 
@@ -595,37 +594,38 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
-            if (SUPPORT_LIB_ARTIFACT.equals(artifact)
-                    || ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-                if (supportLib == null) {
-                    // OR,
-                    // androidx.legacy:legacy-support-v4
-                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    supportLib =
-                            dependsOn(dependencies, SUPPORT_LIB_ARTIFACT)
-                                    || dependsOn(dependencies, ANDROIDX_SUPPORT_LIB_ARTIFACT);
-                }
-                return supportLib;
-            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)
-                    || ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-                if (appCompat == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    appCompat =
-                            dependsOn(dependencies, APPCOMPAT_LIB_ARTIFACT)
-                                    || dependsOn(dependencies, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
-                }
-                return appCompat;
-            } else if (LEANBACK_V17_ARTIFACT.equals(artifact)
-                    || ANDROIDX_LEANBACK_ARTIFACT.equals(artifact)) {
-                if (leanback == null) {
-                    Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                    leanback =
-                            dependsOn(dependencies, LEANBACK_V17_ARTIFACT)
-                                    || dependsOn(dependencies, ANDROIDX_LEANBACK_ARTIFACT);
-                }
-                return leanback;
-            } else {
-                return super.dependsOn(artifact);
+            switch (artifact) {
+                case SUPPORT_LIB_ARTIFACT:
+                case ANDROIDX_SUPPORT_LIB_ARTIFACT:
+                    if (supportLib == null) {
+                        // OR,
+                        // androidx.legacy:legacy-support-v4
+                        Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
+                        supportLib =
+                                dependsOn(dependencies, SUPPORT_LIB_ARTIFACT)
+                                        || dependsOn(dependencies, ANDROIDX_SUPPORT_LIB_ARTIFACT);
+                    }
+                    return supportLib;
+                case APPCOMPAT_LIB_ARTIFACT:
+                case ANDROIDX_APPCOMPAT_LIB_ARTIFACT:
+                    if (appCompat == null) {
+                        Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
+                        appCompat =
+                                dependsOn(dependencies, APPCOMPAT_LIB_ARTIFACT)
+                                        || dependsOn(dependencies, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
+                    }
+                    return appCompat;
+                case LEANBACK_V17_ARTIFACT:
+                case ANDROIDX_LEANBACK_ARTIFACT:
+                    if (leanback == null) {
+                        Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
+                        leanback =
+                                dependsOn(dependencies, LEANBACK_V17_ARTIFACT)
+                                        || dependsOn(dependencies, ANDROIDX_LEANBACK_ARTIFACT);
+                    }
+                    return leanback;
+                default:
+                    return super.dependsOn(artifact);
             }
         }
     }
@@ -774,32 +774,33 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
-            if (SUPPORT_LIB_ARTIFACT.equals(artifact)
-                    || ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-                if (supportLib == null) {
-                    supportLib =
-                            dependsOn(mLibrary, SUPPORT_LIB_ARTIFACT)
-                                    || dependsOn(mLibrary, ANDROIDX_SUPPORT_LIB_ARTIFACT);
-                }
-                return supportLib;
-            } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)
-                    || ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-                if (appCompat == null) {
-                    appCompat =
-                            dependsOn(mLibrary, APPCOMPAT_LIB_ARTIFACT)
-                                    || dependsOn(mLibrary, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
-                }
-                return appCompat;
-            } else if (LEANBACK_V17_ARTIFACT.equals(artifact)
-                    || ANDROIDX_LEANBACK_ARTIFACT.equals(artifact)) {
-                if (leanback == null) {
-                    leanback =
-                            dependsOn(mLibrary, LEANBACK_V17_ARTIFACT)
-                                    || dependsOn(mLibrary, ANDROIDX_LEANBACK_ARTIFACT);
-                }
-                return leanback;
-            } else {
-                return super.dependsOn(artifact);
+            switch (artifact) {
+                case SUPPORT_LIB_ARTIFACT:
+                case ANDROIDX_SUPPORT_LIB_ARTIFACT:
+                    if (supportLib == null) {
+                        supportLib =
+                                dependsOn(mLibrary, SUPPORT_LIB_ARTIFACT)
+                                        || dependsOn(mLibrary, ANDROIDX_SUPPORT_LIB_ARTIFACT);
+                    }
+                    return supportLib;
+                case APPCOMPAT_LIB_ARTIFACT:
+                case ANDROIDX_APPCOMPAT_LIB_ARTIFACT:
+                    if (appCompat == null) {
+                        appCompat =
+                                dependsOn(mLibrary, APPCOMPAT_LIB_ARTIFACT)
+                                        || dependsOn(mLibrary, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
+                    }
+                    return appCompat;
+                case LEANBACK_V17_ARTIFACT:
+                case ANDROIDX_LEANBACK_ARTIFACT:
+                    if (leanback == null) {
+                        leanback =
+                                dependsOn(mLibrary, LEANBACK_V17_ARTIFACT)
+                                        || dependsOn(mLibrary, ANDROIDX_LEANBACK_ARTIFACT);
+                    }
+                    return leanback;
+                default:
+                    return super.dependsOn(artifact);
             }
         }
     }
@@ -819,7 +820,6 @@ public class LintGradleProject extends Project {
         public final Map<MavenCoordinates, LintGradleProject> javaLibraryProjectsByCoordinate =
                 Maps.newHashMap();
         public final Map<org.gradle.api.Project, AndroidProject> gradleProjects = Maps.newHashMap();
-        private final Set<Object> mSeen = Sets.newHashSet();
 
         public ProjectSearch() {}
 
@@ -914,126 +914,124 @@ public class LintGradleProject extends Project {
 
             // Sources
             SourceSetContainer sourceSets = convention.getSourceSets();
-            if (sourceSets != null) {
-                final List<File> sources = Lists.newArrayList();
-                final List<File> classes = Lists.newArrayList();
-                final List<File> libs = Lists.newArrayList();
-                final List<File> tests = Lists.newArrayList();
-                for (SourceSet sourceSet : sourceSets) {
-                    if (sourceSet.getName().equals(SourceSet.TEST_SOURCE_SET_NAME)) {
-                        // We don't model the full test source set yet (e.g. its dependencies),
-                        // only its source files
-                        SourceDirectorySet javaSrc = sourceSet.getJava();
-                        if (javaSrc != null) {
-                            tests.addAll(javaSrc.getSrcDirs());
-                        }
-                        continue;
-                    }
-
+            final List<File> sources = Lists.newArrayList();
+            final List<File> classes = Lists.newArrayList();
+            final List<File> libs = Lists.newArrayList();
+            final List<File> tests = Lists.newArrayList();
+            for (SourceSet sourceSet : sourceSets) {
+                if (sourceSet.getName().equals(SourceSet.TEST_SOURCE_SET_NAME)) {
+                    // We don't model the full test source set yet (e.g. its dependencies),
+                    // only its source files
                     SourceDirectorySet javaSrc = sourceSet.getJava();
-                    if (javaSrc != null) {
-                        // There are also resource directories, in case we want to
-                        // model those here eventually
-                        sources.addAll(javaSrc.getSrcDirs());
-                    }
-                    SourceSetOutput output = sourceSet.getOutput();
-                    if (output != null) {
-                        for (File file : output.getClassesDirs()) {
-                            classes.add(file);
+                    for (File dir : javaSrc.getSrcDirs()) {
+                        if (dir.exists()) {
+                            tests.add(dir);
                         }
                     }
-
-                    libs.addAll(sourceSet.getCompileClasspath().getFiles());
-
-                    // TODO: Boot classpath? We don't have access to that here, so for
-                    // now EcjParser just falls back to the running Gradle JVM and looks
-                    // up its class path.
+                    continue;
                 }
 
-                File projectDir = gradleProject.getProjectDir();
-                final List<Project> dependencies = Lists.newArrayList();
-                Project project =
-                        new Project(lintClient, projectDir, projectDir) {
-                            @Override
-                            protected void initialize() {
-                                // Deliberately not calling super; that code is for ADT compatibility
-                                gradleProject = true;
-                                mergeManifests = true;
-                                directLibraries = dependencies;
-                                javaSourceFolders = sources;
-                                javaClassFolders = classes;
-                                javaLibraries = libs;
-                                testSourceFolders = tests;
-                            }
-
-                            @Override
-                            public boolean isGradleProject() {
-                                return true;
-                            }
-
-                            @Override
-                            public boolean isAndroidProject() {
-                                return false;
-                            }
-
-                            @Nullable
-                            @Override
-                            public IAndroidTarget getBuildTarget() {
-                                return null;
-                            }
-                        };
-
-                // Dependencies
-                ConfigurationContainer configurations = gradleProject.getConfigurations();
-                Configuration compileConfiguration = configurations.getByName("compileClasspath");
-                for (Dependency dependency : compileConfiguration.getAllDependencies()) {
-                    if (dependency instanceof ProjectDependency) {
-                        org.gradle.api.Project p =
-                                ((ProjectDependency) dependency).getDependencyProject();
-                        if (p != null) {
-                            Project lintProject =
-                                    getProject(lintClient, p.getPath(), p, variantName);
-                            if (lintProject != null) {
-                                dependencies.add(lintProject);
-                            }
-                        }
-                    } else if (dependency instanceof ExternalDependency) {
-                        String group = dependency.getGroup();
-                        String name = dependency.getName();
-                        String version = dependency.getVersion();
-                        if (name == null || group == null || version == null) {
-                            // This will be the case for example if you use something like
-                            //    repositories { flatDir { dirs 'myjars' } }
-                            //    dependencies { compile name: 'guava-18.0' }
-                            continue;
-                        }
-                        MavenCoordinatesImpl coordinates =
-                                new MavenCoordinatesImpl(group, name, version);
-                        Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
-                        //noinspection StatementWithEmptyBody
-                        if (javaLib != null) {
-                            ((LintGradleProject) javaLib).setExternalLibrary(true);
-                            dependencies.add(javaLib);
-                        } else {
-                            // Else: Create wrapper here. Unfortunately, we don't have a
-                            // pointer to the actual .jar file to add (getArtifacts()
-                            // typically returns an empty set), so we can't create
-                            // a real artifact (and creating a fake one and placing it here
-                            // is dangerous; it would mean putting one into the
-                            // map that would prevent a real definition from being inserted.
-                        }
-                    } else if (dependency instanceof FileCollectionDependency) {
-                        Set<File> files = ((FileCollectionDependency) dependency).resolve();
-                        if (files != null) {
-                            libs.addAll(files);
-                        }
+                SourceDirectorySet javaSrc = sourceSet.getJava();
+                // There are also resource directories, in case we want to
+                // model those here eventually
+                for (File dir : javaSrc.getSrcDirs()) {
+                    if (dir.exists()) {
+                        sources.add(dir);
+                    }
+                }
+                for (File file : sourceSet.getOutput().getClassesDirs()) {
+                    if (file.exists()) {
+                        classes.add(file);
                     }
                 }
 
-                return project;
+                for (File file : sourceSet.getCompileClasspath().getFiles()) {
+                    if (file.exists()) {
+                        libs.add(file);
+                    }
+                }
+
+                // TODO: Boot classpath? We don't have access to that here, so for
+                // now EcjParser just falls back to the running Gradle JVM and looks
+                // up its class path.
             }
 
-            return null;
+            File projectDir = gradleProject.getProjectDir();
+            final List<Project> dependencies = Lists.newArrayList();
+            Project project =
+                    new Project(lintClient, projectDir, projectDir) {
+                        @Override
+                        protected void initialize() {
+                            // Deliberately not calling super; that code is for ADT compatibility
+                            gradleProject = true;
+                            mergeManifests = true;
+                            directLibraries = dependencies;
+                            javaSourceFolders = sources;
+                            javaClassFolders = classes;
+                            javaLibraries = libs;
+                            testSourceFolders = tests;
+                        }
+
+                        @Override
+                        public boolean isGradleProject() {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean isAndroidProject() {
+                            return false;
+                        }
+
+                        @Nullable
+                        @Override
+                        public IAndroidTarget getBuildTarget() {
+                            return null;
+                        }
+                    };
+
+            // Dependencies
+            ConfigurationContainer configurations = gradleProject.getConfigurations();
+            Configuration compileConfiguration = configurations.getByName("compileClasspath");
+            for (Dependency dependency : compileConfiguration.getAllDependencies()) {
+                if (dependency instanceof ProjectDependency) {
+                    org.gradle.api.Project p =
+                            ((ProjectDependency) dependency).getDependencyProject();
+                    Project lintProject = getProject(lintClient, p.getPath(), p, variantName);
+                    if (lintProject != null) {
+                        dependencies.add(lintProject);
+                    }
+                } else if (dependency instanceof ExternalDependency) {
+                    String group = dependency.getGroup();
+                    String name = dependency.getName();
+                    String version = dependency.getVersion();
+                    if (group == null || version == null) {
+                        // This will be the case for example if you use something like
+                        //    repositories { flatDir { dirs 'myjars' } }
+                        //    dependencies { compile name: 'guava-18.0' }
+                        continue;
+                    }
+                    MavenCoordinatesImpl coordinates =
+                            new MavenCoordinatesImpl(group, name, version);
+                    LintGradleProject javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
+                    //noinspection StatementWithEmptyBody
+                    if (javaLib != null) {
+                        javaLib.setExternalLibrary(true);
+                        dependencies.add(javaLib);
+                    } else {
+                        // Else: Create wrapper here. Unfortunately, we don't have a
+                        // pointer to the actual .jar file to add (getArtifacts()
+                        // typically returns an empty set), so we can't create
+                        // a real artifact (and creating a fake one and placing it here
+                        // is dangerous; it would mean putting one into the
+                        // map that would prevent a real definition from being inserted.
+                    }
+                } else if (dependency instanceof FileCollectionDependency) {
+                    Set<File> files = ((FileCollectionDependency) dependency).resolve();
+                    libs.addAll(files);
+                }
+            }
+
+            return project;
         }
 
         public Project getProject(
@@ -1045,7 +1043,6 @@ public class LintGradleProject extends Project {
             if (cached != null) {
                 return cached;
             }
-            mSeen.add(project);
             File dir = gradleProject.getProjectDir();
             LintGradleProject lintProject;
             if (project.getProjectType() == AndroidProject.PROJECT_TYPE_INSTANTAPP) {
@@ -1078,21 +1075,19 @@ public class LintGradleProject extends Project {
                 if (dependency instanceof ProjectDependency) {
                     org.gradle.api.Project p =
                             ((ProjectDependency) dependency).getDependencyProject();
-                    if (p != null) {
-                        // Libraries don't have to use the same variant name as the
-                        // consuming app. In fact they're typically not: libraries generally
-                        // use the release variant. We can look up the variant name
-                        // in AndroidBundle#getProjectVariant, though it's always null
-                        // at the moment. So as a fallback, search for existing
-                        // code.
-                        Project depProject = getProject(client, p, variant.getName());
-                        if (depProject != null) {
-                            if (processedProjects == null) {
-                                processedProjects = Lists.newArrayList();
-                            }
-                            processedProjects.add(p.getPath());
-                            lintProject.addDirectLibrary(depProject);
+                    // Libraries don't have to use the same variant name as the
+                    // consuming app. In fact they're typically not: libraries generally
+                    // use the release variant. We can look up the variant name
+                    // in AndroidBundle#getProjectVariant, though it's always null
+                    // at the moment. So as a fallback, search for existing
+                    // code.
+                    Project depProject = getProject(client, p, variant.getName());
+                    if (depProject != null) {
+                        if (processedProjects == null) {
+                            processedProjects = Lists.newArrayList();
                         }
+                        processedProjects.add(p.getPath());
+                        lintProject.addDirectLibrary(depProject);
                     }
                 }
             }
@@ -1165,7 +1160,6 @@ public class LintGradleProject extends Project {
                 }
             }
 
-            mSeen.add(library);
             File dir = library.getFolder();
             LibraryProject project = new LibraryProject(client, dir, dir, library);
             project.setMavenCoordinates(coordinates);
@@ -1195,7 +1189,6 @@ public class LintGradleProject extends Project {
                 return cached;
             }
 
-            mSeen.add(library);
             File dir = library.getJarFile();
             JavaLibraryProject project = new JavaLibraryProject(client, dir, dir, library);
             project.setMavenCoordinates(coordinates);

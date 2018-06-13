@@ -25,10 +25,12 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.BundleOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
+import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
@@ -50,6 +52,7 @@ public class FeatureExtension extends LibraryExtension {
             new DefaultDomainObjectSet<FeatureVariant>(FeatureVariant.class);
 
     private boolean isBaseFeature = false;
+    private final BundleOptions bundle;
 
     public FeatureExtension(
             @NonNull Project project,
@@ -74,6 +77,12 @@ public class FeatureExtension extends LibraryExtension {
                 sourceSetManager,
                 extraModelInfo);
         setGeneratePureSplits(true);
+        bundle =
+                project.getObjects()
+                        .newInstance(
+                                BundleOptions.class,
+                                project.getObjects(),
+                                extraModelInfo.getDeprecationReporter());
     }
 
     /**
@@ -139,5 +148,13 @@ public class FeatureExtension extends LibraryExtension {
     @Override
     public Boolean getBaseFeature() {
         return isBaseFeature;
+    }
+
+    public void bundle(Action<BundleOptions> action) {
+        action.execute(bundle);
+    }
+
+    public BundleOptions getBundle() {
+        return bundle;
     }
 }

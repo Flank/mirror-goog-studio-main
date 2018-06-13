@@ -53,7 +53,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UDoWhileExpression;
@@ -352,7 +351,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         DataFlowAnalyzer visitor =
                 new DataFlowAnalyzer(Collections.singleton(node), Collections.emptyList()) {
                     @Override
-                    public void receiver(@NotNull UCallExpression call) {
+                    public void receiver(@NonNull UCallExpression call) {
                         if (isCleanup(call)) {
                             recycled.set(true);
                         }
@@ -402,13 +401,13 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                     }
 
                     @Override
-                    public void field(@NotNull UElement field) {
+                    public void field(@NonNull UElement field) {
                         escapes.set(true);
                     }
 
                     @Override
                     public void argument(
-                            @NotNull UCallExpression call, @NotNull UElement reference) {
+                            @NonNull UCallExpression call, @NonNull UElement reference) {
                         // Special case
                         if (recycleType.equals(SURFACE_TEXTURE_CLS)
                                 && UastExpressionUtils.isConstructorCall(call)) {
@@ -434,7 +433,7 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                     }
 
                     @Override
-                    public void returns(@NotNull UReturnExpression expression) {
+                    public void returns(@NonNull UReturnExpression expression) {
                         escapes.set(true);
                     }
                 };

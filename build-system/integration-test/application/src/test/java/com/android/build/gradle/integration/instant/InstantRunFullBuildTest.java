@@ -75,7 +75,9 @@ public class InstantRunFullBuildTest {
         doTest(24);
         assertThat(
                         mProject.file(
-                                "build/intermediates/incremental/ir_slices/debug/slice_0/AndroidManifest.xml"))
+                                "build/intermediates/instant_run_split_apk_resources/debug/"
+                                        + "instantRunSplitApkResourcesDebug/out/"
+                                        + "slice_0/AndroidManifest.xml"))
                 .contains("android:versionCode=\"42\"");
     }
 

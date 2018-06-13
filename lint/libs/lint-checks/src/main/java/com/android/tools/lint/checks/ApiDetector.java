@@ -45,8 +45,10 @@ import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.SWITCH;
 import static com.android.SdkConstants.TAG;
+import static com.android.SdkConstants.TAG_ANIMATED_VECTOR;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.TAG_VECTOR;
 import static com.android.SdkConstants.TARGET_API;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VIEW_INCLUDE;
@@ -314,8 +316,6 @@ public class ApiDetector extends ResourceXmlDetector
                     new Implementation(ApiDetector.class, Scope.JAVA_FILE_SCOPE));
 
     private static final String TAG_RIPPLE = "ripple";
-    private static final String TAG_VECTOR = "vector";
-    private static final String TAG_ANIMATED_VECTOR = "animated-vector";
     private static final String TAG_ANIMATED_SELECTOR = "animated-selector";
 
     protected ApiLookup mApiDatabase;

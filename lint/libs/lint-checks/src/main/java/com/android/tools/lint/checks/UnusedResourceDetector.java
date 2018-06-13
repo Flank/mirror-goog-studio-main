@@ -231,6 +231,15 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     @Override
     public void afterCheckRootProject(@NonNull Context context) {
+        if (context.getMainProject().isLibrary() && LintClient.isGradle()) {
+            // In Gradle, don't report unused resources for a library project;
+            // these are usually processed separately (without the main app
+            // module) and results in a lot of false positives. To get unused
+            // resources accounted correctly, run the check on the app project,
+            // preferably with checkDependencies true.
+            return;
+        }
+
         if (context.getPhase() == 1) {
             Project project = context.getProject();
 

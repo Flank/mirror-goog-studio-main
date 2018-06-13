@@ -75,6 +75,7 @@ public class InstantRunSplitApkBuilderTest {
     @Mock BuildableArtifact mainResources;
     @Mock FileCollection mainResourcesFiles;
     @Mock FileTree mainResourcesApkFileTree;
+    @Mock BuildableArtifact splitApkResources;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
@@ -124,6 +125,7 @@ public class InstantRunSplitApkBuilderTest {
                         mainResources,
                         mainResources,
                         apkList,
+                        splitApkResources,
                         apkInfo) {
                     @Override
                     protected Aapt getLinker() {
@@ -252,6 +254,7 @@ public class InstantRunSplitApkBuilderTest {
                         mainResources,
                         mainResources,
                         apkList,
+                        splitApkResources,
                         apkInfo) {
                     @Override
                     protected Aapt getLinker() {

@@ -29,6 +29,7 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -41,9 +42,11 @@ class ZipMergingTaskTest {
     @Throws(IOException::class)
     fun merge() {
         val zip1 = temporaryFolder.newFile("file1.zip")
+        val dir1 = temporaryFolder.newFolder("directory")
         val zip2 = temporaryFolder.newFile("file2.zip")
 
         createZip(zip1, "foo.txt", "foo")
+        dir1.resolve("test.txt").writer().use { it.write("test") }
         createZip(zip2, "bar.txt", "bar")
 
         val testDir = temporaryFolder.newFolder()
@@ -54,23 +57,29 @@ class ZipMergingTaskTest {
 
         val dslScope = Mockito.mock(DslScope::class.java)
         BuildableArtifactImpl.enableResolution()
-        task.init(BuildableArtifactImpl(project.files(zip1), dslScope),
-                BuildableArtifactImpl(project.files(zip2), dslScope),
-                output)
+        task.init(
+            BuildableArtifactImpl(project.files(zip1), dslScope),
+            BuildableArtifactImpl(project.files(dir1), dslScope),
+            BuildableArtifactImpl(project.files(zip2), dslScope),
+            output
+        )
         task.merge()
 
         assertThat(output).exists()
 
         assertThatZip(output).containsFileWithContent("foo.txt", "foo")
+        assertThatZip(output).containsFileWithContent("test.txt", "test")
         assertThatZip(output).containsFileWithContent("bar.txt", "bar")
     }
 
     @Test
     fun mergeDuplicates() {
         val zip1 = temporaryFolder.newFile("file1.zip")
+        val dir1 = temporaryFolder.newFolder("directory")
         val zip2 = temporaryFolder.newFile("file2.zip")
 
         createZip(zip1, "foo.txt", "foo")
+        dir1.resolve("foo.txt").writer().use { it.write("foo") }
         createZip(zip2, "foo.txt", "foo")
 
         val testDir = temporaryFolder.newFolder()
@@ -81,7 +90,9 @@ class ZipMergingTaskTest {
 
         val dslScope = Mockito.mock(DslScope::class.java)
         BuildableArtifactImpl.enableResolution()
-        task.init(BuildableArtifactImpl(project.files(zip1), dslScope),
+        task.init(
+            BuildableArtifactImpl(project.files(zip1), dslScope),
+            BuildableArtifactImpl(project.files(dir1), dslScope),
             BuildableArtifactImpl(project.files(zip2), dslScope),
             output)
         task.merge()

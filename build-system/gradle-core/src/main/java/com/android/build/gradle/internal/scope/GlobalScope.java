@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.FeatureExtension;
-import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.FeatureModelBuilder;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.api.dsl.DslScope;
@@ -298,8 +297,7 @@ public class GlobalScope implements TransformGlobalScope {
     public boolean hasDynamicFeatures() {
         final AndroidConfig extension = getExtension();
         if (extension instanceof BaseAppModuleExtension) {
-            return !AppModelBuilder.getDynamicFeatures((BaseAppModuleExtension) extension, this)
-                    .isEmpty();
+            return !((BaseAppModuleExtension) extension).getDynamicFeatures().isEmpty();
         }
         if (extension instanceof FeatureExtension) {
             return !FeatureModelBuilder.getDynamicFeatures(this).isEmpty();

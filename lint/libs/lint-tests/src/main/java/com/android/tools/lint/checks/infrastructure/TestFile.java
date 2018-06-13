@@ -116,7 +116,11 @@ public class TestFile {
     public String getTargetPath() {
         String target = targetRelativePath;
         if (targetRootFolder != null) {
-            target = targetRootFolder + '/' + target;
+            if (target.startsWith("/")) {
+                target = targetRootFolder + target;
+            } else {
+                target = targetRootFolder + '/' + target;
+            }
         }
 
         return target;

@@ -40,10 +40,12 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.SimpleWorkQueue;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
@@ -163,27 +165,38 @@ public class ProGuardTransform extends BaseProguardAction {
     public void transform(@NonNull final TransformInvocation invocation) throws TransformException {
         // only run one minification at a time (across projects)
         SettableFuture<TransformOutputProvider> resultFuture = SettableFuture.create();
-        final Job<Void> job = new Job<>(getName(),
-                new com.android.builder.tasks.Task<Void>() {
-                    @Override
-                    public void run(@NonNull Job<Void> job,
-                            @NonNull JobContext<Void> context) throws IOException {
-                        doMinification(
-                                invocation.getInputs(),
-                                invocation.getReferencedInputs(),
-                                invocation.getOutputProvider());
-                    }
+        final Job<Void> job =
+                new Job<>(
+                        getName(),
+                        new com.android.builder.tasks.Task<Void>() {
+                            @Override
+                            public void run(
+                                    @NonNull Job<Void> job, @NonNull JobContext<Void> context)
+                                    throws IOException {
+                                doMinification(
+                                        invocation.getInputs(),
+                                        invocation.getReferencedInputs(),
+                                        invocation.getOutputProvider());
 
-                    @Override
-                    public void finished() {
-                        resultFuture.set(invocation.getOutputProvider());
-                    }
+                                // make sure the mapping file is always created. Since the file is always published as
+                                // an artifact, it's important that it is always present even if empty so that it
+                                // can be published to a repo.
+                                if (!printMapping.isFile()) {
+                                    Files.asCharSink(printMapping, Charsets.UTF_8).write("");
+                                }
+                            }
 
-                    @Override
-                    public void error(Throwable e) {
-                        resultFuture.setException(e);
-                    }
-                }, resultFuture);
+                            @Override
+                            public void finished() {
+                                resultFuture.set(invocation.getOutputProvider());
+                            }
+
+                            @Override
+                            public void error(Throwable e) {
+                                resultFuture.setException(e);
+                            }
+                        },
+                        resultFuture);
         try {
             SimpleWorkQueue.push(job);
 

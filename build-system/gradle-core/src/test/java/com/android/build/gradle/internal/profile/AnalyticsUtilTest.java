@@ -30,21 +30,21 @@ import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.stats.DeviceInfo;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.gradle.api.Plugin;
 import org.gradle.api.Task;
 import org.junit.Test;
 
@@ -55,12 +55,7 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName,
-                "com.android.build.gradle.tasks.ZipMergingTask",
-                "com.android.build.gradle.tasks.AndroidZip",
-                "com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask",
-                "com.android.build.gradle.internal.res.LinkAndroidResForBundleTask",
-                "com.android.build.gradle.internal.tasks.PipelineToPublicationTask");
+                AnalyticsUtil::getPotentialTaskExecutionTypeName);
     }
 
     @Test
@@ -68,11 +63,7 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Transform.class,
                 AnalyticsUtil::getTransformType,
-                AnalyticsUtil::getPotentialTransformTypeName,
-                "com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform",
-                "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
-                "com.android.build.gradle.internal.pipeline.TestTransform",
-                "com.android.build.gradle.internal.tasks.AppPreBuildTask");
+                AnalyticsUtil::getPotentialTransformTypeName);
     }
 
     @Test
@@ -156,20 +147,15 @@ public class AnalyticsUtilTest {
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
             @NonNull Class<T> itemClass,
             @NonNull Function<Class<T>, U> mappingFunction,
-            @NonNull Function<Class<T>, String> calculateExpectedEnumName,
-            @NonNull String... blackListClasses)
+            @NonNull Function<Class<T>, String> calculateExpectedEnumName)
             throws IOException {
         ClassPath classPath = ClassPath.from(this.getClass().getClassLoader());
-
-        Set<String> blackList = Sets.newHashSet(blackListClasses);
 
         TypeToken<T> taskInterface = TypeToken.of(itemClass);
         List<Class<T>> missingTasks =
                 classPath
                         .getTopLevelClassesRecursive("com.android.build")
                         .stream()
-                        .filter(
-                                info -> !blackList.contains(info.getName()))
                         .map(classInfo -> (Class<T>) classInfo.load())
                         .filter(
                                 clazz ->
@@ -343,5 +329,23 @@ public class AnalyticsUtilTest {
                 .containsExactly(
                         com.android.tools.build.gradle.internal.profile.StringOption
                                 .IDE_BUILD_TARGET_ABI_VALUE);
+    }
+
+    @Test
+    public void includedPluginNames() throws IOException {
+        checkHaveAllEnumValues(
+                Plugin.class,
+                (pluginClass) -> AnalyticsUtil.otherPluginToProto(pluginClass.getName()),
+                (pluginClass) -> AnalyticsUtil.getOtherPluginEnumName(pluginClass.getName()));
+    }
+
+    @Test
+    public void otherPluginNames() {
+        assertThat(
+                        AnalyticsUtil.otherPluginToProto(
+                                "com.google.gms.googleservices.GoogleServicesPlugin"))
+                .isEqualTo(
+                        GradleBuildProject.GradlePlugin
+                                .COM_GOOGLE_GMS_GOOGLESERVICES_GOOGLESERVICESPLUGIN);
     }
 }

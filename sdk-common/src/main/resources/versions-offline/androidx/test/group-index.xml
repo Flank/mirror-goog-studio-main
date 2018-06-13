@@ -1,8 +1,9 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <androidx.test>
-  <monitor versions="1.1.0-alpha1"/>
-  <runner versions="1.1.0-alpha1"/>
-  <orchestrator versions="1.1.0-alpha1"/>
-  <rules versions="1.1.0-alpha1"/>
+  <monitor versions="1.1.0-alpha3"/>
+  <runner versions="1.1.0-alpha3"/>
+  <orchestrator versions="1.1.0-alpha3"/>
+  <rules versions="1.1.0-alpha3"/>
+  <core versions="1.0.0-alpha3"/>
 </androidx.test>
 

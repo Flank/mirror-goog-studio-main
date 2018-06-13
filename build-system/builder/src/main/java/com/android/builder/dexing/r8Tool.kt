@@ -130,7 +130,7 @@ fun runR8(
     }
 
     pathsAdder(inputs, { p -> r8CommandBuilder.addProgramFiles(p) })
-    pathsAdder(libraries, { p -> r8CommandBuilder.addLibraryFiles(p) })
+    libraries.forEach { p -> r8CommandBuilder.addLibraryFiles(p) }
 
     val logger: Logger = Logger.getLogger("R8")
     if (logger.isLoggable(Level.FINE)) {

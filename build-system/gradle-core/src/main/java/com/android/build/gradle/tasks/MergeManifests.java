@@ -47,7 +47,6 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
@@ -72,6 +71,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -121,7 +121,31 @@ public class MergeManifests extends ManifestProcessorTask {
         ModuleMetadata moduleMetadata = null;
         if (packageManifest != null && !packageManifest.isEmpty()) {
             moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
+            boolean isDebuggable = optionalFeatures.get().contains(Feature.DEBUGGABLE);
+            if (moduleMetadata.getDebuggable() != isDebuggable) {
+                String moduleType =
+                        variantConfiguration.getType().isHybrid()
+                                ? "Instant App Feature"
+                                : "Dynamic Feature";
+                String errorMessage =
+                        String.format(
+                                "%1$s '%2$s' (build type '%3$s') %4$s debuggable,\n"
+                                        + "and the corresponding build type in the base "
+                                        + "application %5$s debuggable.\n"
+                                        + "Recommendation: \n"
+                                        + "   in  %6$s\n"
+                                        + "   set android.buildTypes.%3$s.debuggable = %7$s",
+                                moduleType,
+                                getProject().getPath(),
+                                variantConfiguration.getBuildType().getName(),
+                                isDebuggable ? "is" : "is not",
+                                moduleMetadata.getDebuggable() ? "is" : "is not",
+                                getProject().getBuildFile(),
+                                moduleMetadata.getDebuggable() ? "true" : "false");
+                throw new InvalidUserDataException(errorMessage);
+            }
         }
+
 
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 
@@ -523,8 +547,8 @@ public class MergeManifests extends ManifestProcessorTask {
 
 
             // optional manifest files too.
-            if (variantScope.getMicroApkTask() != null &&
-                    config.getBuildType().isEmbedMicroApp()) {
+            if (variantScope.getTaskContainer().getMicroApkTask() != null
+                    && config.getBuildType().isEmbedMicroApp()) {
                 processManifestTask.microApkManifest = project.files(
                         variantScope.getMicroApkManifestFile());
             }
@@ -618,9 +642,7 @@ public class MergeManifests extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_METADATA,
                     artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
 
-            variantScope
-                    .getVariantData()
-                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifestTask);
+            variantScope.getTaskContainer().setProcessManifestTask(processManifestTask);
         }
 
         /**

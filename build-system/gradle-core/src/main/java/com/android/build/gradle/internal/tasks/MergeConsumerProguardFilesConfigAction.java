@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -65,8 +66,22 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
                                 InternalArtifactType.CONSUMER_PROGUARD_FILE,
                                 mergeProguardFiles,
                                 SdkConstants.FN_PROGUARD_TXT));
-        Collection<File> consumerProguardFiles = variantScope.getConsumerProguardFiles();
-        checkForDefaultFiles(consumerProguardFiles);
+        final boolean hasFeaturePlugin = project.getPlugins().hasPlugin(FeaturePlugin.class);
+        // We include proguardFiles if we're in a dynamic-feature or feature module. For feature
+        // modules, we check for the presence of the FeaturePlugin, because we want to include
+        // proguardFiles even when we're in the library variant.
+        final boolean includeProguardFiles =
+                hasFeaturePlugin || variantScope.getType().isDynamicFeature();
+        final boolean isBaseFeature =
+                hasFeaturePlugin && variantScope.getGlobalScope().getExtension().getBaseFeature();
+        final Collection<File> consumerProguardFiles = variantScope.getConsumerProguardFiles();
+        if (includeProguardFiles) {
+            consumerProguardFiles.addAll(variantScope.getExplicitProguardFiles());
+        }
+        // We check for default files unless it's a base feature, which can include default files.
+        if (!isBaseFeature) {
+            checkForDefaultFiles(consumerProguardFiles);
+        }
         ConfigurableFileCollection inputFiles = project.files(consumerProguardFiles);
         if (variantScope.getType().isFeatureSplit()) {
             inputFiles.from(
@@ -92,12 +107,27 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
 
         for (File consumerProguardFile : consumerProguardFiles) {
             if (defaultFiles.containsKey(consumerProguardFile)) {
-                issueReporter.reportError(
-                        Type.GENERIC,
-                        new EvalIssueException(
-                                String.format(
-                                        "Default file %s should not be used as a consumer configuration file.",
-                                        defaultFiles.get(consumerProguardFile))));
+                final String errorMessage;
+                if (variantScope.getType().isDynamicFeature()
+                        || variantScope
+                                .getGlobalScope()
+                                .getProject()
+                                .getPlugins()
+                                .hasPlugin(FeaturePlugin.class)) {
+                    errorMessage =
+                            "Default file "
+                                    + defaultFiles.get(consumerProguardFile)
+                                    + " should not be specified in this module."
+                                    + " It can be specified in the base module instead.";
+
+                } else {
+                    errorMessage =
+                            "Default file "
+                                    + defaultFiles.get(consumerProguardFile)
+                                    + " should not be used as a consumer configuration file.";
+                }
+
+                issueReporter.reportError(Type.GENERIC, new EvalIssueException(errorMessage));
             }
         }
     }

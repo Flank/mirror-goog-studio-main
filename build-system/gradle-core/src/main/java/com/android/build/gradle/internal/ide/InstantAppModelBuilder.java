@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
@@ -305,7 +304,7 @@ public class InstantAppModelBuilder
                         syncIssues,
                         modelLevel,
                         modelWithFullDependency);
-        Task assembleTask = variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
+        Task assembleTask = variantScope.getTaskContainer().getAssembleTask();
         File outputLocation = variantScope.getApkLocation();
         String baseName =
                 variantScope.getGlobalScope().getProjectBaseName()

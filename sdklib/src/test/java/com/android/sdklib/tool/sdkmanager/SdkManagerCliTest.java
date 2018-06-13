@@ -18,8 +18,11 @@ package com.android.sdklib.tool.sdkmanager;
 
 import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
@@ -43,11 +46,14 @@ import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -891,5 +897,97 @@ public class SdkManagerCliTest {
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=/sdk", "--licenses", "foo"),
                         mFileOp.getFileSystem()));
+    }
+
+    @Test
+    public void proxySettings() throws MalformedURLException {
+        final String HTTP_PROXY = "http://studio-unittest.name:2340";
+        final String HTTPS_PROXY = "https://studio-other-unittest.name:2341";
+        String httpProxyHost = new URL(HTTP_PROXY).getHost();
+        String httpsProxyHost = new URL(HTTPS_PROXY).getHost();
+
+        Map<String, String> environment =
+                ImmutableMap.of(
+                        "HTTP_PROXY", HTTP_PROXY,
+                        "HTTPS_PROXY", HTTPS_PROXY,
+                        "STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY", "1");
+
+        assertNull(
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--no_proxy", "--proxy_port=80"),
+                        mFileOp.getFileSystem(),
+                        environment));
+        assertNull(
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--no_proxy", "--proxy_host=foo.bar"),
+                        mFileOp.getFileSystem(),
+                        environment));
+        assertNull(
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--no_proxy", "--proxy=bar.baz"),
+                        mFileOp.getFileSystem(),
+                        environment));
+
+        {
+            SdkManagerCliSettings settings =
+                    SdkManagerCliSettings.createSettings(
+                            ImmutableList.of("--sdk_root=/sdk", "--no_proxy"),
+                            mFileOp.getFileSystem(),
+                            environment);
+            assertNotNull(settings);
+            assertTrue(settings.getForceNoProxy());
+            assertSame(Proxy.NO_PROXY, settings.getProxy());
+        }
+
+        {
+            SdkManagerCliSettings settings =
+                    SdkManagerCliSettings.createSettings(
+                            ImmutableList.of("--sdk_root=/sdk", "--no_https"),
+                            mFileOp.getFileSystem(),
+                            environment);
+            assertNotNull(settings);
+            assertTrue(settings.getForceHttp());
+            assertEquals(httpProxyHost, settings.getProxyHostStr());
+        }
+
+        {
+            SdkManagerCliSettings settings =
+                    SdkManagerCliSettings.createSettings(
+                            ImmutableList.of("--sdk_root=/sdk"),
+                            mFileOp.getFileSystem(),
+                            environment);
+            assertNotNull(settings);
+            assertFalse(settings.getForceNoProxy());
+            assertFalse(settings.getForceHttp());
+            assertEquals(httpsProxyHost, settings.getProxyHostStr());
+        }
+
+        {
+            Map<String, String> environmentHttpOnly =
+                    ImmutableMap.of(
+                            "HTTP_PROXY", HTTP_PROXY, "STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY", "1");
+            SdkManagerCliSettings settings =
+                    SdkManagerCliSettings.createSettings(
+                            ImmutableList.of("--sdk_root=/sdk"),
+                            mFileOp.getFileSystem(),
+                            environmentHttpOnly);
+            assertNotNull(settings);
+            assertFalse(settings.getForceNoProxy());
+            assertFalse(settings.getForceHttp());
+            assertEquals(httpProxyHost, settings.getProxyHostStr());
+        }
+
+        {
+            Map<String, String> environmentInvalidProxyUrl =
+                    ImmutableMap.of(
+                            "HTTP_PROXY", "Ти до мене не ходи",
+                            "STUDIO_UNITTEST_DO_NOT_RESOLVE_PROXY", "1");
+            SdkManagerCliSettings settings =
+                    SdkManagerCliSettings.createSettings(
+                            ImmutableList.of("--sdk_root=/sdk"),
+                            mFileOp.getFileSystem(),
+                            environmentInvalidProxyUrl);
+            assertNull(settings);
+        }
     }
 }

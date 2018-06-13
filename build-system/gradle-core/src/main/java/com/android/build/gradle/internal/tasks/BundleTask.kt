@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.process.JarSigner
@@ -39,7 +40,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -72,6 +73,12 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     var mainDexList: BuildableArtifact? = null
         private set
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    var obsfuscationMappingFile: BuildableArtifact? = null
+        private set
+
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
@@ -100,10 +107,16 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
     var keyPassword: String? = null
         private set
 
-    @get:OutputFile
+    @get:OutputDirectory
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundleFile: Provider<RegularFile>
-        private set
+    val bundleLocation: File
+        get() = bundleFile.get().asFile.parentFile
+
+    @get:Input
+    val fileName: String
+        get() = bundleFile.get().asFile.name
+
+    private lateinit var bundleFile: Provider<RegularFile>
 
     @TaskAction
     fun bundleModules() {
@@ -119,6 +132,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                     baseModuleFile = baseModuleZip.singleFile(),
                     featureFiles = featureZips.files,
                     mainDexList = mainDexList?.singleFile(),
+                    obfuscationMappingFile = obsfuscationMappingFile?.singleFile(),
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     signature = signature,
@@ -132,6 +146,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         val baseModuleFile: File,
         val featureFiles: Set<File>,
         val mainDexList: File?,
+        val obfuscationMappingFile: File?,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
         val signature: JarSigner.Signature?,
@@ -143,11 +158,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             // BundleTool requires that the destination directory for the bundle file exists,
             // and that the bundle file itself does not
             val bundleFile = params.bundleFile
-            FileUtils.mkdirs(bundleFile.parentFile)
-
-            if (bundleFile.isFile) {
-                FileUtils.delete(bundleFile)
-            }
+            FileUtils.cleanOutputDir(bundleFile.parentFile)
 
             val builder = ImmutableList.builder<Path>()
             builder.add(getBundlePath(params.baseModuleFile))
@@ -177,6 +188,14 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 
             params.mainDexList?.let {
                 command.setMainDexListFile(it.toPath())
+            }
+
+            params.obfuscationMappingFile?.let {
+                command.addMetadataFile(
+                    "com.android.tools.build.obfuscation",
+                    "proguard.map",
+                    it.toPath()
+                )
             }
 
             command.build().execute()
@@ -217,11 +236,13 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             val apkLocationOverride =
                 scope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
 
+            val bundleName = "${scope.globalScope.projectBaseName}.aab"
+
             task.bundleFile = if (apkLocationOverride == null)
-                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, "bundle.aab")
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, bundleName)
             else
                 scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task,
-                    File(apkLocationOverride, "bundle.aab"))
+                    File(apkLocationOverride, bundleName))
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
@@ -234,7 +255,13 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             task.aaptOptionsNoCompress =
                     scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
-            task.bundleOptions = ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+            if (scope.type.isHybrid) {
+                task.bundleOptions =
+                        ((scope.globalScope.extension as FeatureExtension).bundle).convert()
+            } else {
+                task.bundleOptions =
+                        ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+            }
 
             if (scope.needsMainDexListForBundle) {
                 task.mainDexList =
@@ -244,6 +271,11 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
                 // The dex files from this application are still processed for legacy multidex
                 // in this case, as if none of the dynamic features are fused the bundle tool will
                 // not reprocess the dex files.
+            }
+
+            if (scope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
+                task.obsfuscationMappingFile =
+                        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
             }
 
             scope.variantConfiguration.signingConfig?.let {

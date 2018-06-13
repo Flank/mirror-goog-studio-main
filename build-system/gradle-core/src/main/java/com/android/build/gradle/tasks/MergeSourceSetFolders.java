@@ -384,7 +384,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             final BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            variantData.mergeAssetsTask = mergeAssetsTask;
+            scope.getTaskContainer().setMergeAssetsTask(mergeAssetsTask);
 
             final Function<SourceProvider, Collection<File>> assetDirFunction =
                     SourceProvider::getAssetsDirectories;

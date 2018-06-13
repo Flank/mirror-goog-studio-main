@@ -57,7 +57,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -308,6 +308,19 @@ public class Main {
                         return super.findRuleJars(project);
                     }
 
+                    @NonNull
+                    @Override
+                    public List<File> findGlobalRuleJars() {
+                        if (metadata != null) {
+                            List<File> jars = metadata.getGlobalLintChecks();
+                            if (!jars.isEmpty()) {
+                                return jars;
+                            }
+                        }
+
+                        return super.findGlobalRuleJars();
+                    }
+
                     @Nullable
                     @Override
                     public File getCacheDir(@Nullable String name, boolean create) {
@@ -357,6 +370,33 @@ public class Main {
                             return Main.this.sdkHome;
                         }
                         return super.getSdkHome();
+                    }
+
+                    @Override
+                    protected boolean addBootClassPath(
+                            @NonNull Collection<? extends Project> knownProjects,
+                            List<File> files) {
+                        if (metadata != null && !metadata.getJdkBootClasspath().isEmpty()) {
+                            boolean isAndroid = false;
+                            for (Project project : knownProjects) {
+                                if (project.isAndroidProject()) {
+                                    isAndroid = true;
+                                    break;
+                                }
+                            }
+                            if (!isAndroid) {
+                                files.addAll(metadata.getJdkBootClasspath());
+                                return true;
+                            }
+
+                            boolean ok = super.addBootClassPath(knownProjects, files);
+                            if (!ok) {
+                                files.addAll(metadata.getJdkBootClasspath());
+                            }
+                            return ok;
+                        }
+
+                        return super.addBootClassPath(knownProjects, files);
                     }
                 };
 
@@ -559,7 +599,7 @@ public class Main {
                 boolean closeWriter;
                 String outputName = args[++index];
                 if (outputName.equals("stdout")) {
-                    //noinspection IOResourceOpenedButNotSafelyClosed
+                    //noinspection IOResourceOpenedButNotSafelyClosed,resource
                     writer = new PrintWriter(System.out, true);
                     closeWriter = false;
                 } else {
@@ -581,7 +621,7 @@ public class Main {
                         exit(ERRNO_EXISTS);
                     }
                     try {
-                        //noinspection IOResourceOpenedButNotSafelyClosed
+                        //noinspection IOResourceOpenedButNotSafelyClosed,resource
                         writer = new BufferedWriter(new FileWriter(output));
                     } catch (IOException e) {
                         log(e, null);
@@ -609,10 +649,6 @@ public class Main {
                                 flags.getSuppressedIds().add(issue.getId());
                             }
                         }
-                    } else if (!registry.isIssueId(id)) {
-                        System.err.println("Invalid id or category \"" + id + "\".\n");
-                        displayValidIds(registry, System.err);
-                        exit(ERRNO_INVALID_ARGS);
                     } else {
                         flags.getSuppressedIds().add(id);
                     }
@@ -634,11 +670,6 @@ public class Main {
                                 flags.getEnabledIds().add(issue.getId());
                             }
                         }
-                    } else if (!registry.isIssueId(id)) {
-                        System.err.println("Invalid id or category \"" + id + "\".\n");
-                        displayValidIds(registry, System.err);
-                        exit(ERRNO_INVALID_ARGS);
-                    } else {
                         flags.getEnabledIds().add(id);
                     }
                 }
@@ -666,10 +697,6 @@ public class Main {
                                 checkedIds.add(issue.getId());
                             }
                         }
-                    } else if (!registry.isIssueId(id)) {
-                        System.err.println("Invalid id or category \"" + id + "\".\n");
-                        displayValidIds(registry, System.err);
-                        exit(ERRNO_INVALID_ARGS);
                     } else {
                         checkedIds.add(id);
                     }
@@ -1124,8 +1151,7 @@ public class Main {
     private static void showIssues(IssueRegistry registry) {
         List<Issue> issues = registry.getIssues();
         List<Issue> sorted = new ArrayList<>(issues);
-        Collections.sort(
-                sorted,
+        sorted.sort(
                 (issue1, issue2) -> {
                     int d = issue1.getCategory().compareTo(issue2.getCategory());
                     if (d != 0) {

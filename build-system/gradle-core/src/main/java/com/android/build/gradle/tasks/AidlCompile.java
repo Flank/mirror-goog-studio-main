@@ -367,7 +367,7 @@ public class AidlCompile extends IncrementalTask {
             final VariantConfiguration<?, ?, ?> variantConfiguration = scope
                     .getVariantConfiguration();
 
-            scope.getVariantData().aidlCompileTask = compileTask;
+            scope.getTaskContainer().setAidlCompileTask(compileTask);
 
             compileTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             compileTask.setVariantName(scope.getVariantConfiguration().getFullName());

@@ -120,9 +120,22 @@ public class SimpleWebServer implements Runnable {
             serverSocket = new ServerSocket(0);
             System.out.println("Test Framework Server Listening: " + serverSocket.getLocalPort());
             while (isRunning) {
-                Socket socket = serverSocket.accept();
-                handle(socket);
-                socket.close();
+                final Socket socket = serverSocket.accept();
+                // Use thread to handle each client request separately, as accept() would wait. See
+                // http://www.java2s.com/Tutorial/Java/0320__Network/ThreadbasedServerSocket.html.
+                new Thread(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            handle(socket);
+                                            socket.close();
+                                        } catch (Exception e) {
+                                            System.err.println("Socket Exception: " + e);
+                                        }
+                                    }
+                                })
+                        .start();
             }
         } catch (SocketException e) {
             // The server was stopped; ignore.

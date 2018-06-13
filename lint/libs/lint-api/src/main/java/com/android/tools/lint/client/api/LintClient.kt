@@ -417,7 +417,7 @@ abstract class LintClient {
      * Returns the File pointing to the user's SDK install area. This is generally
      * the root directory containing the lint tool (but also platforms/ etc).
      *
-     * @return a file pointing to the user's install area
+     * @return a file pointing to the user's Android SDK install area
      */
     open fun getSdkHome(): File? {
         val binDir = lintBinDir
@@ -869,11 +869,15 @@ abstract class LintClient {
      * @return the compile target to use to build the given project
      */
     open fun getCompileTarget(project: Project): IAndroidTarget? {
+        if (!project.isAndroidProject) {
+            return null
+        }
+
         val compileSdkVersion = project.buildTargetHash
         if (compileSdkVersion != null) {
-            val logger = getRepositoryLogger()
             val handler = getSdk()
             if (handler != null) {
+                val logger = getRepositoryLogger()
                 val manager = handler.getAndroidTargetManager(logger)
                 val target = manager.getTargetFromHashString(
                     compileSdkVersion,

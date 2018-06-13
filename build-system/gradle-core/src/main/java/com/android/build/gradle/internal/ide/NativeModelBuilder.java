@@ -52,7 +52,8 @@ public class NativeModelBuilder implements ToolingModelBuilder {
         NativeAndroidProjectBuilder builder = new NativeAndroidProjectBuilder(project.getName());
 
         for (VariantScope scope : variantManager.getVariantScopes()) {
-            ExternalNativeJsonGenerator generator = scope.getExternalNativeJsonGenerator();
+            ExternalNativeJsonGenerator generator =
+                    scope.getTaskContainer().getExternalNativeJsonGenerator();
             if (generator == null) {
                 continue;
             }

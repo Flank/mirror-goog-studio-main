@@ -201,7 +201,7 @@ public class AppPreBuildTask extends AndroidVariantTask {
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             "prebuild/" + variantScope.getVariantConfiguration().getDirName());
 
-            variantScope.getVariantData().preBuildTask = task;
+            variantScope.getTaskContainer().setPreBuildTask(task);
         }
     }
 }

@@ -455,7 +455,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             }
 
             task.setAndroidBuilder(androidBuilder);
-            variantData.externalNativeBuildTasks.add(task);
+            variantData.getTaskContainer().getExternalNativeBuildTasks().add(task);
         }
     }
 }

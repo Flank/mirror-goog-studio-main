@@ -872,7 +872,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         List<Callable<Void>> buildSteps = new ArrayList<>();
                         for (VariantScope variantScope : variantManager.getVariantScopes()) {
                             ExternalNativeJsonGenerator generator =
-                                    variantScope.getExternalNativeJsonGenerator();
+                                    variantScope
+                                            .getTaskContainer()
+                                            .getExternalNativeJsonGenerator();
                             if (generator != null) {
                                 // This will generate any out-of-date or non-existent JSONs.
                                 // When refreshExternalNativeModel() is true it will also
@@ -891,7 +893,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     } else {
                         for (VariantScope variantScope : variantManager.getVariantScopes()) {
                             ExternalNativeJsonGenerator generator =
-                                    variantScope.getExternalNativeJsonGenerator();
+                                    variantScope
+                                            .getTaskContainer()
+                                            .getExternalNativeJsonGenerator();
                             if (generator != null) {
                                 // This will generate any out-of-date or non-existent JSONs.
                                 // When refreshExternalNativeModel() is true it will also

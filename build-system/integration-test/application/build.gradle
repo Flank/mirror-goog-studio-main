@@ -130,6 +130,7 @@ configure([test, testPrebuilts]) {
 
     exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
+    exclude "com/android/build/gradle/integration/sanity/**"
     exclude "**/BazelIntegrationTestsSuite*"
 }
 
@@ -139,6 +140,13 @@ task automaticTest(type: Test) {
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
     environment = testEnvironment
+}
+
+task sanityTest(type: Test) {
+    include "com/android/build/gradle/integration/sanity/**"
+    environment = testEnvironment
+    dependsOn ':base:java-lib-model:publishLocal'
+    dependsOn ':base:java-lib-model-builder:publishLocal'
 }
 
 task onlineTest(type: Test) {

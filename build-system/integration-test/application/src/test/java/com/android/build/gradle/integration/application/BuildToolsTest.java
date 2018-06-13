@@ -122,7 +122,7 @@ public class BuildToolsTest {
 
         GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble");
 
-        assertThat(result.getInputChangedTasks()).containsAllIn(JAVAC_TASKS);
+        assertThat(result.getDidWorkTasks()).containsAllIn(JAVAC_TASKS);
     }
 
     @Test

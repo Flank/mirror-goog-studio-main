@@ -140,6 +140,12 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
+            if (targetThreads.contains(ANY_THREAD_ANNOTATION.oldName()) ||
+                    targetThreads.contains(ANY_THREAD_ANNOTATION.newName())) {
+                // Any thread allowed? Then we're good!
+                return
+            }
+
             val message = String.format(
                 "%1\$s %2\$s must be called from the %3\$s thread, currently inferred thread is %4\$s thread",
                 if (method.isConstructor) "Constructor" else "Method",

@@ -47,8 +47,8 @@ import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.AndroidZip;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
+import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
@@ -171,10 +171,7 @@ public class LibraryTaskManager extends TaskManager {
         TaskManager.setJavaCompilerTask(javacTask, variantScope);
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (!isComponentModelPlugin()) {
-            // Add NDK tasks
-            createNdkTasks(variantScope);
-        }
+        createNdkTasks(variantScope);
         variantScope.setNdkBuildable(getNdkBuildable(variantScope.getVariantData()));
 
         // External native build
@@ -245,20 +242,22 @@ public class LibraryTaskManager extends TaskManager {
                                 // if the task is a no-op then we make assemble task
                                 // depend on it.
                                 if (transform.getScopes().isEmpty()) {
-                                    variantScope.getAssembleTask().dependsOn(t);
+                                    variantScope.getTaskContainer().getAssembleTask().dependsOn(t);
                                 }
                             });
         }
 
         // Now add transforms for intermediate publishing (projects to projects).
         File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
-        File mainClassJar = new File(jarOutputFolder, FN_CLASSES_JAR);
+        File classesMainDir = new File(variantScope.getIntermediateJarOutputFolder(), "classes");
+        File mainClassJar = new File(classesMainDir, FN_CLASSES_JAR);
+        File mainClassDir = new File(classesMainDir, "dir");
         File mainResJar = new File(jarOutputFolder, FN_INTERMEDIATE_RES_JAR);
         LibraryIntermediateJarsTransform intermediateTransform =
                 new LibraryIntermediateJarsTransform(
                         mainClassJar,
+                        mainClassDir,
                         mainResJar,
-                        null,
                         variantConfig::getPackageFromManifest,
                         extension.getPackageBuildConfig());
         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
@@ -271,8 +270,12 @@ public class LibraryTaskManager extends TaskManager {
                 t -> {
                     // publish the intermediate classes.jar
                     artifacts.appendArtifact(
-                            InternalArtifactType.LIBRARY_CLASSES,
+                            InternalArtifactType.LIBRARY_CLASSES_JAR,
                             ImmutableList.of(mainClassJar),
+                            t);
+                    artifacts.appendArtifact(
+                            InternalArtifactType.LIBRARY_CLASSES_DIR,
+                            ImmutableList.of(mainClassDir),
                             t);
                     // publish the res jar
                     artifacts.appendArtifact(
@@ -385,10 +388,10 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void createBundleTask(@NonNull VariantScope variantScope) {
-        final AndroidZip bundle =
-                taskFactory.create(new AndroidZip.ConfigAction(extension, variantScope));
+        final BundleAar bundle =
+                taskFactory.create(new BundleAar.ConfigAction(extension, variantScope));
 
-        variantScope.getAssembleTask().dependsOn(bundle);
+        variantScope.getTaskContainer().getAssembleTask().dependsOn(bundle);
 
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
@@ -509,8 +512,8 @@ public class LibraryTaskManager extends TaskManager {
         MergeSourceSetFolders mergeAssetsTask =
                 taskFactory.create(new MergeSourceSetFolders.LibraryAssetConfigAction(scope));
 
-        mergeAssetsTask.dependsOn(scope.getAssetGenTask());
-        scope.setMergeAssetsTask(mergeAssetsTask);
+        mergeAssetsTask.dependsOn(scope.getTaskContainer().getAssetGenTask());
+        scope.getTaskContainer().setMergeAssetsTask(mergeAssetsTask);
     }
 
     @NonNull
@@ -531,6 +534,6 @@ public class LibraryTaskManager extends TaskManager {
         VerifyLibraryResourcesTask verifyLibraryResources =
                 taskFactory.create(new VerifyLibraryResourcesTask.ConfigAction(scope));
 
-        scope.getAssembleTask().dependsOn(verifyLibraryResources);
+        scope.getTaskContainer().getAssembleTask().dependsOn(verifyLibraryResources);
     }
 }

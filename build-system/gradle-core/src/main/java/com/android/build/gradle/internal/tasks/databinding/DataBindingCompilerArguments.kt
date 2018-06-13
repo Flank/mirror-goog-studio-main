@@ -42,8 +42,11 @@ class DataBindingCompilerArguments constructor(
     @get:Input
     val artifactType: CompilerArguments.Type,
 
-    @get:Input
-    val modulePackage: String,
+    // Use module package provider so that we can delay resolving the module package until execution
+    // time (for performance). The resolved module package is set as @Input (see getModulePackage()
+    // below), but the provider itself should be set as @Internal.
+    @Internal
+    private val modulePackageProvider: () -> String,
 
     @get:Input
     val minApi: Int,
@@ -88,7 +91,11 @@ class DataBindingCompilerArguments constructor(
     @get:Input
     val enableDebugLogs: Boolean,
 
-    @get:Input
+    // We don't set this as an @Input because: (1) it doesn't affect the results of data binding
+    // processing, and (2) its value is changed between an Android Studio build and a command line
+    // build; by not setting it as @Input, we allow the users to get incremental/UP-TO-DATE builds
+    // when switching between the two modes (see https://issuetracker.google.com/80555723).
+    @get:Internal
     val printEncodedErrorLogs: Boolean,
 
     @get:Input
@@ -101,10 +108,13 @@ class DataBindingCompilerArguments constructor(
     val isEnableV2: Boolean
 ) : CommandLineArgumentProvider {
 
+    @Input
+    fun getModulePackage() = modulePackageProvider()
+
     fun toMap(): Map<String, String> {
         return CompilerArguments(
             artifactType = artifactType,
-            modulePackage = modulePackage,
+            modulePackage = getModulePackage(),
             minApi = minApi,
             sdkDir = sdkDir,
             buildDir = buildDir,
@@ -139,7 +149,7 @@ class DataBindingCompilerArguments constructor(
         val prefix = "databinding"
 
         inputs.property("$prefix.artifactType", artifactType)
-        inputs.property("$prefix.modulePackage", modulePackage)
+        inputs.property("$prefix.modulePackage", getModulePackage())
         inputs.property("$prefix.minApi", minApi)
 
         inputs.dir(buildDir).withPropertyName("$prefix.buildDir")
@@ -201,10 +211,6 @@ class DataBindingCompilerArguments constructor(
                 }
             }
 
-            // TODO: find a way to not pass the packageName if possible, as this may force us to
-            // parse the manifest for data binding during configuration.
-            val modulePackage = variantConfig.originalApplicationId
-
             // Get classLogDir
             val classLogDir = Iterables.getOnlyElement<File>(
                 artifacts.getFinalArtifactFiles(
@@ -255,7 +261,7 @@ class DataBindingCompilerArguments constructor(
 
             return DataBindingCompilerArguments(
                 artifactType = artifactType,
-                modulePackage = modulePackage,
+                modulePackageProvider = { variantConfig.originalApplicationId },
                 minApi = variantConfig.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkHandler.checkAndGetSdkFolder(),
                 buildDir = variantScope.buildFolderForDataBindingCompiler,

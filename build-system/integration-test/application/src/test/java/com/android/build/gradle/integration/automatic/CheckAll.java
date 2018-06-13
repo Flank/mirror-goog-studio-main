@@ -111,6 +111,7 @@ public class CheckAll {
                     "databinding",
                     "databindingAndKotlin",
                     "databindingAndJetifier",
+                    "databindingMultiModule",
                     "databindingWithFeatures",
 
                     // These are all right:

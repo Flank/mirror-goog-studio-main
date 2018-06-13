@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkVariantOutput;
-import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.ide.common.build.ApkData;
 import com.google.common.base.MoreObjects;
@@ -48,7 +48,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
-        return taskContainer.getTaskByType(PackageAndroidArtifact.class);
+        return taskContainer.getPackageAndroidTask();
     }
 
     @NonNull

@@ -80,6 +80,13 @@ fun getAaptDaemon(
     serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
 @JvmOverloads
+fun getAaptPoolSize(
+    aapt2ServiceKey: Aapt2ServiceKey,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE)
+        : Int =
+    serviceRegistry.getService(aapt2ServiceKey).service.stats().poolSize
+
+@JvmOverloads
 fun registerAaptService(
     aapt2FromMaven: FileCollection?,
     buildToolInfo: BuildToolInfo? = null,

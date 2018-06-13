@@ -18,6 +18,7 @@ package com.android.tools.profiler.memory;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.*;
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler.*;

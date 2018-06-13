@@ -68,6 +68,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 public class FontDetector extends ResourceXmlDetector {
+    // TODO: Change this to the API version where we dont have to rely on appcompat for downloadable fonts loading at runtime.
+    public static final int FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK =
+            Integer.MAX_VALUE - 1;
+
     private static final Implementation IMPLEMENTATION =
             new Implementation(FontDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
@@ -146,7 +150,8 @@ public class FontDetector extends ResourceXmlDetector {
             if (reportMisplacedFontTag(context, fontTag)) {
                 return;
             }
-            if (minSdk.getApiLevel() > AndroidVersion.VersionCodes.O_MR1) {
+            if (minSdk.getApiLevel()
+                    >= FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK) {
                 reportUnexpectedAttributeNamespace(context, firstAppAttribute, ANDROID_NS_NAME);
             } else {
                 reportUnexpectedAttributeNamespace(context, firstAndroidAttribute, APP_PREFIX);

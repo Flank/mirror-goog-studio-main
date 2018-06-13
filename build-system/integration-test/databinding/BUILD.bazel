@@ -42,6 +42,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/databindingAndJetifier",
     "//tools/base/build-system/integration-test:test-projects/databindingAndKotlin",
     "//tools/base/build-system/integration-test:test-projects/databindingIncremental",
+    "//tools/base/build-system/integration-test:test-projects/databindingMultiModule",
     "//tools/base/build-system/integration-test:test-projects/databindingWithFeatures",
     "//tools/data-binding:data_binding_runtime.zip",
     "//tools/data-binding:integration-test-projects",

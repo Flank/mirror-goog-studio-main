@@ -59,19 +59,14 @@ public class TaskStateList {
 
         @NonNull private final String taskName;
         @NonNull private final ExecutionState executionState;
-        private final boolean inputChanged;
         @NonNull private final TaskStateList taskStateList;
 
         public TaskInfo(
                 @NonNull String taskName,
                 @NonNull ExecutionState executionState,
-                boolean inputChanged,
                 @NonNull TaskStateList taskStateList) {
-            Preconditions.checkArgument(
-                    !inputChanged || executionState != ExecutionState.UP_TO_DATE);
             this.taskName = taskName;
             this.executionState = executionState;
-            this.inputChanged = inputChanged;
             this.taskStateList = taskStateList;
         }
 
@@ -123,18 +118,11 @@ public class TaskStateList {
             return executionState == ExecutionState.FAILED;
         }
 
-        public boolean hadChangedInputs() {
-            return inputChanged;
-        }
-
         @NonNull
         TaskStateList getTaskStateList() {
             return taskStateList;
         }
     }
-
-    private static final Pattern INPUT_CHANGED_PATTERN =
-            Pattern.compile("Value of input property '.*' has changed for task '(\\S+)'");
 
     public static final Pattern NO_ACTIONS_PATTERN =
             Pattern.compile("Skipping task '(.*)' as it has no actions.");
@@ -142,7 +130,6 @@ public class TaskStateList {
     @NonNull private final ImmutableList<String> taskList;
     @NonNull private final ImmutableMap<String, TaskInfo> taskInfoMap;
     @NonNull private final ImmutableMap<ExecutionState, ImmutableSet<String>> taskStateMap;
-    @NonNull private final ImmutableSet<String> inputChangedTasks;
 
     public TaskStateList(
             @NonNull List<ProgressEvent> progressEvents, @NonNull String gradleOutput) {
@@ -194,21 +181,10 @@ public class TaskStateList {
             }
         }
 
-        // Among the tasks that were not UP-TO-DATE, detect those whose inputs have changed. This
-        // information is not provided by the tooling API, so we need to detect them in the Gradle
-        // output.
-        inputChangedTasks = getTasksByPatternFromGradleOutput(gradleOutput, INPUT_CHANGED_PATTERN);
-        Preconditions.checkState(taskList.containsAll(inputChangedTasks));
-        for (String inputChangedTask : inputChangedTasks) {
-            Preconditions.checkState(
-                    !taskMap.get(ExecutionState.UP_TO_DATE).contains(inputChangedTask));
-        }
-
         ImmutableMap.Builder<String, TaskInfo> taskInfoMapBuilder = ImmutableMap.builder();
         for (ExecutionState state : taskMap.keySet()) {
             for (String task : taskMap.get(state)) {
-                taskInfoMapBuilder.put(
-                        task, new TaskInfo(task, state, inputChangedTasks.contains(task), this));
+                taskInfoMapBuilder.put(task, new TaskInfo(task, state, this));
             }
         }
         taskInfoMap = taskInfoMapBuilder.build();
@@ -236,7 +212,7 @@ public class TaskStateList {
     public TaskInfo getTask(@NonNull String task) {
         // if the task-info is missing, then create one for a non executed task.
         return taskInfoMap.getOrDefault(
-                task, new TaskInfo(task, ExecutionState.NOT_PLANNED_FOR_EXECUTION, false, this));
+                task, new TaskInfo(task, ExecutionState.NOT_PLANNED_FOR_EXECUTION, this));
     }
 
     @NonNull
@@ -267,11 +243,6 @@ public class TaskStateList {
     @NonNull
     public Set<String> getFailedTasks() {
         return taskStateMap.get(ExecutionState.FAILED);
-    }
-
-    @NonNull
-    public Set<String> getInputChangedTasks() {
-        return inputChangedTasks;
     }
 
     int getTaskIndex(String taskName) {

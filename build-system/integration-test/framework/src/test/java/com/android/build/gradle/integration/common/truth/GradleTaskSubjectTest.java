@@ -51,14 +51,6 @@ public class GradleTaskSubjectTest {
                         + "  No history is available.\n"
                         + ":didWorkTask (Thread[Daemon worker,5,main]) completed. Took 0.004 secs.\n"
                         + "\n"
-                        + ":didWorkTaskWithChangedInputs (Thread[Daemon worker,5,main]) started.\n"
-                        + ":didWorkTaskWithChangedInputs\n"
-                        + "Executing task ':didWorkTaskWithChangedInputs' (up-to-date check took 0.005 secs) due to:\n"
-                        + "  Value of input property 'someFakeInput' has changed for task ':didWorkTaskWithChangedInputs'\n"
-                        + "All input files are considered out-of-date for incremental task ':didWorkTaskWithChangedInputs'.\n"
-                        + "Unable do incremental execution: full task run\n"
-                        + ":didWorkTaskWithChangedInputs (Thread[Daemon worker,5,main]) completed. Took 0.135 secs.\n"
-                        + "\n"
                         + ":skippedTask SKIPPED\n"
                         + "\n"
                         + ":fromCacheTask FAILED";
@@ -67,7 +59,6 @@ public class GradleTaskSubjectTest {
         events.add(upToDate(":upToDateTask"));
         events.add(fromCache(":fromCacheTask"));
         events.add(didWork(":didWorkTask"));
-        events.add(didWork(":didWorkTaskWithChangedInputs"));
         events.add(skipped(":skippedTask"));
         events.add(failed(":failedTask"));
 
@@ -196,24 +187,6 @@ public class GradleTaskSubjectTest {
                 ":failedTask",
                 GradleTaskSubject::didNotFail,
                 "Not true that :failedTask did not fail");
-    }
-
-    @Test
-    public void hadChangedInputs() {
-        assertSuccess(":didWorkTaskWithChangedInputs", GradleTaskSubject::hadChangedInputs);
-        assertFailure(
-                ":didWorkTask",
-                GradleTaskSubject::hadChangedInputs,
-                "Not true that :didWorkTask had changed inputs");
-    }
-
-    @Test
-    public void hadNoChangedInputs() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::hadNoChangedInputs);
-        assertFailure(
-                ":didWorkTaskWithChangedInputs",
-                GradleTaskSubject::hadNoChangedInputs,
-                "Not true that :didWorkTaskWithChangedInputs had no changed inputs");
     }
 
     @Test

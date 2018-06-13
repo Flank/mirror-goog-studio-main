@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -44,8 +45,15 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
 
     @Rule public Adb adb = new Adb();
 
+    private final boolean libEnableV2;
+    private final boolean appEnableV2;
+    private final boolean useAndroidX;
+
     public DataBindingExternalArtifactDependencyConnectedTest(
             boolean libEnableV2, boolean appEnableV2, boolean useAndroidX) {
+        this.libEnableV2 = libEnableV2;
+        this.appEnableV2 = appEnableV2;
+        this.useAndroidX = useAndroidX;
         String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
         String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
         String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
@@ -83,6 +91,13 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
     @Category(DeviceTests.class)
     public void buildLibraryThenBuildApp_connectedCheck() throws IOException, InterruptedException {
         List<String> args = createLibraryArtifact();
+        if (useAndroidX && (!appEnableV2 || !libEnableV2)) {
+            // implementation dependencies are only supported in V2 so update the test to use
+            // api instead of implementation;
+            // non-androidX tests are not updated anymore so they don't test that path
+            TestFileUtils.searchVerbatimAndReplace(
+                    app.file("./testlibrary2/build.gradle"), "implementation ", "api ");
+        }
         app.executeConnectedCheck(args);
     }
 

@@ -57,12 +57,12 @@ public class ${className} extends SliceProvider {
             // Path recognized. Customize the Slice using the androidx.slice.builders API.
             // Note: ANRs and strict mode is enforced here so don't do any heavy operations.
             // Only bind data that is currently available in memory.
-            return new ListBuilder(getContext(), sliceUri)
+            return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
                     .addRow(new RowBuilder(context, sliceUri).setTitle("URI found."))
                     .build();
         } else {
             // Error: Path not found.
-            return new ListBuilder(context, sliceUri)
+            return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
                     .addRow(new RowBuilder(context, sliceUri).setTitle("URI not found."))
                     .build();
         }

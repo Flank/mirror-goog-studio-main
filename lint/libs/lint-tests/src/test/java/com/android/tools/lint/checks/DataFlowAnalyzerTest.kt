@@ -85,8 +85,12 @@ class DataFlowAnalyzerTest : TestCase() {
                         val result = a().b().c().d().e().f()
                         val copied2: Test
                         copied2 = result
-                        copied2.g()
+                        val copied3 = copied2.g()
                         copied2.toString().hashCode()
+
+                        copied3.apply {
+                            h()
+                        }
                     }
 
                     fun a(): Test = this
@@ -96,6 +100,7 @@ class DataFlowAnalyzerTest : TestCase() {
                     fun e(): Test = this
                     fun f(): Test = this
                     fun g(): Test = this
+                    fun h(): Test = this
                     fun other(): Test = this
                 }
             """, File("test/pkg/Test.kt")
@@ -114,7 +119,7 @@ class DataFlowAnalyzerTest : TestCase() {
         }
         target.getParentOfType<UMethod>(UMethod::class.java)?.accept(analyzer)
 
-        assertEquals("e, f, g, toString", receivers.joinToString { it })
+        assertEquals("e, f, g, toString, apply, h", receivers.joinToString { it })
 
         Disposer.dispose(parsed.second)
     }

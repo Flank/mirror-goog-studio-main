@@ -22,7 +22,7 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.ide.common.build.ApkData;
 import com.google.common.collect.ImmutableList;
 import org.gradle.api.model.ObjectFactory;

@@ -301,9 +301,10 @@ public class ResourceItemResolverTest extends TestCase {
 
         chain.clear();
         ResourceValue v = resolver.findResValue("@android:color/bright_foreground_dark", false);
-        assertEquals("@android:color/bright_foreground_dark => @android:color/background_light",
-                ResourceItemResolver.getDisplayString(ResourceType.COLOR, "bright_foreground_dark",
-                        true, chain));
+        String url = "@android:color/bright_foreground_dark";
+        assertEquals(
+                "@android:color/bright_foreground_dark => @android:color/background_light",
+                ResourceItemResolver.getDisplayString(url, chain));
         assertEquals("First: ${firstName} Last: ${lastName}",
                 resolver.findResValue("@string/xliff_string", false).getValue());
         assertEquals("First: <xliff:g id=\"firstName\">%1$s</xliff:g> Last: <xliff:g id=\"lastName\">%2$s</xliff:g>",

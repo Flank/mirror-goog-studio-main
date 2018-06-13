@@ -47,7 +47,6 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.Objects;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -190,8 +189,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         } else {
             CheckTestedAppObfuscation checkObfuscation =
                     taskFactory.create(new CheckTestedAppObfuscation.ConfigAction(variantScope));
-            Preconditions.checkNotNull(variantScope.getJavacTask());
-            variantScope.getJavacTask().dependsOn(checkObfuscation);
+            Preconditions.checkNotNull(variantScope.getTaskContainer().getJavacTask());
+            variantScope.getTaskContainer().getJavacTask().dependsOn(checkObfuscation);
             return null;
         }
     }
@@ -231,7 +230,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected DefaultTask createVariantPreBuildTask(@NonNull VariantScope scope) {
+    protected Task createVariantPreBuildTask(@NonNull VariantScope scope) {
         return createDefaultPreBuildTask(scope);
     }
 }

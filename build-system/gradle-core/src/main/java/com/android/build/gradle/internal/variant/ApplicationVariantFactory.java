@@ -151,6 +151,11 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             return;
         }
 
+        // if universalAPK is requested, abiFilter will control what goes into the universal APK.
+        if (extension.getSplits().getAbi().isUniversalApk()) {
+            return;
+        }
+
         // check supportedAbis in Ndk configuration versus ABI splits.
         Set<String> ndkConfigAbiFilters =
                 variantData.getVariantConfiguration().getNdkConfig().getAbiFilters();

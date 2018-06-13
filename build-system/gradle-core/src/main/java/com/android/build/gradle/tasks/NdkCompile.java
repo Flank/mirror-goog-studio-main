@@ -464,7 +464,7 @@ public class NdkCompile extends NdkTask {
             ndkCompile.isDeprecatedNdkCompileLeaseExpired =
                     NdkLease.isDeprecatedNdkCompileLeaseExpired(
                             variantScope.getGlobalScope().getProjectOptions());
-            variantData.ndkCompileTask = ndkCompile;
+            variantScope.getTaskContainer().setNdkCompileTask(ndkCompile);
 
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
@@ -481,7 +481,10 @@ public class NdkCompile extends NdkTask {
                         if (Boolean.TRUE.equals(
                                 variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
                             sourceList.add(
-                                    variantData.renderscriptCompileTask.getSourceOutputDir());
+                                    variantScope
+                                            .getTaskContainer()
+                                            .getRenderscriptCompileTask()
+                                            .getSourceOutputDir());
                         }
 
                         return sourceList;

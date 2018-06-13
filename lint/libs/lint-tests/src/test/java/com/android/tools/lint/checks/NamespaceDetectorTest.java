@@ -470,6 +470,45 @@ public class NamespaceDetectorTest extends AbstractCheckTest {
                                         + "\n")));
     }
 
+    public void testHttpsTools() {
+        // Regression test for
+        // 80346518: tools:ignore="MissingTranslation" doesn't work for <resource element>
+        lint().files(
+                        xml(
+                                "res/values-nb/strings.xml",
+                                ""
+                                        + "<resources "
+                                        + "    xmlns:android=\"https://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"https://schemas.android.com/tools\"\n"
+                                        + "    tools:ignore=\"ExtraTranslation\">\n"
+                                        + "    <string name=\"bar\">Bar</string>\n"
+                                        + "</resources>"),
+                        xml(
+                                "res/xml/random.xml",
+                                ""
+                                        + "<foo xmlns:foo=\"https://schemas.android.com/apk/res/android\"/>\n"))
+                .run()
+                .expect(
+                        ""
+                                + "res/values-nb/strings.xml:1: Error: Suspicious namespace: should start with http:// [NamespaceTypo]\n"
+                                + "<resources     xmlns:android=\"https://schemas.android.com/apk/res/android\"\n"
+                                + "                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/values-nb/strings.xml:2: Error: Suspicious namespace: should start with http:// [NamespaceTypo]\n"
+                                + "    xmlns:tools=\"https://schemas.android.com/tools\"\n"
+                                + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for res/values-nb/strings.xml line 1: Replace with http://schemas.android.com/apk/res/android:\n"
+                                + "@@ -1 +1\n"
+                                + "- <resources     xmlns:android=\"https://schemas.android.com/apk/res/android\"\n"
+                                + "+ <resources     xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "Fix for res/values-nb/strings.xml line 2: Replace with http://schemas.android.com/tools:\n"
+                                + "@@ -2 +2\n"
+                                + "-     xmlns:tools=\"https://schemas.android.com/tools\"\n"
+                                + "+     xmlns:tools=\"http://schemas.android.com/tools\"");
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mCustomview =
             xml(

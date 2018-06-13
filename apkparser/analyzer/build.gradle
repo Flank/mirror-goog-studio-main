@@ -54,5 +54,6 @@ sourceSets {
 
 project.ext.pomName = 'Apk Analyzer library'
 project.ext.pomDesc = 'Library for parsing and analyzing information from APK files'
-
-
+group = 'com.android.tools.apkparser'
+archivesBaseName = 'apkanalyzer'
+version = rootProject.ext.baseVersion

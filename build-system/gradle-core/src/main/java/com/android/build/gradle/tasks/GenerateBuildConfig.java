@@ -214,7 +214,7 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
         public void execute(@NonNull GenerateBuildConfig generateBuildConfigTask) {
             BaseVariantData variantData = scope.getVariantData();
 
-            variantData.generateBuildConfigTask = generateBuildConfigTask;
+            scope.getTaskContainer().setGenerateBuildConfigTask(generateBuildConfigTask);
 
             final GradleVariantConfiguration variantConfiguration =
                     variantData.getVariantConfiguration();

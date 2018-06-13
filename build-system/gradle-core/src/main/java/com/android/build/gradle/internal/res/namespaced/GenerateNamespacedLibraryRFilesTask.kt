@@ -31,7 +31,6 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -54,10 +53,6 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
     @get:OutputFile lateinit var rJarFile: File private set
     @get:OutputFile lateinit var resIdsFile: File private set
-        // TODO: remove b/77676030
-    @get:OutputDirectory
-    lateinit var emptyRClass: File
-    private set
 
     @TaskAction
     fun taskAction() {
@@ -78,9 +73,6 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
         // Finally, generate the res-ids.txt file containing the package name and the resources list.
         SymbolIo.writeRDef(resources, resIdsFile.toPath())
-
-        // TODO: remove b/77676030 write an empty R class for studio
-        SymbolIo.exportToJava(SymbolTable.builder().tablePackage(packageForR).build(), emptyRClass, false)
     }
 
 
@@ -103,10 +95,6 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
             task.resIdsFile = scope.artifacts
                 .appendArtifact(InternalArtifactType.NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
                     task, "res-ids.txt")
-
-            // TODO: remove b/77676030
-            task.emptyRClass = scope.artifacts
-                .appendArtifact(InternalArtifactType.EMPTY_R_CLASS_FOR_STUDIO, task)
         }
     }
 }

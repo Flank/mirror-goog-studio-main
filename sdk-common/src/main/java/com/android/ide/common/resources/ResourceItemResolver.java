@@ -222,25 +222,6 @@ public class ResourceItemResolver extends RenderResources {
         return null;
     }
 
-    @Deprecated
-    @Override
-    @Nullable
-    public StyleResourceValue getCurrentTheme() {
-        ResourceResolver resolver = getFullResolver();
-        if (resolver != null) {
-            return resolver.getCurrentTheme();
-        }
-
-        return null;
-    }
-
-    @Deprecated
-    @Override
-    public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
-        assert false; // This method shouldn't be called on this resolver.
-        return super.getTheme(name, frameworkTheme);
-    }
-
     @Override
     public boolean themeIsParentOf(StyleResourceValue parentTheme, StyleResourceValue childTheme) {
         assert false; // This method shouldn't be called on this resolver
@@ -303,25 +284,6 @@ public class ResourceItemResolver extends RenderResources {
     @Nullable
     public List<ResourceValue> getLookupChain() {
         return myLookupChain;
-    }
-
-    /**
-     * Returns a display string for a resource lookup.
-     *
-     * @param type the resource type
-     * @param name the resource name
-     * @param isFramework whether the item is in the framework
-     * @param lookupChain the list of resolved items to display
-     * @return the display string
-     */
-    @Deprecated
-    public static String getDisplayString(
-            @NonNull ResourceType type,
-            @NonNull String name,
-            boolean isFramework,
-            @NonNull List<ResourceValue> lookupChain) {
-        String url = ResourceUrl.create(type, name, isFramework).toString();
-        return getDisplayString(url, lookupChain);
     }
 
     /**

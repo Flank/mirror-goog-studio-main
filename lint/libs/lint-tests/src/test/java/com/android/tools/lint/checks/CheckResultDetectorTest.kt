@@ -109,7 +109,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     import com.google.errorprone.annotations.CanIgnoreReturnValue;
                     import javax.annotation.CheckReturnValue;
 
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "ResultOfMethodCallIgnored"})
                     @CheckReturnValue
                     public class IgnoreTest {
                         public String method1() {
@@ -460,6 +460,77 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                         this.myMethod(); // WARN
                         ~~~~~~~~~~~~~~~
                 0 errors, 2 warnings
+                """
+            )
+    }
+
+    fun test80234958() {
+        // 80234958: Lint check misses CheckResult inside kotlin class init blocks
+        lint().files(
+            kotlin(
+                """
+                package com.example
+
+                import io.reactivex.Observable
+
+                @Suppress("ConvertSecondaryConstructorToPrimary","RemoveExplicitTypeArguments")
+                class Foo {
+                  private val someObservable = Observable.create<Int> { }
+
+                  init {
+                    someObservable.subscribe { }
+                  }
+
+                  constructor() {
+                    someObservable.subscribe { }
+                  }
+
+                  fun method() {
+                    someObservable.subscribe { }
+                  }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                    // Stub
+                    package io.reactivex;
+
+                    import android.support.annotation.CheckResult;
+                    import java.util.Consumer;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public abstract class Observable<T> {
+                        @CheckResult
+                        public static <T> Observable<T> create(Object source) {
+                            return null;
+                        }
+
+                        @CheckResult
+                        public final Object subscribe(Consumer<? super T> onNext) {
+                            return null;
+                        }
+                    }
+
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .run()
+            .expect(
+                """
+                src/com/example/Foo.kt:10: Warning: The result of subscribe is not used [CheckResult]
+                    someObservable.subscribe { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/com/example/Foo.kt:14: Warning: The result of subscribe is not used [CheckResult]
+                    someObservable.subscribe { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/com/example/Foo.kt:18: Warning: The result of subscribe is not used [CheckResult]
+                    someObservable.subscribe { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 3 warnings
                 """
             )
     }

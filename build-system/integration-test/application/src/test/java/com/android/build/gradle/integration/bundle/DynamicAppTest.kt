@@ -32,6 +32,7 @@ import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
+import com.google.common.base.Throwables
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -75,7 +76,12 @@ class DynamicAppTest {
         "/META-INF/ANDROIDD.RSA",
         "/META-INF/ANDROIDD.SF",
         "/META-INF/MANIFEST.MF"))
-    
+
+    private val releaseUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
+        // Only the release variant is shrunk, so only it will contain a proguard mapping file.
+        "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"
+    ))
+
     private val mainDexClasses: List<String> = listOf(
         "Landroid/support/multidex/MultiDex;",
         "Landroid/support/multidex/MultiDexApplication;",
@@ -91,7 +97,7 @@ class DynamicAppTest {
 
     private val mainDexListClassesInBundle: List<String> =
         mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
-    
+
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
@@ -182,7 +188,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*bundleContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
         }
     }
 
@@ -305,13 +311,13 @@ class DynamicAppTest {
 
     @Test
     fun `test overriding bundle output location`() {
-        val apkFromBundleTaskName = getBundleTaskName("debug")
+        val bundleTaskName = getBundleTaskName("debug")
 
         // use a relative path to the project build dir.
         project
             .executor()
             .with(StringOption.IDE_APK_LOCATION, "out/test/my-bundle")
-            .run("app:$apkFromBundleTaskName")
+            .run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(File(project.getSubproject(":app").buildDir,
@@ -322,9 +328,57 @@ class DynamicAppTest {
         project
             .executor()
             .with(StringOption.IDE_APK_LOCATION, absolutePath)
-            .run("app:$apkFromBundleTaskName")
+            .run("app:$bundleTaskName")
 
         FileSubject.assertThat(File(absolutePath, bundleFile.name)).exists()
+    }
+
+    @Test
+    fun `test DSL update to bundle name`() {
+        val bundleTaskName = getBundleTaskName("debug")
+
+        project.execute("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        project.getSubproject(":app").buildFile.appendText("\narchivesBaseName ='foo'")
+
+        project.execute("app:$bundleTaskName")
+
+        val newBundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(newBundleFile).exists()
+
+        // test the folder is the same as the previous one.
+        Truth.assertThat(bundleFile.parentFile).isEqualTo(newBundleFile.parentFile)
+
+        // check that the previous bundle does not exist anymore
+        FileSubject.assertThat(bundleFile).doesNotExist()
+
+    }
+
+    fun `test invalid debuggable combination`() {
+        project.file("feature2/build.gradle").appendText(
+            """
+                 android.buildTypes.debug.debuggable = false
+            """
+        )
+        val apkFromBundleTaskName = getBundleTaskName("debug")
+
+        // use a relative path to the project build dir.
+        val failure = project
+            .executor()
+            .expectFailure()
+            .run("app:$apkFromBundleTaskName")
+
+        val exception = Throwables.getRootCause(failure.exception!!)
+
+        assertThat(exception).hasMessageThat().startsWith(
+            "Dynamic Feature ':feature2' (build type 'debug') is not debuggable,\n" +
+                    "and the corresponding build type in the base application is debuggable."
+        )
+        assertThat(exception).hasMessageThat()
+            .contains("set android.buildTypes.debug.debuggable = true")
     }
 
     private fun getBundleTaskName(name: String): String {

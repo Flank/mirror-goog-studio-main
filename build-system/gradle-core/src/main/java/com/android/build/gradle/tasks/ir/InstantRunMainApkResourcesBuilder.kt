@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.tasks.ir
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -43,6 +45,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
+import java.util.stream.Collectors
 
 /**
  * Task to create the main APK resources.ap_ file. This file will only contain the merged
