@@ -135,6 +135,26 @@ class PathStringTest {
     }
 
     @Test
+    fun testHashCodeForParent() {
+        val child1 = PathString("/var/log")
+        val child2 = PathString("/var/log/")
+        // Need to compute the child hashcodes first to trigger the optimization we're trying to
+        // test here.
+        val child1Hash = child1.hashCode()
+        val child2Hash = child2.hashCode()
+
+        val parent1 = child1.parent!!
+        val parent2 = child2.parent!!
+        val parent3 = PathString("/var")
+
+        assertThat(parent1.hashCode()).isEqualTo(parent3.hashCode())
+        assertThat(parent2.hashCode()).isEqualTo(parent3.hashCode())
+        assertThat(child1.hashCode()).isNotEqualTo(child2.hashCode())
+        assertThat(child1.hashCode()).isNotEqualTo(parent3.hashCode())
+        assertThat(child2.hashCode()).isNotEqualTo(parent3.hashCode())
+    }
+
+    @Test
     fun testStripSelfSegments() {
         assertThat(PathString("foo/././bar").normalize()).isEqualTo(PathString("foo/bar"))
     }
