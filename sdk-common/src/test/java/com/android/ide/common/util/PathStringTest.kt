@@ -186,10 +186,10 @@ class PathStringTest {
     fun testHashCodeForParent() {
         val child1 = PathString("/var/log")
         val child2 = PathString("/var/log/")
-        // Need to compute the child hashcodes first to trigger the optimization we're trying to
-        // test here.
-        val child1Hash = child1.hashCode()
-        val child2Hash = child2.hashCode()
+        // Need to compute the child hashcodes first to ensure they've been cached in the PathString
+        // which triggers the code paths we want to test here.
+        child1.hashCode()
+        child2.hashCode()
 
         val parent1 = child1.parent!!
         val parent2 = child2.parent!!

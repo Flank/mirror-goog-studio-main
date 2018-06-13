@@ -290,12 +290,30 @@ class PathString private constructor(
             if (newEnd <= startIndex) {
                 return root
             }
-            return PathString(filesystemUri,
+            val result = PathString(filesystemUri,
                     path,
                     startIndex,
                     newEnd,
                     prefixEndIndex,
                     separator)
+
+            if (hash != 0) {
+                // Compute the hashcode for the parent by subtracting the hashcode for the removed
+                // segments.
+                var parentHash = hash
+                var hashCodeForSegment = 0
+                for (i in newEnd until suffixEndIndex) {
+                    val nextChar = path[i]
+                    if (isSeparator(nextChar)) {
+                        parentHash -= hashCodeForSegment
+                        hashCodeForSegment = 0
+                    }
+                    hashCodeForSegment = 31 * hashCodeForSegment + nextChar.toInt()
+                }
+                parentHash -= hashCodeForSegment
+                result.hash = parentHash
+            }
+            return result
         }
 
     /**
@@ -368,12 +386,22 @@ class PathString private constructor(
         var result = filesystemUri.hashCode()
 
         for (i in 0.until(prefixEndIndex)) {
-            result = 31 * result + path[i].hashCode()
+            result = 31 * result + path[i].toInt()
         }
 
-        for (i in startIndex.until(suffixEndIndex)) {
-            result = 31 * result + path[i].hashCode()
+        // Compute the hashcode as the simple sum of the hashcodes of the individual segments.
+        // That way we can compute the hashcode for the parent folder efficiently from the
+        // hashcode of one of the child folders by subtracting the hashcode of the last segment.
+        var hashCodeForSegment = 0
+        for (i in startIndex until suffixEndIndex) {
+            val nextChar = path[i]
+            if (isSeparator(nextChar)) {
+                result += hashCodeForSegment
+                hashCodeForSegment = 0
+            }
+            hashCodeForSegment = 31 * hashCodeForSegment + nextChar.toInt()
         }
+        result += hashCodeForSegment
 
         return result
     }
