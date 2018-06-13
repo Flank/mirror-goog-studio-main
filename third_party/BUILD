@@ -1416,7 +1416,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.smali_baksmali",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/baksmali/2.2.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/baksmali/2.2.4:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.beust_jcommander",
@@ -1429,7 +1429,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.smali_dexlib2",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/dexlib2/2.2.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/dexlib2/2.2.4:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
@@ -1441,7 +1441,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.smali_util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/util/2.2.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/util/2.2.4:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.beust_jcommander",
