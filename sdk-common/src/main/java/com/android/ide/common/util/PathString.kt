@@ -269,7 +269,7 @@ class PathString private constructor(
             if (prefixEndIndex == 0) {
                 return null
             }
-            return PathString(filesystemUri, path, 0, 0, prefixEndIndex, separator)
+            return PathString(filesystemUri, path, prefixEndIndex, prefixEndIndex, prefixEndIndex, separator)
         }
 
     /**
