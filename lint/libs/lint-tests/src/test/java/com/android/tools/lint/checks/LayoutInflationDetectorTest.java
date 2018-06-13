@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Detector;
 import java.io.IOException;
 import java.io.StringReader;
+import org.kxml2.io.KXmlParser;
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 public class LayoutInflationDetectorTest extends AbstractCheckTest {
@@ -82,7 +84,17 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
         return false;
     }
 
-    public void test() {
+    private static XmlPullParser createXmlPullParser(@NonNull String xml)
+            throws XmlPullParserException {
+        // Instantiate an XML pull parser based on the contents of the file.
+        XmlPullParser parser;
+        parser = new KXmlParser(); // Parser for regular text XML.
+        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+        parser.setInput(new StringReader(xml));
+        return parser;
+    }
+
+    public void testFull() {
         String expected =
                 ""
                         + "src/test/pkg/LayoutInflationTest.java:13: Warning: Avoid passing null as the view root (needed to resolve layout parameters on the inflated layout's root element) [InflateParams]\n"
@@ -112,6 +124,37 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testIncremental() {
+        String expected =
+                ""
+                        + "src/test/pkg/LayoutInflationTest.java:13: Warning: Avoid passing null as the view root (needed to resolve layout parameters on the inflated layout's root element) [InflateParams]\n"
+                        + "        convertView = mInflater.inflate(R.layout.your_layout, null);\n"
+                        + "                                                              ~~~~\n"
+                        + "src/test/pkg/LayoutInflationTest.java:14: Warning: Avoid passing null as the view root (needed to resolve layout parameters on the inflated layout's root element) [InflateParams]\n"
+                        + "        convertView = mInflater.inflate(R.layout.your_layout, null, true);\n"
+                        + "                                                              ~~~~\n"
+                        + "0 errors, 2 warnings\n";
+        lint().files(
+                        mLayoutInflationTest,
+                        xml(
+                                "res/layout/your_layout.xml",
+                                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:id=\"@+id/LinearLayout1\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    android:orientation=\"vertical\" />\n"),
+                        xml(
+                                "res/layout-port/your_layout.xml",
+                                ""
+                                        + "<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:id=\"@id/text1\"\n"
+                                        + "    style=\"?android:attr/listSeparatorTextViewStyle\" />\n"))
+                .incremental(mLayoutInflationTest.targetRelativePath)
+                .run()
+                .expect(expected);
+    }
+
     public void testNoLayoutParams() {
         lint().files(
                         mLayoutInflationTest,
@@ -126,11 +169,12 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
     }
 
     public void testHasLayoutParams() throws IOException, XmlPullParserException {
-        assertFalse(LayoutInflationDetector.hasLayoutParams(new StringReader("")));
-        assertFalse(LayoutInflationDetector.hasLayoutParams(new StringReader("<LinearLayout/>")));
+        assertFalse(LayoutInflationDetector.hasLayoutParams(createXmlPullParser("")));
+        assertFalse(
+                LayoutInflationDetector.hasLayoutParams(createXmlPullParser("<LinearLayout/>")));
         assertFalse(
                 LayoutInflationDetector.hasLayoutParams(
-                        new StringReader(
+                        createXmlPullParser(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -145,7 +189,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
 
         assertTrue(
                 LayoutInflationDetector.hasLayoutParams(
-                        new StringReader(
+                        createXmlPullParser(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

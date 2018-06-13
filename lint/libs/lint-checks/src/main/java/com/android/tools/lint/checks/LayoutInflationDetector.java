@@ -42,21 +42,17 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.CharSequences;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.PsiMethod;
-import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UastLiteralUtils;
-import org.kxml2.io.KXmlParser;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -207,21 +203,14 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
                 return true; // Not certain.
             }
 
-            File file = source.toFile();
-            if (file == null) {
-                return true; // Not certain.
-            }
-            if (file.exists()) {
-                try {
-                    CharSequence s = client.readFile(file);
-                    Reader reader = CharSequences.getReader(s, true);
-                    if (hasLayoutParams(reader)) {
-                        return true;
-                    }
-                } catch (Exception e) {
-                    context.log(e, "Could not read/parse inflated layout");
-                    return true; // not certain
+            try {
+                XmlPullParser parser = client.createXmlPullParser(source);
+                if (parser != null && hasLayoutParams(parser)) {
+                    return true;
                 }
+            } catch (XmlPullParserException | IOException e) {
+                context.log(e, "Could not read/parse inflated layout");
+                return true; // not certain
             }
         }
 
@@ -229,12 +218,8 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
     }
 
     @VisibleForTesting
-    static boolean hasLayoutParams(@NonNull Reader reader)
+    static boolean hasLayoutParams(@NonNull XmlPullParser parser)
             throws XmlPullParserException, IOException {
-        KXmlParser parser = new KXmlParser();
-        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-        parser.setInput(reader);
-
         while (true) {
             int event = parser.next();
             if (event == XmlPullParser.START_TAG) {

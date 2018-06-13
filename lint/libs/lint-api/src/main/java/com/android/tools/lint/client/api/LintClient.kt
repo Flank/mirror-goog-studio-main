@@ -33,6 +33,7 @@ import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.resources.AbstractResourceRepository
 import com.android.ide.common.resources.ResourceItem
+import com.android.ide.common.util.PathString
 import com.android.manifmerger.Actions
 import com.android.prefs.AndroidLocation
 import com.android.repository.api.ProgressIndicator
@@ -61,15 +62,20 @@ import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.google.common.io.Files
 import com.intellij.openapi.util.Computable
+import org.kxml2.io.KXmlParser
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.xmlpull.v1.XmlPullParser
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLClassLoader
 import java.net.URLConnection
+import java.nio.charset.StandardCharsets
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.function.Predicate
@@ -90,7 +96,6 @@ abstract class LintClient {
     }
 
     protected constructor() {
-
         clientName = "unknown"
     }
 
@@ -237,7 +242,21 @@ abstract class LintClient {
      *             read for some reason
      */
     @Throws(IOException::class)
-    open fun readBytes(file: File): ByteArray = Files.toByteArray(file)
+    open fun readBytes(file: File): ByteArray = file.readBytes()
+
+    /**
+     * Reads and returns the contents of a file resource.
+     *
+     * @param resourcePath the path to a file
+     *
+     * @return the contents of the file resource
+     *
+     * @throws FileNotFoundException if the resource doesn't exist
+     * @throws IOException in case of an I/O error
+     */
+    @Throws(IOException::class)
+    open fun readBytes(resourcePath: PathString): ByteArray =
+        resourcePath.toFile()?.readBytes() ?: throw FileNotFoundException(resourcePath.toString())
 
     /**
      * Returns the list of source folders for Java source files
@@ -1497,6 +1516,22 @@ abstract class LintClient {
             resourceVisibilityProvider = ResourceVisibilityLookup.Provider()
         }
         return resourceVisibilityProvider!!
+    }
+
+    /**
+     * Creates a [XmlPullParser] for the given XML file resource.
+     *
+     * @param resourcePath the path to a file
+     *
+     * @return the parser for the resource, or null if the resource does not exist.
+     */
+    @Throws(IOException::class)
+    open fun createXmlPullParser(resourcePath: PathString): XmlPullParser? {
+        val bytes = try { readBytes(resourcePath) } catch (e: FileNotFoundException) { return null }
+        val parser = KXmlParser()
+        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+        parser.setInput(ByteArrayInputStream(bytes), StandardCharsets.UTF_8.name())
+        return parser
     }
 
     /** Returns the version number of this lint client, if known  */

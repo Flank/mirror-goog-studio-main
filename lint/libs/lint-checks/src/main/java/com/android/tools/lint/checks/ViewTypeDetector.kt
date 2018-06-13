@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
@@ -32,6 +31,7 @@ import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.SdkConstants.VIEW_MERGE
 import com.android.SdkConstants.VIEW_TAG
 import com.android.ide.common.resources.ResourceItem
+import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.tools.lint.detector.api.Category
@@ -51,13 +51,9 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.skipParentheses
 import com.android.tools.lint.detector.api.stripIdPrefix
-import com.android.utils.CharSequences
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
-import com.google.common.collect.Sets
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.pom.java.LanguageLevel.JDK_1_7
 import com.intellij.pom.java.LanguageLevel.JDK_1_8
@@ -72,13 +68,10 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UVariable
-import org.kxml2.io.KXmlParser
 import org.w3c.dom.Attr
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.File
 import java.io.IOException
-import java.io.Reader
 import java.util.ArrayList
 import java.util.Arrays
 import java.util.EnumSet
@@ -91,7 +84,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
     private val idToViewTag = HashMap<String, Any>(50)
 
-    private var fileIdMap: MutableMap<File, Multimap<String, String>>? = null
+    private var fileIdMap: MutableMap<PathString, Multimap<String, String>>? = null
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
         return folderType == ResourceFolderType.LAYOUT
@@ -267,7 +260,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
                     val items = resources.getResourceItem(ResourceType.ID, id)
                     if (items != null && !items.isEmpty()) {
-                        val compatible = Sets.newHashSet<String>()
+                        val compatible = HashSet<String>()
                         for (item in items) {
                             val tags = getViewTags(context, item)
                             if (tags != null) {
@@ -275,7 +268,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                             }
                         }
                         if (!compatible.isEmpty()) {
-                            val layoutTypes = Lists.newArrayList(compatible)
+                            val layoutTypes = ArrayList(compatible)
                             checkCompatible(
                                 context,
                                 castType,
@@ -383,23 +376,17 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
     protected open fun getViewTags(context: Context, item: ResourceItem): Collection<String>? {
         // Check view tag in this file.
-        val source = item.source?.toFile()
-        if (source != null) {
-            val map = getIdToTagsIn(context, source) // This is cached
-            if (map != null) {
-                return map.get(item.name)
-            }
-        }
-
-        return null
+        val source = item.source ?: return null
+        val map = getIdToTagsIn(context, source) ?: return null // This is cached
+        return map.get(item.name)
     }
 
-    private fun getIdToTagsIn(context: Context, file: File): Multimap<String, String>? {
-        if (!file.path.endsWith(DOT_XML)) {
+    private fun getIdToTagsIn(context: Context, file: PathString): Multimap<String, String>? {
+        if (!file.fileName.endsWith(DOT_XML)) {
             return null
         }
         val fileIdMap = fileIdMap ?: run {
-            val list = Maps.newHashMap<File, Multimap<String, String>>()
+            val list = HashMap<PathString, Multimap<String, String>>()
             fileIdMap = list
             list
         }
@@ -407,24 +394,23 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         if (map == null) {
             map = ArrayListMultimap.create()
             fileIdMap[file] = map
-
-            val contents = context.client.readFile(file)
             try {
-                addTags(CharSequences.getReader(contents, true), map)
-            } catch (ignore: XmlPullParserException) {
+                val parser = context.client.createXmlPullParser(file)
+                if (parser != null) {
+                    addTags(parser, map)
+                }
+            }
+            catch (ignore: XmlPullParserException) {
                 // Users might be editing these files in the IDE; don't flag
-            } catch (ignore: IOException) {
+            }
+            catch (ignore: IOException) {
                 // Users might be editing these files in the IDE; don't flag
             }
         }
         return map
     }
 
-    private fun addTags(reader: Reader, map: Multimap<String, String>) {
-        val parser = KXmlParser()
-        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
-        parser.setInput(reader)
-
+    private fun addTags(parser: XmlPullParser, map: Multimap<String, String>) {
         while (true) {
             val event = parser.next()
             if (event == XmlPullParser.START_TAG) {
