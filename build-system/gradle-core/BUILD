@@ -1,12 +1,6 @@
-load("//tools/base/bazel:antlr.bzl", "antlr_sources")
 load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-
-antlr_sources(
-    name = "proguard-parser",
-    srcs = glob(["src/main/antlr/**"]),
-)
 
 fileset(
     name = "resources",
@@ -35,7 +29,6 @@ kotlin_library(
     bundled_deps = [
         "//tools/base/build-system/instant-run-instrumentation",
     ],
-    java_srcs = [":proguard-parser"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
@@ -71,7 +64,6 @@ kotlin_library(
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
         "//tools/base/third_party:net.sf.proguard_proguard-gradle",
-        "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
         "//tools/base/third_party:org.apache.httpcomponents_httpmime",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
@@ -159,7 +151,6 @@ kotlin_test(
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
-        "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jacoco_org.jacoco.core",
         "//tools/base/third_party:org.jacoco_org.jacoco.report",

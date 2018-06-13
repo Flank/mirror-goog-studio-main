@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.tasks.MergeResources;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import groovy.util.Eval;
@@ -42,15 +41,9 @@ import org.junit.rules.TemporaryFolder;
 /** Tests for the public DSL of the App plugin ("com.android.application") */
 public class AppPluginDslTest {
     public static final String PROGUARD_DEBUG = "transformClassesAndResourcesWithProguardForDebug";
-    public static final String SHRINKER_DEBUG =
-            "transformClassesWithAndroidGradleClassShrinkerForDebug";
     public static final String R8_DEBUG = "transformClassesAndResourcesWithR8ForDebug";
     public static final String PROGUARD_DEBUG_ANDROID_TEST =
             "transformClassesAndResourcesWithProguardForDebugAndroidTest";
-    public static final String SHRINKER_DEBUG_ANDROID_TEST =
-            "transformClassesWithAndroidGradleClassShrinkerForDebugAndroidTest";
-    public static final String SHRINKER_RELEASE =
-            "transformClassesWithAndroidGradleClassShrinkerForRelease";
     public static final String PROGUARD_RELEASE =
             "transformClassesAndResourcesWithProguardForRelease";
     public static final String R8_RELEASE = "transformClassesAndResourcesWithR8ForRelease";
@@ -208,48 +201,6 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testPostprocessingBlock_builtInShrinker() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("release").getPostprocessing();
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setCodeShrinker("android_gradle");
-
-        assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).contains(SHRINKER_RELEASE);
-    }
-
-    @Test
-    public void testPostprocessingBlock_builtInShrinker_dontshrink() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("release").getPostprocessing();
-        postprocessing.setCodeShrinker("android_gradle");
-        assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_RELEASE);
-    }
-
-    @Test
-    public void testPostprocessingBlock_builtInShrinker_shrinkAndObfuscate() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("release").getPostprocessing();
-        postprocessing.setCodeShrinker("android_gradle");
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setObfuscate(true); // This is set to true, but won't happen.
-
-        try {
-            plugin.createAndroidTasks();
-            fail();
-        } catch (EvalIssueException e) {
-            assertThat(e.getMessage()).contains("obfuscating");
-        }
-    }
-
-    @Test
     public void testPostprocessingBlock_r8_noFeatures() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("r8");
@@ -273,7 +224,7 @@ public class AppPluginDslTest {
     @Test
     public void testPostprocessingBlock_mixingDsls_newOld() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
-        release.getPostprocessing().setCodeShrinker("android_gradle");
+        release.getPostprocessing().setCodeShrinker("proguard");
 
         try {
             release.setMinifyEnabled(true);
@@ -293,51 +244,6 @@ public class AppPluginDslTest {
             fail();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("setMinifyEnabled");
-        }
-    }
-
-    @Test
-    public void testPostprocessingBlock_validating() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("release").getPostprocessing();
-        postprocessing.setCodeShrinker("android_gradle");
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setObfuscate(true);
-
-        try {
-            plugin.createAndroidTasks();
-            fail();
-        } catch (Exception e) {
-            assertThat(e.getMessage()).contains("does not support obfuscating");
-        }
-    }
-
-    @Test
-    public void testPostprocessingBlock_resourceShrinker() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("release").getPostprocessing();
-        postprocessing.setCodeShrinker("android_gradle");
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setRemoveUnusedResources(true);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames())
-                .containsAllOf(SHRINKER_RELEASE, "transformClassesAndDexWithShrinkResForRelease");
-    }
-
-    @Test
-    public void testPostprocessingBlock_noCodeShrinking() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("release").getPostprocessing();
-        postprocessing.setCodeShrinker("android_gradle");
-        postprocessing.setRemoveUnusedCode(false);
-        postprocessing.setRemoveUnusedResources(true);
-
-        try {
-            plugin.createAndroidTasks();
-        } catch (Exception e) {
-            assertThat(e.getMessage()).contains("requires unused code shrinking");
         }
     }
 
@@ -409,7 +315,6 @@ public class AppPluginDslTest {
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -425,8 +330,7 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
+        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
     }
 
     @Test
@@ -444,7 +348,6 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
         assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
     }
 
@@ -463,7 +366,6 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
     }
 
@@ -485,7 +387,6 @@ public class AppPluginDslTest {
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -509,7 +410,6 @@ public class AppPluginDslTest {
 
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -534,8 +434,6 @@ public class AppPluginDslTest {
         // If the user insists on ProGuard, they get a warning a no shrinking at all.
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -545,8 +443,6 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -581,19 +477,6 @@ public class AppPluginDslTest {
 
         assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
         assertThat(project.getTasks().getNames()).contains(R8_DEBUG_ANDROID_TEST);
-    }
-
-    @Test
-    public void testApkShrinker_newDsl_builtInShrinker() throws Exception {
-        PostprocessingOptions postprocessing =
-                android.getBuildTypes().getByName("debug").getPostprocessing();
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setCodeShrinker("android_gradle");
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG_ANDROID_TEST);
     }
 
     @Test

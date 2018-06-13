@@ -21,9 +21,6 @@ import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.ProguardFiles.ProguardFile;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.shrinker.ProguardConfig;
-import com.android.build.gradle.shrinker.parser.ProguardFlags;
-import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -32,11 +29,8 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CheckProguardFiles extends DefaultTask {
-    private static final Logger logger = LoggerFactory.getLogger(CheckProguardFiles.class);
 
     private List<File> proguardFiles;
 
@@ -44,8 +38,6 @@ public class CheckProguardFiles extends DefaultTask {
     public void run() {
         // Below we assume new postprocessing DSL is used, since otherwise TaskManager does not
         // create this task.
-
-        ProguardConfig proguardConfig = new ProguardConfig();
 
         Map<File, ProguardFile> oldFiles = new HashMap<>();
         oldFiles.put(
@@ -66,22 +58,6 @@ public class CheckProguardFiles extends DefaultTask {
                                 + " should not be used together with the new postprocessing DSL. "
                                 + "The new DSL includes sensible settings by default, you can override this "
                                 + "using `postprocessing { proguardFiles = []}`");
-            }
-
-            try {
-                proguardConfig.parse(file, UnsupportedFlagsHandler.NO_OP);
-            } catch (Exception e) {
-                // Don't break the build, but leave some trace of what happened.
-                logger.info("Failed to parse " + file.getAbsolutePath(), e);
-                continue;
-            }
-
-            ProguardFlags flags = proguardConfig.getFlags();
-            if (flags.isDontShrink() || flags.isDontOptimize() || flags.isDontObfuscate()) {
-                throw new InvalidUserDataException(
-                        file.getAbsolutePath()
-                                + ": When postprocessing features are configured in the DSL, "
-                                + "corresponding flags (e.g. -dontobfuscate) cannot be used.");
             }
         }
     }

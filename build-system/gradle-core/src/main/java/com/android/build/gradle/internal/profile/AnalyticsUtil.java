@@ -201,8 +201,6 @@ public class AnalyticsUtil {
         switch (codeShrinker) {
             case PROGUARD:
                 return GradleBuildVariant.CodeShrinkerTool.PROGUARD;
-            case ANDROID_GRADLE:
-                return GradleBuildVariant.CodeShrinkerTool.ANDROID_GRADLE_SHRINKER;
             case R8:
                 return GradleBuildVariant.CodeShrinkerTool.R8;
         }

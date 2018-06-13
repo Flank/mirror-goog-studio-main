@@ -126,7 +126,6 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDepen
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
-import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.D8MainDexListTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
@@ -3013,8 +3012,7 @@ public abstract class TaskManager {
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
         Optional<TransformTask> transformTask;
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                && codeShrinker != CodeShrinker.ANDROID_GRADLE) {
+        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
             logger.warn(
                     "{} is disabled for variant {} because it is not compatible with Instant Run. "
                             + "See http://d.android.com/r/studio-ui/shrink-code-with-ir.html "
@@ -3030,9 +3028,6 @@ public abstract class TaskManager {
             case PROGUARD:
                 transformTask = createProguardTransform(variantScope, mappingFileCollection);
                 break;
-            case ANDROID_GRADLE:
-                transformTask = createBuiltInShrinkerTransform(variantScope);
-                break;
             case R8:
                 if (variantScope.getVariantConfiguration().getType().isAar()) {
                     // R8 class backend is not fully supported yet
@@ -3045,30 +3040,14 @@ public abstract class TaskManager {
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
         }
-
         if (variantScope.getPostprocessingFeatures() != null && transformTask.isPresent()) {
             CheckProguardFiles checkFilesTask =
                     taskFactory.create(new CheckProguardFiles.ConfigAction(variantScope));
 
             transformTask.get().dependsOn(checkFilesTask);
         }
+
         return createdShrinker;
-    }
-
-    @NonNull
-    private Optional<TransformTask> createBuiltInShrinkerTransform(@NonNull VariantScope scope) {
-        BuiltInShrinkerTransform transform = new BuiltInShrinkerTransform(scope);
-        applyProguardConfigForNonTest(transform, scope);
-
-        if (scope.getInstantRunBuildContext().isInInstantRunMode()) {
-            //TODO: This is currently overly broad, as finding the actual application class
-            //      requires manually parsing the manifest, see
-            //      aapt -D (getMainDexListProguardOutputFile)
-            transform.keep("class ** extends android.app.Application {*;}");
-            transform.keep("class com.android.tools.ir.** {*;}");
-        }
-
-        return scope.getTransformManager().addTransform(taskFactory, scope, transform);
     }
 
     @NonNull

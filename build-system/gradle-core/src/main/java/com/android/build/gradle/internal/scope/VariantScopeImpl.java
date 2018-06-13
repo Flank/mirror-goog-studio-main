@@ -35,7 +35,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
-import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
@@ -158,8 +157,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable private Collection<File> ndkSoFolder;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
-    @Nullable private CodeShrinker defaultCodeShrinker;
-
     @NonNull private BuildArtifactsHolder buildArtifactsHolder;
 
     private final MutableTaskContainer taskContainer = new MutableTaskContainer();
@@ -198,35 +195,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         getFullVariantName(),
                         globalScope.getBuildDir(),
                         globalScope.getDslScope());
-
-        validatePostprocessingOptions();
-    }
-
-    private void validatePostprocessingOptions() {
-        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
-        if (postprocessingOptions == null) {
-            return;
-        }
-
-        if (postprocessingOptions.getCodeShrinkerEnum() == ANDROID_GRADLE) {
-            if (postprocessingOptions.isObfuscate()) {
-                globalScope
-                        .getErrorHandler()
-                        .reportError(
-                                Type.GENERIC,
-                                new EvalIssueException(
-                                        "The 'android-gradle' code shrinker does not support obfuscating."));
-            }
-
-            if (postprocessingOptions.isOptimizeCode()) {
-                globalScope
-                        .getErrorHandler()
-                        .reportError(
-                                Type.GENERIC,
-                                new EvalIssueException(
-                                        "The 'android-gradle' code shrinker does not support optimizing code."));
-            }
-        }
     }
 
     protected Project getProject() {
@@ -351,7 +319,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean useResourceShrinker() {
-        if (variantData.getType().isForTesting()) {
+        if (variantData.getType().isForTesting()
+                || getInstantRunBuildContext().isInInstantRunMode()) {
             return false;
         }
 
@@ -506,12 +475,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     } else {
                         // For testing code, we only run ProGuard/R8 if main code is obfuscated.
                         return postprocessingOptions.isObfuscate() ? chosenShrinker : null;
-                    }
-                case ANDROID_GRADLE:
-                    if (isTestComponent) {
-                        return null;
-                    } else {
-                        return postprocessingOptions.isRemoveUnusedCode() ? ANDROID_GRADLE : null;
                     }
                 default:
                     throw new AssertionError("Unknown value " + chosenShrinker);

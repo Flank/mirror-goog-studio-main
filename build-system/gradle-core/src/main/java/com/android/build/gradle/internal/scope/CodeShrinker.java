@@ -18,6 +18,5 @@ package com.android.build.gradle.internal.scope;
 
 public enum CodeShrinker {
     PROGUARD,
-    ANDROID_GRADLE,
     R8,
 }

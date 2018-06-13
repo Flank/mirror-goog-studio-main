@@ -137,23 +137,6 @@ public class PostprocessingTest {
     }
 
     @Test
-    public void configFilesValidation() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.buildTypes.release.postprocessing {\n"
-                        + "removeUnusedCode true\n"
-                        + "proguardFile 'proguard-rules.pro'\n"
-                        + "}\n");
-
-        Files.write("-dontshrink", project.file("proguard-rules.pro"), StandardCharsets.UTF_8);
-
-        GradleBuildResult result = project.executor().expectFailure().run("assembleRelease");
-
-        assertThat(result.getFailureMessage())
-                .contains("postprocessing features are configured in the DSL");
-    }
-
-    @Test
     public void configFilesValidation_oldDefaults() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
