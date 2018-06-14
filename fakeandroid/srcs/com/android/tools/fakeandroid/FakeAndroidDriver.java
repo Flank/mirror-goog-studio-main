@@ -85,7 +85,7 @@ public class FakeAndroidDriver extends ProcessRunner {
                             + debuggerPort);
         }
 
-        args.add("com.android.tools.profiler.FakeAndroid");
+        args.add("com.android.tools.applauncher.FakeAndroid");
 
         this.myAddress = address;
         myProcessArgs = args.toArray(new String[args.size()]);

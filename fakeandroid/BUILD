@@ -27,3 +27,35 @@ dex_library(
     jars = ["android-mock"],
     visibility = ["//visibility:public"],
 )
+
+sh_binary(
+    name = "art-runner",
+    srcs = ["//prebuilts/tools/linux-x86_64/art"],
+    data = select({
+        "//tools/base/bazel:darwin": [],
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [
+            ":android-mock-dex",
+            ":app-launcher-dex",
+            "//prebuilts/tools/linux-x86_64/art:art_deps",
+            "//prebuilts/tools/linux-x86_64/art:dex2oat",
+        ],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+dex_library(
+    name = "app-launcher-dex",
+    jars = [":app-launcher_deploy.jar"],
+    output = "app-launcher.dex",
+    visibility = ["//visibility:public"],
+)
+
+java_binary(
+    name = "app-launcher",
+    srcs = ["srcs/com/android/tools/applauncher/FakeAndroid.java"],
+    main_class = "com.android.tools.applauncher.FakeAndroid",
+    deps = [
+        ":android-mock",
+    ],
+)

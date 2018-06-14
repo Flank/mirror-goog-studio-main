@@ -1,5 +1,5 @@
-load("//tools/base/profiler:perf_test.bzl", "perf_test")
 load("//tools/base/bazel:android.bzl", "dex_library")
+load("//tools/base/fakeandroid:fakeandroid.bzl", "fake_android_test")
 
 package(default_testonly = True)
 
@@ -9,13 +9,15 @@ java_library(
     deps = ["//tools/base/bazel:langtools"],
 )
 
-perf_test(
+fake_android_test(
     name = "BasicTest",
     srcs = glob(["src/test/com/android/tools/deploy/swapper/*Test.java"]),
+    data = [":test-app"],
+    jvm_flags = ["-Dapp.dex.location=$(location :test-app)"],
     tags = ["no_test_foundry"],  # b/73948555
-    test_app = ":test-app",
     deps = [
         ":libhotswap",
+        ":test-app",
         "//tools/base/bazel:langtools",
         "//tools/base/fakeandroid",
         "//tools/idea/.idea/libraries:JUnit4",

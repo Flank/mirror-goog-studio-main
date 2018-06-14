@@ -5,27 +5,6 @@ package(
     default_testonly = True,
 )
 
-sh_binary(
-    name = "art-runner",
-    srcs = ["//prebuilts/tools/linux-x86_64/art"],
-    data = select({
-        "//tools/base/bazel:darwin": [],
-        "//tools/base/bazel:windows": [],
-        "//conditions:default": [
-            ":profiler-service",
-            "//prebuilts/tools/linux-x86_64/art:art_deps",
-            "//prebuilts/tools/linux-x86_64/art:dex2oat",
-            "//tools/base/profiler/app:perfa",
-            "//tools/base/profiler/app:perfa_java",
-            "//tools/base/profiler/app:perfa_okhttp",
-            "//tools/base/profiler/native/perfa:libperfa.so",
-            "//tools/base/fakeandroid:android-mock-dex",
-            "//tools/base/profiler/tests/app-launcher:app-launcher-dex",
-        ],
-    }),
-    visibility = ["//visibility:public"],
-)
-
 # TODO: Have transform pull in dependency jar files, so we do not need to load multiple
 # jar dependencies at runtime.
 java_binary(
@@ -35,7 +14,6 @@ java_binary(
     ],
     main_class = "com.android.tools.profiler.transform.ProfilerTransformMain",
     resources = ["profiler.properties"],
-    visibility = ["//visibility:public"],
     runtime_deps = ["//tools/base/profiler/transform"],
     deps = [
         "//tools/base/profiler/transform",
@@ -46,13 +24,11 @@ java_binary(
 dex_library(
     name = "profiler-service",
     jars = ["//tools/base/profiler/app:studio-profiler"],
-    visibility = ["//visibility:public"],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["**/*.java"]),
-    visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",

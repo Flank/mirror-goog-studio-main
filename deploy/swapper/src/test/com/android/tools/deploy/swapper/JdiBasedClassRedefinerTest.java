@@ -72,11 +72,7 @@ public class JdiBasedClassRedefinerTest {
                 new JdiBasedClassRedefiner(
                         JdiBasedClassRedefiner.attach("localhost", debuggerPort));
         android.start();
-
-        // TODO(acleung): We should not need to trigger the profiler instrumentation. This
-        // will be changed when perf_test gen_rule is refactored.
-        android.loadDex(ProcessRunner.getProcessPath("profiler.service.location"));
-        android.loadDex(ProcessRunner.getProcessPath("instrumented.app.dex.location"));
+        android.loadDex(ProcessRunner.getProcessPath("app.dex.location"));
         android.launchActivity(ACTIVITY_CLASS);
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");

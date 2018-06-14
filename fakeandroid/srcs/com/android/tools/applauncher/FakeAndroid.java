@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler;
+package com.android.tools.applauncher;
 
 import android.app.Activity;
 import android.app.ActivityThread;
