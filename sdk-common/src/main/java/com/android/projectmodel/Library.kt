@@ -84,9 +84,9 @@ data class AarLibrary(
 data class JavaLibrary(
     override val address: String,
     /**
-     * Path to the file or folder corresponding to this dependency.
+     * Path to .jar file containing the library classes.
      */
-    val location: PathString
+    val classesJar: PathString
 ) : Library()
 
 /**
