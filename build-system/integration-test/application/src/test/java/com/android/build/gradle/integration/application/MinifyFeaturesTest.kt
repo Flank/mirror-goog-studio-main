@@ -65,7 +65,7 @@ class MinifyFeaturesTest(
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters(name = "codeShrinker {0}, {1}, dexArchive {2}")
+        @Parameterized.Parameters(name = "codeShrinker {0}, {1}")
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
                 arrayOf(CodeShrinker.PROGUARD, MultiApkMode.DYNAMIC_APP),
