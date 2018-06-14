@@ -12,6 +12,11 @@ iml_module(
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
+    exports = [
+        "//tools/base/lint:studio.android.sdktools.lint-api",
+        "//tools/base/lint:studio.android.sdktools.lint-checks",
+    ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
@@ -26,8 +31,8 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/base/lint:studio.android.sdktools.lint-api",
-        "//tools/base/lint:studio.android.sdktools.lint-checks",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
     ],
 )
