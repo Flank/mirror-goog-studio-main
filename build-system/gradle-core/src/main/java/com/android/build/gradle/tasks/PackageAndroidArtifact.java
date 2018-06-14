@@ -27,7 +27,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -230,10 +229,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return projectBaseName;
     }
 
-    protected File aaptIntermediateFolder;
-
-    protected AaptGeneration aaptGeneration;
-
     protected FileCache fileCache;
 
     protected BuildableArtifact apkList;
@@ -381,11 +376,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
 
     protected abstract InternalArtifactType getInternalArtifactType();
-
-    @Input
-    public String getAaptGeneration() {
-        return aaptGeneration.name();
-    }
 
     @NonNull
     static Set<File> getAndroidResources(@Nullable File processedResources) {
@@ -948,10 +938,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     TaskInputHelper.memoize(variantScope::getMinSdkVersion);
             packageAndroidArtifact.instantRunContext =
                     TaskInputHelper.memoize(variantScope::getInstantRunBuildContext);
-            packageAndroidArtifact.aaptIntermediateFolder =
-                    new File(
-                            variantScope.getIncrementalDir(packageAndroidArtifact.getName()),
-                            "aapt-temp");
 
             packageAndroidArtifact.resourceFiles =
                     variantScope.getArtifacts().getFinalArtifactFiles(inputResourceFilesType);
@@ -984,8 +970,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
-            packageAndroidArtifact.aaptGeneration =
-                    AaptGeneration.fromProjectOptions(projectOptions);
             packageAndroidArtifact.buildTargetAbi =
                     globalScope.getExtension().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)

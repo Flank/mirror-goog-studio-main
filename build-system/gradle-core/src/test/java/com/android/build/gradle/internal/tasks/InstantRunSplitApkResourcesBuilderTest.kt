@@ -132,6 +132,7 @@ class InstantRunSplitApkResourcesBuilderTest {
             InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES,
             task)).thenReturn(temporaryFolder.newFolder())
         Mockito.`when`(resources.get()).thenReturn(project.files())
+        Mockito.`when`(globalScope.project).thenReturn(project)
 
         configAction.execute(task)
 

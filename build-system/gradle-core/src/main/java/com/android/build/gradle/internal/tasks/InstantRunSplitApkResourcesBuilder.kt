@@ -20,12 +20,11 @@ import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus
-import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
+import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
 import com.android.build.gradle.internal.res.namespaced.getAaptPoolSize
@@ -97,10 +96,6 @@ open class InstantRunSplitApkResourcesBuilder
     @get:Input
     val aaptVersion: String
         get() = builder.buildToolInfo.revision.toString()
-
-    @get:Input
-    lateinit var aaptGeneration: String
-        private set
 
     @get:Input
     private val maxSlices = DexArchiveBuilderTransform.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES - 1
@@ -272,9 +267,7 @@ open class InstantRunSplitApkResourcesBuilder
                 InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES,
                 task)
 
-            task.aapt2FromMaven = getAapt2FromMavenIfEnabled(globalScope)
-            task.aaptGeneration = AaptGeneration.fromProjectOptions(
-                globalScope.projectOptions).toString()
+            task.aapt2FromMaven = getAapt2FromMaven(globalScope)
             task.applicationId = variantScope.variantConfiguration.applicationId
 
             task.setAndroidBuilder(globalScope.androidBuilder)

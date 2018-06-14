@@ -26,8 +26,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -48,10 +46,8 @@ import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.build.ApkData;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
@@ -96,7 +92,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     // should be considered out of date.
     private Supplier<String> versionName;
     private IntSupplier versionCode;
-    private AaptGeneration aaptGeneration;
 
     private Set<String> splits;
     private File outputDirectory;
@@ -123,11 +118,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     @Optional
     public String getVersionName() {
         return versionName.get();
-    }
-
-    @Input
-    public String getAaptGeneration() {
-        return aaptGeneration.name();
     }
 
     @Input
@@ -210,20 +200,13 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                                 .setVariantType(variantType)
                                 .setAndroidTarget(builder.getTarget())
                                 .build();
-                if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-                    Aapt2ServiceKey aapt2ServiceKey =
-                            Aapt2DaemonManagerService.registerAaptService(
-                                    aapt2FromMaven,
-                                    builder.getBuildToolInfo(),
-                                    builder.getLogger());
-                    Aapt2ProcessResourcesRunnable.Params params =
-                            new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
-                    workerExecutor.submit(Aapt2ProcessResourcesRunnable.class, params);
-                } else {
-                    try (Aapt aapt = makeAapt(builder)) {
-                        AndroidBuilder.processResources(aapt, aaptConfig, builder.getLogger());
-                    }
-                }
+
+                Aapt2ServiceKey aapt2ServiceKey =
+                        Aapt2DaemonManagerService.registerAaptService(
+                                aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
+                Aapt2ProcessResourcesRunnable.Params params =
+                        new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
+                workerExecutor.submit(Aapt2ProcessResourcesRunnable.class, params);
 
                 buildOutputs.add(
                         new BuildOutput(
@@ -233,15 +216,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             }
         }
         new BuildElements(buildOutputs.build()).save(outputDirectory);
-    }
-
-    @NonNull
-    private Aapt makeAapt(@NonNull AndroidBuilder builder) {
-        return AaptGradleFactory.make(
-                aaptGeneration,
-                builder,
-                new LoggedProcessOutputHandler(
-                        new AaptGradleFactory.FilteringLogger(builder.getLogger())));
     }
 
     @VisibleForTesting
@@ -369,8 +343,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             // not used directly, but considered as input for the task.
             generateSplitAbiRes.versionCode = config::getVersionCode;
             generateSplitAbiRes.versionName = config::getVersionName;
-            generateSplitAbiRes.aaptGeneration =
-                    AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
 
             generateSplitAbiRes.variantScope = scope;
             generateSplitAbiRes.variantType = variantType;
@@ -388,7 +360,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                     scope.getGlobalScope().getExtension().getAaptOptions();
             generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
             generateSplitAbiRes.aapt2FromMaven =
-                    Aapt2MavenUtils.getAapt2FromMavenIfEnabled(scope.getGlobalScope());
+                    Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
 
             // if BASE_FEATURE get the app ID from the app module
             if (variantType.isBaseModule() && variantType.isHybrid()) {

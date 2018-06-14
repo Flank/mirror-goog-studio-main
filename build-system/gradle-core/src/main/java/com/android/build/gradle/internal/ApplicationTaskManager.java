@@ -26,7 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -293,10 +292,9 @@ public class ApplicationTaskManager extends TaskManager {
                         project,
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
-                        Aapt2MavenUtils.getAapt2FromMavenIfEnabled(globalScope),
+                        Aapt2MavenUtils.getAapt2FromMaven(globalScope),
                         variantScope.getVariantConfiguration()::getApplicationId,
                         variantScope.getVariantConfiguration().getSigningConfig(),
-                        AaptGeneration.fromProjectOptions(projectOptions),
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "dep"),
                         new File(
@@ -324,10 +322,9 @@ public class ApplicationTaskManager extends TaskManager {
                         project,
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
-                        Aapt2MavenUtils.getAapt2FromMavenIfEnabled(globalScope),
+                        Aapt2MavenUtils.getAapt2FromMaven(globalScope),
                         variantScope.getVariantConfiguration()::getApplicationId,
                         variantScope.getVariantConfiguration().getSigningConfig(),
-                        AaptGeneration.fromProjectOptions(projectOptions),
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),

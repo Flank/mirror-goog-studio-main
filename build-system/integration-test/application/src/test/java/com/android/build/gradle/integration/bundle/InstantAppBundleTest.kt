@@ -79,7 +79,6 @@ class InstantAppBundleTest {
     @Throws(IOException::class)
     fun `test model contains feature information`() {
         val rootBuildModelMap = project.model()
-            .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
             .fetchAndroidProjects()
             .rootBuildModelMap
 
@@ -272,7 +271,6 @@ class InstantAppBundleTest {
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
-            .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":base"] ?: fail("Failed to get sync model for :base module")
@@ -284,7 +282,6 @@ class InstantAppBundleTest {
     private fun getApkFromBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
-            .allowOptionWarning(BooleanOption.USE_AAPT2_FROM_MAVEN)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":base"] ?: fail("Failed to get sync model for :base module")

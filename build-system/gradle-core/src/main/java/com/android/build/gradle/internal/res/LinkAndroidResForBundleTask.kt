@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
@@ -65,11 +64,7 @@ import javax.inject.Inject
 open class LinkAndroidResForBundleTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
-    private var aaptGeneration: AaptGeneration? = null
     private val workers = Workers.getWorker(workerExecutor)
-
-    @Input
-    fun getAaptGenerationString() = aaptGeneration.toString()
 
     @get:Input
     var debuggable: Boolean = false
@@ -235,7 +230,6 @@ open class LinkAndroidResForBundleTask
                 .appendArtifact(InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                     processResources,
                     "bundled-res.ap_")
-            processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions)
 
             processResources.incrementalFolder = variantScope.getIncrementalDir(name)
 

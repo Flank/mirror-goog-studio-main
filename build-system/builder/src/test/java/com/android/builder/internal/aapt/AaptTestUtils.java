@@ -19,9 +19,7 @@ package com.android.builder.internal.aapt;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
-import com.android.testutils.TestResources;
 import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -78,39 +76,13 @@ public class AaptTestUtils {
     }
 
     /**
-     * Obtains a text file for testing.
-     *
-     * @param temporaryFolder the temporary folder where temporary files should be placed
-     * @return a test file in a {@code raw} folder
-     */
-    @NonNull
-    public static File getTestTxt(@NonNull TemporaryFolder temporaryFolder) throws Exception {
-        File raw = new File(temporaryFolder.getRoot(), "raw");
-        FileUtils.mkdirs(raw);
-        File txt = new File(raw, "abc.txt");
-        Files.write("text.txt", txt, Charsets.US_ASCII);
-        return txt;
-    }
-
-    /**
-     * Obtains a PNG that cannot be crunched for testing.
-     *
-     * @return a PNG
-     */
-    @NonNull
-    public static File getNinePatchTestPng() {
-        return TestResources.getFile("/testData/aapt/9patch.9.png");
-    }
-
-    /**
      * Obtains the temporary directory where output files should be placed.
      *
      * @param temporaryFolder the temporary folder where temporary files should be placed
      * @return the output directory
-     * @throws Exception failed to create the output directory
      */
     @NonNull
-    public static File getOutputDir(@NonNull TemporaryFolder temporaryFolder) throws Exception {
+    public static File getOutputDir(@NonNull TemporaryFolder temporaryFolder) {
         File outputDir = new File(temporaryFolder.getRoot(), "compile-output");
         if (!outputDir.isDirectory()) {
             assertTrue(outputDir.mkdirs());

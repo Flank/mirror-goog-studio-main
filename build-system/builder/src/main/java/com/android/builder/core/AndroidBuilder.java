@@ -16,8 +16,6 @@
 
 package com.android.builder.core;
 
-import static com.android.SdkConstants.DOT_CLASS;
-import static com.android.SdkConstants.DOT_DEX;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FD_RES_XML;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR;
@@ -49,12 +47,10 @@ import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfo;
-import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.android.ide.common.resources.FileStatus;
@@ -77,13 +73,11 @@ import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
-import com.android.utils.LineCollector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
@@ -91,15 +85,11 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * This is the main builder class. It is given all the data to process the build (such as {@link

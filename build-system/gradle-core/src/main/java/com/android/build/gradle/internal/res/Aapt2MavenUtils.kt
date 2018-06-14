@@ -24,7 +24,6 @@ package com.android.build.gradle.internal.res
 import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.Version
 import com.google.common.base.Strings
@@ -60,29 +59,9 @@ private object Aapt2Version {
             }
     }
 }
-/**
- * Returns a file collection, which will contain the directory with AAPT2 to be used.
- *
- * Returns null if aapt2 should be used from the SDK.
- *
- * On first invocation, creates a new configuration ([AAPT2_CONFIG_NAME]) that
- * references the AAPT2 binary for the current platform and registers the
- * artifact transform to unzip the archive. The file collection returned is
- * backed by the artifact view of the transformed dependency.
- *
- * Idempotent.
- */
-fun getAapt2FromMavenIfEnabled(globalScope: GlobalScope): FileCollection? {
-    if (!globalScope.projectOptions[BooleanOption.USE_AAPT2_FROM_MAVEN]) {
-        return null
-    }
-    return getAapt2FromMaven(globalScope)
-}
 
 /**
  * Returns a file collection, which will contain the directory with AAPT2 to be used.
- *
- * Ignores the feature flag [BooleanOption.USE_AAPT2_FROM_MAVEN]. Used for the namespaced pipeline.
  *
  * See [getAapt2FromMaven].
  *

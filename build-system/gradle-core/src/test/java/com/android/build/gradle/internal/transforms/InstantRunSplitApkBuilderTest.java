@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -118,7 +117,6 @@ public class InstantRunSplitApkBuilderTest {
                         null,
                         () -> "com.foo.test",
                         coreSigningConfig,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         instantRunFolder,
@@ -142,7 +140,7 @@ public class InstantRunSplitApkBuilderTest {
         Map<String, Object> parameterInputs = instantRunSliceSplitApkBuilder.getParameterInputs();
         assertThat(parameterInputs).containsEntry("applicationId", "com.foo.test");
         assertThat(parameterInputs).containsEntry("aaptVersion", "27.0.0");
-        assertThat(parameterInputs).hasSize(3);
+        assertThat(parameterInputs).hasSize(2);
     }
 
     @Test
@@ -247,7 +245,6 @@ public class InstantRunSplitApkBuilderTest {
                         null,
                         () -> "com.foo.test",
                         coreSigningConfig,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         instantRunFolder,

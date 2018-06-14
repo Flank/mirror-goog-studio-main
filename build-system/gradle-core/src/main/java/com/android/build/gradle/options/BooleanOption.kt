@@ -60,7 +60,6 @@ enum class BooleanOption(
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),
     CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies"),
-    USE_AAPT2_FROM_MAVEN("android.useAapt2FromMaven", true),
 
     /** Set to true to build native .so libraries only for the device it will be run on. */
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),

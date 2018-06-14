@@ -29,13 +29,11 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.utils.FileCache
 import com.android.ide.common.build.ApkInfo
 import com.android.utils.ILogger
-import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
@@ -78,6 +76,7 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var fileCache: FileCache
     @Mock private lateinit var dslScope: DslScope
     @Mock private lateinit var issueReporter: EvalIssueReporter
+    @Mock private lateinit var projectOptions: ProjectOptions
     private val outputScope = OutputScope()
 
     internal lateinit var project: Project
@@ -93,12 +92,8 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.fullVariantName).thenReturn("variantName")
         `when`(variantConfiguration.baseName).thenReturn("variantName")
         `when`(globalScope.buildCache).thenReturn(fileCache)
-        `when`(globalScope.projectOptions).thenReturn(
-            ProjectOptions(ImmutableMap.of<String, Any>(
-                BooleanOption.USE_AAPT2_FROM_MAVEN.propertyName, false
-            ))
-        )
         `when`(globalScope.project).thenReturn(project)
+        `when`(globalScope.projectOptions).thenReturn(projectOptions)
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)

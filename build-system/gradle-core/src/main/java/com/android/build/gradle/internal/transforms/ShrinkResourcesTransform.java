@@ -29,7 +29,6 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -100,7 +99,6 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final BuildableArtifact mergedManifests;
     @NonNull private final BuildableArtifact uncompressedResources;
 
-    @NonNull private final AaptGeneration aaptGeneration;
     @NonNull private final AaptOptions aaptOptions;
     @NonNull private final VariantType variantType;
     private final boolean isDebuggableBuildType;
@@ -112,7 +110,6 @@ public class ShrinkResourcesTransform extends Transform {
             @NonNull BaseVariantData variantData,
             @NonNull BuildableArtifact uncompressedResources,
             @NonNull File compressedResources,
-            @NonNull AaptGeneration aaptGeneration,
             @NonNull Logger logger) {
         VariantScope variantScope = variantData.getScope();
         GlobalScope globalScope = variantScope.getGlobalScope();
@@ -137,7 +134,6 @@ public class ShrinkResourcesTransform extends Transform {
                 artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
         this.uncompressedResources = uncompressedResources;
 
-        this.aaptGeneration = aaptGeneration;
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
         this.variantType = variantData.getType();
         this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
@@ -201,7 +197,6 @@ public class ShrinkResourcesTransform extends Transform {
     @Override
     public Map<String, Object> getParameterInputs() {
         Map<String, Object> params = Maps.newHashMapWithExpectedSize(7);
-        params.put("aaptGeneration", aaptGeneration.name());
         params.put(
                 "aaptOptions",
                 Joiner.on(";")

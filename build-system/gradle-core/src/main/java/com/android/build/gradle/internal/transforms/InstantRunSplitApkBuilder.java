@@ -25,8 +25,6 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -73,7 +71,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     protected final Project project;
     @NonNull protected final AndroidBuilder androidBuilder;
-    @NonNull private final AaptGeneration aaptGeneration;
     @Nullable private FileCollection aapt2FromMaven;
     @NonNull protected final InstantRunBuildContext buildContext;
     @NonNull
@@ -105,7 +102,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @Nullable FileCollection aapt2FromMaven,
             @NonNull Supplier<String> applicationIdSupplier,
             @Nullable CoreSigningConfig signingConf,
-            @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
@@ -120,7 +116,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         this.aapt2FromMaven = aapt2FromMaven;
         this.applicationIdSupplier = applicationIdSupplier;
         this.signingConf = signingConf;
-        this.aaptGeneration = aaptGeneration;
         this.aaptOptions = aaptOptions;
         this.outputDirectory = outputDirectory;
         this.supportDirectory = supportDirectory;
@@ -183,8 +178,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         .put("applicationId", applicationIdSupplier.get())
                         .put(
                                 "aaptVersion",
-                                androidBuilder.getBuildToolInfo().getRevision().toString())
-                        .put("aaptGeneration", aaptGeneration.name());
+                                androidBuilder.getBuildToolInfo().getRevision().toString());
         return builder.build();
     }
 
@@ -398,23 +392,20 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     }
 
     protected CloseableBlockingResourceLinker getLinker() {
-        return getLinker(aapt2FromMaven, aaptGeneration, androidBuilder);
+        return getLinker(aapt2FromMaven, androidBuilder);
     }
 
     @NonNull
     public static CloseableBlockingResourceLinker getLinker(
             @Nullable FileCollection aapt2FromMaven,
-            @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder androidBuilder) {
-        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-            Aapt2ServiceKey aapt2ServiceKey =
-                    Aapt2DaemonManagerService.registerAaptService(
-                            aapt2FromMaven,
-                            androidBuilder.getBuildToolInfo(),
-                            androidBuilder.getLogger());
-            return Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey);
-        }
-        return AaptGradleFactory.make(aaptGeneration, androidBuilder, null);
+        Aapt2ServiceKey aapt2ServiceKey =
+                Aapt2DaemonManagerService.registerAaptService(
+                        aapt2FromMaven,
+                        androidBuilder.getBuildToolInfo(),
+                        androidBuilder.getLogger());
+
+        return Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey);
     }
 
 }

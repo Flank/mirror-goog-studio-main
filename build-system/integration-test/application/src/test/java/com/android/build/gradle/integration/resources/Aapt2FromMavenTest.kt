@@ -19,19 +19,13 @@ package com.android.build.gradle.integration.resources
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.res.getAapt2FromMaven
-import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.StdLogger
-import com.google.common.collect.ImmutableMap
-import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
@@ -39,9 +33,6 @@ import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verifyZeroInteractions
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import kotlin.test.assertNotNull
@@ -52,26 +43,6 @@ class Aapt2FromMavenTest {
     @Rule
     @JvmField
     val temporaryFolder = TemporaryFolder()
-
-    /** Verify that nothing is done if using AAPT2 from maven is disabled. */
-    @Test
-    fun disabledByProjectOptions() {
-        val project = mock(Project::class.java)
-        val disabledOptions = ProjectOptions(
-            ImmutableMap.of<String, Any>(
-                BooleanOption.USE_AAPT2_FROM_MAVEN.propertyName,
-                false
-            )
-        )
-
-        val globalScope = mock(GlobalScope::class.java)
-        `when`(globalScope.projectOptions).thenReturn(disabledOptions)
-        `when`(globalScope.project).thenReturn(project)
-        assertThat(
-            getAapt2FromMavenIfEnabled(globalScope)
-        ).isNull()
-        verifyZeroInteractions(project)
-    }
 
     /** Verify that the the artifact provided by the [getAapt2FromMaven] method is usable. */
     @Test

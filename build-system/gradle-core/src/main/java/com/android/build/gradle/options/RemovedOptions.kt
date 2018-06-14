@@ -69,6 +69,11 @@ enum class RemovedOptions(
         "android.useDexArchive", "This property has no effect, incremental dexing is always used."),
     ENABLE_AAPT2(
             "android.enableAapt2", "This property has no effect, AAPT2 is now always used."),
+    USE_AAPT2_FROM_MAVEN(
+            "android.useAapt2FromMaven",
+            "This property has no effect and AAPT2 from maven.google.com is now always used. "
+                    + "If you wish to use a local executable of AAPT2 please use the "
+                    + "'android.aapt2FromMavenOverride' option."),
     ;
 
     override val status: Option.Status

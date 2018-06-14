@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.TaskFactory
-import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
-import com.google.common.base.Preconditions
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -52,7 +50,6 @@ class NamespacedResourcesTaskManager(
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
-        val aaptGeneration = AaptGeneration.fromProjectOptions(globalScope.projectOptions)
 
         // Process dependencies making sure everything we consume will be fully namespaced.
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {

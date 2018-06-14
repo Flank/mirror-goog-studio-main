@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -68,7 +67,6 @@ public class LibWithResourcesTest {
     public void checkInvalidResourcesWithAapt2SharedPool() throws Exception {
         // Build should be successful for release mode without invalid resources.
         project.executor()
-                .with(AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL)
                 .run("clean", "lib:assembleRelease");
 
         TestFileUtils.searchAndReplace(
@@ -79,13 +77,11 @@ public class LibWithResourcesTest {
 
         // Build should be successful for debug mode even if there are invalid references.
         project.executor()
-                .with(AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL)
                 .run("clean", "lib:assembleDebug");
 
         // Build should fail for release mode if there are invalid references.
         GradleBuildResult result =
                 project.executor()
-                        .with(AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL)
                         .expectFailure()
                         .run("clean", "lib:assembleRelease");
 
@@ -101,7 +97,6 @@ public class LibWithResourcesTest {
 
         // Again, build should be successful for release mode without invalid resources.
         project.executor()
-                .with(AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL)
                 .run("lib:assembleRelease");
     }
 }

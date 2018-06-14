@@ -16,12 +16,9 @@
 
 package com.android.build.gradle.tasks.ir
 
-import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
+import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
@@ -31,12 +28,10 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.internal.aapt.BlockingResourceLinker
-import com.android.builder.utils.FileCache
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -45,7 +40,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
-import java.util.stream.Collectors
 
 /**
  * Task to create the main APK resources.ap_ file. This file will only contain the merged
@@ -60,10 +54,6 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var resourceFiles: BuildableArtifact private set
-
-    private lateinit var aaptGeneration: AaptGeneration
-    @Input
-    fun getAaptGenerationString() = aaptGeneration.toString()
 
     @get:OutputDirectory
     lateinit var outputDirectory: File private set
@@ -96,9 +86,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
         }
 
         return try {
-            InstantRunSplitApkBuilder.getLinker(
-                aapt2FromMaven, aaptGeneration, builder
-            ).use { aapt ->
+            InstantRunSplitApkBuilder.getLinker(aapt2FromMaven, builder).use { aapt ->
                 processSplit(manifestFile, aapt)
             }
         } catch (e: InterruptedException) {
@@ -141,9 +129,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
                 .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS)
             task.outputDirectory =
                     artifacts.appendArtifact(INSTANT_RUN_MAIN_APK_RESOURCES, task, "out")
-            task.aaptGeneration = AaptGeneration.fromProjectOptions(
-                    variantScope.globalScope.projectOptions)
-            task.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
 
         }
 

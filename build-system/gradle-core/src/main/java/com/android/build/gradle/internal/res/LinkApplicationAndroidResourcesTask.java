@@ -32,8 +32,6 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -62,20 +60,14 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager;
 import com.android.builder.internal.aapt.v2.Aapt2Exception;
 import com.android.ide.common.blame.MergingLog;
-import com.android.ide.common.blame.MergingLogRewriter;
-import com.android.ide.common.blame.ParsingProcessOutputHandler;
-import com.android.ide.common.blame.parser.ToolOutputParser;
-import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.symbols.SymbolIo;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
@@ -131,8 +123,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private MultiOutputPolicy multiOutputPolicy;
 
     private VariantType type;
-
-    private AaptGeneration aaptGeneration;
 
     @Nullable private FileCollection aapt2FromMaven;
 
@@ -244,16 +234,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
 
-        try (@Nullable Aapt aapt = makeAapt()) {
-
-            Aapt2ServiceKey aapt2ServiceKey;
-            if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-                aapt2ServiceKey =
-                        Aapt2DaemonManagerService.registerAaptService(
-                                aapt2FromMaven, getBuildTools(), getILogger());
-            } else {
-                aapt2ServiceKey = null;
-            }
+        try {
+            Aapt2ServiceKey aapt2ServiceKey =
+                    Aapt2DaemonManagerService.registerAaptService(
+                            aapt2FromMaven, getBuildTools(), getILogger());
 
             // do a first pass at the list so we generate the code synchronously since it's required
             // by the full splits asynchronous processing below.
@@ -276,7 +260,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     featureResourcePackages,
                                     apkInfo,
                                     true,
-                                    aapt,
                                     aapt2ServiceKey));
                     break;
                 }
@@ -296,7 +279,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                                 featureResourcePackages,
                                                 apkInfo,
                                                 false,
-                                                aapt,
                                                 aapt2ServiceKey));
                     }
                 }
@@ -388,7 +370,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             @NonNull Set<File> featureResourcePackages,
             ApkInfo apkData,
             boolean generateCode,
-            @Nullable Aapt aapt,
             @Nullable Aapt2ServiceKey aapt2ServiceKey)
             throws IOException {
 
@@ -511,24 +492,19 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     configBuilder.setResourceDir(
                             BuildableArtifactUtil.singleFile(checkNotNull(getInputResourcesDir())));
                 }
-                AaptPackageConfig config = configBuilder.build();
 
-                if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-                    Preconditions.checkNotNull(
-                            aapt2ServiceKey, "AAPT2 daemon manager service not initialized");
-                    try (Aapt2DaemonManager.LeasedAaptDaemon aaptDaemon =
-                            Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey)) {
-                        AndroidBuilder.processResources(aaptDaemon, config, getILogger());
-                    } catch (Aapt2Exception e) {
-                        throw Aapt2ErrorUtils.rewriteLinkException(
-                                e, new MergingLog(getMergeBlameLogFolder()));
-                    }
-                } else {
-                    Preconditions.checkNotNull(
-                            aapt,
-                            "AAPT needs be instantiated for linking if bypassing AAPT is disabled");
-                    AndroidBuilder.processResources(aapt, config, getILogger());
+                Preconditions.checkNotNull(
+                        aapt2ServiceKey, "AAPT2 daemon manager service not initialized");
+                try (Aapt2DaemonManager.LeasedAaptDaemon aaptDaemon =
+                        Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey)) {
+
+                    AndroidBuilder.processResources(
+                            aaptDaemon, configBuilder.build(), getILogger());
+                } catch (Aapt2Exception e) {
+                    throw Aapt2ErrorUtils.rewriteLinkException(
+                            e, new MergingLog(getMergeBlameLogFolder()));
                 }
+
 
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
@@ -576,31 +552,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             }
         }
         return null;
-    }
-
-    /**
-     * Create an instance of AAPT. Whenever calling this method make sure the close() method is
-     * called on the instance once the work is done.
-     *
-     * <p>Returns null if the worker action compatible mode should be used, as instances must not be
-     * shared between threads.
-     */
-    @Nullable
-    private Aapt makeAapt() {
-        AndroidBuilder builder = getBuilder();
-        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-
-            return null;
-        }
-
-        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
-
-        ProcessOutputHandler processOutputHandler =
-                new ParsingProcessOutputHandler(
-                        new ToolOutputParser(new Aapt2OutputParser(), getILogger()),
-                        new MergingLogRewriter(mergingLog::find, builder.getMessageReceiver()));
-
-        return AaptGradleFactory.make(aaptGeneration, builder, processOutputHandler);
     }
 
     /**
@@ -698,9 +649,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.PROCESSED_RES, processResources, "out");
-            processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             processResources.aapt2FromMaven =
-                    Aapt2MavenUtils.getAapt2FromMavenIfEnabled(variantScope.getGlobalScope());
+                    Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
 
             if (variantData.getType().isAar()) {
                 throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
@@ -877,7 +827,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     variantScope
                             .getArtifacts()
                             .appendArtifact(InternalArtifactType.PROCESSED_RES, task, "out");
-            task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
 
             task.applicationId = TaskInputHelper.memoize(config::getApplicationId);
@@ -1109,11 +1058,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     public void setType(VariantType type) {
         this.type = type;
-    }
-
-    @Input
-    public String getAaptGeneration() {
-        return aaptGeneration.name();
     }
 
     @InputFiles

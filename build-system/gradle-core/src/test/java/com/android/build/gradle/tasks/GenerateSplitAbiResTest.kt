@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.VariantOutput
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -32,18 +31,15 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.FeatureVariantData
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Ignore
@@ -53,7 +49,6 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.any
 import org.mockito.MockitoAnnotations
 import java.util.function.Supplier
 
@@ -76,6 +71,7 @@ class GenerateSplitAbiResTest {
     @Mock private lateinit var mockedAaptOptions: AaptOptions
     @Mock private lateinit var mockedOutputFactory: OutputFactory
     @Mock private lateinit var provider: FeatureSetMetadata.SupplierProvider
+    @Mock private lateinit var projectOptionsMock: ProjectOptions
 
     private val apkData = OutputFactory.ConfigurationSplitApkData(
             "x86",
@@ -95,14 +91,10 @@ class GenerateSplitAbiResTest {
 
         with(mockedGlobalScope) {
             `when`(androidBuilder).thenReturn(mockedAndroidBuilder)
-            `when`(projectOptions).thenReturn(
-                ProjectOptions(ImmutableMap.of<String, Any>(
-                    BooleanOption.USE_AAPT2_FROM_MAVEN.propertyName, false
-                ))
-            )
             `when`(extension).thenReturn(mockedAndroidConfig)
 //            `when`(projectBaseName).thenReturn("featureA")
             `when`(project).thenReturn(this@GenerateSplitAbiResTest.project)
+            `when`(projectOptions).thenReturn(projectOptionsMock)
         }
 
         with(mockedVariantScope) {

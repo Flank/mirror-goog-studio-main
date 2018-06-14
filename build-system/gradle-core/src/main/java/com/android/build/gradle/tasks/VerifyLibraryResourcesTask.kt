@@ -18,13 +18,11 @@ package com.android.build.gradle.tasks
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
-import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
+import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
@@ -34,17 +32,10 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.BlockingResourceLinker
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
-import com.android.ide.common.blame.MergingLog
-import com.android.ide.common.blame.MergingLogRewriter
-import com.android.ide.common.blame.ParsingProcessOutputHandler
-import com.android.ide.common.blame.parser.ToolOutputParser
-import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.QueueableResourceCompiler
@@ -92,13 +83,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     @get:InputFiles
     lateinit var manifestFiles: BuildableArtifact private set
 
-    private lateinit var aaptGeneration: AaptGeneration
-
-    @Input
-    fun getAaptGeneration(): String {
-        return aaptGeneration.name
-    }
-
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -141,57 +125,21 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles)
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
-        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-            val aapt2ServiceKey = registerAaptService(aapt2FromMaven, buildTools, iLogger)
-            // If we're using AAPT2 we need to compile the resources into the compiled directory
-            // first as we need the .flat files for linking.
-            workers.use { facade ->
-                compileResources(
-                        inputs,
-                        compiledDirectory, null,
-                        facade,
-                        aapt2ServiceKey,
-                        inputDirectory.singleFile())
-                val config = getAaptPackageConfig(compiledDirectory, manifestFile)
-                val params = Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config)
-                facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
-            }
-            return
-        }
-
-        val mergingLogRewriter =
-                MergingLogRewriter(
-                        JavaFunction { MergingLog(mergeBlameLogFolder).find(it) },
-                        builder.messageReceiver)
-
-        val processOutputHandler = ParsingProcessOutputHandler(
-                ToolOutputParser(Aapt2OutputParser(), iLogger),
-                mergingLogRewriter)
-
-        AaptGradleFactory.make(aaptGeneration, builder, processOutputHandler).use { aapt ->
-            // If we're using AAPT2 we need to compile the resources into the compiled directory
-            // first as we need the .flat files for linking.
+        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, buildTools, iLogger)
+        // If we're using AAPT2 we need to compile the resources into the compiled directory
+        // first as we need the .flat files for linking.
+        workers.use { facade ->
             compileResources(
                     inputs,
-                    compiledDirectory,
-                    aapt,
-                    null,
-                    null,
+                    compiledDirectory, null,
+                    facade,
+                    aapt2ServiceKey,
                     inputDirectory.singleFile())
-            linkResources(compiledDirectory, aapt, manifestFile)
+            val config = getAaptPackageConfig(compiledDirectory, manifestFile)
+            val params = Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config)
+            facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
         }
-    }
 
-    /**
-     * Calls AAPT link to verify the correctness of the library's resources.
-     *
-     * @param resDir directory containing resources to link.
-     * @param aapt AAPT tool to execute the resource linking.
-     * @param manifestFile the manifest file to package.
-     */
-    private fun linkResources(resDir: File, aapt: BlockingResourceLinker, manifestFile: File) {
-        val config = getAaptPackageConfig(resDir, manifestFile)
-        AndroidBuilder.processResources(aapt, config, iLogger)
     }
 
     private fun getAaptPackageConfig(resDir: File, manifestFile: File): AaptPackageConfig {
@@ -224,10 +172,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             verifyLibraryResources.variantName = config.fullName
 
             verifyLibraryResources.setAndroidBuilder(scope.globalScope.androidBuilder)
-
-            verifyLibraryResources.aaptGeneration =
-                    AaptGeneration.fromProjectOptions(scope.globalScope.projectOptions)
-            verifyLibraryResources.aapt2FromMaven = getAapt2FromMavenIfEnabled(scope.globalScope)
+            verifyLibraryResources.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
             verifyLibraryResources.incrementalFolder = scope.getIncrementalDir(name)
 
             verifyLibraryResources.inputDirectory =

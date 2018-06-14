@@ -30,8 +30,6 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -77,7 +75,6 @@ public class InstantRunSlicesSplitApkBuilderTest {
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
     @Mock BuildableArtifact apkList;
-    @Mock DslScope dslScope;
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
@@ -117,7 +114,6 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         null,
                         () -> "com.foo.test",
                         coreSigningConfig,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),

@@ -37,7 +37,6 @@ class ExitsBeforeReadyAapt2Daemon {
     }
 }
 
-
 class ExitsAfterReadyAapt2Daemon {
     companion object {
         @JvmStatic
