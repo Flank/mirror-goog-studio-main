@@ -627,202 +627,20 @@ void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
   }
 }
 
-void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
+void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   // Load in perfa.jar which should be in to data/data.
   std::string agent_lib_path(GetAppDataPath());
   agent_lib_path.append("perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
+}
 
-  // TODO: Removed these once the auto-JNI-binding feature becomes
-  // available in all published O system images.
-  if (agent_config->energy_profiler_enabled()) {
-    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/EnergyUtils",
-                  "getCurrentTime", "()J");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
-        "sendWakeLockAcquired", "(JIILjava/lang/String;JLjava/lang/String;)V");
-    BindJNIMethod(jni,
-                  "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockReleased", "(JIIZLjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmScheduled",
-        "(JIIJJJLjava/lang/String;ILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmScheduled",
-        "(JIIJJJLjava/lang/String;Ljava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmCancelled",
-        "(JILjava/lang/String;ILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmCancelled",
-        "(JILjava/lang/String;Ljava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmFired", "(JILjava/lang/String;IZ)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmFired", "(JILjava/lang/String;)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
-                  "sendJobScheduled",
-                  "(JIILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
-                  "Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
-                  "sendJobStarted",
-                  "(JII[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/"
-                  "String;Ljava/lang/String;Z)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
-                  "sendJobStopped",
-                  "(JII[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/"
-                  "String;Ljava/lang/String;Z)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
-                  "sendJobFinished",
-                  "(JII[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/"
-                  "String;Ljava/lang/String;ZLjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationUpdateRequested",
-        "(JILjava/lang/String;JJFIIILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendIntentLocationUpdateRequested",
-        "(JILjava/lang/String;JJFIIILjava/lang/String;ILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationUpdateRemoved", "(JILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendIntentLocationUpdateRemoved",
-        "(JILjava/lang/String;ILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationChanged", "(JILjava/lang/String;FDD)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendIntentLocationChanged",
-        "(JILjava/lang/String;FDDLjava/lang/String;I)V");
-  }
-
-  if (agent_config->cpu_api_tracing_enabled()) {
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
-        "sendStartOperation", "(ILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
-        "sendStopOperation", "(I)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
-        "recordInputPath", "(ILjava/lang/String;)V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
-        "recordOutputPath", "(ILjava/lang/String;)V");
-  }
-
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/network/"
-                "HttpTracker$InputStreamTracker",
-                "onClose", "(J)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/network/"
-                "HttpTracker$InputStreamTracker",
-                "onReadBegin", "(J)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/network/"
-                "HttpTracker$InputStreamTracker",
-                "reportBytes", "(J[BI)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/network/"
-                "HttpTracker$OutputStreamTracker",
-                "onClose", "(J)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/network/"
-                "HttpTracker$OutputStreamTracker",
-                "onWriteBegin", "(J)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/network/"
-                "HttpTracker$OutputStreamTracker",
-                "reportBytes", "(J[BI)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "nextId", "()J");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "trackThread", "(JLjava/lang/String;J)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onPreConnect", "(JLjava/lang/String;Ljava/lang/String;)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onRequestBody", "(J)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onRequest", "(JLjava/lang/String;Ljava/lang/String;)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onResponse", "(JLjava/lang/String;Ljava/lang/String;)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onResponseBody", "(J)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onDisconnect", "(J)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
-      "onError", "(JLjava/lang/String;)V");
-
-  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler",
-                "logAllocStats", "(II)V");
-
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/event/InputConnectionWrapper",
-      "sendKeyboardEvent", "(Ljava/lang/String;)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/event/WindowProfilerCallback",
-      "sendTouchEvent", "(IJ)V");
-  BindJNIMethod(
-      jni, "com/android/tools/profiler/support/event/WindowProfilerCallback",
-      "sendKeyEvent", "(Ljava/lang/String;J)V");
-
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivityCreated", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivityStarted", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivityResumed", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivityPaused", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivityStopped", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivitySaved", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendActivityDestroyed", "(Ljava/lang/String;I)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendFragmentAdded", "(Ljava/lang/String;II)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendFragmentRemoved", "(Ljava/lang/String;II)V");
-  BindJNIMethod(jni,
-                "com/android/tools/profiler/support/profilers/EventProfiler",
-                "sendRotationEvent", "(I)V");
-
+void ProfilerInitializationWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
+  proto::AgentConfig* config = static_cast<proto::AgentConfig*>(ptr);
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
   jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(ZZ)V");
-  bool log_live_alloc_count = agent_config->mem_config().use_live_alloc();
-  bool network_request_payload =
-      agent_config->profiler_network_request_payload();
+  bool log_live_alloc_count = config->mem_config().use_live_alloc();
+  bool network_request_payload = config->profiler_network_request_payload();
   jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count,
                             network_request_payload);
 }
@@ -847,7 +665,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   Agent::Instance(&config);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
-  LoadDex(jvmti_env, jni_env, &agent_config);
+  LoadDex(jvmti_env, jni_env);
 
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
@@ -924,6 +742,13 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     // connected to perfd.
     Log::V("Perfa connected to Perfd.");
   });
+
+  // ProfilerService#Initialize depends on JNI native methods being auto-binded
+  // after the agent finishes attaching. Therefore we call initialize after
+  // the VM is unpaused to make sure the runtime can auto-find the JNI methods.
+  jvmti_env->RunAgentThread(AllocateJavaThread(jvmti_env, jni_env),
+                            &ProfilerInitializationWorker, &agent_config,
+                            JVMTI_THREAD_NORM_PRIORITY);
 
   return JNI_OK;
 }
