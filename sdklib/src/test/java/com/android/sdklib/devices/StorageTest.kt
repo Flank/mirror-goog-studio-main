@@ -110,6 +110,18 @@ class StorageTest {
   }
 
   @Test
+  fun testToUiString() {
+    assertThat(Storage(123, Storage.Unit.B).toUiString()).isEqualTo("123 B")
+    assertThat(Storage(123, Storage.Unit.B).toUiString(2)).isEqualTo("123 B")
+    assertThat(Storage(2048, Storage.Unit.KiB).toUiString()).isEqualTo("2.0 MB")
+    assertThat(Storage(2049, Storage.Unit.KiB).toUiString()).isEqualTo("2.0 MB")
+    assertThat(Storage(2000, Storage.Unit.MiB).toUiString()).isEqualTo("2.0 GB")
+    assertThat(Storage(2200, Storage.Unit.MiB).toUiString()).isEqualTo("2.1 GB") // 2200 * 10^6 < 2.2 * 2^30
+    assertThat(Storage(2048 * 1024L, Storage.Unit.MiB).toUiString()).isEqualTo("2.0 TB")
+    assertThat(Storage(2048 * 1024L, Storage.Unit.MiB).toUiString(2)).isEqualTo("2.00 TB")
+  }
+
+  @Test
   fun testToIniString() {
     assertThat(Storage(1234, Storage.Unit.B).toIniString()).isEqualTo("1234B")
     assertThat(Storage(2048, Storage.Unit.KiB).toIniString()).isEqualTo("2M")

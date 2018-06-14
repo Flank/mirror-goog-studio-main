@@ -47,6 +47,7 @@ public class Storage {
 
     /**
      * Return the amount of storage represented by the instance in the given unit
+     *
      * @param unit The unit of the result.
      * @return The size of the storage in the given unit.
      */
@@ -54,26 +55,26 @@ public class Storage {
         return mNoBytes / unit.getNumberOfBytes();
     }
 
-  /**
-   * Returns the amount of storage represented by the instance in the given unit
-   * as a double to get a more precise result
-   * @param unit The unit of the result.
-   * @return The size of the storage in the given unit.
-   */
+    /**
+     * Returns the amount of storage represented by the instance in the given unit as a double to
+     * get a more precise result
+     *
+     * @param unit The unit of the result.
+     * @return The size of the storage in the given unit.
+     */
     public double getPreciseSizeAsUnit(@NonNull Unit unit) {
-        return ((double)mNoBytes) / unit.getNumberOfBytes();
+        return ((double) mNoBytes) / unit.getNumberOfBytes();
     }
 
-  /**
-   * Decodes the given string and returns a {@link Storage} of
-   * the corresponding size.
-   * The input string can look like these:
-   *     "2"  "2B" "2MB"  "2 M"  "2   MB"
-   * But NOT like these:
-   *     "2m"  "2.6"  "2 MiB"
-   */
-  @Nullable
-  public static Storage getStorageFromString(@Nullable String storageString) {
+    /**
+     * Decodes the given string and returns a {@link Storage} of the corresponding size. The input
+     * string can look like these:
+     *     "2" "2B" "2MB" "2 M" "2 MB"
+     * But NOT like these:
+     *     "2m" "2.6" "2 MiB"
+     */
+    @Nullable
+    public static Storage getStorageFromString(@Nullable String storageString) {
     if (storageString == null || storageString.isEmpty()) {
       return null;
     }
@@ -117,34 +118,32 @@ public class Storage {
         if (!(other instanceof Storage)) {
             return false;
         }
-        return this.getSize() == ((Storage)other).getSize();
+        return this.getSize() == ((Storage) other).getSize();
     }
 
     public boolean lessThan(Object other) {
         if (!(other instanceof Storage)) {
             return false;
         }
-        return this.getSize() < ((Storage)other).getSize();
+        return this.getSize() < ((Storage) other).getSize();
     }
 
     @Override
     public int hashCode() {
         int result = 17;
-        return 31 * result + (int)(mNoBytes^(mNoBytes>>>32));
+        return 31 * result + (int) (mNoBytes ^ (mNoBytes >>> 32));
     }
 
-    public enum Unit{
+    public enum Unit {
         B("B", "B", 1),
         KiB("KiB", "KB", 1024),
         MiB("MiB", "MB", 1024 * 1024),
         GiB("GiB", "GB", 1024 * 1024 * 1024),
         TiB("TiB", "TB", 1024L * 1024L * 1024L * 1024L);
 
-        @NonNull
-        private String mValue;
+        @NonNull private String mValue;
 
-        @NonNull
-        private String mDisplayValue;
+        @NonNull private String mDisplayValue;
 
         /** The number of bytes needed to have one of the given unit */
         private long mNoBytes;
@@ -189,7 +188,7 @@ public class Storage {
 
         @NonNull
         public String getDisplayValue() {
-          return mDisplayValue;
+            return mDisplayValue;
         }
 
         public char getUnitChar() {
@@ -244,13 +243,39 @@ public class Storage {
         return String.format("%d %s", getSizeAsUnit(unit), unit.getDisplayValue());
     }
 
+    /**
+     * Represents a {@link Storage} as a string suitable for displaying in the UI.
+     *
+     * @see {@link #getLargestReasonableUnits()}
+     */
+    public String toUiString() {
+        return toUiString(1);
+    }
+
+    /**
+     * Represents a {@link Storage} as a string suitable for displaying in the UI.
+     *
+     * @param precision The number of digits after decimal point to display.
+     * @see {@link #getLargestReasonableUnits()}
+     */
+    public String toUiString(int precision) {
+        Unit reasonableUnit = getLargestReasonableUnits();
+        if (reasonableUnit == Unit.B) {
+            precision = 0; // It'd be silly to show decimal point in the number of bytes.
+        }
+
+        double sizeInReasonableUnits = getPreciseSizeAsUnit(reasonableUnit);
+        String format = String.format("%%.%df %%s", precision);
+        return String.format(format, sizeInReasonableUnits, reasonableUnit.getDisplayValue());
+    }
+
   /**
    * Represents a {@link Storage} as a string suitable
    * for use in an INI file.
    */
   @NonNull
   public String toIniString() {
-      Unit unit = getAppropriateUnits();
-      return String.format("%d%c", getSizeAsUnit(unit), unit.getUnitChar());
+        Unit unit = getAppropriateUnits();
+        return String.format("%d%c", getSizeAsUnit(unit), unit.getUnitChar());
   }
 }
