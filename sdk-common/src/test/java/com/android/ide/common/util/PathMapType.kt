@@ -24,5 +24,9 @@ enum class PathMapType {
     /**
      * Identifies maps returned by [toPathMap].
      */
-    PATH_HASH_MAP
+    PATH_HASH_MAP,
+    /**
+     * Identifies maps returned by [toPathTreeMap].
+     */
+    PATH_TREE_MAP
 }

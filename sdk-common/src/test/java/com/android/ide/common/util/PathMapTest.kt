@@ -22,6 +22,7 @@ import com.google.common.truth.Truth
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import toPathTreeMap
 
 @RunWith(Parameterized::class)
 class PathMapTest(val mapType: PathMapType) {
@@ -31,6 +32,7 @@ class PathMapTest(val mapType: PathMapType) {
     fun <T> buildMap(input: Map<PathString, T>): PathMap<T> {
         when (mapType) {
             PathMapType.PATH_HASH_MAP -> return input.toPathMap()
+            PathMapType.PATH_TREE_MAP -> return input.toPathTreeMap()
         }
     }
 
@@ -90,9 +92,13 @@ class PathMapTest(val mapType: PathMapType) {
         val map = buildMap(paths.map { it to it }.toMap())
 
         paths.forEach {
-            Truth.assertThat(map[it]).isEqualTo(it)
+            Truth.assertWithMessage("map[${it}] = ${it}").that(map[it]).isEqualTo(it)
         }
         Truth.assertThat(map[PathString("Not present")]).isNull()
+        Truth.assertThat(map[PathString("/foo")]).isNull()
+        Truth.assertThat(map[PathString("/foo/bar")]).isNotNull()
+        Truth.assertThat(map[PathString("/foo/bar/bing")]).isNull()
+        Truth.assertThat(map[PathString("/foo/bar/bing/bong")]).isNull()
     }
 
     @Test
