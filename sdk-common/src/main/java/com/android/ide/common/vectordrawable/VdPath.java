@@ -20,17 +20,8 @@ import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import com.android.SdkConstants;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.LinearGradientPaint;
-import java.awt.MultipleGradientPaint;
-import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
+import java.awt.*;
+import java.awt.geom.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -530,7 +521,14 @@ class VdPath extends VdElement {
             g.draw(path2d);
         }
         if (isClipPath) {
-            g.setClip(path2d);
+            Shape clip = g.getClip();
+            if (clip != null) {
+                Area area = new Area(clip);
+                area.intersect(new Area(path2d));
+                g.setClip(area);
+            } else {
+                g.setClip(path2d);
+            }
         }
         if (fillGradient != null) {
             fillGradient.drawGradient(g, path2d, true);
