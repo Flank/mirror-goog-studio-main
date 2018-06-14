@@ -22,7 +22,7 @@ import com.android.utils.HashCodes;
 import java.util.Objects;
 
 /** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text. */
-public class TextResourceValue extends ResourceValueImpl {
+public abstract class TextResourceValue extends ResourceValueImpl {
     private String mRawXmlValue;
 
     public TextResourceValue(

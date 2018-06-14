@@ -24,7 +24,7 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /** Represents an Android resource with a name and a string value. */
-public class ResourceValue implements ResourceValueTemp {
+public abstract class ResourceValue implements ResourceValueTemp {
     @NonNull private final ResourceType resourceType;
     @NonNull private final ResourceNamespace namespace;
     @NonNull private final String name;

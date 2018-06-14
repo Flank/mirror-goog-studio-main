@@ -27,7 +27,7 @@ import java.util.Map;
  * <p>{@link #getValue()} will return null, instead use {@link #getAttributeValues()} to get the
  * enum/flag value associated with an attribute defined in the declare-styleable.
  */
-public class AttrResourceValue extends ResourceValueImpl {
+public abstract class AttrResourceValue extends ResourceValueImpl {
     @Nullable private Map<String, Integer> mValueMap;
 
     public AttrResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {

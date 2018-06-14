@@ -26,7 +26,7 @@ import java.util.Collection;
 /**
  * Represents an android style resource with a name and a list of children {@link ResourceValue}.
  */
-public class StyleResourceValue extends ResourceValueImpl {
+public abstract class StyleResourceValue extends ResourceValueImpl {
     /**
      * Contents of the {@code parent} XML attribute. May be empty or null.
      *

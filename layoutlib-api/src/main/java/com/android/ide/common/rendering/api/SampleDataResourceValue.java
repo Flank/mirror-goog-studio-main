@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * A {@link ResourceValue} used to contain the value of a Sample Data source. This class avoids
  * having to split potentially large files multiple times since we store it as a list of lines.
  */
-public class SampleDataResourceValue extends ResourceValueImpl {
+public abstract class SampleDataResourceValue extends ResourceValueImpl {
     /**
      * This splitter is used to split back the content into lines. The content is generated always
      * with \n as new line separator.

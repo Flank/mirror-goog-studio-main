@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Represents an android plurals resource. */
-public class PluralsResourceValue extends ResourceValueImpl {
+public abstract class PluralsResourceValue extends ResourceValueImpl {
     private final List<String> mQuantities = new ArrayList<>();
     private final List<String> mValues = new ArrayList<>();
 
