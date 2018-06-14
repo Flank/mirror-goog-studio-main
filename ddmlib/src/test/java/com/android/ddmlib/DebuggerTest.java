@@ -113,7 +113,8 @@ public class DebuggerTest extends TestCase {
                 .isEqualTo(debugger.getReadBufferInitialCapacity());
     }
 
-    public void testLargePacket() throws Exception {
+    // b/78036506
+    public void ignore_testLargePacket() throws Exception {
         // Prepare
         connectToDebugger();
         sendHandshake();
@@ -126,7 +127,8 @@ public class DebuggerTest extends TestCase {
                 .isGreaterThan(debugger.getReadBufferInitialCapacity() * 4);
     }
 
-    public void testBufferShrinksAfterLargePacket() throws Exception {
+    // b/78036506
+    public void ignore_testBufferShrinksAfterLargePacket() throws Exception {
         // Prepare
         connectToDebugger();
         sendHandshake();
