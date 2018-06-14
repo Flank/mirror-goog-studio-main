@@ -123,9 +123,35 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
      * <p>If chrome tracing output is enabled, this method will also create a second file, with a
      * {@code .json} extension, in the same directory.
      *
-     * <p>Should be called exactly once.
+     * <p>Either finishAndWrite or finish() should be called exactly once
      */
-    synchronized void finishAndMaybeWrite(@Nullable Path outputFile) {
+    synchronized void finishAndWrite(@NonNull Path outputFile) {
+        finish();
+
+        // Write benchmark file into build directory
+        try {
+            Files.createDirectories(outputFile.getParent());
+            try (BufferedOutputStream outputStream =
+                    new BufferedOutputStream(
+                            Files.newOutputStream(outputFile, StandardOpenOption.CREATE_NEW))) {
+                mBuild.build().writeTo(outputStream);
+            }
+
+            if (mEnableChromeTracingOutput) {
+                ChromeTracingProfileConverter.toJson(outputFile);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Finishes processing the outstanding {@link GradleBuildProfileSpan} publication and shuts down
+     * the processing queue.
+     *
+     * <p>Either finishAndWrite or finish() should be called exactly once
+     */
+    synchronized void finish() {
         checkState(!finished, "Already finished");
         finished = true;
 
@@ -150,24 +176,6 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
         }
 
         mBuild.addAllRawProjectId(getApplicationIds());
-
-        // Write benchmark file into build directory, if set.
-        if (outputFile != null) {
-            try {
-                Files.createDirectories(outputFile.getParent());
-                try (BufferedOutputStream outputStream =
-                        new BufferedOutputStream(
-                                Files.newOutputStream(outputFile, StandardOpenOption.CREATE_NEW))) {
-                    mBuild.build().writeTo(outputStream);
-                }
-
-                if (mEnableChromeTracingOutput) {
-                    ChromeTracingProfileConverter.toJson(outputFile);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
 
         // Public build profile.
         UsageTracker.log(

@@ -172,7 +172,7 @@ public class ProcessProfileWriterTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        ProcessProfileWriter.get().finishAndMaybeWrite(outputFile);
+        ProcessProfileWriter.get().finishAndWrite(outputFile);
     }
 
     @Test
@@ -198,7 +198,7 @@ public class ProcessProfileWriterTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        ProcessProfileWriter.get().finishAndMaybeWrite(outputFile);
+        ProcessProfileWriter.get().finishAndWrite(outputFile);
 
         GradleBuildProfile profile = loadProfile();
         List<Long> threadValues =

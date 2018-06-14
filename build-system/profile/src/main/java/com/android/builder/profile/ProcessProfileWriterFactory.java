@@ -30,6 +30,7 @@ import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -53,13 +54,19 @@ public final class ProcessProfileWriterFactory {
             if (sINSTANCE.isInitialized()) {
                 ProcessProfileWriter processProfileWriter =
                         verifyNotNull(sINSTANCE.processProfileWriter);
-                // Write analytics files in another thread as it might involve parsing manifest files.
-                shutdownAction =
-                        sINSTANCE.mScheduledExecutorService.submit(
-                                () -> {
-                                    processProfileWriter.finishAndMaybeWrite(outputFile);
-                                    return null;
-                                });
+                if (outputFile == null) {
+                    // Write analytics files in another thread as it might involve parsing manifest files.
+                    shutdownAction =
+                            sINSTANCE.mScheduledExecutorService.submit(
+                                    () -> {
+                                        processProfileWriter.finish();
+                                        return null;
+                                    });
+                } else {
+                    // If writing a GradleBuildProfile file for Benchmarking, go ahead and block
+                    processProfileWriter.finishAndWrite(outputFile);
+                    shutdownAction = CompletableFuture.completedFuture(null);
+                }
             }
             sINSTANCE.processProfileWriter = null;
             return shutdownAction;
