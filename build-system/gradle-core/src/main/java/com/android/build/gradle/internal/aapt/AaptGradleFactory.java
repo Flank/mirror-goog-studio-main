@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.Aapt;
-import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.QueueableAapt2;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
@@ -47,18 +46,13 @@ public final class AaptGradleFactory {
      * @param aaptGeneration which aapt to use
      * @param builder the android builder project model
      * @param outputHandler the output handler to use
-     * @param crunchPng should PNGs be crunched?
-     * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
-     *     used
      * @return the newly-created instance
      */
     @NonNull
     public static Aapt make(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
-            @Nullable ProcessOutputHandler outputHandler,
-            boolean crunchPng,
-            int cruncherProcesses) {
+            @Nullable ProcessOutputHandler outputHandler) {
         TargetInfo target = builder.getTargetInfo();
         Preconditions.checkNotNull(target, "target == null");
         BuildToolInfo buildTools = target.getBuildTools();
@@ -70,14 +64,6 @@ public final class AaptGradleFactory {
         }
 
         switch (aaptGeneration) {
-            case AAPT_V1:
-                return new AaptV1(
-                        builder.getProcessExecutor(),
-                        outputHandler,
-                        buildTools,
-                        new FilteringLogger(builder.getLogger()),
-                        crunchPng ? AaptV1.PngProcessMode.ALL : AaptV1.PngProcessMode.NO_CRUNCH,
-                        cruncherProcesses);
             case AAPT_V2_DAEMON_MODE:
                 return new QueueableAapt2(
                         outputHandler,

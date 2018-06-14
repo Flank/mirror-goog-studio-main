@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.testutils.TestUtils;
@@ -37,13 +36,9 @@ import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Tests for the PNG generation feature.
@@ -51,15 +46,7 @@ import org.junit.runners.Parameterized;
  * The "v4" is added by resource merger to all dpi qualifiers, to make it clear dpi qualifiers are
  * supported since API 4.
  */
-@RunWith(Parameterized.class)
 public class VectorDrawableTest {
-
-    @Parameterized.Parameters(name = "aaptGeneration=\"{0}\"")
-    public static Collection<AaptGeneration> expected() {
-        return Arrays.asList(AaptGeneration.AAPT_V1, AaptGeneration.AAPT_V2_DAEMON_MODE);
-    }
-
-    @Parameterized.Parameter public AaptGeneration aaptGeneration;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -73,8 +60,8 @@ public class VectorDrawableTest {
 
     @Test
     public void vectorFileIsMovedAndPngsAreGenerated() throws Exception {
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-anydpi-v24/gradient.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
@@ -97,47 +84,27 @@ public class VectorDrawableTest {
 
         // Check HDPI. Test project contains the hdpi png, it should be used instead of the
         // generated one.
-        File originalPng = new File(
-                project.getTestDir(),
-                "src/main/res/drawable-hdpi/special_heart.png");
         File generatedPng = new File(
                 project.getTestDir(),
                 "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
-        File pngToUse = new File(
-                project.getTestDir(),
-                "build/intermediates/res/merged/debug/drawable-hdpi-v4/special_heart.png");
-
         assertThat(generatedPng).doesNotExist();
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isEqualTo(FileUtils.sha1(originalPng));
-        } else {
-            pngToUse = new File(
-                    project.getTestDir(),
-                    "build/intermediates/res/merged/debug/drawable-hdpi_special_heart.png.flat");
-            assertThat(pngToUse).exists();
-        }
+        File pngToUse =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/drawable-hdpi_special_heart.png.flat");
+        assertThat(pngToUse).exists();
 
         // Check XHDPI.
         generatedPng = new File(
                 project.getTestDir(),
                 "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
-        pngToUse = new File(
-                project.getTestDir(),
-                "build/intermediates/res/merged/debug/drawable-xhdpi-v4/special_heart.png");
+        pngToUse =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/drawable-xhdpi_special_heart.png.flat");
+        assertThat(pngToUse).exists();
+        assertThat(generatedPng).exists();
 
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isEqualTo(FileUtils.sha1(generatedPng));
-        } else {
-            pngToUse = new File(
-                    project.getTestDir(),
-                    "build/intermediates/res/merged/debug/drawable-xhdpi_special_heart.png.flat");
-            assertThat(pngToUse).exists();
-            assertThat(generatedPng).exists();
-        }
 
         // Check interactions with other qualifiers.
         apk = project.getApk("debug");
@@ -164,26 +131,20 @@ public class VectorDrawableTest {
 
     @Test
     public void incrementalBuildAddXml() throws Exception {
-        project.executor().with(aaptGeneration).run("assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
 
         // Sanity check:
         assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart_copy.png");
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart_copy.png");
 
         File intermediatesXml =
-                    project.file(
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                            ? "build/intermediates/res/merged/debug/drawable-anydpi-v21/heart.xml"
-                            : "build/intermediates/res/merged/debug/"
-                                    + "drawable-anydpi-v21_heart.arsc.flat");
+                project.file(
+                        "build/intermediates/res/merged/debug/"
+                                + "drawable-anydpi-v21_heart.arsc.flat");
 
         File intermediatesHdpiPng =
-                    project.file(
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                            ? "build/intermediates/res/merged/debug/drawable-hdpi-v4/heart.png"
-                            : "build/intermediates/res/merged/debug/"
-                                    + "drawable-hdpi_heart.png.flat");
+                project.file("build/intermediates/res/merged/debug/drawable-hdpi_heart.png.flat");
 
         long xmlTimestamp = intermediatesXml.lastModified();
         long pngTimestamp = intermediatesHdpiPng.lastModified();
@@ -193,10 +154,10 @@ public class VectorDrawableTest {
         Files.copy(heartXml, heartXmlCopy);
 
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
         assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
         assertThat(intermediatesHdpiPng).wasModifiedAt(pngTimestamp);
-        apk = project.getApk("debug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-anydpi-v21/heart_copy.xml");
@@ -210,21 +171,18 @@ public class VectorDrawableTest {
 
     @Test
     public void incrementalBuildDeleteXml() throws Exception {
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
         File intermediatesIconPng =
-                    project.file(
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                            ? "build/intermediates/res/merged/debug/drawable/icon.png"
-                            : "build/intermediates/res/merged/debug/drawable_icon.png.flat");
+                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
         FileUtils.delete(new File(project.getTestDir(), "src/main/res/drawable/heart.xml"));
 
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
 
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart.png");
@@ -238,13 +196,11 @@ public class VectorDrawableTest {
 
     @Test
     public void incrementalBuildDeletePng() throws Exception {
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
         File intermediatesXml =
-                    project.file(
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                            ? "build/intermediates/res/merged/debug/drawable-anydpi-v21/heart.xml"
-                            : "build/intermediates/res/merged/debug/"
-                                    + "drawable-anydpi-v21_heart.arsc.flat");
+                project.file(
+                        "build/intermediates/res/merged/debug/"
+                                + "drawable-anydpi-v21_heart.arsc.flat");
 
         long xmlTimestamp = intermediatesXml.lastModified();
 
@@ -255,49 +211,30 @@ public class VectorDrawableTest {
                 project.getTestDir(),
                 "src/main/res/drawable-hdpi/special_heart.png");
         File pngToUse =
-                    new File(
-                            project.getTestDir(),
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                                    ? "build/intermediates/res/merged/debug/drawable-hdpi-v4/"
-                                            + "special_heart.png"
-                                    : "build/intermediates/res/merged/debug/"
-                                            + "drawable-hdpi_special_heart.png.flat");
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/"
+                                + "drawable-hdpi_special_heart.png.flat");
 
         assertThat(generatedPng).doesNotExist();
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isEqualTo(FileUtils.sha1(originalPng));
-        } else {
-            assertThat(pngToUse).exists();
-        }
+        assertThat(pngToUse).exists();
 
         FileUtils.delete(originalPng);
 
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
-
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isEqualTo(FileUtils.sha1(generatedPng));
-        } else {
-            assertThat(pngToUse).exists();
-        }
+        project.executor().run("assembleDebug");
+        assertThat(pngToUse).exists();
 
         assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
     }
 
     @Test
     public void incrementalBuildAddPng() throws Exception {
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
         File intermediatesXml =
-                    project.file(
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                                    ? "build/intermediates/res/merged/debug/drawable-anydpi-v21/"
-                                            + "heart.xml"
-                                    : "build/intermediates/res/merged/debug/"
-                                            + "drawable-anydpi-v21_heart.xml.flat");
+                project.file(
+                        "build/intermediates/res/merged/debug/"
+                                + "drawable-anydpi-v21_heart.xml.flat");
 
         assertThat(intermediatesXml).exists();
         long xmlTimestamp = intermediatesXml.lastModified();
@@ -307,21 +244,12 @@ public class VectorDrawableTest {
                 "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
         File pngToUse =
                 new File(
-                    project.getTestDir(),
-                        aaptGeneration == AaptGeneration.AAPT_V1
-                                ? "build/intermediates/res/merged/debug/drawable-xhdpi-v4/"
-                                        + "special_heart.png"
-                                : "build/intermediates/res/merged/debug/"
-                                        + "drawable-xhdpi_special_heart.png.flat");
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/"
+                                + "drawable-xhdpi_special_heart.png.flat");
+        assertThat(pngToUse).exists();
+        assertThat(generatedPng).exists();
 
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isEqualTo(FileUtils.sha1(generatedPng));
-        } else {
-            assertThat(pngToUse).exists();
-            assertThat(generatedPng).exists();
-        }
 
         // Create a PNG file for XHDPI. It should be used instead of the generated one.
         File hdpiPng = new File(project.getTestDir(),
@@ -332,45 +260,29 @@ public class VectorDrawableTest {
         Files.copy(hdpiPng, xhdpiPng);
 
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
-
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isNotEqualTo(FileUtils.sha1(generatedPng));
-
-            assertWithMessage("Wrong file used.")
-                    .that(FileUtils.sha1(pngToUse))
-                    .isEqualTo(FileUtils.sha1(xhdpiPng));
-        } else {
-            assertThat(pngToUse).exists();
-            assertThat(generatedPng).exists();
-        }
+        project.executor().run("assembleDebug");
+        assertThat(pngToUse).exists();
+        assertThat(generatedPng).exists();
 
         assertThat(intermediatesXml).wasModifiedAt(xmlTimestamp);
     }
 
     @Test
     public void incrementalBuildModifyXml() throws Exception {
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
         File intermediatesIconPng =
-                    project.file(
-                            aaptGeneration == AaptGeneration.AAPT_V1
-                                    ? "build/intermediates/res/merged/debug/drawable/icon.png"
-                                    : "build/intermediates/res/merged/debug/drawable_icon.png.flat");
+                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
-        File heartPngToUse = new File(
-                project.getTestDir(),
-                aaptGeneration == AaptGeneration.AAPT_V1
-                        ? "build/intermediates/res/merged/debug/drawable-hdpi-v4/heart.png"
-                        : "build/intermediates/res/merged/debug/drawable-hdpi_heart.png.flat");
-        File iconPngToUse = new File(
-                project.getTestDir(),
-                aaptGeneration == AaptGeneration.AAPT_V1
-                        ? "build/intermediates/res/merged/debug/drawable/icon.png"
-                        : "build/intermediates/res/merged/debug/drawable_icon.png.flat");
+        File heartPngToUse =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/drawable-hdpi_heart.png.flat");
+        File iconPngToUse =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/drawable_icon.png.flat");
 
         String oldHashCode = FileUtils.sha1(heartPngToUse);
         long heartPngModified = heartPngToUse.lastModified();
@@ -382,7 +294,7 @@ public class VectorDrawableTest {
         Files.write(content.replace("ff0000", "0000ff"), heartXml, UTF_8);
 
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         assertThat(iconPngToUse.lastModified()).isEqualTo(iconPngModified);
         assertThat(heartPngToUse.lastModified()).isNotEqualTo(heartPngModified);
@@ -395,12 +307,9 @@ public class VectorDrawableTest {
 
     @Test
     public void incrementalBuildReplaceVectorDrawableWithBitmapAlias() throws Exception {
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
         File intermediatesIconPng =
-                project.file(
-                        aaptGeneration == AaptGeneration.AAPT_V1
-                                ? "build/intermediates/res/merged/debug/drawable/icon.png"
-                                : "build/intermediates/res/merged/debug/drawable_icon.png.flat");
+                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
@@ -412,9 +321,9 @@ public class VectorDrawableTest {
                 UTF_8);
 
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
+        project.executor().run("assembleDebug");
 
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable/heart.xml");
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
@@ -423,20 +332,11 @@ public class VectorDrawableTest {
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
 
-        File heartXmlToUse = new File(
-                project.getTestDir(),
-                aaptGeneration == AaptGeneration.AAPT_V1
-                        ? "build/intermediates/res/merged/debug/drawable/heart.xml"
-                        : "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
-
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            // They won't be equal, because of the source marker added in the XML.
-            assertThat(Files.toString(heartXmlToUse, UTF_8))
-                    .contains(Files.toString(heartXml, UTF_8));
-        } else {
-            assertThat(heartXmlToUse).exists();
-        }
-
+        File heartXmlToUse =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
+        assertThat(heartXmlToUse).exists();
         assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
 
@@ -452,16 +352,13 @@ public class VectorDrawableTest {
                 heartXml,
                 UTF_8);
 
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug");
         File intermediatesIconPng =
-                project.file(
-                        aaptGeneration == AaptGeneration.AAPT_V1
-                                ? "build/intermediates/res/merged/debug/drawable/icon.png"
-                                : "build/intermediates/res/merged/debug/drawable_icon.png.flat");
+                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable/heart.xml");
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
@@ -470,24 +367,16 @@ public class VectorDrawableTest {
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
 
-        File heartXmlToUse = new File(
-                project.getTestDir(),
-                aaptGeneration == AaptGeneration.AAPT_V1
-                        ? "build/intermediates/res/merged/debug/drawable/heart.xml"
-                        : "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
-
-        if (aaptGeneration == AaptGeneration.AAPT_V1) {
-            // They won't be equal, because of the source marker added in the XML.
-            assertThat(Files.toString(heartXmlToUse, UTF_8))
-                    .contains(Files.toString(heartXml, UTF_8));
-        } else {
-            assertThat(heartXmlToUse).exists();
-        }
+        File heartXmlToUse =
+                new File(
+                        project.getTestDir(),
+                        "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
+        assertThat(heartXmlToUse).exists();
 
         Files.write(vectorDrawable, heartXml, UTF_8);
         TestUtils.waitForFileSystemTick();
-        project.executor().with(aaptGeneration).run("assembleDebug");
-        apk = project.getApk("debug");
+        project.executor().run("assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
@@ -504,8 +393,8 @@ public class VectorDrawableTest {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "generatedDensities.*" + System.lineSeparator(), "");
 
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-xxxhdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-xxhdpi-v4/heart.png");
@@ -523,8 +412,8 @@ public class VectorDrawableTest {
     @Test
     public void nothingIsDoneWhenMinSdk21AndAbove() throws Exception {
         searchAndReplace(project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion 21");
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
 
         assertThat(apk).containsResource("drawable-hdpi-v4/special_heart.png");
         assertThat(apk).containsResource("drawable-v16/modern_heart.xml");
@@ -550,8 +439,8 @@ public class VectorDrawableTest {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android.defaultConfig.vectorDrawables.generatedDensities = []");
 
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertPngGenerationDisabled(apk);
     }
 
@@ -560,16 +449,16 @@ public class VectorDrawableTest {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android.defaultConfig.generatedDensities = []");
 
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertPngGenerationDisabled(apk);
     }
 
     @Test
     public void incrementalBuildDisablingPngGeneration() throws Exception {
 
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-v22/no_need.xml");
@@ -585,15 +474,15 @@ public class VectorDrawableTest {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android.defaultConfig.vectorDrawables.useSupportLibrary = true");
 
-        project.executor().with(aaptGeneration).run("assembleDebug");
-        assertPngGenerationDisabled(project.getApk("debug"));
+        project.executor().run("assembleDebug");
+        assertPngGenerationDisabled(project.getApk(GradleTestProject.ApkType.DEBUG));
     }
 
     @Test
     public void incrementalBuildChangingDensities() throws Exception {
 
-        project.executor().with(aaptGeneration).run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-v22/no_need.xml");
@@ -609,8 +498,8 @@ public class VectorDrawableTest {
         TestFileUtils.appendToFile(project.getBuildFile(),
                 "android.defaultConfig.vectorDrawables.generatedDensities = ['hdpi']");
 
-        project.executor().with(aaptGeneration).run("assembleDebug");
-        apk = project.getApk("debug");
+        project.executor().run("assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
         assertThat(apk).containsResource("drawable-v22/no_need.xml");

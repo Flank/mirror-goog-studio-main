@@ -56,7 +56,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -72,7 +71,6 @@ import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
-import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
@@ -186,7 +184,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @NonNull
     @Internal
-    private Set<String> getSplits(@NonNull SplitList splitList) throws IOException {
+    private Set<String> getSplits(@NonNull SplitList splitList) {
         return SplitList.getSplits(splitList, multiOutputPolicy);
     }
 
@@ -204,8 +202,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
 
     private OutputFactory outputFactory;
-
-    private boolean enableAapt2;
 
     private Supplier<String> applicationId;
 
@@ -601,19 +597,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         ProcessOutputHandler processOutputHandler =
                 new ParsingProcessOutputHandler(
-                        new ToolOutputParser(
-                                aaptGeneration == AaptGeneration.AAPT_V1
-                                        ? new AaptOutputParser()
-                                        : new Aapt2OutputParser(),
-                                getILogger()),
+                        new ToolOutputParser(new Aapt2OutputParser(), getILogger()),
                         new MergingLogRewriter(mergingLog::find, builder.getMessageReceiver()));
 
-        return AaptGradleFactory.make(
-                aaptGeneration,
-                builder,
-                processOutputHandler,
-                true,
-                aaptOptions.getCruncherProcesses());
+        return AaptGradleFactory.make(aaptGeneration, builder, processOutputHandler);
     }
 
     /**
@@ -723,8 +710,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         "source output type should be MERGE",
                         sourceArtifactType);
             }
-
-            processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
 
             processResources.applicationId = config::getApplicationId;
 
@@ -894,7 +879,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             .appendArtifact(InternalArtifactType.PROCESSED_RES, task, "out");
             task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
-            task.setEnableAapt2(true);
 
             task.applicationId = TaskInputHelper.memoize(config::getApplicationId);
 
@@ -1212,15 +1196,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @NonNull
     public File getResPackageOutputFolder() {
         return resPackageOutputFolder;
-    }
-
-    @Input
-    public boolean isAapt2Enabled() {
-        return enableAapt2;
-    }
-
-    public void setEnableAapt2(boolean enableAapt2) {
-        this.enableAapt2 = enableAapt2;
     }
 
     boolean isLibrary;

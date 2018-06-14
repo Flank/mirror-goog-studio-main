@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -48,14 +47,6 @@ public class NoCruncherTest {
         checkResource(ApkType.DEBUG, "drawable/lib_bg.9.png", true);
         checkResource(ApkType.RELEASE, "drawable/icon.png", false);
         checkResource(ApkType.RELEASE, "drawable/lib_bg.9.png", true);
-    }
-
-    @Test
-    public void checkAapt1() throws Exception {
-        noPngCrunch.executor().withEnabledAapt2(false).run("assembleDebug");
-        // Check "crunchable" PNG is not crunched
-        checkResource(ApkType.DEBUG, "drawable/icon.png", false);
-        checkResource(ApkType.DEBUG, "drawable/lib_bg.9.png", true);
     }
 
     @Test

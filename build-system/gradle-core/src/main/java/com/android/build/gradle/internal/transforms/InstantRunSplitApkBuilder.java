@@ -414,12 +414,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                             androidBuilder.getLogger());
             return Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey);
         }
-        return AaptGradleFactory.make(
-                aaptGeneration,
-                androidBuilder,
-                null,
-                true,
-                0);
+        return AaptGradleFactory.make(aaptGeneration, androidBuilder, null);
     }
 
 }

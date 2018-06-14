@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -90,7 +89,6 @@ public class SwitchMultidexTest {
 
     private void legacyMultidex() throws Exception {
         project.executor()
-                .withEnabledAapt2(true)
                 .withProperty("inject.minsdk", "19")
                 .withProperty("inject.multidex", "true")
                 .with(BooleanOption.ENABLE_D8, false)
@@ -132,7 +130,6 @@ public class SwitchMultidexTest {
 
     private void nativeMultidex() throws IOException, InterruptedException {
         project.executor()
-                .withEnabledAapt2(true)
                 .withProperty("inject.minsdk", "21")
                 .withProperty("inject.multidex", "true")
                 .run("assembleDebug");

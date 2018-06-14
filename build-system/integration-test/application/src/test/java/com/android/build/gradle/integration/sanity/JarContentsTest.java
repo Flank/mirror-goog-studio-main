@@ -190,7 +190,6 @@ public class JarContentsTest {
                 "com/android/builder/files/",
                 "com/android/builder/internal/",
                 "com/android/builder/internal/aapt/",
-                "com/android/builder/internal/aapt/v1/",
                 "com/android/builder/internal/aapt/v2/",
                 "com/android/builder/internal/AndroidManifest.template",
                 "com/android/builder/internal/compiler/",

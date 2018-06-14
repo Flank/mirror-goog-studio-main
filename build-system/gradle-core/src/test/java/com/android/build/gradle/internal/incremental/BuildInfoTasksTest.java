@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.internal.incremental;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
@@ -74,7 +72,6 @@ public class BuildInfoTasksTest {
         InstantRunBuildContext context =
                 new InstantRunBuildContext(
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -92,7 +89,6 @@ public class BuildInfoTasksTest {
         InstantRunBuildContext context =
                 new InstantRunBuildContext(
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,

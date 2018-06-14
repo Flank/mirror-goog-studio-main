@@ -63,7 +63,6 @@ public class FeatureTest {
     public void publishApplicationId() throws Exception {
         // Call the task to publish the base feature application ID.
         project.executor()
-                .withEnabledAapt2(true)
                 .run("clean", ":baseFeature:writeDebugFeatureApplicationId");
     }
 
@@ -92,7 +91,7 @@ public class FeatureTest {
                 "android.defaultConfig.minSdkVersion " + minSdkVersion + "\n");
 
         // Build all the things.
-        project.executor().withEnabledAapt2(true).run("clean", "assemble");
+        project.executor().run("clean", "assemble");
 
         // check the base feature declared the list of features and their associated IDs.
         GradleTestProject baseProject = project.getSubproject(":baseFeature");
@@ -133,7 +132,7 @@ public class FeatureTest {
     @Test
     public void build() throws Exception {
         // Build all the things.
-        project.executor().withEnabledAapt2(true).run("clean", "assemble");
+        project.executor().run("clean", "assemble");
 
         // check the feature declaration file presence.
         GradleTestProject featureProject = project.getSubproject(":feature");
@@ -247,7 +246,7 @@ public class FeatureTest {
 
     @Test
     public void testMinimalisticModel() throws Exception {
-        project.executor().withEnabledAapt2(true).run("clean", "assemble");
+        project.executor().run("clean", "assemble");
 
         // get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =
@@ -284,7 +283,7 @@ public class FeatureTest {
 
     @Test
     public void incrementalAllVariantsBuild() throws Exception {
-        project.executor().withEnabledAapt2(true).run("clean", "assemble");
+        project.executor().run("clean", "assemble");
 
         GradleTestProject featureProject = project.getSubproject(":feature");
 
@@ -307,7 +306,7 @@ public class FeatureTest {
 
         Files.write(javaCode, addedSource, Charsets.UTF_8);
 
-        GradleBuildResult assemble = project.executor().withEnabledAapt2(true).run("assemble");
+        GradleBuildResult assemble = project.executor().run("assemble");
 
         multi = project.model().fetchMulti(ProjectBuildOutput.class);
 
@@ -332,7 +331,7 @@ public class FeatureTest {
 
     @Test
     public void incrementalBuild() throws Exception {
-        project.executor().withEnabledAapt2(true).run("clean", "assemble");
+        project.executor().run("clean", "assemble");
 
         GradleTestProject featureProject = project.getSubproject(":feature");
 
@@ -360,8 +359,7 @@ public class FeatureTest {
 
         Files.write(javaCode, addedSource, Charsets.UTF_8);
 
-        GradleBuildResult assembleDebug =
-                project.executor().withEnabledAapt2(true).run("assembleDebug");
+        GradleBuildResult assembleDebug = project.executor().run("assembleDebug");
 
         multi = project.model().fetchMulti(ProjectBuildOutput.class);
 
@@ -394,7 +392,7 @@ public class FeatureTest {
 
     @Test
     public void incrementalManifestBuild() throws Exception {
-        project.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug");
 
         // now change the feature manifest
         GradleTestProject featureProject = project.getSubproject(":feature");
@@ -403,7 +401,7 @@ public class FeatureTest {
         content = content.replace("84", "42");
         Files.write(content, featureManifest, Charsets.UTF_8);
 
-        GradleBuildResult run = project.executor().withEnabledAapt2(true).run("assembleDebug");
+        GradleBuildResult run = project.executor().run("assembleDebug");
         assertThat(run.getNotUpToDateTasks()).contains(":baseFeature:processDebugFeatureManifest");
     }
 

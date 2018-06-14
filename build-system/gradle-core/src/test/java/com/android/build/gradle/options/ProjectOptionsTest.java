@@ -129,7 +129,7 @@ public class ProjectOptionsTest {
         ProjectOptions projectOptions =
                 new ProjectOptions(
                         ImmutableMap.of(
-                                "android.enableAapt2", "false",
+                                "android.enableDesugar", "false",
                                 "android.enableD8", "false"));
 
         assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
@@ -138,7 +138,7 @@ public class ProjectOptionsTest {
         projectOptions =
                 new ProjectOptions(
                         ImmutableMap.of(
-                                "android.enableAapt2", "true",
+                                "android.enableDesugar", "true",
                                 "android.enableD8", "false"));
 
         assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
@@ -147,7 +147,7 @@ public class ProjectOptionsTest {
         projectOptions =
                 new ProjectOptions(
                         ImmutableMap.of(
-                                "android.enableAapt2", "true",
+                                "android.enableDesugar", "true",
                                 "android.enableD8", "true"));
 
         assertThat(projectOptions.hasDeprecatedOptions()).isFalse();

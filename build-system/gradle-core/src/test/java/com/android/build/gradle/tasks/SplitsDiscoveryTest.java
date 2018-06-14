@@ -66,7 +66,6 @@ public class SplitsDiscoveryTest {
         task = project.getTasks().create("test", SplitsDiscovery.class);
         task.persistedList = outputFile;
         task.resourceConfigs = ImmutableSet.of();
-        task.aapt2Enabled = true;
     }
 
     @After
@@ -179,34 +178,6 @@ public class SplitsDiscoveryTest {
     }
 
     @Test
-    public void testAutoLanguageFiltersWithAapt2Disabled() throws IOException {
-        File mergedFolder = temporaryFolder.newFolder();
-        assertThat(new File(mergedFolder, "values-fr").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-de").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_be").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_ca").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_ma").mkdirs()).isTrue();
-        // wrong name, should not be picked up
-        assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
-
-        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
-        task.languageAuto = true;
-        task.aapt2Enabled = false;
-        task.taskAction();
-        SplitList splitList = SplitList.load(outputs);
-        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
-        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr", "de", "fr_be", "fr_ca", "fr_ma");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
-
-        Map<String, String> expectedLanguageFiltersAndNames =
-                ImmutableMap.of(
-                        "fr", "fr", "de", "de", "fr_be", "fr_be", "fr_ca", "fr_ca", "fr_ma",
-                        "fr_ma");
-        validateLanguageFilterNames(splitList, expectedLanguageFiltersAndNames);
-    }
-
-    @Test
     public void testAllAutoFilters() throws IOException {
         File mergedFolder = temporaryFolder.newFolder();
         assertThat(new File(mergedFolder, "drawable-xhdpi").mkdirs()).isTrue();
@@ -297,7 +268,7 @@ public class SplitsDiscoveryTest {
     }
 
     private static void validateLanguageFilterNames(
-            SplitList splitList, Map<String, String> expected) throws IOException {
+            SplitList splitList, Map<String, String> expected) {
         Map<String, String> actual = new HashMap<>();
         splitList.forEach(
                 (filterType, filters) -> {

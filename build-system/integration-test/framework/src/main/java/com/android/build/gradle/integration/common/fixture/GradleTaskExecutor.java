@@ -195,25 +195,13 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         }
     }
 
-    /** Makes the project execute with AAPT2 flag set to {@param enableAapt2}. */
-    public GradleTaskExecutor withEnabledAapt2(boolean enableAapt2) {
-        with(enableAapt2 ? AaptGeneration.AAPT_V2_DAEMON_MODE : AaptGeneration.AAPT_V1);
-        return this;
-    }
-
-    /** Makes the project execute with AAPT2 flag set to {@param enableAapt2}. */
+    /** Makes the project execute with the correct AAPT2 flags. */
     public GradleTaskExecutor with(@NonNull AaptGeneration aaptGeneration) {
         switch (aaptGeneration) {
-            case AAPT_V1:
-                with(BooleanOption.ENABLE_AAPT2, false);
-                with(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS, false);
-                break;
             case AAPT_V2_DAEMON_MODE:
-                with(BooleanOption.ENABLE_AAPT2, true);
                 with(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS, false);
                 break;
             case AAPT_V2_DAEMON_SHARED_POOL:
-                with(BooleanOption.ENABLE_AAPT2, true);
                 with(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS, true);
                 break;
             default:

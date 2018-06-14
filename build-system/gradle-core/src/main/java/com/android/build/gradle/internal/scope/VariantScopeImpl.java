@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
@@ -161,8 +160,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private final MutableTaskContainer taskContainer = new MutableTaskContainer();
 
-    private File resourceOutputDir;
-
     private InstantRunTaskManager instantRunTaskManager;
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
@@ -184,7 +181,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.instantRunBuildContext =
                 new InstantRunBuildContext(
                         variantData.getVariantConfiguration().isInstantRunBuild(globalScope),
-                        AaptGeneration.fromProjectOptions(projectOptions),
                         DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
@@ -528,8 +524,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull Function<BaseConfig, Collection<File>> baseConfigGetter) {
         GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
 
-        List<File> result = new ArrayList<>();
-        result.addAll(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
+        List<File> result =
+                new ArrayList<>(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
 
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
         if (postprocessingOptions == null) {
@@ -992,17 +988,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     getProject().getPath(),
                                     variantName),
                     SubtractingArtifactCollection::new,
-                    (testArtifact, testedArtifact) -> {
-                        return new AndroidTestResourceArtifactCollection(
-                                testArtifact,
-                                getVariantData()
-                                        .getVariantDependency()
-                                        .getIncomingRuntimeDependencies(),
-                                getVariantData()
-                                        .getVariantDependency()
-                                        .getRuntimeClasspath()
-                                        .getIncoming());
-                    });
+                    (testArtifact, testedArtifact) ->
+                            new AndroidTestResourceArtifactCollection(
+                                    testArtifact,
+                                    getVariantData()
+                                            .getVariantDependency()
+                                            .getIncomingRuntimeDependencies(),
+                                    getVariantData()
+                                            .getVariantDependency()
+                                            .getRuntimeClasspath()
+                                            .getIncoming()));
         }
 
         return artifacts;

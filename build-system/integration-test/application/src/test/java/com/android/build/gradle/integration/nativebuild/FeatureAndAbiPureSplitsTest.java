@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -45,9 +44,6 @@ public class FeatureAndAbiPureSplitsTest {
     @ClassRule
     public static GradleTestProject sProject =
             GradleTestProject.builder().fromTestProject("projectWithFeaturesAndSplitABIs").create();
-
-    @BeforeClass
-    public static void setUp() throws Exception {}
 
     @AfterClass
     public static void cleanUp() {
@@ -58,7 +54,7 @@ public class FeatureAndAbiPureSplitsTest {
     public void buildAndCheckModel() throws Exception {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Build all the things.
-        sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
+        sProject.executor().run("clean", "assembleDebug");
 
         checkModel(sProject.model());
     }
@@ -178,9 +174,7 @@ public class FeatureAndAbiPureSplitsTest {
                 sProject.getSubproject(":feature_a").getBuildFile(), signingConfig);
 
         // Build the instantapp.
-        sProject.executor()
-                .withEnabledAapt2(true)
-                .run("clean", ":bundle:assembleRelease");
+        sProject.executor().run("clean", ":bundle:assembleRelease");
 
         Map<String, InstantAppProjectBuildOutput> models =
                 sProject.model().fetchMulti(InstantAppProjectBuildOutput.class);
@@ -239,7 +233,7 @@ public class FeatureAndAbiPureSplitsTest {
                 "generatePureSplits true",
                 "generatePureSplits false");
 
-        sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
+        sProject.executor().run("clean", "assembleDebug");
 
         ModelBuilder modelBuilder = sProject.model().ignoreSyncIssues();
 

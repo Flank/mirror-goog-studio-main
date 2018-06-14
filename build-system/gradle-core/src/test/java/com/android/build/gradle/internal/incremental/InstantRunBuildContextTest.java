@@ -23,7 +23,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext.Build;
 import com.android.builder.model.Version;
 import com.android.sdklib.AndroidVersion;
@@ -50,12 +49,11 @@ public class InstantRunBuildContextTest {
     private static final InstantRunBuildContext.BuildIdAllocator idAllocator = System::nanoTime;
 
     @Test
-    public void testTaskDurationRecording() throws ParserConfigurationException {
+    public void testTaskDurationRecording() {
         InstantRunBuildContext buildContext =
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -72,7 +70,6 @@ public class InstantRunBuildContextTest {
                 .isNotEqualTo(
                         new InstantRunBuildContext(
                                         true,
-                                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                                         new AndroidVersion(21, null),
                                         null,
                                         null,
@@ -86,7 +83,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -102,7 +98,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -118,12 +113,11 @@ public class InstantRunBuildContextTest {
     }
 
     @Test
-    public void testDuplicateEntries() throws ParserConfigurationException, IOException {
+    public void testDuplicateEntries() {
         InstantRunBuildContext context =
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -140,13 +134,11 @@ public class InstantRunBuildContextTest {
     }
 
     @Test
-    public void testLoadingFromCleanState()
-            throws ParserConfigurationException, SAXException, IOException {
+    public void testLoadingFromCleanState() throws SAXException, IOException {
         InstantRunBuildContext buildContext =
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -167,7 +159,6 @@ public class InstantRunBuildContextTest {
                     new InstantRunBuildContext(
                             idAllocator,
                             true,
-                            AaptGeneration.AAPT_V2_DAEMON_MODE,
                             new AndroidVersion(23, null),
                             null,
                             null,
@@ -188,7 +179,6 @@ public class InstantRunBuildContextTest {
                     new InstantRunBuildContext(
                             idAllocator,
                             true,
-                            AaptGeneration.AAPT_V2_DAEMON_MODE,
                             new AndroidVersion(23, null),
                             null,
                             null,
@@ -210,7 +200,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -228,7 +217,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -239,7 +227,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -252,7 +239,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -268,7 +254,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         "xxxhdpi",
@@ -281,7 +266,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         "xhdpi",
@@ -343,7 +327,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -359,7 +342,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -382,7 +364,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -396,7 +377,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -412,7 +392,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -440,7 +419,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(24, null),
                         null,
                         null,
@@ -455,7 +433,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(24, null),
                         null,
                         null,
@@ -471,7 +448,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(24, null),
                         null,
                         null,
@@ -487,7 +463,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(24, null),
                         null,
                         null,
@@ -505,7 +480,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(24, null),
                         null,
                         null,
@@ -540,7 +514,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -558,7 +531,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -574,7 +546,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -589,7 +560,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -661,7 +631,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -674,7 +643,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -688,7 +656,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -719,7 +686,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         "x86",
                         null,
@@ -730,7 +696,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         "x86",
                         null,
@@ -745,7 +710,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -770,7 +734,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -789,7 +752,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -807,7 +769,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -825,7 +786,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -847,7 +807,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -866,7 +825,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -893,7 +851,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -912,7 +869,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -941,7 +897,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(21, null),
                         null,
                         null,
@@ -983,7 +938,6 @@ public class InstantRunBuildContextTest {
         return new InstantRunBuildContext(
                 idAllocator,
                 true,
-                AaptGeneration.AAPT_V2_DAEMON_MODE,
                 new AndroidVersion(patchingPolicy == MULTI_APK_SEPARATE_RESOURCES ? 27 : 21, null),
                 null,
                 null,
@@ -1068,7 +1022,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -1087,7 +1040,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(25, null),
                         null,
                         null,
@@ -1136,7 +1088,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         androidVersion,
                         null,
                         null,
@@ -1160,7 +1111,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         androidVersion,
                         null,
                         null,
@@ -1179,7 +1129,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         androidVersion,
                         null,
                         null,
@@ -1202,7 +1151,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -1216,7 +1164,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -1251,7 +1198,6 @@ public class InstantRunBuildContextTest {
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,

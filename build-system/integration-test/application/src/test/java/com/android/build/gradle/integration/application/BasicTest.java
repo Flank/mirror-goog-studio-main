@@ -172,9 +172,7 @@ public class BasicTest {
 
     @Test
     public void testBuildOutputModel() throws Exception {
-        project.executor()
-                .withEnabledAapt2(true)
-                .run("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
+        project.executor().run("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
 
         // get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =

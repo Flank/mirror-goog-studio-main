@@ -24,13 +24,11 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.Variant;
-import com.android.builder.testing.api.DeviceException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
@@ -88,8 +86,7 @@ public final class InstantRunTestUtils {
     public static InstantRunBuildContext loadBuildContext(
             AndroidVersion androidVersion, @NonNull InstantRun instantRunModel) throws Exception {
         InstantRunBuildContext context =
-                new InstantRunBuildContext(
-                        true, AaptGeneration.AAPT_V2_DAEMON_MODE, androidVersion, null, null, true);
+                new InstantRunBuildContext(true, androidVersion, null, null, true);
         context.loadFromXml(Files.toString(instantRunModel.getInfoFile(), Charsets.UTF_8));
         return context;
     }
@@ -108,7 +105,7 @@ public final class InstantRunTestUtils {
 
     /** This performs the same work as the SplitApkDeployTask in studio. */
     static void doInstall(@NonNull IDevice device, @NonNull InstantRunBuildInfo info)
-            throws DeviceException, InstallException {
+            throws InstallException {
 
         if (info.canHotswap()) {
             throw new AssertionError("Tried to install a hot swap build");
@@ -303,9 +300,8 @@ public final class InstantRunTestUtils {
         }
     }
 
-    static void waitForAppStart(
-            @NonNull InstantRunClient client, @NonNull IDevice device)
-            throws InterruptedException, IOException {
+    static void waitForAppStart(@NonNull InstantRunClient client, @NonNull IDevice device)
+            throws InterruptedException {
         AppState appState = null;
         int times = 0;
         while (appState != AppState.FOREGROUND) {

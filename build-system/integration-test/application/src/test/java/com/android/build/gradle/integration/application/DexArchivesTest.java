@@ -56,8 +56,7 @@ import org.junit.runners.Parameterized;
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class DexArchivesTest {
 
-    @Parameterized.Parameter(0)
-    public DexerTool dexerTool;
+    @Parameterized.Parameter() public DexerTool dexerTool;
 
     @Parameterized.Parameter(1)
     public DexMergerTool mergerTool;
@@ -83,7 +82,7 @@ public class DexArchivesTest {
 
         checkIntermediaryDexFiles(ImmutableList.of("classes.dex"));
 
-        Dex mainDex = project.getApk("debug").getMainDexFile().get();
+        Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
         MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getInitialDexClasses());
     }
 
@@ -102,7 +101,7 @@ public class DexArchivesTest {
         assertThat(FileUtils.find(builderDir(), "HelloWorld.dex").get().lastModified())
                 .isGreaterThan(created);
 
-        Dex mainDex = project.getApk("debug").getMainDexFile().get();
+        Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
         MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getInitialDexClasses());
         MoreTruth.assertThat(mainDex)
                 .containsClass("Lcom/example/helloworld/HelloWorld;")
@@ -130,7 +129,7 @@ public class DexArchivesTest {
 
         List<String> dexClasses = Lists.newArrayList("Lcom/example/helloworld/NewClass;");
         dexClasses.addAll(getInitialDexClasses());
-        MoreTruth.assertThat(project.getApk("debug").getMainDexFile().get())
+        MoreTruth.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
                 .containsExactlyClassesIn(dexClasses);
     }
 
@@ -148,7 +147,7 @@ public class DexArchivesTest {
         runTask("assembleDebug");
 
         checkIntermediaryDexArchives(getInitialDexEntries());
-        MoreTruth.assertThat(project.getApk("debug").getMainDexFile().get())
+        MoreTruth.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
                 .containsExactlyClassesIn(getInitialDexClasses());
     }
 
@@ -238,7 +237,6 @@ public class DexArchivesTest {
     private GradleBuildResult runTask(@NonNull String taskName)
             throws IOException, InterruptedException {
         return project.executor()
-                .withEnabledAapt2(true)
                 .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
                 .run(taskName);
     }

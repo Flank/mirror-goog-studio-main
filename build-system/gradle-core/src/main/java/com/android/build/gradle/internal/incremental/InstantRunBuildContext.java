@@ -20,7 +20,6 @@ import static com.android.build.gradle.internal.incremental.InstantRunPatchingPo
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.Version;
 import com.android.ide.common.xml.XmlPrettyPrinter;
@@ -287,7 +286,6 @@ public class InstantRunBuildContext {
 
     public InstantRunBuildContext(
             boolean isInstantRunMode,
-            @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidVersion androidVersion,
             @Nullable String targetAbi,
             @Nullable String density,
@@ -295,7 +293,6 @@ public class InstantRunBuildContext {
         this(
                 defaultBuildIdAllocator,
                 isInstantRunMode,
-                aaptGeneration,
                 androidVersion,
                 targetAbi,
                 density,
@@ -306,7 +303,6 @@ public class InstantRunBuildContext {
     InstantRunBuildContext(
             @NonNull BuildIdAllocator buildIdAllocator,
             boolean isInstantRunMode,
-            @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidVersion androidVersion,
             @Nullable String targetAbi,
             @Nullable String density,
@@ -323,7 +319,6 @@ public class InstantRunBuildContext {
                 isInstantRunMode
                         ? InstantRunPatchingPolicy.getPatchingPolicy(
                                 androidVersion,
-                                aaptGeneration != AaptGeneration.AAPT_V1,
                                 createSeparateApkForResources)
                         : InstantRunPatchingPolicy.UNKNOWN_PATCHING_POLICY;
 
@@ -769,8 +764,7 @@ public class InstantRunBuildContext {
      *
      * @param persistedState the persisted xml file.
      */
-    public void loadFromXmlFile(@NonNull File persistedState)
-            throws IOException, ParserConfigurationException, SAXException {
+    public void loadFromXmlFile(@NonNull File persistedState) throws IOException, SAXException {
         if (!persistedState.exists()) {
             setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
             return;
@@ -780,8 +774,7 @@ public class InstantRunBuildContext {
 
     /** {@link #loadFromXmlFile(File)} but using a String */
     @VisibleForTesting
-    public void loadFromXml(@NonNull String persistedState)
-            throws IOException, SAXException, ParserConfigurationException {
+    public void loadFromXml(@NonNull String persistedState) throws IOException, SAXException {
         loadFromDocument(XmlUtils.parseDocument(persistedState, false));
     }
 
@@ -822,10 +815,8 @@ public class InstantRunBuildContext {
      * @param tmpBuildInfoFile a past build build-info.xml
      * @throws IOException cannot be thrown.
      * @throws SAXException when the xml is not correct.
-     * @throws ParserConfigurationException when the xml parser cannot be initialized.
      */
-    public void mergeFromFile(@NonNull File tmpBuildInfoFile)
-            throws IOException, SAXException, ParserConfigurationException {
+    public void mergeFromFile(@NonNull File tmpBuildInfoFile) throws IOException, SAXException {
         mergeFrom(XmlUtils.parseUtfXmlFile(tmpBuildInfoFile, false));
     }
 
@@ -837,15 +828,13 @@ public class InstantRunBuildContext {
      * @param tmpBuildInfo a past build build-info.xml as a String
      * @throws IOException cannot be thrown.
      * @throws SAXException when the xml is not correct.
-     * @throws ParserConfigurationException when the xml parser cannot be initialized.
      */
-    public void mergeFrom(@NonNull String tmpBuildInfo)
-            throws IOException, SAXException, ParserConfigurationException {
+    public void mergeFrom(@NonNull String tmpBuildInfo) throws IOException, SAXException {
 
         mergeFrom(XmlUtils.parseDocument(tmpBuildInfo, false));
     }
 
-    private void mergeFrom(@NonNull Document document) throws IOException {
+    private void mergeFrom(@NonNull Document document) {
         Element instantRun = document.getDocumentElement();
         Build lastBuild = Build.fromXml(instantRun);
         for (Artifact previousArtifact : lastBuild.getArtifacts()) {

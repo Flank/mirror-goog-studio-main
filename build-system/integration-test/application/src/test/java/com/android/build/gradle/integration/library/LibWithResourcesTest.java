@@ -33,44 +33,9 @@ public class LibWithResourcesTest {
             GradleTestProject.builder().fromTestProject("libDependency").create();
 
     @Test
-    public void checkInvalidResourcesWithAapt1() throws Exception {
-        // Build should be successful for release mode without invalid resources.
-        project.executor().withEnabledAapt2(false).run("clean", "lib:assembleRelease");
-
-        TestFileUtils.searchAndReplace(
-                project.file("lib/src/main/res/values/strings.xml"),
-                "<string name=\"lib_string\">SUCCESS-LIB</string>",
-                "<string name=\"lib_string\">SUCCESS-LIB</string>\n"
-                        + "<string name=\"oops\">@string/invalid</string>");
-
-        // Build should be successful for debug mode even if there are invalid references.
-        project.executor().withEnabledAapt2(false).run("clean", "lib:assembleDebug");
-
-        // Build should fail for release mode if there are invalid references.
-        GradleBuildResult result =
-                project.executor()
-                        .withEnabledAapt2(false)
-                        .expectFailure()
-                        .run("clean", "lib:assembleRelease");
-
-        assertThat(result.getStdout())
-                .contains(
-                        "AAPT: No resource found that matches the given name "
-                                + "(at 'oops' with value '@string/invalid')");
-
-        TestFileUtils.searchAndReplace(
-                project.file("lib/src/main/res/values/strings.xml"),
-                "<string name=\"oops\">@string/invalid</string>",
-                "");
-
-        // Again, build should be successful for release mode without invalid resources.
-        project.executor().withEnabledAapt2(false).run("lib:assembleRelease");
-    }
-
-    @Test
     public void checkInvalidResourcesWithAapt2() throws Exception {
         // Build should be successful for release mode without invalid resources.
-        project.executor().withEnabledAapt2(true).run("clean", "lib:assembleRelease");
+        project.executor().run("clean", "lib:assembleRelease");
 
         TestFileUtils.searchAndReplace(
                 project.file("lib/src/main/res/values/strings.xml"),
@@ -79,14 +44,11 @@ public class LibWithResourcesTest {
                         + "<string name=\"oops\">@string/invalid</string>");
 
         // Build should be successful for debug mode even if there are invalid references.
-        project.executor().withEnabledAapt2(true).run("clean", "lib:assembleDebug");
+        project.executor().run("clean", "lib:assembleDebug");
 
         // Build should fail for release mode if there are invalid references.
         GradleBuildResult result =
-                project.executor()
-                        .withEnabledAapt2(true)
-                        .expectFailure()
-                        .run("clean", "lib:assembleRelease");
+                project.executor().expectFailure().run("clean", "lib:assembleRelease");
 
         assertThat(result.getStdout())
                 .contains(
@@ -99,7 +61,7 @@ public class LibWithResourcesTest {
                 "");
 
         // Again, build should be successful for release mode without invalid resources.
-        project.executor().withEnabledAapt2(true).run("lib:assembleRelease");
+        project.executor().run("lib:assembleRelease");
     }
 
     @Test

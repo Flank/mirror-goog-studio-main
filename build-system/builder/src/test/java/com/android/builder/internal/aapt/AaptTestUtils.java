@@ -98,26 +98,6 @@ public class AaptTestUtils {
      * @return a PNG
      */
     @NonNull
-    public static File getNonCrunchableTestPng() {
-        return TestResources.getFile("/testData/aapt/png-that-is-bigger-if-crunched.png");
-    }
-
-    /**
-     * Obtains a PNG that can be crunched for testing.
-     *
-     * @return a PNG
-     */
-    @NonNull
-    public static File getCrunchableTestPng() {
-        return TestResources.getFile("/testData/aapt/lorem-lena.png");
-    }
-
-    /**
-     * Obtains a PNG that cannot be crunched for testing.
-     *
-     * @return a PNG
-     */
-    @NonNull
     public static File getNinePatchTestPng() {
         return TestResources.getFile("/testData/aapt/9patch.9.png");
     }

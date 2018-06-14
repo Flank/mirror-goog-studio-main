@@ -178,7 +178,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     }
 
     @TaskAction
-    protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
+    protected void doFullTaskAction() throws IOException, ProcessException {
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
         try (WorkerExecutorFacade workerExecutor = workers) {
@@ -241,13 +241,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                 aaptGeneration,
                 builder,
                 new LoggedProcessOutputHandler(
-                        new AaptGradleFactory.FilteringLogger(builder.getLogger())),
-                true,
-                variantScope
-                        .getGlobalScope()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getCruncherProcesses());
+                        new AaptGradleFactory.FilteringLogger(builder.getLogger())));
     }
 
     @VisibleForTesting

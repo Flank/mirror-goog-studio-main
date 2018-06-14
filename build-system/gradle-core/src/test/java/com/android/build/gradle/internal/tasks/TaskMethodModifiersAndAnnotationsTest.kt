@@ -108,7 +108,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setAaptMainDexListProguardOutputFile",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setAaptOptions",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setDebuggable",
-                "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setEnableAapt2",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setMergeBlameLogFolder",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setProguardOutputFile",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setPseudoLocalesEnabled",

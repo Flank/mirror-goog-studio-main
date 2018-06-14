@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.feature;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.ZipFileSubject;
@@ -49,7 +48,6 @@ public class FeatureApkLocationTest {
     public void build() throws Exception {
         // Call the task to publish the base feature application ID.
         sProject.executor()
-                .withEnabledAapt2(true)
                 .with(StringOption.IDE_APK_LOCATION, sTempFolder.getRoot().getAbsolutePath())
                 .run("clean", ":bundle:assembleRelease");
 

@@ -25,8 +25,6 @@ enum class BooleanOption(
     override val status: Option.Status = Option.Status.EXPERIMENTAL,
     override val additionalInfo: String = ""
 ) : Option<Boolean> {
-    ENABLE_AAPT2("android.enableAapt2", true, DeprecationReporter.DeprecationTarget.AAPT),
-
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
     ENABLE_PROFILE_JSON("android.enableProfileJson", false),
     // Used by Studio as workaround for b/71054106, b/75955471

@@ -15,15 +15,11 @@
  */
 
 /**
- * The {@code aapt} package contains support for invoking the {@code aapt} tool. The package is
+ * The {@code aapt} package contains support for invoking the {@code aapt2} tool. The package is
  * organized with a top-level package (the {@code aapt} package) that contains the common interface
  * for {@code aapt} as well as common implementation parts.
  *
- * <p>Individual {@code aapt} implementations are provided as sub-packages. Package {@code v1}
- * contains support for the original {@code aapt} tool.
- *
- * <p>Using the package requires instantiating an
- * {@link com.android.builder.internal.aapt.Aapt}
+ * <p>Using the package requires instantiating an {@link com.android.builder.internal.aapt.Aapt}
  * using one of the implementations that exist in the sub-packages.
  */
 package com.android.builder.internal.aapt;

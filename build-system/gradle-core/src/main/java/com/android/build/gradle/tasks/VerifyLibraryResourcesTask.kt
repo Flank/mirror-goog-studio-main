@@ -39,14 +39,12 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.BlockingResourceLinker
-import com.android.builder.internal.aapt.v1.AaptV1
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.blame.MergingLogRewriter
 import com.android.ide.common.blame.ParsingProcessOutputHandler
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
-import com.android.ide.common.blame.parser.aapt.AaptOutputParser
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.QueueableResourceCompiler
@@ -167,30 +165,20 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                         builder.messageReceiver)
 
         val processOutputHandler = ParsingProcessOutputHandler(
-                ToolOutputParser(
-                        if (aaptGeneration == AaptGeneration.AAPT_V1)
-                            AaptOutputParser()
-                        else
-                            Aapt2OutputParser(),
-                        iLogger),
+                ToolOutputParser(Aapt2OutputParser(), iLogger),
                 mergingLogRewriter)
 
-        AaptGradleFactory.make(aaptGeneration, builder, processOutputHandler, true, 0).use { aapt ->
-            if (aapt is AaptV1) {
-                // If we're using AAPT1 we only need to link the resources.
-                linkResources(inputDirectory.singleFile(), aapt, manifestFile)
-            } else {
-                // If we're using AAPT2 we need to compile the resources into the compiled directory
-                // first as we need the .flat files for linking.
-                compileResources(
-                        inputs,
-                        compiledDirectory,
-                        aapt,
-                        null,
-                        null,
-                        inputDirectory.singleFile())
-                linkResources(compiledDirectory, aapt, manifestFile)
-            }
+        AaptGradleFactory.make(aaptGeneration, builder, processOutputHandler).use { aapt ->
+            // If we're using AAPT2 we need to compile the resources into the compiled directory
+            // first as we need the .flat files for linking.
+            compileResources(
+                    inputs,
+                    compiledDirectory,
+                    aapt,
+                    null,
+                    null,
+                    inputDirectory.singleFile())
+            linkResources(compiledDirectory, aapt, manifestFile)
         }
     }
 
@@ -287,9 +275,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 workerExecutor: WorkerExecutorFacade?,
                 aapt2ServiceKey: Aapt2ServiceKey?,
                 mergedResDirectory: File) {
-            Preconditions.checkState(
-                    aapt !is AaptV1,
-                    "Library resources should be compiled for verification using AAPT2")
 
             Preconditions.checkState(
                     aapt != null || (workerExecutor != null && aapt2ServiceKey != null),

@@ -51,20 +51,17 @@ public enum InstantRunPatchingPolicy {
      * passed by Android Studio.
      *
      * @param androidVersion the android version of the target device
-     * @param useAapt2OrAbove use aapt2 or above to process resources.
      * @return a {@link InstantRunPatchingPolicy} instance.
      */
     @NonNull
     public static InstantRunPatchingPolicy getPatchingPolicy(
             AndroidVersion androidVersion,
-            boolean useAapt2OrAbove,
             boolean createSeparateApkForResources) {
 
         if (androidVersion.getFeatureLevel() < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
             return UNKNOWN_PATCHING_POLICY;
         } else {
             return androidVersion.getFeatureLevel() >= AndroidVersion.VersionCodes.O
-                            && useAapt2OrAbove
                             && createSeparateApkForResources
                     ? MULTI_APK_SEPARATE_RESOURCES
                     : MULTI_APK;

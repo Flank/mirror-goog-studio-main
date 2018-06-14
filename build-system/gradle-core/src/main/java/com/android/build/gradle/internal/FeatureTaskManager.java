@@ -78,17 +78,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                     .reportError(Type.GENERIC, new EvalIssueException(message));
         }
 
-        // Ensure we're not using aapt1.
-        if (AaptGeneration.fromProjectOptions(projectOptions) == AaptGeneration.AAPT_V1
-                && !extension.getBaseFeature()) {
-            androidBuilder
-                    .getIssueReporter()
-                    .reportError(
-                            Type.GENERIC,
-                            new EvalIssueException(
-                                    "Non-base feature modules require AAPTv2 to build."));
-        }
-
         // FIXME: This is currently disabled due to b/62301277.
         if (extension.getDataBinding().isEnabled() && !extension.getBaseFeature()) {
             String bindingV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName();
