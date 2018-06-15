@@ -24,6 +24,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.concurrent.Callable
 import java.util.function.Consumer
@@ -47,7 +48,7 @@ class FilteredArtifactCollection(
     private val filterResolver: FilterResolver
 
     init {
-        filterResolver = FilterResolver(mainArtifact, excludeDirectoryFiles)
+        filterResolver = FilterResolver(mainArtifact, excludeDirectoryFiles, project)
 
         // create a dynamic file collection, using a callable that will compute the
         // content when queried the first time, but not during configuration.
@@ -75,10 +76,16 @@ class FilteredArtifactCollection(
         artifacts.forEach(action)
     }
 
+    /**
+     * We need to pass a Callable<Provider<Collection<File>>>, otherwise Gradle does not compute
+     * this file collection correctly. Previously we passed Callable<Collection<File>>, but that
+     * caused issues such as b/79660649.
+     */
     private class FilterResolver(
-            val mainArtifacts: ArtifactCollection,
-            private val excludeDirectoryFiles: FileCollection)
-        : Callable<Collection<File>> {
+        val mainArtifacts: ArtifactCollection,
+        private val excludeDirectoryFiles: FileCollection,
+        private val project: Project
+    ) : Callable<Provider<Collection<File>>> {
 
         fun getArtifactResults(): Set<ResolvedArtifactResult> {
             val filteredArtifacts = computeFilteredArtifacts()
@@ -91,15 +98,15 @@ class FilteredArtifactCollection(
                 .filter { !filteredArtifacts.contains(compIdToString(it)) }.toSet()
         }
 
-        override fun call(): Collection<File> {
+        override fun call(): Provider<Collection<File>> {
             val excludedArtifacts = computeFilteredArtifacts()
 
             if (excludedArtifacts.isEmpty()) {
-                return mainArtifacts.artifactFiles.files
+                return project.providers.provider({mainArtifacts.artifactFiles.files})
             }
 
-            return mainArtifacts.artifacts.asSequence()
-                .filter { !excludedArtifacts.contains(compIdToString(it)) }.map { it.file }.toSet()
+            return project.providers.provider({mainArtifacts.artifacts.asSequence()
+                .filter { !excludedArtifacts.contains(compIdToString(it)) }.map { it.file }.toSet()})
         }
 
         private fun computeFilteredArtifacts(): Set<String>
