@@ -611,22 +611,6 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   Log::V("Transformed class: %s", name);
 }
 
-void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
-                   const char* signature) {
-  jclass klass = jni->FindClass(class_name);
-  std::string mangled_name(GetMangledName(class_name, method_name));
-  void* sym = dlsym(RTLD_DEFAULT, mangled_name.c_str());
-  if (sym != nullptr) {
-    JNINativeMethod native_method;
-    native_method.fnPtr = sym;
-    native_method.name = const_cast<char*>(method_name);
-    native_method.signature = const_cast<char*>(signature);
-    jni->RegisterNatives(klass, &native_method, 1);
-  } else {
-    Log::V("Failed to find symbol for %s", mangled_name.c_str());
-  }
-}
-
 void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   // Load in perfa.jar which should be in to data/data.
   std::string agent_lib_path(GetAppDataPath());
