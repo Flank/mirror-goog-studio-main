@@ -508,6 +508,33 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {"--check", "HardcodedText", project.getPath()});
     }
 
+    public void testInvalidLintXmlId() throws Exception {
+        // Regression test for
+        // 37070812: Lint does not fail when invalid issue ID is referenced in XML
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1),
+                        xml(
+                                "lint.xml",
+                                ""
+                                        + "<lint><issue id=\"SomeUnknownId\" severity=\"fatal\" /></lint>"),
+                        // dummy to ensure we have .class files
+                        source("bin/classes/foo/bar/ApiCallTest.class", ""));
+        checkDriver(
+                ""
+                        + "Scanning MainTest_testInvalidLintXmlId: \n"
+                        + "MainTest_testInvalidLintXmlId: Error: Unknown issue id \"SomeUnknownId\", found in /TESTROOT/lint.xml [LintError]\n"
+                        + "1 errors, 0 warnings",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {"--check", "HardcodedText", project.getPath()});
+    }
+
     public void testValidateOutput() throws Exception {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             // This test relies on making directories not writable, then

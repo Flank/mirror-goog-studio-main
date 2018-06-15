@@ -968,6 +968,11 @@ public class LintCliClient extends LintClient {
             validateIssueIds(project, registry, flags.getEnabledIds());
             validateIssueIds(project, registry, flags.getSuppressedIds());
             validateIssueIds(project, registry, flags.getSeverityOverrides().keySet());
+
+            if (project != null) {
+                Configuration configuration = project.getConfiguration(driver);
+                configuration.validateIssueIds(this, driver, project, registry);
+            }
         }
     }
 
