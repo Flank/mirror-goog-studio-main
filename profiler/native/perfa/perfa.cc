@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cassert>
 #include <string>
+#include <unordered_map>
 
 #include "agent/agent.h"
 #include "jvmti_helper.h"
@@ -29,9 +30,28 @@
 #include "utils/config.h"
 #include "utils/log.h"
 
-#include "slicer/instrumentation.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
+
+#include "transform/android_activitythread_transform.h"
+#include "transform/android_alarmmanager_listenerwrapper_transform.h"
+#include "transform/android_alarmmanager_transform.h"
+#include "transform/android_debug_transform.h"
+#include "transform/android_instrumentation_transform.h"
+#include "transform/android_intentservice_transform.h"
+#include "transform/android_jobschedulerimpl_transform.h"
+#include "transform/android_jobservice_transform.h"
+#include "transform/android_jobserviceengine_jobhandler_transform.h"
+#include "transform/android_locationmanager_listenertransport_transform.h"
+#include "transform/android_locationmanager_transform.h"
+#include "transform/android_pendingintent_transform.h"
+#include "transform/android_powermanager_transform.h"
+#include "transform/android_powermanager_wakelock_transform.h"
+#include "transform/gms_fusedlocationproviderclient_transform.h"
+#include "transform/java_url_transform.h"
+#include "transform/okhttp3_okhttpclient_transform.h"
+#include "transform/okhttp_okhttpclient_transform.h"
+#include "transform/transform.h"
 
 using profiler::Agent;
 using profiler::Log;
@@ -57,41 +77,18 @@ class JvmtiAllocator : public dex::Writer::Allocator {
 
 proto::AgentConfig agent_config;
 
+std::unordered_map<std::string, Transform*>* GetClassTransforms() {
+  static auto* transformations =
+      new std::unordered_map<std::string, Transform*>();
+  return transformations;
+}
+
 // Retrieve the app's data directory path
 static std::string GetAppDataPath() {
   Dl_info dl_info;
   dladdr((void*)Agent_OnAttach, &dl_info);
   std::string so_path(dl_info.dli_fname);
   return so_path.substr(0, so_path.find_last_of('/') + 1);
-}
-
-static bool IsRetransformClassSignature(const char* sig_mutf8) {
-  return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
-         (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
-         (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
-         (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
-          agent_config.cpu_api_tracing_enabled()) ||
-         (agent_config.energy_profiler_enabled() &&
-          (strcmp(sig_mutf8, "Landroid/app/Instrumentation;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/app/ActivityThread;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
-               0 ||
-           strcmp(sig_mutf8, "Landroid/app/IntentService;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
-               0 ||
-           strcmp(sig_mutf8, "Landroid/app/PendingIntent;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/location/LocationManager;") == 0 ||
-           strcmp(sig_mutf8,
-                  "Landroid/location/LocationManager$ListenerTransport;") ==
-               0 ||
-           strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 ||
-           strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 ||
-           strcmp(sig_mutf8,
-                  "Lcom/google/android/gms/location/"
-                  "FusedLocationProviderClient;") == 0));
 }
 
 // ClassPrepare event callback to invoke transformation of selected classes.
@@ -103,7 +100,8 @@ void JNICALL OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   assert(agent_config.android_feature_level() <= 27);
   char* sig_mutf8;
   jvmti_env->GetClassSignature(klass, &sig_mutf8, nullptr);
-  if (IsRetransformClassSignature(sig_mutf8)) {
+  auto class_transforms = GetClassTransforms();
+  if (class_transforms->find(sig_mutf8) != class_transforms->end()) {
     CheckJvmtiError(
         jvmti_env, jvmti_env->SetEventNotificationMode(
                        JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
@@ -128,7 +126,9 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   // however, in .dex these classes are stored using the "Ljava/net/URL;"
   // format.
   std::string desc = "L" + std::string(name) + ";";
-  if (!IsRetransformClassSignature(desc.c_str())) return;
+  auto class_transforms = GetClassTransforms();
+  auto transform = class_transforms->find(desc);
+  if (transform == class_transforms->end()) return;
 
   dex::Reader reader(class_data, class_data_len);
   auto class_index = reader.FindClassIndex(desc.c_str());
@@ -139,465 +139,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
   reader.CreateClassIr(class_index);
   auto dex_ir = reader.GetIr();
-
-  if (strcmp(name, "java/net/URL") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/network/httpurl/HttpURLWrapper;",
-        "wrapURLConnection"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "openConnection",
-                                          "()Ljava/net/URLConnection;"))) {
-      Log::E("Error instrumenting URL.openConnection");
-    }
-  } else if (strcmp(name, "okhttp3/OkHttpClient") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    // Add Entry hook method with this argument passed as type Object.
-    mi.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/network/okhttp/"
-                     "OkHttp3Wrapper;",
-                     "setOkHttpClassLoader"),
-        true);
-    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper;",
-        "insertInterceptor"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
-                                          "()Ljava/util/List;"))) {
-      Log::E("Error instrumenting OkHttp3 OkHttpClient");
-    }
-  } else if (strcmp(name, "com/squareup/okhttp/OkHttpClient") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    // Add Entry hook method with this argument passed as type Object.
-    mi.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/network/okhttp/"
-                     "OkHttp2Wrapper;",
-                     "setOkHttpClassLoader"),
-        true);
-    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
-        "insertInterceptor"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
-                                          "()Ljava/util/List;"))) {
-      Log::E("Error instrumenting OkHttp2 OkHttpClient");
-    }
-  } else if (strcmp(name, "android/os/Debug") == 0) {
-    // Instrument startMethodTracing(String tracePath) at entry.
-    slicer::MethodInstrumenter mi_start(dex_ir);
-    mi_start.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
-        "onStartMethodTracing"));
-    if (!mi_start.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "startMethodTracing", "(Ljava/lang/String;)V"))) {
-      Log::E("Error instrumenting Debug.startMethodTracing(String)");
-    }
-
-    // Instrument stopMethodTracing() at exit.
-    slicer::MethodInstrumenter mi_stop(dex_ir);
-    mi_stop.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
-        "onStopMethodTracing"));
-    if (!mi_stop.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "stopMethodTracing", "()V"))) {
-      Log::E("Error instrumenting Debug.stopMethodTracing");
-    }
-
-    // Instrument fixTracePath() at entry.
-    slicer::MethodInstrumenter mi_fix_entry(dex_ir);
-    mi_fix_entry.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
-        "onFixTracePathEntry"));
-    if (!mi_fix_entry.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "fixTracePath",
-                         "(Ljava/lang/String;)Ljava/lang/String;"))) {
-      Log::E("Error instrumenting Debug.fixTracePath entry");
-    }
-
-    // Instrument fixTracePath() at exit.
-    slicer::MethodInstrumenter mi_fix_exit(dex_ir);
-    mi_fix_exit.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
-        "onFixTracePathExit"));
-    if (!mi_fix_exit.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "fixTracePath",
-                         "(Ljava/lang/String;)Ljava/lang/String;"))) {
-      Log::E("Error instrumenting Debug.fixTracePath exit");
-    }
-  } else if (strcmp(name, "android/os/PowerManager") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "onNewWakeLockEntry"));
-    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "onNewWakeLockExit"));
-    if (!mi.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "newWakeLock",
-            "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
-      Log::E("Error instrumenting PowerManager.newWakeLock");
-    }
-  } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
-    // Instrument acquire() and acquire(long).
-    slicer::MethodInstrumenter mi_acq(dex_ir);
-    mi_acq.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "wrapAcquire"));
-    if (!mi_acq.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "acquire", "()V"))) {
-      Log::E("Error instrumenting WakeLock.acquire");
-    }
-    if (!mi_acq.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "acquire", "(J)V"))) {
-      Log::E("Error instrumenting WakeLock.acquire(long)");
-    }
-
-    // Instrument release(int).
-    slicer::MethodInstrumenter mi_rel(dex_ir);
-    mi_rel.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "onReleaseEntry"));
-    mi_rel.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "onReleaseExit"));
-    if (!mi_rel.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "release", "(I)V"))) {
-      Log::E("Error instrumenting WakeLock.release");
-    }
-  } else if (strcmp(name, "android/app/AlarmManager") == 0) {
-    // Instrument setImpl.
-    slicer::MethodInstrumenter mi_set(dex_ir);
-    mi_set.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
-        "wrapSetImpl"));
-    if (!mi_set.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "setImpl",
-            "(IJJJILandroid/app/PendingIntent;"
-            "Landroid/app/AlarmManager$OnAlarmListener;Ljava/lang/String;"
-            "Landroid/os/Handler;Landroid/os/WorkSource;"
-            "Landroid/app/AlarmManager$AlarmClockInfo;)V"))) {
-      Log::E("Error instrumenting AlarmManager.setImpl");
-    }
-
-    // Instrument cancel(PendingIntent) and cancel(OnAlarmListener).
-    slicer::MethodInstrumenter mi_cancel(dex_ir);
-    mi_cancel.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
-        "wrapCancel"));
-    if (!mi_cancel.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "cancel", "(Landroid/app/PendingIntent;)V"))) {
-      Log::E("Error instrumenting AlarmManager.cancel(PendingIntent)");
-    }
-    if (!mi_cancel.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "cancel",
-                         "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
-      Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
-    }
-  } else if (strcmp(name, "android/app/AlarmManager$ListenerWrapper") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::DetourInterfaceInvoke>(
-        ir::MethodId("Landroid/app/AlarmManager$OnAlarmListener;", "onAlarm",
-                     "()V"),
-        ir::MethodId(
-            "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
-            "wrapListenerOnAlarm"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "run", "()V"))) {
-      Log::E("Error instrumenting ListenerWrapper.run");
-    }
-  } else if (strcmp(name, "android/app/JobSchedulerImpl") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
-                     "onScheduleJobEntry"),
-        true);
-    mi.AddTransformation<slicer::ExitHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
-                     "onScheduleJobExit"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "schedule",
-                                          "(Landroid/app/job/JobInfo;)I"))) {
-      Log::E("Error instrumenting JobScheduler.schedule");
-    }
-  } else if (strcmp(name, "android/app/job/JobService") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
-                     "wrapJobFinished"));
-    if (!mi.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "jobFinished",
-                         "(Landroid/app/job/JobParameters;Z)V"))) {
-      Log::E("Error instrumenting JobService.jobFinished");
-    }
-  } else if (strcmp(name, "android/app/job/JobServiceEngine$JobHandler") == 0) {
-    // ackStartMessage is non-abstract and calls onStartJob.
-    slicer::MethodInstrumenter mi_start(dex_ir);
-    mi_start.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
-                     "wrapOnStartJob"),
-        true);
-    if (!mi_start.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "ackStartMessage",
-                         "(Landroid/app/job/JobParameters;Z)V"))) {
-      Log::E("Error instrumenting JobHandler.ackStartMessage");
-    }
-
-    // ackStopMessage is non-abstract and calls onStopJob.
-    slicer::MethodInstrumenter mi_stop(dex_ir);
-    mi_stop.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
-                     "wrapOnStopJob"),
-        true);
-    if (!mi_stop.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "ackStopMessage",
-                         "(Landroid/app/job/JobParameters;Z)V"))) {
-      Log::E("Error instrumenting JobHandler.ackStopMessage");
-    }
-  } else if (strcmp(name, "android/location/LocationManager") == 0) {
-    // Instrument all versions of requestLocationUpdates.
-    slicer::MethodInstrumenter mi_req(dex_ir);
-    mi_req.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
-        "wrapRequestLocationUpdates"));
-    if (!mi_req.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "requestLocationUpdates",
-                         "(Ljava/lang/String;JFLandroid/location/"
-                         "LocationListener;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(String, "
-          "long, float, LocationListener)");
-    }
-    if (!mi_req.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "requestLocationUpdates",
-                         "(JFLandroid/location/Criteria;Landroid/location/"
-                         "LocationListener;Landroid/os/Looper;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(long, "
-          "float, Criteria, LocationListener, Looper)");
-    }
-    if (!mi_req.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "requestLocationUpdates",
-                         "(Ljava/lang/String;JFLandroid/location/"
-                         "LocationListener;Landroid/os/Looper;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(String, "
-          "long, float, LocationListener, Looper)");
-    }
-    if (!mi_req.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "requestLocationUpdates",
-            "(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(long, "
-          "float, Criteria, PendingIntent)");
-    }
-    if (!mi_req.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "requestLocationUpdates",
-            "(Ljava/lang/String;JFLandroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestLocationUpdates(String, "
-          "long, float, PendingIntent)");
-    }
-
-    // Instrument all versions of requestSingleUpdate.
-    slicer::MethodInstrumenter mi_req_s(dex_ir);
-    mi_req_s.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
-        "wrapRequestSingleUpdate"));
-    if (!mi_req_s.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "requestSingleUpdate",
-                         "(Ljava/lang/String;Landroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestSingleUpdate(String, "
-          "PendingIntent)");
-    }
-    if (!mi_req_s.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "requestSingleUpdate",
-            "(Landroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
-          "PendingIntent)");
-    }
-    if (!mi_req_s.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "requestSingleUpdate",
-                         "(Ljava/lang/String;Landroid/location/"
-                         "LocationListener;Landroid/os/Looper;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestSingleUpdate(String, "
-          "LocationListener, Looper)");
-    }
-    if (!mi_req_s.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "requestSingleUpdate",
-                         "(Landroid/location/Criteria;Landroid/location/"
-                         "LocationListener;Landroid/os/Looper;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
-          "LocationListener, Looper)");
-    }
-
-    // Instrument all versions of removeUpdates
-    slicer::MethodInstrumenter mi_remove(dex_ir);
-    mi_remove.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
-        "wrapRemoveUpdates"));
-    if (!mi_remove.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "removeUpdates",
-                         "(Landroid/location/LocationListener;)V"))) {
-      Log::E(
-          "Error instrumenting "
-          "LocationManager.removeUpdates(LocationListener)");
-    }
-    if (!mi_remove.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "removeUpdates", "(Landroid/app/PendingIntent;)V"))) {
-      Log::E(
-          "Error instrumenting LocationManager.removeUpdates(PendingIntent)");
-    }
-  } else if (strcmp(name,
-                    "android/location/LocationManager$ListenerTransport") ==
-             0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::DetourInterfaceInvoke>(
-        ir::MethodId("Landroid/location/LocationListener;", "onLocationChanged",
-                     "(Landroid/location/Location;)V"),
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/"
-                     "LocationManagerWrapper;",
-                     "wrapOnLocationChanged"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "_handleMessage",
-                                          "(Landroid/os/Message;)V"))) {
-      Log::E("Error instrumenting LocationListener.onLocationChanged");
-    }
-  } else if (strcmp(name, "android/app/PendingIntent") == 0) {
-    slicer::MethodInstrumenter mi_activity(dex_ir);
-    mi_activity.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "onGetActivityEntry"));
-    mi_activity.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "onGetActivityExit"));
-    if (!mi_activity.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "getActivity",
-                         "(Landroid/content/Context;ILandroid/content/Intent;I"
-                         "Landroid/os/Bundle;)Landroid/app/PendingIntent;"))) {
-      Log::E("Error instrumenting PendingIntent.getActivity");
-    }
-
-    slicer::MethodInstrumenter mi_service(dex_ir);
-    mi_service.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "onGetServiceEntry"));
-    mi_service.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "onGetServiceExit"));
-    if (!mi_service.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "getService",
-                         "(Landroid/content/Context;ILandroid/content/Intent;I)"
-                         "Landroid/app/PendingIntent;"))) {
-      Log::E("Error instrumenting PendingIntent.getService");
-    }
-
-    slicer::MethodInstrumenter mi_broadcast(dex_ir);
-    mi_broadcast.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "onGetBroadcastEntry"));
-    mi_broadcast.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "onGetBroadcastExit"));
-    if (!mi_broadcast.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "getBroadcast",
-                         "(Landroid/content/Context;ILandroid/content/Intent;I)"
-                         "Landroid/app/PendingIntent;"))) {
-      Log::E("Error instrumenting PendingIntent.getBroadcast");
-    }
-  } else if (strcmp(name, "android/app/Instrumentation") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "wrapActivityCreate"));
-    if (!mi.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "callActivityOnCreate",
-                         "(Landroid/app/Activity;Landroid/os/Bundle;)V"))) {
-      Log::E(
-          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle)");
-    }
-    if (!mi.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "callActivityOnCreate",
-                         "(Landroid/app/Activity;Landroid/os/Bundle;Landroid/"
-                         "os/PersistableBundle;)V"))) {
-      Log::E(
-          "Error instrumenting Instrumentation.callActivityOnCreate(Bundle, "
-          "PersistableBundle)");
-    }
-  } else if (strcmp(name, "android/app/IntentService") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-        "wrapServiceStart"));
-    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "onStartCommand",
-                                          "(Landroid/content/Intent;II)I"))) {
-      Log::E("Error instrumenting IntentService.onStartCommand");
-    }
-  } else if (strcmp(name, "android/app/ActivityThread") == 0) {
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::DetourVirtualInvoke>(
-        ir::MethodId("Landroid/content/BroadcastReceiver;", "onReceive",
-                     "(Landroid/content/Context;Landroid/content/Intent;)V"),
-        ir::MethodId(
-            "Lcom/android/tools/profiler/support/energy/PendingIntentWrapper;",
-            "wrapBroadcastReceive"));
-    if (!mi.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "handleReceiver",
-                         "(Landroid/app/ActivityThread$ReceiverData;)V"))) {
-      Log::E("Error instrumenting BroadcastReceiver.onReceive");
-    }
-  } else if (strcmp(name,
-                    "com/google/android/gms/location/"
-                    "FusedLocationProviderClient") == 0) {
-    slicer::MethodInstrumenter mi_req(dex_ir);
-    mi_req.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
-                     "FusedLocationProviderClientWrapper;",
-                     "wrapRequestLocationUpdates"),
-        true);
-    if (!mi_req.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "requestLocationUpdates",
-            "(Lcom/google/android/gms/location/LocationRequest;"
-            "Lcom/google/android/gms/location/LocationCallback;"
-            "Landroid/os/Looper;)Lcom/google/android/gms/tasks/Task;"))) {
-      Log::E(
-          "Error instrumenting "
-          "FusedLocationProviderClient.requestLocationUpdates("
-          "LocationCallback)");
-    }
-    if (!mi_req.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "requestLocationUpdates",
-            "(Lcom/google/android/gms/location/LocationRequest;Landroid/app/"
-            "PendingIntent;)Lcom/google/android/gms/tasks/Task;"))) {
-      Log::E(
-          "Error instrumenting "
-          "FusedLocationProviderClient.requestLocationUpdates(PendingIntent)");
-    }
-
-    slicer::MethodInstrumenter mi_rmv(dex_ir);
-    mi_rmv.AddTransformation<slicer::EntryHook>(
-        ir::MethodId("Lcom/android/tools/profiler/support/energy/gms/"
-                     "FusedLocationProviderClientWrapper;",
-                     "wrapRemoveLocationUpdates"),
-        true);
-    if (!mi_rmv.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "removeLocationUpdates",
-                         "(Lcom/google/android/gms/location/LocationCallback;)"
-                         "Lcom/google/android/gms/tasks/Task;"))) {
-      Log::E(
-          "Error instrumenting "
-          "FusedLocationProviderClient.removeLocationUpdates("
-          "LocationCallback)");
-    }
-    if (!mi_rmv.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "removeLocationUpdates",
-                         "(Landroid/app/PendingIntent;)"
-                         "Lcom/google/android/gms/tasks/Task;"))) {
-      Log::E(
-          "Error instrumenting "
-          "FusedLocationProviderClient.removeLocationUpdates(PendingIntent)");
-    }
-  } else {
-    Log::V("No transformation applied for class: %s", name);
-    return;
-  }
+  transform->second->Apply(dex_ir);
 
   size_t new_image_size = 0;
   dex::u1* new_image = nullptr;
@@ -609,13 +151,58 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   *new_class_data_len = new_image_size;
   *new_class_data = new_image;
   Log::V("Transformed class: %s", name);
-}
+}  // namespace profiler
 
 void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   // Load in perfa.jar which should be in to data/data.
   std::string agent_lib_path(GetAppDataPath());
   agent_lib_path.append("perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
+}
+
+// Populate the map of transforms we want to apply to different classes.
+void RegisterTransforms(
+    const proto::AgentConfig& config,
+    std::unordered_map<std::string, Transform*>* transforms) {
+  transforms->insert({"Ljava/net/URL;", new JavaUrlTransform()});
+  transforms->insert({"Lokhttp3/OkHttpClient;", new Okhttp3ClientTransform()});
+  transforms->insert(
+      {"Lcom/squareup/okhttp/OkHttpClient;", new OkhttpClientTransform()});
+  if (config.cpu_api_tracing_enabled()) {
+    transforms->insert({"Landroid/os/Debug;", new AndroidDebugTransform()});
+  }
+  if (config.energy_profiler_enabled()) {
+    transforms->insert({"Landroid/app/Instrumentation;",
+                        new AndroidInstrumentationTransform()});
+    transforms->insert(
+        {"Landroid/app/ActivityThread;", new AndroidActivityThreadTransform()});
+    transforms->insert(
+        {"Landroid/app/AlarmManager;", new AndroidAlarmManagerTransform()});
+    transforms->insert({"Landroid/app/AlarmManager$ListenerWrapper;",
+                        new AndroidAlarmManagerListenerWrapperTransform()});
+    transforms->insert(
+        {"Landroid/app/IntentService;", new AndroidIntentServiceTransform()});
+    transforms->insert({"Landroid/app/JobSchedulerImpl;",
+                        new AndroidJobSchedulerImplTransform()});
+    transforms->insert(
+        {"Landroid/app/job/JobService;", new AndroidJobServiceTransform()});
+    transforms->insert({"Landroid/app/job/JobServiceEngine$JobHandler;",
+                        new AndroidJobServiceEngineJobHandlerTransform()});
+    transforms->insert(
+        {"Landroid/app/PendingIntent;", new AndroidPendingIntentTransform()});
+    transforms->insert({"Landroid/location/LocationManager;",
+                        new AndroidLocationManagerTransform()});
+    transforms->insert(
+        {"Landroid/location/LocationManager$ListenerTransport;",
+         new AndroidLocationManagerListenerTransportTransform()});
+    transforms->insert(
+        {"Landroid/os/PowerManager;", new AndroidPowerManagerTransform()});
+    transforms->insert({"Landroid/os/PowerManager$WakeLock;",
+                        new AndroidPowerManagerWakeLockTransform()});
+    transforms->insert(
+        {"Lcom/google/android/gms/location/FusedLocationProviderClient;",
+         new GmsFusedLocationProviderClientTransform()});
+  }
 }
 
 void ProfilerInitializationWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
@@ -651,6 +238,9 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env);
 
+  auto class_transforms = GetClassTransforms();
+  RegisterTransforms(agent_config, class_transforms);
+
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = OnClassFileLoaded;
@@ -679,7 +269,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   jvmti_env->GetLoadedClasses(&class_count, &loaded_classes);
   for (int i = 0; i < class_count; ++i) {
     jvmti_env->GetClassSignature(loaded_classes[i], &sig_mutf8, nullptr);
-    if (IsRetransformClassSignature(sig_mutf8)) {
+    if (class_transforms->find(sig_mutf8) != class_transforms->end()) {
       classes.push_back(loaded_classes[i]);
     }
     if (sig_mutf8 != nullptr) {

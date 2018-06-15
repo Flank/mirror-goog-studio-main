@@ -12,7 +12,7 @@ cc_binary(
         "memory/stats.h",
         "perfa.cc",
         "scoped_local_ref.h",
-    ],
+    ] + glob(["transform/*.h"]),
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
