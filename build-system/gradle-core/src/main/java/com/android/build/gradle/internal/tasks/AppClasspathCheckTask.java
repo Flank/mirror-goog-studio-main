@@ -63,11 +63,11 @@ public class AppClasspathCheckTask extends ClasspathComparisionTask {
 
         String message =
                 String.format(
-                        "Conflict with dependency '%1$s:%2$s' in project '%3%s'. Resolved versions for "
+                        "Conflict with dependency '%1$s:%2$s' in project '%3$s'. Resolved versions for "
                                 + "runtime classpath (%4$s) and compile classpath (%5$s) differ. This "
                                 + "can lead to runtime crashes. To resolve this issue follow "
-                                + "advices at https://developer.android.com/studio/build/gradle-tips#configure-project-wide-properties. "
-                                + "Alternatively, you can try to fix the problem"
+                                + "advice at https://developer.android.com/studio/build/gradle-tips#configure-project-wide-properties. "
+                                + "Alternatively, you can try to fix the problem "
                                 + "by adding this snippet to %6$s:\n"
                                 + "dependencies {\n"
                                 + "    implementation(\"%1$s:%2$s:%7$s\")\n"
