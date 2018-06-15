@@ -79,6 +79,12 @@ service CpuService {
   }
 }
 
+enum CpuProfilerMode {
+  UNSPECIFIED_MODE = 0;
+  SAMPLED = 1;
+  INSTRUMENTED = 2;
+}
+
 enum CpuProfilerType {
   UNSPECIFIED_PROFILER = 0;
   ART = 1;
@@ -120,14 +126,15 @@ message Thread {
 // one defined in a GetTraceInfoRequest.
 message TraceInfo {
   CpuProfilerType profiler_type = 1;
-  TraceInitiationType initiation_type = 2;
-  int64 from_timestamp = 3;  // inclusive
-  int64 to_timestamp = 4;    // inclusive
-  int32 trace_id = 5;
+  CpuProfilerMode profiler_mode = 2;
+  TraceInitiationType initiation_type = 3;
+  int64 from_timestamp = 4;  // inclusive
+  int64 to_timestamp = 5;    // inclusive
+  int32 trace_id = 6;
   // Path to the binary file containing the trace content.
-  string trace_file_path = 6;
+  string trace_file_path = 7;
   // These threads are those having data captured by the designated trace.
-  repeated Thread threads = 7;
+  repeated Thread threads = 8;
 }
 
 message GetTraceRequest {
@@ -147,6 +154,8 @@ message GetTraceResponse {
   bytes data = 2;
   // Type of the profiler used to obtain the trace.
   CpuProfilerType profiler_type = 3;
+  // Mode (i.e. sampling or instrumentation) used to obtain the trace.
+  CpuProfilerMode profiler_mode = 4;
 }
 
 // Requests profiler data associated with |session|, in the time range
@@ -226,14 +235,9 @@ message CpuProfilingAppStartResponse {
 }
 
 message CpuProfilerConfiguration {
-  enum Mode {
-    UNSTATED = 0;
-    SAMPLED = 1;
-    INSTRUMENTED = 2;
-  }
   // Name of the configuration. For Studio-side display only.
   string name = 1;
-  Mode mode = 2;
+  CpuProfilerMode profiler_mode = 2;
   CpuProfilerType profiler_type = 3;
   // When using ART, the size of the in-memory buffer that holds tracing data.
   int32 buffer_size_in_mb = 4;
@@ -245,6 +249,7 @@ message CpuProfilerConfiguration {
 message CpuProfilingAppStopRequest {
   Session session = 1;
   CpuProfilerType profiler_type = 2;
+  CpuProfilerMode profiler_mode = 3;
 }
 
 message CpuProfilingAppStopResponse {

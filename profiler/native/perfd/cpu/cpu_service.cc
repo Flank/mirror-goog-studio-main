@@ -35,6 +35,7 @@ using profiler::proto::CpuCoreConfigResponse;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
 using profiler::proto::CpuProfilerConfiguration;
+using profiler::proto::CpuProfilerMode;
 using profiler::proto::CpuProfilerType;
 using profiler::proto::CpuProfilingAppStartRequest;
 using profiler::proto::CpuProfilingAppStartResponse;
@@ -136,6 +137,7 @@ grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
     if (datum.end_timestamp == -1) continue;
     TraceInfo* info = response->add_trace_info();
     info->set_profiler_type(datum.configuration.profiler_type());
+    info->set_profiler_mode(datum.configuration.profiler_mode());
     info->set_initiation_type(datum.initiation_type);
     info->set_from_timestamp(datum.start_timestamp);
     info->set_to_timestamp(datum.end_timestamp);
@@ -155,6 +157,7 @@ grpc::Status CpuServiceImpl::GetTrace(ServerContext* context,
     response->set_status(GetTraceResponse::SUCCESS);
     response->set_data(content);
     response->set_profiler_type(CpuProfilerType::ART);
+    response->set_profiler_mode(CpuProfilerMode::INSTRUMENTED);
   } else {
     response->set_status(GetTraceResponse::FAILURE);
   }
@@ -225,7 +228,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     // It should be shared with everything in perfd.
     ActivityManager* manager = ActivityManager::Instance();
     auto mode = ActivityManager::SAMPLING;
-    if (configuration.mode() == CpuProfilerConfiguration::INSTRUMENTED) {
+    if (configuration.profiler_mode() == CpuProfilerMode::INSTRUMENTED) {
       mode = ActivityManager::INSTRUMENTED;
     }
     success = manager->StartProfiling(mode, app_pkg_name,
@@ -347,7 +350,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
   if (profiler_type == CpuProfilerType::ART) {
     ActivityManager* manager = ActivityManager::Instance();
     auto mode = ActivityManager::SAMPLING;
-    if (app.configuration.mode() == CpuProfilerConfiguration::INSTRUMENTED) {
+    if (app.configuration.profiler_mode() == CpuProfilerMode::INSTRUMENTED) {
       mode = ActivityManager::INSTRUMENTED;
     }
     manager->StartProfiling(mode, app.app_pkg_name,

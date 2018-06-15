@@ -20,6 +20,7 @@
 
 using grpc::ServerContext;
 using grpc::Status;
+using profiler::proto::CpuProfilerMode;
 using profiler::proto::CpuProfilerType;
 using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
@@ -49,6 +50,7 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     capture.start_timestamp = request->timestamp();
     capture.end_timestamp = -1;
     capture.configuration.set_profiler_type(CpuProfilerType::ART);
+    capture.configuration.set_profiler_mode(CpuProfilerMode::INSTRUMENTED);
     capture.initiation_type = TraceInitiationType::INITIATED_BY_API;
     int32_t trace_id = cache_.AddProfilingStart(pid, capture);
     response->set_start_operation_allowed(true);
