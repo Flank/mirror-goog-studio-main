@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.google.common.annotations.Beta
 import java.io.File
@@ -142,4 +143,22 @@ abstract class Configuration {
      * details.
      */
     open fun finishBulkEditing() {}
+
+    /**
+     * Makes sure that any custom severity definitions defined in this configuration refer to valid
+     * issue id's, valid severities etc. This helps catch bugs in manually edited config files (see
+     * issue 194382).
+     *
+     * @param client the lint client to report to
+     * @param driver the active lint driver
+     * @param project the project relevant to the configuration, if known
+     * @param registry the fully initialized registry (might include custom lint checks from
+     *                 libraries etc)
+     */
+    open fun validateIssueIds(
+        client: LintClient,
+        driver: LintDriver,
+        project: Project,
+        registry: IssueRegistry
+    ) {}
 }

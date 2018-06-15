@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -42,6 +43,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -774,5 +776,62 @@ public class DefaultConfiguration extends Configuration {
     @Override
     public void setBaselineFile(@Nullable File baselineFile) {
         this.baselineFile = baselineFile;
+    }
+
+    @Override
+    public void validateIssueIds(
+            @NonNull LintClient client,
+            @Nullable LintDriver driver,
+            @NonNull Project project,
+            @NonNull IssueRegistry registry) {
+        super.validateIssueIds(client, driver, project, registry);
+
+        ensureInitialized();
+
+        validateIssueIds(client, driver, project, registry, severity.keySet());
+        validateIssueIds(client, driver, project, registry, suppressed.keySet());
+        if (regexps != null) {
+            validateIssueIds(client, driver, project, registry, regexps.keySet());
+        }
+    }
+
+    public void validateIssueIds(
+            @NonNull LintClient client,
+            @Nullable LintDriver driver,
+            @NonNull Project project,
+            @NonNull IssueRegistry registry,
+            Collection<String> ids) {
+        for (String id : ids) {
+            if (registry.getIssue(id) == null) {
+                reportNonExistingIssueId(client, driver, project, id);
+            }
+        }
+    }
+
+    private void reportNonExistingIssueId(
+            @NonNull LintClient client,
+            @Nullable LintDriver driver,
+            @NonNull Project project,
+            @NonNull String id) {
+        String message = String.format("Unknown issue id \"%1$s\"", id);
+        if (configFile != null) {
+            message += String.format(", found in %1$s", configFile.getPath());
+        }
+
+        if (driver != null) {
+            Location location = Location.create(project.getDir());
+            if (getSeverity(IssueRegistry.LINT_ERROR) != Severity.IGNORE) {
+                client.report(
+                        new Context(driver, project, project, project.getDir(), null),
+                        IssueRegistry.LINT_ERROR,
+                        project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
+                        location,
+                        message,
+                        TextFormat.RAW,
+                        null);
+            } else {
+                client.log(Severity.ERROR, null, "Lint: %1$s", message);
+            }
+        }
     }
 }
