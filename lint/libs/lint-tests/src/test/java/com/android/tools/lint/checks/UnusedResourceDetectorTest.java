@@ -388,6 +388,44 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlin3() {
+        // Regression test for issue 76213486
+        // 76213486: Resource ids passed into Kotlin enum constructors are not considered used
+        //noinspection all // Sample code
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "enum class KotlinEnum(val resId: Int) {\n"
+                                        + "    MAIN(R.layout.main1)\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "public enum JavaEnum {\n"
+                                        + "    MAIN(R.layout.main2);\n"
+                                        + "\n"
+                                        + "    JavaEnum(int arg) {\n"
+                                        + "    }\n"
+                                        + "}"),
+                        xml("res/layout/main1.xml", LAYOUT_XML),
+                        xml("res/layout/main2.xml", LAYOUT_XML),
+                        java(
+                                "src/test/pkg/R.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "public class R {\n"
+                                        + "    public static class layout {\n"
+                                        + "        public static final int main1 = 1;\n"
+                                        + "        public static final int main2 = 2;\n"
+                                        + "    }\n"
+                                        + "}"),
+                        manifest().minSdk(14))
+                .issues(UnusedResourceDetector.ISSUE) // Not id's
+                .run()
+                .expectClean();
+    }
+
     /* Not sure about this -- why would we ignore drawable XML?
     public void testIgnoreXmlDrawable() throws Exception {
         assertEquals(
