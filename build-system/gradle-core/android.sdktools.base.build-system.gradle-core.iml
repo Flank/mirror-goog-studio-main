@@ -77,5 +77,6 @@
     <orderEntry type="module" module-name="android.sdktools.analytics.crash-base" />
     <orderEntry type="library" name="http-client" level="project" />
     <orderEntry type="module" module-name="db-compilerCommon" />
+    <orderEntry type="library" name="kotlin-stdlib-jre8" level="project" />
   </component>
 </module>
