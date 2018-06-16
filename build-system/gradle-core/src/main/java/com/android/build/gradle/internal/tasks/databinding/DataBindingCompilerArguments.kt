@@ -17,13 +17,17 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
-import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
-import com.google.common.collect.Iterables
 import org.gradle.api.Task
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -45,7 +49,7 @@ class DataBindingCompilerArguments constructor(
     // Use module package provider so that we can delay resolving the module package until execution
     // time (for performance). The resolved module package is set as @Input (see getModulePackage()
     // below), but the provider itself should be set as @Internal.
-    @Internal
+    @get:Internal
     private val modulePackageProvider: () -> String,
 
     @get:Input
@@ -58,27 +62,27 @@ class DataBindingCompilerArguments constructor(
     @get:Internal
     val sdkDir: File,
 
-    @get:InputDirectory
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val buildDir: File,
+    val dependencyArtifactsDir: BuildableArtifact,
 
-    @get:InputDirectory
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val layoutInfoDir: File,
+    val layoutInfoDir: BuildableArtifact,
 
-    @get:InputDirectory
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val classLogDir: File,
-
-    @get:Optional
-    @get:InputDirectory
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    val baseFeatureInfoDir: File?,
+    val classLogDir: BuildableArtifact,
 
     @get:Optional
-    @get:InputDirectory
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val featureInfoDir: File?,
+    val baseFeatureInfoDir: BuildableArtifact?,
+
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val featureInfoDir: BuildableArtifact?,
 
     @get:Optional
     @get:OutputDirectory
@@ -117,11 +121,11 @@ class DataBindingCompilerArguments constructor(
             modulePackage = getModulePackage(),
             minApi = minApi,
             sdkDir = sdkDir,
-            buildDir = buildDir,
-            layoutInfoDir = layoutInfoDir,
-            classLogDir = classLogDir,
-            baseFeatureInfoDir = baseFeatureInfoDir,
-            featureInfoDir = featureInfoDir,
+            dependencyArtifactsDir = dependencyArtifactsDir.get().singleFile,
+            layoutInfoDir = layoutInfoDir.get().singleFile,
+            classLogDir = classLogDir.get().singleFile,
+            baseFeatureInfoDir = baseFeatureInfoDir?.get()?.singleFile,
+            featureInfoDir = featureInfoDir?.get()?.singleFile,
             aarOutDir = aarOutDir,
             exportClassListOutFile = exportClassListOutFile,
             enableDebugLogs = enableDebugLogs,
@@ -152,21 +156,22 @@ class DataBindingCompilerArguments constructor(
         inputs.property("$prefix.modulePackage", getModulePackage())
         inputs.property("$prefix.minApi", minApi)
 
-        inputs.dir(buildDir).withPropertyName("$prefix.buildDir")
+        inputs.files(dependencyArtifactsDir).withPropertyName("$prefix.dependencyArtifactsDir")
             .withPathSensitivity(PathSensitivity.RELATIVE)
-        inputs.dir(layoutInfoDir).withPropertyName("$prefix.layoutInfoDir")
+        inputs.files(layoutInfoDir).withPropertyName("$prefix.layoutInfoDir")
             .withPathSensitivity(PathSensitivity.RELATIVE)
-        inputs.dir(classLogDir).withPropertyName("$prefix.classLogDir")
+        inputs.files(classLogDir).withPropertyName("$prefix.classLogDir")
             .withPathSensitivity(PathSensitivity.RELATIVE)
 
         if (baseFeatureInfoDir != null) {
-            inputs.dir(baseFeatureInfoDir).withPropertyName("$prefix.baseFeatureInfoDir")
+            inputs.files(baseFeatureInfoDir).withPropertyName("$prefix.baseFeatureInfoDir")
                 .withPathSensitivity(PathSensitivity.RELATIVE)
         }
         if (featureInfoDir != null) {
-            inputs.dir(featureInfoDir).withPropertyName("$prefix.featureInfoDir")
+            inputs.files(featureInfoDir).withPropertyName("$prefix.featureInfoDir")
                 .withPathSensitivity(PathSensitivity.RELATIVE)
         }
+
         if (aarOutDir != null) {
             outputs.dir(aarOutDir).withPropertyName("$prefix.aarOutDir")
         }
@@ -175,7 +180,6 @@ class DataBindingCompilerArguments constructor(
         }
 
         inputs.property("$prefix.enableDebugLogs", enableDebugLogs)
-        inputs.property("$prefix.printEncodedErrorLogs", printEncodedErrorLogs)
         inputs.property("$prefix.isTestVariant", isTestVariant)
         inputs.property("$prefix.isEnabledForTests", isEnabledForTests)
         inputs.property("$prefix.isEnableV2", isEnableV2)
@@ -190,7 +194,6 @@ class DataBindingCompilerArguments constructor(
             printEncodedErrorLogs: Boolean
         ): DataBindingCompilerArguments {
             val globalScope = variantScope.globalScope
-            val extension = globalScope.extension
             val variantData = variantScope.variantData
             val variantConfig = variantScope.variantConfiguration
             val artifacts = variantScope.artifacts
@@ -211,47 +214,6 @@ class DataBindingCompilerArguments constructor(
                 }
             }
 
-            // Get classLogDir
-            val classLogDir = Iterables.getOnlyElement<File>(
-                artifacts.getFinalArtifactFiles(
-                    InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
-                ).get()
-            )
-
-            // Get baseFeatureInfoDir
-            val baseFeatureInfoDir = if (artifacts.hasArtifact(
-                    InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO
-                )
-            ) {
-                Iterables.getOnlyElement<File>(
-                    artifacts
-                        .getFinalArtifactFiles(
-                            InternalArtifactType
-                                .FEATURE_DATA_BINDING_BASE_FEATURE_INFO
-                        )
-                        .get()
-                )
-            } else {
-                null
-            }
-
-            // Get featureInfoDir
-            val featureInfoDir = if (artifacts.hasArtifact(
-                    InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
-                )
-            ) {
-                Iterables.getOnlyElement<File>(
-                    artifacts
-                        .getFinalArtifactFiles(
-                            InternalArtifactType
-                                .FEATURE_DATA_BINDING_FEATURE_INFO
-                        )
-                        .get()
-                )
-            } else {
-                null
-            }
-
             // Get exportClassListOutFile
             val exportClassListOutFile = if (variantData.type.isExportDataBindingClassList) {
                 variantScope.generatedClassListOutputFileForDataBinding
@@ -264,17 +226,22 @@ class DataBindingCompilerArguments constructor(
                 modulePackageProvider = { variantConfig.originalApplicationId },
                 minApi = variantConfig.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkHandler.checkAndGetSdkFolder(),
-                buildDir = variantScope.buildFolderForDataBindingCompiler,
-                layoutInfoDir = variantScope.layoutInfoOutputForDataBinding,
-                classLogDir = classLogDir,
-                baseFeatureInfoDir = baseFeatureInfoDir,
-                featureInfoDir = featureInfoDir,
+                dependencyArtifactsDir =
+                        artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS),
+                layoutInfoDir =
+                        artifacts.getFinalArtifactFiles(DATA_BINDING_LAYOUT_INFO_TYPE_MERGE),
+                classLogDir = artifacts.getFinalArtifactFiles(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                baseFeatureInfoDir =
+                        artifacts.getFinalArtifactFilesIfPresent(
+                                FEATURE_DATA_BINDING_BASE_FEATURE_INFO),
+                featureInfoDir =
+                        artifacts.getFinalArtifactFilesIfPresent(FEATURE_DATA_BINDING_FEATURE_INFO),
                 aarOutDir = variantScope.bundleArtifactFolderForDataBinding,
                 exportClassListOutFile = exportClassListOutFile,
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = variantData.type.isTestComponent,
-                isEnabledForTests = extension.dataBinding.isEnabledForTests,
+                isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
                 isEnableV2 = globalScope.projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)
             )
         }

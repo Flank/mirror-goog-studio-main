@@ -104,14 +104,8 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT
             )
-            val outFolder = File(
-                variantScope.buildFolderForDataBindingCompiler,
-                DataBindingBuilder.ARTIFACT_FILES_DIR_FROM_LIBS
-            )
-            task.outFolder = outFolder
-            variantScope.artifacts.appendArtifact(
+            task.outFolder = variantScope.artifacts.appendArtifact(
                 InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
-                ImmutableList.of(outFolder),
                 task
             )
         }
