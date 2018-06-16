@@ -15,15 +15,19 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.TaskManager.MergeType.MERGE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE;
 
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
@@ -703,6 +707,7 @@ public class MergeResources extends IncrementalTask {
     public static class ConfigAction implements TaskConfigAction<MergeResources> {
         @NonNull
         private final VariantScope scope;
+        @NonNull private final TaskManager.MergeType mergeType;
         @NonNull
         private final String taskNamePrefix;
         @Nullable
@@ -715,6 +720,7 @@ public class MergeResources extends IncrementalTask {
 
         public ConfigAction(
                 @NonNull VariantScope scope,
+                @NonNull TaskManager.MergeType mergeType,
                 @NonNull String taskNamePrefix,
                 @Nullable File outputLocation,
                 @Nullable File mergedNotCompiledOutputDirectory,
@@ -722,6 +728,7 @@ public class MergeResources extends IncrementalTask {
                 boolean processResources,
                 @NonNull ImmutableSet<Flag> flags) {
             this.scope = scope;
+            this.mergeType = mergeType;
             this.taskNamePrefix = taskNamePrefix;
             this.outputLocation = outputLocation;
             this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
@@ -818,13 +825,26 @@ public class MergeResources extends IncrementalTask {
             if (!mergeResourcesTask.disableVectorDrawables) {
                 mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
             }
+
+            // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
+            // MergeResources tasks sharing the same task type (MergeResources) and ConfigAction
+            // code: packageResources with mergeType == PACKAGE, and mergeResources with
+            // mergeType == MERGE. Since the following line of code is called for each task, the
+            // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
+            // finally registered in the current scope.
+            // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
             scope.getTaskContainer().setMergeResourcesTask(mergeResourcesTask);
 
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
                 // Keep as an output.
                 mergeResourcesTask.dataBindingLayoutInfoOutFolder =
-                        scope.getLayoutInfoOutputForDataBinding();
-
+                        scope.getArtifacts()
+                                .appendArtifact(
+                                        mergeType == MERGE
+                                                ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
+                                                : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE,
+                                        mergeResourcesTask,
+                                        "out");
                 mergeResourcesTask.dataBindingLayoutProcessor =
                         new SingleFileProcessor() {
 

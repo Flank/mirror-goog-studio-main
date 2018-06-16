@@ -176,6 +176,20 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
+     * Returns the final [BuildableArtifact] associated with the `artifactType` or `null` if no
+     * [BuildableArtifact] has been registered for this artifact type.
+     *
+     * See [getFinalArtifactFiles] for more details.
+     */
+    fun getFinalArtifactFilesIfPresent(artifactType: ArtifactType): BuildableArtifact? {
+        return if (hasArtifact(artifactType)) {
+            getFinalArtifactFiles(artifactType)
+        } else {
+            null
+        }
+    }
+
+    /**
      * Returns whether the artifactType exists in the holder.
      */
     fun hasArtifact(artifactType: ArtifactType) : Boolean {
@@ -223,7 +237,7 @@ abstract class BuildArtifactsHolder(
             artifactType: ArtifactType,
             newFiles : Collection<File>,
             task : Task) : BuildableArtifact {
-        return _appendArtifact(artifactType,
+        return doAppendArtifact(artifactType,
             createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(task))
     }
 
@@ -239,7 +253,7 @@ abstract class BuildArtifactsHolder(
      * @param existingFiles existing files' [FileCollection] with
      */
     fun appendArtifact(artifactType: ArtifactType, existingFiles: FileCollection) {
-        _appendArtifact(artifactType,
+        doAppendArtifact(artifactType,
             createFileCollection(artifactRecordMap[artifactType], existingFiles))
     }
     /**
@@ -250,7 +264,7 @@ abstract class BuildArtifactsHolder(
      * @param buildableArtifact existing [BuildableArtifact] holding files and dependencies
      */
     fun appendArtifact(artifactType: ArtifactType, buildableArtifact: BuildableArtifact) {
-        _appendArtifact(artifactType,
+        doAppendArtifact(artifactType,
             createFileCollection(artifactRecordMap[artifactType], buildableArtifact))
     }
 
@@ -357,7 +371,7 @@ abstract class BuildArtifactsHolder(
             project.files(newFiles)
         }
 
-    private fun _appendArtifact(type: ArtifactType, files: FileCollection) : BuildableArtifact {
+    private fun doAppendArtifact(type: ArtifactType, files: FileCollection) : BuildableArtifact {
         val newBuildableArtifact = BuildableArtifactImpl(files, dslScope)
         createOutput(type, newBuildableArtifact)
         return newBuildableArtifact
@@ -440,7 +454,7 @@ abstract class BuildArtifactsHolder(
                 artifact.buildDependencies.getDependencies(null).map(Task::getPath))
 
     companion object {
-        val MULTI_TYPES = "multi-types"
+        const val MULTI_TYPES = "multi-types"
 
         fun parseReport(file : File) : Report {
             val result = mutableMapOf<ArtifactType, List<BuildableArtifactData>>()
@@ -457,7 +471,7 @@ abstract class BuildArtifactsHolder(
                                         obj.getAsJsonArray("builtBy").map(
                                                 JsonElement::getAsString))
                             }
-                    result.put(key.toArtifactType(), history)
+                    result[key.toArtifactType()] = history
                 }
             }
             return result

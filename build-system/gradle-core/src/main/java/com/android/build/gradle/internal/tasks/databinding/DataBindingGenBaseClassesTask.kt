@@ -22,16 +22,18 @@ import android.databinding.tool.store.LayoutInfoInput
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.io.File
@@ -53,7 +55,9 @@ import kotlin.reflect.KFunction
  */
 open class DataBindingGenBaseClassesTask : DefaultTask() {
     // where xml info files are
-    @get:InputDirectory lateinit var xmlInfoFolder: File
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var layoutInfoDirectory: BuildableArtifact
         private set
     // the package name for the module / app
     lateinit var packageNameSupplier: KFunction<String>
@@ -120,18 +124,25 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     private fun buildInputArgs(inputs: IncrementalTaskInputs): LayoutInfoInput.Args {
         val outOfDate = ArrayList<File>()
         val removed = ArrayList<File>()
+        val layoutInfoDir = layoutInfoDirectory.get().singleFile
 
         // if dependency added/removed a file, it is handled by the LayoutInfoInput class
         if (inputs.isIncremental) {
             inputs.outOfDate { inputFileDetails ->
-                if (FileUtils.isFileInDirectory(inputFileDetails.file,
-                        xmlInfoFolder) && inputFileDetails.file.name.endsWith(".xml")) {
+                if (FileUtils.isFileInDirectory(
+                        inputFileDetails.file,
+                        layoutInfoDir
+                    ) && inputFileDetails.file.name.endsWith(".xml")
+                ) {
                     outOfDate.add(inputFileDetails.file)
                 }
             }
             inputs.removed { inputFileDetails ->
-                if (FileUtils.isFileInDirectory(inputFileDetails.file,
-                        xmlInfoFolder) && inputFileDetails.file.name.endsWith(".xml")) {
+                if (FileUtils.isFileInDirectory(
+                        inputFileDetails.file,
+                        layoutInfoDir
+                    ) && inputFileDetails.file.name.endsWith(".xml")
+                ) {
                     removed.add(inputFileDetails.file)
                 }
             }
@@ -142,7 +153,7 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         return LayoutInfoInput.Args(
                 outOfDate = outOfDate,
                 removed = removed,
-                infoFolder = xmlInfoFolder,
+                infoFolder = layoutInfoDir,
                 dependencyClassesFolder = mergedArtifactsFromDependencies.single(),
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
@@ -161,7 +172,9 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         override fun getType(): Class<DataBindingGenBaseClassesTask> = DataBindingGenBaseClassesTask::class.java
 
         override fun execute(task: DataBindingGenBaseClassesTask) {
-            task.xmlInfoFolder = variantScope.layoutInfoOutputForDataBinding
+            task.layoutInfoDirectory =
+                    variantScope.artifacts.getFinalArtifactFiles(
+                            DATA_BINDING_LAYOUT_INFO_TYPE_MERGE)
             val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
             task.packageNameSupplier = variantData.variantConfiguration::getOriginalApplicationId

@@ -6,7 +6,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
@@ -147,13 +146,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
         if (isDataBindingEnabled) {
 
-            if (artifacts.hasArtifact(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
-                // if data binding is enabled and this variant has merged dependency artifacts, then
-                // make the javac task depend on them. (test variants don't do the merge so they
-                // could not have the artifacts)
-                javacTask.dataBindingDependencyArtifacts =
-                        artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS);
-            }
             // the data binding artifact is created by the annotation processor, so we register this
             // task output (which also publishes it) with javac as the generating task.
             javacTask.dataBindingArtifactOutputDirectory =
@@ -162,31 +154,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             artifacts.appendArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT,
                     ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
                     javacTask);
-
-            VariantType variantType = scope.getType();
-            if (variantType.isBaseModule()) {
-                javacTask
-                        .getInputs()
-                        .files(
-                                artifacts
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
-                                        .get())
-                        .withPropertyName("databinding.baseFeatureInfoDir")
-                        .withPathSensitivity(PathSensitivity.RELATIVE);
-            } else if (variantType.isFeatureSplit()) {
-                javacTask
-                        .getInputs()
-                        .files(
-                                artifacts
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .FEATURE_DATA_BINDING_FEATURE_INFO)
-                                        .get())
-                        .withPropertyName("databinding.featureInfoDir")
-                        .withPathSensitivity(PathSensitivity.RELATIVE);
-            }
         }
 
         javacTask.processorListFile =

@@ -1333,19 +1333,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "source/dataBinding/trigger/" + getVariantConfiguration().getDirName());
     }
 
-
-    @Override
-    @NonNull
-    public File getLayoutInfoOutputForDataBinding() {
-        return dataBindingIntermediate("layout-info");
-    }
-
-    @Override
-    @NonNull
-    public File getBuildFolderForDataBindingCompiler() {
-        return dataBindingIntermediate("compiler");
-    }
-
     @Override
     @NonNull
     public File getGeneratedClassListOutputFileForDataBinding() {

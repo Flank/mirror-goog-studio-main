@@ -161,6 +161,11 @@ public enum InternalArtifactType implements ArtifactType {
     DATA_BINDING_ARTIFACT,
     // the merged data binding artifacts from all the dependencies
     DATA_BINDING_DEPENDENCY_ARTIFACTS,
+    // directory containing layout info files for data binding when merge-resources type == MERGE
+    DATA_BINDING_LAYOUT_INFO_TYPE_MERGE,
+    // directory containing layout info files for data binding when merge-resources type == PACKAGE
+    // see https://issuetracker.google.com/110412851
+    DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE,
     // the generated base classes artifacts from all dependencies
     DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
     // the data binding class log generated after compilation, includes merged

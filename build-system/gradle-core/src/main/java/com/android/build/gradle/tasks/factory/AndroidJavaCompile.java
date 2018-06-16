@@ -34,9 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
-import org.gradle.api.Buildable;
 import org.gradle.api.JavaVersion;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -61,12 +59,6 @@ public class AndroidJavaCompile extends JavaCompile {
 
     String variantName;
 
-    /**
-     * Collection of artifacts that were produced by dependencies' data binding annotation
-     * processors.
-     */
-    BuildableArtifact dataBindingDependencyArtifacts;
-
     File dataBindingArtifactOutputDirectory;
 
     @PathSensitive(PathSensitivity.NONE)
@@ -84,13 +76,6 @@ public class AndroidJavaCompile extends JavaCompile {
     @Optional
     public File getDataBindingArtifactOutputDirectory() {
         return dataBindingArtifactOutputDirectory;
-    }
-
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @InputFiles
-    @Optional
-    public BuildableArtifact getDataBindingDependencyArtifacts() {
-        return dataBindingDependencyArtifacts;
     }
 
     @Override

@@ -117,7 +117,7 @@ public class LibraryTaskManager extends TaskManager {
 
         createRenderscriptTask(variantScope);
 
-        createMergeResourcesTask(variantScope);
+        createMergeResourcesTasks(variantScope);
 
         createShaderTask(variantScope);
 
@@ -437,7 +437,7 @@ public class LibraryTaskManager extends TaskManager {
                                 .build());
     }
 
-    private void createMergeResourcesTask(@NonNull VariantScope variantScope) {
+    private void createMergeResourcesTasks(@NonNull VariantScope variantScope) {
         ImmutableSet<MergeResources.Flag> flags;
         if (Boolean.TRUE.equals(
                 variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
@@ -472,7 +472,6 @@ public class LibraryTaskManager extends TaskManager {
         // This task merges all the resources, including the dependencies of this library.
         // This should be unused, except that external libraries might consume it.
         createMergeResourcesTask(variantScope, false /*processResources*/, ImmutableSet.of());
-
     }
 
     @Override
@@ -499,11 +498,17 @@ public class LibraryTaskManager extends TaskManager {
                             variantScope.getVariantData().getType().isExportDataBindingClassList()
                                     ? variantScope.getGeneratedClassListOutputFileForDataBinding()
                                     : null;
-                    File dataBindingFolder = variantScope.getBuildFolderForDataBindingCompiler();
+                    File dependencyArtifactsDir =
+                            variantScope
+                                    .getArtifacts()
+                                    .getFinalArtifactFiles(
+                                            InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
+                                    .get()
+                                    .getSingleFile();
                     return dataBindingBuilder.getJarExcludeList(
                             variantScope.getVariantData().getLayoutXmlProcessor(),
                             excludeFile,
-                            dataBindingFolder);
+                            dependencyArtifactsDir);
                 });
     }
 
