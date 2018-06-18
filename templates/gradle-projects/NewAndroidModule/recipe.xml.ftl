@@ -145,7 +145,6 @@
     </#if>
 </#if>
 
-
 <#if includeCppSupport>
     <mkdir at="${escapeXmlAttribute(nativeSrcOut)}" />
 
@@ -153,6 +152,17 @@
                    to="${escapeXmlAttribute(projectOut)}/CMakeLists.txt" />
     <instantiate from="root/native-lib.cpp.ftl"
                    to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
+</#if>
+
+<#if includeNavController>
+    <instantiate from="root/res/navigation/mobile_navigation.xml.ftl"
+                   to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
+    <#if includeKotlinSupport>
+        <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+" />
+    <#else>
+        <dependency mavenUrl="android.arch.navigation:navigation-fragment:+" />
+    </#if>
+    <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
 </#if>
 
 </recipe>

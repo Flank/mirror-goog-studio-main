@@ -98,6 +98,12 @@
         default="false" />
 
     <parameter
+        id="includeNavController"
+        name="Include Navigation Controller"
+        type="boolean"
+        default="false" />
+
+    <parameter
         id="isInstantApp"
         name="Has Instant App support"
         type="boolean"
