@@ -53,13 +53,13 @@ class NamespaceRewriterTest {
         javacOutput = temporaryFolder.newFolder("out")
 
         compileSources(
-                ImmutableList.of(
-                        getFile("R.java"),
-                        getFile("Test.java"),
-                        getFile("Test2.java"),
-                        getFile("dependency/R.java")
-                ),
-                javacOutput
+            ImmutableList.of(
+                getFile("R.java"),
+                getFile("Test.java"),
+                getFile("Test2.java"),
+                getFile("dependency/R.java")
+            ),
+            javacOutput
         )
 
         testClass = FileUtils.join(javacOutput, "com", "example", "mymodule", "Test.class")
@@ -73,11 +73,11 @@ class NamespaceRewriterTest {
         dependencyRClass = FileUtils.join(javacOutput, "com", "example", "dependency", "R.class")
         assertThat(dependencyRClass).exists()
         dependencyRStringClass = FileUtils.join(
-                javacOutput,
-                "com",
-                "example",
-                "dependency",
-                "R\$string.class"
+            javacOutput,
+            "com",
+            "example",
+            "dependency",
+            "R\$string.class"
         )
         assertThat(dependencyRStringClass).exists()
     }
@@ -91,15 +91,15 @@ class NamespaceRewriterTest {
         setBytecodeUp()
         // Test class will contain only resources from its' own module.
         val moduleTable = SymbolTable.builder()
-                .tablePackage("com.example.mymodule")
-                .add(symbol("string", "s1"))
-                .add(symbol("string", "s2"))
-                .add(symbol("string", "s3"))
-                .build()
+            .tablePackage("com.example.mymodule")
+            .add(symbol("string", "s1"))
+            .add(symbol("string", "s2"))
+            .add(symbol("string", "s3"))
+            .build()
 
         // Just override the existing file as we compile them per test.
         NamespaceRewriter(ImmutableList.of(moduleTable))
-                .rewriteClass(testClass.toPath(), testClass.toPath())
+            .rewriteClass(testClass.toPath(), testClass.toPath())
 
         val urls = arrayOf(javacOutput.toURI().toURL())
         URLClassLoader(urls, null).use { classLoader ->
@@ -118,47 +118,47 @@ class NamespaceRewriterTest {
         // dependencies. Only resources not defined in this module need to be rewritten.
         // Test class will contain only resources from its' own module.
         val moduleTable = SymbolTable.builder()
-                .tablePackage("com.example.mymodule")
-                .add(symbol("string", "s1"))
-                .build()
+            .tablePackage("com.example.mymodule")
+            .add(symbol("string", "s1"))
+            .build()
         val dependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.dependency")
-                .add(symbol("string", "s2"))
-                .add(symbol("string", "s3"))
-                .build()
+            .tablePackage("com.example.dependency")
+            .add(symbol("string", "s2"))
+            .add(symbol("string", "s3"))
+            .build()
         val secondDependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.libA")
-                .add(symbol("string", "s2"))
-                .build()
+            .tablePackage("com.example.libA")
+            .add(symbol("string", "s2"))
+            .build()
         val thirdDependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.libB")
-                .add(symbol("string", "s1"))
-                .add(symbol("string", "s2"))
-                .build()
+            .tablePackage("com.example.libB")
+            .add(symbol("string", "s1"))
+            .add(symbol("string", "s2"))
+            .build()
 
         val logger = MockLogger()
         // Just override the existing file as we compile them per test.
         NamespaceRewriter(
-                ImmutableList.of(
-                        moduleTable,
-                        dependencyTable,
-                        secondDependencyTable,
-                        thirdDependencyTable
-                ),
-                logger
+            ImmutableList.of(
+                moduleTable,
+                dependencyTable,
+                secondDependencyTable,
+                thirdDependencyTable
+            ),
+            logger
         )
-                .rewriteClass(testClass.toPath(), testClass.toPath())
+            .rewriteClass(testClass.toPath(), testClass.toPath())
 
         assertThat(logger.warnings).hasSize(2)
         assertThat(logger.warnings[0]).contains(
-                "In package com.example.mymodule multiple options found in its dependencies for " +
-                        "resource string s1. Using com.example.mymodule, other available: " +
-                        "com.example.libB"
+            "In package com.example.mymodule multiple options found in its dependencies for " +
+                    "resource string s1. Using com.example.mymodule, other available: " +
+                    "com.example.libB"
         )
         assertThat(logger.warnings[1]).contains(
-                "In package com.example.mymodule multiple options found in its dependencies for " +
-                        "resource string s2. Using com.example.dependency, other available: " +
-                        "com.example.libA, com.example.libB"
+            "In package com.example.mymodule multiple options found in its dependencies for " +
+                    "resource string s2. Using com.example.dependency, other available: " +
+                    "com.example.libA, com.example.libB"
         )
 
         val urls = arrayOf(javacOutput.toURI().toURL())
@@ -177,12 +177,12 @@ class NamespaceRewriterTest {
         val e = assertFailsWith<IllegalStateException> {
             val symbols = SymbolTable.builder().tablePackage("my.example.lib").build()
             NamespaceRewriter(ImmutableList.of(symbols)).rewriteClass(
-                    testClass.toPath(),
-                    testClass.toPath()
+                testClass.toPath(),
+                testClass.toPath()
             )
         }
         assertThat(e.message).contains(
-                "In package my.example.lib found unknown symbol of type string and name s1."
+            "In package my.example.lib found unknown symbol of type string and name s1."
         )
     }
 
@@ -199,18 +199,18 @@ class NamespaceRewriterTest {
         }
 
         val moduleTable = SymbolTable.builder()
-                .tablePackage("com.example.mymodule")
-                .add(symbol("string", "s1"))
-                .build()
+            .tablePackage("com.example.mymodule")
+            .add(symbol("string", "s1"))
+            .build()
         val dependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.dependency")
-                .add(symbol("string", "s2"))
-                .add(symbol("string", "s3"))
-                .build()
+            .tablePackage("com.example.dependency")
+            .add(symbol("string", "s2"))
+            .add(symbol("string", "s3"))
+            .build()
 
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable)).rewriteJar(
-                inputJar,
-                outputJar
+            inputJar,
+            outputJar
         )
         assertThat(outputJar).exists()
         ZFile(outputJar).use {
@@ -235,7 +235,8 @@ class NamespaceRewriterTest {
     @Test
     fun rewriteManifest() {
         val originalManifest = temporaryFolder.newFile("AndroidManifest.xml")
-        FileUtils.writeToFile(originalManifest, """<?xml version="1.0" encoding="UTF-8"?>
+        FileUtils.writeToFile(
+            originalManifest, """<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.module"
     android:versionCode="@integer/version_code"
@@ -255,21 +256,22 @@ class NamespaceRewriterTest {
         </activity>
     </application>
 
-</manifest>""")
+</manifest>"""
+        )
         val outputManifest = temporaryFolder.newFile("com.foo.bar.example_AndroidManifest.xml")
         val moduleTable = SymbolTable.builder()
-                .tablePackage("com.example.module")
-                .add(symbol("integer", "version_code"))
-                .add(symbol("string", "version_name"))
-                .add(symbol("string", "activity_name")) // overrides library string
-                .build()
+            .tablePackage("com.example.module")
+            .add(symbol("integer", "version_code"))
+            .add(symbol("string", "version_name"))
+            .add(symbol("string", "activity_name")) // overrides library string
+            .build()
         val dependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.dependency")
-                .add(symbol("string", "app_name"))
-                .add(symbol("drawable", "ic_launcher"))
-                .add(symbol("style", "Theme_Simple")) // Canonicalized here, but not in the manifest
-                .add(symbol("string", "activity_name")) // overridden by the one in the module
-                .build()
+            .tablePackage("com.example.dependency")
+            .add(symbol("string", "app_name"))
+            .add(symbol("drawable", "ic_launcher"))
+            .add(symbol("style", "Theme_Simple")) // Canonicalized here, but not in the manifest
+            .add(symbol("string", "activity_name")) // overridden by the one in the module
+            .build()
 
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
             .rewriteManifest(originalManifest.toPath(), outputManifest.toPath())
@@ -297,13 +299,15 @@ class NamespaceRewriterTest {
         </activity>
     </application>
 
-</manifest>""")
+</manifest>"""
+        )
     }
 
     @Test
     fun rewriteValuesFile() {
         val original = temporaryFolder.newFile("values.xml")
-        FileUtils.writeToFile(original, """<?xml version="1.0" encoding="UTF-8"?>
+        FileUtils.writeToFile(
+            original, """<?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="app_name">@string/string</string>
     <string name="string">string</string>
@@ -331,31 +335,32 @@ class NamespaceRewriterTest {
         </attr>
     </declare-styleable>
 
-</resources>""")
-        val namespaced = File(temporaryFolder.newFolder("namespaced", "values") , "values.xml")
+</resources>"""
+        )
+        val namespaced = File(temporaryFolder.newFolder("namespaced", "values"), "values.xml")
         // TODO: add mock platform attributes, styles and styleables
         val moduleTable = SymbolTable.builder()
-                .tablePackage("com.example.module")
-                .add(symbol("integer", "version_code"))
-                .add(symbol("string", "app_name"))
-                .add(symbol("string", "string")) // just make sure we don't rewrite the types
-                .add(symbol("string", "activity_name")) // overrides library string
-                .add(symbol("string", "activity_ref")) // to make sure we will reference the app one
-                .add(symbol("attr", "showText"))
-                .build()
+            .tablePackage("com.example.module")
+            .add(symbol("integer", "version_code"))
+            .add(symbol("string", "app_name"))
+            .add(symbol("string", "string")) // just make sure we don't rewrite the types
+            .add(symbol("string", "activity_name")) // overrides library string
+            .add(symbol("string", "activity_ref")) // to make sure we will reference the app one
+            .add(symbol("attr", "showText"))
+            .build()
         val dependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.dependency")
-                .add(symbol("string", "reference"))
-                .add(symbol("integer", "remote_value"))
-                .add(symbol("string", "activity_name"))
-                .add(symbol("style", "Parent"))
-                .build()
+            .tablePackage("com.example.dependency")
+            .add(symbol("string", "reference"))
+            .add(symbol("integer", "remote_value"))
+            .add(symbol("string", "activity_name"))
+            .add(symbol("style", "Parent"))
+            .build()
 
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
             .rewriteValuesFile(original.toPath(), namespaced.toPath())
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
-                """<?xml version="1.0" encoding="utf-8"?>
+            """<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_name">@com.example.module:string/string</string>
@@ -384,13 +389,15 @@ class NamespaceRewriterTest {
         </attr>
     </declare-styleable>
 
-</resources>""")
+</resources>"""
+        )
     }
 
     @Test
     fun rewriteLayoutFile() {
         val original = temporaryFolder.newFile("layout.xml")
-        FileUtils.writeToFile(original, """<?xml version="1.0" encoding="utf-8"?>
+        FileUtils.writeToFile(
+            original, """<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -415,38 +422,41 @@ class NamespaceRewriterTest {
         custom:showText="true"
         custom:labelPosition="left" />
 
-</LinearLayout>""")
-        val namespaced = File(temporaryFolder.newFolder("namespaced", "layout") , "layout.xml")
+</LinearLayout>"""
+        )
+        val namespaced = File(temporaryFolder.newFolder("namespaced", "layout"), "layout.xml")
         val moduleTable = SymbolTable.builder()
-                .tablePackage("com.example.module")
-                .add(symbol("layout", "activity_main"))
-                .add(symbol("string", "text"))
-                .add(symbol("attr", "labelPosition"))
-                .add(symbol("attr", "showText"))
-                .build()
+            .tablePackage("com.example.module")
+            .add(symbol("layout", "activity_main"))
+            .add(symbol("string", "text"))
+            .add(symbol("attr", "labelPosition"))
+            .add(symbol("attr", "showText"))
+            .build()
         val dependencyTable = SymbolTable.builder()
-                .tablePackage("com.example.dependency")
-                .add(symbol("string", "appbar_scrolling_view_behavior"))
-                .build()
+            .tablePackage("com.example.dependency")
+            .add(symbol("string", "appbar_scrolling_view_behavior"))
+            .build()
         val coordinatorlayoutTable = SymbolTable.builder()
-                .tablePackage("androidx.coordinatorlayout")
-                .add(symbol("attr", "layout_behavior"))
-                .build()
+            .tablePackage("androidx.coordinatorlayout")
+            .add(symbol("attr", "layout_behavior"))
+            .build()
         val constraintTable = SymbolTable.builder()
-                .tablePackage("android.support.constraint")
-                .add(symbol("attr", "layout_constraintBottom_toBottomOf"))
-                .add(symbol("attr", "layout_constraintLeft_toLeftOf"))
-                .add(symbol("attr", "layout_constraintRight_toRightOf"))
-                .add(symbol("attr", "layout_constraintTop_toTopOf"))
-                .build()
+            .tablePackage("android.support.constraint")
+            .add(symbol("attr", "layout_constraintBottom_toBottomOf"))
+            .add(symbol("attr", "layout_constraintLeft_toLeftOf"))
+            .add(symbol("attr", "layout_constraintRight_toRightOf"))
+            .add(symbol("attr", "layout_constraintTop_toTopOf"))
+            .build()
 
         NamespaceRewriter(
-                ImmutableList.of(
-                        moduleTable, dependencyTable, coordinatorlayoutTable, constraintTable))
+            ImmutableList.of(
+                moduleTable, dependencyTable, coordinatorlayoutTable, constraintTable
+            )
+        )
             .rewriteXmlFile(original.toPath(), namespaced.toPath())
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
-                """<?xml version="1.0" encoding="utf-8"?>
+            """<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res/com.example.customviews"
     xmlns:tools="http://schemas.android.com/tools"
@@ -473,7 +483,8 @@ class NamespaceRewriterTest {
         custom:labelPosition="left"
         custom:showText="true" />
 
-</LinearLayout>""")
+</LinearLayout>"""
+        )
     }
 
     @Test
@@ -571,9 +582,12 @@ class NamespaceRewriterTest {
         checkAarRewrite(namespaceRewriter, "drawable/my.foo2", raw, raw)
     }
 
-
-
-    private fun checkAarRewrite(namespaceRewriter: NamespaceRewriter, path: String, from: String, to: String) {
+    private fun checkAarRewrite(
+        namespaceRewriter: NamespaceRewriter,
+        path: String,
+        from: String,
+        to: String
+    ) {
         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
         val outputDir = fileSystem.getPath("/tmp/rewrittenAar")
         val aarRes = fileSystem.getPath("/tmp/aars/someRes")
@@ -588,6 +602,6 @@ class NamespaceRewriterTest {
         assertThat(Files.readAllLines(outputFile).joinToString("\n").trim()).isEqualTo(to.trim())
     }
 
-    private fun Path.list() : List<Path> =
+    private fun Path.list(): List<Path> =
         Files.list(this).use { it.collect(ImmutableList.toImmutableList()) }
 }
