@@ -20,27 +20,15 @@ import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.Variant;
+import com.android.builder.model.*;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Class which provides information about whether Android resources for a given library are
@@ -566,7 +554,7 @@ public abstract class ResourceVisibilityLookup {
                     }
 
                     String typeString = line.substring(0, index);
-                    ResourceType type = ResourceType.getEnum(typeString);
+                    ResourceType type = ResourceType.fromClassName(typeString);
                     if (type == null) {
                         // This could in theory happen if in the future a new ResourceType is
                         // introduced, and a newer version of the Gradle build system writes the
@@ -706,7 +694,7 @@ public abstract class ResourceVisibilityLookup {
                 if (typeString.equals(previousTypeString)) {
                     type = previousType;
                 } else {
-                    type = ResourceType.getEnum(typeString);
+                    type = ResourceType.fromClassName(typeString);
                     previousTypeString = typeString;
                     previousType = type;
                 }

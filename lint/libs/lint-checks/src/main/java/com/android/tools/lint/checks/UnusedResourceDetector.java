@@ -16,19 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ATTR_CLASS;
-import static com.android.SdkConstants.ATTR_DISCARD;
-import static com.android.SdkConstants.ATTR_KEEP;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_SHRINK_MODE;
-import static com.android.SdkConstants.DOT_JAVA;
-import static com.android.SdkConstants.DOT_XML;
-import static com.android.SdkConstants.TAG_DATA;
-import static com.android.SdkConstants.TAG_LAYOUT;
-import static com.android.SdkConstants.TOOLS_PREFIX;
-import static com.android.SdkConstants.VALUE_FALSE;
-import static com.android.SdkConstants.VALUE_TRUE;
-import static com.android.SdkConstants.XMLNS_PREFIX;
+import static com.android.SdkConstants.*;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
@@ -36,37 +24,14 @@ import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.ClassField;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.Variant;
+import com.android.builder.model.*;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.UElementHandler;
-import com.android.tools.lint.detector.api.BinaryResourceScanner;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.ResourceContext;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.SourceCodeScanner;
-import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.tools.lint.detector.api.*;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -76,14 +41,7 @@ import com.google.common.io.Files;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Document;
@@ -215,7 +173,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             Location location = Lint.guessGradleLocation(project);
             for (String name : keys) {
                 ClassField field = resValues.get(name);
-                ResourceType type = ResourceType.getEnum(field.getType());
+                ResourceType type = ResourceType.fromClassName(field.getType());
                 if (type == null) {
                     // Highly unlikely. This would happen if in the future we add
                     // some new ResourceType, that the Gradle plugin (and the user's

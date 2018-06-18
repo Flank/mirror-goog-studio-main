@@ -20,21 +20,8 @@ import com.android.SdkConstants
 import com.android.SdkConstants.ANDROID_PKG
 import com.android.resources.ResourceType
 import com.google.common.base.Joiner
-import com.intellij.psi.PsiArrayType
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiModifier
-import com.intellij.psi.PsiType
-import com.intellij.psi.PsiVariable
-import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.UQualifiedReferenceExpression
-import org.jetbrains.uast.UResolvable
-import org.jetbrains.uast.USimpleNameReferenceExpression
-import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.asQualifiedPath
-import org.jetbrains.uast.getContainingClass
-import org.jetbrains.uast.getQualifiedParentOrThis
+import com.intellij.psi.*
+import org.jetbrains.uast.*
 import org.jetbrains.uast.java.JavaAbstractUExpression
 import org.jetbrains.uast.java.JavaUDeclarationsExpression
 
@@ -93,7 +80,7 @@ class ResourceReference(
             val type = path[size - 2]
             val name = path[size - 1]
 
-            val resourceType = ResourceType.getEnum(type) ?: return null
+            val resourceType = ResourceType.fromClassName(type) ?: return null
             return ResourceReference(expression, packageName, resourceType, name)
         }
 
@@ -163,7 +150,7 @@ class ResourceReference(
                 return null
             }
 
-            val resourceType = ResourceType.getEnum(resTypeClass.name ?: return null) ?: return null
+            val resourceType = ResourceType.fromClassName(resTypeClass.name ?: return null) ?: return null
             val resourceName = variable.name
             val node: UExpression = when (element) {
                 is UExpression -> element

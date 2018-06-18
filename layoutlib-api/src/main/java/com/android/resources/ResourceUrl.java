@@ -15,9 +15,7 @@
  */
 package com.android.resources;
 
-import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_EMPTY;
-import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_NULL;
-import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_UNDEFINED;
+import static com.android.ide.common.rendering.api.RenderResources.*;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -238,7 +236,7 @@ public class ResourceUrl implements Serializable {
             typeBegin = colon + 1;
         }
         String typeName = url.substring(typeBegin, typeEnd);
-        ResourceType type = ResourceType.getEnum(typeName);
+        ResourceType type = ResourceType.fromXmlValue(typeName);
         if (type == null) {
             return null;
         }

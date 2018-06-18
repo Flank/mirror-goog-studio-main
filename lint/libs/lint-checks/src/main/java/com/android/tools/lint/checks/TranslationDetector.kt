@@ -32,7 +32,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.VersionQualifier
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.ResourceUsageModel.getResourceFieldName
-import com.android.ide.common.resources.usage.ResourceUsageModel.getResourceType
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType.VALUES
 import com.android.resources.ResourceType
@@ -72,6 +71,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.EnumSet
 import java.util.Locale
+import kotlin.collections.set
 
 /**
  * Checks for incomplete translations - e.g. keys that are only present in some
@@ -234,7 +234,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             // Visit top level children within the resource file
             var child = XmlUtils.getFirstSubTag(root)
             while (child != null) {
-                val type = getResourceType(child)
+                val type = ResourceType.fromXmlTag(child)
                 if (type != null && type != ID && type != PUBLIC && type != AAPT) {
                     val name = getResourceFieldName(child)
                     if (name.isNullOrBlank()) {
@@ -500,7 +500,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         isDefaultFolder: Boolean
     ): Boolean {
         val translatable: Attr? = element.getAttributeNode(ATTR_TRANSLATABLE)
-        if (translatable != null && !translatable.value.toBoolean()) {
+        if (translatable != null && !translatable.value!!.toBoolean()) {
             if (!isDefaultFolder &&
                 // Ensure that we're really in a locale folder, not just some non-default
                 // folder (for example, values-en is a locale folder, values-v19 is not)

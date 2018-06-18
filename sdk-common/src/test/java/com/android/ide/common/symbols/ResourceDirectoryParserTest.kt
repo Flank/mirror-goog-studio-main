@@ -101,10 +101,10 @@ class ResourceDirectoryParserTest {
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("drawable", "bar", "int", 0x7f_09_0001))
-                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", 0x7f_09_0002))
-                        .add(SymbolTestUtils.createSymbol("raw", "bar", "int", 0x7f_14_0002))
-                        .add(SymbolTestUtils.createSymbol("raw", "foo", "int", 0x7f_14_0001))
+                        .add(SymbolTestUtils.createSymbol("drawable", "bar", "int", 0x7f_08_0001))
+                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", 0x7f_08_0002))
+                        .add(SymbolTestUtils.createSymbol("raw", "bar", "int", 0x7f_13_0002))
+                        .add(SymbolTestUtils.createSymbol("raw", "foo", "int", 0x7f_13_0001))
                         .build()
 
         assertEquals(expected, parsed)

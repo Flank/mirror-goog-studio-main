@@ -15,15 +15,7 @@
  */
 package com.android.tools.lint.detector.api;
 
-import static com.android.SdkConstants.ANDROID_PKG;
-import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
-import static com.android.SdkConstants.CLASS_CONTEXT;
-import static com.android.SdkConstants.CLASS_FRAGMENT;
-import static com.android.SdkConstants.CLASS_RESOURCES;
-import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
-import static com.android.SdkConstants.CLS_TYPED_ARRAY;
-import static com.android.SdkConstants.R_CLASS;
-import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
+import static com.android.SdkConstants.*;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
@@ -74,10 +66,10 @@ public class ResourceEvaluator {
     /**
      * Marker ResourceType used to signify that an expression is of type {@code @Px}, which isn't
      * actually a ResourceType but one we want to specifically compare with. We're using {@link
-     * ResourceType#DECLARE_STYLEABLE} because that one doesn't have a corresponding {@code *Res}
-     * constant (and ResourceType is an enum we can't just create new constants for.)
+     * ResourceType#SAMPLE_DATA} because that one doesn't have a corresponding {@code *Res} constant
+     * (and ResourceType is an enum we can't just create new constants for.)
      */
-    public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.DECLARE_STYLEABLE;
+    public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.SAMPLE_DATA;
 
     public static final AndroidxName COLOR_INT_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "ColorInt");
@@ -671,7 +663,7 @@ public class ResourceEvaluator {
                         String typeName = select.getReferenceName();
                         String name = expression.getReferenceName();
 
-                        ResourceType type = ResourceType.getEnum(typeName);
+                        ResourceType type = ResourceType.fromClassName(typeName);
                         if (type != null && name != null) {
                             boolean isFramework =
                                     reference.getQualifier() instanceof PsiReferenceExpression
@@ -692,7 +684,7 @@ public class ResourceEvaluator {
                 PsiClass rClass = typeClass.getContainingClass();
                 if (rClass != null && R_CLASS.equals(rClass.getName())) {
                     String name = field.getName();
-                    ResourceType type = ResourceType.getEnum(typeClass.getName());
+                    ResourceType type = ResourceType.fromClassName(typeClass.getName());
                     if (type != null && name != null) {
                         String qualifiedName = rClass.getQualifiedName();
                         boolean isFramework =

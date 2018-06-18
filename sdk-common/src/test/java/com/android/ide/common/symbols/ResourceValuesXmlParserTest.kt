@@ -55,7 +55,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -65,8 +65,8 @@ class ResourceValuesXmlParserTest {
                 SymbolTable.builder()
                         .add(SymbolTestUtils.createSymbol("attr", "a0", "int", 0x7f_04_0001))
                         .add(SymbolTestUtils.createSymbol("attr", "a1", "int", 0x7f_04_0002))
-                        .add(SymbolTestUtils.createSymbol("id", "e0", "int", 0x7f_0c_0001))
-                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", 0x7f_0c_0002))
+                        .add(SymbolTestUtils.createSymbol("id", "e0", "int", 0x7f_0b_0001))
+                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", 0x7f_0b_0002))
                         .add(SymbolTestUtils.createSymbol("attr", "a2", "int", 0x7f_04_0003))
                         .build()
 
@@ -83,7 +83,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -106,7 +106,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -146,15 +146,15 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
                         .add(SymbolTestUtils.createSymbol("styleable", "empty", "int[]", "{  }"))
-                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", 0x7f_0c_0001))
-                        .add(SymbolTestUtils.createSymbol("id", "e2", "int", 0x7f_0c_0002))
+                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", 0x7f_0b_0001))
+                        .add(SymbolTestUtils.createSymbol("id", "e2", "int", 0x7f_0b_0002))
                         .add(SymbolTestUtils.createSymbol("attr", "enums", "int", 0x7f_04_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
@@ -194,7 +194,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         androidSymbols)
 
@@ -223,15 +223,15 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("dimen", "a", "int", 0x7f_08_0001))
-                        .add(SymbolTestUtils.createSymbol("dimen", "b", "int", 0x7f_08_0002))
-                        .add(SymbolTestUtils.createSymbol("dimen", "c", "int", 0x7f_08_0003))
+                        .add(SymbolTestUtils.createSymbol("dimen", "a", "int", 0x7f_07_0001))
+                        .add(SymbolTestUtils.createSymbol("dimen", "b", "int", 0x7f_07_0002))
+                        .add(SymbolTestUtils.createSymbol("dimen", "c", "int", 0x7f_07_0003))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -242,13 +242,13 @@ class ResourceValuesXmlParserTest {
         val xml = """<resources><drawable name="foo">#0cffffff</drawable></resources>"""
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", 0x7f_09_0001))
+                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", 0x7f_08_0001))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -259,13 +259,13 @@ class ResourceValuesXmlParserTest {
         val xml = """<resources><item name="foo" type="id"/></resources>"""
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("id", "foo", "int", 0x7f_0c_0001))
+                        .add(SymbolTestUtils.createSymbol("id", "foo", "int", 0x7f_0b_0001))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -276,13 +276,13 @@ class ResourceValuesXmlParserTest {
         val xml = """<resources><integer name="a">10</integer></resources>"""
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("integer", "a", "int", 0x7f_0d_0001))
+                        .add(SymbolTestUtils.createSymbol("integer", "a", "int", 0x7f_0c_0001))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -300,7 +300,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -325,13 +325,13 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("plurals", "plu", "int", 0x7f_13_0001))
+                        .add(SymbolTestUtils.createSymbol("plurals", "plu", "int", 0x7f_12_0001))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -342,13 +342,13 @@ class ResourceValuesXmlParserTest {
         val xml = """<resources><string name="a">b</string></resources>"""
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("string", "a", "int", 0x7f_15_0001))
+                        .add(SymbolTestUtils.createSymbol("string", "a", "int", 0x7f_14_0001))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -366,7 +366,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -390,14 +390,14 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("style", "empty", "int", 0x7f_16_0001))
-                        .add(SymbolTestUtils.createSymbol("style", "s0", "int", 0x7f_16_0002))
+                        .add(SymbolTestUtils.createSymbol("style", "empty", "int", 0x7f_15_0001))
+                        .add(SymbolTestUtils.createSymbol("style", "s0", "int", 0x7f_15_0002))
                         .build()
 
         assertThat(table).isEqualTo(expected)
@@ -421,7 +421,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -451,7 +451,7 @@ class ResourceValuesXmlParserTest {
 
         val itemXml = """
 <resources>
-    <item type="declare-styleable" name="PieChart">
+    <item type="styleable" name="PieChart">
         <item type="attr" name="showText" format="boolean" />
         <item type="attr" name="labelPosition" format="enum">
             <item type="enum" name="left" value="0"/>
@@ -462,20 +462,20 @@ class ResourceValuesXmlParserTest {
 
         val itemTable =
                 parseValuesResource(
-                        XmlUtils.parseDocument(itemXml, false),
+                        XmlUtils.parseDocument(itemXml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
         val noItemTable =
                 parseValuesResource(
-                        XmlUtils.parseDocument(noItemXml, false),
+                        XmlUtils.parseDocument(noItemXml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
         val expected =
                 SymbolTable.builder()
                         .add(SymbolTestUtils.createSymbol("attr", "showText", "int", 0x7f_04_0001))
-                        .add(SymbolTestUtils.createSymbol("id", "left", "int", 0x7f_0c_0001))
-                        .add(SymbolTestUtils.createSymbol("id", "right", "int", 0x7f_0c_0002))
+                        .add(SymbolTestUtils.createSymbol("id", "left", "int", 0x7f_0b_0001))
+                        .add(SymbolTestUtils.createSymbol("id", "right", "int", 0x7f_0b_0002))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "attr", "labelPosition", "int", 0x7f_04_0002))
@@ -496,7 +496,7 @@ class ResourceValuesXmlParserTest {
     fun parseIncorrectStyleable() {
         val xml = """
 <resources>
-    <item type="declare-styleable" name="PieChart">
+    <item type="styleable" name="PieChart">
         <item type="attr" name="showText" format="boolean"/>
         <attr name="labelPosition" format="enum"/>
         <enum name="left" value="0"/>
@@ -506,7 +506,7 @@ class ResourceValuesXmlParserTest {
 
         try {
             parseValuesResource(
-                    XmlUtils.parseDocument(xml, false),
+                    XmlUtils.parseDocument(xml, true),
                     IdProvider.sequential(),
                     platformAttrSymbols)
             fail()
@@ -523,24 +523,25 @@ class ResourceValuesXmlParserTest {
 
         try {
             parseValuesResource(
-                    XmlUtils.parseDocument(xml, false),
+                    XmlUtils.parseDocument(xml, true),
                     IdProvider.sequential(),
                     platformAttrSymbols)
             fail()
         } catch (e: ResourceValuesXmlParseException) {
             // expected
-            assertThat(e.message).contains("Unknown resource value XML element 'myType'")
+            assertThat(e.message).contains("myType")
+            assertThat(e.message).contains("foo")
         }
     }
 
     @Test
     fun parseOtherAaptAcceptedTypes() {
         val xml = """
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/anroid" xmlns:aapt="http://schemas.android.com/aapt">
     <android:color name="colorPrimary">#3F51B5</android:color>
     <aapt:color name="colorPrimaryDark">#303F9F</aapt:color>
     <color name="colorAccent">#FF4081</color>
-    <item type="declare-styleable" name="foo_declare_styleable">
+    <item type="styleable" name="foo_declare_styleable">
     </item>
     <item type="anim" name="foo_anim">idk</item>
     <item type="animator" name="foo_animator">idk</item>
@@ -558,7 +559,7 @@ class ResourceValuesXmlParserTest {
 
         val actual =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -582,25 +583,25 @@ class ResourceValuesXmlParserTest {
                                         "animator", "foo_animator", "int", 0x7f_02_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "drawable", "foo_drawable", "int", 0x7f_09_0001))
+                                        "drawable", "foo_drawable", "int", 0x7f_08_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "fraction", "foo_fraction", "int", 0x7f_0b_0001))
+                                        "fraction", "foo_fraction", "int", 0x7f_0a_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "integer", "foo_integer", "int", 0x7f_0d_0001))
-                        .add(SymbolTestUtils.createSymbol("menu", "foo_menu", "int", 0x7f_10_0001))
+                                        "integer", "foo_integer", "int", 0x7f_0c_0001))
+                        .add(SymbolTestUtils.createSymbol("menu", "foo_menu", "int", 0x7f_0f_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "mipmap", "foo_mipmap", "int", 0x7f_11_0001))
-                        .add(SymbolTestUtils.createSymbol("raw", "foo_raw", "int", 0x7f_14_0001))
+                                        "mipmap", "foo_mipmap", "int", 0x7f_10_0001))
+                        .add(SymbolTestUtils.createSymbol("raw", "foo_raw", "int", 0x7f_13_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "style", "foo_style", "int", 0x7f_16_0001))
+                                        "style", "foo_style", "int", 0x7f_15_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "transition", "foo_transition", "int", 0x7f_18_0001))
-                        .add(SymbolTestUtils.createSymbol("xml", "foo_xml", "int", 0x7f_19_0001))
+                                        "transition", "foo_transition", "int", 0x7f_17_0001))
+                        .add(SymbolTestUtils.createSymbol("xml", "foo_xml", "int", 0x7f_18_0001))
                         .build()
 
         assertThat(actual).isEqualTo(expected)
@@ -621,7 +622,7 @@ class ResourceValuesXmlParserTest {
 
         val table =
                 parseValuesResource(
-                        XmlUtils.parseDocument(xml, false),
+                        XmlUtils.parseDocument(xml, true),
                         IdProvider.sequential(),
                         platformAttrSymbols)
 
@@ -631,9 +632,9 @@ class ResourceValuesXmlParserTest {
                 SymbolTable.builder()
                         .add(SymbolTestUtils.createSymbol("attr", "a0", "int", 0x7f_04_0001))
                         .add(SymbolTestUtils.createSymbol("attr", "a1", "int", 0x7f_04_0002))
-                        .add(SymbolTestUtils.createSymbol("id", "enum1", "int", 0x7f_0c_0003))
-                        .add(SymbolTestUtils.createSymbol("id", "nonEnumId", "int", 0x7f_0c_0004))
-                        .add(SymbolTestUtils.createSymbol("id", "enum2", "int", 0x7f_0c_0002))
+                        .add(SymbolTestUtils.createSymbol("id", "enum1", "int", 0x7f_0b_0003))
+                        .add(SymbolTestUtils.createSymbol("id", "nonEnumId", "int", 0x7f_0b_0004))
+                        .add(SymbolTestUtils.createSymbol("id", "enum2", "int", 0x7f_0b_0002))
                         .build()
 
         assertThat(table).isEqualTo(expected)

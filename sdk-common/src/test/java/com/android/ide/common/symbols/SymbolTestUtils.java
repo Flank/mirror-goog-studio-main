@@ -47,7 +47,7 @@ public final class SymbolTestUtils {
             @NonNull List<String> styleableChildren) {
         ResourceType type =
                 Preconditions.checkNotNull(
-                        ResourceType.getEnum(resourceType),
+                        ResourceType.fromClassName(resourceType),
                         "Invalid resource type %s",
                         resourceType);
         if (javaType.equals("int[]")) {

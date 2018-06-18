@@ -462,7 +462,7 @@ public final class SymbolIo {
         int pos2 = line.indexOf(' ', pos + 1);
         String className = line.substring(pos + 1, pos2);
 
-        ResourceType resourceType = ResourceType.getEnum(className);
+        ResourceType resourceType = ResourceType.fromClassName(className);
         if (resourceType == null) {
             throw new IOException("Invalid resource type " + className);
         }
@@ -494,7 +494,7 @@ public final class SymbolIo {
         int pos3 = line.indexOf(' ', pos2 + 1);
         String className = line.substring(pos2 + 1, pos3);
 
-        ResourceType resourceType = ResourceType.getEnum(className);
+        ResourceType resourceType = ResourceType.fromClassName(className);
         if (resourceType == null) {
             throw new IOException("Invalid resource type " + className);
         }
@@ -509,7 +509,7 @@ public final class SymbolIo {
         // format is "<class> <name>"
         int pos = line.indexOf(' ');
         String className = line.substring(0, pos);
-        ResourceType resourceType = ResourceType.getEnum(className);
+        ResourceType resourceType = ResourceType.fromClassName(className);
         if (resourceType == null) {
             throw new IOException("Invalid resource type " + className);
         }
@@ -532,7 +532,7 @@ public final class SymbolIo {
         // format is "<type> <name>[ <child>[ <child>[ ...]]]"
         int startPos = line.indexOf(' ');
         String typeName = line.substring(0, startPos);
-        ResourceType resourceType = ResourceType.getEnum(typeName);
+        ResourceType resourceType = ResourceType.fromClassName(typeName);
         if (resourceType == null) {
             throw new IOException("Invalid symbol type " + typeName);
         }
@@ -617,7 +617,7 @@ public final class SymbolIo {
                 boolean readValues,
                 boolean singleLineStyleable,
                 boolean rawSymbolNames,
-                String fileTypeHeader) {
+                @Nullable String fileTypeHeader) {
             this.readValues = readValues;
             this.singleLineStyleable = singleLineStyleable;
             this.fileTypeHeader = fileTypeHeader;

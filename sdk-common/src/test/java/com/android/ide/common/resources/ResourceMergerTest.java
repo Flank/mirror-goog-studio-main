@@ -93,7 +93,8 @@ public class ResourceMergerTest extends BaseTestCase {
     public void testMergedResourcesWithNormalizationByName() throws Exception {
         ResourceMerger merger = getResourceMerger();
 
-        verifyResourceExists(merger,
+        verifyResourceExists(
+                merger,
                 "drawable/icon",
                 "drawable-ldpi-v4/icon",
                 "drawable/icon2",
@@ -123,14 +124,13 @@ public class ResourceMergerTest extends BaseTestCase {
                 "attr/blah",
                 "attr/blah2",
                 "attr/flagAttr",
-                "declare-styleable/declare_styleable",
+                "styleable/declare_styleable",
                 "dimen/dimen",
                 "dimen-sw600dp-v13/offset",
                 "id/item_id",
                 "integer/integer",
                 "plurals/plurals",
-                "plurals/plurals_with_bad_quantity"
-        );
+                "plurals/plurals_with_bad_quantity");
     }
 
     private static String getPlatformPath(String path) {
@@ -408,8 +408,7 @@ public class ResourceMergerTest extends BaseTestCase {
         writtenSet.addSource(folder);
         writtenSet.loadFromFiles(logger);
 
-        List<ResourceMergerItem> items =
-                writtenSet.getDataMap().get("declare-styleable/declare_styleable");
+        List<ResourceMergerItem> items = writtenSet.getDataMap().get("styleable/declare_styleable");
         assertEquals(1, items.size());
 
         Node styleableNode = items.get(0).getValue();
@@ -1455,7 +1454,7 @@ public class ResourceMergerTest extends BaseTestCase {
         ListMultimap<String, ResourceMergerItem> map = mergedSet.getDataMap();
         assertEquals(4, map.size());
 
-        List<ResourceMergerItem> items = map.get("declare-styleable/foo");
+        List<ResourceMergerItem> items = map.get("styleable/foo");
         assertNotNull(items);
         assertEquals(1, items.size());
 

@@ -50,7 +50,7 @@ class SymbolTableMergeTest {
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
-                .add(symbol("dimen", "a", "int", 0x7f_08_0001))
+                .add(symbol("dimen", "a", "int", 0x7f_07_0001))
                 .add(symbol("attr", "b", "int", 0x7f_04_0001))
                 .build()
 
@@ -78,7 +78,7 @@ class SymbolTableMergeTest {
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
-                .add(symbol("dimen", "a", "int", 0x7f_08_0001))
+                .add(symbol("dimen", "a", "int", 0x7f_07_0001))
                 .add(symbol("attr", "b", "int", 0x7f_04_0001))
                 .build()
 
@@ -107,7 +107,7 @@ class SymbolTableMergeTest {
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
-                .add(symbol("dimen", "a", "int", 0x7f_08_0001))
+                .add(symbol("dimen", "a", "int", 0x7f_07_0001))
                 .add(symbol("attr", "a1", "int", 0x7f_04_0001))
                 .add(symbol("attr", "a2", "int", 0x7f_04_0002))
                 .add(symbol("styleable", "style1", "int[]", "{ 0x7f040001, 0x7f040002 }", listOf("a1", "a2")))

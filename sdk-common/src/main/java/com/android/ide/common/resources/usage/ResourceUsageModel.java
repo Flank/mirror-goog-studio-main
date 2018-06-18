@@ -16,33 +16,8 @@
 
 package com.android.ide.common.resources.usage;
 
-import static com.android.SdkConstants.AAPT_URI;
-import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_DISCARD;
-import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.ATTR_KEEP;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_PARENT;
-import static com.android.SdkConstants.ATTR_SHRINK_MODE;
-import static com.android.SdkConstants.ATTR_TYPE;
-import static com.android.SdkConstants.PREFIX_ANDROID;
-import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
-import static com.android.SdkConstants.REFERENCE_STYLE;
-import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
-import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.SdkConstants.TAG_LAYOUT;
-import static com.android.SdkConstants.TAG_STYLE;
-import static com.android.SdkConstants.TOOLS_URI;
-import static com.android.SdkConstants.VALUE_SAFE;
-import static com.android.SdkConstants.VALUE_STRICT;
-import static com.android.SdkConstants.VIEW_FRAGMENT;
-import static com.android.utils.SdkUtils.endsWithIgnoreCase;
-import static com.android.utils.SdkUtils.fileNameToResourceName;
-import static com.android.utils.SdkUtils.globToRegexp;
+import static com.android.SdkConstants.*;
+import static com.android.utils.SdkUtils.*;
 import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.SdkConstants;
@@ -62,20 +37,11 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 
 /**
  * A model for Android resource declarations and usages
@@ -104,28 +70,13 @@ public class ResourceUsageModel {
         return SdkUtils.getResourceFieldName(element.getAttribute(ATTR_NAME));
     }
 
-    public static ResourceType getResourceType(Element element) {
-        String tagName = element.getTagName();
-        if (tagName.equals(TAG_ITEM)) {
-            String typeName = element.getAttribute(ATTR_TYPE);
-            if (!typeName.isEmpty()) {
-                return ResourceType.getEnum(typeName);
-            }
-        } else if ("string-array".equals(tagName) || "integer-array".equals(tagName)) {
-            return ResourceType.ARRAY;
-        } else {
-            return ResourceType.getEnum(tagName);
-        }
-        return null;
-    }
-
     @Nullable
     public Resource getResource(Element element) {
         return getResource(element, false);
     }
 
     public Resource getResource(Element element, boolean declare) {
-        ResourceType type = getResourceType(element);
+        ResourceType type = ResourceType.fromXmlTag(element);
         if (type != null) {
             String name = getResourceFieldName(element);
             Resource resource = getResource(type, name);
@@ -200,7 +151,7 @@ public class ResourceUsageModel {
 
         // Some other relative path. Just look from the end:
         int typeSlash = url.lastIndexOf('/', nameSlash - 1);
-        ResourceType type = ResourceType.getEnum(url.substring(typeSlash + 1, nameSlash));
+        ResourceType type = ResourceType.fromXmlValue(url.substring(typeSlash + 1, nameSlash));
         if (type != null) {
             int nameBegin = nameSlash + 1;
             int dot = url.indexOf('.', nameBegin);
@@ -471,7 +422,6 @@ public class ResourceUsageModel {
             if (!resource.isReachable()
                     // Styles not yet handled correctly: don't mark as unused
                     && resource.type != ResourceType.ATTR
-                    && resource.type != ResourceType.DECLARE_STYLEABLE
                     && resource.type != ResourceType.STYLEABLE
                     // Don't flag known service keys read by library
                     && !SdkUtils.isServiceKey(resource.name)) {
@@ -964,13 +914,13 @@ public class ResourceUsageModel {
             if (folderType == ResourceFolderType.VALUES) {
 
                 Resource definition = null;
-                ResourceType type = getResourceType(element);
+                ResourceType type = ResourceType.fromXmlTag(element);
                 if (type != null) {
                     String name = getResourceFieldName(element);
                     if (type == ResourceType.PUBLIC) {
                         String typeName = element.getAttribute(ATTR_TYPE);
                         if (!typeName.isEmpty()) {
-                            type = ResourceType.getEnum(typeName);
+                            type = ResourceType.fromXmlValue(typeName);
                             if (type != null) {
                                 definition = declareResource(type, name, element);
                                 definition.setPublic(true);
@@ -1665,7 +1615,7 @@ public class ResourceUsageModel {
                     char t = s.charAt(index);
                     if (t == '.') {
                         String typeName = s.substring(begin + 2, index);
-                        ResourceType type = ResourceType.getEnum(typeName);
+                        ResourceType type = ResourceType.fromClassName(typeName);
                         if (type != null) {
                             index++;
                             begin = index;

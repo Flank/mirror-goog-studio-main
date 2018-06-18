@@ -16,14 +16,7 @@
 
 package com.android.ide.common.resources.deprecated;
 
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_PARENT;
-import static com.android.SdkConstants.ATTR_TYPE;
-import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.SdkConstants.TAG_RESOURCES;
+import static com.android.SdkConstants.*;
 
 import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.ValueXmlHelper;
@@ -106,7 +99,9 @@ public final class ValueResourceParser extends DefaultHandler {
                     inResources = true;
                 }
             } else if (mDepth == 2 && inResources) {
-                ResourceType type = getType(qName, attributes);
+                ResourceType type =
+                        ResourceType.fromXmlTag(
+                                new Object(), (t) -> qName, (t, name) -> attributes.getValue(name));
 
                 if (type != null) {
                     // get the resource name
@@ -120,7 +115,7 @@ public final class ValueResourceParser extends DefaultHandler {
                                                 namespace, type, name, parent, mLibraryName);
                                 mRepository.addResourceValue(mCurrentStyle);
                                 break;
-                            case DECLARE_STYLEABLE:
+                            case STYLEABLE:
                                 mCurrentDeclareStyleable =
                                         new DeclareStyleableResourceValueImpl(
                                                 namespace, type, name, null, mLibraryName);
@@ -207,20 +202,6 @@ public final class ValueResourceParser extends DefaultHandler {
         } finally {
             super.startElement(uri, localName, qName, attributes);
         }
-    }
-
-    private static ResourceType getType(String qName, Attributes attributes) {
-        String typeValue;
-
-        // if the node is <item>, we get the type from the attribute "type"
-        if (TAG_ITEM.equals(qName)) {
-            typeValue = attributes.getValue(ATTR_TYPE);
-        } else {
-            // the type is the name of the node.
-            typeValue = qName;
-        }
-
-        return ResourceType.getEnum(typeValue);
     }
 
     @Override

@@ -36,7 +36,7 @@ public class DeclareStyleableResourceValueImpl extends ResourceValueImpl
             @Nullable String value,
             @Nullable String libraryName) {
         super(reference, value, libraryName);
-        assert reference.getResourceType() == ResourceType.DECLARE_STYLEABLE;
+        assert reference.getResourceType() == ResourceType.STYLEABLE;
     }
 
     public DeclareStyleableResourceValueImpl(
@@ -46,7 +46,7 @@ public class DeclareStyleableResourceValueImpl extends ResourceValueImpl
             @Nullable String value,
             @Nullable String libraryName) {
         super(namespace, type, name, value, libraryName);
-        assert type == ResourceType.DECLARE_STYLEABLE;
+        assert type == ResourceType.STYLEABLE;
     }
 
     @Override

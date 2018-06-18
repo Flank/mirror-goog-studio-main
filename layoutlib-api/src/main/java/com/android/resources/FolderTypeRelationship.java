@@ -17,13 +17,8 @@
 package com.android.resources;
 
 import com.android.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This class gives access to the bidirectional relationship between {@link ResourceType} and
@@ -61,7 +56,6 @@ public final class FolderTypeRelationship {
         add(ResourceType.ATTR, ResourceFolderType.VALUES);
         add(ResourceType.BOOL, ResourceFolderType.VALUES);
         add(ResourceType.COLOR, ResourceFolderType.VALUES);
-        add(ResourceType.DECLARE_STYLEABLE, ResourceFolderType.VALUES);
         add(ResourceType.DIMEN, ResourceFolderType.VALUES);
         add(ResourceType.DRAWABLE, ResourceFolderType.VALUES);
         add(ResourceType.FRACTION, ResourceFolderType.VALUES);
@@ -162,6 +156,32 @@ public final class FolderTypeRelationship {
     }
 
     /**
+     * Returns the {@link ResourceFolderType} corresponding to a given {@link ResourceType}, that is
+     * a folder that can contain files generating resources of the specified type and is not {@link
+     * ResourceFolderType#VALUES}, if one exists.
+     *
+     * <p>Returns null for {@link ResourceType#ID}, since there's not a single {@link
+     * ResourceFolderType} that contains only ids.
+     */
+    @Nullable
+    public static ResourceFolderType getNonValuesRelatedFolder(@NonNull ResourceType resType) {
+        if (resType == ResourceType.ID) {
+            return null;
+        }
+
+        List<ResourceFolderType> list = mTypeToFolderMap.get(resType);
+        if (list != null) {
+            for (ResourceFolderType type : list) {
+                if (type != ResourceFolderType.VALUES) {
+                    return type;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Check if a folder may contain ID generating types (via android:id="@+id/xyz").
      * @param folderType The folder type.
      * @return true if folder may contain ID generating types.
@@ -227,6 +247,9 @@ public final class FolderTypeRelationship {
         for (ResourceType type : ResourceType.values()) {
             List<ResourceFolderType> list = mTypeToFolderMap.get(type);
             if (list != null) {
+                // getNonValuesRelatedFolder above assumes every resource belongs in only one non-values folder.
+                assert type == ResourceType.ID || list.size() <= 2;
+
                 // replace with a unmodifiable list wrapper around the current list.
                 mTypeToFolderMap.put(type, Collections.unmodifiableList(list));
             }

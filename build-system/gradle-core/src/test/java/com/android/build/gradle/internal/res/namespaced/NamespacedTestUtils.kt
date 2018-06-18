@@ -66,8 +66,8 @@ fun compileSources(sources: ImmutableList<File>, javacOutput: File) {
  * declare-styleables, '0' for other types). Does not verify the correctness of the resource name.
  */
 fun symbol(type: String, name: String): Symbol {
-    val resType = ResourceType.getEnum(type)!!
-    if (resType == ResourceType.DECLARE_STYLEABLE) {
+    val resType = ResourceType.fromClassName(type)!!
+    if (resType == ResourceType.STYLEABLE) {
         return Symbol.StyleableSymbol(name, ImmutableList.of(), ImmutableList.of())
     }
     return Symbol.NormalSymbol(resType, name, 0)

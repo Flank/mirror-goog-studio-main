@@ -390,7 +390,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkResourceType(
         context: JavaContext,
         argument: UElement,
-        expectedType: EnumSet<ResourceType>,
+        expectedTypes: EnumSet<ResourceType>,
         calledMethod: PsiMethod?
     ) {
         val actual = ResourceEvaluator.getResourceTypes(context.evaluator, argument)
@@ -402,15 +402,15 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         } else if (actual != null && (!Sets.intersection(
                 actual,
-                expectedType
-            ).isEmpty() || expectedType.contains(DRAWABLE) && (actual.contains(COLOR) || actual.contains(
+                expectedTypes
+            ).isEmpty() || expectedTypes.contains(DRAWABLE) && (actual.contains(COLOR) || actual.contains(
                 MIPMAP
             )))
         ) {
             return
         }
 
-        if (expectedType.contains(STYLEABLE) && expectedType.size == 1 &&
+        if (expectedTypes.contains(STYLEABLE) && expectedTypes.size == 1 &&
             calledMethod != null &&
             context.evaluator.isMemberInClass(
                 calledMethod,
@@ -433,7 +433,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             )
         ) {
             message = "Expected a color resource id (`R.color.`) but received an RGB integer"
-        } else if (expectedType.contains(ResourceEvaluator.COLOR_INT_MARKER_TYPE)) {
+        } else if (expectedTypes.contains(ResourceEvaluator.COLOR_INT_MARKER_TYPE)) {
             message = String.format(
                 "Should pass resolved color instead of resource id here: `getResources().getColor(%1\$s)`",
                 argument.asSourceString()
@@ -443,15 +443,15 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             )
         ) {
             message = "Expected a dimension resource id (`R.color.`) but received a pixel integer"
-        } else if (expectedType.contains(ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
+        } else if (expectedTypes.contains(ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
             message = String.format(
                 "Should pass resolved pixel size instead of resource id here: `getResources().getDimension*(%1\$s)`",
                 argument.asSourceString()
             )
-        } else if (expectedType.size < ResourceType.values().size - 2) { // -2: marker types
+        } else if (expectedTypes.size < ResourceType.values().size - 2) { // -2: marker types
             message = String.format(
                 "Expected resource of type %1\$s",
-                Joiner.on(" or ").join(expectedType)
+                Joiner.on(" or ").join(expectedTypes)
             )
         } else {
             message = "Expected resource identifier (`R`.type.`name`)"
@@ -557,6 +557,11 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             ResourceTypeDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
+
+        /**
+         * Number of non-synthethic [ResourceType]s.
+         */
+        private val allResourceTypes: Int = ResourceType.values().count { it.hasInnerClass }
 
         /**
          * Attempting pass the wrong type of resource

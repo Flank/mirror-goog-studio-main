@@ -24,44 +24,108 @@ public class ResourceTypeTest extends TestCase {
 
   public void testName() {
     assertEquals("array", ResourceType.ARRAY.getName());
-    assertEquals("declare-styleable", ResourceType.DECLARE_STYLEABLE.getName());
     assertEquals("mipmap", ResourceType.MIPMAP.getName());
   }
 
   public void testGetDisplayName() {
     assertEquals("Array", ResourceType.ARRAY.getDisplayName());
-    assertEquals("Declare Styleable", ResourceType.DECLARE_STYLEABLE.getDisplayName());
     assertEquals("Mip Map", ResourceType.MIPMAP.getDisplayName());
   }
 
-  public void testStringToEnum() {
-    assertEquals(ResourceType.ANIM, ResourceType.getEnum("anim"));
-    assertEquals(ResourceType.ANIMATOR, ResourceType.getEnum("animator"));
-    assertEquals(ResourceType.DECLARE_STYLEABLE, ResourceType.getEnum("declare-styleable"));
-    assertEquals(ResourceType.FONT, ResourceType.getEnum("font"));
-    assertEquals(ResourceType.MIPMAP, ResourceType.getEnum("mipmap"));
-    assertEquals(ResourceType.STRING, ResourceType.getEnum("string"));
-    assertEquals(ResourceType.STYLE, ResourceType.getEnum("style"));
-    assertEquals(ResourceType.STYLEABLE, ResourceType.getEnum("styleable"));
-    assertEquals(ResourceType.XML, ResourceType.getEnum("xml"));
+    public void testFromXmlTag() {
+        assertEquals(ResourceType.ANIM, ResourceType.fromXmlTagName("anim"));
+        assertEquals(ResourceType.ANIMATOR, ResourceType.fromXmlTagName("animator"));
+        assertEquals(ResourceType.FONT, ResourceType.fromXmlTagName("font"));
+        assertEquals(ResourceType.MIPMAP, ResourceType.fromXmlTagName("mipmap"));
+        assertEquals(ResourceType.STRING, ResourceType.fromXmlTagName("string"));
+        assertEquals(ResourceType.STYLE, ResourceType.fromXmlTagName("style"));
+        assertEquals(ResourceType.XML, ResourceType.fromXmlTagName("xml"));
 
-    // Alternate names should work:
-    assertEquals(ResourceType.ARRAY, ResourceType.getEnum("array"));
-    assertEquals(ResourceType.ARRAY, ResourceType.getEnum("string-array"));
-    assertEquals(ResourceType.ARRAY, ResourceType.getEnum("integer-array"));
+        // In XML, "declare-styleable" has to be used.
+        assertEquals(ResourceType.STYLEABLE, ResourceType.fromXmlTagName("declare-styleable"));
+        assertNull(ResourceType.fromXmlTagName("styleable"));
 
-    // Display names should not work.
-    assertNull(ResourceType.getEnum("Array"));
-    assertNull(ResourceType.getEnum("Declare Styleable"));
+        // There can be a "public" tag.
+        assertEquals(ResourceType.PUBLIC, ResourceType.fromXmlTagName("public"));
 
-    // Misc values should not work.
-    assertNull(ResourceType.getEnum(""));
-    assertNull(ResourceType.getEnum("declare"));
-    assertNull(ResourceType.getEnum("pluralz"));
-    assertNull(ResourceType.getEnum("strin"));
+        // Alternate names should work:
+        assertEquals(ResourceType.ARRAY, ResourceType.fromXmlTagName("array"));
+        assertEquals(ResourceType.ARRAY, ResourceType.fromXmlTagName("string-array"));
+        assertEquals(ResourceType.ARRAY, ResourceType.fromXmlTagName("integer-array"));
 
-    for (ResourceType type : ResourceType.values()) {
-      assertEquals(type, ResourceType.getEnum(type.getName()));
+        // Display names should not work.
+        assertNull(ResourceType.fromXmlTagName("Array"));
+        assertNull(ResourceType.fromXmlTagName("Declare Styleable"));
+
+        // Misc values should not work.
+        assertNull(ResourceType.fromXmlTagName(""));
+        assertNull(ResourceType.fromXmlTagName("declare"));
+        assertNull(ResourceType.fromXmlTagName("pluralz"));
+        assertNull(ResourceType.fromXmlTagName("strin"));
     }
+
+    public void testClassName() {
+        assertEquals(ResourceType.ANIM, ResourceType.fromClassName("anim"));
+        assertEquals(ResourceType.ANIMATOR, ResourceType.fromClassName("animator"));
+        assertEquals(ResourceType.FONT, ResourceType.fromClassName("font"));
+        assertEquals(ResourceType.MIPMAP, ResourceType.fromClassName("mipmap"));
+        assertEquals(ResourceType.STRING, ResourceType.fromClassName("string"));
+        assertEquals(ResourceType.STYLE, ResourceType.fromClassName("style"));
+        assertEquals(ResourceType.XML, ResourceType.fromClassName("xml"));
+
+        // The class is called "styleable".
+        assertEquals(ResourceType.STYLEABLE, ResourceType.fromClassName("styleable"));
+        assertNull(ResourceType.fromClassName("declare-styleable"));
+
+        // There's no public class.
+        assertNull(ResourceType.fromClassName("public"));
+
+        // Alternate names should not work:
+        assertEquals(ResourceType.ARRAY, ResourceType.fromXmlValue("array"));
+        assertNull(ResourceType.fromClassName("string-array"));
+        assertNull(ResourceType.fromClassName("integer-array"));
+
+        // Display names should not work.
+        assertNull(ResourceType.fromClassName("Array"));
+        assertNull(ResourceType.fromClassName("Declare Styleable"));
+
+        // Misc values should not work.
+        assertNull(ResourceType.fromClassName(""));
+        assertNull(ResourceType.fromClassName("declare"));
+        assertNull(ResourceType.fromClassName("pluralz"));
+        assertNull(ResourceType.fromClassName("strin"));
+    }
+
+    public void testFromXmlValue() {
+        assertEquals(ResourceType.ANIM, ResourceType.fromXmlValue("anim"));
+        assertEquals(ResourceType.ANIMATOR, ResourceType.fromXmlValue("animator"));
+        assertEquals(ResourceType.FONT, ResourceType.fromXmlValue("font"));
+        assertEquals(ResourceType.MIPMAP, ResourceType.fromXmlValue("mipmap"));
+        assertEquals(ResourceType.STRING, ResourceType.fromXmlValue("string"));
+        assertEquals(ResourceType.STYLE, ResourceType.fromXmlValue("style"));
+        assertEquals(ResourceType.XML, ResourceType.fromXmlValue("xml"));
+
+        // Styleable doesn't work at all.
+        assertNull(ResourceType.fromXmlValue("declare-styleable"));
+        assertNull(ResourceType.fromXmlValue("styleable"));
+
+        // No way to "reference" a public declaration.
+        assertNull(ResourceType.fromXmlValue("public"));
+
+        // Alternate names should not work:
+        assertEquals(ResourceType.ARRAY, ResourceType.fromXmlValue("array"));
+        assertNull(ResourceType.fromXmlValue("string-array"));
+        assertNull(ResourceType.fromXmlValue("integer-array"));
+
+        // Display names should not work.
+        assertNull(ResourceType.fromXmlValue("Array"));
+        assertNull(ResourceType.fromXmlValue("Declare Styleable"));
+
+        // Misc values should not work.
+        assertNull(ResourceType.fromXmlValue(""));
+        assertNull(ResourceType.fromXmlValue("declare"));
+        assertNull(ResourceType.fromXmlValue("pluralz"));
+        assertNull(ResourceType.fromXmlValue("strin"));
   }
+
 }

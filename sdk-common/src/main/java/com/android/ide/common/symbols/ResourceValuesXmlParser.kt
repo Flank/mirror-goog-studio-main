@@ -23,6 +23,7 @@ import com.android.SdkConstants.ANDROID_NS_NAME_PREFIX
 import com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN
 import com.android.SdkConstants.TAG_EAT_COMMENT
 import com.android.resources.ResourceType
+import com.android.utils.XmlUtils.toXml
 import com.google.common.collect.ImmutableList
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -83,7 +84,7 @@ import java.util.ArrayList
  *
  * <pre>
  * <resources>
- *     <item type="declare-styleable" name="PieChart">
+ *     <item type="styleable" name="PieChart">
  *         <item type="attr" name="showText" format="boolean" />
  *         <item type="attr" name="labelPosition" format="enum">
  *             <item type="enum" name="left" value="0"/>
@@ -198,25 +199,12 @@ private fun parseChild(
         idProvider: IdProvider,
         enumSymbols: MutableList<Symbol>,
         platformAttrSymbols: SymbolTable?) {
-
-    var type = child.tagName
-
-    if (type == SdkConstants.TAG_EAT_COMMENT) {
-        // Doesn't declare a resource.
+    if (child.tagName == SdkConstants.TAG_EAT_COMMENT) {
         return
     }
 
-    if (type == SdkConstants.TAG_ITEM) {
-        type = child.getAttribute(SdkConstants.ATTR_TYPE)
-    }
-
-    // Strip the type name of prefixes.
-    if (type.contains(":")) {
-        type = type.substring(type.lastIndexOf(':') + 1, type.length)
-    }
-
-    val resourceType = ResourceType.getEnum(type) ?: throw ResourceValuesXmlParseException(
-            "Unknown resource value XML element '$type'")
+    val resourceType = ResourceType.fromXmlTag(child)
+                       ?: throw ResourceValuesXmlParseException("Unknown resource value XML element '${toXml(child)}'")
 
     if (resourceType == ResourceType.PUBLIC) {
         // Doesn't declare a resource.
@@ -248,17 +236,16 @@ private fun parseChild(
         ResourceType.TRANSITION,
         ResourceType.XML ->
             builder.add(Symbol.createAndValidateSymbol(resourceType, name, idProvider))
-        ResourceType.DECLARE_STYLEABLE ->
+        ResourceType.STYLEABLE ->
             // We also need to find all the attributes declared under declare styleable.
             parseDeclareStyleable(
                     child, idProvider, name, builder, enumSymbols, platformAttrSymbols)
         ResourceType.ATTR ->
             // We also need to find all the enums declared under attr (if there are any).
             parseAttr(child, idProvider, name, builder, enumSymbols)
-        ResourceType.PUBLIC ->
-            throw AssertionError("Already checked above.")
+        ResourceType.PUBLIC -> error("Already checked above.")
         else -> throw ResourceValuesXmlParseException(
-                "Unknown resource value XML element '$type'")
+                "Unknown resource value XML element '${toXml(child)}'")
     }
 }
 

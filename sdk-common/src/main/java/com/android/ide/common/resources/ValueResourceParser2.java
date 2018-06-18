@@ -28,13 +28,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -124,7 +118,7 @@ class ValueResourceParser2 {
 
                 resources.add(resource);
 
-                if (resource.getType() == ResourceType.DECLARE_STYLEABLE) {
+                if (resource.getType() == ResourceType.STYLEABLE) {
                     // Need to also create ATTR items for its children
                     addStyleableItems(node, resources, map, mFile, mNamespace, mLibraryName);
                 }
@@ -165,35 +159,28 @@ class ValueResourceParser2 {
 
     /**
      * Returns the type of the ResourceItem based on a node's attributes.
+     *
      * @param node the node
      * @return the ResourceType or null if it could not be inferred.
      */
+    @Nullable
     static ResourceType getType(@NonNull Node node, @Nullable File from) throws MergingException {
         String nodeName = node.getLocalName();
-        String typeString = null;
 
-        if (TAG_ITEM.equals(nodeName)) {
-            Attr attribute = (Attr) node.getAttributes().getNamedItemNS(null, ATTR_TYPE);
-            if (attribute != null) {
-                typeString = attribute.getValue();
-            }
-        } else if (TAG_EAT_COMMENT.equals(nodeName) || TAG_SKIP.equals(nodeName)) {
+        if (TAG_EAT_COMMENT.equals(nodeName) || TAG_SKIP.equals(nodeName)) {
             return null;
-        } else {
-            // the type is the name of the node.
-            typeString = nodeName;
         }
 
-        if (typeString != null) {
-            ResourceType type = ResourceType.getEnum(typeString);
-            if (type != null) {
-                return type;
-            }
-            throw MergingException.withMessage("Unsupported type '%s'", typeString).withFile(from)
+        ResourceType result = ResourceType.fromXmlTag(node);
+
+        if (result != null) {
+            return result;
+        } else {
+            throw MergingException.withMessage(
+                            "Can't determine type for tag '%s'", XmlUtils.toXml(node))
+                    .withFile(from)
                     .build();
         }
-
-        throw MergingException.withMessage("Unsupported node '%s'", nodeName).withFile(from).build();
     }
 
     /**
@@ -248,7 +235,7 @@ class ValueResourceParser2 {
             @NonNull ResourceNamespace namespace,
             @Nullable String libraryName)
             throws MergingException {
-        assert styleableNode.getNodeName().equals(ResourceType.DECLARE_STYLEABLE.getName());
+        assert styleableNode.getNodeName().equals(TAG_DECLARE_STYLEABLE);
         NodeList nodes = styleableNode.getChildNodes();
 
         for (int i = 0, n = nodes.getLength(); i < n; i++) {

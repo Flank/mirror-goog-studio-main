@@ -15,10 +15,7 @@
  */
 package com.android.ide.common.resources.deprecated;
 
-import static com.android.SdkConstants.ATTR_REF_PREFIX;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
+import static com.android.SdkConstants.*;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -35,18 +32,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @deprecated This class is part of an obsolete resource repository system that is no longer used
@@ -275,7 +261,7 @@ public abstract class ResourceRepository {
                 typeBegin = colon + 1;
             }
             String typeName = url.substring(typeBegin, typeEnd);
-            ResourceType type = ResourceType.getEnum(typeName);
+            ResourceType type = ResourceType.fromXmlValue(typeName);
             if (type != null) {
                 String name = url.substring(nameBegin);
                 return hasResourceItem(type, name);
@@ -348,7 +334,9 @@ public abstract class ResourceRepository {
                         case ATTR:             size = 1064; break;
                         case STYLE:             size = 783; break;
                         case ID:                size = 347; break;
-                        case DECLARE_STYLEABLE: size = 210; break;
+                        case STYLEABLE:
+                            size = 210;
+                            break;
                         case LAYOUT:            size = 187; break;
                         case COLOR:             size = 120; break;
                         case ANIM:               size = 95; break;

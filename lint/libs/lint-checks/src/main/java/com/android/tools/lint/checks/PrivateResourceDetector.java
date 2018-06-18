@@ -16,22 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_REF_PREFIX;
-import static com.android.SdkConstants.ATTR_TYPE;
-import static com.android.SdkConstants.FD_RES_VALUES;
-import static com.android.SdkConstants.RESOURCE_CLR_STYLEABLE;
-import static com.android.SdkConstants.RESOURCE_CLZ_ARRAY;
-import static com.android.SdkConstants.RESOURCE_CLZ_ID;
-import static com.android.SdkConstants.TAG_ARRAY;
-import static com.android.SdkConstants.TAG_INTEGER_ARRAY;
-import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.SdkConstants.TAG_PLURALS;
-import static com.android.SdkConstants.TAG_RESOURCES;
-import static com.android.SdkConstants.TAG_STRING_ARRAY;
-import static com.android.SdkConstants.TAG_STYLE;
-import static com.android.SdkConstants.TOOLS_URI;
-import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.SdkConstants.*;
 import static com.android.tools.lint.detector.api.Lint.getBaseName;
 import static com.android.tools.lint.detector.api.Lint.isXmlFile;
 import static com.android.utils.SdkUtils.getResourceFieldName;
@@ -196,27 +181,16 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
                 Attr nameAttribute = item.getAttributeNode(ATTR_NAME);
                 if (nameAttribute != null) {
                     String name = getResourceFieldName(nameAttribute.getValue());
-                    String type = item.getTagName();
-                    if (type.equals(TAG_ITEM)) {
-                        type = item.getAttribute(ATTR_TYPE);
-                        if (type == null || type.isEmpty()) {
-                            type = RESOURCE_CLZ_ID;
-                        }
-                    } else if (type.equals("declare-styleable")) {
-                        type = RESOURCE_CLR_STYLEABLE;
-                    } else if (type.contains("array")) {
-                        // <string-array> etc
-                        type = RESOURCE_CLZ_ARRAY;
-                    }
-                    ResourceType t = ResourceType.getEnum(type);
-                    if (t != null && isPrivate(context, t, name)) {
+                    ResourceType resourceType = ResourceType.fromXmlTag(item);
+                    if (resourceType != null && isPrivate(context, resourceType, name)) {
                         if (overriding == null) {
                             overriding = Lists.newArrayList();
                         }
-                        overriding.add(type + ":" + name);
+                        overriding.add(resourceType.getName() + ":" + name);
 
                         if (!VALUE_TRUE.equals(item.getAttributeNS(TOOLS_URI, ATTR_OVERRIDE))) {
-                            String message = createOverrideErrorMessage(context, t, name);
+                            String message =
+                                    createOverrideErrorMessage(context, resourceType, name);
                             Location location = context.getValueLocation(nameAttribute);
                             context.report(ISSUE, nameAttribute, location, message);
                         }

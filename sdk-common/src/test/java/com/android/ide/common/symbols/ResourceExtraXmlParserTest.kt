@@ -68,8 +68,8 @@ class ResourceExtraXmlParserTest {
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("id", "toolbar", "int", 0x7f_0c_0001))
-                        .add(SymbolTestUtils.createSymbol("id", "fab", "int", 0x7f_0c_0002))
+                        .add(SymbolTestUtils.createSymbol("id", "toolbar", "int", 0x7f_0b_0001))
+                        .add(SymbolTestUtils.createSymbol("id", "fab", "int", 0x7f_0b_0002))
                         .build()
 
         Truth.assertThat(table).isEqualTo(expected)

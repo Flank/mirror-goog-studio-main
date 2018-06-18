@@ -199,14 +199,14 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                         ValueResourceParser2.getResource(resNode, file, mNamespace, mLibraryName);
                 if (r != null) {
                     resourceList.add(r);
-                    if (r.getType() == ResourceType.DECLARE_STYLEABLE) {
+                    if (r.getType() == ResourceType.STYLEABLE) {
                         // Need to also create ATTR items for its children
                         try {
                             ValueResourceParser2.addStyleableItems(
                                     resNode, resourceList, null, file, mNamespace, mLibraryName);
-                        } catch (MergingException ignored) {
+                        } catch (MergingException e) {
                             // since we are not passing a dup map, this will never be thrown
-                            assert false : file + ": " + ignored.getMessage();
+                            throw new AssertionError(null, e);
                         }
                     }
                 }
@@ -215,7 +215,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
             return new ResourceFile(file, resourceList, folderConfiguration);
         } else {
             // single res file
-            ResourceType type = ResourceType.getEnum(typeAttr);
+            ResourceType type = ResourceType.fromClassName(typeAttr);
             if (type == null) {
                 return null;
             }

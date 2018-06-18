@@ -15,11 +15,7 @@
  */
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.ANDROID_NS_NAME;
-import static com.android.SdkConstants.ATTR_REF_PREFIX;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
+import static com.android.SdkConstants.*;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,24 +26,8 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.ResourceType;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Table;
-import com.google.common.collect.Tables;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import com.google.common.collect.*;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -316,7 +296,7 @@ public abstract class AbstractResourceRepository {
             }
 
             String typeName = url.substring(typeBegin, typeEnd);
-            ResourceType type = ResourceType.getEnum(typeName);
+            ResourceType type = ResourceType.fromXmlValue(typeName);
             if (type != null) {
                 String name = url.substring(nameBegin);
                 return hasResourceItem(namespace, type, name);

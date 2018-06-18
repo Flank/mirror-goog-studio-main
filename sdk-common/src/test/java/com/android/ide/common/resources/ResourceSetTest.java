@@ -16,6 +16,7 @@
 
 package com.android.ide.common.resources;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,7 +48,8 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBaseResourceSetWithNormalizationByName() throws Exception {
         ResourceSet resourceSet = getBaseResourceSet();
 
-        verifyResourceExists(resourceSet,
+        verifyResourceExists(
+                resourceSet,
                 "drawable/icon",
                 "drawable/patch",
                 "raw/foo",
@@ -74,14 +76,13 @@ public class ResourceSetTest extends BaseTestCase {
                 "attr/blah",
                 "attr/blah2",
                 "attr/flagAttr",
-                "declare-styleable/declare_styleable",
+                "styleable/declare_styleable",
                 "dimen/dimen",
                 "dimen-sw600dp-v13/offset",
                 "id/item_id",
                 "integer/integer",
                 "plurals/plurals",
-                "plurals/plurals_with_bad_quantity"
-        );
+                "plurals/plurals_with_bad_quantity");
     }
 
     @Test
@@ -222,9 +223,10 @@ public class ResourceSetTest extends BaseTestCase {
             set.loadFromFiles(logger);
         } catch (MergingException e) {
             gotException = true;
-            assertEquals(new File(root, "values" + separator + "dimens.xml").getAbsolutePath() +
-                         ": Error: Unsupported type 'dimenot'",
-                         e.getMessage());
+            assertThat(e.getMessage()).contains("dimenot");
+            assertThat(e.getMessage())
+                    .contains(
+                            new File(root, "values" + separator + "dimens.xml").getAbsolutePath());
         }
 
         assertTrue("ResourceSet processing should have failed, but didn't", gotException);
@@ -244,9 +246,10 @@ public class ResourceSetTest extends BaseTestCase {
             set.loadFromFiles(logger);
         } catch (MergingException e) {
             gotException = true;
-            assertEquals(new File(root, "values" + separator + "dimens.xml").getAbsolutePath() +
-                         ": Error: Unsupported type 'dimenot2'",
-                         e.getMessage());
+            assertThat(e.getMessage()).contains("dimenot");
+            assertThat(e.getMessage())
+                    .contains(
+                            new File(root, "values" + separator + "dimens.xml").getAbsolutePath());
         }
 
         assertTrue("ResourceSet processing should have failed, but didn't", gotException);

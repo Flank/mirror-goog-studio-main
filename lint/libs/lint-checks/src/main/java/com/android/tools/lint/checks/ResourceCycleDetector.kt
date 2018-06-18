@@ -16,59 +16,19 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.ANDROID_PREFIX
-import com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX
-import com.android.SdkConstants.ANDROID_URI
-import com.android.SdkConstants.ATTR_COLOR
-import com.android.SdkConstants.ATTR_DRAWABLE
-import com.android.SdkConstants.ATTR_FONT
-import com.android.SdkConstants.ATTR_LAYOUT
-import com.android.SdkConstants.ATTR_NAME
-import com.android.SdkConstants.ATTR_PARENT
-import com.android.SdkConstants.ATTR_TYPE
-import com.android.SdkConstants.COLOR_RESOURCE_PREFIX
-import com.android.SdkConstants.DRAWABLE_PREFIX
-import com.android.SdkConstants.FONT_PREFIX
-import com.android.SdkConstants.ID_PREFIX
-import com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX
-import com.android.SdkConstants.NEW_ID_PREFIX
-import com.android.SdkConstants.PREFIX_RESOURCE_REF
-import com.android.SdkConstants.STYLE_RESOURCE_PREFIX
-import com.android.SdkConstants.TAG_COLOR
-import com.android.SdkConstants.TAG_DIMEN
-import com.android.SdkConstants.TAG_FONT
-import com.android.SdkConstants.TAG_ITEM
-import com.android.SdkConstants.TAG_STRING
-import com.android.SdkConstants.TAG_STYLE
-import com.android.SdkConstants.TOOLS_URI
-import com.android.SdkConstants.VIEW_INCLUDE
+import com.android.SdkConstants.*
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.resources.ResourceUrl
-import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Context
-import com.android.tools.lint.detector.api.Implementation
-import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.ResourceXmlDetector
-import com.android.tools.lint.detector.api.Scope
-import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.XmlContext
-import com.android.tools.lint.detector.api.getBaseName
+import com.android.tools.lint.detector.api.*
 import com.android.utils.XmlUtils
 import com.google.common.base.Joiner
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
-import com.google.common.collect.Multimap
-import com.google.common.collect.Multimaps
-import com.google.common.collect.Sets
+import com.google.common.collect.*
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import java.util.Arrays
-import java.util.TreeMap
+import java.util.*
 
 /**
  * Checks for cycles in resource definitions
@@ -204,7 +164,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val typeNode = element.getAttributeNode(ATTR_TYPE)
                 if (typeNode != null) {
                     val typeName = typeNode.value
-                    val type = ResourceType.getEnum(typeName)
+                    val type = ResourceType.fromXmlValue(typeName)
                     val nameNode = element.getAttributeNode(ATTR_NAME)
                     if (type != null && nameNode != null) {
                         val childNodes = element.childNodes
@@ -350,7 +310,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         } else if (c == '@' && text.startsWith(tagName, k + 1)) {
                             val to = text.trim { it <= ' ' }.substring(tagName.length + 2)
                             val name = element.getAttribute(ATTR_NAME)
-                            val type = ResourceType.getEnum(tagName)
+                            val type = ResourceType.fromXmlTagName(tagName)
                             if (type != null) {
                                 handleReference(context, child, type, name, to)
                             }

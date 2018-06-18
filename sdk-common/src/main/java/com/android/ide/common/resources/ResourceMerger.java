@@ -129,7 +129,7 @@ public class ResourceMerger extends DataMerger<ResourceMergerItem, ResourceFile,
 
     @Override
     protected boolean requiresMerge(@NonNull String dataItemKey) {
-        return dataItemKey.startsWith("declare-styleable/");
+        return dataItemKey.startsWith(ResourceType.STYLEABLE.getName() + "/");
     }
 
     @Override

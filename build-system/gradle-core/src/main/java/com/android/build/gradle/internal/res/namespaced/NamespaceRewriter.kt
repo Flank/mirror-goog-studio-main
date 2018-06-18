@@ -675,7 +675,7 @@ private fun maybeFindPackage(
 }
 
 private fun getResourceType(typeString: String): ResourceType =
-    ResourceType.getEnum(typeString) ?: error("Unknown type '$typeString'")
+    ResourceType.fromClassName(typeString) ?: error("Unknown type '$typeString'")
 
 
 fun generatePublicFile(symbols: SymbolTable, outputDirectory: Path) {

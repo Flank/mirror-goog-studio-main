@@ -23,6 +23,7 @@ import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.internal.ClassFieldImpl;
@@ -52,18 +53,19 @@ public class ResValueGenerator {
 
     public static final String RES_VALUE_FILENAME_XML = "generated.xml";
 
-    private static final List<ResourceType> RESOURCES_WITH_TAGS = ImmutableList.of(
-            ResourceType.ARRAY,
-            ResourceType.ATTR,
-            ResourceType.BOOL,
-            ResourceType.COLOR,
-            ResourceType.DECLARE_STYLEABLE,
-            ResourceType.DIMEN,
-            ResourceType.FRACTION,
-            ResourceType.INTEGER,
-            ResourceType.PLURALS,
-            ResourceType.STRING,
-            ResourceType.STYLE);
+    private static final List<ResourceType> RESOURCES_WITH_TAGS =
+            ImmutableList.of(
+                    ResourceType.ARRAY,
+                    ResourceType.ATTR,
+                    ResourceType.BOOL,
+                    ResourceType.COLOR,
+                    ResourceType.STYLEABLE,
+                    ResourceType.DIMEN,
+                    ResourceType.FRACTION,
+                    ResourceType.INTEGER,
+                    ResourceType.PLURALS,
+                    ResourceType.STRING,
+                    ResourceType.STYLE);
 
     private final File mGenFolder;
 
@@ -131,7 +133,11 @@ public class ResValueGenerator {
             if (item instanceof ClassField) {
                 ClassField field = (ClassField)item;
 
-                ResourceType type = ResourceType.getEnum(field.getType());
+                ResourceType type = ResourceType.fromClassName(field.getType());
+                if (type == null && SdkConstants.TAG_DECLARE_STYLEABLE.equals(field.getType())) {
+                    type = ResourceType.STYLEABLE;
+                }
+
                 boolean hasResourceTag = (type != null && RESOURCES_WITH_TAGS.contains(type));
 
                 Node itemNode = document.createElement(hasResourceTag ? field.getType() : TAG_ITEM);

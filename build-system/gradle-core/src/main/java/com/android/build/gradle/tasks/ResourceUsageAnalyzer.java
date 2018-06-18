@@ -725,7 +725,7 @@ public class ResourceUsageAnalyzer {
 
     private void stripUnused(Element element, List<String> removed) {
         if (TWO_PASS_AAPT) {
-            ResourceType type = ResourceUsageModel.getResourceType(element);
+            ResourceType type = ResourceType.fromXmlTag(element);
             if (type == ResourceType.ATTR) {
                 // Not yet properly handled
                 return;
@@ -733,8 +733,7 @@ public class ResourceUsageAnalyzer {
 
             Resource resource = mModel.getResource(element);
             if (resource != null) {
-                if (resource.type == ResourceType.DECLARE_STYLEABLE ||
-                        resource.type == ResourceType.ATTR) {
+                if (resource.type == ResourceType.STYLEABLE || resource.type == ResourceType.ATTR) {
                     // Don't strip children of declare-styleable; we're not correctly
                     // tracking field references of the R_styleable_attr fields yet
                     return;
@@ -1015,7 +1014,7 @@ public class ResourceUsageAnalyzer {
                 if (slash > 0) {
                     int colon = string.indexOf(':');
                     String typeName = string.substring(colon != -1 ? colon + 1 : 0, slash);
-                    ResourceType type = ResourceType.getEnum(typeName);
+                    ResourceType type = ResourceType.fromClassName(typeName);
                     if (type == null) {
                         continue;
                     }
@@ -1311,7 +1310,7 @@ public class ResourceUsageAnalyzer {
                 continue;
             }
             String typeName = line.substring(index + RESOURCE.length(), arrow);
-            ResourceType type = ResourceType.getEnum(typeName);
+            ResourceType type = ResourceType.fromClassName(typeName);
             if (type == null) {
                 continue;
             }
@@ -1480,7 +1479,7 @@ public class ResourceUsageAnalyzer {
         int index = name.lastIndexOf('/');
         if (index != -1 && name.startsWith("R$", index + 1)) {
             String typeName = name.substring(index + 3, name.length() - DOT_CLASS.length());
-            return ResourceType.getEnum(typeName) != null;
+            return ResourceType.fromClassName(typeName) != null;
         }
 
         return false;
@@ -1539,7 +1538,7 @@ public class ResourceUsageAnalyzer {
                 break;
             }
             String typeName = s.substring(start, end);
-            ResourceType type = ResourceType.getEnum(typeName);
+            ResourceType type = ResourceType.fromClassName(typeName);
             if (type == null) {
                 break;
             }
@@ -1593,7 +1592,6 @@ public class ResourceUsageAnalyzer {
                             end = s.indexOf('=', start);
                             assert end != -1;
                             String styleable = s.substring(start, end).trim();
-                            mModel.addResource(ResourceType.DECLARE_STYLEABLE, styleable, null);
                             mModel.addResource(ResourceType.STYLEABLE, styleable, null);
                             // TODO: Read in all the action bar ints!
                             // For now, we're simply treating all R.attr fields as used

@@ -18,11 +18,7 @@ package com.android.ide.common.resources;
 
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -56,7 +52,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         assertEquals(1, items.get(RES_AUTO, ResourceType.STYLE).size());
         assertEquals(3, items.get(RES_AUTO, ResourceType.ARRAY).size());
         assertEquals(7, items.get(RES_AUTO, ResourceType.ATTR).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.DECLARE_STYLEABLE).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.STYLEABLE).size());
         assertEquals(2, items.get(RES_AUTO, ResourceType.DIMEN).size());
         assertEquals(1, items.get(RES_AUTO, ResourceType.ID).size());
         assertEquals(1, items.get(RES_AUTO, ResourceType.INTEGER).size());
@@ -68,7 +64,8 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         MergerResourceRepository repo = getResourceRepository();
 
         // use ? between type and qualifier because of declare-styleable
-        verifyResourceExists(repo,
+        verifyResourceExists(
+                repo,
                 "drawable/icon",
                 "drawable?ldpi-v4/icon",
                 "drawable/icon2",
@@ -97,14 +94,13 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
                 "attr/blah",
                 "attr/blah2",
                 "attr/flagAttr",
-                "declare-styleable/declare_styleable",
+                "styleable/declare_styleable",
                 "dimen/dimen",
                 "dimen?sw600dp-v13/offset",
                 "id/item_id",
                 "integer/integer",
                 "plurals/plurals",
-                "plurals/plurals_with_bad_quantity"
-        );
+                "plurals/plurals_with_bad_quantity");
     }
 
     @Test
@@ -619,7 +615,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
                 type = type.substring(0, pos);
             }
 
-            ResourceType resourceType = ResourceType.getEnum(type);
+            ResourceType resourceType = ResourceType.fromClassName(type);
             assertNotNull("Type check for " + resKey, resourceType);
 
             Multimap<String, ResourceItem> map = items.get(RES_AUTO, resourceType);

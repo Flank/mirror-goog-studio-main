@@ -433,7 +433,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                         new StyleResourceValueImpl(
                                 mNamespace, mType, getName(), parent, mLibraryName));
 
-            case DECLARE_STYLEABLE:
+            case STYLEABLE:
                 return parseDeclareStyleable(
                         new DeclareStyleableResourceValueImpl(
                                 mNamespace, mType, getName(), null, mLibraryName));

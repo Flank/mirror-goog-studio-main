@@ -61,34 +61,35 @@ public class ValueResourceParser2Test extends BaseTestCase {
             resourceMap.put(item.getKey(), item);
         }
 
-        String[] resourceNames = new String[] {
-                "drawable/color_drawable",
-                "drawable/drawable_ref",
-                "color/color",
-                "string/basic_string",
-                "string/xliff_string",
-                "string/styled_string",
-                "string/two",
-                "string/many",
-                "style/style",
-                "array/string_array",
-                "array/integer_array",
-                "array/my_colors",
-                "attr/dimen_attr",
-                "attr/string_attr",
-                "attr/enum_attr",
-                "attr/flag_attr",
-                "attr/blah",
-                "attr/blah2",
-                "attr/flagAttr",
-                "declare-styleable/declare_styleable",
-                "dimen/dimen",
-                "id/item_id",
-                "integer/integer",
-                "layout/layout_ref",
-                "plurals/plurals",
-                "plurals/plurals_with_bad_quantity"
-        };
+        String[] resourceNames =
+                new String[] {
+                    "drawable/color_drawable",
+                    "drawable/drawable_ref",
+                    "color/color",
+                    "string/basic_string",
+                    "string/xliff_string",
+                    "string/styled_string",
+                    "string/two",
+                    "string/many",
+                    "style/style",
+                    "array/string_array",
+                    "array/integer_array",
+                    "array/my_colors",
+                    "attr/dimen_attr",
+                    "attr/string_attr",
+                    "attr/enum_attr",
+                    "attr/flag_attr",
+                    "attr/blah",
+                    "attr/blah2",
+                    "attr/flagAttr",
+                    "styleable/declare_styleable",
+                    "dimen/dimen",
+                    "id/item_id",
+                    "integer/integer",
+                    "layout/layout_ref",
+                    "plurals/plurals",
+                    "plurals/plurals_with_bad_quantity"
+                };
 
         for (String name : resourceNames) {
             assertNotNull(name, resourceMap.get(name));

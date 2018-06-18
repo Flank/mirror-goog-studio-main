@@ -2023,7 +2023,7 @@ public final class SdkConstants {
     public static final String RESOURCE_CLZ_COLOR = "color"; //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ARRAY = "array"; //$NON-NLS-1$
     public static final String RESOURCE_CLZ_ATTR = "attr"; //$NON-NLS-1$
-    public static final String RESOURCE_CLR_STYLEABLE = "styleable"; //$NON-NLS-1$
+    public static final String RESOURCE_CLZ_STYLEABLE = "styleable"; //$NON-NLS-1$
     public static final String NULL_RESOURCE = "@null"; //$NON-NLS-1$
     public static final String TRANSPARENT_COLOR = "@android:color/transparent"; //$NON-NLS-1$
     public static final String REFERENCE_STYLE = "style/"; //$NON-NLS-1$
