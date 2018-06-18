@@ -47,6 +47,8 @@ public class CmakeTargetsTest {
                     .addFile(HelloWorldJniApp.cmakeListsMultiModule("."))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))
+                    .setCmakeVersion("3.10.4819442")
+                    .setWithCmakeDirInLocalProp(true)
                     .create();
 
     @Before
@@ -121,7 +123,7 @@ public class CmakeTargetsTest {
     private static void assertModel(GradleTestProject project, NativeAndroidProject model)
             throws IOException {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getBuildFiles()).hasSize(2);
         assertThat(model.getName()).isEqualTo("project");
         assertThat(model.getArtifacts())
                 .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 4);

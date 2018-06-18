@@ -25,7 +25,10 @@ import org.junit.Test
 
 class VulkanTest {
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("vulkan").create()
+    val project = GradleTestProject.builder()
+        .setCmakeVersion("3.10.4819442")
+        .setWithCmakeDirInLocalProp(true)
+        .fromTestProject("vulkan").create()
 
     @Test
     fun assembleDebug() {
