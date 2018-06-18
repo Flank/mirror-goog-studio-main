@@ -102,6 +102,10 @@ public class SigningReportTask extends DefaultTask {
                         textOutput.withStyle(Description).text(signingInfo.sha1);
                         textOutput.println();
 
+                        textOutput.withStyle(Identifier).text("SHA-256: ");
+                        textOutput.withStyle(Description).text(signingInfo.sha256);
+                        textOutput.println();
+
                         textOutput.withStyle(Identifier).text("Valid until: ");
                         DateFormat df = DateFormat.getDateInstance(DateFormat.FULL);
                         textOutput.withStyle(Description).text(df.format(signingInfo.notAfter));
@@ -141,6 +145,8 @@ public class SigningReportTask extends DefaultTask {
                                     signingConfig.getKeyAlias());
                     signingInfo.md5 = getFingerprint(certificateInfo.getCertificate(), "MD5");
                     signingInfo.sha1 = getFingerprint(certificateInfo.getCertificate(), "SHA1");
+                    signingInfo.sha256 =
+                            getFingerprint(certificateInfo.getCertificate(), "SHA-256");
                     signingInfo.notAfter = certificateInfo.getCertificate().getNotAfter();
                 } catch (KeytoolException e) {
                     signingInfo.error = e.getMessage();
@@ -158,6 +164,7 @@ public class SigningReportTask extends DefaultTask {
     private static final class SigningInfo {
         String md5;
         String sha1;
+        String sha256;
         Date notAfter;
         String error;
 
