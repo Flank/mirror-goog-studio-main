@@ -2068,8 +2068,6 @@ public abstract class TaskManager {
                                         .getScope()
                                         .getArtifacts()
                                         .getFinalArtifactFiles(InternalArtifactType.APK));
-        testData.setExtraInstrumentationTestRunnerArgs(
-                projectOptions.getExtraInstrumentationTestRunnerArgs());
 
         configureTestData(testData);
 
@@ -3880,5 +3878,7 @@ public abstract class TaskManager {
 
     protected void configureTestData(AbstractTestDataImpl testData) {
         testData.setAnimationsDisabled(extension.getTestOptions().getAnimationsDisabled());
+        testData.setExtraInstrumentationTestRunnerArgs(
+                projectOptions.getExtraInstrumentationTestRunnerArgs());
     }
 }
