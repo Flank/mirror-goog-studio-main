@@ -273,7 +273,7 @@ class NamespaceRewriterTest {
             .tablePackage("com.example.dependency")
             .add(symbol("string", "app_name"))
             .add(symbol("drawable", "ic_launcher"))
-            .add(symbol("style", "Theme_Simple")) // Canonicalized here, but not in the manifest
+            .add(symbol("style", "Theme.Simple"))
             .add(symbol("string", "activity_name")) // overridden by the one in the module
             .build()
 
@@ -535,7 +535,7 @@ class NamespaceRewriterTest {
         val depTable = SymbolTable.builder()
             .tablePackage("com.example.foo")
             .add(symbol("attr", "colorAccent"))
-            .add(symbol("style", "Base_Widget_Design"))
+            .add(symbol("style", "Base.Widget.Design"))
             .add(symbol("dimen", "design_tab_max_width"))
             .build()
 

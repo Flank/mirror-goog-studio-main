@@ -1001,11 +1001,21 @@ public class SymbolIoTest {
                         .tablePackage("foo.bar")
                         .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
                         .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
-                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "beep", 0))
+                        .add(
+                                new Symbol.NormalSymbol(
+                                        ResourceType.STRING,
+                                        "be.ep",
+                                        0,
+                                        ResourceVisibility.UNDEFINED,
+                                        "be_ep"))
                         .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
                         .add(
                                 new Symbol.StyleableSymbol(
-                                        "s1", ImmutableList.of(), ImmutableList.of("a1", "a2")))
+                                        "A.B",
+                                        ImmutableList.of(),
+                                        ImmutableList.of("a1", "a2.f"),
+                                        ResourceVisibility.UNDEFINED,
+                                        "A_B"))
                         .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
                         .build();
 

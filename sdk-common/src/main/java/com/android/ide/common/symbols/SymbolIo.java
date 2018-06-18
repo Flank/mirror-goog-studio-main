@@ -290,9 +290,17 @@ public final class SymbolIo {
                         if (readConfiguration.readValues) {
                             value = SymbolUtils.valueStringToInt(data.value);
                         }
+                        String canonicalName =
+                                readConfiguration.rawSymbolNames
+                                        ? SymbolUtils.canonicalizeValueResourceName(data.name)
+                                        : data.name;
                         table.add(
                                 new Symbol.NormalSymbol(
-                                        data.resourceType, data.name, value, data.accessibility));
+                                        data.resourceType,
+                                        data.name,
+                                        value,
+                                        data.accessibility,
+                                        canonicalName));
                         readNextLine();
                     }
                 }
@@ -310,9 +318,17 @@ public final class SymbolIo {
         private void handleStyleable(@NonNull SymbolTable.Builder table, @NonNull SymbolData data)
                 throws IOException {
             if (readConfiguration.singleLineStyleable) {
+                String canonicalName =
+                        readConfiguration.rawSymbolNames
+                                ? SymbolUtils.canonicalizeValueResourceName(data.name)
+                                : data.name;
                 table.add(
                         new Symbol.StyleableSymbol(
-                                data.name, ImmutableList.of(), data.children, data.accessibility));
+                                data.name,
+                                ImmutableList.of(),
+                                data.children,
+                                data.accessibility,
+                                canonicalName));
                 return;
             }
             // Keep the current location to report if there is an error
@@ -362,9 +378,13 @@ public final class SymbolIo {
             } else {
                 values = ImmutableList.of();
             }
-
+            String canonicalName =
+                    readConfiguration.rawSymbolNames
+                            ? SymbolUtils.canonicalizeValueResourceName(data.name)
+                            : data.name;
             table.add(
-                    new Symbol.StyleableSymbol(data.name, values, childNames, data.accessibility));
+                    new Symbol.StyleableSymbol(
+                            canonicalName, values, childNames, data.accessibility, data.name));
         }
 
         private static final Comparator<SymbolData> SYMBOL_DATA_VALUE_COMPARATOR =
@@ -567,7 +587,7 @@ public final class SymbolIo {
                 return readSymbolListWithPackageLine(line);
             }
         },
-        R_DEF(false, true, "R_DEF: Internal format may change without notice") {
+        R_DEF(false, true, true, "R_DEF: Internal format may change without notice") {
             @NonNull
             @Override
             public SymbolData parseLine(@NonNull String line) throws IOException {
@@ -590,17 +610,23 @@ public final class SymbolIo {
         };
 
         ReadConfiguration(boolean readValues, boolean singleLineStyleable) {
-            this(readValues, singleLineStyleable, null);
+            this(readValues, singleLineStyleable, false, null);
         }
 
-        ReadConfiguration(boolean readValues, boolean singleLineStyleable, String fileTypeHeader) {
+        ReadConfiguration(
+                boolean readValues,
+                boolean singleLineStyleable,
+                boolean rawSymbolNames,
+                String fileTypeHeader) {
             this.readValues = readValues;
             this.singleLineStyleable = singleLineStyleable;
             this.fileTypeHeader = fileTypeHeader;
+            this.rawSymbolNames = rawSymbolNames;
         }
 
         final boolean readValues;
         final boolean singleLineStyleable;
+        final boolean rawSymbolNames;
         @Nullable final String fileTypeHeader;
 
         @NonNull
@@ -712,12 +738,12 @@ public final class SymbolIo {
                 for (Symbol s : symbols) {
                     writer.write(s.getResourceType().getName());
                     writer.write(' ');
-                    writer.write(s.getCanonicalName());
+                    writer.write(s.getName());
                     if (s.getResourceType() == ResourceType.STYLEABLE) {
                         List<String> children = s.getChildren();
                         for (String child : children) {
                             writer.write(' ');
-                            writer.write(SymbolUtils.canonicalizeValueResourceName(child));
+                            writer.write(child);
                         }
                     }
                     writer.write('\n');
@@ -730,7 +756,7 @@ public final class SymbolIo {
      * Writes the abridged symbol table with the package name as the first line.
      *
      * <p>This collapses the styleable children so the subsequent lines have the format {@code
-     * "<type> <name>[ <child>[ <child>[ ...]]]"}
+     * "<type> <canonical_name>[ <child>[ <child>[ ...]]]"}
      *
      * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
      *     only the package name
@@ -754,7 +780,7 @@ public final class SymbolIo {
      * Writes the symbol table with the package name as the first line.
      *
      * <p>This collapses the styleable children so the subsequent lines have the format {@code
-     * "<type> <name>[ <child>[ <child>[ ...]]]" }
+     * "<type> <canonical_name>[ <child>[ <child>[ ...]]]" }
      *
      * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
      *     only the package name

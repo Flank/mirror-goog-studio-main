@@ -134,13 +134,13 @@ abstract class SymbolTable protected constructor() {
     /**
      * Checks if the table contains a resource with matching type and name.
      */
-    fun containsSymbol(type: ResourceType, name: String): Boolean {
-        var found = symbols.contains(type, name)
-        if (!found && type == ResourceType.STYLEABLE && name.contains('_')) {
+    fun containsSymbol(type: ResourceType, canonicalName: String): Boolean {
+        var found = symbols.contains(type, canonicalName)
+        if (!found && type == ResourceType.STYLEABLE && canonicalName.contains('_')) {
             // If the symbol is a styleable and contains the underscore character, it is very likely
             // that we're looking for a styleable child. These are stored under the parent's symbol,
             // so try finding the parent first and then the child under it.
-            found = containsStyleableSymbol(name)
+            found = containsStyleableSymbol(canonicalName)
         }
         return found
     }
@@ -156,13 +156,13 @@ abstract class SymbolTable protected constructor() {
      * {@code containsStyleableSymbol("foo")} or {@code containsSymbol(STYLEABLE, "foo")} would
      * both return {@code false}.
      */
-    private fun containsStyleableSymbol(name: String, start: Int = 0): Boolean {
+    private fun containsStyleableSymbol(canonicalName: String, start: Int = 0): Boolean {
         var found = false
-        val index = name.indexOf('_', start)
+        val index = canonicalName.indexOf('_', start)
         if (index > -1) {
-            val parentName = name.substring(0, index)
+            val parentName = canonicalName.substring(0, index)
             if (symbols.contains(ResourceType.STYLEABLE, parentName)) {
-                var childName = name.substring(index + 1, name.length)
+                var childName = canonicalName.substring(index + 1, canonicalName.length)
                 val parent = symbols.get(ResourceType.STYLEABLE, parentName)
                 found = parent.children.any { it == childName }
                 // styleable children of the format <parent>_android_<child> could have been either
@@ -176,7 +176,7 @@ abstract class SymbolTable protected constructor() {
                 }
             }
             if (!found) {
-                found = containsStyleableSymbol(name, index + 1)
+                found = containsStyleableSymbol(canonicalName, index + 1)
             }
         }
         return found
@@ -341,12 +341,12 @@ abstract class SymbolTable protected constructor() {
          *
          * @param resourceType the resource type
          *
-         * @param name the name
+         * @param canonicalName the name
          *
          * @return does the table contain a symbol with the given resource type / name?
          */
-        fun contains(resourceType: ResourceType, name: String): Boolean {
-            return symbols.contains(resourceType, name)
+        fun contains(resourceType: ResourceType, canonicalName: String): Boolean {
+            return symbols.contains(resourceType, canonicalName)
         }
 
         /**
@@ -391,10 +391,10 @@ abstract class SymbolTable protected constructor() {
                     val tableSymbolMap = t.symbols.row(resourceType)
                     if (tableSymbolMap != null && !tableSymbolMap.isEmpty()) {
                         for (s in tableSymbolMap.values) {
-                            val name = s.canonicalName
-                            if (!present.contains(name)) {
-                                present.add(name)
-                                builder.put(resourceType, name, s)
+                            val canonicalName = s.canonicalName
+                            if (!present.contains(canonicalName)) {
+                                present.add(canonicalName)
+                                builder.put(resourceType, canonicalName, s)
                             }
                         }
                     }

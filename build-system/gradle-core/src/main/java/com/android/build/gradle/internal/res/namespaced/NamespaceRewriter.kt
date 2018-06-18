@@ -243,7 +243,7 @@ class NamespaceRewriter(
             if (!possibleParent.isEmpty()) {
                 val possiblePackage = maybeFindPackage(
                     "style",
-                    canonicalizeValueResourceName(possibleParent),
+                    possibleParent,
                     logger,
                     symbolTables
                 )
@@ -502,7 +502,7 @@ class NamespaceRewriter(
         val type = trimmedContent.substring(1, slashIndex)
         val name = trimmedContent.substring(slashIndex + 1, trimmedContent.length)
 
-        val pckg = findPackage(type, canonicalizeValueResourceName(name), logger, symbolTables)
+        val pckg = findPackage(type, name, logger, symbolTables)
 
         // Rewrite the reference using the package and the un-canonicalized name.
         return "$prefixChar$pckg:$type/$name"
@@ -642,12 +642,13 @@ private fun maybeFindPackage(
     logger: Logger,
     symbolTables: ImmutableList<SymbolTable>
 ): String? {
+    val canonicalName = canonicalizeValueResourceName(name)
     var packages: ArrayList<String>? = null
     var result: String? = null
 
     // Go through R.txt files and find the proper package.
     for (table in symbolTables) {
-        if (table.containsSymbol(getResourceType(type), name)) {
+        if (table.containsSymbol(getResourceType(type), canonicalName)) {
             if (result == null) {
                 result = table.tablePackage
             } else {

@@ -79,13 +79,10 @@ public class SymbolTest {
     }
 
     @Test
-    public void nameCannotContainDots() {
-        try {
-            SymbolTestUtils.createSymbol("attr", "b.c", "int", "e");
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertThat("Resource name cannot contain dots: b.c").isEqualTo(e.getMessage());
-        }
+    public void nameCanContainDots() {
+        Symbol symbol = SymbolTestUtils.createSymbol("attr", "b.c", "int", "e");
+        assertThat(symbol.getName()).isEqualTo("b.c");
+        assertThat(symbol.getCanonicalName()).isEqualTo("b_c");
     }
 
     @Test

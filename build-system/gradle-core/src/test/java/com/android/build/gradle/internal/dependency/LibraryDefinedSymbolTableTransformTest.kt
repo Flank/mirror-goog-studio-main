@@ -96,7 +96,7 @@ class LibraryDefinedSymbolTableTransformTest {
                 Symbol.StyleableSymbol(
                     "ds",
                     ImmutableList.of(),
-                    ImmutableList.of("android_name", "android_color", "myAttr")
+                ImmutableList.of("android:name", "android:color", "myAttr")
                 )
             )
             .build()

@@ -109,6 +109,7 @@ fun mergeAndRenumberSymbols(
             val newSymbol =
                     Symbol.NormalSymbol(
                             resourceType = resourceType,
+                            name = symbolName, // All names are canonical at this point.
                             canonicalName = symbolName,
                             intValue = value
                     )
@@ -160,7 +161,8 @@ fun mergeAndRenumberSymbols(
             Symbol.StyleableSymbol(
                 arrayName,
                 attributeValues.build(),
-                ImmutableList.copyOf(attributes)
+                ImmutableList.copyOf(attributes),
+                canonicalName = arrayName // All names are canonical at this point.
             )
         )
     }

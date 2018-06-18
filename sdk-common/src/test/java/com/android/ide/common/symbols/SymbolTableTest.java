@@ -155,6 +155,43 @@ public class SymbolTableTest {
     }
 
     @Test
+    public void tableFilterWithAarTable() {
+        SymbolTable t =
+                SymbolTable.builder()
+                        .tablePackage("bar")
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "Foo.Bar",
+                                        "int[]",
+                                        "{0}",
+                                        ImmutableList.of("child")))
+                        .build();
+
+        SymbolTable f =
+                SymbolTable.builder()
+                        .tablePackage("fromAAR")
+                        .add(createSymbol("styleable", "Foo_Bar", "int[]", "{}"))
+                        .build();
+
+        SymbolTable r = t.filter(f);
+
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .tablePackage("bar")
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "Foo.Bar",
+                                        "int[]",
+                                        "{0}",
+                                        ImmutableList.of("child")))
+                        .build();
+
+        assertEquals(expected, r);
+    }
+
+    @Test
     public void renameTest() {
         SymbolTable t = SymbolTable.builder().add(createSymbol("attr", "b", "int", "d")).build();
         SymbolTable r = t.rename("x");

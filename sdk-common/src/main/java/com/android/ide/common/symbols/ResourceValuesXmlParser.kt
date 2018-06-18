@@ -223,7 +223,7 @@ private fun parseChild(
         return
     }
 
-    val name = canonicalizeValueResourceName(getMandatoryAttr(child, "name"))
+    val name = getMandatoryAttr(child, "name")
 
     when (resourceType) {
         ResourceType.ANIM,
@@ -282,8 +282,8 @@ private fun parseDeclareStyleable(
         builder: SymbolTable.Builder,
         enumSymbols: MutableList<Symbol>,
         platformAttrSymbols: SymbolTable?) {
+    val attrNames = ImmutableList.Builder<String>()
     val attrValues = ImmutableList.builder<Int>()
-    val attrNames = ArrayList<String>()
 
     var attrNode: Node? = declareStyleable.firstChild
     while (attrNode != null) {
@@ -309,39 +309,37 @@ private fun parseDeclareStyleable(
                             "<attr>")
         }
 
-        var attrName = getMandatoryAttr(attrElement, "name")
-
-        if (attrName.startsWith(ANDROID_NS_NAME_PREFIX)) {
+        val attrName = getMandatoryAttr(attrElement, "name")
+        val attrValue = if (attrName.startsWith(ANDROID_NS_NAME_PREFIX)) {
             if (platformAttrSymbols == null) {
                 // If platform attr symbols are not provided, we don't need the actual values.
                 // Use a fake ID to signal this is the case.
-                attrName = canonicalizeValueResourceName(attrName)
-                attrValues.add(-1)
+                -1
             } else {
                 // this is an android attr.
                 val realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN)
 
                 val attrSymbol =
-                        platformAttrSymbols.symbols.get(ResourceType.ATTR, realAttrName)
+                    platformAttrSymbols.symbols.get(ResourceType.ATTR, realAttrName)
+                            ?: throw ResourceValuesXmlParseException(
+                                "Unknown android attribute '$attrName' under '$styleableName"
+                            )
 
-                if (attrSymbol != null) {
-                    attrValues.add((attrSymbol as Symbol.NormalSymbol).intValue)
-                } else {
-                    throw ResourceValuesXmlParseException(
-                            "Unknown android attribute '$attrName' under '$styleableName")
-                }
+                (attrSymbol as Symbol.NormalSymbol).intValue
             }
         } else {
-            attrName = canonicalizeValueResourceName(attrName)
-            attrValues.add(parseAttr(attrElement, idProvider, attrName, builder, enumSymbols))
+            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols)
         }
-
         attrNames.add(attrName)
-
+        attrValues.add(attrValue)
         attrNode = attrNode.nextSibling
     }
     builder.add(
-            Symbol.createAndValidateStyleableSymbol(styleableName, attrValues.build(), attrNames))
+            Symbol.createAndValidateStyleableSymbol(
+                styleableName,
+                attrValues.build(),
+                attrNames.build()
+            ))
 }
 
 /**
@@ -381,8 +379,7 @@ private fun parseAttr(
 
         val newEnum = Symbol.createAndValidateSymbol(
                 ResourceType.ID,
-                canonicalizeValueResourceName(
-                        getMandatoryAttr(enumElement, "name")),
+                getMandatoryAttr(enumElement, "name"),
                 idProvider)
 
         enumSymbols.add(newEnum)

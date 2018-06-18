@@ -33,10 +33,11 @@ import com.google.common.collect.ImmutableList
  *
  * The name of the symbol has to be a valid java identifier and is usually the file name of the
  * resource (without the extension) or the name of the resource if the resource is part of an XML
- * file. While names of resources declared in XML files can contain dots and colons, these should be
- * replaced by underscores before being passed to the constructor. To sanitize the resource name,
- * call [canonicalizeValueResourceName] before passing the name to the
- * constructor.
+ * file.
+ *
+ * Names of resources declared in XML files can contain dots and colons, these are replaced by
+ * underscores when accessed from java. To sanitize the resource name, call
+ * [canonicalizeValueResourceName].
  *
  * For example, the resource `drawable/foo.png` has name `foo`.
  * The string `bar` in file `values/strings.xml` with name `bar` has resource name `bar`.
@@ -59,6 +60,7 @@ sealed class Symbol {
     abstract val resourceVisibility: ResourceVisibility
     abstract val resourceType: ResourceType
     abstract val canonicalName:String
+    abstract val name: String
     /** The value as a string. */
     abstract fun getValue():String
     abstract val javaType: SymbolJavaType
@@ -70,10 +72,12 @@ sealed class Symbol {
 
 
         /**
-         * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
-         * name. See [canonicalizeValueResourceName] method and apply it beforehand
-         * when necessary.
+         * Creates a new non-stylable symbol.
          *
+         * Validates that the `name` of the symbol is a valid resource name.
+         *
+         * The `cannonicalName` of the symbol will be the sanitized resource
+         * name (See [canonicalizeValueResourceName].)
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
          * @param idProvider the provider for the value of the symbol
@@ -85,16 +89,18 @@ sealed class Symbol {
             validateSymbol(name, resourceType)
             return NormalSymbol(
                 resourceType = resourceType,
-                canonicalName = name,
+                name = name,
                 intValue = idProvider.next(resourceType)
             )
         }
 
         /**
-         * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
-         * name. See [canonicalizeValueResourceName] method and apply it beforehand
-         * when necessary.
+         * Creates a new non-stylable symbol. 
          *
+         * Validates that the `name` of the symbol is a valid resource name.
+         *
+         * The `cannonicalName` of the symbol will be the sanitized resource
+         * name (See [canonicalizeValueResourceName].)
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
          * @param value the value of the symbol
@@ -106,15 +112,19 @@ sealed class Symbol {
             validateSymbol(name, resourceType)
             return NormalSymbol(
                 resourceType = resourceType,
-                canonicalName = name,
+                name = name,
+                canonicalName = canonicalizeValueResourceName(name),
                 intValue = value
             )
         }
 
         /**
-         * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
-         * name. See [canonicalizeValueResourceName] method and apply it beforehand
-         * when necessary.
+         * Creates a new styleable symbol. 
+         *
+         * Validates that the `name` of the symbol is a valid resource name.
+         *
+         * The `cannonicalName` of the symbol will be the sanitized resource
+         * name (See [canonicalizeValueResourceName].)
          *
          * For example:
          * ```
@@ -133,7 +143,8 @@ sealed class Symbol {
             children: List<String> = ImmutableList.of()): StyleableSymbol {
             validateSymbol(name, ResourceType.STYLEABLE)
             return StyleableSymbol(
-                canonicalName = name,
+                name = name,
+                canonicalName = canonicalizeValueResourceName(name),
                 values = values,
                 children = ImmutableList.copyOf(children)
             )
@@ -145,10 +156,7 @@ sealed class Symbol {
          *
          * @param name the name of the resource that needs to be validated
          */
-        private fun validateSymbol(name: String?, resourceType: ResourceType) {
-            Preconditions.checkArgument(name != null, "Resource name cannot be null")
-            Preconditions.checkArgument(
-                    !name!!.contains("."), "Resource name cannot contain dots: " + name)
+        private fun validateSymbol(name: String, resourceType: ResourceType) {
             try {
                 ValueResourceNameValidator.validate(name, resourceType, null)
             } catch (e: MergingException) {
@@ -160,9 +168,10 @@ sealed class Symbol {
 
     data class NormalSymbol @JvmOverloads constructor(
         override val resourceType: ResourceType,
-        override val canonicalName: String,
+        override val name: String,
         val intValue: Int,
-        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED
+        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+        override val canonicalName: String = canonicalizeValueResourceName(name)
     ) : Symbol() {
         init {
             Preconditions.checkArgument(resourceType != ResourceType.STYLEABLE,
@@ -179,7 +188,7 @@ sealed class Symbol {
     }
 
     data class StyleableSymbol @JvmOverloads constructor(
-        override val canonicalName: String,
+        override val name: String,
         val values: ImmutableList<Int>,
         /**
          * list of the symbol's children in order corresponding to their IDs in the value list.
@@ -193,7 +202,8 @@ sealed class Symbol {
          * "attr2"}`.
          * */
         override val children: ImmutableList<String>,
-        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED
+        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+        override val canonicalName: String = canonicalizeValueResourceName(name)
     ) : Symbol() {
         override val resourceType: ResourceType
             get() = ResourceType.STYLEABLE

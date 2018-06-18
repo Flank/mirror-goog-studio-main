@@ -107,7 +107,7 @@ private fun checkForResources(
         val name = text.substring(SdkConstants.NEW_ID_PREFIX.length, text.length)
         val newSymbol = Symbol.createAndValidateSymbol(
                 ResourceType.ID,
-                canonicalizeValueResourceName(name),
+                name,
                 idProvider)
         if (!builder.contains(newSymbol)) {
             builder.add(newSymbol)
