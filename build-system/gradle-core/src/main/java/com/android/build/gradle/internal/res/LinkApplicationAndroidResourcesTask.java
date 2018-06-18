@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -76,6 +77,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -84,6 +87,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -205,6 +209,15 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     private BuildableArtifact apkList;
+
+    private BuildableArtifact convertedLibraryDependencies;
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    @Optional
+    public BuildableArtifact getConvertedLibraryDependencies() {
+        return convertedLibraryDependencies;
+    }
 
     // FIX-ME : make me incremental !
     @Override
@@ -484,7 +497,18 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setAndroidTarget(getBuilder().getTarget());
 
                 if (isNamespaced) {
-                    configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(dependencies));
+                    ImmutableList.Builder<File> packagedDependencies = ImmutableList.builder();
+                    packagedDependencies.addAll(dependencies);
+                    if (convertedLibraryDependencies != null) {
+                        try (Stream<Path> list =
+                                Files.list(
+                                        BuildableArtifactUtil.singleFile(
+                                                        convertedLibraryDependencies)
+                                                .toPath())) {
+                            list.map(Path::toFile).forEach(packagedDependencies::add);
+                        }
+                    }
+                    configBuilder.setStaticLibraryDependencies(packagedDependencies.build());
                 } else {
                     if (generateCode) {
                         configBuilder.setLibrarySymbolTableFiles(dependencies);
@@ -901,6 +925,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             RUNTIME_CLASSPATH,
                             ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY));
+            if (projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+                task.convertedLibraryDependencies =
+                        variantScope
+                                .getArtifacts()
+                                .getArtifactFiles(
+                                        InternalArtifactType
+                                                .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES);
+            }
 
             task.dependenciesFileCollection =
                     variantScope.getGlobalScope().getProject().files(dependencies);

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.android.utils.FileUtils
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
@@ -54,9 +55,9 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             artifacts: ArtifactFiles = ImmutableMap.of()
         ): DependenciesGraph {
             return create(
-                    dependencies.resolutionResult.root.dependencies,
-                    artifacts,
-                    HashMap()
+                dependencies.resolutionResult.root.dependencies,
+                artifacts,
+                HashMap()
             )
         }
 
@@ -64,13 +65,14 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
         fun create(
             roots: Iterable<DependencyResult>,
             artifacts: ArtifactFiles = ImmutableMap.of(),
-            foundNodes: HashMap<String, Node> = HashMap()
+            foundNodes: MutableMap<String, Node> = HashMap(),
+            sanitizedNames: MutableSet<String> = HashSet()
         ): DependenciesGraph {
             val rootNodes = mutableSetOf<Node>()
             // We can have multiple roots. Collect nodes starting from each of them.
             for (dependency in roots) {
                 dependency as ResolvedDependencyResult
-                val node = collect(dependency, foundNodes, artifacts)
+                val node = collect(dependency, foundNodes, sanitizedNames, artifacts)
                 rootNodes.add(node)
             }
             return DependenciesGraph(
@@ -81,7 +83,8 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
 
         private fun collect(
             dependencyResult: DependencyResult,
-            foundNodes: HashMap<String, Node>,
+            foundNodes: MutableMap<String, Node>,
+            usedSanitizedNames: MutableSet<String>,
             artifacts: ArtifactFiles
         ): Node {
             dependencyResult as ResolvedDependencyResult
@@ -94,11 +97,15 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                 val dependencies = ArrayList<DependenciesGraph.Node>()
                 for (dependency in dependencyResult.selected.dependencies) {
                     dependency as ResolvedDependencyResult
-                    collect(dependency, foundNodes, artifacts)
+                    collect(dependency, foundNodes, usedSanitizedNames, artifacts)
                     dependencies.add(foundNodes[dependency.selected.id.displayName]!!)
                 }
                 return Node(
                     dependencyResult.selected.id,
+                    getUniqueSanitizedDependencyName(
+                        dependencyResult.selected.id.displayName,
+                        usedSanitizedNames
+                    ),
                     ImmutableSet.copyOf(dependencies),
                     artifacts
                 ).also {
@@ -111,13 +118,26 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                 )
             }
         }
+
+        private fun getUniqueSanitizedDependencyName(
+            name: String, usedNames: MutableSet<String>
+        ): String {
+            var sanitizedName = FileUtils.sanitizeFileName(name)
+            // This is unlikely, but if there is a collision, add more _ charaters until it is unique.
+            while (usedNames.contains(sanitizedName)) {
+                sanitizedName += "_"
+            }
+            usedNames.add(sanitizedName)
+            return sanitizedName
+        }
     }
 
     /**
      * Class for storing information about a dependency node.
      */
-    class Node(
+    class Node constructor(
         val id: ComponentIdentifier,
+        val sanitizedName: String,
         val dependencies: ImmutableSet<Node>,
         artifactFiles: ArtifactFiles
     ) {
@@ -150,7 +170,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             return getFiles(type)?.single()
         }
 
-        fun getFiles(type: ArtifactType) : ImmutableCollection<File>? {
+        fun getFiles(type: ArtifactType): ImmutableCollection<File>? {
             return artifacts[type]
         }
 

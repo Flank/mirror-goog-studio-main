@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -56,6 +57,13 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    var convertedLibraryDependencies: BuildableArtifact? = null
+        private set
+
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: BuildableArtifact? = null; private set
 
@@ -77,6 +85,9 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
         imports.addAll(libraryDependencies.files)
+        convertedLibraryDependencies?.let {
+            it.singleFile().listFiles().forEach { imports.add(it) }
+        }
         imports.addAll(sharedLibraryDependencies.files)
 
         val request = AaptPackageConfig(
@@ -121,6 +132,11 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
+            if (scope.artifacts.hasArtifact(InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
+                task.convertedLibraryDependencies = scope.artifacts.getArtifactFiles(
+                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES
+                )
+            }
             task.sharedLibraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

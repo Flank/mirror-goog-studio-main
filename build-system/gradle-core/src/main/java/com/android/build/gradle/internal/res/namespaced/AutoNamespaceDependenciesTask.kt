@@ -21,6 +21,7 @@ import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
@@ -28,11 +29,16 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.builder.symbols.exportToCompiledJava
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.sdklib.IAndroidTarget
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -45,13 +51,23 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
+import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.ForkJoinTask
 
 /**
- * Rewrites the classes.jar files of the module's dependencies to be fully resource namespaced. It
- * does not rewrite the references inside the resources in the libraries, only in the bytecode.
+ * Rewrites the non-namespaced AAR dependencies of this module to be namespaced.
+ *
+ * 1. Build a model of where the resources of non-namespaced AARs have come from.
+ * 2. Rewrites the classes.jar to be namespaced
+ * 3. Rewrites the manifest to use namespaced resource references
+ * 4. Rewrites the resources themselves to use namespaced references, and compiles
+ *    them in to a static library.
  */
 @CacheableTask
 open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
@@ -60,78 +76,172 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     lateinit var nonNamespacedManifests: ArtifactCollection private set
     lateinit var jarFiles: ArtifactCollection private set
     lateinit var dependencies: ResolvableDependencies private set
+    lateinit var externalNotNamespacedResources: ArtifactCollection private set
+    lateinit var externalResStaticLibraries: ArtifactCollection private set
 
     @InputFiles fun getRDefFiles(): FileCollection = rFiles.artifactFiles
     @InputFiles fun getManifestsFiles(): FileCollection = nonNamespacedManifests.artifactFiles
     @InputFiles fun getClassesJarFiles(): FileCollection = jarFiles.artifactFiles
-    @InputFiles fun getDependenciesFiles(): FileCollection = dependencies.files
+    @InputFiles
+    fun getNonNamespacedResourcesFiles(): FileCollection =
+        externalNotNamespacedResources.artifactFiles
+
+    @InputFiles
+    fun getStaticLibraryDependenciesFiles(): FileCollection =
+        externalResStaticLibraries.artifactFiles
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var aapt2FromMaven: FileCollection
+        private set
 
     @VisibleForTesting internal var log: Logger? = null
-    private var symbolTablesCache: HashMap<File, SymbolTable> = HashMap()
-    private var usedSanitizedDependencyNames: HashSet<String> = HashSet()
+
+    /**
+     * Reading the R files and building symbol tables is costly, and is wasteful to repeat,
+     * hence, use a LoadingCache.
+     */
+    private var symbolTablesCache: LoadingCache<File, SymbolTable> = CacheBuilder.newBuilder()
+        .build(
+            object : CacheLoader<File, SymbolTable>() {
+                override fun load(rDefFile: File): SymbolTable {
+                    return SymbolIo.readRDef(rDefFile.toPath())
+                }
+            }
+        )
 
     @get:OutputDirectory lateinit var outputRewrittenClasses: File private set
+    @get:OutputDirectory
+    lateinit var outputStaticLibraries: File
+        private set
     @get:OutputDirectory lateinit var outputRClasses: File private set
     @get:OutputFile lateinit var outputClassesJar: File private set
     @get:OutputFile lateinit var outputRClassesJar: File private set
     @get:OutputDirectory lateinit var outputRewrittenManifests: File private set
 
-    @TaskAction
-    fun taskAction() = namespaceDependencies()
+    lateinit var intermediateDirectory: File private set
 
-    @VisibleForTesting
-    fun namespaceDependencies(
+    @TaskAction
+    fun taskAction() = autoNamespaceDependencies()
+
+    private fun autoNamespaceDependencies(
+        forkJoinPool: ForkJoinPool = sharedForkJoinPool,
+        aapt2FromMaven: FileCollection = this.aapt2FromMaven,
         dependencies: ResolvableDependencies = this.dependencies,
         rFiles: ArtifactCollection = this.rFiles,
         jarFiles: ArtifactCollection = this.jarFiles,
         manifests: ArtifactCollection = this.nonNamespacedManifests,
-        outputDirectory: File = this.outputRewrittenClasses,
+        notNamespacedResources: ArtifactCollection = this.externalNotNamespacedResources,
+        staticLibraryDependencies: ArtifactCollection = this.externalResStaticLibraries,
+        intermediateDirectory: File = this.intermediateDirectory,
+        outputRewrittenClasses: File = this.outputRewrittenClasses,
+        outputStaticLibraries: File = this.outputStaticLibraries,
         outputRClasses: File = this.outputRClasses,
         outputClassesJar: File = this.outputClassesJar,
         outputRClassesJar: File = this.outputRClassesJar,
         outputManifests: File = this.outputRewrittenManifests
     ) {
-        if (outputDirectory.exists()) {
-            outputDirectory.deleteRecursively()
-            FileUtils.mkdirs(outputDirectory)
-        }
-        if (outputRClasses.exists()) {
-            outputRClasses.deleteRecursively()
-            FileUtils.mkdirs(outputRClasses)
-        }
-        outputClassesJar.delete()
-        outputRClassesJar.delete()
 
-        // First, create a graph based on the ResolvableDependencies and the Artifact Collections.
-        // Each node in the DependenciesGraph is an external dependency and is either a full AAR or
-        // a JAR dependency.
-        // Each node will hold the information about its dependencies. Additionally, nodes
-        // representing AARs will also contain the paths to the corresponding R-def.txt file, their
-        // classes.jar file and their non-namespaced AndroidManifest.xml file; nodes representing
-        // JAR dependencies will have none.
-        val graph = DependenciesGraph.create(
+        try {
+            val graph = DependenciesGraph.create(
                 dependencies,
                 ImmutableMap.of(
-                        ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rFiles.toMap(),
-                        ArtifactType.NON_NAMESPACED_CLASSES, jarFiles.toMap(),
-                        ArtifactType.NON_NAMESPACED_MANIFEST, manifests.toMap()
+                    ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rFiles.toMap(),
+                    ArtifactType.NON_NAMESPACED_CLASSES, jarFiles.toMap(),
+                    ArtifactType.NON_NAMESPACED_MANIFEST, manifests.toMap(),
+                    ArtifactType.ANDROID_RES, notNamespacedResources.toMap(),
+                    ArtifactType.RES_STATIC_LIBRARY, staticLibraryDependencies
+                        .toMap()
                 )
-        )
+            )
+
+            val rewrittenResources = File(intermediateDirectory, "namespaced_res")
+
+            val rewrittenResourcesMap = namespaceDependencies(
+                graph = graph,
+                forkJoinPool = forkJoinPool,
+                outputRewrittenClasses = outputRewrittenClasses,
+                outputRClasses = outputRClasses,
+                outputManifests = outputManifests,
+                outputResourcesDir = rewrittenResources
+            )
+
+            // Jar all the classes into two JAR files - one for namespaced classes, one for R classes.
+            jarOutputs(outputClassesJar, outputRewrittenClasses)
+            jarOutputs(outputRClassesJar, outputRClasses)
+
+            val aapt2ServiceKey = registerAaptService(aapt2FromMaven, logger = iLogger)
+
+            val outputCompiledResources = File(intermediateDirectory, "compiled_namespaced_res")
+            // compile the rewritten resources
+            val compileMap =
+                compile(
+                    rewrittenResourcesMap = rewrittenResourcesMap,
+                    aapt2ServiceKey = aapt2ServiceKey,
+                    forkJoinPool = forkJoinPool,
+                    outputDirectory = outputCompiledResources
+                )
+
+            // then link them in to static libraries.
+            val nonNamespacedDependenciesLinker = NonNamespacedDependenciesLinker(
+                graph = graph,
+                compiled = compileMap,
+                outputStaticLibrariesDirectory = outputStaticLibraries,
+                intermediateDirectory = intermediateDirectory,
+                pool = forkJoinPool,
+                aapt2ServiceKey = aapt2ServiceKey,
+                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR)
+            )
+            nonNamespacedDependenciesLinker.link()
+        } finally {
+            symbolTablesCache.invalidateAll()
+        }
+    }
+
+    @VisibleForTesting
+    internal fun namespaceDependencies(
+        graph: DependenciesGraph,
+        forkJoinPool: ForkJoinPool,
+        outputRewrittenClasses: File,
+        outputRClasses: File,
+        outputManifests: File,
+        outputResourcesDir: File
+    ): Map<DependenciesGraph.Node, File> {
+        FileUtils.cleanOutputDir(outputRewrittenClasses)
+        FileUtils.cleanOutputDir(outputRClasses)
+        FileUtils.cleanOutputDir(outputManifests)
+        FileUtils.cleanOutputDir(outputResourcesDir)
+
 
         // The rewriting works per node, since for rewriting a library the only files from its
         // dependencies we need are their R-def.txt files, which were already generated by the
         // [LibraryDefinedSymbolTableTransform].
-        // TODO: do this in parallel
+        // TODO: do this all as one action to interleave work.
+        val rewrittenResources = ImmutableMap.builder<DependenciesGraph.Node, File>()
+
+        val tasks = mutableListOf<ForkJoinTask<*>>()
         for (dependency in graph.allNodes) {
-            namespaceDependency(dependency, outputDirectory, outputRClasses, outputManifests)
+            val outputResources = if (dependency.getFile(ArtifactType.ANDROID_RES) != null) {
+                File(
+                    outputResourcesDir,
+                    dependency.sanitizedName
+                )
+            } else {
+                null
+            }
+            outputResources?.apply { rewrittenResources.put(dependency, outputResources) }
+            tasks.add(forkJoinPool.submit {
+                namespaceDependency(
+                    dependency,
+                    outputRewrittenClasses, outputRClasses, outputManifests, outputResources
+                )
+            })
         }
-
-        symbolTablesCache.clear()
-        usedSanitizedDependencyNames.clear()
-
-        // Jar all the classes into two JAR files - one for namespaced classes, one for R classes.
-        jarOutputs(outputClassesJar, outputDirectory)
-        jarOutputs(outputRClassesJar, outputRClasses)
+        for (task in tasks) {
+            task.get()
+        }
+        tasks.clear()
+        return rewrittenResources.build()
     }
 
     private fun jarOutputs(outputJar: File, inputDirectory: File) {
@@ -153,77 +263,111 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
 
     private fun namespaceDependency(
         dependency: DependenciesGraph.Node,
-        outputDirectory: File,
+        outputClassesDirectory: File,
         outputRClassesDirectory: File,
-        outputManifests: File
+        outputManifests: File,
+        outputResourcesDirectory: File?
     ) {
-        val input = dependency.getFile(ArtifactType.NON_NAMESPACED_CLASSES)
+        val inputClasses = dependency.getFiles(ArtifactType.NON_NAMESPACED_CLASSES)
         val manifest = dependency.getFile(ArtifactType.NON_NAMESPACED_MANIFEST)
+        val resources = dependency.getFile(ArtifactType.ANDROID_RES)
+
         // Only convert external nodes and non-namespaced libraries. Already namespaced libraries
         // and JAR files can be present in the graph, but they will not contain the
         // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
-        if (dependency.id !is ProjectComponentIdentifier && input != null) {
+        if (dependency.id !is ProjectComponentIdentifier && inputClasses != null) {
             Preconditions.checkNotNull(
                     manifest,
-                    "Manifest missing for library ${dependency.id.displayName}")
-            val dependencyName = dependency.id.displayName
-            val sanitizedDependencyName = getUniqueSanitizedDependencyName(dependencyName)
-            val out = File(
-                    outputDirectory,
-                    "namespaced-$sanitizedDependencyName-${input.name}"
-            )
+                    "Manifest missing for library $dependency")
 
             // The rewriting algorithm uses ordered symbol tables, with this library's table at the
             // top of the list. It looks up resources starting from the top of the list, trying to
             // find where the references resource was defined (or overridden), closest to the root
             // (this node) in the dependency graph.
             val symbolTables = getSymbolTables(dependency)
-            logger.info("Started rewriting $dependencyName")
+            logger.info("Started rewriting $dependency")
             val rewriter = NamespaceRewriter(symbolTables, log ?: logger)
-            rewriter.rewriteJar(input, out)
+
+            // Brittle, relies on the AAR expansion logic that makes sure all jars have unique names
+            try {
+            inputClasses.forEach {
+                val out = File(
+                    outputClassesDirectory,
+                    "namespaced-${dependency.sanitizedName}-${it.name}"
+                )
+                rewriter.rewriteJar(it, out)
+            }
+            } catch (e: Exception) {
+                throw IOException("Failed to transform jar + ${dependency.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)}", e)
+            }
             rewriter.rewriteManifest(
                     manifest!!.toPath(),
-                    outputManifests.toPath().resolve("${sanitizedDependencyName}_AndroidManifest.xml"))
-            logger.info("Finished rewriting $dependencyName")
+                    outputManifests.toPath().resolve("${dependency.sanitizedName}_AndroidManifest.xml"))
+            if (resources != null) {
+                rewriter.rewriteAarResources(
+                    resources.toPath(),
+                    outputResourcesDirectory!!.toPath()
+                )
+                generatePublicFile(getDefinedSymbols(dependency), outputResourcesDirectory.toPath())
+            }
+
+            logger.info("Finished rewriting $dependency")
 
             // Also generate fake R classes for compilation.
             exportToCompiledJava(
                     ImmutableList.of(symbolTables[0]),
                     File(
                             outputRClassesDirectory,
-                            "namespaced-$sanitizedDependencyName-R.jar"
+                            "namespaced-${dependency.sanitizedName}-R.jar"
                     ).toPath()
             )
         }
     }
 
-    private fun getUniqueSanitizedDependencyName(name: String): String {
-        var sanitizedName = FileUtils.sanitizeFileName(name)
-        // This should not happen, but in case we do run into a collision better to be safe and
-        // append an extra underscore character. And to be extremely cautious, keep checking until
-        // we're safe.
-        while (usedSanitizedDependencyNames.contains(sanitizedName)) {
-            sanitizedName += "_"
+    private fun compile(
+        rewrittenResourcesMap: Map<DependenciesGraph.Node, File>,
+        aapt2ServiceKey: Aapt2ServiceKey,
+        forkJoinPool: ForkJoinPool,
+        outputDirectory: File
+    ): Map<DependenciesGraph.Node, File> {
+        val compiled = ImmutableMap.builder<DependenciesGraph.Node, File>()
+        val tasks = mutableListOf<ForkJoinTask<*>>()
+
+        rewrittenResourcesMap.forEach { node, rewrittenResources ->
+            val nodeOutputDirectory = File(outputDirectory, node.sanitizedName)
+            compiled.put(node, nodeOutputDirectory)
+            Files.createDirectories(nodeOutputDirectory.toPath())
+            for (resConfigurationDir in rewrittenResources.listFiles()) {
+                for (resourceFile in resConfigurationDir.listFiles()) {
+                    val request = CompileResourceRequest(
+                        inputFile = resourceFile,
+                        outputDirectory = nodeOutputDirectory
+                    )
+                    val params =
+                        Aapt2CompileRunnable.Params(aapt2ServiceKey, listOf(request))
+                    tasks.add(forkJoinPool.submit(Aapt2CompileRunnable(params)))
+                }
+            }
         }
-        usedSanitizedDependencyNames.add(sanitizedName)
-        return sanitizedName
+        for (task in tasks) {
+            task.get()
+        }
+        return compiled.build()
     }
 
-    private fun getSymbolTables(node: DependenciesGraph.Node): ImmutableList<SymbolTable> {
-        synchronized(symbolTablesCache) {
-            val builder = ImmutableList.builder<SymbolTable>()
 
-            // Reading the R files and building symbol tables is very costly, remember them in the
-            // cache when reading for the first time, then just fetch the already build table.
-            for (rFile in node.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)) {
-                if (!symbolTablesCache.contains(rFile)) {
-                    val table = SymbolIo.readRDef(rFile.toPath())
-                    symbolTablesCache[rFile] = table
-                }
-                builder.add(symbolTablesCache[rFile]!!)
-            }
-            return builder.build()
+
+    private fun getSymbolTables(node: DependenciesGraph.Node): ImmutableList<SymbolTable> {
+        val builder = ImmutableList.builder<SymbolTable>()
+        for (rDefFile in node.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)) {
+            builder.add(symbolTablesCache.getUnchecked(rDefFile))
         }
+        return builder.build()
+    }
+
+    private fun getDefinedSymbols(node: DependenciesGraph.Node): SymbolTable {
+        val rDefFile = node.getFile(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)!!
+        return symbolTablesCache.getUnchecked(rDefFile)
     }
 
     private fun ArtifactCollection.toMap(): ImmutableMap<String, ImmutableCollection<File>> =
@@ -281,8 +425,41 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     task,
                     "namespaced-R.jar")
 
+            task.outputStaticLibraries = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
+                task
+            )
+
             task.dependencies =
                     variantScope.variantData.variantDependency.runtimeClasspath.incoming
+
+            task.externalNotNamespacedResources = variantScope.getArtifactCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.EXTERNAL,
+                ArtifactType.ANDROID_RES
+            )
+
+            task.externalResStaticLibraries = variantScope.getArtifactCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.EXTERNAL,
+                ArtifactType.RES_STATIC_LIBRARY
+            )
+
+            task.intermediateDirectory = variantScope.getIncrementalDir(name)
+
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
+        }
+    }
+
+    companion object {
+        val sharedForkJoinPool: ForkJoinPool by lazy {
+            ForkJoinPool(
+                Math.max(
+                    1,
+                    Math.min(8, Runtime.getRuntime().availableProcessors() / 2)
+                )
+            )
         }
     }
 }

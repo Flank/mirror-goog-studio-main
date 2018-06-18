@@ -17,8 +17,6 @@
 package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
@@ -34,25 +32,7 @@ class AutoNamespaceTest {
         .create()
 
     @Test
-    fun rewriteJavaBytecodeAndRClasses() {
-        TestFileUtils.searchAndReplace(
-                FileUtils.join(project.mainSrcDir, "com", "example", "namespacedApp", "Test.java"),
-                "int test;",
-                """
-        // Check java references.
-        String javaRef = android.support.constraint.BuildConfig.BUILD_TYPE;
-        // Check namespaced resource references.
-        int resRef = android.support.constraint.R.attr.layout_constraintBaseline_creator;"""
-        )
-
-        TestFileUtils.appendToFile(
-                project.buildFile,
-                """dependencies {
-    implementation 'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-}"""
-        )
-
+    fun rewriteJavaBytecodeRClassesAndResources() {
         project.executor()
             .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
             .run("assembleDebug")
@@ -93,24 +73,14 @@ class AutoNamespaceTest {
     fun incorrectReferencesAreStillInvalid() {
         TestFileUtils.searchAndReplace(
                 FileUtils.join(project.mainSrcDir, "com", "example", "namespacedApp", "Test.java"),
-                "int test;",
-                """
-        // Check namespaced resource references.
-        int resRef = android.support.constraint.R.attr.invalid_reference;"""
-        )
-
-        TestFileUtils.appendToFile(
-                project.buildFile,
-                """dependencies {
-    implementation 'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'
-    implementation 'com.android.support.constraint:constraint-layout:$TEST_CONSTRAINT_LAYOUT_VERSION'
-}"""
+                "int resRef = .*;",
+                "int resRef = android.support.constraint.R.attr.invalid_reference;"
         )
 
         val result = project.executor()
-                .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-                .expectFailure()
-                .run("assembleDebug")
+            .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
+            .expectFailure()
+            .run("assembleDebug")
 
         Truth.assertThat(result.stdout).contains("error: cannot find symbol")
         Truth.assertThat(result.stdout)

@@ -35,6 +35,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.PrintWriter
+import java.nio.file.Files
 import java.util.ArrayList
 import java.util.Locale
 import java.util.Objects
@@ -126,6 +127,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
 
                 // Resources list could have changed since last run.
                 FileUtils.deleteIfExists(resourceListFile)
+                Files.createDirectories(config.intermediateDir.toPath())
                 for (dir in config.resourceDirs) {
                     FileOutputStream(resourceListFile).use { fos ->
                         PrintWriter(fos).use { pw ->

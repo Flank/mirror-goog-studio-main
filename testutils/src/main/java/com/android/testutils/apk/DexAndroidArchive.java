@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 
 @Immutable
 public abstract class DexAndroidArchive extends AndroidArchive {
@@ -88,5 +89,22 @@ public abstract class DexAndroidArchive extends AndroidArchive {
             }
         }
         return false;
+    }
+
+    @Nullable
+    public final DexBackedClassDef getClass(@NonNull String className) throws IOException {
+        if (mainDex != null) {
+            DexBackedClassDef foundClass = mainDex.getClasses().get(className);
+            if (foundClass != null) {
+                return foundClass;
+            }
+        }
+        for (Dex dex : secondaryDexes) {
+            DexBackedClassDef foundClass = dex.getClasses().get(className);
+            if (foundClass != null) {
+                return foundClass;
+            }
+        }
+        return null;
     }
 }

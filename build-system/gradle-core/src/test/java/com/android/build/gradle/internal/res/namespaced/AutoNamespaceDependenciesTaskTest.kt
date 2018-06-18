@@ -16,34 +16,29 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.testutils.TestResources
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.ResolvableDependencies
-import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
-import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolutionResult
-import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
+import java.util.concurrent.ForkJoinPool
 import com.google.common.collect.ImmutableMap.of as map
 import com.google.common.collect.ImmutableSet.of as set
 
@@ -108,27 +103,34 @@ class AutoNamespaceDependenciesTaskTest {
 
         val node = createDependency("libA")
 
-        val dependencies = wrapDependencies(set(node))
         val outputRewrittenClasses = tempFolder.newFolder("output")
         val outputRClasses = tempFolder.newFolder("rClasses")
         val classesJar = tempFolder.newFile("namespaced-classes.jar")
         val rJar = tempFolder.newFile("r.jar")
         val outputRewrittenManifests = tempFolder.newFolder("manifests")
-        val rFiles = getArtifactCollection(map("libA", rDef))
+        val rDefFiles = getArtifactCollection(map("libA", rDef))
+        val notNamespacedResources = getArtifactCollection(map())
         val jarFiles = getArtifactCollection(map("libA", testClassesJar))
         val manifestsArtifact = getArtifactCollection(map("libA", manifest))
         task.log = log
 
+        val graph = DependenciesGraph.create(
+            set(node),
+            ImmutableMap.of<ArtifactType, ImmutableMap<String, ImmutableCollection<File>>>(
+                ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rDefFiles,
+                ArtifactType.NON_NAMESPACED_CLASSES, jarFiles,
+                ArtifactType.NON_NAMESPACED_MANIFEST, manifestsArtifact,
+                ArtifactType.ANDROID_RES, notNamespacedResources,
+                ArtifactType.RES_STATIC_LIBRARY, getArtifactCollection(map())
+            )
+        )
         task.namespaceDependencies(
-                dependencies,
-                rFiles,
-                jarFiles,
-                manifestsArtifact,
-                outputRewrittenClasses,
-                outputRClasses,
-                classesJar,
-                rJar,
-                outputRewrittenManifests)
+            graph = graph,
+            forkJoinPool = ForkJoinPool.commonPool(),
+            outputRewrittenClasses = outputRewrittenClasses,
+            outputRClasses = outputRClasses,
+            outputManifests = outputRewrittenManifests,
+            outputResourcesDir = tempFolder.newFolder("outResources"))
 
         Truth.assertThat(log.warnings).isEmpty()
 
@@ -206,27 +208,33 @@ class AutoNamespaceDependenciesTaskTest {
         val nodeB = createDependency("lib?")
         val nodeA = createDependency("lib_", set(nodeB, nodeC))
 
-        val dependencies = wrapDependencies(set(nodeA))
         val outputRewrittenClasses = tempFolder.newFolder("output")
         val outputRClasses = tempFolder.newFolder("rClasses")
-        val classesJar = tempFolder.newFile("namespaced-classes.jar")
-        val rJar = tempFolder.newFile("r.jar")
         val outputRewrittenManifests = tempFolder.newFolder("manifests")
+        val notNamespacedResources = getArtifactCollection(map())
         val rFilesArtifact = getArtifactCollection(rFiles)
         val jarFiles = getArtifactCollection(classesJars)
         val manifestsArtifact = getArtifactCollection(manifests)
         task.log = log
 
+
+        val graph = DependenciesGraph.create(
+            set(nodeA),
+            ImmutableMap.of<ArtifactType, ImmutableMap<String, ImmutableCollection<File>>>(
+                ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rFilesArtifact,
+                ArtifactType.NON_NAMESPACED_CLASSES, jarFiles,
+                ArtifactType.NON_NAMESPACED_MANIFEST, manifestsArtifact,
+                ArtifactType.ANDROID_RES, notNamespacedResources,
+                ArtifactType.RES_STATIC_LIBRARY, getArtifactCollection(map())
+            )
+        )
         task.namespaceDependencies(
-                dependencies,
-                rFilesArtifact,
-                jarFiles,
-                manifestsArtifact,
-                outputRewrittenClasses,
-                outputRClasses,
-                classesJar,
-                rJar,
-                outputRewrittenManifests)
+            graph = graph,
+            forkJoinPool = ForkJoinPool.commonPool(),
+            outputRewrittenClasses = outputRewrittenClasses,
+            outputRClasses = outputRClasses,
+            outputManifests = outputRewrittenManifests,
+            outputResourcesDir = tempFolder.newFolder("outResources"))
 
         // Check if the colliding names got the underscore characters appended.
         assertThat(File(outputRewrittenClasses, "namespaced-lib_-classes.jar")).exists()
@@ -317,28 +325,34 @@ class AutoNamespaceDependenciesTaskTest {
         val nodeA = createDependency("libA", set(nodeC, nodeD))
 
         // Fill task inputs.
-        val dependencies = wrapDependencies(set(nodeA, nodeB))
         val outputRewrittenClasses = tempFolder.newFolder("output")
         val outputRClasses = tempFolder.newFolder("rClasses")
-        val classesJar = tempFolder.newFile("namespaced-classes.jar")
-        val rJar = tempFolder.newFile("r.jar")
         val outputRewrittenManifests = tempFolder.newFolder("manifests")
         val rFilesArtifact = getArtifactCollection(rFiles)
+        val notNamespacedResources = getArtifactCollection(map())
         val jarFiles = getArtifactCollection(classesJars)
         val manifestsArtifact = getArtifactCollection(manifests)
         task.log = log
 
         // Execute the task.
+        val graph = DependenciesGraph.create(
+            set(nodeA, nodeB),
+            ImmutableMap.of<ArtifactType, ImmutableMap<String, ImmutableCollection<File>>>(
+                ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rFilesArtifact,
+                ArtifactType.NON_NAMESPACED_CLASSES, jarFiles,
+                ArtifactType.NON_NAMESPACED_MANIFEST, manifestsArtifact,
+                ArtifactType.ANDROID_RES, notNamespacedResources,
+                ArtifactType.RES_STATIC_LIBRARY, getArtifactCollection(map())
+            )
+        )
+
         task.namespaceDependencies(
-                dependencies,
-                rFilesArtifact,
-                jarFiles,
-                manifestsArtifact,
-                outputRewrittenClasses,
-                outputRClasses,
-                classesJar,
-                rJar,
-                outputRewrittenManifests)
+            graph = graph,
+            forkJoinPool = ForkJoinPool.commonPool(),
+            outputRewrittenClasses = outputRewrittenClasses,
+            outputRClasses = outputRClasses,
+            outputManifests = outputRewrittenManifests,
+            outputResourcesDir = tempFolder.newFolder("outResources"))
 
         // Verify warnings about overrides were printed.
         Truth.assertThat(log.warnings).isNotEmpty()
@@ -498,37 +512,8 @@ class AutoNamespaceDependenciesTaskTest {
         return TestResources.getFile(AutoNamespaceDependenciesTaskTest::class.java, name)
     }
 
-    private fun wrapDependencies(roots: MutableSet<DependencyResult>): ResolvableDependencies {
-        val dependencies = mock(ResolvableDependencies::class.java)
-        val resolutionResult = mock(ResolutionResult::class.java)
-        val resolvedComponentResult = mock(ResolvedComponentResult::class.java)
-
-        `when`(dependencies.resolutionResult).thenReturn(resolutionResult)
-        `when`(resolutionResult.root).thenReturn(resolvedComponentResult)
-        `when`(resolvedComponentResult.dependencies).thenReturn(roots)
-
-        return dependencies
+    private fun getArtifactCollection(files: Map<String, File>): ImmutableMap<String, ImmutableCollection<File>> {
+        return files.toImmutableMap { ImmutableList.of(it) }
     }
 
-    private fun getArtifactCollection(files: Map<String, File>): ArtifactCollection {
-        val collection = mock(ArtifactCollection::class.java)
-        val artifacts = getArtifacts(files)
-        `when`(collection.artifacts).thenReturn(artifacts)
-        return collection
-    }
-
-    private fun getArtifacts(files: Map<String, File>): ImmutableSet<ResolvedArtifactResult> {
-        val builder = ImmutableSet.builder<ResolvedArtifactResult>()
-        for (entry in files) {
-            val artifact = mock(ResolvedArtifactResult::class.java)
-            val artifactIdentifier = mock(ComponentArtifactIdentifier::class.java)
-            val identifier = mock(ComponentIdentifier::class.java)
-            `when`(identifier.displayName).thenReturn(entry.key)
-            `when`(artifactIdentifier.componentIdentifier).thenReturn(identifier)
-            `when`(artifact.id).thenReturn(artifactIdentifier)
-            `when`(artifact.file).thenReturn(entry.value)
-            builder.add(artifact)
-        }
-        return builder.build()
-    }
 }

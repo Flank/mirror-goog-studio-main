@@ -53,7 +53,6 @@ class NamespacedResourcesTaskManager(
 
         // Process dependencies making sure everything we consume will be fully namespaced.
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-            // TODO: also rewrite the resources
             taskFactory.create(AutoNamespaceDependenciesTask.ConfigAction(variantScope))
         }
 

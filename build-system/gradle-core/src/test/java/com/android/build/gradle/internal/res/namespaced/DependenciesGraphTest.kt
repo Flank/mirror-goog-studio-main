@@ -131,6 +131,22 @@ class DependenciesGraphTest {
             .containsExactlyElementsIn(listOf(fileA, fileB, fileC, fileD))
     }
 
+    @Test
+    fun clashingNormalizedNames() {
+        // a> a< a_
+        val a1 = createDependency("a>")
+        val a2 = createDependency("a<")
+        val a3 = createDependency("a_")
+
+        val graph = DependenciesGraph.create(listOf(a1, a2, a3))
+
+        assertThat(graph.allNodes).hasSize(3)
+        assertThat(graph.allNodes.map { it.sanitizedName }.toSet()).hasSize(3)
+        graph.allNodes.forEach {
+            assertThat(it.sanitizedName).startsWith("a_")
+        }
+    }
+
     private fun visit(nodes: ImmutableSet<DependenciesGraph.Node>): List<String> {
         val names = ImmutableList.Builder<String>()
         nodes.forEach { visit(it, names) }

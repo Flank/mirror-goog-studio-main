@@ -99,6 +99,8 @@ public enum InternalArtifactType implements ArtifactType {
     RES_COMPILED_FLAT_FILES,
     // An AAPT2 static library, containing only the current sub-project's resources.
     RES_STATIC_LIBRARY,
+    // A directory of AAPT2 static libraries generated from all non-namepaced remote dependencies.
+    RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
     // Compiled R class jar (for compilation only, packaged in AAR)
     COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
     // JAR file containing all of the auto-namespaced classes from dependencies.

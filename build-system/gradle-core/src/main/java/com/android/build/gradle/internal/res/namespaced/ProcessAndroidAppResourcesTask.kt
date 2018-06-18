@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.singlePath
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -25,6 +26,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -44,6 +46,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.nio.file.Files
 import javax.inject.Inject
 
 /**
@@ -64,6 +67,11 @@ open class ProcessAndroidAppResourcesTask
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    var convertedLibraryDependencies: BuildableArtifact? = null
+        private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:Optional @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
@@ -78,6 +86,11 @@ open class ProcessAndroidAppResourcesTask
     fun taskAction() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
+        convertedLibraryDependencies?.singlePath()?.let { convertedDir ->
+            Files.list(convertedDir).use { convertedLibraries ->
+                convertedLibraries.forEach { staticLibraries.add(it.toFile()) }
+            }
+        }
         staticLibraries.add(thisSubProjectStaticLibrary.single())
         val config = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
@@ -124,6 +137,13 @@ open class ProcessAndroidAppResourcesTask
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
+            if (scope.globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+                task.convertedLibraryDependencies =
+                        scope
+                            .artifacts
+                            .getArtifactFiles(
+                                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)
+            }
             task.sharedLibraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
