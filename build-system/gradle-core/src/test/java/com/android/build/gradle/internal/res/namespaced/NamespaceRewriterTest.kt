@@ -17,11 +17,15 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.xml.XmlFormatPreferences
+import com.android.ide.common.xml.XmlFormatStyle
+import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.testutils.TestResources
 import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
+import com.android.utils.PositionXmlParser
 import com.google.common.collect.ImmutableList
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
@@ -359,7 +363,7 @@ class NamespaceRewriterTest {
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
             .rewriteValuesFile(original.toPath(), namespaced.toPath())
 
-        assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
+        assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).isEqualTo(
             """<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
@@ -388,8 +392,7 @@ class NamespaceRewriterTest {
             <enum name="right" value="1" />
         </attr>
     </declare-styleable>
-
-</resources>"""
+</resources>""".xmlFormat()
         )
     }
 
@@ -511,16 +514,49 @@ class NamespaceRewriterTest {
         val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
 
         val from = """<?xml version="1.0" encoding="utf-8"?>
-                <resources>
-                <string name="app_name">@string/text</string> </resources>"""
+            <resources>
+                <string name="app_name">@string/text</string>
+            </resources>"""
         val to = """<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <string name="app_name">@com.example.module:string/text</string>
-
-</resources>"""
+            <resources>
+                <string name="app_name">@com.example.module:string/text</string>
+            </resources>""".xmlFormat()
         checkAarRewrite(namespaceRewriter, "values/strings.xml", from, to)
         checkAarRewrite(namespaceRewriter, "values-en/strings.xml", from, to)
+    }
+
+    @Test
+    fun checkAarStyleAttrReferenceRewrite() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("attr", "tabMaxWidth"))
+            .add(symbol("attr", "tabIndicatorColor"))
+            .build()
+        val depTable = SymbolTable.builder()
+            .tablePackage("com.example.foo")
+            .add(symbol("attr", "colorAccent"))
+            .add(symbol("style", "Base_Widget_Design"))
+            .add(symbol("dimen", "design_tab_max_width"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable, depTable))
+
+        val from = """<?xml version="1.0" encoding="utf-8"?>
+                <resources>
+                    <style name="Base.Widget.Design.TabLayout">
+                        <item name="tabMaxWidth">@dimen/design_tab_max_width</item>
+                        <item name="tabIndicatorColor">?attr/colorAccent</item>
+                    </style>
+                </resources>"""
+        val to = """<?xml version="1.0" encoding="utf-8"?>
+                <resources>
+                    <style name="Base.Widget.Design.TabLayout" parent="@com.example.foo:style/Base.Widget.Design">
+                        <item name="com.example.module:tabMaxWidth">@com.example.foo:dimen/design_tab_max_width</item>
+                        <item name="com.example.module:tabIndicatorColor">?com.example.foo:attr/colorAccent</item>
+                    </style>
+                </resources>""".xmlFormat()
+        checkAarRewrite(namespaceRewriter, "values/styles.xml", from, to)
+        checkAarRewrite(namespaceRewriter, "values-en/styles.xml", from, to)
     }
 
     @Test
@@ -568,9 +604,64 @@ class NamespaceRewriterTest {
         android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
 
 </vector>
-        """.trimIndent()
+        """.xmlFormat()
         checkAarRewrite(namespaceRewriter, "drawable/vd.xml", vector, rewritten)
         checkAarRewrite(namespaceRewriter, "drawable-en/vd.xml", vector, rewritten)
+    }
+
+    @Test
+    fun checkCommentFirst() {
+        val commentFirst = """<?xml version="1.0" encoding="utf-8"?>
+            <!-- Copyright (C) 2015 The Android Open Source Project
+
+                 Licensed under the Apache License, Version 2.0 (the "License");
+                 you may not use this file except in compliance with the License.
+                 You may obtain a copy of the License at
+
+                      http://www.apache.org/licenses/LICENSE-2.0
+
+                 Unless required by applicable law or agreed to in writing, software
+                 distributed under the License is distributed on an "AS IS" BASIS,
+                 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+                 See the License for the specific language governing permissions and
+                 limitations under the License.
+            -->
+
+            <ripple xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:color="@color/abc_color_highlight_material"
+                    android:radius="20dp" />
+            """
+
+        val expected = """<?xml version="1.0" encoding="utf-8"?>
+            <!-- Copyright (C) 2015 The Android Open Source Project
+
+                 Licensed under the Apache License, Version 2.0 (the "License");
+                 you may not use this file except in compliance with the License.
+                 You may obtain a copy of the License at
+
+                      http://www.apache.org/licenses/LICENSE-2.0
+
+                 Unless required by applicable law or agreed to in writing, software
+                 distributed under the License is distributed on an "AS IS" BASIS,
+                 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+                 See the License for the specific language governing permissions and
+                 limitations under the License.
+            -->
+
+            <ripple xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:com_example_module="http://schemas.android.com/apk/res/com.example.module"
+                    android:color="@com.example.module:color/abc_color_highlight_material"
+                    android:radius="20dp" />
+            """.xmlFormat()
+
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("color", "abc_color_highlight_material"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+
+        checkAarRewrite(namespaceRewriter, "drawable-v23/ripple.xml", commentFirst, expected)
     }
 
     @Test
@@ -604,4 +695,15 @@ class NamespaceRewriterTest {
 
     private fun Path.list(): List<Path> =
         Files.list(this).use { it.collect(ImmutableList.toImmutableList()) }
+
+    private fun String.xmlFormat(): String =
+        PositionXmlParser.parse(this).let { doc ->
+            XmlPrettyPrinter.prettyPrint(
+                doc,
+                XmlFormatPreferences.defaults(),
+                XmlFormatStyle.get(doc),
+                "\n",
+                false
+            )
+        }
 }
