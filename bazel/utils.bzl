@@ -107,7 +107,7 @@ def fileset(name, srcs=[], mappings={}, **kwargs):
 # will migrate to it when it's fixed.
 def java_jarjar(name, rules, srcs=[], visibility=None):
   native.genrule(
-      name = name,
+      name = "java_jarjar_" + name,
       srcs = srcs + [rules],
       outs = [name + ".jar"],
       tools = ["//tools/base/bazel:jarjar"],
@@ -115,6 +115,12 @@ def java_jarjar(name, rules, srcs=[], visibility=None):
              "$(location " + rules + ") " +
              " ".join(["$(location " + src + ")" for src in srcs]) + " " +
              "--output '$@'"),
+      visibility = visibility,
+  )
+
+  native.java_import(
+      name = name,
+      jars = [name + ".jar"],
       visibility = visibility,
   )
 
