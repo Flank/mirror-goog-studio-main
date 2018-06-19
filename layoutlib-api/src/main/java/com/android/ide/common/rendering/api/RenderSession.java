@@ -20,7 +20,6 @@ import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED
 
 import com.android.ide.common.rendering.api.Result.Status;
 import com.android.util.PropertiesMap;
-
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
@@ -104,14 +103,13 @@ public class RenderSession {
     }
 
     /**
-     * Returns a map of (XML attribute name, attribute value) containing only default attribute
-     * values, for the given view Object.
-     * @param viewObject the view object.
-     * @return a map of the default property values or null.
-     * @deprecated use {@link #getDefaultProperties()}
+     * Returns the map of View Cookie → properties (attribute name, attribute value) for all the
+     * views that have a view cookie.
+     *
+     * @deprecated use {@link #getDefaultNamespacedProperties()}
      */
     @Deprecated
-    public Map<String, String> getDefaultProperties(Object viewObject) {
+    public Map<Object, PropertiesMap> getDefaultProperties() {
         return null;
     }
 
@@ -119,7 +117,12 @@ public class RenderSession {
      * Returns the map of View Cookie → properties (attribute name, attribute value) for all the
      * views that have a view cookie.
      */
-    public Map<Object, PropertiesMap> getDefaultProperties() {
+    public Map<Object, Map<ResourceReference, ResourceValue>> getDefaultNamespacedProperties() {
+        return null;
+    }
+
+    /** Returns the map of View Cookie → default style for all the views that have a view cookie. */
+    public Map<Object, String> getDefaultStyles() {
         return null;
     }
 
