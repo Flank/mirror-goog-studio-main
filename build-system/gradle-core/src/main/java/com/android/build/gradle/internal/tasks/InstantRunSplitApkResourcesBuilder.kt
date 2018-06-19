@@ -184,7 +184,7 @@ open class InstantRunSplitApkResourcesBuilder
                 for (sliceNumber in params.bucketNumber..params.maxSlices step params.stepSize) {
                     val processingStart = System.currentTimeMillis()
                     generateSplitApkResource(it, sliceNumber)
-                    logger.quiet("processing $sliceNumber in bucket ${params.bucketNumber}" +
+                    logger.info("processing $sliceNumber in bucket ${params.bucketNumber}" +
                             " took ${System.currentTimeMillis() - processingStart}")
                 }
             }

@@ -80,6 +80,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder dexFileFolder = new TemporaryFolder();
     @Rule public TemporaryFolder apkListDirectory = new TemporaryFolder();
+    @Rule public TemporaryFolder apkResources = new TemporaryFolder();
 
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
@@ -88,12 +89,12 @@ public class InstantRunSlicesSplitApkBuilderTest {
     final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
-    public void setUpMock() {
+    public void setUpMock() throws IOException {
         MockitoAnnotations.initMocks(this);
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
         when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn("/path/to/zip-align");
-        when(splitApkResources.getFiles()).thenReturn(ImmutableSet.of(new File("resources")));
+        when(splitApkResources.getFiles()).thenReturn(ImmutableSet.of(apkResources.getRoot()));
 
     }
 
@@ -104,6 +105,12 @@ public class InstantRunSlicesSplitApkBuilderTest {
         org.apache.commons.io.FileUtils.write(
                 apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
         when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());
+
+        FileUtils.createFile(new File(apkResources.getRoot(), "dex_one/resources_ap"), "resources");
+        FileUtils.createFile(new File(apkResources.getRoot(), "dex_two/resources_ap"), "resources");
+        FileUtils.createFile(
+                new File(apkResources.getRoot(), "dex_three/resources_ap"), "resources");
+
 
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(

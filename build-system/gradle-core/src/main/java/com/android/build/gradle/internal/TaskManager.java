@@ -2467,7 +2467,8 @@ public abstract class TaskManager {
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
                         isDebuggable,
-                        variantScope.consumesFeatureJars());
+                        variantScope.consumesFeatureJars(),
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
         Optional<TransformTask> dexTask =
                 transformManager.addTransform(taskFactory, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream

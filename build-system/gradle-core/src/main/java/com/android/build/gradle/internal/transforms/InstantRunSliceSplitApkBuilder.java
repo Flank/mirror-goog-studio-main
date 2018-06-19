@@ -45,6 +45,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -227,6 +228,10 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                                     File resPackageFile =
                                             new File(splitApkResource, "resources_ap");
 
+                                    if (!resPackageFile.exists()) {
+                                        throw new FileNotFoundException(
+                                                resPackageFile.getAbsolutePath());
+                                    }
                                     generateSplitApk(
                                             uniqueName, resPackageFile, split, alignedOutput);
 
