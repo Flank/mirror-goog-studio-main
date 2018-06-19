@@ -93,7 +93,7 @@ public final class IncrementalRelativeFileSets {
             @NonNull File zip,
             FileStatus status)
             throws IOException {
-        Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
+        Preconditions.checkArgument(zip.isFile(), "!zip.isFile(): %s", zip);
 
         return ImmutableMap.<RelativeFile, FileStatus>builder()
                 .putAll(

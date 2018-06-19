@@ -112,7 +112,7 @@ public final class RelativeFiles {
      */
     @NonNull
     public static ImmutableSet<RelativeFile> fromZip(@NonNull File zip) throws IOException {
-        Preconditions.checkArgument(zip.isFile(), "!zip.isFile()");
+        Preconditions.checkArgument(zip.isFile(), "!zip.isFile(): %s", zip);
 
         Set<RelativeFile> files = Sets.newHashSet();
 
