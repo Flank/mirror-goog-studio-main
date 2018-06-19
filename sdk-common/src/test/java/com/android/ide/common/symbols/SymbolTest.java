@@ -35,7 +35,7 @@ public class SymbolTest {
     public void symbolData() {
         Symbol s = SymbolTestUtils.createSymbol("attr", "a", "int", "0xc");
         assertThat(s).isInstanceOf(Symbol.NormalSymbol.class);
-        assertThat(s.getName()).isEqualTo("a");
+        assertThat(s.getCanonicalName()).isEqualTo("a");
         assertThat(s.getJavaType()).isEqualTo(SymbolJavaType.INT);
         assertThat(((Symbol.NormalSymbol) s).getIntValue()).isEqualTo(0xc);
         assertThat(s.getResourceType()).isEqualTo(ResourceType.ATTR);

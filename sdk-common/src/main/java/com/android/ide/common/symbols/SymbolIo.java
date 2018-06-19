@@ -591,7 +591,7 @@ public final class SymbolIo {
                     pw.print(' ');
                     pw.print(s.getResourceType().getName());
                     pw.print(' ');
-                    pw.print(s.getName());
+                    pw.print(s.getCanonicalName());
                     pw.print(' ');
                     if (s.getResourceType() != ResourceType.STYLEABLE) {
                         Symbol.NormalSymbol symbol = (Symbol.NormalSymbol) s;
@@ -612,7 +612,7 @@ public final class SymbolIo {
                             pw.print(' ');
                             pw.print(ResourceType.STYLEABLE.getName());
                             pw.print(' ');
-                            pw.print(s.getName());
+                            pw.print(s.getCanonicalName());
                             pw.print('_');
                             pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
                             pw.print(' ');
@@ -665,7 +665,7 @@ public final class SymbolIo {
                     pw.print(' ');
                     pw.print(s.getResourceType().getName());
                     pw.print(' ');
-                    pw.print(s.getName());
+                    pw.print(s.getCanonicalName());
                     pw.print('\n');
 
                     // Declare styleables have the attributes that were defined under their node
@@ -680,7 +680,7 @@ public final class SymbolIo {
                             pw.print(' ');
                             pw.print(ResourceType.STYLEABLE.getName());
                             pw.print(' ');
-                            pw.print(s.getName());
+                            pw.print(s.getCanonicalName());
                             pw.print('_');
                             pw.print(SymbolUtils.canonicalizeValueResourceName(child));
                             pw.print('\n');
@@ -863,7 +863,7 @@ public final class SymbolIo {
                 pw.println();
 
                 for (Symbol s : symbols) {
-                    final String name = s.getName();
+                    final String name = s.getCanonicalName();
                     pw.print("        ");
                     pw.print(idModifiers);
                     pw.print(' ');

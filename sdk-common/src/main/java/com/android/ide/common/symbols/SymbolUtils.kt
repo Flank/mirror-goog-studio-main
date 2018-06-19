@@ -81,10 +81,10 @@ fun mergeAndRenumberSymbols(
     tables.forEach { table ->
         table.symbols.values().forEach { symbol ->
             when (symbol) {
-                is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.name)
+                is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.canonicalName)
                 is Symbol.StyleableSymbol -> {
                     arrayToAttrs
-                        .getOrPut(symbol.name) { HashSet() }
+                        .getOrPut(symbol.canonicalName) { HashSet() }
                         .addAll(symbol.children)
                 }
                 else -> throw IOException("Unexpected symbol $symbol")
@@ -109,7 +109,7 @@ fun mergeAndRenumberSymbols(
             val newSymbol =
                     Symbol.NormalSymbol(
                             resourceType = resourceType,
-                            name = symbolName,
+                            canonicalName = symbolName,
                             intValue = value
                     )
             tableBuilder.add(newSymbol)

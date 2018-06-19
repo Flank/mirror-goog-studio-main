@@ -19,8 +19,8 @@ package com.android.ide.common.symbols
 import com.android.annotations.concurrency.Immutable
 import com.android.ide.common.resources.MergingException
 import com.android.ide.common.resources.ValueResourceNameValidator
-import com.android.resources.ResourceVisibility
 import com.android.resources.ResourceType
+import com.android.resources.ResourceVisibility
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 
@@ -58,7 +58,7 @@ sealed class Symbol {
 
     abstract val resourceVisibility: ResourceVisibility
     abstract val resourceType: ResourceType
-    abstract val name:String
+    abstract val canonicalName:String
     /** The value as a string. */
     abstract fun getValue():String
     abstract val javaType: SymbolJavaType
@@ -85,7 +85,7 @@ sealed class Symbol {
             validateSymbol(name, resourceType)
             return NormalSymbol(
                 resourceType = resourceType,
-                name = name,
+                canonicalName = name,
                 intValue = idProvider.next(resourceType)
             )
         }
@@ -106,7 +106,7 @@ sealed class Symbol {
             validateSymbol(name, resourceType)
             return NormalSymbol(
                 resourceType = resourceType,
-                name = name,
+                canonicalName = name,
                 intValue = value
             )
         }
@@ -133,7 +133,7 @@ sealed class Symbol {
             children: List<String> = ImmutableList.of()): StyleableSymbol {
             validateSymbol(name, ResourceType.STYLEABLE)
             return StyleableSymbol(
-                name = name,
+                canonicalName = name,
                 values = values,
                 children = ImmutableList.copyOf(children)
             )
@@ -160,7 +160,7 @@ sealed class Symbol {
 
     data class NormalSymbol @JvmOverloads constructor(
         override val resourceType: ResourceType,
-        override val name: String,
+        override val canonicalName: String,
         val intValue: Int,
         override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED
     ) : Symbol() {
@@ -175,11 +175,11 @@ sealed class Symbol {
             get() = throw UnsupportedOperationException("Only styleables have children.")
 
         override fun toString(): String =
-                "$resourceVisibility $resourceType $name = 0x${intValue.toString(16)}"
+                "$resourceVisibility $resourceType $canonicalName = 0x${intValue.toString(16)}"
     }
 
     data class StyleableSymbol @JvmOverloads constructor(
-        override val name: String,
+        override val canonicalName: String,
         val values: ImmutableList<Int>,
         /**
          * list of the symbol's children in order corresponding to their IDs in the value list.

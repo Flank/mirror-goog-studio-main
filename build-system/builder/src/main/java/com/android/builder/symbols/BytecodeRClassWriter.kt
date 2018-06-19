@@ -125,7 +125,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
     for (s in symbols) {
         cw.visitField(
                 ACC_PUBLIC + ACC_STATIC,
-                s.name,
+                s.canonicalName,
                 s.javaType.desc,
                 null,
                 (s as? Symbol.NormalSymbol)?.intValue
@@ -137,7 +137,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
             for ((i, child) in children.withIndex()) {
                 cw.visitField(
                         ACC_PUBLIC + ACC_STATIC,
-                        "${s.name}_${canonicalizeValueResourceName(child)}",
+                        "${s.canonicalName}_${canonicalizeValueResourceName(child)}",
                         "I",
                         null,
                         i)
@@ -171,7 +171,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
                 clinit.visitInsn(IASTORE)
             }
 
-            clinit.visitFieldInsn(PUTSTATIC, internalName, s.name, "[I")
+            clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "[I")
         }
         clinit.visitInsn(RETURN)
         clinit.visitMaxs(0, 0)
