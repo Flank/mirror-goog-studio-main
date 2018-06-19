@@ -17,8 +17,7 @@ package com.android.resources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Enum representing a type of compiled resource.
@@ -73,6 +72,11 @@ public enum ResourceType {
      */
     SAMPLE_DATA("sample", "Sample data");
 
+    /** The set of all types of resources that can be referenced by other resources. */
+    public static final Set<ResourceType> REFERENCEABLE_TYPES;
+
+    private static final Map<String, ResourceType> sNameToType;
+
     private final String mName;
     private final String mDisplayName;
     private final String[] mAlternateXmlNames;
@@ -82,8 +86,6 @@ public enum ResourceType {
         mDisplayName = displayName;
         mAlternateXmlNames = alternateXmlNames;
     }
-
-    private static final Map<String, ResourceType> sNameToType;
 
     static {
         ResourceType[] values = ResourceType.values();
@@ -103,6 +105,14 @@ public enum ResourceType {
                 }
             }
         }
+
+        Set<ResourceType> referenceableTypes = EnumSet.allOf(ResourceType.class);
+        referenceableTypes.remove(ATTR);
+        referenceableTypes.remove(STYLEABLE);
+        referenceableTypes.remove(PUBLIC);
+        referenceableTypes.remove(AAPT);
+        referenceableTypes.remove(SAMPLE_DATA);
+        REFERENCEABLE_TYPES = Collections.unmodifiableSet(referenceableTypes);
     }
 
     /**
@@ -132,6 +142,7 @@ public enum ResourceType {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return getName();
     }

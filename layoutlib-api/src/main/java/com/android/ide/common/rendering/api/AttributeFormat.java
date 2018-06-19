@@ -17,30 +17,47 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.resources.ResourceType;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 /** Formats of styleable attribute value. */
 public enum AttributeFormat {
-    BOOLEAN("boolean"),
-    COLOR("color"),
-    DIMENSION("dimension"),
-    ENUM("enum"),
-    FLAGS("flags"),
-    FLOAT("float"),
-    FRACTION("fraction"),
-    INTEGER("integer"),
-    REFERENCE("reference"),
-    STRING("string");
+    BOOLEAN("boolean", EnumSet.of(ResourceType.BOOL)),
+    COLOR("color", EnumSet.of(ResourceType.COLOR, ResourceType.DRAWABLE, ResourceType.MIPMAP)),
+    DIMENSION("dimension", EnumSet.of(ResourceType.DIMEN)),
+    ENUM("enum", Collections.emptySet()),
+    FLAGS("flags", Collections.emptySet()),
+    FLOAT("float", EnumSet.of(ResourceType.INTEGER)),
+    FRACTION("fraction", EnumSet.of(ResourceType.FRACTION)),
+    INTEGER("integer", EnumSet.of(ResourceType.INTEGER)),
+    REFERENCE("reference", ResourceType.REFERENCEABLE_TYPES),
+    STRING("string", EnumSet.of(ResourceType.STRING));
 
     private final String name;
 
-    AttributeFormat(@NonNull String name) {
+    private final Set<ResourceType> matchingTypes;
+
+    AttributeFormat(@NonNull String name, @NonNull Set<ResourceType> matchingTypes) {
         this.name = name;
+        this.matchingTypes = matchingTypes;
+    }
+
+    AttributeFormat(@NonNull String name, @NonNull EnumSet<ResourceType> matchingTypes) {
+        this(name, Collections.unmodifiableSet(matchingTypes));
     }
 
     /** Returns the name used for the format in XML. */
     @NonNull
     public String getName() {
         return name;
+    }
+
+    /** Returns the set of matching resource types. */
+    @NonNull
+    public Set<ResourceType> getMatchingTypes() {
+        return matchingTypes;
     }
 
     /**
