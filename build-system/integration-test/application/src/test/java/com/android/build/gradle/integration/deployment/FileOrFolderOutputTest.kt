@@ -65,7 +65,9 @@ class FileOrFolderOutputTest {
 
             val changeListFile = File(it.file.toFile(), FolderBasedApkChangeList.CHANGE_LIST_FN)
             FileSubject.assertThat(changeListFile).exists()
-            val changeList = FolderBasedApkChangeList.read(FileReader(changeListFile))
+            val changeList = FileReader(changeListFile).use {
+                FolderBasedApkChangeList.read(it)
+            }
             assertThat(changeList.changes).containsExactlyElementsIn(apkContent.keys)
         }
 
@@ -86,10 +88,11 @@ class FileOrFolderOutputTest {
         val ignoredContents = listOf(
             "META-INF/CERT.RSA",  "META-INF/CERT.SF", "META-INF/MANIFEST.MF")
         val apkContent = mutableMapOf<String, Long>()
-        val zipFile = ZipFile(zip)
-        for (entry in zipFile.entries()) {
-            if (!entry.isDirectory && !ignoredContents.contains(entry.name)) {
-                apkContent[entry.name] = entry.size
+        ZipFile(zip).use {
+            for (entry in it.entries()) {
+                if (!entry.isDirectory && !ignoredContents.contains(entry.name)) {
+                    apkContent[entry.name] = entry.size
+                }
             }
         }
         return apkContent
@@ -107,7 +110,7 @@ class FileOrFolderOutputTest {
                 if (file.isDirectory) {
                     compareContent(content, file, base)
                 } else {
-                    val entryName = file.toRelativeString(base)
+                    val entryName = file.toRelativeString(base).replace(File.separatorChar, '/')
                     assertThat(content.containsKey(entryName)).isTrue()
                     content.remove(entryName)
                 }
