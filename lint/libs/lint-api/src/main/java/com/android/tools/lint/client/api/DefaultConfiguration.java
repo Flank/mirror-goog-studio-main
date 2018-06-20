@@ -815,7 +815,8 @@ public class DefaultConfiguration extends Configuration {
             @NonNull String id) {
         String message = String.format("Unknown issue id \"%1$s\"", id);
         if (configFile != null) {
-            message += String.format(", found in %1$s", configFile.getPath());
+            message += String.format(", found in %1$s",
+                    configFile.getPath().replace("\\", "\\\\"));
         }
 
         if (driver != null) {
