@@ -99,7 +99,7 @@ public final class ResourceReference implements Serializable {
      */
     @Deprecated
     public final boolean isFramework() {
-        return namespace == ResourceNamespace.ANDROID;
+        return ResourceNamespace.ANDROID.equals(namespace);
     }
 
     @NonNull

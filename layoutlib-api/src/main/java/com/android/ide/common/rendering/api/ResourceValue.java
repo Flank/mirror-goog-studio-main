@@ -21,10 +21,11 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
+import java.io.Serializable;
 import java.util.Objects;
 
 /** Represents an Android resource with a name and a string value. */
-public abstract class ResourceValue implements ResourceValueTemp {
+public abstract class ResourceValue implements ResourceValueTemp, Serializable {
     @NonNull private final ResourceType resourceType;
     @NonNull private final ResourceNamespace namespace;
     @NonNull private final String name;
@@ -33,7 +34,7 @@ public abstract class ResourceValue implements ResourceValueTemp {
     @Nullable private String value;
 
     @NonNull
-    protected ResourceNamespace.Resolver mNamespaceResolver =
+    protected transient ResourceNamespace.Resolver mNamespaceResolver =
             ResourceNamespace.Resolver.EMPTY_RESOLVER;
 
     public ResourceValue(
@@ -110,7 +111,8 @@ public abstract class ResourceValue implements ResourceValueTemp {
 
     @Override
     public boolean isFramework() {
-        return namespace == ResourceNamespace.ANDROID;
+        // When transferring this accross the wire, the instance check won't be correct.
+        return ResourceNamespace.ANDROID.equals(namespace);
     }
 
     /**
