@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.structureplugin
 
 import com.android.testutils.TestResources
+import com.android.utils.FileUtils.loadFileWithUnixLineSeparators
 import com.google.common.truth.Truth
 import org.junit.Test
 import java.io.File
@@ -136,12 +137,12 @@ private fun ModuleInfo.addDependency(dep: PoetDependenciesInfo): ModuleInfo {
 }
 
 private fun validate(project: ASPoetInfo, targetGoldenFile: String) {
-    val expectedJson = loadGoldenFile(targetGoldenFile).readText()
+    val expectedJson = loadFileWithUnixLineSeparators(loadGoldenFile(targetGoldenFile))
     Truth.assertThat(project.toJson()).isEqualTo(expectedJson)
 }
 
 private fun validate(module: ModuleInfo, targetGoldenFile: String) {
-    val expectedJson = loadGoldenFile(targetGoldenFile).readText()
+    val expectedJson = loadFileWithUnixLineSeparators(loadGoldenFile(targetGoldenFile))
     Truth.assertThat(module.toJson()).isEqualTo(expectedJson)
 
     // reload and check it's same value
