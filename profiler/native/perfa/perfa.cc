@@ -75,8 +75,6 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_env_;
 };
 
-proto::AgentConfig agent_config;
-
 std::unordered_map<std::string, Transform*>* GetClassTransforms() {
   static auto* transformations =
       new std::unordered_map<std::string, Transform*>();
@@ -95,9 +93,6 @@ static std::string GetAppDataPath() {
 // In pre-P, this saves expensive OnClassFileLoaded calls for other classes.
 void JNICALL OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                             jthread thread, jclass klass) {
-  // In P+ we keep OnClassFileLoaded always enabled and thus disable
-  // ClassPrepare events.
-  assert(agent_config.android_feature_level() <= 27);
   char* sig_mutf8;
   jvmti_env->GetClassSignature(klass, &sig_mutf8, nullptr);
   auto class_transforms = GetClassTransforms();
@@ -231,9 +226,9 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   SetAllCapabilities(jvmti_env);
 
   // TODO: Update options to support more than one argument if needed.
-  profiler::Config config(options);
-  agent_config = config.GetAgentConfig();
-  Agent::Instance(&config);
+  static const auto* const config = new profiler::Config(options);
+  auto const& agent_config = config->GetAgentConfig();
+  Agent::Instance(config);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env);
@@ -302,7 +297,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  Agent::Instance().AddPerfdConnectedCallback([vm] {
+  Agent::Instance().AddPerfdConnectedCallback([vm, &agent_config] {
     // MemoryTackingEnv needs a connection to perfd, which may not be always the
     // case. If we don't postpone until there is a connection, MemoryTackingEnv
     // is going to busy-wait, so not allowing the application to finish
