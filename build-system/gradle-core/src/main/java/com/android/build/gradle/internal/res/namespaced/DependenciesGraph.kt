@@ -18,6 +18,10 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
+import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -27,7 +31,7 @@ import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import java.io.File
 
-typealias ArtifactFiles = Map<ArtifactType, ImmutableMap<String, File>>
+typealias ArtifactFiles = Map<ArtifactType, ImmutableMap<String, ImmutableCollection<File>>>
 
 /**
  * Represents a graph of dependencies, with custom Nodes capable of fetching artifact files.
@@ -117,17 +121,17 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
         val dependencies: ImmutableSet<Node>,
         artifactFiles: ArtifactFiles
     ) {
-        val artifacts: ImmutableMap<ArtifactType, File>
+        val artifacts: ImmutableMap<ArtifactType, ImmutableCollection<File>>
+        private val transitiveArtifactCache: LoadingCache<ArtifactType, ImmutableList<File>>
         val transitiveDependencies: ImmutableSet<Node> by lazy(LazyThreadSafetyMode.PUBLICATION) {
             ImmutableSet.builder<Node>().apply {
                 addAll(dependencies)
                 dependencies.forEach { addAll(it.transitiveDependencies) }
             }.build()
         }
-        private val transitiveArtifactCache: HashMap<ArtifactType, ImmutableList<File>> = HashMap()
 
         init {
-            val builder = ImmutableMap.builder<ArtifactType, File>()
+            val builder = ImmutableMap.builder<ArtifactType, ImmutableCollection<File>>()
             for (type in artifactFiles.keys) {
                 val file = artifactFiles[type]!![id.displayName]
                 if (file != null) {
@@ -135,16 +139,26 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                 }
             }
             artifacts = builder.build()
+            transitiveArtifactCache = CacheBuilder.newBuilder().build(
+                object : CacheLoader<ArtifactType, ImmutableList<File>>() {
+                    override fun load(artifactType: ArtifactType) =
+                        computeTransitiveFiles(artifactType)
+                })
         }
 
         fun getFile(type: ArtifactType): File? {
+            return getFiles(type)?.single()
+        }
+
+        fun getFiles(type: ArtifactType) : ImmutableCollection<File>? {
             return artifacts[type]
         }
 
         fun getTransitiveFiles(type: ArtifactType): ImmutableList<File> {
-            if (transitiveArtifactCache.containsKey(type)) {
-                return transitiveArtifactCache[type]!!
-            }
+            return transitiveArtifactCache.getUnchecked(type)
+        }
+
+        private fun computeTransitiveFiles(type: ArtifactType): ImmutableList<File> {
             val builder = ArrayList<File>()
             // Add ourselves first, if we contain the file.
             val file = getFile(type)
@@ -162,8 +176,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                     }
                 }
             }
-            transitiveArtifactCache.put(type, ImmutableList.copyOf(builder))
-            return transitiveArtifactCache[type]!!
+            return ImmutableList.copyOf(builder)
         }
 
         override fun toString(): String {

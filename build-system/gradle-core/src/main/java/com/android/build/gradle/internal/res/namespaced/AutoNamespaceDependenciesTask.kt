@@ -25,12 +25,15 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.ArtifactCollection
@@ -223,12 +226,13 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         }
     }
 
-    private fun ArtifactCollection.toMap(): ImmutableMap<String, File> =
-        ImmutableMap.builder<String, File>().apply {
+    private fun ArtifactCollection.toMap(): ImmutableMap<String, ImmutableCollection<File>> =
+        HashMap<String, MutableCollection<File>>().apply {
             for (artifact in artifacts) {
-                put(artifact.id.componentIdentifier.displayName, artifact.file)
+                val key = artifact.id.componentIdentifier.displayName
+                getOrPut(key) { mutableListOf() }.add(artifact.file)
             }
-        }.build()
+        }.toImmutableMap { it.toImmutableList() }
 
     class ConfigAction(private val variantScope: VariantScope) :
         TaskConfigAction<AutoNamespaceDependenciesTask>() {

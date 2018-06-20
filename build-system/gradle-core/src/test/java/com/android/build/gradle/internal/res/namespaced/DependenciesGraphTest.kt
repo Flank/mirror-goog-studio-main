@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.utils.toImmutableMap
+import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -113,8 +115,9 @@ class DependenciesGraphTest {
         val fileC = temporaryFolder.newFile("c.txt")
         val fileD = temporaryFolder.newFile("d.txt")
 
-        val artifacts: ImmutableMap<String, File> =
-                ImmutableMap.of("a", fileA, "b", fileB, "c", fileC, "d", fileD)
+        val artifacts: ImmutableMap<String, ImmutableCollection<File>> =
+                mapOf<String, File>("a" to fileA, "b" to fileB, "c" to fileC, "d" to fileD)
+                    .toImmutableMap { ImmutableList.of(it) }
 
         val result = DependenciesGraph.create(
                 ImmutableSet.of(a),
