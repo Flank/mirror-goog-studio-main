@@ -67,7 +67,7 @@ public enum AttributeFormat {
      * @return the format, or null if the given name doesn't match any formats
      */
     @Nullable
-    public static AttributeFormat fromName(@NonNull String name) {
+    public static AttributeFormat fromXmlName(@NonNull String name) {
         switch (name) {
             case "boolean":
                 return BOOLEAN;
