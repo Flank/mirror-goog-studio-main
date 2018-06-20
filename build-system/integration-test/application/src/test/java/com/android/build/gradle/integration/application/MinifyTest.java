@@ -175,4 +175,15 @@ public class MinifyTest {
                 .that()
                 .hasFieldWithType("stringProvider", "Lcom/android/tests/basic/a;");
     }
+
+    @Test
+    public void testProguardOptimizedBuildsSuccessfully() throws Exception {
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "getDefaultProguardFile\\('proguard-android.txt'\\)",
+                "getDefaultProguardFile('proguard-android-optimize.txt')");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinified");
+    }
 }
