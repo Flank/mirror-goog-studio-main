@@ -19,12 +19,14 @@ package com.android.ide.common.symbols
 import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
 import com.google.common.base.Throwables
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import com.google.common.collect.ImmutableList.of as list
 
@@ -280,11 +282,7 @@ class SymbolTablePartialRMergeTest {
 
         // Write to a file so it's easier to check contents.
         val writtenResources = mTemporaryFolder.newFile("all-resources.txt")
-        SymbolIo.writeRDef(result, writtenResources.toPath())
-        val lines = Files.readAllLines(writtenResources.toPath())
-
-        assertThat(lines).containsExactly(
-                "com.boop.beep",
+        val expectedLines = listOf(
                 "default int color accent",
                 "default int color main",
                 "default int drawable image",
@@ -303,6 +301,10 @@ class SymbolTablePartialRMergeTest {
                 "default int styleable dsA_attr1",
                 "default int styleable dsA_attr2",
                 "default int styleable dsA_attr3")
+
+        Files.write(writtenResources.toPath(), expectedLines, StandardCharsets.UTF_8)
+        val expected = SymbolIo.readFromPartialRFile(writtenResources, "com.boop.beep");
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test
@@ -345,21 +347,28 @@ class SymbolTablePartialRMergeTest {
         val result =
                 SymbolTable.mergePartialTables(listOf(stylesA, stylesB, stylesC), "com.boop.beep")
 
-        // Write to a file so it's easier to check contents.
-        val writtenResources = mTemporaryFolder.newFile("all-resources.txt")
-        SymbolIo.writeRDef(result, writtenResources.toPath())
-        val lines = Files.readAllLines(writtenResources.toPath())
-
-        assertThat(lines).containsExactly(
-                "com.boop.beep",
-                "public int attr a1",
-                "private int attr a2",
-                "default int attr a3",
-                "public int[] styleable s1",
-                "public int styleable s1_a1",
-                "public int styleable s1_a2",
-                "public int styleable s1_a3",
-                "public int styleable s1_android_name")
+        val expected = SymbolTable.builder()
+            .tablePackage("com.boop.beep")
+            .add(Symbol.NormalSymbol(ResourceType.ATTR, "a1", 0, ResourceVisibility.PUBLIC))
+            .add(Symbol.NormalSymbol(ResourceType.ATTR, "a2", 0, ResourceVisibility.PRIVATE))
+            .add(
+                Symbol.NormalSymbol(
+                    ResourceType.ATTR,
+                    "a3",
+                    0,
+                    ResourceVisibility.PRIVATE_XML_ONLY
+                )
+            )
+            .add(
+                Symbol.StyleableSymbol(
+                    "s1",
+                    ImmutableList.of(),
+                    ImmutableList.of("a1", "a2", "a3", "android:name"),
+                    ResourceVisibility.PUBLIC
+                )
+            )
+            .build()
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test

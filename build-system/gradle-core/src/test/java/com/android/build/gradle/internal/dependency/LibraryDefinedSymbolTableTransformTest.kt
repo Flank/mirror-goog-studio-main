@@ -16,9 +16,14 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.ide.common.symbols.Symbol
+import com.android.ide.common.symbols.SymbolIo
+import com.android.ide.common.symbols.SymbolTable
+import com.android.resources.ResourceType
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -81,15 +86,22 @@ class LibraryDefinedSymbolTableTransformTest {
 
         Truth.assertThat(result).hasSize(1)
         Truth.assertThat(result[0].name).isEqualTo("com.example.mylibrary-R-def.txt")
-        val lines = Files.readAllLines(result[0].toPath())
-        Truth.assertThat(lines).containsExactly(
-                "com.example.mylibrary",
-                "undefined int attr myAttr",
-                "undefined int string app_name",
-                "undefined int string desc",
-                "undefined int[] styleable ds",
-                "undefined int styleable ds_android_name",
-                "undefined int styleable ds_android_color",
-                "undefined int styleable ds_myAttr")
+
+        val expected = SymbolTable.builder()
+            .tablePackage("com.example.mylibrary")
+            .add(Symbol.NormalSymbol(ResourceType.ATTR, "myAttr", 0))
+            .add(Symbol.NormalSymbol(ResourceType.STRING, "app_name", 0))
+            .add(Symbol.NormalSymbol(ResourceType.STRING, "desc", 0))
+            .add(
+                Symbol.StyleableSymbol(
+                    "ds",
+                    ImmutableList.of(),
+                    ImmutableList.of("android_name", "android_color", "myAttr")
+                )
+            )
+            .build()
+
+        val actual = SymbolIo.readRDef(result[0].toPath())
+        assertThat(actual).isEqualTo(expected)
     }
 }

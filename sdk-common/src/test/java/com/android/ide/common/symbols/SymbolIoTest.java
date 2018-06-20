@@ -993,4 +993,41 @@ public class SymbolIoTest {
                                 ImmutableList.of(),
                                 ResourceVisibility.PUBLIC));
     }
+
+    @Test
+    public void testRDefFormat() throws Exception {
+        SymbolTable originalTable =
+                SymbolTable.builder()
+                        .tablePackage("foo.bar")
+                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "img", 0))
+                        .add(new Symbol.NormalSymbol(ResourceType.ID, "bar", 0))
+                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "beep", 0))
+                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "foo", 0))
+                        .add(
+                                new Symbol.StyleableSymbol(
+                                        "s1", ImmutableList.of(), ImmutableList.of("a1", "a2")))
+                        .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .build();
+
+        Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();
+
+        SymbolIo.writeRDef(originalTable, rDefFile);
+
+        SymbolTable tableLoadedFromFile = SymbolIo.readRDef(rDefFile);
+
+        assertThat(tableLoadedFromFile).isEqualTo(originalTable);
+    }
+
+    @Test
+    public void testRDefFormatFailure() throws Exception {
+        Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();
+        java.nio.file.Files.write(rDefFile, ImmutableList.of("not an RDef file should fail"));
+        try {
+            SymbolIo.readRDef(rDefFile);
+            fail("Expected failure");
+        } catch (IOException e) {
+            assertThat(e).hasMessageThat().contains("Invalid symbol file");
+            assertThat(e).hasMessageThat().contains("R_DEF");
+        }
+    }
 }

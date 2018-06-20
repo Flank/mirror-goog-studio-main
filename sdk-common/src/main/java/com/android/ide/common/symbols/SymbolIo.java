@@ -136,8 +136,10 @@ public final class SymbolIo {
             throws IOException {
         SymbolTable.Builder table;
         try (Stream<String> lines = Files.lines(file.toPath(), Charsets.UTF_8)) {
+            Iterator<String> linesIterator = lines.iterator();
+            int startLine = checkFileTypeHeader(linesIterator, readConfiguration, file.toPath());
             table =
-                    new SymbolLineReader(readConfiguration, lines.iterator(), file.toPath(), 1)
+                    new SymbolLineReader(readConfiguration, linesIterator, file.toPath(), startLine)
                             .readLines();
         }
         if (tablePackage != null) {
@@ -170,7 +172,7 @@ public final class SymbolIo {
      */
     @NonNull
     public static SymbolTable readRDef(@NonNull Path file) throws IOException {
-        return readWithPackage(file, ReadConfiguration.PARTIAL_FILE);
+        return readWithPackage(file, ReadConfiguration.R_DEF);
     }
 
     @NonNull
@@ -180,17 +182,52 @@ public final class SymbolIo {
         SymbolTable.Builder table;
         try (Stream<String> lines = Files.lines(file, Charsets.UTF_8)) {
             Iterator<String> linesIterator = lines.iterator();
+            int startLine = checkFileTypeHeader(linesIterator, readConfiguration, file);
             if (!linesIterator.hasNext()) {
                 throw new IOException(
                         "Internal error: Symbol file with package cannot be empty. File located at: "
                                 + file);
             }
             tablePackage = linesIterator.next().trim();
-            table = new SymbolLineReader(readConfiguration, linesIterator, file, 2).readLines();
+            table =
+                    new SymbolLineReader(readConfiguration, linesIterator, file, startLine + 1)
+                            .readLines();
         }
 
         table.tablePackage(tablePackage);
         return table.build();
+    }
+
+    private static int checkFileTypeHeader(
+            @NonNull Iterator<String> lines,
+            @NonNull ReadConfiguration readConfiguration,
+            @NonNull Path path)
+            throws IOException {
+        if (readConfiguration.fileTypeHeader == null) {
+            return 1;
+        }
+        if (!lines.hasNext()) {
+            throw new IOException(
+                    "Internal Error: Invalid symbol file '"
+                            + path
+                            + "', cannot be empty for type '"
+                            + readConfiguration
+                            + "'");
+        }
+        String firstLine = lines.next();
+        if (!lines.hasNext() || !readConfiguration.fileTypeHeader.equals(firstLine)) {
+            throw new IOException(
+                    "Internal Error: Invalid symbol file '"
+                            + path
+                            + "', first line is incorrect for type '"
+                            + readConfiguration
+                            + "'.\n Expected '"
+                            + readConfiguration.fileTypeHeader
+                            + "' but got '"
+                            + firstLine
+                            + "'");
+        }
+        return 2;
     }
 
     private static class SymbolLineReader {
@@ -530,6 +567,13 @@ public final class SymbolIo {
                 return readSymbolListWithPackageLine(line);
             }
         },
+        R_DEF(false, true, "R_DEF: Internal format may change without notice") {
+            @NonNull
+            @Override
+            public SymbolData parseLine(@NonNull String line) throws IOException {
+                return readSymbolListWithPackageLine(line);
+            }
+        },
         PARTIAL_FILE(false, false) {
             @NonNull
             @Override
@@ -546,12 +590,18 @@ public final class SymbolIo {
         };
 
         ReadConfiguration(boolean readValues, boolean singleLineStyleable) {
+            this(readValues, singleLineStyleable, null);
+        }
+
+        ReadConfiguration(boolean readValues, boolean singleLineStyleable, String fileTypeHeader) {
             this.readValues = readValues;
             this.singleLineStyleable = singleLineStyleable;
+            this.fileTypeHeader = fileTypeHeader;
         }
 
         final boolean readValues;
         final boolean singleLineStyleable;
+        @Nullable final String fileTypeHeader;
 
         @NonNull
         abstract SymbolData parseLine(@NonNull String line) throws IOException;
@@ -641,16 +691,17 @@ public final class SymbolIo {
     /**
      * Writes a file listing the resources provided by the library.
      *
-     * <p>This uses the partial-r file format of <access qualifier> <type> <class> <name> with the
-     * first line as the table package.
+     * <p>This uses the symbol list with package name format of {@code "<type> <name>[ <child>[
+     * <child>[ ...]]]" }.
      */
     public static void writeRDef(@NonNull SymbolTable table, @NonNull Path file)
             throws IOException {
 
-        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
-                PrintWriter pw = new PrintWriter(os)) {
-            pw.print(table.getTablePackage());
-            pw.print('\n');
+        try (Writer writer = Files.newBufferedWriter(file)) {
+            writer.write(ReadConfiguration.R_DEF.fileTypeHeader);
+            writer.write('\n');
+            writer.write(table.getTablePackage());
+            writer.write('\n');
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
                 List<Symbol> symbols = table.getSymbolByResourceType(resType);
@@ -659,33 +710,17 @@ public final class SymbolIo {
                 }
 
                 for (Symbol s : symbols) {
-                    pw.print(s.getResourceVisibility().getName());
-                    pw.print(' ');
-                    pw.print(s.getJavaType().getTypeName());
-                    pw.print(' ');
-                    pw.print(s.getResourceType().getName());
-                    pw.print(' ');
-                    pw.print(s.getCanonicalName());
-                    pw.print('\n');
-
-                    // Declare styleables have the attributes that were defined under their node
-                    // listed in
-                    // the children list.
+                    writer.write(s.getResourceType().getName());
+                    writer.write(' ');
+                    writer.write(s.getCanonicalName());
                     if (s.getResourceType() == ResourceType.STYLEABLE) {
                         List<String> children = s.getChildren();
                         for (String child : children) {
-                            pw.print(s.getResourceVisibility().getName());
-                            pw.print(' ');
-                            pw.print(SymbolJavaType.INT.getTypeName());
-                            pw.print(' ');
-                            pw.print(ResourceType.STYLEABLE.getName());
-                            pw.print(' ');
-                            pw.print(s.getCanonicalName());
-                            pw.print('_');
-                            pw.print(SymbolUtils.canonicalizeValueResourceName(child));
-                            pw.print('\n');
+                            writer.write(' ');
+                            writer.write(SymbolUtils.canonicalizeValueResourceName(child));
                         }
                     }
+                    writer.write('\n');
                 }
             }
         }
