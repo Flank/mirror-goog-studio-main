@@ -451,6 +451,54 @@ class DynamicAppTest {
         }
     }
 
+    @Test
+    fun `test versionCode and versionName overrides`() {
+        val bundleTaskName = getBundleTaskName("debug")
+
+        project.getSubproject(":app").buildFile.appendText(
+            """
+            android.applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    output.versionCodeOverride = 12
+                    output.versionNameOverride = "12.0"
+                }
+            }
+            """
+        )
+
+        project.execute("app:$bundleTaskName")
+
+        // first check that the app metadata file contains overridden values
+        val appMetadataFile =
+            FileUtils.join(
+                project.getSubproject("app").buildDir,
+                "intermediates",
+                "metadata_base_module_declaration",
+                "debug",
+                "writeDebugApplicationId",
+                "application-metadata.json")
+        FileSubject.assertThat(appMetadataFile).isFile()
+        FileSubject.assertThat(appMetadataFile).contains("\"versionCode\":\"12\"")
+        FileSubject.assertThat(appMetadataFile).contains("\"versionName\":\"12.0\"")
+
+
+        // then check that overridden values were incorporated into all of the merged manifests.
+        for (moduleName in listOf("app", "feature1", "feature2")) {
+            val manifestFile =
+                FileUtils.join(
+                    project.getSubproject(moduleName).buildDir,
+                    "intermediates",
+                    "merged_manifests",
+                    "debug",
+                    "processDebugManifest",
+                    "merged",
+                    "AndroidManifest.xml")
+            FileSubject.assertThat(manifestFile).isFile()
+            FileSubject.assertThat(manifestFile).contains("android:versionCode=\"12\"")
+            FileSubject.assertThat(manifestFile).contains("android:versionName=\"12.0\"")
+        }
+    }
+
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
