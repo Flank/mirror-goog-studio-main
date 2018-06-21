@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.symbols.exportToCompiledJava
-import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
@@ -52,7 +51,6 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
     @get:Input val packageForR get() = packageForRSupplier.get()
 
     @get:OutputFile lateinit var rJarFile: File private set
-    @get:OutputFile lateinit var resIdsFile: File private set
 
     @TaskAction
     fun taskAction() {
@@ -63,16 +61,12 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         }
 
         FileUtils.deleteIfExists(rJarFile)
-        FileUtils.deleteIfExists(resIdsFile)
 
         // Read the symbol tables from the partial R.txt files and merge them into one.
         val resources = SymbolTable.mergePartialTables(partialRFiles.build(), packageForR)
 
         // Generate the R.jar file containing compiled R class and its' inner classes.
         exportToCompiledJava(ImmutableList.of(resources), rJarFile.toPath())
-
-        // Finally, generate the res-ids.txt file containing the package name and the resources list.
-        SymbolIo.writeRDef(resources, resIdsFile.toPath())
     }
 
 
@@ -92,9 +86,6 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
             task.rJarFile = scope.artifacts
                 .appendArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     task, "R.jar")
-            task.resIdsFile = scope.artifacts
-                .appendArtifact(InternalArtifactType.NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
-                    task, "res-ids.txt")
         }
     }
 }

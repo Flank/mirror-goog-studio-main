@@ -107,8 +107,6 @@ public enum InternalArtifactType implements ArtifactType {
     COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JARS,
     // Classes JAR files from dependencies that need to be auto-namespaced.
     NON_NAMESPACED_CLASSES,
-    // res-ids.txt
-    NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
     // Final R class sources (to package)
     RUNTIME_R_CLASS_SOURCES(Category.GENERATED),
     // Final R class classes (for packaging)

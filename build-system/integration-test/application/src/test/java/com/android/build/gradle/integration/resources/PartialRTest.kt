@@ -22,12 +22,10 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.net.URLClassLoader
-import java.nio.file.Files
 import kotlin.test.assertFailsWith
 
 class PartialRTest {
@@ -40,6 +38,13 @@ class PartialRTest {
                        <string name="default_string">My String</string>
                        <string name="public_string">public</string>
                        <string name="private_string">private</string>
+                   </resources>"""
+        )
+        .withFile(
+            "src/main/res/values/strings2.xml",
+            """<resources>
+                       <string name="string2">delete_me</string>
+                       <public type="string" name="string2"/>
                    </resources>"""
         )
         .withFile(
@@ -77,6 +82,7 @@ class PartialRTest {
         )
         val publicR = File(stringsR.parentFile, "values_public.arsc.flat-R.txt")
         val symbolsR = File(stringsR.parentFile, "values_symbols.arsc.flat-R.txt")
+        val strings2 = File(stringsR.parentFile, "values_strings2.arsc.flat-R.txt")
 
         assertThat(stringsR).exists()
         assertThat(publicR).exists()
@@ -91,21 +97,6 @@ class PartialRTest {
         assertThat(publicR).contains("public int string public_string")
         assertThat(symbolsR).contains("private int string private_string")
 
-        val resIds = FileUtils.join(
-                project.getSubproject("app").intermediatesDir,
-            "namespaced_symbol_list_with_package_name",
-            "debug",
-            "createDebugRFiles",
-            "res-ids.txt")
-        assertThat(resIds).exists()
-        assertThat(Files.readAllLines(resIds.toPath()))
-            .containsExactly(
-                        "com.example.app",
-                        "default int string default_string",
-                        "private int string private_string",
-                        "public int string public_string")
-            .inOrder()
-
         val rJar = FileUtils.join(
                 project.getSubproject("app").intermediatesDir,
             "compile_only_namespaced_r_class_jar",
@@ -119,37 +110,46 @@ class PartialRTest {
             checkResource(testC, "public_string")
             checkResource(testC, "private_string")
             checkResource(testC, "default_string")
-
-            assertFailsWith<NoSuchFieldException> {
-                checkResource(testC, "invalid")
-            }
+            checkResource(testC, "string2")
+            checkResourceNotPresent(testC, "invalid")
         }
 
         // Check that deletes are handled properly too.
-        val symbolsOrig =
+        val strings2SourceFile =
                 FileUtils.join(
                         project.getSubproject(":app").mainSrcDir.parentFile,
-                        "res", "values", "symbols.xml")
+                        "res", "values", "strings2.xml")
         // Make sure we've got the right file and then delete it.
-        assertThat(symbolsOrig).exists()
-        FileUtils.delete(symbolsOrig)
-        assertThat(symbolsOrig).doesNotExist()
+        assertThat(strings2SourceFile).exists()
+        FileUtils.delete(strings2SourceFile)
+        assertThat(strings2SourceFile).doesNotExist()
         // Partial file from previous build.
-        assertThat(symbolsR).exists()
+        assertThat(strings2).exists()
 
         // Incremental build.
         project.executor().run(":app:assembleDebug")
 
         // Partial file for the removed file should have been removed too.
-        assertThat(symbolsR).doesNotExist()
+        assertThat(strings2).doesNotExist()
 
-        // The "java-symbol" tag was removed, so the string shouldn't be private anymore.
-        assertThat(Files.readAllLines(resIds.toPath()))
-                .contains("default int string private_string")
+        URLClassLoader(arrayOf(rJar.toURI().toURL()), null).use { classLoader ->
+            val testC = classLoader.loadClass("com.example.app.R\$string")
+            checkResource(testC, "public_string")
+            checkResource(testC, "private_string")
+            checkResource(testC, "default_string")
+            checkResourceNotPresent(testC, "string2")
+            checkResourceNotPresent(testC, "invalid")
+        }
     }
 
     private fun checkResource(testC: Class<*>, name: String) {
         val field = testC.getField(name)
         Truth.assertThat(field.getInt(testC)).isEqualTo(0)
+    }
+
+    private fun checkResourceNotPresent(testC: Class<*>, name: String) {
+        assertFailsWith<NoSuchFieldException> {
+            testC.getField(name)
+        }
     }
 }
