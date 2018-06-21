@@ -14,7 +14,6 @@ fake_android_test(
     srcs = glob(["src/test/com/android/tools/deploy/swapper/*Test.java"]),
     data = [":test-app"],
     jvm_flags = ["-Dapp.dex.location=$(location :test-app)"],
-    tags = ["no_test_foundry"],  # b/73948555
     deps = [
         ":libhotswap",
         ":test-app",

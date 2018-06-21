@@ -23,6 +23,7 @@ public class FakeAndroidDriver extends ProcessRunner {
     public FakeAndroidDriver(String address, int debuggerPort) {
         List<String> args = new ArrayList<>();
         String[] array = new String[] {};
+        args.add("bash");
         args.add(ART_PATH);
         args.add("--64");
         args.add("--verbose");

@@ -1,7 +1,7 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/fakeandroid:fakeandroid.bzl", "fake_android_test")
 
-def perf_test(name, srcs, test_app, deps = [], tags = None, size = "small"):
+def perf_test(name, srcs, test_app, deps = [], tags = [], size = "small"):
     native.genrule(
       name = name + "_transform-app_java",
       srcs = [test_app + "_java_deploy.jar"],

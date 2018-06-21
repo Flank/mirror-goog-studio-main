@@ -48,7 +48,6 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
     ],
-    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -66,7 +65,6 @@ perf_test(
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
     ],
-    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -84,7 +82,6 @@ perf_test(
     ],
     tags = [
         "manual",  # b/80501379
-        "no_test_foundry",  # b/73948555
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
@@ -101,7 +98,6 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
     ],
-    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
@@ -120,7 +116,6 @@ perf_test(
         "testSrcs/com/android/tools/profiler/energy/LocationTest.java",
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
-    tags = ["no_test_foundry"],  # b/73948555
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
