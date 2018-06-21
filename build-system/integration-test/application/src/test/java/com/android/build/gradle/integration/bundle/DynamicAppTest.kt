@@ -357,6 +357,7 @@ class DynamicAppTest {
 
     }
 
+    @Test
     fun `test invalid debuggable combination`() {
         project.file("feature2/build.gradle").appendText(
             """
@@ -379,6 +380,125 @@ class DynamicAppTest {
         )
         assertThat(exception).hasMessageThat()
             .contains("set android.buildTypes.debug.debuggable = true")
+    }
+
+    @Test
+    fun `test ResConfig is applied`() {
+        val apkFromBundleTaskName = getBundleTaskName("debug")
+
+        val content = """
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24.0"
+        android:viewportHeight="24.0">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+</vector>"""
+
+        // Add some drawables in different configs.
+        val resDir = FileUtils.join(project.getSubproject(":app").testDir, "src", "main", "res")
+        val img1 = FileUtils.join(resDir, "drawable-mdpi", "density.xml")
+        FileUtils.mkdirs(img1.parentFile)
+        Files.write(img1.toPath(), content.toByteArray(Charsets.UTF_8))
+        val img2 = FileUtils.join(resDir, "drawable-hdpi", "density.xml")
+        FileUtils.mkdirs(img2.parentFile)
+        Files.write(img2.toPath(), content.toByteArray(Charsets.UTF_8))
+        val img3 = FileUtils.join(resDir, "drawable-xxxhdpi", "density.xml")
+        FileUtils.mkdirs(img3.parentFile)
+        Files.write(img3.toPath(), content.toByteArray(Charsets.UTF_8))
+        val img4 = FileUtils.join(resDir, "drawable", "lang.xml")
+        FileUtils.mkdirs(img4.parentFile)
+        Files.write(img4.toPath(), content.toByteArray(Charsets.UTF_8))
+        val img5 = FileUtils.join(resDir, "drawable-en", "lang.xml")
+        FileUtils.mkdirs(img5.parentFile)
+        Files.write(img5.toPath(), content.toByteArray(Charsets.UTF_8))
+        val img6 = FileUtils.join(resDir, "drawable-es", "lang.xml")
+        FileUtils.mkdirs(img6.parentFile)
+        Files.write(img6.toPath(), content.toByteArray(Charsets.UTF_8))
+
+
+        // First check without resConfigs.
+        project.executor().run("app:$apkFromBundleTaskName")
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        Zip(bundleFile).use {
+            val entries = it.entries.map { it.toString() }
+            Truth.assertThat(entries).contains("/base/res/drawable-mdpi-v21/density.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-hdpi-v21/density.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-xxxhdpi-v21/density.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-anydpi-v21/lang.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-en-anydpi-v21/lang.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-es-anydpi-v21/lang.xml")
+        }
+
+        project.file("app/build.gradle").appendText("""
+            android.defaultConfig.resConfigs "en", "mdpi"
+        """)
+
+        project.executor().run("app:$apkFromBundleTaskName")
+
+        // Check that unwanted configs were filtered out.
+        FileSubject.assertThat(bundleFile).exists()
+        Zip(bundleFile).use {
+            val entries = it.entries.map { it.toString() }
+            Truth.assertThat(entries).contains("/base/res/drawable-mdpi-v21/density.xml")
+            Truth.assertThat(entries).doesNotContain("/base/res/drawable-hdpi-v21/density.xml")
+            Truth.assertThat(entries).doesNotContain("/base/res/drawable-xxxhdpi-v21/density.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-anydpi-v21/lang.xml")
+            Truth.assertThat(entries).contains("/base/res/drawable-en-anydpi-v21/lang.xml")
+            Truth.assertThat(entries).doesNotContain("/base/res/drawable-es-anydpi-v21/lang.xml")
+        }
+    }
+
+    @Test
+    fun `test versionCode and versionName overrides`() {
+        val bundleTaskName = getBundleTaskName("debug")
+
+        project.getSubproject(":app").buildFile.appendText(
+            """
+            android.applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    output.versionCodeOverride = 12
+                    output.versionNameOverride = "12.0"
+                }
+            }
+            """
+        )
+
+        project.execute("app:$bundleTaskName")
+
+        // first check that the app metadata file contains overridden values
+        val appMetadataFile =
+            FileUtils.join(
+                project.getSubproject("app").buildDir,
+                "intermediates",
+                "metadata_base_module_declaration",
+                "debug",
+                "writeDebugApplicationId",
+                "application-metadata.json")
+        FileSubject.assertThat(appMetadataFile).isFile()
+        FileSubject.assertThat(appMetadataFile).contains("\"versionCode\":\"12\"")
+        FileSubject.assertThat(appMetadataFile).contains("\"versionName\":\"12.0\"")
+
+
+        // then check that overridden values were incorporated into all of the merged manifests.
+        for (moduleName in listOf("app", "feature1", "feature2")) {
+            val manifestFile =
+                FileUtils.join(
+                    project.getSubproject(moduleName).buildDir,
+                    "intermediates",
+                    "merged_manifests",
+                    "debug",
+                    "processDebugManifest",
+                    "merged",
+                    "AndroidManifest.xml")
+            FileSubject.assertThat(manifestFile).isFile()
+            FileSubject.assertThat(manifestFile).contains("android:versionCode=\"12\"")
+            FileSubject.assertThat(manifestFile).contains("android:versionName=\"12.0\"")
+        }
     }
 
     private fun getBundleTaskName(name: String): String {

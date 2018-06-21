@@ -124,7 +124,12 @@ public class DataBindingIncrementalTest {
     }
 
     private File getInfoIntermediate(String fileName) {
-        return project.getIntermediateFile("data-binding", "debug", "layout-info", fileName);
+        return project.getIntermediateFile(
+                "data_binding_layout_info_type_merge",
+                "debug",
+                "mergeDebugResources",
+                "out",
+                fileName);
     }
 
     @Test

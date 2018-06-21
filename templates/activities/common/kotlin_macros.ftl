@@ -11,7 +11,7 @@ apply plugin: 'kotlin-android-extensions'
 </#macro>
 
 <#macro addKotlinDependencies>
-<#if generateKotlin>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"</#if>
+<#if generateKotlin>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"</#if>
 </#macro>
 
 // TODO: <apply plugin /> Is adding the dependencies at the *end* of build.gradle
@@ -24,7 +24,7 @@ apply plugin: 'kotlin-android-extensions'
       <apply plugin="kotlin-android-extensions" />
     </#if>
     <#if !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>
-        <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"/>
+        <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"/>
         <merge from="root://activities/common/kotlin.gradle.ftl"
                  to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
     </#if>

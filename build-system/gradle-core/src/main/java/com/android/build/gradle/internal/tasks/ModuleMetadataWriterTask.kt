@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.file.FileCollection
@@ -50,11 +51,16 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
     @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
     @get:Input val applicationId get() = applicationIdSupplier.get()
 
-    @get:Internal lateinit var versionCodeSupplier: Supplier<Int> private set
-    @get:Input val versionCode get() = versionCodeSupplier.get().toString()
+    private lateinit var outputScope: OutputScope
 
-    @get:Internal lateinit var versionNameSupplier: Supplier<String?> private set
-    @get:Input @get:Optional val versionName get() = versionNameSupplier.get()
+    @get:Input
+    val versionCode
+        get() = outputScope.mainSplit.versionCode
+
+    @get:Input
+    @get:Optional
+    val versionName
+        get() = outputScope.mainSplit.versionName
 
     @get:Input
     var debuggable: Boolean = false
@@ -78,7 +84,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
             } else {
                 ModuleMetadata(
                     applicationId = applicationId,
-                    versionCode = versionCode,
+                    versionCode = versionCode.toString(),
                     versionName = versionName,
                     debuggable = debuggable
                 )
@@ -107,12 +113,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
                 variantScope.variantConfiguration.applicationId
             }
 
-            task.versionCodeSupplier = TaskInputHelper.memoize {
-                variantScope.variantConfiguration.versionCode
-            }
-            task.versionNameSupplier = TaskInputHelper.memoize {
-                variantScope.variantConfiguration.versionName
-            }
+            task.outputScope = variantScope.variantData.outputScope
 
             task.debuggable = variantScope.variantConfiguration.buildType.isDebuggable
 
