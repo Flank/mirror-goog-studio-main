@@ -206,19 +206,7 @@ class GradleModelConverter(
 
     fun convert(sourceProvider: SourceProvider): SourceSet =
         compute(sourceProvider) {
-            SourceSet(mapOf(
-                AndroidPathType.MANIFEST to listOf(PathString(sourceProvider.manifestFile)),
-                AndroidPathType.JAVA to sourceProvider.javaDirectories.toPathStrings(),
-                AndroidPathType.RESOURCE to sourceProvider.resourcesDirectories.toPathStrings(),
-                AndroidPathType.AIDL to sourceProvider.aidlDirectories.toPathStrings(),
-                AndroidPathType.RENDERSCRIPT to sourceProvider.renderscriptDirectories.toPathStrings(),
-                AndroidPathType.C to sourceProvider.cDirectories.toPathStrings(),
-                AndroidPathType.CPP to sourceProvider.cppDirectories.toPathStrings(),
-                AndroidPathType.RES to sourceProvider.resDirectories.toPathStrings(),
-                AndroidPathType.ASSETS to sourceProvider.assetsDirectories.toPathStrings(),
-                AndroidPathType.JNI_LIBS to sourceProvider.jniLibsDirectories.toPathStrings(),
-                AndroidPathType.SHADERS to sourceProvider.shadersDirectories.toPathStrings()
-            ))
+            toSourceSet()
         }
 
     fun convert(variant: VariantContext): Variant =
@@ -489,6 +477,25 @@ class GradleModelConverter(
         return cache.computeIfAbsent(key, { key.lambda() })
     }
 }
+
+/**
+ * Converts this [SourceProvider] to a [SourceSet].
+ */
+fun SourceProvider.toSourceSet() = SourceSet(
+    mapOf(
+        AndroidPathType.MANIFEST to listOf(PathString(manifestFile)),
+        AndroidPathType.JAVA to javaDirectories.toPathStrings(),
+        AndroidPathType.RESOURCE to resourcesDirectories.toPathStrings(),
+        AndroidPathType.AIDL to aidlDirectories.toPathStrings(),
+        AndroidPathType.RENDERSCRIPT to renderscriptDirectories.toPathStrings(),
+        AndroidPathType.C to cDirectories.toPathStrings(),
+        AndroidPathType.CPP to cppDirectories.toPathStrings(),
+        AndroidPathType.RES to resDirectories.toPathStrings(),
+        AndroidPathType.ASSETS to assetsDirectories.toPathStrings(),
+        AndroidPathType.JNI_LIBS to jniLibsDirectories.toPathStrings(),
+        AndroidPathType.SHADERS to shadersDirectories.toPathStrings()
+    )
+)
 
 fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Map<String, DynamicResourceValue> {
     val result = HashMap<String, DynamicResourceValue>()
