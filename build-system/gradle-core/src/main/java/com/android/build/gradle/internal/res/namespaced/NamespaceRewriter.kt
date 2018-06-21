@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.annotations.VisibleForTesting
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.canonicalizeValueResourceName
 import com.android.ide.common.xml.XmlFormatPreferences
@@ -44,6 +45,7 @@ import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.io.File
 import java.io.IOException
+import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.HashSet
@@ -674,3 +676,33 @@ private fun maybeFindPackage(
 
 private fun getResourceType(typeString: String): ResourceType =
     ResourceType.getEnum(typeString) ?: error("Unknown type '$typeString'")
+
+
+fun generatePublicFile(symbols: SymbolTable, outputDirectory: Path) {
+    val values = outputDirectory.resolve("values")
+    Files.createDirectories(values)
+    val publicFile = values.resolve("auto-namespace-public.xml")
+    if (Files.exists(publicFile)) {
+        error("Internal error: Auto namespaced public file already exists")
+    }
+    Files.newBufferedWriter(publicFile).use {
+        writePublicFile(it, symbols)
+    }
+}
+
+@VisibleForTesting
+internal fun writePublicFile(writer: Writer, symbols: SymbolTable) {
+    writer.write("""<?xml version="1.0" encoding="utf-8"?>""")
+    writer.write("\n<resources>\n\n")
+    symbols.resourceTypes.forEach { resourceType ->
+        symbols.getSymbolByResourceType(resourceType).forEach { symbol ->
+            writer.write("    <public name=\"")
+            writer.write(symbol.name)
+            writer.write("\" type=\"")
+            writer.write(resourceType.getName())
+            writer.write("\" />\n")
+        }
+
+    }
+    writer.write("\n</resources>\n")
+}

@@ -34,6 +34,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.StringWriter
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -671,6 +672,27 @@ class NamespaceRewriterTest {
         val raw = """<?notxml"""
         checkAarRewrite(namespaceRewriter, "drawable/my.foo", raw, raw)
         checkAarRewrite(namespaceRewriter, "drawable/my.foo2", raw, raw)
+    }
+
+
+    @Test
+    fun checkPublicFileGeneration() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("color", "abc_color_highlight_material"))
+            .add(symbol("style", "Base.Widget.Design.TabLayout"))
+            .build()
+
+        val result = StringWriter().apply {
+            writePublicFile(this, moduleTable)
+        }.toString().trim()
+
+        assertThat(result).isEqualTo("""
+            <resources>
+            <public name="abc_color_highlight_material" type="color" />
+            <public name="Base.Widget.Design.TabLayout" type="style" />
+            </resources>
+        """.xmlFormat())
     }
 
     private fun checkAarRewrite(
