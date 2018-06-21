@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
-import com.android.utils.StringHelper
+import com.android.utils.toSystemLineSeparator
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import java.io.File
@@ -63,7 +63,7 @@ class LintFixPerformerTest : TestCase() {
         assertEquals(expected.trimIndent().trim(), after.trim())
         if (expectedOutput != null) {
             assertEquals(
-                StringHelper.toSystemLineSeparator(expectedOutput.trimIndent().trim()),
+                expectedOutput.trimIndent().trim().toSystemLineSeparator(),
                 output.trim()
             )
         }

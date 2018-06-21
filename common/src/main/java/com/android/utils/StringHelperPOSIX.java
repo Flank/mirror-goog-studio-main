@@ -34,7 +34,7 @@ import java.util.List;
  *       backquote, and backslash
  * </ul>
  */
-public class StringHelperPOSIX extends StringHelper {
+public class StringHelperPOSIX {
 
     /**
      * Split a single command line into individual commands with POSIX rules.

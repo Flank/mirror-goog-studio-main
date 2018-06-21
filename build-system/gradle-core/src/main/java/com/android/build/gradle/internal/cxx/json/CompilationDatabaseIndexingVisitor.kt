@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.json
 
-import com.android.utils.StringHelper
+import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
@@ -46,7 +46,7 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
      * Intern each command after stripping -o and -c flags
      */
     override fun visitCommand(command: String) {
-        val tokens = StringHelper.tokenizeCommandLineToEscaped(command)
+        val tokens = command.tokenizeCommandLineToEscaped()
         val stripped = mutableListOf<String>()
         var skipNext = false
         for (token in tokens) {

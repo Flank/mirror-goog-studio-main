@@ -41,7 +41,7 @@ import java.util.List;
  *       "escaped" by the remaining backslash
  * </ul>
  */
-public class StringHelperWindows extends StringHelper {
+public class StringHelperWindows {
 
     /**
      * Split a single command line into individual commands with Windows rules.

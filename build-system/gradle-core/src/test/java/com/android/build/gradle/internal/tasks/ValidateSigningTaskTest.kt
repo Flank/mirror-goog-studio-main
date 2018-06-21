@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.testutils.truth.PathSubject.assertThat
-import com.android.utils.StringHelper
+import com.android.utils.capitalize
 import com.google.common.hash.Hashing
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.InvalidUserDataException
@@ -83,7 +83,7 @@ class ValidateSigningTaskTest {
         `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
         `when`(variantScope.fullVariantName).thenReturn(variantName)
         `when`(variantScope.getTaskName("validateSigning"))
-                .thenReturn("validateSigning" + StringHelper.capitalize(variantName))
+                .thenReturn("validateSigning" + variantName.capitalize())
         `when`(variantScope.getIncrementalDir(anyString())).thenReturn(temporaryFolder.newFolder())
     }
 

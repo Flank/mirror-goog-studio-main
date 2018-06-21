@@ -50,7 +50,7 @@ public class FeatureVariantData extends ApplicationVariantData {
             StringHelper.appendCapitalized(sb, config.getFlavorName());
             return sb.toString();
         } else {
-            return StringHelper.capitalizeWithSuffix(
+            return StringHelper.capitalizeAndAppend(
                     config.getBuildType().getName(), " feature split build");
         }
     }

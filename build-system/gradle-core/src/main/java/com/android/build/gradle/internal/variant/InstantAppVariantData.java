@@ -48,7 +48,7 @@ public class InstantAppVariantData extends BaseVariantData {
             StringHelper.appendCapitalized(sb, config.getFlavorName());
             return sb.toString();
         } else {
-            return StringHelper.capitalizeWithSuffix(config.getBuildType().getName(), " build");
+            return StringHelper.capitalizeAndAppend(config.getBuildType().getName(), " build");
         }
     }
 }

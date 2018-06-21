@@ -39,7 +39,7 @@ import com.android.builder.errors.EvalIssueException
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
-import com.android.utils.StringHelper
+import com.android.utils.appendCapitalized
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ListMultimap
@@ -329,7 +329,7 @@ class VariantBuilder<in E: BaseExtension2>(
             if (createdVariantMap[variantType] != null) {
                 throw RuntimeException("More than one VariantFactory with same type $variantType")
             }
-            createdVariantMap.put(variantType, variant)
+            createdVariantMap[variantType] = variant
 
             // next variant must duplicate the common props
             duplicateCommonProps = true
@@ -626,7 +626,7 @@ private fun computeMultiFlavorName(flavors: List<ProductFlavor>): String {
             sb.append(flavor.name)
             first = false
         } else {
-            StringHelper.appendCapitalized(sb, flavor.name)
+            sb.appendCapitalized(flavor.name)
         }
     }
 

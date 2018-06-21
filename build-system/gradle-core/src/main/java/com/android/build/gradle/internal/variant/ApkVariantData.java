@@ -47,7 +47,7 @@ public abstract class ApkVariantData extends InstallableVariantData {
             sb.append(" build");
             return sb.toString();
         } else {
-            return StringHelper.capitalizeWithSuffix(config.getBuildType().getName(), " build");
+            return StringHelper.capitalizeAndAppend(config.getBuildType().getName(), " build");
         }
     }
 }

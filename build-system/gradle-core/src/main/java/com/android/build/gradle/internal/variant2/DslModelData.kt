@@ -42,7 +42,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter.Type
-import com.android.utils.StringHelper
+import com.android.utils.appendCapitalized
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -92,12 +92,14 @@ class DslModelDataImpl<in E: BaseExtension2>(
         private val logger: Logger): DslModelData, Sealable {
 
     // wrapped container for source sets.
+    @Suppress("PropertyName")
     internal val _sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet>
 
     // sealable container for source set.
     override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet>
 
     // wrapped container for product flavors
+    @Suppress("PropertyName")
     internal val _productFlavors: NamedDomainObjectContainer<ProductFlavorImpl> =
             containerFactory.createContainer(
                     ProductFlavorImpl::class.java,
@@ -111,6 +113,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                     _productFlavors)
 
     // wrapped container for build type
+    @Suppress("PropertyName")
     internal val _buildTypes: NamedDomainObjectContainer<BuildTypeImpl> =
             containerFactory.createContainer(
                     BuildTypeImpl::class.java,
@@ -493,7 +496,7 @@ private fun computeSourceSetName(
     if (!variantType.prefix.isEmpty()) {
         newName = buildString {
             append(variantType.prefix)
-            StringHelper.appendCapitalized(this, newName)
+            appendCapitalized(newName)
         }
     }
 
@@ -529,11 +532,11 @@ private fun <T> toSingleItem(): BinaryOperator<T> {
 }
 
 
-inline private fun getConfigDescriptionOld(
+private inline fun getConfigDescriptionOld(
         configName: String,
         sourceSetName: String,
         replacementName: String) =
         "$configName dependencies for '$sourceSetName' sources (deprecated: use '$replacementName' instead)."
 
-inline private fun getConfigDescription(configName: String, sourceSetName: String) =
+private inline fun getConfigDescription(configName: String, sourceSetName: String) =
         "$configName dependencies for '$sourceSetName' sources."
