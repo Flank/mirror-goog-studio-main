@@ -719,6 +719,7 @@ class PathString private constructor(
 
 fun Path.toPathString() : PathString = PathString(this)
 fun File.toPathString() : PathString = PathString(this)
+fun Collection<File>.toPathStrings() = map { PathString(it) }
 
 const val PARENT = ".."
 const val SELF = "."
