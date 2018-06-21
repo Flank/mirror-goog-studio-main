@@ -42,6 +42,7 @@ public class AvdManagerTest extends TestCase {
     private AvdManager mAvdManager;
     private File mAvdFolder;
     private SystemImage mSystemImageAosp;
+    private SystemImage mSystemImageApi21;
     private SystemImage mSystemImageGoogle;
     private SystemImage mSystemImagePlay;
     private SystemImage mSystemImageWear24;
@@ -57,6 +58,7 @@ public class AvdManagerTest extends TestCase {
         mFileOp.recordExistingFile("/sdk/tools/lib/emulator/snapshots.img");
         recordGoogleApisSysImg23(mFileOp);
         recordPlayStoreSysImg24(mFileOp);
+        recordSysImg21(mFileOp);
         recordSysImg23(mFileOp);
         recordWearSysImg24(mFileOp);
         recordWearSysImg25(mFileOp);
@@ -75,7 +77,11 @@ public class AvdManagerTest extends TestCase {
         for (SystemImage si : mAndroidSdkHandler.getSystemImageManager(new FakeProgressIndicator()).getImages()) {
             final String tagId = si.getTag().getId();
             if ("default".equals(tagId)) {
-                mSystemImageAosp = si;
+                if (si.getAndroidVersion().getApiLevel() == 21) {
+                    mSystemImageApi21 = si;
+                } else {
+                    mSystemImageAosp = si;
+                }
             } else if ("google_apis".equals(tagId)) {
                 mSystemImageGoogle = si;
             } else if ("google_apis_playstore".equals(tagId)) {
@@ -91,10 +97,11 @@ public class AvdManagerTest extends TestCase {
             } else if ("chromeos".equals(tagId)) {
                 mSystemImageChromeOs = si;
             } else {
-                assertTrue("Created unexpected system image: " + tagId, false);
+                fail("Created unexpected system image: " + tagId);
             }
         }
         assertNotNull(mSystemImageAosp);
+        assertNotNull(mSystemImageApi21);
         assertNotNull(mSystemImageGoogle);
         assertNotNull(mSystemImagePlay);
         assertNotNull(mSystemImageWear24);
@@ -128,13 +135,47 @@ public class AvdManagerTest extends TestCase {
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
         assertEquals("system-images/android-23/default/x86/",
                 mFileOp.getAgnosticAbsPath(properties.get("image.sysdir.1")));
-        assertEquals(null, properties.get("snapshot.present"));
-        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+        assertNull(properties.get("snapshot.present"));
+        assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
         assertFalse("Expected NO snapshots.img in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
+    }
+
+    public void testCreateAvdWithUserdata() throws Exception {
+
+        MockLog log = new MockLog();
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageApi21,
+          null,
+          null,
+          null,
+          null,
+          null,
+          false,
+          false,
+          false,
+          false,
+          log);
+
+        File avdConfigFile = new File(mAvdFolder, "config.ini");
+        assertTrue("Expected config.ini in " + mAvdFolder, mFileOp.exists(avdConfigFile));
+        Map<String, String> properties = AvdManager.parseIniFile(
+          new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
+        assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
+        assertEquals("system-images/android-21/default/x86/",
+                     mFileOp.getAgnosticAbsPath(properties.get("image.sysdir.1")));
+        assertNull(properties.get("snapshot.present"));
+        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+                   mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
+        assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
+        assertFalse("Expected NO snapshots.img in " + mAvdFolder,
+                    mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
     }
 
     public void testCreateAvdWithSnapshot() throws Exception {
@@ -272,7 +313,7 @@ public class AvdManagerTest extends TestCase {
                 new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
         assertEquals("system-images/android-23/default/x86/",
                 mFileOp.getAgnosticAbsPath(properties.get("image.sysdir.1")));
-        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
@@ -311,7 +352,7 @@ public class AvdManagerTest extends TestCase {
                 new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
         assertEquals("system-images/android-23/default/x86/",
                 mFileOp.getAgnosticAbsPath(baseProperties.get("image.sysdir.1")));
-        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
@@ -392,7 +433,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals("222M", configProperties.get("sdcard.size"));
         assertEquals("originalValue1", configProperties.get("testKey1"));
         assertEquals("newValue2", configProperties.get("testKey2"));
-        assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + newFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + newFolder,
                    mFileOp.exists(new File(newFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                     mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
@@ -632,16 +673,40 @@ public class AvdManagerTest extends TestCase {
         assertThat(emptyInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
     }
 
-
+    private static void recordSysImg21(MockFileOp fop) {
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/system.img");
+        // Include userdata.img, but no data/ directory
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/"
+                        + AvdManager.USERDATA_IMG);
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/res1/layout");
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/dummy");
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/res2/layout");
+        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/package.xml",
+                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                               + "<ns3:sdk-sys-img "
+                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                               + "<license id=\"license-A78C4257\" type=\"text\">Terms and Conditions\n"
+                               + "</license><localPackage path=\"system-images;android-21;default;x86\" "
+                               + "obsolete=\"false\">"
+                               + "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>21</api-level>"
+                               + "<tag><id>default</id><display>Default</display></tag><abi>x86</abi>"
+                               + "</type-details><revision><major>5</major></revision>"
+                               + "<display-name>Intel x86 Atom System Image</display-name>"
+                               + "<uses-license ref=\"license-A78C4257\"/></localPackage>"
+                               + "</ns3:sdk-sys-img>\n");
+    }
 
     private static void recordSysImg23(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/"
-                        + AvdManager.USERDATA_IMG);
+        // Include data/ directory, but no userdata.img file
+        fop.mkdirs(new File("/sdk/system-images/android-23/default/x86/data"));
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res1/layout");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/dummy");
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res2/layout");
-
         fop.recordExistingFile("/sdk/system-images/android-23/default/x86/package.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
@@ -663,9 +728,7 @@ public class AvdManagerTest extends TestCase {
 
     private static void recordGoogleApisSysImg23(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/"
-                        + AvdManager.USERDATA_IMG);
-
+        fop.mkdirs(new File("/sdk/system-images/android-23/google_apis/x86_64/data"));
         fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/package.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
@@ -689,9 +752,7 @@ public class AvdManagerTest extends TestCase {
 
     private static void recordPlayStoreSysImg24(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/"
-                               + AvdManager.USERDATA_IMG);
-
+        fop.mkdirs(new File("/sdk/system-images/android-24/google_apis_playstore/x86_64/data"));
         fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/package.xml",
                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                                + "<ns3:sdk-sys-img "
@@ -717,7 +778,6 @@ public class AvdManagerTest extends TestCase {
         fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/system.img");
         fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/"
                                + AvdManager.USERDATA_IMG);
-
         fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/package.xml",
                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                                + "<ns3:sdk-sys-img "
@@ -742,7 +802,6 @@ public class AvdManagerTest extends TestCase {
         fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/system.img");
         fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/"
                                + AvdManager.USERDATA_IMG);
-
         fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/package.xml",
                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                                + "<ns3:sdk-sys-img "
@@ -767,7 +826,6 @@ public class AvdManagerTest extends TestCase {
         fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/system.img");
         fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/"
                                + AvdManager.USERDATA_IMG);
-
         fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/package.xml",
                                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                                + "<ns3:sdk-sys-img "
@@ -791,7 +849,6 @@ public class AvdManagerTest extends TestCase {
     private static void recordChromeOsSysImg(MockFileOp fop) {
         fop.recordExistingFile("/sdk/system-images/chromeos/m60/x86/system.img");
         fop.recordExistingFile("/sdk/system-images/chromeos/m60/x86/" + AvdManager.USERDATA_IMG);
-
         fop.recordExistingFile(
                 "/sdk/system-images/chromeos/m60/x86/package.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
@@ -811,7 +868,4 @@ public class AvdManagerTest extends TestCase {
                         + "  </localPackage>"
                         + "</ns3:sdk-sys-img>\n");
     }
-
-
-
 }

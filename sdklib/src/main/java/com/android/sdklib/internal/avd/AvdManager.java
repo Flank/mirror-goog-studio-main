@@ -317,6 +317,7 @@ public class AvdManager {
      * Pattern to match pixel-sized skin "names", e.g. "320x480".
      */
     public static final Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
+    public static final String DATA_FOLDER = "data";
     public static final String USERDATA_IMG = "userdata.img";
     public static final String USERDATA_QEMU_IMG = "userdata-qemu.img";
     public static final String SNAPSHOTS_DIRECTORY = "snapshots";
@@ -1845,6 +1846,14 @@ public class AvdManager {
         String abiType = systemImage.getAbiType();
 
         if (!mFop.exists(userdataSrc)) {
+            if (mFop.isDirectory(new File(imageFolder, DATA_FOLDER))) {
+                // Because this image includes a data folder, a
+                // userdata.img file is not needed. Don't signal
+                // an error.
+                // (The emulator will access the 'data' folder directly;
+                //  we do not need to copy it over.)
+                return;
+            }
             log.warning("Unable to find a '%1$s' file for ABI %2$s to copy into the AVD folder.",
                     USERDATA_IMG,
                     abiType);
@@ -1862,7 +1871,6 @@ public class AvdManager {
                 throw new AvdMgrException();
             }
         }
-        return;
     }
 
     /**
