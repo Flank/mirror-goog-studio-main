@@ -263,6 +263,22 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
         return Objects.equals(packageName, that.packageName);
     }
 
+    @NonNull
+    public Object readResolve() {
+        switch (uri) {
+            case SdkConstants.ANDROID_URI:
+                return ANDROID;
+            case SdkConstants.AUTO_URI:
+                return RES_AUTO;
+            case SdkConstants.TOOLS_URI:
+                return TOOLS;
+            case SdkConstants.AAPT_URI:
+                return AAPT;
+            default:
+                return this;
+        }
+    }
+
     @Override
     public int hashCode() {
         return uri.hashCode();

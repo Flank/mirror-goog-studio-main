@@ -13,20 +13,24 @@
 // limitations under the License.
 package com.android.resources;
 
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.ide.common.rendering.api.ResourceNamespace.Resolver.EMPTY_RESOLVER;
 import static com.android.ide.common.rendering.api.ResourceNamespace.TOOLS;
 import static com.android.ide.common.rendering.api.ResourceNamespace.fromNamespacePrefix;
+import static com.android.ide.common.rendering.api.ResourceNamespace.fromNamespaceUri;
 import static com.android.ide.common.rendering.api.ResourceNamespace.fromPackageName;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.google.common.collect.ImmutableMap;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import org.junit.Test;
 
 public class ResourceNamespaceTest {
@@ -60,13 +64,11 @@ public class ResourceNamespaceTest {
     }
 
     @Test
-    public void androidSingleton() {
-        assertSame(ANDROID, ResourceNamespace.fromPackageName("android"));
-
-        assertSame(
-                ANDROID,
-                ResourceNamespace.fromNamespacePrefix(
-                        "android", RES_AUTO, prefix -> SdkConstants.ANDROID_URI));
+    public void androidSingleton() throws Exception {
+        assertSame(ANDROID, fromPackageName("android"));
+        assertSame(ANDROID, fromNamespacePrefix("android", RES_AUTO, prefix -> ANDROID_URI));
+        assertSame(ANDROID, fromNamespaceUri(ANDROID_URI));
+        assertSame(ANDROID, serializeAndDeserialize(ANDROID));
     }
 
     @Test
@@ -89,6 +91,24 @@ public class ResourceNamespaceTest {
 
     @Test
     public void xmlNamespaceUri() {
-        assertEquals(SdkConstants.ANDROID_URI, ANDROID.getXmlNamespaceUri());
+        assertEquals(ANDROID_URI, ANDROID.getXmlNamespaceUri());
+    }
+
+    private static ResourceNamespace serializeAndDeserialize(ResourceNamespace namespace)
+            throws IOException, ClassNotFoundException {
+        //noinspection resource: ByteArrayOutputStream doesn't leak resources.
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(bytes)) {
+            objectOutputStream.writeObject(namespace);
+        }
+
+        ResourceNamespace deserialized;
+        try (ObjectInputStream objectInputStream =
+                new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
+            deserialized = (ResourceNamespace) objectInputStream.readObject();
+        }
+
+        return deserialized;
     }
 }
