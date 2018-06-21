@@ -80,6 +80,8 @@
   <migrate old-name="android.support.design.widget.ViewOffsetHelper" new-name="com.google.android.material.appbar.ViewOffsetHelper" type="CLASS"/>
   <migrate old-name="android.support.design.widget.ViewUtilsLollipop" new-name="com.google.android.material.appbar.ViewUtilsLollipop" type="CLASS"/>
   <migrate old-name="android.support.design.widget.VisibilityAwareImageButton" new-name="com.google.android.material.internal.VisibilityAwareImageButton" type="CLASS"/>
+  <migrate old-name="android.support.design.R" new-name="com.google.android.material.R" type="CLASS"/>
+
 
   <!-- Support Library Classes and Packages -->
   <migrate old-name="android.support.v17.internal.widget.OutlineOnlyWithChildrenFrameLayout" new-name="androidx.leanback.preference.internal.OutlineOnlyWithChildrenFrameLayout" type="CLASS"/>
@@ -356,8 +358,8 @@
   <migrate-dependency old-group-name="com.android.support" old-artifact-name="gridlayout-v7" new-group-name="androidx.gridlayout" new-artifact-name="gridlayout" base-version="1.0.0-alpha1"/>
   <migrate-dependency old-group-name="com.android.support" old-artifact-name="leanback-v17" new-group-name="androidx.leanback" new-artifact-name="leanback" base-version="1.0.0-alpha1"/>
   <migrate-dependency old-group-name="com.android.support" old-artifact-name="mediarouter-v7" new-group-name="androidx.mediarouter" new-artifact-name="mediarouter" base-version="1.0.0-alpha1"/>
-  <migrate-dependency old-group-name="com.android.support" old-artifact-name="multidex" new-group-name="androidx.multidex" new-artifact-name="multidex" base-version="1.0.3"/>
-  <migrate-dependency old-group-name="com.android.support" old-artifact-name="multidex-instrumentation" new-group-name="androidx.multidex" new-artifact-name="multidex-instrumentation" base-version="1.0.3"/>
+  <migrate-dependency old-group-name="com.android.support" old-artifact-name="multidex" new-group-name="androidx.multidex" new-artifact-name="multidex" base-version="2.0.0"/>
+  <migrate-dependency old-group-name="com.android.support" old-artifact-name="multidex-instrumentation" new-group-name="androidx.multidex" new-artifact-name="multidex-instrumentation" base-version="2.0.0"/>
   <migrate-dependency old-group-name="com.android.support" old-artifact-name="palette-v7" new-group-name="androidx.palette" new-artifact-name="palette" base-version="1.0.0-alpha1"/>
   <migrate-dependency old-group-name="com.android.support" old-artifact-name="percent" new-group-name="androidx.percentlayout" new-artifact-name="percentlayout" base-version="1.0.0-alpha1"/>
   <migrate-dependency old-group-name="com.android.support" old-artifact-name="preference-leanback-v17" new-group-name="androidx.leanback" new-artifact-name="leanback-preference" base-version="1.0.0-alpha1"/>
