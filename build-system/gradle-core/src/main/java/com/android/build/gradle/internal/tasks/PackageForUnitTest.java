@@ -55,7 +55,7 @@ public class PackageForUnitTest extends DefaultTask {
 
         FileUtils.copyFile(apkFrom(resApk), apkForUnitTest);
 
-        URI uri = URI.create("jar:file:" + apkForUnitTest.getAbsolutePath());
+        URI uri = URI.create("jar:" + apkForUnitTest.toURI());
         try (FileSystem apkFs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
             Path apkAssetsPath = apkFs.getPath("/assets");
             for (File mergedAssetsDir : mergedAssets.getFiles()) {
