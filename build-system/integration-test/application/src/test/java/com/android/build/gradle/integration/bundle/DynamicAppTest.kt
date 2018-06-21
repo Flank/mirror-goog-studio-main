@@ -300,6 +300,18 @@ class DynamicAppTest {
         apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 18")
             .containsExactly("standalone-xxhdpi.apk")
+
+
+        // Check universal APK generation too.
+        project
+            .executor()
+            .run(":app:packageDebugUniversalApk")
+
+        val univeralApk = project.getSubproject("app").getOutputFile("universal_apk", "debug", "app-universal.apk")
+        Zip(univeralApk).use {
+            Truth.assertThat(it.entries.map { it.toString() })
+                .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
+        }
     }
 
 

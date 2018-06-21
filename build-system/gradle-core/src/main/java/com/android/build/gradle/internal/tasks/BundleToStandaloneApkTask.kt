@@ -27,22 +27,28 @@ import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.io.IOException
 import java.io.Serializable
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.util.zip.ZipInputStream
 import javax.inject.Inject
 
 /**
- * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
+ * Task that generates the standalone from a bundle.
  */
-open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -55,9 +61,17 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
     lateinit var aapt2FromMaven: FileCollection
         private set
 
-    @get:OutputFile
-    lateinit var outputFile: File
-        private set
+    private lateinit var outputFile: Provider<RegularFile>
+
+    @get:Input
+    val outputDirectory: File
+       get() = outputFile.get().asFile.parentFile!!
+
+    @get:Input
+    val fileName: String
+        get() = outputFile.get().asFile.name
+
+    private lateinit var tempDirectory: File
 
     @get:InputFile
     @get:org.gradle.api.tasks.Optional
@@ -90,7 +104,8 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
                 Params(
                     bundle.singleFile(),
                     File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
-                    outputFile,
+                    outputFile.get().asFile,
+                    tempDirectory,
                     keystoreFile,
                     keystorePassword,
                     keyAlias,
@@ -104,6 +119,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         val bundleFile: File,
         val aapt2File: File,
         val outputFile: File,
+        val temporaryDir: File,
         val keystoreFile: File?,
         val keystorePassword: String?,
         val keyAlias: String?,
@@ -112,12 +128,21 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
-            FileUtils.deleteIfExists(params.outputFile)
+            FileUtils.cleanOutputDir(params.outputFile.parentFile)
+            FileUtils.cleanOutputDir(params.temporaryDir)
 
+            val outputApksBundle =
+                params.temporaryDir.toPath().resolve("universal_bundle.apks")
+
+            generateUniversalApkBundle(outputApksBundle)
+            extractUniversalApk(outputApksBundle)
+        }
+
+        private fun generateUniversalApkBundle(outputApksBundle: Path) {
             val command = BuildApksCommand
                 .builder()
                 .setBundlePath(params.bundleFile.toPath())
-                .setOutputFile(params.outputFile.toPath())
+                .setOutputFile(outputApksBundle)
                 .setAapt2Command(Aapt2Command.createFromExecutablePath(params.aapt2File.toPath()))
                 .setSigningConfiguration(
                     keystoreFile = params.keystoreFile,
@@ -126,27 +151,52 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
                     keyPassword = params.keyPassword
                 )
 
+            command.setGenerateOnlyUniversalApk(true)
+
             command.build().execute()
+        }
+
+        private fun extractUniversalApk(outputApksBundle: Path) {
+            ZipInputStream(Files.newInputStream(outputApksBundle).buffered()).use { zipInputStream ->
+                var found = false
+                while (true) {
+                    val entry = zipInputStream.nextEntry ?: break
+                    if (entry.name.endsWith(".apk")) {
+                        if (found) {
+                            throw IOException("Expected bundle to contain the single universal apk, but contained multiple: $outputApksBundle")
+                        }
+                        Files.copy(
+                            zipInputStream,
+                            params.outputFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING
+                        )
+                        found = true
+                    }
+                }
+                if (!found) {
+                    throw IOException("Expected bundle to contain the single universal apk, but contained none: $outputApksBundle")
+                }
+            }
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleToApkTask>() {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleToStandaloneApkTask>() {
 
         override val name: String
-            get() = scope.getTaskName("makeApkFromBundleFor")
-        override val type: Class<BundleToApkTask>
-            get() = BundleToApkTask::class.java
+            get() = scope.getTaskName("package", "UniversalApk")
+        override val type: Class<BundleToStandaloneApkTask>
+            get() = BundleToStandaloneApkTask::class.java
 
-        override fun execute(task: BundleToApkTask) {
+        override fun execute(task: BundleToStandaloneApkTask) {
             task.variantName = scope.fullVariantName
-            task.outputFile = scope.artifacts.appendArtifact(
-                InternalArtifactType.APKS_FROM_BUNDLE,
+            task.outputFile = scope.artifacts.setArtifactFile(
+                InternalArtifactType.UNIVERSAL_APK,
                 task,
-                "bundle.apks"
+                "${scope.globalScope.projectBaseName}-universal.apk"
             )
             task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
-
+            task.tempDirectory = scope.getIncrementalDir(name)
             scope.variantConfiguration.signingConfig?.let {
                 task.keystoreFile = it.storeFile
                 task.keystorePassword = it.storePassword

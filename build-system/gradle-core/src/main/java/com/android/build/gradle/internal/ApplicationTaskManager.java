@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
+import com.android.build.gradle.internal.tasks.BundleToStandaloneApkTask;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
@@ -493,12 +494,17 @@ public class ApplicationTaskManager extends TaskManager {
                             scope.getArtifacts()
                                     .getFinalArtifactFiles(InternalArtifactType.BUNDLE));
 
-            BundleToApkTask task = taskFactory.create(new BundleToApkTask.ConfigAction(scope));
-            // make the task depend on the validate signing task to ensure that the keystore
+            BundleToApkTask splitAndMultiApkTask =
+                    taskFactory.create(new BundleToApkTask.ConfigAction(scope));
+            BundleToStandaloneApkTask universalApkTask =
+                    taskFactory.create(new BundleToStandaloneApkTask.ConfigAction(scope));
+            // make the tasks depend on the validate signing task to ensure that the keystore
             // is created if it's a debug one.
             if (scope.getVariantConfiguration().getSigningConfig() != null) {
-                task.dependsOn(getValidateSigningTask(scope));
-                bundleTask.dependsOn(getValidateSigningTask(scope));
+                Task validateSigningTask = getValidateSigningTask(scope);
+                splitAndMultiApkTask.dependsOn(validateSigningTask);
+                bundleTask.dependsOn(validateSigningTask);
+                universalApkTask.dependsOn(validateSigningTask);
             }
 
             taskFactory.create(new ExtractApksTask.ConfigAction(scope));
