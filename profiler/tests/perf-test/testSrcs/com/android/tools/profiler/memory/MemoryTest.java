@@ -90,9 +90,8 @@ public class MemoryTest {
 
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
         final int allocationCount = 10;
-        int allocationsReported = 0;
-        int deallocationsReported = 0;
-        HashSet<Integer> tags = new HashSet<Integer>();
+        HashSet<Integer> allocTags = new HashSet<Integer>();
+        HashSet<Integer> deallocTags = new HashSet<Integer>();
         HashMap<Integer, String> idToThreadName = new HashMap<Integer, String>();
 
         // Create several instances of MemTestEntity and when done free and collect them.
@@ -106,7 +105,7 @@ public class MemoryTest {
 
         // ALLOC_DATA events are available shortly, but FREE_DATA events need System.gc
         // and a while to happen.
-        while (deallocationsReported < allocationCount) {
+        while (deallocTags.size() < allocationCount) {
             androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
             jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             long endTime = jvmtiData.getEndTimestamp();
@@ -129,16 +128,14 @@ public class MemoryTest {
                         assertThat(alloc.getThreadId()).isGreaterThan(0);
                         assertThat(idToThreadName.containsKey(alloc.getThreadId())).isTrue();
                         if (alloc.getClassTag() == memTestEntityId) {
-                            allocationsReported++;
                             System.out.printf("Alloc recorded: tag=%d\n", alloc.getTag());
-                            assertThat(tags.add(alloc.getTag())).isTrue();
+                            assertThat(allocTags.add(alloc.getTag())).isTrue();
                         }
                     } else if (event.getEventCase() == AllocationEvent.EventCase.FREE_DATA) {
                         AllocationEvent.Deallocation dealloc = event.getFreeData();
-                        if (tags.contains(dealloc.getTag())) {
-                            deallocationsReported++;
+                        if (allocTags.contains(dealloc.getTag())) {
                             System.out.printf("Free recorded: tag=%d\n", dealloc.getTag());
-                            tags.remove(dealloc.getTag());
+                            assertThat(deallocTags.add(dealloc.getTag())).isTrue();
                         }
                     }
                 }
@@ -150,7 +147,6 @@ public class MemoryTest {
         }
 
         // allocationCount of instances should have been created/deleted.
-        assertThat(allocationsReported).isEqualTo(allocationCount);
-        assertThat(deallocationsReported).isEqualTo(allocationCount);
+        assertThat(deallocTags).isEqualTo(allocTags);
     }
 }
