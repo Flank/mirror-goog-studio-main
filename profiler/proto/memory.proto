@@ -65,6 +65,9 @@ service MemoryService {
       returns (AllocationContextsResponse) {}
   // Pre-O only: Used by Studio only for exporting legacy tracking data.
   rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
+  // Pre-O only: Import saved allocation records.
+  rpc ImportLegacyAllocations(ImportLegacyAllocationsRequest)
+      returns (ImportLegacyAllocationsResponse) {}
 
   // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
   // This returns all allocation deallocation events that happened
@@ -291,6 +294,26 @@ message TrackAllocationsRequest {
   // and end times of a session. On O+ setups, perfd +
   // the agent would perform allocation tracking.
   bool legacy = 4;
+}
+
+message ImportLegacyAllocationsRequest {
+  Session session = 1;
+  AllocationsInfo info = 2;
+  // The allocation events that should be returned when
+  // GetLegacyAllocationEvents is called.
+  LegacyAllocationEventsResponse allocations = 3;
+  // The classes and stack traces that should be returned
+  // when GetLegacyAllocationContexts is called.
+  AllocationContextsResponse contexts = 4;
+}
+
+message ImportLegacyAllocationsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+  Status status = 1;
 }
 
 message LegacyAllocationEventsRequest {
