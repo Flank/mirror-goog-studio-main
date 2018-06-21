@@ -209,6 +209,9 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
      */
     @Nullable
     public static ResourceNamespace fromNamespaceUri(@NonNull String uri) {
+        if (uri.equals(SdkConstants.ANDROID_URI)) {
+            return ANDROID;
+        }
         if (uri.equals(SdkConstants.AUTO_URI)) {
             return RES_AUTO;
         }
