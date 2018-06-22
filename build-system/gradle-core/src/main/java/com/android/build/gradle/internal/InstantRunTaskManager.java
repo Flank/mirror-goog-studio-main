@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_APP_INFO_OUTPUT_FILE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
@@ -223,8 +225,11 @@ public class InstantRunTaskManager {
                 OriginalStream.builder(project, "main-split-from-injector")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(InternalScope.MAIN_SPLIT)
-                        .setJar(generateInstantRunAppInfoTask.getOutputFile())
-                        .setDependency(generateInstantRunAppInfoTask)
+                        .setFileCollection(
+                                variantScope
+                                        .getArtifacts()
+                                        .getFinalArtifactFiles(INSTANT_RUN_APP_INFO_OUTPUT_FILE)
+                                        .get()) // FIXME the file collection returned does not survives Artifact transform/append b/110709212
                         .build());
 
         instantRunTask.ifPresent(anchorTask::dependsOn);

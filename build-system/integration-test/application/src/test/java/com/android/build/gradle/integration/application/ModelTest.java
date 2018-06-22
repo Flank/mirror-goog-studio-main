@@ -88,12 +88,14 @@ public class ModelTest {
 
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactly(
-                        project.file("build/generated/source/aidl/debug"),
+                        project.file(
+                                "build/generated/aidl_source_output_dir/debug/compileDebugAidl/out"),
                         project.file("build/generated/source/apt/debug"),
                         project.file("build/generated/source/buildConfig/debug"),
                         project.file(
                                 "build/generated/not_namespaced_r_class_sources/debug/processDebugResources/r"),
-                        project.file("build/generated/source/rs/debug"));
+                        project.file(
+                                "build/generated/renderscript_source_output_dir/debug/compileDebugRenderscript/out"));
 
         assertThat(debugArtifact.getGeneratedResourceFolders())
                 .containsExactly(
@@ -104,12 +106,14 @@ public class ModelTest {
 
         assertThat(androidTestArtifact.getGeneratedSourceFolders())
                 .containsExactly(
-                        project.file("build/generated/source/aidl/androidTest/debug"),
+                        project.file(
+                                "build/generated/aidl_source_output_dir/debugAndroidTest/compileDebugAndroidTestAidl/out"),
                         project.file("build/generated/source/apt/androidTest/debug"),
                         project.file("build/generated/source/buildConfig/androidTest/debug"),
                         project.file(
                                 "build/generated/not_namespaced_r_class_sources/debugAndroidTest/processDebugAndroidTestResources/r"),
-                        project.file("build/generated/source/rs/androidTest/debug"));
+                        project.file(
+                                "build/generated/renderscript_source_output_dir/debugAndroidTest/compileDebugAndroidTestRenderscript/out"));
 
         assertThat(androidTestArtifact.getGeneratedResourceFolders())
                 .containsExactly(

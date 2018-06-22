@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -292,7 +293,10 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, RENDERSCRIPT);
 
-            renderscriptTask.setSourceOutputDir(scope.getRenderscriptSourceOutputDir());
+            renderscriptTask.setSourceOutputDir(
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    RENDERSCRIPT_SOURCE_OUTPUT_DIR, renderscriptTask, "out"));
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());
             renderscriptTask.setObjOutputDir(scope.getRenderscriptObjOutputDir());
             renderscriptTask.setLibOutputDir(scope.getRenderscriptLibOutputDir());

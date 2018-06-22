@@ -1172,13 +1172,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRenderscriptSourceOutputDir() {
-        return new File(globalScope.getGeneratedDir(),
-                "source/rs/" + variantData.getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
     public File getRenderscriptLibOutputDir() {
         return new File(globalScope.getIntermediatesDir(),
                 "rs/" + variantData.getVariantConfiguration().getDirName() + "/lib");
@@ -1289,13 +1282,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getSourceFoldersJavaResDestinationDir() {
         return new File(globalScope.getIntermediatesDir(),
                 "sourceFolderJavaResources/" + getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getAidlSourceOutputDir() {
-        return new File(globalScope.getGeneratedDir(),
-                "source/aidl/" + getVariantConfiguration().getDirName());
     }
 
     @Override

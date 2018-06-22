@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
 import static com.android.build.gradle.options.LongOption.DEPRECATED_NDK_COMPILE_LEASE;
 import static com.android.build.gradle.options.NdkLease.DEPRECATED_NDK_COMPILE_LEASE_DAYS;
 
@@ -50,6 +51,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
@@ -475,21 +477,19 @@ public class NdkCompile extends NdkTask {
                 ndkCompile.setNdkRenderScriptMode(false);
             }
 
-            final Callable<Collection<File>> callable =
-                    () -> {
-                        Collection<File> sourceList = variantConfig.getJniSourceList();
-                        if (Boolean.TRUE.equals(
-                                variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
-                            sourceList.add(
-                                    variantScope
-                                            .getTaskContainer()
-                                            .getRenderscriptCompileTask()
-                                            .getSourceOutputDir());
-                        }
+            final Callable<Collection<File>> callable = variantConfig::getJniSourceList;
 
-                        return sourceList;
-                    };
-            ndkCompile.sourceFolders = variantScope.getGlobalScope().getProject().files(callable);
+            ConfigurableFileCollection sourceFoldersFC =
+                    variantScope.getGlobalScope().getProject().files(callable);
+            if (Boolean.TRUE.equals(
+                    variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
+                sourceFoldersFC.from(
+                        variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(RENDERSCRIPT_SOURCE_OUTPUT_DIR));
+            }
+
+            ndkCompile.sourceFolders = sourceFoldersFC;
 
             ndkCompile.setGeneratedMakefile(
                     new File(

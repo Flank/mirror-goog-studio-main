@@ -129,8 +129,11 @@ public enum InternalArtifactType implements ArtifactType {
 
     // AIDL headers "packaged" by libraries for consumers.
     AIDL_PARCELABLE,
+    AIDL_SOURCE_OUTPUT_DIR(Category.GENERATED),
     // renderscript headers "packaged" by libraries for consumers.
     RENDERSCRIPT_HEADERS,
+    // source output for rs
+    RENDERSCRIPT_SOURCE_OUTPUT_DIR(Category.GENERATED),
 
     COMPATIBLE_SCREEN_MANIFEST,
     MERGED_MANIFESTS,
@@ -242,7 +245,9 @@ public enum InternalArtifactType implements ArtifactType {
     // Project metadata
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
-    METADATA_INSTALLED_BASE_DECLARATION;
+    METADATA_INSTALLED_BASE_DECLARATION,
+
+    INSTANT_RUN_APP_INFO_OUTPUT_FILE;
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

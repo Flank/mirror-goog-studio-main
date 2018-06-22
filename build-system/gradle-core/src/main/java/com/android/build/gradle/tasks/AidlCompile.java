@@ -377,7 +377,12 @@ public class AidlCompile extends IncrementalTask {
             compileTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, AIDL);
 
-            compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());
+            compileTask.setSourceOutputDir(
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
+                                    compileTask,
+                                    "out"));
 
             if (variantConfiguration.getType().isAar()) {
                 compileTask.setPackagedDir(

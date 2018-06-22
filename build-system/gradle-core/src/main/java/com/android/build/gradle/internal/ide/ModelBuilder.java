@@ -1083,11 +1083,20 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                     .getFiles(),
                             0));
         }
-        folders.add(scope.getAidlSourceOutputDir());
+        folders.add(
+                scope.getArtifacts()
+                        .getFinalArtifactFiles(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
+                        .get()
+                        .getSingleFile());
         folders.add(scope.getBuildConfigSourceOutputDir());
         Boolean ndkMode = variantData.getVariantConfiguration().getMergedFlavor().getRenderscriptNdkModeEnabled();
         if (ndkMode == null || !ndkMode) {
-            folders.add(scope.getRenderscriptSourceOutputDir());
+            folders.add(
+                    scope.getArtifacts()
+                            .getFinalArtifactFiles(
+                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+                            .get()
+                            .getSingleFile());
         }
         if (addDataBindingSources) {
             BuildableArtifact output =

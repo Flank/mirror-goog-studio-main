@@ -696,9 +696,12 @@ public abstract class BaseVariantData {
             }
 
             if (taskContainer.getAidlCompileTask() != null) {
-                sourceSets.add(
-                        project.fileTree(scope.getAidlSourceOutputDir())
-                                .builtBy(taskContainer.getAidlCompileTask().getName()));
+                // FIXME we need to get a configurableFileTree directly from the BuildableArtifact.
+                FileCollection aidlFC =
+                        scope.getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
+                                .get();
+                sourceSets.add(project.fileTree(aidlFC.getSingleFile()).builtBy(aidlFC));
             }
 
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
@@ -717,9 +720,13 @@ public abstract class BaseVariantData {
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()
                     && taskContainer.getRenderscriptCompileTask() != null) {
-                sourceSets.add(
-                        project.fileTree(scope.getRenderscriptSourceOutputDir())
-                                .builtBy(taskContainer.getRenderscriptCompileTask().getName()));
+                // FIXME we need to get a configurableFileTree directly from the BuildableArtifact.
+                FileCollection rsFC =
+                        scope.getArtifacts()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+                                .get();
+                sourceSets.add(project.fileTree(rsFC.getSingleFile()).builtBy(rsFC));
             }
 
             defaultJavaSources = sourceSets.build();
@@ -734,36 +741,34 @@ public abstract class BaseVariantData {
      * <p>This includes all the source folders except for the ones containing R and buildConfig.
      */
     @NonNull
-    public List<File> getJavaSourceFoldersForCoverage() {
-        // Build the list of source folders.
-        List<File> sourceFolders = Lists.newArrayList();
+    public FileCollection getJavaSourceFoldersForCoverage() {
+        ConfigurableFileCollection fc = scope.getGlobalScope().getProject().files();
 
         // First the actual source folders.
         List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
         for (SourceProvider provider : providers) {
             for (File sourceFolder : provider.getJavaDirectories()) {
                 if (sourceFolder.isDirectory()) {
-                    sourceFolders.add(sourceFolder);
+                    fc.from(sourceFolder);
                 }
             }
         }
 
-        File sourceFolder;
         // then all the generated src folders, except the ones for the R/Manifest and
         // BuildConfig classes.
-        sourceFolder = taskContainer.getAidlCompileTask().getSourceOutputDir();
-        if (sourceFolder.isDirectory()) {
-            sourceFolders.add(sourceFolder);
-        }
+        fc.from(
+                scope.getArtifacts()
+                        .getFinalArtifactFiles(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
+                        .get());
 
         if (!variantConfiguration.getRenderscriptNdkModeEnabled()) {
-            sourceFolder = taskContainer.getRenderscriptCompileTask().getSourceOutputDir();
-            if (sourceFolder.isDirectory()) {
-                sourceFolders.add(sourceFolder);
-            }
+            fc.from(
+                    scope.getArtifacts()
+                            .getFinalArtifactFiles(
+                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR));
         }
 
-        return sourceFolders;
+        return fc;
     }
 
     @Override

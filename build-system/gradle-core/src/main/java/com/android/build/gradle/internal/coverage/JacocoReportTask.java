@@ -80,7 +80,7 @@ public class JacocoReportTask extends DefaultTask {
 
     private Supplier<File> coverageDirectory;
     private BuildableArtifact classFileCollection;
-    private Supplier<Collection<File>> sourceFolders;
+    private Supplier<FileCollection> sourceFolders;
 
     private File coverageFile;
     private File reportDir;
@@ -128,7 +128,7 @@ public class JacocoReportTask extends DefaultTask {
     }
 
     @InputFiles
-    public Collection<File> getSourceFolders() {
+    public FileCollection getSourceFolders() {
         return sourceFolders.get();
     }
 

@@ -198,9 +198,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getProguardComponentsJarFile();
 
     @NonNull
-    File getRenderscriptSourceOutputDir();
-
-    @NonNull
     File getRenderscriptLibOutputDir();
 
     @NonNull
@@ -238,9 +235,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getSourceFoldersJavaResDestinationDir();
-
-    @NonNull
-    File getAidlSourceOutputDir();
 
     @NonNull
     File getAarClassesJar();
