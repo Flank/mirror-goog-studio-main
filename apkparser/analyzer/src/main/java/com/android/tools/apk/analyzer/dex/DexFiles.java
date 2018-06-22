@@ -25,6 +25,10 @@ import org.jf.dexlib2.dexbacked.raw.HeaderItem;
 import org.jf.dexlib2.util.DexUtil;
 
 public final class DexFiles {
+
+    public static final int MAX_SUPPORTED_DEX_VERSION = 38;
+    public static final int API = 15;
+
     private DexFiles() {}
 
     @NonNull
@@ -35,14 +39,15 @@ public final class DexFiles {
     @NonNull
     public static DexBackedDexFile getDexFile(@NonNull byte[] contents) {
         try {
-            return new DexBackedDexFile(Opcodes.forApi(15), contents);
+            return new DexBackedDexFile(Opcodes.forApi(API), contents);
         } catch (DexUtil.UnsupportedFile e) {
-            // TODO: b/65186612: remove this hack once dexlib2 supports version 38
-            if (HeaderItem.getVersion(contents, 0) == 38) {
+            // b/65186612: if dex version is too new,
+            // fallback by trying the latest dex version we do support.
+            if (HeaderItem.getVersion(contents, 0) > MAX_SUPPORTED_DEX_VERSION) {
                 contents[4] = '0';
                 contents[5] = '3';
-                contents[6] = '7';
-                return new DexBackedDexFile(Opcodes.forApi(15), contents);
+                contents[6] = '8';
+                return new DexBackedDexFile(Opcodes.forApi(API), contents);
             } else {
                 throw e;
             }
