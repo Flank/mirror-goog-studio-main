@@ -21,6 +21,7 @@ import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
 
 class TaskFactoryImpl(private val taskContainer: TaskContainer): TaskFactory {
 
@@ -46,9 +47,11 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer): TaskFactory {
     }
 
     override fun <T : Task> create(configAction: TaskConfigAction<T>): T {
-        val task = taskContainer
-            .create(configAction.name, configAction.type)
-        configAction.preConfigure(task, task.name)
+        val task = taskContainer.create(configAction.name, configAction.type)
+        // FIXME replace with TaskContainer.named() in Gradle 4.9
+        @Suppress("UNCHECKED_CAST")
+        val taskProvider = taskContainer.getByNameLater(Task::class.java, task.name) as TaskProvider<T>
+        configAction.preConfigure(taskProvider, task.name)
         configAction.execute(task)
         return task
     }

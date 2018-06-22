@@ -39,17 +39,15 @@ abstract class TaskConfigAction<T : Task> : PreConfigAction<T>() {
  */
 abstract class PreConfigAction<T: Task>: Action<T> {
     /**
-     * Pre-configures the task, acting on the [Task].
+     * Pre-configures the task, acting on the [TaskProvider].
      *
      * This is meant to handle configuration that must happen always, even when the task
      * is configured lazily.
      *
-     * For now this acts on the task, but in the future, this will act on a [TaskProvider]
-     *
-     * @param task the task
+     * @param taskProvider the task provider
      * @param taskName the task name
      */
-    open fun preConfigure(task: T, taskName: String) {}
+    open fun preConfigure(taskProvider: TaskProvider<out T>, taskName: String) {}
 
     /** Configures the task. */
     abstract override fun execute(task: T)
