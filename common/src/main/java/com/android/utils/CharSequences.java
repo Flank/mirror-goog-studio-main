@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Arrays;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -242,11 +241,12 @@ public class CharSequences {
         return false;
     }
 
-    public static int indexOf(@NonNull CharSequence haystack, CharSequence needle) {
+    public static int indexOf(@NonNull CharSequence haystack, @NonNull CharSequence needle) {
         return indexOf(haystack, needle, 0);
     }
 
-    public static int indexOf(@NonNull CharSequence haystack, CharSequence needle, int start) {
+    public static int indexOf(
+            @NonNull CharSequence haystack, @NonNull CharSequence needle, int start) {
         int needleLength = needle.length();
         if (needleLength == 0) {
             return start;
@@ -328,7 +328,7 @@ public class CharSequences {
     }
 
     @NonNull
-    public static InputStream getInputStream(CharSequence text) {
+    public static InputStream getInputStream(@NonNull CharSequence text) {
         return new ByteArrayInputStream(text.toString().getBytes(Charsets.UTF_8));
     }
 
