@@ -80,9 +80,6 @@ perf_test(
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
         "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
     ],
-    tags = [
-        "manual",  # b/80501379
-    ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
