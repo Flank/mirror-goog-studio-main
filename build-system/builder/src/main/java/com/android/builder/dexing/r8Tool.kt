@@ -20,17 +20,23 @@ package com.android.builder.dexing
 
 import com.android.SdkConstants
 import com.android.ide.common.blame.MessageReceiver
+import com.android.tools.r8.ArchiveProgramResourceProvider
 import com.android.tools.r8.ClassFileConsumer
 import com.android.tools.r8.CompatProguardCommandBuilder
 import com.android.tools.r8.CompilationMode
+import com.android.tools.r8.DataDirectoryResource
+import com.android.tools.r8.DataEntryResource
 import com.android.tools.r8.DataResourceConsumer
+import com.android.tools.r8.DataResourceProvider
 import com.android.tools.r8.DexIndexedConsumer
-import com.android.tools.r8.OutputMode
+import com.android.tools.r8.ProgramResource
+import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.R8
 import com.android.tools.r8.origin.Origin
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Collections
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -39,8 +45,10 @@ import java.util.logging.Logger
  * output path.
  */
 fun runR8(
-    inputs: Collection<Path>,
+    inputClasses: Collection<Path>,
     output: Path,
+    inputJavaResources: Collection<Path>,
+    javaResourcesJar: Path,
     libraries: Collection<Path>,
     toolConfig: ToolConfig,
     proguardConfig: ProguardConfig,
@@ -62,15 +70,16 @@ fun runR8(
 
     r8CommandBuilder
         .addProguardConfigurationFiles(
-                proguardConfig.proguardConfigurationFiles.filter { Files.isRegularFile(it) }
+            proguardConfig.proguardConfigurationFiles.filter { Files.isRegularFile(it) }
         )
         .addProguardConfiguration(proguardConfig.proguardConfigurations, Origin.unknown())
 
     if (proguardConfig.proguardMapInput != null
-            && Files.exists(proguardConfig.proguardMapInput)) {
+        && Files.exists(proguardConfig.proguardMapInput)
+    ) {
         r8CommandBuilder.addProguardConfiguration(
-                listOf("-applymapping " + proguardConfig.proguardMapInput.toString()),
-                Origin.unknown()
+            listOf("-applymapping " + proguardConfig.proguardMapInput.toString()),
+            Origin.unknown()
         )
     }
 
@@ -80,13 +89,34 @@ fun runR8(
     }
 
     val compilationMode =
-            if (toolConfig.isDebuggable) CompilationMode.DEBUG else CompilationMode.RELEASE
-    val outputType =
-            if (toolConfig.r8OutputType == R8OutputType.CLASSES) {
-                OutputMode.ClassFile
+        if (toolConfig.isDebuggable) CompilationMode.DEBUG else CompilationMode.RELEASE
+
+    val dataResourceConsumer = ClassFileConsumer.ArchiveConsumer(javaResourcesJar)
+    val programConsumer =
+        if (toolConfig.r8OutputType == R8OutputType.CLASSES) {
+            val baseConsumer: ClassFileConsumer = if (Files.isDirectory(output)) {
+                ClassFileConsumer.DirectoryConsumer(output)
             } else {
-                OutputMode.DexIndexed
+                ClassFileConsumer.ArchiveConsumer(output)
             }
+            object : ClassFileConsumer.ForwardingConsumer(baseConsumer) {
+                override fun getDataResourceConsumer(): DataResourceConsumer? {
+                    return dataResourceConsumer
+                }
+            }
+        } else {
+            val baseConsumer: DexIndexedConsumer = if (Files.isDirectory(output)) {
+                DexIndexedConsumer.DirectoryConsumer(output)
+            } else {
+                DexIndexedConsumer.ArchiveConsumer(output)
+            }
+            object : DexIndexedConsumer.ForwardingConsumer(baseConsumer) {
+                override fun getDataResourceConsumer(): DataResourceConsumer? {
+                    return dataResourceConsumer
+                }
+            }
+        }
+
     @Suppress("UsePropertyAccessSyntax")
     r8CommandBuilder
         .setDisableMinification(toolConfig.disableMinification)
@@ -94,52 +124,50 @@ fun runR8(
         .setDisableDesugaring(toolConfig.disableDesugaring)
         .setMinApiLevel(toolConfig.minSdkVersion)
         .setMode(compilationMode)
-        .setOutput(output, outputType)
+        .setProgramConsumer(programConsumer)
 
-    // By default, R8 will maintain Java data resources. Wrap the consumer to ignore them.
-    val outputConsumer = r8CommandBuilder.programConsumer
-    when (outputConsumer) {
-        is ClassFileConsumer ->
-            r8CommandBuilder.programConsumer =
-                    object : ClassFileConsumer.ForwardingConsumer(outputConsumer) {
-                        override fun getDataResourceConsumer(): DataResourceConsumer? {
-                            return null
-                        }
-                    }
-        is DexIndexedConsumer ->
-            r8CommandBuilder.programConsumer =
-                    object : DexIndexedConsumer.ForwardingConsumer(outputConsumer) {
-                        override fun getDataResourceConsumer(): DataResourceConsumer? {
-                            return null
-                        }
-                    }
-    }
 
-    fun pathsAdder(paths: Collection<Path>, consumer: (Path) -> Any) {
-        for (path in paths) {
-            when {
-                Files.isRegularFile(path) -> consumer(path)
-                Files.isDirectory(path) -> Files.walk(path).use {
-                    it
-                        .filter { p -> p.toString().endsWith(SdkConstants.DOT_CLASS) }
-                        .forEach { consumer(it) }
-                }
-                else -> throw IOException("Unexpected file format: " + path.toString())
+    for (path in inputClasses) {
+        when {
+            Files.isRegularFile(path) -> r8CommandBuilder.addProgramResourceProvider(
+                ArchiveProgramResourceProvider.fromArchive(path)
+            )
+            Files.isDirectory(path) -> Files.walk(path).use {
+                it.filter { Files.isRegularFile(it) && it.toString().endsWith(SdkConstants.DOT_CLASS) }
+                    .forEach { r8CommandBuilder.addProgramFiles(it) }
             }
+            else -> throw IOException("Unexpected file format: $path")
         }
     }
 
-    pathsAdder(inputs, { p -> r8CommandBuilder.addProgramFiles(p) })
+    val dirResources = inputJavaResources.filter {
+        if (!Files.isDirectory(it)) {
+            // API is missing to create java resources jars, but this works
+            r8CommandBuilder.addProgramFiles(it)
+            false
+        } else {
+            true
+        }
+    }
+
+    r8CommandBuilder.addProgramResourceProvider(object : ProgramResourceProvider {
+        override fun getProgramResources() = Collections.emptyList<ProgramResource>()
+
+        override fun getDataResourceProvider() = R8DataResourceProvider(dirResources)
+    })
+
+
     libraries.forEach { p -> r8CommandBuilder.addLibraryFiles(p) }
 
     val logger: Logger = Logger.getLogger("R8")
     if (logger.isLoggable(Level.FINE)) {
         logger.fine("*** Using R8 to process code ***")
-        logger.fine("Main dex list config: " + mainDexListConfig)
-        logger.fine("Proguard config: " + proguardConfig)
-        logger.fine("Tool config: " + toolConfig)
-        logger.fine("Program classes: " + inputs)
-        logger.fine("Library classes: " + libraries)
+        logger.fine("Main dex list config: $mainDexListConfig")
+        logger.fine("Proguard config: $proguardConfig")
+        logger.fine("Tool config: $toolConfig")
+        logger.fine("Program classes: $inputClasses")
+        logger.fine("Java resources: $inputJavaResources")
+        logger.fine("Library classes: $libraries")
     }
 
     R8.run(r8CommandBuilder.build())
@@ -174,3 +202,34 @@ data class ToolConfig(
     val disableMinification: Boolean,
     val r8OutputType: R8OutputType
 )
+
+/** Provider that loads all resources from the specified directories.  */
+private class R8DataResourceProvider(val dirResources: Collection<Path>) : DataResourceProvider {
+    override fun accept(visitor: DataResourceProvider.Visitor?) {
+        val seen = mutableSetOf<Path>()
+        val logger: Logger = Logger.getLogger("R8")
+        for (resourceBase in dirResources) {
+            Files.walk(resourceBase).use {
+                it.forEach {
+                    val relative = resourceBase.relativize(it)
+                    if (it != resourceBase && seen.add(relative)) {
+                        when {
+                            Files.isDirectory(it) -> visitor!!.visit(
+                                DataDirectoryResource.fromFile(
+                                    resourceBase, resourceBase.relativize(it)
+                                )
+                            )
+                            else -> visitor!!.visit(
+                                DataEntryResource.fromFile(
+                                    resourceBase, resourceBase.relativize(it)
+                                )
+                            )
+                        }
+                    } else {
+                        logger.fine { "Ignoring duplicate Java resources $relative" }
+                    }
+                }
+            }
+        }
+    }
+}

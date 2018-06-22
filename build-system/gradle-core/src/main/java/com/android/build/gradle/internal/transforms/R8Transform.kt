@@ -20,9 +20,7 @@ import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.SecondaryFile
-import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
-import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_WITH_RESOURCES
@@ -35,12 +33,12 @@ import com.android.builder.dexing.ProguardConfig
 import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.runR8
-import com.android.builder.packaging.JarMerger
 import com.android.ide.common.blame.MessageReceiver
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Transform that uses R8 to convert class files to dex. In case of a library variant, this
@@ -126,7 +124,7 @@ class R8Transform(
         mutableListOf(outputProguardMapping)
 
     override fun keep(keep: String) {
-        proguardConfigurations.add("-keep " + keep)
+        proguardConfigurations.add("-keep $keep")
     }
 
     override fun keepattributes() {
@@ -134,7 +132,7 @@ class R8Transform(
     }
 
     override fun dontwarn(dontwarn: String) {
-        proguardConfigurations.add("-dontwarn " + dontwarn)
+        proguardConfigurations.add("-dontwarn $dontwarn")
     }
 
     override fun setActions(actions: PostprocessingFeatures) {
@@ -151,7 +149,6 @@ class R8Transform(
                 { "No output provider set" }
         )
         outputProvider.deleteAll()
-        copyResources(transformInvocation.inputs, outputProvider)
 
         val r8OutputType: R8OutputType
         val outputFormat: Format
@@ -183,10 +180,8 @@ class R8Transform(
         val mainDexListConfig = MainDexListConfig(
                 mainDexRulesFiles.files.map { it.toPath() },
                 mainDexListFiles.files.map { it.toPath() },
-                MainDexListTransform.getPlatformRules().map { it -> "-keep " + it }
+                MainDexListTransform.getPlatformRules().map { it -> "-keep $it" }
         )
-
-        val allFiles = getAllFiles(transformInvocation.inputs).map { it.toPath() }
 
         val output = outputProvider.getContentLocation(
                 "main",
@@ -196,46 +191,41 @@ class R8Transform(
         )
         Files.createDirectories(output.toPath())
 
-        val bootClasspathInputs =
-                getAllFiles(transformInvocation.referencedInputs) + bootClasspath.value
-
-        runR8(
-                allFiles,
-                output.toPath(),
-                bootClasspathInputs.map { it.toPath() },
-                toolConfig,
-                proguardConfig,
-                mainDexListConfig,
-                messageReceiver
-        )
-    }
-
-    /**
-     * In the future, R8 will provide an API to handle Java resources, but because there is not one
-     * at the moment, we simple copy them to output.
-     */
-    private fun copyResources(inputs: Collection<TransformInput>, output: TransformOutputProvider) {
-        val outputLocation =
-            output.getContentLocation("java_res", setOf(RESOURCES), scopes, Format.JAR)
-
-        JarMerger(
-            outputLocation.toPath(),
-            JarMerger.EXCLUDE_CLASSES).use { jarMerger ->
-            inputs.forEach { input ->
-                input.directoryInputs.forEach { dirInput ->
-                    if (containsResources(dirInput)) {
-                        jarMerger.addDirectory(dirInput.file.toPath())
-                    }
+        val inputJavaResources = mutableListOf<Path>()
+        val inputClasses = mutableListOf<Path>()
+        transformInvocation.inputs.forEach {
+            it.directoryInputs.forEach { dirInput ->
+                if (dirInput.contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)) {
+                    inputJavaResources.add(dirInput.file.toPath())
+                } else {
+                    inputClasses.add(dirInput.file.toPath())
                 }
-                input.jarInputs.forEach { jarInput ->
-                    if (containsResources(jarInput)) {
-                        jarMerger.addJar(jarInput.file.toPath())
-                    }
+            }
+            it.jarInputs.forEach { jarInput ->
+                if (jarInput.contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)) {
+                    inputJavaResources.add(jarInput.file.toPath())
+                } else {
+                    inputClasses.add(jarInput.file.toPath())
                 }
             }
         }
-    }
+        val javaResources =
+            outputProvider.getContentLocation("java_res", setOf(RESOURCES), scopes, Format.JAR)
+        Files.createDirectories(javaResources.toPath().parent)
 
-    private fun containsResources(content: QualifiedContent): Boolean =
-        content.contentTypes.contains(RESOURCES)
+        val bootClasspathInputs =
+            getAllFiles(transformInvocation.referencedInputs) + bootClasspath.value
+
+        runR8(
+            inputClasses,
+            output.toPath(),
+            inputJavaResources,
+            javaResources.toPath(),
+            bootClasspathInputs.map { it.toPath() },
+            toolConfig,
+            proguardConfig,
+            mainDexListConfig,
+            messageReceiver
+        )
+    }
 }

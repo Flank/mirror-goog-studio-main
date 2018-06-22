@@ -32,6 +32,7 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -185,5 +186,17 @@ public class MinifyTest {
         project.executor()
                 .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified");
+    }
+
+    @Test
+    public void testJavaResourcesArePackaged() throws IOException, InterruptedException {
+        Path javaRes = project.getTestDir().toPath().resolve("src/main/resources/my_res.txt");
+        Files.createDirectories(javaRes.getParent());
+        Files.createFile(javaRes);
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinified");
+        assertThat(project.getApk(GradleTestProject.ApkType.of("minified", true)))
+                .contains("my_res.txt");
     }
 }
