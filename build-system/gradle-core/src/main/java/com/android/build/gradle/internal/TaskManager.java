@@ -989,8 +989,9 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "mergedJniFolder")
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                                 .addScope(Scope.PROJECT)
-                                .setFolder(variantScope.getMergeNativeLibsOutputDir())
-                                .setDependency(mergeJniLibFoldersTask.getName())
+                                .setFileCollection(
+                                        project.files(variantScope.getMergeNativeLibsOutputDir())
+                                                .builtBy(mergeJniLibFoldersTask.getName()))
                                 .build());
 
         // create a stream that contains the content of the local NDK build
@@ -1000,8 +1001,13 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "local-ndk-build")
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                                 .addScope(Scope.PROJECT)
-                                .setFolders(variantScope::getNdkSoFolder)
-                                .setDependency(getNdkBuildable(variantScope.getVariantData()))
+                                .setFileCollection(
+                                        project.files(
+                                                        (Callable<Collection<File>>)
+                                                                variantScope::getNdkSoFolder)
+                                                .builtBy(
+                                                        getNdkBuildable(
+                                                                variantScope.getVariantData())))
                                 .build());
 
         // create a stream that contains the content of the local external native build
@@ -1012,20 +1018,23 @@ public abstract class TaskManager {
                             OriginalStream.builder(project, "external-native-build")
                                     .addContentType(ExtendedContentType.NATIVE_LIBS)
                                     .addScope(Scope.PROJECT)
-                                    .setFolder(
-                                            taskContainer
-                                                    .getExternalNativeJsonGenerator()
-                                                    .getObjFolder())
-                                    .setDependency(
-                                            checkNotNull(taskContainer.getExternalNativeBuildTask())
-                                                    .getName())
+                                    .setFileCollection(
+                                            project.files(
+                                                            taskContainer
+                                                                    .getExternalNativeJsonGenerator()
+                                                                    .getObjFolder())
+                                                    .builtBy(
+                                                            checkNotNull(
+                                                                            taskContainer
+                                                                                    .getExternalNativeBuildTask())
+                                                                    .getName()))
                                     .build());
         }
 
         // create a stream containing the content of the renderscript compilation output
         // if support mode is enabled.
         if (variantScope.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
-            final Supplier<Collection<File>> supplier =
+            final Callable<Collection<File>> callable =
                     () -> {
                         ImmutableList.Builder<File> builder = ImmutableList.builder();
 
@@ -1068,9 +1077,12 @@ public abstract class TaskManager {
                             OriginalStream.builder(project, "rs-support-mode-output")
                                     .addContentType(ExtendedContentType.NATIVE_LIBS)
                                     .addScope(Scope.PROJECT)
-                                    .setFolders(supplier)
-                                    .setDependency(
-                                            taskContainer.getRenderscriptCompileTask().getName())
+                                    .setFileCollection(
+                                            project.files(callable)
+                                                    .builtBy(
+                                                            taskContainer
+                                                                    .getRenderscriptCompileTask()
+                                                                    .getName()))
                                     .build());
         }
 

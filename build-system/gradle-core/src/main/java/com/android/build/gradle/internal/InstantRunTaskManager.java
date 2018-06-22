@@ -210,8 +210,9 @@ public class InstantRunTaskManager {
                 OriginalStream.builder(project, "main-split-from-extractor")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(InternalScope.MAIN_SPLIT)
-                        .setJar(variantScope.getIncrementalRuntimeSupportJar())
-                        .setDependency(extractorTask)
+                        .setFileCollection(
+                                project.files(variantScope.getIncrementalRuntimeSupportJar())
+                                        .builtBy(extractorTask))
                         .build());
 
         // create the AppInfo.class for this variant.

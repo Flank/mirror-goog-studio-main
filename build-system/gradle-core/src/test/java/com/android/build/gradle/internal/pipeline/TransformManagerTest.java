@@ -31,7 +31,9 @@ import java.util.List;
 import java.util.Optional;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,12 +45,16 @@ public class TransformManagerTest extends TaskTestUtils {
     private Project project;
     @Rule
     public final ExpectedException exception = ExpectedException.none();
+    private FileCollection fileCollection;
 
+    @Before
     @Override
     public void setUp() throws IOException {
         super.setUp();
         File projectDirectory = java.nio.file.Files.createTempDirectory(getClass().getName()).toFile();
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
+
+        fileCollection = project.files(new File("my file")).builtBy(MY_FAKE_DEPENDENCY_TASK_NAME);
     }
 
     @Test
@@ -58,8 +64,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setFolder(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -104,8 +109,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setFolder(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -134,8 +138,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setFolder(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -143,8 +146,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
-                        .setFolder(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(libClasses);
 
@@ -152,8 +154,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.SUB_PROJECTS)
-                        .setFolder(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(modulesClasses);
 
@@ -199,8 +200,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
-                        .setFolder(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClassAndResources);
 
@@ -334,8 +334,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setJar(temporaryFolder.newFile("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -343,8 +342,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(libClassAndResources);
 
@@ -436,8 +434,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -445,8 +442,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(libClasses);
 
@@ -492,8 +488,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -527,8 +522,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -536,8 +530,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(libClasses);
 
@@ -586,8 +579,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -635,8 +627,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 
@@ -644,8 +635,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES)
                         .addScope(Scope.SUB_PROJECTS)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(libClass);
 
@@ -696,8 +686,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 OriginalStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScope(Scope.PROJECT)
-                        .setJar(new File("my file"))
-                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .setFileCollection(fileCollection)
                         .build();
         transformManager.addStream(projectClass);
 

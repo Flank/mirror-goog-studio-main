@@ -32,7 +32,6 @@ import com.android.build.api.transform.TransformInput;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -41,12 +40,9 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -54,7 +50,6 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -78,9 +73,6 @@ public class OriginalStream extends TransformStream {
         private Set<ContentType> contentTypes = Sets.newHashSet();
         private QualifiedContent.ScopeType scope;
         private FileCollection fileCollection;
-        private Supplier<Collection<File>> jarFiles;
-        private Supplier<Collection<File>> folders;
-        private ImmutableList<? extends Object> dependencies;
         private ArtifactCollection artifactCollection;
 
         public Builder(@NonNull Project project, @NonNull String name) {
@@ -91,44 +83,14 @@ public class OriginalStream extends TransformStream {
         public OriginalStream build() {
             checkNotNull(scope);
             checkState(!contentTypes.isEmpty());
-
-            FileCollection fc;
-
-            if (fileCollection != null) {
-                fc = fileCollection;
-
-            } else if (artifactCollection != null) {
-                fc = artifactCollection.getArtifactFiles();
-            } else {
-                // create a file collection with the files and the dependencies.
-                ConfigurableFileCollection fc2 =
-                        project.files(
-                                (Callable<Object>)
-                                        () -> {
-                                            if (jarFiles != null && folders != null) {
-                                                return ImmutableList.of(
-                                                        jarFiles.get(), folders.get());
-                                            }
-                                            if (jarFiles != null) {
-                                                return jarFiles.get();
-                                            }
-
-                                            if (folders != null) {
-                                                return folders.get();
-                                            }
-
-                                            return ImmutableList.of();
-                                        });
-
-                if (dependencies != null) {
-                    fc2.builtBy(dependencies.toArray());
-                }
-
-                fc = fc2;
-            }
+            checkNotNull(fileCollection);
 
             return new OriginalStream(
-                    name, ImmutableSet.copyOf(contentTypes), scope, artifactCollection, fc);
+                    name,
+                    ImmutableSet.copyOf(contentTypes),
+                    scope,
+                    artifactCollection,
+                    fileCollection);
         }
 
         public Builder addContentTypes(@NonNull Set<ContentType> types) {
@@ -151,86 +113,16 @@ public class OriginalStream extends TransformStream {
             return this;
         }
 
-        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
-        @Deprecated
-        public Builder setJar(@NonNull final File jarFile) {
-            Preconditions.checkState(
-                    fileCollection == null && artifactCollection == null,
-                    "Cannot set file collection, artifact collection and jars/folders at the same time");
-            this.jarFiles = () -> ImmutableList.of(jarFile);
-            return this;
-        }
-
-        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
-        @Deprecated
-        public Builder setJars(@NonNull Supplier<Collection<File>> jarSupplier) {
-            Preconditions.checkState(
-                    fileCollection == null && artifactCollection == null,
-                    "Cannot set file collection, artifact collection and jars/folders at the same time");
-            this.jarFiles = jarSupplier;
-            return this;
-        }
-
-        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
-        @Deprecated
-        public Builder setFolder(@NonNull final File folder) {
-            Preconditions.checkState(
-                    fileCollection == null && artifactCollection == null,
-                    "Cannot set file collection, artifact collection and jars/folders at the same time");
-            this.folders = () -> ImmutableList.of(folder);
-            return this;
-        }
-
-        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
-        @Deprecated
-        public Builder setFolders(@NonNull Supplier<Collection<File>> folderSupplier) {
-            Preconditions.checkState(
-                    fileCollection == null && artifactCollection == null,
-                    "Cannot set file collection, artifact collection and jars/folders at the same time");
-            this.folders = folderSupplier;
-            return this;
-        }
-
-        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
-        @Deprecated
-        public Builder setDependencies(@NonNull List<? extends Object> dependencies) {
-            Preconditions.checkState(
-                    fileCollection == null && artifactCollection == null,
-                    "Cannot set dependency when file collection or artifact collection is used");
-            this.dependencies = ImmutableList.copyOf(dependencies);
-            return this;
-        }
-
-        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
-        @Deprecated
-        public Builder setDependency(@NonNull Object dependency) {
-            Preconditions.checkState(
-                    fileCollection == null && artifactCollection == null,
-                    "Cannot set dependency when file collection or artifact collection is used");
-            this.dependencies = ImmutableList.of(dependency);
-            return this;
-        }
-
         public Builder setFileCollection(@NonNull FileCollection fileCollection) {
             Preconditions.checkState(
-                    jarFiles == null
-                            && folders == null
-                            && dependencies == null
-                            && artifactCollection == null,
-                    "Cannot set file collection, artifact collection and jars/folders at the same time");
+                    this.fileCollection == null, "FileCollection already set on OriginalStream");
             this.fileCollection = fileCollection;
             return this;
         }
 
         public Builder setArtifactCollection(@NonNull ArtifactCollection artifactCollection) {
-            Preconditions.checkState(
-                    jarFiles == null
-                            && folders == null
-                            && dependencies == null
-                            && fileCollection == null,
-                    "Cannot set file collection, artifact collection and jars/folders at the same time");
             this.artifactCollection = artifactCollection;
-            return this;
+            return setFileCollection(artifactCollection.getArtifactFiles());
         }
     }
 
