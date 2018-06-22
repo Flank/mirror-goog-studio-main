@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 
 /**
  * Translates a {@link com.google.wireless.android.sdk.stats.GradleBuildProfileSpan} into a {link
- * BenchmarkLogger}
+ * Metric} map.
  */
 public class ProfilerToBenchmarkAdapter {
 
@@ -49,17 +49,23 @@ public class ProfilerToBenchmarkAdapter {
     @SuppressWarnings("MethodMayBeStatic")
     public void adapt(GradleBuildProfile profile) {
 
+        final long utcMs = Instant.now().toEpochMilli();
+
         consolidate(profile, isTransform.negate(), (it) -> it.getTask().getType())
                 .forEach(
-                        (type, timings) ->
-                                addMetric(GradleTaskExecutionType.forNumber(type).name(), timings));
+                        (type, timing) ->
+                                addMetricSample(
+                                        GradleTaskExecutionType.forNumber(type).name(),
+                                        utcMs,
+                                        timing));
 
         consolidate(profile, isTransform, (it) -> it.getTransform().getType())
                 .forEach(
-                        (type, timings) ->
-                                addMetric(
+                        (type, timing) ->
+                                addMetricSample(
                                         GradleTransformExecutionType.forNumber(type).name(),
-                                        timings));
+                                        utcMs,
+                                        timing));
     }
 
     public void commit() {
@@ -67,14 +73,14 @@ public class ProfilerToBenchmarkAdapter {
     }
 
     /**
-     * Add a metric
+     * Add a metric sample
      *
-     * @param metricName
-     * @param timing
+     * @param metricName the metric name
+     * @param utcMs the universal time
+     * @param timing the duration of the metric for this metric sample
      */
-    private void addMetric(String metricName, long timing) {
+    private void addMetricSample(String metricName, long utcMs, long timing) {
         Metric metric = metrics.computeIfAbsent(metricName, Metric::new);
-        long utcMs = Instant.now().toEpochMilli();
         metric.addSamples(benchmark, new Metric.MetricSample(utcMs, timing));
         LOGGER.info(metricName + " : " + timing);
     }
