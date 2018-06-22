@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.ANDROID_NEW_ID_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
 import static com.android.SdkConstants.ANDROID_PREFIX;
+import static com.android.SdkConstants.ATTR_FORMAT;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_INDEX;
 import static com.android.SdkConstants.ATTR_NAME;
@@ -30,12 +30,15 @@ import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.TAG_ENUM;
+import static com.android.SdkConstants.TAG_FLAG;
 import static com.android.SdkConstants.TOOLS_URI;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValueImpl;
 import com.android.ide.common.rendering.api.AttrResourceValueImpl;
+import com.android.ide.common.rendering.api.AttributeFormat;
 import com.android.ide.common.rendering.api.DeclareStyleableResourceValueImpl;
 import com.android.ide.common.rendering.api.DensityBasedResourceValueImpl;
 import com.android.ide.common.rendering.api.PluralsResourceValueImpl;
@@ -61,7 +64,8 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.nio.file.Paths;
-import org.jetbrains.annotations.NotNull;
+import java.util.EnumSet;
+import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -72,11 +76,16 @@ import org.w3c.dom.NodeList;
 /**
  * A resource.
  *
- * <p>This includes the name, type, source file as a {@link ResourceFile} and an optional {@link
- * Node} in case of a resource coming from a value file.
+ * <p>Includes the name, type, source file as a {@link ResourceFile} and an optional {@link Node}
+ * in case of a resource coming from a value file.
  */
 public class ResourceMergerItem extends DataItem<ResourceFile>
         implements Comparable<ResourceMergerItem>, ResourceItem {
+    /** The name of the synthetic XML attribute used for storing ATTR description. */
+    public static final String ATTR_DESCRIPTION = "_description";
+    /** The name of the synthetic XML attribute used for storing ATTR group name. */
+    public static final String ATTR_GROUP_NAME = "_groupName";
+
     @NonNull private final ResourceType mType;
 
     /**
@@ -210,8 +219,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
         setTouched();
     }
 
-    @NotNull
     @Override
+    @NonNull
     public FolderConfiguration getConfiguration() {
         ResourceFile resourceFile = getSourceFile();
         if (resourceFile == null) {
@@ -230,8 +239,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
      * @return the key for this resource.
      * @throws IllegalStateException if the resource is not added to a ResourceFile
      */
-    @NotNull
     @Override
+    @NonNull
     public String getKey() {
         if (getSourceFile() == null) {
             throw new IllegalStateException(
@@ -546,8 +555,10 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
     @Nullable
     private static String getAttributeValueNS(
-            NamedNodeMap attributes, String namespaceURI, String attributeName) {
-        Attr attribute = (Attr) attributes.getNamedItemNS(namespaceURI, attributeName);
+            @NonNull NamedNodeMap attributes,
+            @Nullable String namespaceUri,
+            @NonNull String attributeName) {
+        Attr attribute = (Attr) attributes.getNamedItemNS(namespaceUri, attributeName);
         if (attribute != null) {
             return attribute.getValue();
         }
@@ -589,29 +600,69 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     @NonNull
     private static AttrResourceValueImpl parseAttrValue(
             @NonNull Node valueNode, @NonNull AttrResourceValueImpl attrValue) {
+        NamedNodeMap attributes = valueNode.getAttributes();
+        // FrameworkResourceRepository stores "attr" description in the synthetic "_description"
+        // attribute. For other repositories we need to get it from the preceding comment.
+        String description = getDescription(valueNode);
+        attrValue.setDescription(description);
+
+        // "attr" resource grouping is available only for framework resources, which store group
+        // name as the value of the synthetic "_groupName" attribute.
+        String groupName = getAttributeValue(attributes, ATTR_GROUP_NAME);
+        if (groupName != null) {
+            attrValue.setGroupName(groupName);
+        }
+
+        Set<AttributeFormat> formats = EnumSet.noneOf(AttributeFormat.class);
+        String formatString = getAttributeValue(attributes, ATTR_FORMAT);
+        if (formatString != null) {
+            formats.addAll(AttributeFormat.parse(formatString));
+        }
+
         NodeList children = valueNode.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
 
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                NamedNodeMap attributes = child.getAttributes();
-                String name = getAttributeValue(attributes, ATTR_NAME);
+                String tagName = ((Element)child).getTagName();
+                if (TAG_ENUM.equals(tagName)) {
+                    formats.add(AttributeFormat.ENUM);
+                } else if (TAG_FLAG.equals(tagName)) {
+                    formats.add(AttributeFormat.FLAGS);
+                }
+
+                NamedNodeMap childAttributes = child.getAttributes();
+                String name = getAttributeValue(childAttributes, ATTR_NAME);
                 if (name != null) {
-                    String value = getAttributeValue(attributes, ATTR_VALUE);
+                    description = getDescription(child);
+                    Integer numericValue = null;
+                    String value = getAttributeValue(childAttributes, ATTR_VALUE);
                     if (value != null) {
                         try {
                             // Integer.decode/parseInt can't deal with hex value > 0x7FFFFFFF so we
                             // use Long.decode instead.
-                            attrValue.addValue(name, Long.decode(value).intValue());
-                        } catch (NumberFormatException e) {
-                            // pass, we'll just ignore this value
+                            numericValue = Long.decode(value).intValue();
+                        } catch (NumberFormatException ignored) {
                         }
                     }
+                    attrValue.addValue(name, numericValue, description);
                 }
             }
         }
 
+        attrValue.setFormats(formats);
+
         return attrValue;
+    }
+
+    private static String getDescription(@NonNull Node node) {
+        // FrameworkResourceRepository stores description in the synthetic "description"
+        // attribute. For other repositories we need to get it from the preceding comment.
+        String description = getAttributeValue(node.getAttributes(), ATTR_DESCRIPTION);
+        if (description == null) {
+            description = XmlUtils.getPreviousCommentText(node);
+        }
+        return description;
     }
 
     private ArrayResourceValueImpl parseArrayValue(ArrayResourceValueImpl arrayValue) {

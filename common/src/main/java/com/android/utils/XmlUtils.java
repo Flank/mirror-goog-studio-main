@@ -62,11 +62,13 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -1068,12 +1070,6 @@ public class XmlUtils {
         return null;
     }
 
-    @Deprecated
-    @Nullable
-    public static Element getFirstSubTagTagByName(@Nullable Node parent, @NonNull String name) {
-        return getFirstSubTagByName(parent, name);
-    }
-
     /** Returns the next sibling element from the given node that matches the given name */
     @Nullable
     public static Element getFirstSubTagByName(@Nullable Node parent, @NonNull String name) {
@@ -1146,7 +1142,41 @@ public class XmlUtils {
     }
 
     /**
-     * Returns the <b>number</b> of children sub tags of the given node
+     * Returns the comment preceding the given element with no other elements in between, or null
+     * if the element is not preceded by a comment.
+     */
+    @Nullable
+    public static Comment getPreviousComment(@NonNull Node element) {
+        Node node = element;
+      do {
+            node = node.getPreviousSibling();
+            if (node instanceof Comment) {
+                return (Comment)node;
+            }
+        }
+        while (node instanceof Text && CharMatcher.whitespace().matchesAllOf(node.getNodeValue()));
+        return null;
+    }
+
+    /**
+     * Returns the text of the comment preceding the given element with no other elements in
+     * between, or null if the element is not preceded by a comment or if the comment is empty
+     * or consists of only whitespace characters.
+     */
+    @Nullable
+    public static String getPreviousCommentText(@NonNull Node element) {
+      Comment comment = getPreviousComment(element);
+      if (comment != null) {
+          String text = comment.getNodeValue();
+        if (!CharMatcher.whitespace().matchesAllOf(text)) {
+              return text.trim();
+          }
+      }
+      return null;
+    }
+
+    /**
+     * Returns the number of children sub tags of the given node.
      *
      * @param parent the parent node
      * @return the count of element children

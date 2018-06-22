@@ -18,17 +18,24 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A resource value representing an attr resource.
- *
- * <p>{@link #getValue()} will return null, instead use {@link #getAttributeValues()} to get the
- * enum/flag value associated with an attribute defined in the declare-styleable.
  */
 public class AttrResourceValueImpl extends ResourceValueImpl implements AttrResourceValue {
+    /** The keys are enum or flag names, the values are corresponding numeric values. */
     @Nullable private Map<String, Integer> mValueMap;
+    /** The keys are enum or flag names, the values are the value descriptions. */
+    @Nullable private Map<String, String> mValueDescriptionMap;
+    @Nullable private String mDescription;
+    @Nullable private String mGroupName;
+    @NonNull private Set<AttributeFormat> mFormats = EnumSet.noneOf(AttributeFormat.class);
 
     public AttrResourceValueImpl(
             @NonNull ResourceReference reference, @Nullable String libraryName) {
@@ -43,22 +50,83 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
         super(namespace, type, name, null, libraryName);
     }
 
-    /**
-     * Return the enum/flag integer values.
-     *
-     * @return the map of (name, integer) values. Can be null.
-     */
     @Override
-    @Nullable
+    @NonNull
     public Map<String, Integer> getAttributeValues() {
         return mValueMap;
     }
 
-    public void addValue(@NonNull String name, @NonNull Integer value) {
+    @Override
+    @Nullable
+    public String getValueDescription(@NonNull String valueName) {
+        return mValueDescriptionMap == null ? null : mValueDescriptionMap.get(valueName);
+    }
+
+    @Override
+    @Nullable
+    public String getDescription() {
+        return mDescription;
+    }
+
+    @Override
+    @Nullable
+    public String getGroupName() {
+        return mGroupName;
+    }
+
+    @Override
+    @NonNull
+    public Set<AttributeFormat> getFormats() {
+        return mFormats;
+    }
+
+    /**
+     * Adds a possible value of the flag or enum attribute.
+     *
+     * @param valueName the name of the value
+     * @param numericValue the corresponding numeric value
+     * @param valueName the description of the value
+     */
+    public void addValue(@NonNull String valueName, @Nullable Integer numericValue, @Nullable String description) {
         if (mValueMap == null) {
-            mValueMap = new HashMap<>();
+            mValueMap = new LinkedHashMap<>();
         }
 
-        mValueMap.put(name, value);
+        mValueMap.put(valueName, numericValue);
+
+        if (description != null) {
+            if (mValueDescriptionMap == null) {
+                mValueDescriptionMap = new HashMap<>();
+            }
+
+            mValueDescriptionMap.put(valueName, description);
+        }
+    }
+
+    /**
+     * Sets the description of the attr resource.
+     *
+     * @param description the description to set
+     */
+    public void setDescription(@Nullable String description) {
+        mDescription = description;
+    }
+
+    /**
+     * Sets the name of group the attr resource belongs to.
+     *
+     * @param groupName the name of the group to set
+     */
+    public void setGroupName(@Nullable String groupName) {
+        mGroupName = groupName;
+    }
+
+    /**
+     * Sets the formats allowed for the attribute.
+     *
+     * @param formats the formats to set
+     */
+    public void setFormats(@NonNull Collection<AttributeFormat> formats) {
+        this.mFormats = EnumSet.copyOf(formats);
     }
 }

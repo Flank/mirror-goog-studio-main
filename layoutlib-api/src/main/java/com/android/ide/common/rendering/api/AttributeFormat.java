@@ -18,6 +18,7 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import com.google.common.base.Splitter;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
@@ -34,6 +35,8 @@ public enum AttributeFormat {
     INTEGER("integer", EnumSet.of(ResourceType.INTEGER)),
     REFERENCE("reference", ResourceType.REFERENCEABLE_TYPES),
     STRING("string", EnumSet.of(ResourceType.STRING));
+
+    private static final Splitter PIPE_SPLITTER = Splitter.on('|').trimResults();
 
     private final String name;
 
@@ -91,5 +94,18 @@ public enum AttributeFormat {
                 return STRING;
         }
         return null;
+    }
+
+    /** Parses a pipe-separated format string to a set of formats. */
+    @NonNull
+    public static Set<AttributeFormat> parse(@NonNull String formatString) {
+        Set<AttributeFormat> result = EnumSet.noneOf(AttributeFormat.class);
+        for (String formatName : PIPE_SPLITTER.split(formatString)) {
+            AttributeFormat format = fromXmlName(formatName);
+            if (format != null) {
+                result.add(format);
+            }
+        }
+        return result;
     }
 }

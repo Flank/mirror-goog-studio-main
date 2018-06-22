@@ -179,7 +179,7 @@ public final class ValueResourceParser extends DefaultHandler {
                         try {
                             // Integer.decode/parseInt can't deal with hex value > 0x7FFFFFFF so we
                             // use Long.decode instead.
-                            mCurrentAttr.addValue(name, (int)(long)Long.decode(value));
+                            mCurrentAttr.addValue(name, Long.decode(value).intValue(), null);
                         } catch (NumberFormatException e) {
                             // pass, we'll just ignore this value
                         }
@@ -199,7 +199,7 @@ public final class ValueResourceParser extends DefaultHandler {
                 try {
                     // Integer.decode/parseInt can't deal with hex value > 0x7FFFFFFF so we
                     // use Long.decode instead.
-                    mCurrentAttr.addValue(name, (int)(long)Long.decode(value));
+                    mCurrentAttr.addValue(name, Long.decode(value).intValue(), null);
                 } catch (NumberFormatException e) {
                     // pass, we'll just ignore this value
                 }
