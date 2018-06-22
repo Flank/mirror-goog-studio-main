@@ -69,12 +69,15 @@ open class BuildArtifactReportTask : DefaultTask() {
     }
 
     class SourceSetReportConfigAction(
-            val globalScope : GlobalScope,
-            val sourceSet : DefaultAndroidSourceSet) :
-            TaskConfigAction<BuildArtifactReportTask> {
-        override fun getName() = "reportSourceSetTransform" + sourceSet.name.capitalize()
+        val globalScope: GlobalScope,
+        val sourceSet: DefaultAndroidSourceSet
+    ) :
+        TaskConfigAction<BuildArtifactReportTask>() {
 
-        override fun getType() = BuildArtifactReportTask::class.java
+        override val name: String
+            get() = "reportSourceSetTransform" + sourceSet.name.capitalize()
+        override val type: Class<BuildArtifactReportTask>
+            get() = BuildArtifactReportTask::class.java
 
         override fun execute(task: BuildArtifactReportTask) {
             task.reportSupplier = sourceSet::buildArtifactsReport
@@ -85,11 +88,13 @@ open class BuildArtifactReportTask : DefaultTask() {
         }
     }
 
-    class BuildArtifactReportConfigAction(val scope : VariantScope) :
-            TaskConfigAction<BuildArtifactReportTask> {
-        override fun getName() = scope.getTaskName("reportBuildArtifacts")
+    class BuildArtifactReportConfigAction(val scope: VariantScope) :
+        TaskConfigAction<BuildArtifactReportTask>() {
 
-        override fun getType() = BuildArtifactReportTask::class.java
+        override val name: String
+            get() = scope.getTaskName("reportBuildArtifacts")
+        override val type: Class<BuildArtifactReportTask>
+            get() = BuildArtifactReportTask::class.java
 
         override fun execute(task: BuildArtifactReportTask) {
             val outputFileName =

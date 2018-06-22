@@ -34,11 +34,12 @@ import java.io.File
 @CacheableTask
 open class CompileRClassTask : JavaCompile() {
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<CompileRClassTask> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<CompileRClassTask>() {
 
-        override fun getName() = scope.getTaskName("compile", "FinalRClass")
-
-        override fun getType() = CompileRClassTask::class.java
+        override val name: String
+            get() = scope.getTaskName("compile", "FinalRClass")
+        override val type: Class<CompileRClassTask>
+            get() = CompileRClassTask::class.java
 
         override fun execute(task: CompileRClassTask) {
             val artifacts = scope.artifacts

@@ -362,7 +362,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         this.stlSharedObjectFiles = stlSharedObjectFiles;
     }
 
-    public static class ConfigAction implements TaskConfigAction<ExternalNativeBuildTask> {
+    public static class ConfigAction extends TaskConfigAction<ExternalNativeBuildTask> {
         @Nullable
         private final String buildTargetAbi;
         @NonNull

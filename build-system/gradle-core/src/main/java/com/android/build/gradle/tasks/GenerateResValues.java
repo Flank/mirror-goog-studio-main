@@ -100,7 +100,7 @@ public class GenerateResValues extends AndroidBuilderTask {
     }
 
 
-    public static class ConfigAction implements TaskConfigAction<GenerateResValues> {
+    public static class ConfigAction extends TaskConfigAction<GenerateResValues> {
 
         @NonNull
         private final VariantScope scope;

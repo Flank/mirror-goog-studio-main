@@ -108,7 +108,7 @@ public class SourceSetsTask extends AbstractReportTask {
     }
 
 
-    public static class ConfigAction implements TaskConfigAction<SourceSetsTask> {
+    public static class ConfigAction extends TaskConfigAction<SourceSetsTask> {
 
         private final AndroidConfig extension;
 

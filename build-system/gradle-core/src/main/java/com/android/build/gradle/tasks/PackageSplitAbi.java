@@ -169,7 +169,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     // ----- ConfigAction -----
 
-    public static class ConfigAction implements TaskConfigAction<PackageSplitAbi> {
+    public static class ConfigAction extends TaskConfigAction<PackageSplitAbi> {
 
         private VariantScope scope;
 

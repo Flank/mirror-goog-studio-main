@@ -124,13 +124,15 @@ open class ValidateSigningTask : AndroidVariantTask() {
     fun forceRerun() = signingConfig.storeFile?.isFile != true
 
     class ConfigAction(
-            private val variantScope: VariantScope,
-            private val defaultDebugKeystoreLocation: File) :
-            TaskConfigAction<ValidateSigningTask> {
+        private val variantScope: VariantScope,
+        private val defaultDebugKeystoreLocation: File
+    ) :
+        TaskConfigAction<ValidateSigningTask>() {
 
-        override fun getName() = variantScope.getTaskName("validateSigning")
-
-        override fun getType() = ValidateSigningTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("validateSigning")
+        override val type: Class<ValidateSigningTask>
+            get() = ValidateSigningTask::class.java
 
         override fun execute(task: ValidateSigningTask) {
             task.variantName = variantScope.fullVariantName

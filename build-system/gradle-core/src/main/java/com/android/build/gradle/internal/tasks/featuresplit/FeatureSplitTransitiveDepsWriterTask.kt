@@ -26,9 +26,6 @@ import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
 import com.google.common.io.Files
-import java.io.File
-import java.io.IOException
-import java.util.stream.Collectors
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -38,6 +35,9 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
+import java.io.IOException
+import java.util.stream.Collectors
 
 /** Task to write the list of transitive dependencies.  */
 @CacheableTask
@@ -69,11 +69,13 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
                 .write(Joiner.on(System.lineSeparator()).join(content))
     }
 
-    class ConfigAction(private val variantScope: VariantScope)
-        : TaskConfigAction<FeatureSplitTransitiveDepsWriterTask> {
+    class ConfigAction(private val variantScope: VariantScope) :
+        TaskConfigAction<FeatureSplitTransitiveDepsWriterTask>() {
 
-        override fun getName() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")
-        override fun getType() = FeatureSplitTransitiveDepsWriterTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")
+        override val type: Class<FeatureSplitTransitiveDepsWriterTask>
+            get() = FeatureSplitTransitiveDepsWriterTask::class.java
 
         override fun execute(task: FeatureSplitTransitiveDepsWriterTask) {
             task.variantName = variantScope.fullVariantName

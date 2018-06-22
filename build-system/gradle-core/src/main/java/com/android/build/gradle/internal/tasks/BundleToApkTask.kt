@@ -144,10 +144,12 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleToApkTask> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleToApkTask>() {
 
-        override fun getName() = scope.getTaskName("makeApkFromBundleFor")
-        override fun getType() = BundleToApkTask::class.java
+        override val name: String
+            get() = scope.getTaskName("makeApkFromBundleFor")
+        override val type: Class<BundleToApkTask>
+            get() = BundleToApkTask::class.java
 
         override fun execute(task: BundleToApkTask) {
             task.variantName = scope.fullVariantName

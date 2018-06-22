@@ -71,7 +71,7 @@ public class CheckManifest extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<CheckManifest> {
+    public static class ConfigAction extends TaskConfigAction<CheckManifest> {
 
         private final VariantScope scope;
         private final boolean isManifestOptional;

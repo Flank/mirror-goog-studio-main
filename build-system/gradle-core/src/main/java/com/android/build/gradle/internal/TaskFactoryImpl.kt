@@ -46,8 +46,11 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer): TaskFactory {
     }
 
     override fun <T : Task> create(configAction: TaskConfigAction<T>): T {
-        return taskContainer
-                .create(configAction.name, configAction.type, configAction)
+        val task = taskContainer
+            .create(configAction.name, configAction.type)
+        configAction.preConfigure(task, task.name)
+        configAction.execute(task)
+        return task
     }
 
     override fun <T : Task> create(

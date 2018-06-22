@@ -31,15 +31,15 @@ import com.android.resources.Density
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
-import java.io.File
-import java.io.IOException
-import java.util.function.Supplier
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
+import java.io.File
+import java.io.IOException
+import java.util.function.Supplier
 
 /**
  * Task to generate a manifest snippet that just contains a compatible-screens node with the given
@@ -140,15 +140,12 @@ open class CompatibleScreensManifest : AndroidVariantTask() {
     }
 
     class ConfigAction(private val scope: VariantScope, private val screenSizes: Set<String>) :
-            TaskConfigAction<CompatibleScreensManifest> {
+        TaskConfigAction<CompatibleScreensManifest>() {
 
-        override fun getName(): String {
-            return scope.getTaskName("create", "CompatibleScreenManifests")
-        }
-
-        override fun getType(): Class<CompatibleScreensManifest> {
-            return CompatibleScreensManifest::class.java
-        }
+        override val name: String
+            get() = scope.getTaskName("create", "CompatibleScreenManifests")
+        override val type: Class<CompatibleScreensManifest>
+            get() = CompatibleScreensManifest::class.java
 
         override fun execute(csmTask: CompatibleScreensManifest) {
             csmTask.outputScope = scope.outputScope

@@ -487,7 +487,7 @@ public class MergeManifests extends ManifestProcessorTask {
         return apkList;
     }
 
-    public static class ConfigAction implements TaskConfigAction<MergeManifests> {
+    public static class ConfigAction extends TaskConfigAction<MergeManifests> {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;

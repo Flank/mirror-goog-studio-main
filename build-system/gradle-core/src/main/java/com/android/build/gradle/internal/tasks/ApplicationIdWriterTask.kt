@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import org.apache.commons.io.FileUtils
-import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -79,15 +78,12 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     }
 
     class ConfigAction(private val variantScope: VariantScope) :
-        TaskConfigAction<ApplicationIdWriterTask> {
+        TaskConfigAction<ApplicationIdWriterTask>() {
 
-        override fun getName(): String {
-            return variantScope.getTaskName("write", "ApplicationId")
-        }
-
-        override fun getType(): Class<ApplicationIdWriterTask> {
-            return ApplicationIdWriterTask::class.java
-        }
+        override val name: String
+            get() = variantScope.getTaskName("write", "ApplicationId")
+        override val type: Class<ApplicationIdWriterTask>
+            get() = ApplicationIdWriterTask::class.java
 
         override fun execute(task: ApplicationIdWriterTask) {
             task.variantName = variantScope.fullVariantName

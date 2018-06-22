@@ -188,7 +188,7 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
     // ----- Config Action -----
 
-    public static final class ConfigAction implements TaskConfigAction<GenerateBuildConfig> {
+    public static final class ConfigAction extends TaskConfigAction<GenerateBuildConfig> {
 
         @NonNull
         private final VariantScope scope;

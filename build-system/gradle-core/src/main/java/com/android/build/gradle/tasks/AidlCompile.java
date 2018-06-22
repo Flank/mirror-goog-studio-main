@@ -341,7 +341,7 @@ public class AidlCompile extends IncrementalTask {
         return importDirs;
     }
 
-    public static class ConfigAction implements TaskConfigAction<AidlCompile> {
+    public static class ConfigAction extends TaskConfigAction<AidlCompile> {
 
         @NonNull
         VariantScope scope;

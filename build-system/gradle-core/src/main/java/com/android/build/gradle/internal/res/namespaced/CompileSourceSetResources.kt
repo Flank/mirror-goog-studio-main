@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
@@ -165,13 +164,14 @@ open class CompileSourceSetResources
     private fun willCompile(file: File) = !file.name.startsWith(".") && !file.isDirectory
 
     class ConfigAction(
-            private val name: String,
-            private val inputDirectories: BuildableArtifact,
-            private val variantScope: VariantScope)
+        override val name: String,
+        private val inputDirectories: BuildableArtifact,
+        private val variantScope: VariantScope
+    ) : TaskConfigAction<CompileSourceSetResources>() {
 
-            : TaskConfigAction<CompileSourceSetResources> {
-        override fun getName() = name
-        override fun getType() = CompileSourceSetResources::class.java
+        override val type: Class<CompileSourceSetResources>
+            get() = CompileSourceSetResources::class.java
+
         override fun execute(task: CompileSourceSetResources) {
             task.inputDirectories = inputDirectories
             task.outputDirectory = variantScope.artifacts

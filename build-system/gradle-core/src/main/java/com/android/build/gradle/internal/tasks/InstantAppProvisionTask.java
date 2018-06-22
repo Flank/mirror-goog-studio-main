@@ -77,7 +77,7 @@ public class InstantAppProvisionTask extends DefaultTask {
         return instantAppSdk.get();
     }
 
-    public static class ConfigAction implements TaskConfigAction<InstantAppProvisionTask> {
+    public static class ConfigAction extends TaskConfigAction<InstantAppProvisionTask> {
 
         @NonNull private final GlobalScope globalScope;
 

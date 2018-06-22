@@ -172,7 +172,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
         return APK_FILE_NAME + "-" + apkData.getBaseName();
     }
 
-    public static class ConfigAction implements TaskConfigAction<InstantRunResourcesApkBuilder> {
+    public static class ConfigAction extends TaskConfigAction<InstantRunResourcesApkBuilder> {
 
         protected final VariantScope variantScope;
         private final InternalArtifactType resInputType;

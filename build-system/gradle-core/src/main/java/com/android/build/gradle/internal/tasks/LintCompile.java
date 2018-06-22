@@ -49,7 +49,7 @@ public class LintCompile extends AndroidBuilderTask {
     }
 
 
-    public static class ConfigAction implements TaskConfigAction<LintCompile> {
+    public static class ConfigAction extends TaskConfigAction<LintCompile> {
 
         private final GlobalScope globalScope;
 

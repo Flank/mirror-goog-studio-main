@@ -134,7 +134,7 @@ public class ShaderCompile extends AndroidBuilderTask {
         this.scopedArgs = ImmutableMap.copyOf(scopedArgs);
     }
 
-    public static class ConfigAction implements TaskConfigAction<ShaderCompile> {
+    public static class ConfigAction extends TaskConfigAction<ShaderCompile> {
 
         @NonNull
         VariantScope scope;

@@ -256,7 +256,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
         this.variantData = variantData;
     }
 
-    public static class ConfigAction implements TaskConfigAction<InstallVariantTask> {
+    public static class ConfigAction extends TaskConfigAction<InstallVariantTask> {
 
         private final VariantScope scope;
 

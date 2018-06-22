@@ -99,7 +99,7 @@ public class PackageForUnitTest extends DefaultTask {
                 .getOutputFile();
     }
 
-    public static class ConfigAction implements TaskConfigAction<PackageForUnitTest> {
+    public static class ConfigAction extends TaskConfigAction<PackageForUnitTest> {
         @NonNull private final VariantScope scope;
 
         public ConfigAction(@NonNull VariantScope scope) {

@@ -102,12 +102,13 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
     }
 
     class ConfigAction(
-            private val scope: VariantScope
-    ) : TaskConfigAction<LinkLibraryAndroidResourcesTask> {
+        private val scope: VariantScope
+    ) : TaskConfigAction<LinkLibraryAndroidResourcesTask>() {
 
-        override fun getName() = scope.getTaskName("link", "Resources")
-
-        override fun getType() = LinkLibraryAndroidResourcesTask::class.java
+        override val name: String
+            get() = scope.getTaskName("link", "Resources")
+        override val type: Class<LinkLibraryAndroidResourcesTask>
+            get() = LinkLibraryAndroidResourcesTask::class.java
 
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName

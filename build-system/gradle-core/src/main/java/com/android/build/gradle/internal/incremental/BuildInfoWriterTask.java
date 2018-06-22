@@ -85,7 +85,7 @@ public class BuildInfoWriterTask extends AndroidVariantTask {
                         InstantRunAnalyticsHelper.generateAnalyticsProto(buildContext));
     }
 
-    public static class ConfigAction implements TaskConfigAction<BuildInfoWriterTask> {
+    public static class ConfigAction extends TaskConfigAction<BuildInfoWriterTask> {
 
         public static File getBuildInfoFile(@NonNull InstantRunVariantScope scope) {
             return new File(scope.getBuildInfoOutputFolder(), "build-info.xml");

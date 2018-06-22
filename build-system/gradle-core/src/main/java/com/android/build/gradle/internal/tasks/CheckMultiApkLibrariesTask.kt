@@ -87,12 +87,13 @@ open class CheckMultiApkLibrariesTask : AndroidVariantTask() {
         }
     }
 
-    class ConfigAction(val scope: VariantScope):
-            TaskConfigAction<CheckMultiApkLibrariesTask> {
+    class ConfigAction(val scope: VariantScope) :
+        TaskConfigAction<CheckMultiApkLibrariesTask>() {
 
-        override fun getName() = scope.getTaskName("check", "Libraries")
-
-        override fun getType() = CheckMultiApkLibrariesTask::class.java
+        override val name: String
+            get() = scope.getTaskName("check", "Libraries")
+        override val type: Class<CheckMultiApkLibrariesTask>
+            get() = CheckMultiApkLibrariesTask::class.java
 
         override fun execute(task: CheckMultiApkLibrariesTask) {
             task.variantName = scope.fullVariantName

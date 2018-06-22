@@ -81,7 +81,7 @@ public class PrepareLintJar extends DefaultTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<PrepareLintJar> {
+    public static class ConfigAction extends TaskConfigAction<PrepareLintJar> {
 
         @NonNull private final GlobalScope scope;
 

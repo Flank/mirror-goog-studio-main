@@ -110,7 +110,7 @@ public class TestServerTask extends AndroidVariantTask {
     }
 
     /** Configuration Action for a TestServerTask. */
-    public static class TestServerTaskConfigAction implements TaskConfigAction<TestServerTask> {
+    public static class TestServerTaskConfigAction extends TaskConfigAction<TestServerTask> {
 
         private final VariantScope scope;
 

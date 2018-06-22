@@ -319,7 +319,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
         abstract boolean isAuto(@NonNull SplitsDiscovery task);
     }
 
-    public static final class ConfigAction implements TaskConfigAction<SplitsDiscovery> {
+    public static final class ConfigAction extends TaskConfigAction<SplitsDiscovery> {
 
         private final VariantScope variantScope;
 

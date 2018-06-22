@@ -111,13 +111,15 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
                     "main_resources")
 
     class ConfigAction(
-            val variantScope: VariantScope,
-            private val taskInputType: ArtifactType) :
-            TaskConfigAction<InstantRunMainApkResourcesBuilder> {
+        val variantScope: VariantScope,
+        private val taskInputType: ArtifactType
+    ) :
+        TaskConfigAction<InstantRunMainApkResourcesBuilder>() {
 
-        override fun getName() = variantScope.getTaskName("instantRunMainApkResources")
-
-        override fun getType() = InstantRunMainApkResourcesBuilder::class.java
+        override val name: String
+            get() = variantScope.getTaskName("instantRunMainApkResources")
+        override val type: Class<InstantRunMainApkResourcesBuilder>
+            get() = InstantRunMainApkResourcesBuilder::class.java
 
         override fun execute(task: InstantRunMainApkResourcesBuilder) {
             task.variantName = variantScope.fullVariantName

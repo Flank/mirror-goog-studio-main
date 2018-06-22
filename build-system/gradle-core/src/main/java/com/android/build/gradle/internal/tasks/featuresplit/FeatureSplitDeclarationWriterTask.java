@@ -60,8 +60,7 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
         declaration.save(outputDirectory);
     }
 
-    public static class ConfigAction
-            implements TaskConfigAction<FeatureSplitDeclarationWriterTask> {
+    public static class ConfigAction extends TaskConfigAction<FeatureSplitDeclarationWriterTask> {
 
         @NonNull private final VariantScope variantScope;
 

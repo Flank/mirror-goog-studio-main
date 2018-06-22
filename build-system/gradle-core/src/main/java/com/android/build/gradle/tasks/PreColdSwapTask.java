@@ -74,7 +74,7 @@ public class PreColdSwapTask extends AndroidVariantTask {
                 .setEnabled(false);
     }
 
-    public static class ConfigAction implements TaskConfigAction<PreColdSwapTask> {
+    public static class ConfigAction extends TaskConfigAction<PreColdSwapTask> {
 
         @NonNull
         protected final TransformVariantScope transformVariantScope;

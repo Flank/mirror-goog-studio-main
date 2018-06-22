@@ -211,70 +211,67 @@ open class LinkAndroidResForBundleTask
     var minSdkVersion: Int = 1
         private set
 
-    class ConfigAction(private val variantScope: VariantScope)
-        : TaskConfigAction<LinkAndroidResForBundleTask> {
+    class ConfigAction(private val variantScope: VariantScope) :
+        TaskConfigAction<LinkAndroidResForBundleTask>() {
 
-        override fun getName(): String {
-            return variantScope.getTaskName("bundle", "Resources")
-        }
+        override val name: String
+            get() = variantScope.getTaskName("bundle", "Resources")
+        override val type: Class<LinkAndroidResForBundleTask>
+            get() = LinkAndroidResForBundleTask::class.java
 
-        override fun getType(): Class<LinkAndroidResForBundleTask> {
-            return LinkAndroidResForBundleTask::class.java
-        }
-
-        override fun execute(processResources: LinkAndroidResForBundleTask) {
+        override fun execute(task: LinkAndroidResForBundleTask) {
             val variantData = variantScope.variantData
 
             val projectOptions = variantScope.globalScope.projectOptions
 
             val config = variantData.variantConfiguration
 
-            processResources.setAndroidBuilder(variantScope.globalScope.androidBuilder)
-            processResources.variantName = config.fullName
-            processResources.bundledResFile = variantScope.artifacts
+            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
+            task.variantName = config.fullName
+            task.bundledResFile = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.LINKED_RES_FOR_BUNDLE,
-                    processResources,
+                    task,
                     "bundled-res.ap_")
 
-            processResources.incrementalFolder = variantScope.getIncrementalDir(name)
+            task.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            processResources.versionCodeSupplier = TaskInputHelper.memoize {
+            task.versionCodeSupplier = TaskInputHelper.memoize {
                 config.versionCode
             }
-            processResources.versionNameSupplier = TaskInputHelper.memoize {
+            task.versionNameSupplier = TaskInputHelper.memoize {
                 config.versionName
             }
 
-            processResources.mainSplit = variantData.outputScope.mainSplit
+            task.mainSplit = variantData.outputScope.mainSplit
 
-            processResources.manifestFiles = variantScope.artifacts
+            task.manifestFiles = variantScope.artifacts
                 .getFinalArtifactFiles(MERGED_MANIFESTS)
 
-            processResources.inputResourcesDir =
+            task.inputResourcesDir =
                     variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
-            processResources.featureResourcePackages = variantScope.getArtifactFileCollection(
+            task.featureResourcePackages = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG)
 
             if (variantScope.type.isFeatureSplit) {
                 // get the res offset supplier
-                processResources.resOffsetSupplier =
+                task.resOffsetSupplier =
                         FeatureSetMetadata.getInstance().getResOffsetSupplierForTask(
-                            variantScope, processResources)
+                            variantScope, task)
             }
 
-            processResources.debuggable = config.buildType.isDebuggable
-            processResources.aaptOptions = variantScope.globalScope.extension.aaptOptions
-            processResources.pseudoLocalesEnabled = config.buildType.isPseudoLocalesEnabled
+            task.debuggable = config.buildType.isDebuggable
+            task.aaptOptions = variantScope.globalScope.extension.aaptOptions
+            task.pseudoLocalesEnabled = config.buildType.isPseudoLocalesEnabled
 
-            processResources.buildTargetDensity =
+            task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            processResources.mergeBlameLogFolder = variantScope.resourceBlameLogDir
-            processResources.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
-            processResources.minSdkVersion = variantScope.minSdkVersion.apiLevel
+            task.mergeBlameLogFolder = variantScope.resourceBlameLogDir
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
-            processResources.resConfig =
+            task.resConfig =
                     variantScope.variantConfiguration.mergedFlavor.resourceConfigurations
         }
     }

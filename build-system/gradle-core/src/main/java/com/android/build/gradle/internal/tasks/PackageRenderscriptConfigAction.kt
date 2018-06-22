@@ -23,17 +23,19 @@ import org.gradle.api.tasks.Sync
 
 /** Configuration action for a package-renderscript task.  */
 class PackageRenderscriptConfigAction(private val variantScope: VariantScope) :
-    TaskConfigAction<Sync> {
+    TaskConfigAction<Sync>() {
 
-    override fun getName(): String = variantScope.getTaskName("package", "Renderscript")
-    override fun getType(): Class<Sync> = Sync::class.java
+    override val name: String
+        get() = variantScope.getTaskName("package", "Renderscript")
+    override val type: Class<Sync>
+        get() = Sync::class.java
 
-    override fun execute(packageRenderscript: Sync) {
+    override fun execute(task: Sync) {
         // package from 3 sources. the order is important to make sure the override works well.
-        packageRenderscript
+        task
             .from(variantScope.variantConfiguration.renderscriptSourceList)
             .include("**/*.rsh")
-        packageRenderscript.into(variantScope.artifacts.appendArtifact(
-            InternalArtifactType.RENDERSCRIPT_HEADERS, packageRenderscript, "out"))
+        task.into(variantScope.artifacts.appendArtifact(
+            InternalArtifactType.RENDERSCRIPT_HEADERS, task, "out"))
     }
 }

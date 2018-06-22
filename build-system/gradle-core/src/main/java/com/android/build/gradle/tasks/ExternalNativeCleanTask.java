@@ -137,7 +137,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<ExternalNativeCleanTask> {
+    public static class ConfigAction extends TaskConfigAction<ExternalNativeCleanTask> {
         @NonNull
         private final ExternalNativeJsonGenerator generator;
         @NonNull

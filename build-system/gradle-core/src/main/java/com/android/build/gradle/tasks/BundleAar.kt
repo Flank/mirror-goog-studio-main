@@ -42,49 +42,50 @@ open class BundleAar : Zip() {
     class ConfigAction(
         private val extension: AndroidConfig,
         private val variantScope: VariantScope
-    ) : TaskConfigAction<BundleAar> {
+    ) : TaskConfigAction<BundleAar>() {
 
-        override fun getName() = variantScope.getTaskName("bundle", "Aar")
+        override val name: String
+            get() = variantScope.getTaskName("bundle", "Aar")
+        override val type: Class<BundleAar>
+            get() = BundleAar::class.java
 
-        override fun getType() = BundleAar::class.java
-
-        override fun execute(bundle: BundleAar) {
+        override fun execute(task: BundleAar) {
             val libVariantData = variantScope.variantData as LibraryVariantData
 
             val artifacts = variantScope.artifacts
 
-            libVariantData.scope.taskContainer.bundleLibraryTask = bundle
+            libVariantData.scope.taskContainer.bundleLibraryTask = task
 
             // Sanity check, there should never be duplicates.
-            bundle.duplicatesStrategy = DuplicatesStrategy.FAIL
+            task.duplicatesStrategy = DuplicatesStrategy.FAIL
             // Make the AAR reproducible. Note that we package several zips inside the AAR, so all of
             // those need to be reproducible too before we can switch this on.
             // https://issuetracker.google.com/67597902
-            bundle.isReproducibleFileOrder = true
-            bundle.isPreserveFileTimestamps = false
+            task.isReproducibleFileOrder = true
+            task.isPreserveFileTimestamps = false
 
-            bundle.description = ("Assembles a bundle containing the library in "
+            task.description = ("Assembles a bundle containing the library in "
                     + variantScope.variantConfiguration.fullName
                     + ".")
 
-            bundle.destinationDir = variantScope.aarLocation
-            bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName }
-            bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
-            bundle.from(
+            task.destinationDir = variantScope.aarLocation
+            task.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName!! }
+            task.extension = BuilderConstants.EXT_LIB_ARCHIVE
+            task.from(
                 variantScope.artifacts.getArtifactFiles(
                     InternalArtifactType.AIDL_PARCELABLE
                 ),
                 prependToCopyPath(SdkConstants.FD_AIDL)
             )
-            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.CONSUMER_PROGUARD_FILE))
+            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.CONSUMER_PROGUARD_FILE))
             if (extension.dataBinding.isEnabled) {
-                bundle.from(
+                task.from(
                     variantScope.globalScope.project.provider {
                         variantScope.artifacts.getFinalArtifactFiles(
                             InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
-                bundle.from(
+                task.from(
                     variantScope.globalScope.project.provider {
                         variantScope.artifacts.getFinalArtifactFiles(
                             InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
@@ -95,42 +96,42 @@ open class BundleAar : Zip() {
                     )
                 )
             }
-            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_MANIFEST))
+            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522
             if (java.lang.Boolean.TRUE != variantScope.globalScope.extension.aaptOptions.namespaced) {
-                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
-                bundle.from(
+                task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
+                task.from(
                     artifacts.getFinalArtifactFiles(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
                 )
             }
-            bundle.from(
+            task.from(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.RENDERSCRIPT_HEADERS),
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
-            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
+            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
             if (artifacts.hasArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
-                bundle.from(artifacts.getFinalArtifactFiles(
+                task.from(artifacts.getFinalArtifactFiles(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
             if (artifacts.hasArtifact(InternalArtifactType.RES_STATIC_LIBRARY)) {
-                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY))
+                task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY))
             }
-            bundle.from(
+            task.from(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
-            bundle.from(variantScope.globalScope.artifacts
+            task.from(variantScope.globalScope.artifacts
                 .getFinalArtifactFiles(InternalArtifactType.LINT_JAR))
             if (artifacts.hasArtifact(InternalArtifactType.ANNOTATIONS_ZIP)) {
-                bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.ANNOTATIONS_ZIP))
+                task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.ANNOTATIONS_ZIP))
             }
-            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_MAIN_JAR))
-            bundle.from(
+            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_MAIN_JAR))
+            task.from(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_LIBS_DIRECTORY),
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
-            bundle.from(
+            task.from(
                 variantScope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
@@ -139,17 +140,16 @@ open class BundleAar : Zip() {
                 InternalArtifactType.AAR,
                 listOf(File(variantScope.aarLocation,
                     variantScope.outputScope.mainSplit.outputFileName)),
-                bundle)
+                task)
 
-            libVariantData.packageLibTask = bundle
+            libVariantData.packageLibTask = task
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->
-            copySpec.eachFile(
-                { fileCopyDetails: FileCopyDetails ->
-                    fileCopyDetails.relativePath =
-                            fileCopyDetails.relativePath.prepend(pathSegment)
-                })
+            copySpec.eachFile { fileCopyDetails: FileCopyDetails ->
+                fileCopyDetails.relativePath =
+                        fileCopyDetails.relativePath.prepend(pathSegment)
+            }
         }
     }
 }

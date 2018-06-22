@@ -175,7 +175,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
         return manifestFile;
     }
 
-    public static class ConfigAction implements TaskConfigAction<GenerateApkDataTask> {
+    public static class ConfigAction extends TaskConfigAction<GenerateApkDataTask> {
 
         @NonNull
         VariantScope scope;

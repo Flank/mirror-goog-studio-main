@@ -298,7 +298,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     // ----- ConfigAction -----
 
-    public static class ConfigAction implements TaskConfigAction<GenerateSplitAbiRes> {
+    public static class ConfigAction extends TaskConfigAction<GenerateSplitAbiRes> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final FeatureSetMetadata.SupplierProvider provider;

@@ -156,34 +156,32 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     class ConfigAction(
         private val scope: VariantScope
-    ) : TaskConfigAction<VerifyLibraryResourcesTask> {
+    ) : TaskConfigAction<VerifyLibraryResourcesTask>() {
 
-        /** Return the name of the task to be configured.  */
-        override fun getName(): String = scope.getTaskName("verify", "Resources")
-
-        /** Return the class type of the task to be configured.  */
-        override fun getType(): Class<VerifyLibraryResourcesTask> =
-                VerifyLibraryResourcesTask::class.java
+        override val name: String
+            get() = scope.getTaskName("verify", "Resources")
+        override val type: Class<VerifyLibraryResourcesTask>
+            get() = VerifyLibraryResourcesTask::class.java
 
         /** Configure the given newly-created task object.  */
-        override fun execute(verifyLibraryResources: VerifyLibraryResourcesTask) {
+        override fun execute(task: VerifyLibraryResourcesTask) {
             val variantData = scope.variantData
             val config = variantData.variantConfiguration
-            verifyLibraryResources.variantName = config.fullName
+            task.variantName = config.fullName
 
-            verifyLibraryResources.setAndroidBuilder(scope.globalScope.androidBuilder)
-            verifyLibraryResources.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
-            verifyLibraryResources.incrementalFolder = scope.getIncrementalDir(name)
+            task.setAndroidBuilder(scope.globalScope.androidBuilder)
+            task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
+            task.incrementalFolder = scope.getIncrementalDir(name)
 
-            verifyLibraryResources.inputDirectory =
+            task.inputDirectory =
                     scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
-            verifyLibraryResources.compiledDirectory = scope.compiledResourcesOutputDir
-            verifyLibraryResources.mergeBlameLogFolder = scope.resourceBlameLogDir
+            task.compiledDirectory = scope.compiledResourcesOutputDir
+            task.mergeBlameLogFolder = scope.resourceBlameLogDir
 
             val aaptFriendlyManifestsFilePresent = scope.artifacts
                     .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-            verifyLibraryResources.taskInputType = when {
+            task.taskInputType = when {
                 aaptFriendlyManifestsFilePresent ->
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
                 scope.instantRunBuildContext.isInInstantRunMode ->
@@ -191,8 +189,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 else ->
                     InternalArtifactType.MERGED_MANIFESTS
             }
-            verifyLibraryResources.manifestFiles = scope.artifacts
-                    .getFinalArtifactFiles(verifyLibraryResources.taskInputType)
+            task.manifestFiles = scope.artifacts
+                    .getFinalArtifactFiles(task.taskInputType)
         }
     }
 

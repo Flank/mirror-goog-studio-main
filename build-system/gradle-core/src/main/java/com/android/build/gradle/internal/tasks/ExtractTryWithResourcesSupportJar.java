@@ -54,8 +54,7 @@ public class ExtractTryWithResourcesSupportJar extends AndroidVariantTask {
         return outputLocation.getSingleFile();
     }
 
-    public static class ConfigAction
-            implements TaskConfigAction<ExtractTryWithResourcesSupportJar> {
+    public static class ConfigAction extends TaskConfigAction<ExtractTryWithResourcesSupportJar> {
 
         @NonNull private final ConfigurableFileCollection outputLocation;
         @NonNull private final String taskName;

@@ -109,7 +109,7 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<BuildInfoLoaderTask> {
+    public static class ConfigAction extends TaskConfigAction<BuildInfoLoaderTask> {
 
         private final String taskName;
 

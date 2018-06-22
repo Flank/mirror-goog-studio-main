@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.builder.internal.aapt.AaptOptions
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus
@@ -36,6 +35,7 @@ import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.CloseableBlockingResourceLinker
 import com.android.ide.common.build.ApkInfo
@@ -241,12 +241,13 @@ open class InstantRunSplitApkResourcesBuilder
             val outputDirectory: File): Serializable
     }
 
-    class ConfigAction(val variantScope: VariantScope) : TaskConfigAction<InstantRunSplitApkResourcesBuilder> {
-        override fun getName(): String =
-            variantScope.getTaskName("instantRunSplitApkResources")
+    class ConfigAction(val variantScope: VariantScope) :
+        TaskConfigAction<InstantRunSplitApkResourcesBuilder>() {
 
-        override fun getType(): Class<InstantRunSplitApkResourcesBuilder> =
-            InstantRunSplitApkResourcesBuilder::class.java
+        override val name: String
+            get() = variantScope.getTaskName("instantRunSplitApkResources")
+        override val type: Class<InstantRunSplitApkResourcesBuilder>
+            get() = InstantRunSplitApkResourcesBuilder::class.java
 
         override fun execute(task: InstantRunSplitApkResourcesBuilder) {
             val artifacts = variantScope.artifacts

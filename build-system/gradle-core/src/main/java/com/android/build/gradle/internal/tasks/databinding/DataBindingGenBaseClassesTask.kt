@@ -164,12 +164,13 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
         )
     }
 
-    class ConfigAction(val variantScope: VariantScope)
-        : TaskConfigAction<DataBindingGenBaseClassesTask> {
+    class ConfigAction(val variantScope: VariantScope) :
+        TaskConfigAction<DataBindingGenBaseClassesTask>() {
 
-        override fun getName(): String = variantScope.getTaskName("dataBindingGenBaseClasses")
-
-        override fun getType(): Class<DataBindingGenBaseClassesTask> = DataBindingGenBaseClassesTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("dataBindingGenBaseClasses")
+        override val type: Class<DataBindingGenBaseClassesTask>
+            get() = DataBindingGenBaseClassesTask::class.java
 
         override fun execute(task: DataBindingGenBaseClassesTask) {
             task.layoutInfoDirectory =

@@ -109,7 +109,7 @@ public class BundleInstantApp extends AndroidVariantTask {
     private FileCollection applicationId;
     private FileCollection apkDirectories;
 
-    public static class ConfigAction implements TaskConfigAction<BundleInstantApp> {
+    public static class ConfigAction extends TaskConfigAction<BundleInstantApp> {
 
         public ConfigAction(@NonNull VariantScope scope, @NonNull File bundleDirectory) {
             this.scope = scope;

@@ -488,7 +488,7 @@ public class TransformTask extends StreamBasedTask implements Context {
         return workerExecutor;
     }
 
-    public static class ConfigAction<T extends Transform> implements TaskConfigAction<TransformTask> {
+    public static class ConfigAction<T extends Transform> extends TaskConfigAction<TransformTask> {
 
         @NonNull
         private final String variantName;

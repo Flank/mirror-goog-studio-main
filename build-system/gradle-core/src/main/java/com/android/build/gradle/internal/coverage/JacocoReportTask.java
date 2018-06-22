@@ -196,7 +196,7 @@ public class JacocoReportTask extends DefaultTask {
                 });
     }
 
-    public static class ConfigAction implements TaskConfigAction<JacocoReportTask> {
+    public static class ConfigAction extends TaskConfigAction<JacocoReportTask> {
         @NonNull private VariantScope scope;
         @NonNull private final Configuration jacocoAntConfiguration;
 

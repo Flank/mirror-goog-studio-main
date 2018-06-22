@@ -67,7 +67,7 @@ public class CheckProguardFiles extends DefaultTask {
         return proguardFiles;
     }
 
-    public static class ConfigAction implements TaskConfigAction<CheckProguardFiles> {
+    public static class ConfigAction extends TaskConfigAction<CheckProguardFiles> {
         private final VariantScope scope;
 
         public ConfigAction(VariantScope scope) {

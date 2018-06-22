@@ -246,7 +246,7 @@ public class RenderscriptCompile extends NdkTask {
 
     // ----- ConfigAction -----
 
-    public static class ConfigAction implements TaskConfigAction<RenderscriptCompile> {
+    public static class ConfigAction extends TaskConfigAction<RenderscriptCompile> {
 
         @NonNull
         private final VariantScope scope;

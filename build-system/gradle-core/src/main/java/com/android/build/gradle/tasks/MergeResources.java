@@ -704,7 +704,7 @@ public class MergeResources extends IncrementalTask {
         return resourceSetList;
     }
 
-    public static class ConfigAction implements TaskConfigAction<MergeResources> {
+    public static class ConfigAction extends TaskConfigAction<MergeResources> {
         @NonNull
         private final VariantScope scope;
         @NonNull private final TaskManager.MergeType mergeType;

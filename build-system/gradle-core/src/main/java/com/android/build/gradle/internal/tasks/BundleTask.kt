@@ -225,10 +225,11 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         @get:Optional
         val enableLanguage: Boolean?) : Serializable
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
-
-        override fun getName() = scope.getTaskName("package", "Bundle")
-        override fun getType() = BundleTask::class.java
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask>() {
+        override val name: String
+            get() = scope.getTaskName("package", "Bundle")
+        override val type: Class<BundleTask>
+            get() = BundleTask::class.java
 
         override fun execute(task: BundleTask) {
             task.variantName = scope.fullVariantName

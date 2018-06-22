@@ -21,11 +21,11 @@ import static com.android.build.VariantOutput.OutputType.MAIN;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -272,7 +272,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
     }
 
     public abstract static class BaseConfigAction<T extends LintBaseTask>
-            implements TaskConfigAction<T> {
+            extends TaskConfigAction<T> {
 
         @NonNull private final GlobalScope globalScope;
 

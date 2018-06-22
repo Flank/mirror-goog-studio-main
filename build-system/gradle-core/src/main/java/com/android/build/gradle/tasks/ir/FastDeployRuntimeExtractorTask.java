@@ -97,7 +97,7 @@ public class FastDeployRuntimeExtractorTask extends AndroidVariantTask {
         return !name.startsWith("META-INF") && !name.endsWith("AppInfo.class");
     }
 
-    public static class ConfigAction implements TaskConfigAction<FastDeployRuntimeExtractorTask> {
+    public static class ConfigAction extends TaskConfigAction<FastDeployRuntimeExtractorTask> {
 
         @NonNull
         private final InstantRunVariantScope instantRunVariantScope;

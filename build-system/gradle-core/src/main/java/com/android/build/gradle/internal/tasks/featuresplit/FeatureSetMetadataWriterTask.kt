@@ -110,15 +110,12 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
     }
 
     class ConfigAction(private val variantScope: VariantScope) :
-        TaskConfigAction<FeatureSetMetadataWriterTask> {
+        TaskConfigAction<FeatureSetMetadataWriterTask>() {
 
-        override fun getName(): String {
-            return variantScope.getTaskName("generate", "FeatureMetadata")
-        }
-
-        override fun getType(): Class<FeatureSetMetadataWriterTask> {
-            return FeatureSetMetadataWriterTask::class.java
-        }
+        override val name: String
+            get() = variantScope.getTaskName("generate", "FeatureMetadata")
+        override val type: Class<FeatureSetMetadataWriterTask>
+            get() = FeatureSetMetadataWriterTask::class.java
 
         override fun execute(task: FeatureSetMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName

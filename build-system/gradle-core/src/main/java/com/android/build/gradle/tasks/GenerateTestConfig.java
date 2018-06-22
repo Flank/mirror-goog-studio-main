@@ -180,7 +180,7 @@ public class GenerateTestConfig extends DefaultTask {
         return packageForR.get();
     }
 
-    public static class ConfigAction implements TaskConfigAction<GenerateTestConfig> {
+    public static class ConfigAction extends TaskConfigAction<GenerateTestConfig> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;

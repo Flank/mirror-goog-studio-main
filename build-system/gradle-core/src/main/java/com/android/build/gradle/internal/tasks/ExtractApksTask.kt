@@ -108,10 +108,12 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<ExtractApksTask> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<ExtractApksTask>() {
 
-        override fun getName() = getTaskName(scope)
-        override fun getType() = ExtractApksTask::class.java
+        override val name: String
+            get() = getTaskName(scope)
+        override val type: Class<ExtractApksTask>
+            get() = ExtractApksTask::class.java
 
         override fun execute(task: ExtractApksTask) {
             task.variantName = scope.fullVariantName

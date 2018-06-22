@@ -218,7 +218,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
                 .collect(Collectors.toList());
     }
 
-    public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
+    public static class ConfigAction extends TaskConfigAction<JavaPreCompileTask> {
 
         private final VariantScope scope;
 

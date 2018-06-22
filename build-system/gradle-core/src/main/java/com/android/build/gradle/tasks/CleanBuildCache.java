@@ -44,7 +44,7 @@ public class CleanBuildCache extends DefaultTask {
     }
 
     @Immutable
-    public static final class ConfigAction implements TaskConfigAction<CleanBuildCache> {
+    public static final class ConfigAction extends TaskConfigAction<CleanBuildCache> {
 
         @NonNull private final GlobalScope globalScope;
 

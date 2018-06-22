@@ -89,11 +89,12 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
 
     class ConfigAction(
         private val variantScope: VariantScope
-    ) : TaskConfigAction<DataBindingExportFeatureInfoTask> {
-        override fun getName() =
-            variantScope.getTaskName("dataBindingExportFeatureInfo")
+    ) : TaskConfigAction<DataBindingExportFeatureInfoTask>() {
 
-        override fun getType() = DataBindingExportFeatureInfoTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("dataBindingExportFeatureInfo")
+        override val type: Class<DataBindingExportFeatureInfoTask>
+            get() = DataBindingExportFeatureInfoTask::class.java
 
         override fun execute(task: DataBindingExportFeatureInfoTask) {
             task.outFolder = variantScope.artifacts

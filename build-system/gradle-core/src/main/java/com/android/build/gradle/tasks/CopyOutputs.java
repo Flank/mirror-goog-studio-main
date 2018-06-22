@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -31,7 +30,6 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -110,7 +108,7 @@ public class CopyOutputs extends AndroidVariantTask {
                 .into(InternalArtifactType.APK);
     }
 
-    public static class ConfigAction implements TaskConfigAction<CopyOutputs> {
+    public static class ConfigAction extends TaskConfigAction<CopyOutputs> {
 
         private final VariantScope variantScope;
         private final File outputDirectory;

@@ -8,10 +8,8 @@ import com.android.builder.model.SourceProvider;
 import java.io.File;
 import org.gradle.api.tasks.Sync;
 
-/**
- * Configuration Action for a process*JavaRes tasks.
- */
-public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
+/** Configuration Action for a process*JavaRes tasks. */
+public class ProcessJavaResConfigAction extends TaskConfigAction<Sync> {
     private VariantScope scope;
     private final File destinationDir;
 

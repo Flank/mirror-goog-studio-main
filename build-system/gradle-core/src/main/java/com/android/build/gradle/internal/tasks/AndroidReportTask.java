@@ -164,7 +164,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<AndroidReportTask> {
+    public static class ConfigAction extends TaskConfigAction<AndroidReportTask> {
 
         public enum TaskKind { CONNECTED, DEVICE_PROVIDER }
 

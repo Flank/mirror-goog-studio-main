@@ -167,11 +167,13 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
 
     class ConfigAction(
-            private val variantScope: VariantScope
-    ) : TaskConfigAction<PerModuleBundleTask> {
-        override fun getName() = variantScope.getTaskName("build", "PreBundle")
+        private val variantScope: VariantScope
+    ) : TaskConfigAction<PerModuleBundleTask>() {
 
-        override fun getType() = PerModuleBundleTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("build", "PreBundle")
+        override val type: Class<PerModuleBundleTask>
+            get() = PerModuleBundleTask::class.java
 
         override fun execute(task: PerModuleBundleTask) {
             task.variantName = variantScope.fullVariantName

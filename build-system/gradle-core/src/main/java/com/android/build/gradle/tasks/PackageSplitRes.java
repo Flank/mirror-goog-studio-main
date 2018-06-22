@@ -120,7 +120,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
     // ----- ConfigAction -----
 
-    public static class ConfigAction implements TaskConfigAction<PackageSplitRes> {
+    public static class ConfigAction extends TaskConfigAction<PackageSplitRes> {
 
         private VariantScope scope;
 

@@ -114,7 +114,7 @@ public class UninstallTask extends AndroidBuilderTask {
         mTimeOutInMs = timeoutInMs;
     }
 
-    public static class ConfigAction implements TaskConfigAction<UninstallTask> {
+    public static class ConfigAction extends TaskConfigAction<UninstallTask> {
 
         private final VariantScope scope;
 

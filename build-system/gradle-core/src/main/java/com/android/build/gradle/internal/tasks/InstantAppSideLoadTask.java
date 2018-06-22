@@ -162,7 +162,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
         return bundleDir;
     }
 
-    public static class ConfigAction implements TaskConfigAction<InstantAppSideLoadTask> {
+    public static class ConfigAction extends TaskConfigAction<InstantAppSideLoadTask> {
 
         @NonNull private final VariantScope scope;
 

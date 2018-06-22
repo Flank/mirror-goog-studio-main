@@ -100,16 +100,13 @@ open class ProcessAndroidAppResourcesTask
         }
     }
 
-    class ConfigAction(private val scope: VariantScope)
-        : TaskConfigAction<ProcessAndroidAppResourcesTask> {
+    class ConfigAction(private val scope: VariantScope) :
+        TaskConfigAction<ProcessAndroidAppResourcesTask>() {
 
-        override fun getName(): String {
-            return scope.getTaskName("process", "Resources")
-        }
-
-        override fun getType(): Class<ProcessAndroidAppResourcesTask> {
-            return ProcessAndroidAppResourcesTask::class.java
-        }
+        override val name: String
+            get() = scope.getTaskName("process", "Resources")
+        override val type: Class<ProcessAndroidAppResourcesTask>
+            get() = ProcessAndroidAppResourcesTask::class.java
 
         override fun execute(task: ProcessAndroidAppResourcesTask) {
             task.variantName = scope.fullVariantName

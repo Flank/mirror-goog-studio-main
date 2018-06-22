@@ -64,7 +64,7 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<CheckTestedAppObfuscation> {
+    public static class ConfigAction extends TaskConfigAction<CheckTestedAppObfuscation> {
 
         private final VariantScope scope;
 

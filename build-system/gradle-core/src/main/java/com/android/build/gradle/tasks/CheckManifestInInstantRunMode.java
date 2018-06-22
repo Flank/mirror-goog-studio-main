@@ -198,7 +198,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<CheckManifestInInstantRunMode> {
+    public static class ConfigAction extends TaskConfigAction<CheckManifestInInstantRunMode> {
 
         @NonNull protected final VariantScope variantScope;
 

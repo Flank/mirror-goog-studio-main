@@ -28,7 +28,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Supplier
@@ -56,9 +55,13 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
     }
 
     class ConfigAction(
-                private val scope: VariantScope) : TaskConfigAction<StaticLibraryManifestTask> {
-        override fun getName() = scope.getTaskName("create", "StaticLibraryManifest")
-        override fun getType() = StaticLibraryManifestTask::class.java
+        private val scope: VariantScope
+    ) : TaskConfigAction<StaticLibraryManifestTask>() {
+        override val name: String
+            get() = scope.getTaskName("create", "StaticLibraryManifest")
+        override val type: Class<StaticLibraryManifestTask>
+            get() = StaticLibraryManifestTask::class.java
+
         override fun execute(task: StaticLibraryManifestTask) {
             task.manifestFile = scope.artifacts.appendArtifact(InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 task,

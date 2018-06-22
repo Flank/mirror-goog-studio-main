@@ -94,15 +94,12 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
     }
 
     class ConfigAction(private val variantScope: VariantScope) :
-        TaskConfigAction<ModuleMetadataWriterTask> {
+        TaskConfigAction<ModuleMetadataWriterTask>() {
 
-        override fun getName(): String {
-            return variantScope.getTaskName("write", "ModuleMetadata")
-        }
-
-        override fun getType(): Class<ModuleMetadataWriterTask> {
-            return ModuleMetadataWriterTask::class.java
-        }
+        override val name: String
+            get() = variantScope.getTaskName("write", "ModuleMetadata")
+        override val type: Class<ModuleMetadataWriterTask>
+            get() = ModuleMetadataWriterTask::class.java
 
         override fun execute(task: ModuleMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName

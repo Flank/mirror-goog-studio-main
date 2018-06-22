@@ -592,8 +592,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
     }
 
-    public static class ConfigAction
-            implements TaskConfigAction<LinkApplicationAndroidResourcesTask> {
+    public static class ConfigAction extends TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
         private final File symbolsWithPackageNameOutputFile;
@@ -788,7 +787,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      * discovery task.
      */
     public static final class NamespacedConfigAction
-            implements TaskConfigAction<LinkApplicationAndroidResourcesTask> {
+            extends TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;

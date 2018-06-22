@@ -137,11 +137,12 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             private val variantScope: VariantScope,
             private val symbolFile: File,
             private val symbolsWithPackageNameOutputFile: File
-    ) : TaskConfigAction<GenerateLibraryRFileTask> {
+    ) : TaskConfigAction<GenerateLibraryRFileTask>() {
 
-        override fun getName() = variantScope.getTaskName("generate", "RFile")
-
-        override fun getType() = GenerateLibraryRFileTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("generate", "RFile")
+        override val type: Class<GenerateLibraryRFileTask>
+            get() = GenerateLibraryRFileTask::class.java
 
         override fun execute(task: GenerateLibraryRFileTask) {
             variantScope.taskContainer.processAndroidResTask = task

@@ -230,13 +230,13 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             }
         }.build()
 
-    class ConfigAction(private val variantScope: VariantScope)
-        : TaskConfigAction<AutoNamespaceDependenciesTask> {
+    class ConfigAction(private val variantScope: VariantScope) :
+        TaskConfigAction<AutoNamespaceDependenciesTask>() {
 
-        override fun getName(): String = variantScope.getTaskName("autoNamespace", "Dependencies")
-
-        override fun getType(): Class<AutoNamespaceDependenciesTask>
-                = AutoNamespaceDependenciesTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("autoNamespace", "Dependencies")
+        override val type: Class<AutoNamespaceDependenciesTask>
+            get() = AutoNamespaceDependenciesTask::class.java
 
         override fun execute(task: AutoNamespaceDependenciesTask) {
             task.variantName = variantScope.fullVariantName

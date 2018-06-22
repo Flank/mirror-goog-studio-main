@@ -231,15 +231,12 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
      }
 
     internal class ConfigAction(private val scope: VariantScope) :
-        TaskConfigAction<InstallVariantViaBundleTask> {
+        TaskConfigAction<InstallVariantViaBundleTask>() {
 
-        override fun getName(): String {
-            return scope.getTaskName("install")
-        }
-
-        override fun getType(): Class<InstallVariantViaBundleTask> {
-            return InstallVariantViaBundleTask::class.java
-        }
+        override val name: String
+            get() = scope.getTaskName("install")
+        override val type: Class<InstallVariantViaBundleTask>
+            get() = InstallVariantViaBundleTask::class.java
 
         override fun execute(task: InstallVariantViaBundleTask) {
             task.description = "Installs the " + scope.variantData.description + ""

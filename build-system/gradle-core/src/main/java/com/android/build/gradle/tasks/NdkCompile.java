@@ -429,7 +429,7 @@ public class NdkCompile extends NdkTask {
                 getStl() == null);
     }
 
-    public static class ConfigAction implements TaskConfigAction<NdkCompile> {
+    public static class ConfigAction extends TaskConfigAction<NdkCompile> {
 
         @NonNull private final VariantScope variantScope;
 

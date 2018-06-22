@@ -56,7 +56,7 @@ public class TestPreBuildTask extends ClasspathComparisionTask {
         compareClasspaths();
     }
 
-    public static class ConfigAction implements TaskConfigAction<TestPreBuildTask> {
+    public static class ConfigAction extends TaskConfigAction<TestPreBuildTask> {
 
         @NonNull private final VariantScope variantScope;
 

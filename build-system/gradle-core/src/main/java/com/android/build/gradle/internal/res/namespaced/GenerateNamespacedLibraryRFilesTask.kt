@@ -69,13 +69,13 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         exportToCompiledJava(ImmutableList.of(resources), rJarFile.toPath())
     }
 
+    class ConfigAction(private val scope: VariantScope) :
+        TaskConfigAction<GenerateNamespacedLibraryRFilesTask>() {
 
-    class ConfigAction(private val scope: VariantScope)
-        : TaskConfigAction<GenerateNamespacedLibraryRFilesTask> {
-
-        override fun getType() = GenerateNamespacedLibraryRFilesTask::class.java
-
-        override fun getName() = scope.getTaskName("create", "RFiles")
+        override val name: String
+            get() = scope.getTaskName("create", "RFiles")
+        override val type: Class<GenerateNamespacedLibraryRFilesTask>
+            get() = GenerateNamespacedLibraryRFilesTask::class.java
 
         override fun execute(task: GenerateNamespacedLibraryRFilesTask) {
 

@@ -103,11 +103,12 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleFeatureClasses> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleFeatureClasses>() {
 
-        override fun getName() = scope.getTaskName("bundle", "Classes")
-
-        override fun getType() = BundleFeatureClasses::class.java
+        override val name: String
+            get() = scope.getTaskName("bundle", "Classes")
+        override val type: Class<BundleFeatureClasses>
+            get() = BundleFeatureClasses::class.java
 
         override fun execute(task: BundleFeatureClasses) {
             task.outputJar = scope.artifacts.appendArtifact(

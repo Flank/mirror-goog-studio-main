@@ -76,10 +76,8 @@ public class AndroidUnitTest extends Test {
         return mergedManifest;
     }
 
-    /**
-     * Configuration Action for a JavaCompile task.
-     */
-    public static class ConfigAction implements TaskConfigAction<AndroidUnitTest> {
+    /** Configuration Action for a JavaCompile task. */
+    public static class ConfigAction extends TaskConfigAction<AndroidUnitTest> {
 
         private final VariantScope scope;
 

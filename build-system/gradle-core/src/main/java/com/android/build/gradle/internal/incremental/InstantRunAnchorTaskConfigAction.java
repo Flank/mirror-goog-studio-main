@@ -26,7 +26,7 @@ import org.gradle.api.DefaultTask;
  * Simple task used as an anchor task for all instant run related tasks. An anchor task can be used
  * to conveniently set dependencies.
  */
-public class InstantRunAnchorTaskConfigAction implements TaskConfigAction<DefaultTask> {
+public class InstantRunAnchorTaskConfigAction extends TaskConfigAction<DefaultTask> {
 
     private final TransformVariantScope variantScope;
 

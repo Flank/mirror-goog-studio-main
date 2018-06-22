@@ -263,7 +263,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         return manifests.getArtifactFiles();
     }
 
-    public static class ConfigAction implements TaskConfigAction<ProcessTestManifest> {
+    public static class ConfigAction extends TaskConfigAction<ProcessTestManifest> {
 
         @NonNull
         private final VariantScope scope;

@@ -35,7 +35,7 @@ import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 
 /** Configuration action for a merge-Proguard-files task. */
-public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<MergeFileTask> {
+public class MergeConsumerProguardFilesConfigAction extends TaskConfigAction<MergeFileTask> {
 
     @NonNull private final VariantScope variantScope;
 

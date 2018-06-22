@@ -333,7 +333,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
 
-    protected abstract static class ConfigAction implements TaskConfigAction<MergeSourceSetFolders> {
+    protected abstract static class ConfigAction extends TaskConfigAction<MergeSourceSetFolders> {
         @NonNull
         protected final VariantScope scope;
 

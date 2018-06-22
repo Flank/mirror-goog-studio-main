@@ -87,11 +87,12 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
 
     class ConfigAction(
         private val variantScope: VariantScope
-    ) : TaskConfigAction<DataBindingMergeDependencyArtifactsTask> {
-        override fun getName() =
-            variantScope.getTaskName("dataBindingMergeDependencyArtifacts")
+    ) : TaskConfigAction<DataBindingMergeDependencyArtifactsTask>() {
 
-        override fun getType() = DataBindingMergeDependencyArtifactsTask::class.java
+        override val name: String
+            get() = variantScope.getTaskName("dataBindingMergeDependencyArtifacts")
+        override val type: Class<DataBindingMergeDependencyArtifactsTask>
+            get() = DataBindingMergeDependencyArtifactsTask::class.java
 
         override fun execute(task: DataBindingMergeDependencyArtifactsTask) {
             task.runtimeDependencies = variantScope.getArtifactFileCollection(

@@ -88,7 +88,7 @@ public class AppClasspathCheckTask extends ClasspathComparisionTask {
         compareClasspaths();
     }
 
-    public static class ConfigAction implements TaskConfigAction<AppClasspathCheckTask> {
+    public static class ConfigAction extends TaskConfigAction<AppClasspathCheckTask> {
 
         @NonNull private final VariantScope variantScope;
 

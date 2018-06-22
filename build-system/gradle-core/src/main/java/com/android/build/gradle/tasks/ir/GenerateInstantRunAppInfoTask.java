@@ -194,7 +194,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<GenerateInstantRunAppInfoTask> {
+    public static class ConfigAction extends TaskConfigAction<GenerateInstantRunAppInfoTask> {
         @NonNull private final VariantScope variantScope;
         @NonNull
         private final TransformVariantScope transformVariantScope;

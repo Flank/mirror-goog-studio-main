@@ -160,7 +160,7 @@ public class AppPreBuildTask extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction implements TaskConfigAction<AppPreBuildTask> {
+    public static class ConfigAction extends TaskConfigAction<AppPreBuildTask> {
 
         @NonNull private final VariantScope variantScope;
 

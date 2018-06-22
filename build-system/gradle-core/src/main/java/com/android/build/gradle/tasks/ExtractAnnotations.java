@@ -289,7 +289,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         return false;
     }
 
-    public static class ConfigAction implements TaskConfigAction<ExtractAnnotations> {
+    public static class ConfigAction extends TaskConfigAction<ExtractAnnotations> {
 
         @NonNull private final AndroidConfig extension;
         @NonNull private final VariantScope variantScope;

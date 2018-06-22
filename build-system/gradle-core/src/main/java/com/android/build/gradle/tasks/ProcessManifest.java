@@ -215,7 +215,7 @@ public class ProcessManifest extends ManifestProcessorTask {
         return outputScope.getMainSplit().getFullName();
     }
 
-    public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
+    public static class ConfigAction extends TaskConfigAction<ProcessManifest> {
 
         @NonNull private final VariantScope scope;
 

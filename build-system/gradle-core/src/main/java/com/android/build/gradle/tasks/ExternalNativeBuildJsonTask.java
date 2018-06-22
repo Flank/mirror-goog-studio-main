@@ -48,7 +48,7 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
         return new ConfigAction(scope, generator);
     }
 
-    private static class ConfigAction implements TaskConfigAction<ExternalNativeBuildJsonTask> {
+    private static class ConfigAction extends TaskConfigAction<ExternalNativeBuildJsonTask> {
 
         private final VariantScope scope;
         private final ExternalNativeJsonGenerator generator;

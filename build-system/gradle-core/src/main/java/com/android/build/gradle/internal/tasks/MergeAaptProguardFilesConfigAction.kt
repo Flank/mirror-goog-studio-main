@@ -24,11 +24,12 @@ import com.android.build.gradle.internal.scope.VariantScope
 
 /** Configuration action for a task to merge aapt proguard files  */
 class MergeAaptProguardFilesConfigAction(private val scope: VariantScope) :
-    TaskConfigAction<MergeFileTask> {
+    TaskConfigAction<MergeFileTask>() {
 
-    override fun getName() = scope.getTaskName("merge", "AaptProguardFiles")
-
-    override fun getType() = MergeFileTask::class.java
+    override val name: String
+        get() = scope.getTaskName("merge", "AaptProguardFiles")
+    override val type: Class<MergeFileTask>
+        get() = MergeFileTask::class.java
 
     override fun execute(task: MergeFileTask) {
         task.variantName = scope.variantConfiguration.fullName

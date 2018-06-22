@@ -895,7 +895,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // ----- ConfigAction -----
 
     public abstract static class ConfigAction<T extends PackageAndroidArtifact>
-            implements TaskConfigAction<T> {
+            extends TaskConfigAction<T> {
 
         protected final Project project;
         protected final VariantScope variantScope;

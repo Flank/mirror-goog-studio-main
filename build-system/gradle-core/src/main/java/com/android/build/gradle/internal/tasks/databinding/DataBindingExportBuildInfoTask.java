@@ -62,7 +62,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         Scope.assertNoError();
     }
 
-    public static class ConfigAction implements TaskConfigAction<DataBindingExportBuildInfoTask> {
+    public static class ConfigAction extends TaskConfigAction<DataBindingExportBuildInfoTask> {
 
         @NonNull private final VariantScope variantScope;
 

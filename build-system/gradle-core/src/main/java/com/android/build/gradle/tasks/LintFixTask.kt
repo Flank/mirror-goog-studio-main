@@ -61,27 +61,24 @@ open class LintFixTask : LintBaseTask() {
         globalScope: GlobalScope, private val variantScopes: Collection<VariantScope>
     ) : LintBaseTask.BaseConfigAction<LintFixTask>(globalScope) {
 
-        override fun getName(): String {
-            return TaskManager.LINT_FIX
-        }
+        override val name: String
+            get() = TaskManager.LINT_FIX
+        override val type: Class<LintFixTask>
+            get() = LintFixTask::class.java
 
-        override fun getType(): Class<LintFixTask> {
-            return LintFixTask::class.java
-        }
+        override fun execute(task: LintFixTask) {
+            super.execute(task)
 
-        override fun execute(lintTask: LintFixTask) {
-            super.execute(lintTask)
-
-            lintTask.description =
+            task.description =
                     "Runs lint on all variants and applies any safe suggestions to the source code."
-            lintTask.variantName = ""
-            lintTask.group = "cleanup"
+            task.variantName = ""
+            task.group = "cleanup"
 
-            lintTask.allInputs = globalScope.project.files()
+            task.allInputs = globalScope.project.files()
 
-            lintTask.variantInputMap = variantScopes.asSequence().map { variantScope ->
+            task.variantInputMap = variantScopes.asSequence().map { variantScope ->
                 val inputs = LintBaseTask.VariantInputs(variantScope)
-                lintTask.allInputs!!.from(inputs.allInputs)
+                task.allInputs!!.from(inputs.allInputs)
                 inputs
             }.associateBy { it.name }
         }

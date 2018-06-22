@@ -332,7 +332,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         return testData.getTestedApksDir();
     }
 
-    public static class ConfigAction implements TaskConfigAction<DeviceProviderInstrumentTestTask> {
+    public static class ConfigAction extends TaskConfigAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
         private final VariantScope scope;

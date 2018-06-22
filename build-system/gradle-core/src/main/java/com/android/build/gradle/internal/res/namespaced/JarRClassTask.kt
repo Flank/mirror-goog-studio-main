@@ -52,11 +52,12 @@ open class JarRClassTask @Inject constructor(workerExecutor: WorkerExecutor) : D
     }
 
     class ConfigAction(
-                private val name: String,
+                override val name: String,
                 private val rClassClasses: FileCollection,
-                private val rClassJar: File) : TaskConfigAction<JarRClassTask> {
-        override fun getName() = name
-        override fun getType() = JarRClassTask::class.java
+                private val rClassJar: File) : TaskConfigAction<JarRClassTask>() {
+        override val type: Class<JarRClassTask>
+            get() = JarRClassTask::class.java
+
         override fun execute(task: JarRClassTask) {
             task.rClassClasses = rClassClasses
             task.rClassJar = rClassJar
