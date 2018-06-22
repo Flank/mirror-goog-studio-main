@@ -60,6 +60,42 @@ class DependenciesGraphTest {
         assertThat(visit(result.rootNodes)).containsAllIn(listOf("a", "b", "c", "d", "e", "f", "g"))
     }
 
+    /** As graph nodes are compared by object identity, it is important that duplicates are never created */
+    @Test
+    fun graphWithSharedRoot() {
+        //   b  a
+        //  /
+        // a*
+        val a = createDependency("a")
+        val b = createDependency("b", ImmutableSet.of(a))
+
+        // Do this in both orders to avoid spuriously passing if the 'a' is processed first/
+        graphWithSharedRoot(listOf(a, b))
+        graphWithSharedRoot(listOf(b, a))
+    }
+
+    private fun graphWithSharedRoot(list: List<MockResolvedDependencyResult>) {
+        val result = DependenciesGraph.create(
+            ImmutableList.copyOf(list),
+            artifacts = ImmutableMap.of()
+        )
+
+        // Collect every node from the whole graph.
+        val allReachableNodes = HashSet<DependenciesGraph.Node>()
+        result.rootNodes.forEach {
+            allReachableNodes.add(it)
+            allReachableNodes.addAll(it.transitiveDependencies)
+        }
+        result.allNodes.forEach {
+            allReachableNodes.add(it)
+            allReachableNodes.addAll(it.transitiveDependencies)
+        }
+
+        assertThat(result.rootNodes).hasSize(2)
+        assertThat(result.allNodes).hasSize(2)
+        assertThat(allReachableNodes).hasSize(2)
+    }
+
     @Test
     fun graphWithArtifacts() {
         //     a

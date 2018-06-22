@@ -67,12 +67,11 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             for (dependency in roots) {
                 dependency as ResolvedDependencyResult
                 val node = collect(dependency, foundNodes, artifacts)
-                foundNodes.put(dependency.selected.id.displayName, node)
                 rootNodes.add(node)
             }
             return DependenciesGraph(
-                    ImmutableSet.copyOf(rootNodes),
-                    ImmutableSet.copyOf(foundNodes.values)
+                ImmutableSet.copyOf(rootNodes),
+                ImmutableSet.copyOf(foundNodes.values)
             )
         }
 
@@ -82,29 +81,29 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             artifacts: ArtifactFiles
         ): Node {
             dependencyResult as ResolvedDependencyResult
+            if (foundNodes.contains(dependencyResult.selected.id.displayName)) {
+                return foundNodes[dependencyResult.selected.id.displayName]!!
+            }
             try {
                 // Visit all children of the node and collect them. If a child has already been
                 // visited, it will be stored in the 'foundNodes' map.
                 val dependencies = ArrayList<DependenciesGraph.Node>()
                 for (dependency in dependencyResult.selected.dependencies) {
                     dependency as ResolvedDependencyResult
-                    if (!foundNodes.contains(dependency.selected.id.displayName)) {
-                        foundNodes.put(
-                                dependency.selected.id.displayName,
-                                collect(dependency, foundNodes, artifacts)
-                        )
-                    }
+                    collect(dependency, foundNodes, artifacts)
                     dependencies.add(foundNodes[dependency.selected.id.displayName]!!)
                 }
                 return Node(
-                        dependencyResult.selected.id,
-                        ImmutableSet.copyOf(dependencies),
-                        artifacts
-                )
+                    dependencyResult.selected.id,
+                    ImmutableSet.copyOf(dependencies),
+                    artifacts
+                ).also {
+                    check(foundNodes.put(dependencyResult.selected.id.displayName, it) == null)
+                }
             } catch (e: Exception) {
                 throw RuntimeException(
-                        "Failed rewriting node ${dependencyResult.selected.id.displayName}.",
-                        e
+                    "Failed rewriting node ${dependencyResult.selected.id.displayName}.",
+                    e
                 )
             }
         }
@@ -119,6 +118,12 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
         artifactFiles: ArtifactFiles
     ) {
         val artifacts: ImmutableMap<ArtifactType, File>
+        val transitiveDependencies: ImmutableSet<Node> by lazy(LazyThreadSafetyMode.PUBLICATION) {
+            ImmutableSet.builder<Node>().apply {
+                addAll(dependencies)
+                dependencies.forEach { addAll(it.transitiveDependencies) }
+            }.build()
+        }
         private val transitiveArtifactCache: HashMap<ArtifactType, ImmutableList<File>> = HashMap()
 
         init {
