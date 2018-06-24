@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:JvmName("VariantUtil")
+
 package com.android.projectmodel
 
 /**
@@ -23,43 +24,43 @@ package com.android.projectmodel
  * use Kotlin named arguments to stay source compatible.
  */
 data class Variant(
-        /**
-         * Identifier of the [Variant]. Meant to be unique within a given [AndroidProject] and
-         * stable across syncs. This will be used for cross-referencing the [Variant] from other
-         * projects in [ProjectLibrary.variant].
-         */
-        val name: String,
-        /**
-         * User-readable name of the [Variant]. By default, this is the same as the [name].
-         */
-        val displayName: String = name,
-        /**
-         * Main artifact (for example, the application or library itself). This is the artifact
-         * named [ARTIFACT_NAME_MAIN].
-         */
-        val mainArtifact: Artifact,
-        /**
-         * Android test cases or null if none. This is the artifact named
-         * [ARTIFACT_NAME_ANDROID_TEST].
-         */
-        val androidTestArtifact: Artifact? = null,
-        /**
-         * Plain java unit tests or null if none. This is the artifact named
-         * [ARTIFACT_NAME_UNIT_TEST].
-         */
-        val unitTestArtifact: Artifact? = null,
-        /**
-         * Extra user-defined Android artifacts.
-         */
-        val extraArtifacts: List<Artifact> = emptyList(),
-        /**
-         * Extra user-defined java artifacts.
-         */
-        val extraJavaArtifacts: List<Artifact> = emptyList(),
-        /**
-         * Holds the path to the [Config] instances for this [Variant] within its [ConfigTable].
-         */
-        val configPath: ConfigPath = matchAllArtifacts()
+    /**
+     * Identifier of the [Variant]. Meant to be unique within a given [AndroidProject] and
+     * stable across syncs. This will be used for cross-referencing the [Variant] from other
+     * projects in [ProjectLibrary.variant].
+     */
+    val name: String,
+    /**
+     * User-readable name of the [Variant]. By default, this is the same as the [name].
+     */
+    val displayName: String = name,
+    /**
+     * Main artifact (for example, the application or library itself). This is the artifact
+     * named [ARTIFACT_NAME_MAIN].
+     */
+    val mainArtifact: Artifact,
+    /**
+     * Android test cases or null if none. This is the artifact named
+     * [ARTIFACT_NAME_ANDROID_TEST].
+     */
+    val androidTestArtifact: Artifact? = null,
+    /**
+     * Plain java unit tests or null if none. This is the artifact named
+     * [ARTIFACT_NAME_UNIT_TEST].
+     */
+    val unitTestArtifact: Artifact? = null,
+    /**
+     * Extra user-defined Android artifacts.
+     */
+    val extraArtifacts: List<Artifact> = emptyList(),
+    /**
+     * Extra user-defined java artifacts.
+     */
+    val extraJavaArtifacts: List<Artifact> = emptyList(),
+    /**
+     * Holds the path to the [Config] instances for this [Variant] within its [ConfigTable].
+     */
+    val configPath: ConfigPath = matchAllArtifacts()
 ) {
     /**
      * Returns the [ConfigPath] for the main artifact in this [Variant].
