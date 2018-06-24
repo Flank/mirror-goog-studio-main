@@ -21,6 +21,7 @@ package com.android.ide.common.gradle.model
 import com.android.builder.model.SourceProvider
 import com.android.ide.common.util.PathString
 import com.android.projectmodel.AndroidPathType
+import com.android.projectmodel.ConfigAssociation
 import com.android.projectmodel.SourceSet
 import java.io.File
 
@@ -85,3 +86,9 @@ class SourceProviderAdapter(
 
 fun SourceSet.toSourceProvider(name: String): SourceProviderAdapter =
     SourceProviderAdapter(this, name)
+
+/**
+ * Converts a [ConfigAssocation] to a [SourceProvider]. The name of the [SourceProvider] comes
+ * from the simple name of the associated [ConfigPath]
+ */
+fun ConfigAssociation.toSourceProvider() = config.sources.toSourceProvider(path.simpleName)

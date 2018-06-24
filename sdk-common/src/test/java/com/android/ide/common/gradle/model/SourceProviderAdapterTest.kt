@@ -18,7 +18,10 @@ package com.android.ide.common.gradle.model
 
 import com.android.ide.common.util.PathString
 import com.android.projectmodel.AndroidPathType
+import com.android.projectmodel.Config
+import com.android.projectmodel.ConfigAssociation
 import com.android.projectmodel.SourceSet
+import com.android.projectmodel.matchArtifactsWith
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
@@ -168,5 +171,22 @@ class SourceProviderAdapterTest {
         val result = input.toSourceProvider("MySourceProvider").toSourceSet()
 
         assertThat(result).isEqualTo(input)
+    }
+
+    /**
+     * Verifies that converting a [ConfigAssociation] to a [SourceProvider] creates an instance
+     * with the correct name.
+     */
+    @Test
+    fun testConvertingConfigAssociationToSourceProvider() {
+        val thePath = PathString("/bin/bash")
+        val config1 = ConfigAssociation(
+            matchArtifactsWith("foo/*/bar"),
+            Config(sources = SourceSet(mapOf(AndroidPathType.JAVA to listOf(thePath))))
+        )
+
+        val result = config1.toSourceProvider()
+        assertThat(result.name).isEqualTo("fooBar")
+        assertThat(result.javaDirectories).containsExactly(thePath.toFile())
     }
 }
