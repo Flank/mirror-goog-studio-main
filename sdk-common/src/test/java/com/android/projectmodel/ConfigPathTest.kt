@@ -41,6 +41,30 @@ class ConfigPathTest {
     private val fooAnyBaz = matchArtifactsWith("foo/*/baz")
     private val barAnyBaz = matchArtifactsWith("bar/*/baz")
 
+    /**
+     * Tests that the "simpleName" method produces correct strings in the style of Gradle
+     * variants.
+     */
+    @Test
+    fun testSimpleName() {
+        val expected = listOf(
+            none to "",
+            all to "main",
+            foo to "foo",
+            fooBarBaz to "fooBarBaz",
+            anyBarBaz to "barBaz",
+            fooBarAny to "fooBar",
+            fooAnyAny to "foo",
+            anyAnyBaz to "baz",
+            fooAnyBaz to "fooBaz",
+            matchArtifactsWith("FOO/bAR/bAz/") to "fooBarBaz"
+        )
+
+        for (next in expected) {
+            Truth.assertThat(next.first.simpleName).isEqualTo(next.second)
+        }
+    }
+
     @Test
     fun testMatchesEverything() {
         Truth.assertThat(none.matchesEverything).isFalse()

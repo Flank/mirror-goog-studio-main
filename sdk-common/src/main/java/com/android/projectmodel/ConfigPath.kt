@@ -117,6 +117,22 @@ data class ConfigPath internal constructor(
     @get:JvmName("matchesAnything")
     val matchesAnything: Boolean = segments != null
 
+    /**
+     * Returns a string using the same naming convention used for Android variants. Null segments
+     * are omitted, and the remaining segments are concatenated in camelCase with the leading
+     * segment lowercase. If the path matches everything, it is called "main".
+     */
+    val simpleName: String get() {
+        segments ?: return ""
+        return if (matchesEverything) {
+            "main"
+        }
+        else toCamelCase(segments.filterNotNull())
+    }
+
+    private fun toCamelCase(input: List<String>)
+        = input.mapIndexed { index, s -> if (index == 0) s.toLowerCase() else s.toLowerCase().capitalize() }.joinToString("")
+
     override fun toString(): String {
         segments ?: return ""
         if (segments.isEmpty()) return "*"
