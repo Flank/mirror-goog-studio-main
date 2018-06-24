@@ -67,6 +67,19 @@ data class Variant(
     val mainArtifactConfigPath: ConfigPath get() = ConfigPath(configPath.segments?.plus(mainArtifact.name))
 
     /**
+     * Returns the [Artifact] in this [Variant] with the given name or null if none.
+     */
+    fun artifactNamed(name: String): Artifact? {
+        return when (name) {
+            ARTIFACT_NAME_MAIN -> mainArtifact
+            ARTIFACT_NAME_UNIT_TEST -> unitTestArtifact
+            ARTIFACT_NAME_ANDROID_TEST -> androidTestArtifact
+            else -> extraArtifacts.find { it.name == name }
+                    ?: extraJavaArtifacts.find { it.name == name }
+        }
+    }
+
+    /**
      * Returns all [Artifact] instances that are part of this [Variant].
      */
     val artifacts: List<Artifact> = listOfNotNull(mainArtifact, androidTestArtifact, unitTestArtifact) + extraArtifacts + extraJavaArtifacts

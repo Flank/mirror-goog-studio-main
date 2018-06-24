@@ -44,4 +44,16 @@ class VariantTest {
         assertThat(mainAndJavaExtras.artifacts).containsExactly(artMain, artAndroidExtra1, artAndroidExtra2)
         assertThat(allArtifacts.artifacts).containsExactly(artMain, artTest, artAndroidTest, artExtra1, artExtra2, artAndroidExtra1, artAndroidExtra2)
     }
+
+    @Test
+    fun testArtifactNamed() {
+        assertThat(allArtifacts.artifactNamed(ARTIFACT_NAME_MAIN)).isEqualTo(artMain)
+        assertThat(allArtifacts.artifactNamed("nonexistent name")).isNull()
+        assertThat(allArtifacts.artifactNamed(ARTIFACT_NAME_UNIT_TEST)).isEqualTo(artTest)
+        assertThat(allArtifacts.artifactNamed(ARTIFACT_NAME_ANDROID_TEST)).isEqualTo(artAndroidTest)
+        assertThat(allArtifacts.artifactNamed("extra1")).isEqualTo(artExtra1)
+        assertThat(allArtifacts.artifactNamed("extra2")).isEqualTo(artExtra2)
+        assertThat(allArtifacts.artifactNamed("androidExtra1")).isEqualTo(artAndroidExtra1)
+        assertThat(allArtifacts.artifactNamed("androidExtra2")).isEqualTo(artAndroidExtra2)
+    }
 }
