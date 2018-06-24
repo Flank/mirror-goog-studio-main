@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("VariantUtil")
 package com.android.projectmodel
 
 /**
@@ -33,15 +34,18 @@ data class Variant(
          */
         val displayName: String = name,
         /**
-         * Main artifact (for example, the application or library itself).
+         * Main artifact (for example, the application or library itself). This is the artifact
+         * named [ARTIFACT_NAME_MAIN].
          */
         val mainArtifact: Artifact,
         /**
-         * Android test cases or null if none.
+         * Android test cases or null if none. This is the artifact named
+         * [ARTIFACT_NAME_ANDROID_TEST].
          */
         val androidTestArtifact: Artifact? = null,
         /**
-         * Plain java unit tests or null if none.
+         * Plain java unit tests or null if none. This is the artifact named
+         * [ARTIFACT_NAME_UNIT_TEST].
          */
         val unitTestArtifact: Artifact? = null,
         /**
@@ -62,3 +66,18 @@ data class Variant(
      */
     val mainArtifactConfigPath: ConfigPath get() = ConfigPath(configPath.segments?.plus(mainArtifact.name))
 }
+
+/**
+ * Name reserved the main artifact in a [Variant].
+ */
+const val ARTIFACT_NAME_MAIN = "_main_"
+
+/**
+ * Name reserved the android test artifact in a [Variant].
+ */
+const val ARTIFACT_NAME_ANDROID_TEST = "_android_test_"
+
+/**
+ * Name reserved the unit test artifact in a [Variant].
+ */
+const val ARTIFACT_NAME_UNIT_TEST = "_unit_test_"
