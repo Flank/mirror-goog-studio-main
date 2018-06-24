@@ -59,12 +59,17 @@ data class Variant(
         /**
          * Holds the path to the [Config] instances for this [Variant] within its [ConfigTable].
          */
-        val configPath: ConfigPath
+        val configPath: ConfigPath = matchAllArtifacts()
 ) {
     /**
      * Returns the [ConfigPath] for the main artifact in this [Variant].
      */
     val mainArtifactConfigPath: ConfigPath get() = ConfigPath(configPath.segments?.plus(mainArtifact.name))
+
+    /**
+     * Returns all [Artifact] instances that are part of this [Variant].
+     */
+    val artifacts: List<Artifact> = listOfNotNull(mainArtifact, androidTestArtifact, unitTestArtifact) + extraArtifacts + extraJavaArtifacts
 }
 
 /**

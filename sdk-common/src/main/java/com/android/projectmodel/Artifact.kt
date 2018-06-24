@@ -47,11 +47,11 @@ data class Artifact(
          * For well-formed projects, this [Config] is expected to override all possible metadata and to
          * supply a valid dependency list.
          */
-        val resolved: Config,
+        val resolved: Config = Config(),
         /**
          * List of class folders and .jar files containing the output of java compilation for this artifact.
          */
-        val classFolders: List<PathString>,
+        val classFolders: List<PathString> = emptyList(),
         /**
          * The package name of the R file. Application projects may also use this as the default
          * value for the application ID. It is defined here:
