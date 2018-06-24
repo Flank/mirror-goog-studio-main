@@ -21,9 +21,21 @@ package com.android.projectmodel
  * New properties may be added in the future; clients that invoke the constructor are encouraged to
  * use Kotlin named arguments to stay source compatible.
  */
-data class AndroidModel(
-        /**
-         * List of [AndroidProject] that are present in this module.
-         */
-        val projects: List<AndroidProject> = emptyList()
-)
+class AndroidModel private constructor(
+    /**
+     * Map of project names onto [AndroidProject].
+     */
+    val projectsByName: Map<String, AndroidProject>
+) {
+    constructor (projects: Collection<AndroidProject>) : this(projects.associateBy { it.name })
+
+    /**
+     * List of [AndroidProject] that are present in this module.
+     */
+    val projects: Collection<AndroidProject> get() = projectsByName.values
+
+    /**
+     * Returns the project with the given name or null if none.
+     */
+    fun getProject(name: String): AndroidProject? = projectsByName[name]
+}
