@@ -53,6 +53,15 @@ public class LibraryIntermediateArtifactPublishingTest {
     }
 
     @Test
+    public void testFullJarUpToDate() throws IOException, InterruptedException {
+        GradleBuildResult result = project.executor().run(":lib:createFullJarDebug");
+        assertThat(result.getTask(":lib:createFullJarDebug")).wasExecuted();
+
+        result = project.executor().run(":lib:createFullJarDebug");
+        assertThat(result.getTask(":lib:createFullJarDebug")).wasUpToDate();
+    }
+
+    @Test
     public void jarArtifactIsCreated() throws IOException, InterruptedException {
         // Add a task that uses the request 'jar' artifactType as input.
         TestFileUtils.appendToFile(

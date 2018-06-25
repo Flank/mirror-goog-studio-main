@@ -56,7 +56,8 @@ open class ZipMergingTask : AndroidVariantTask() {
         private set
 
     @get:OutputFile
-    private lateinit var outputFile: File
+    lateinit var outputFile: File
+        private set
 
     @VisibleForTesting
     internal fun init(
