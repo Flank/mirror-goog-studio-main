@@ -15,6 +15,8 @@
  */
 package com.android.projectmodel
 
+import com.android.ide.common.util.PathString
+
 /**
  * Represents a single Android project. This is the collection of sources and metadata needed to construct a single android artifact (an
  * application, library, etc.). An android project contains one or more [Variant]s, which are alternative ways of constructing the project.
@@ -42,5 +44,11 @@ data class AndroidProject(
         /**
          * Config table for this project.
          */
-        val configTable: ConfigTable = ConfigTable()
+        val configTable: ConfigTable = ConfigTable(),
+        /**
+         * List of locations where this project will write generated files and folders. The list
+         * may contains a mixture of files and folders. Any file located at or below these paths should
+         * be considered derived.
+         */
+        val generatedPaths: List<PathString> = emptyList()
 )
