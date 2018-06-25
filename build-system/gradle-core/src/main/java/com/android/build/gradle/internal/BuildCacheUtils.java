@@ -30,7 +30,6 @@ import com.android.builder.utils.SynchronizedFile;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.prefs.AndroidLocation;
 import com.android.utils.FileUtils;
-import com.android.utils.concurrency.ReadWriteProcessLock;
 import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;
@@ -120,86 +119,50 @@ public final class BuildCacheUtils {
                         Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
         // Get the shared directory containing the build caches for different plugin versions.
-        // In AGP 3.0.x and earlier, this directory contains the cache entries directly.
-        // In AGP 3.1.x and later, this directory contains one subdirectory for each plugin version,
-        // which then contains the cache entries for that version.
         File sharedBuildCacheDir = buildCache.getCacheDirectory().getParentFile();
 
-        // Normalize the path in case different paths point to the same directory, this is important
-        // for the locking mechanism below to work reliably.
-        File normalizedSharedBuildCacheDir;
-        try {
-            normalizedSharedBuildCacheDir = sharedBuildCacheDir.getCanonicalFile();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        // Lock the shared build cache directory now for reading and unlock it later at the end
-        // of the build. This is to prevent the case where a plugin with version 3.0.x or
-        // earlier is deleting the shared cache directory while a plugin with version 3.1.x or
-        // later is using a private cache directory inside the shared cache directory.
-        String actionGroup =
-                BuildCacheUtils.class.getName() + "@" + normalizedSharedBuildCacheDir.getPath();
-        BuildSessionImpl.getSingleton()
-                .executeOnce(
-                        actionGroup,
-                        "lockSharedBuildCacheDir",
-                        () -> {
-                            // Since the file's path has been normalized, there is a 1-1
-                            // correspondence between the cache directory and the lock file
-                            File lockFile =
-                                    SynchronizedFile.getLockFile(normalizedSharedBuildCacheDir);
-                            // Create the parent directory as required by ReadWriteProcessLock
-                            FileUtils.mkdirs(lockFile.getParentFile());
-                            ReadWriteProcessLock.Lock lock =
-                                    new ReadWriteProcessLock(lockFile.toPath()).readLock();
-                            try {
-                                lock.lock();
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
-                            }
-                            BuildSessionImpl.getSingleton()
-                                    .executeOnceWhenBuildFinished(
-                                            actionGroup,
-                                            "unlockSharedBuildCacheDir",
-                                            () -> {
-                                                try {
-                                                    lock.unlock();
-                                                } catch (IOException e) {
-                                                    throw new UncheckedIOException(e);
-                                                }
-                                            });
-                        });
+        /*
+         * In AGP 3.0.x and earlier, the shared cache directory contains the cache entries directly.
+         * In AGP 3.1.x and later, this directory contains multiple private cache directories, one
+         * for each plugin version, which then contains the cache entries for that version.
+         *
+         * THREAD-SAFETY:
+         *   - If multiple (concurrent) builds use the same Android Gradle plugin version, thread
+         * safety is already guaranteed by the underlying caching utility (FileCache).
+         *   - If multiple builds use different Android Gradle plugin versions, since the private
+         * cache directories of AGP 3.1.x and later and the cache entries of AGP 3.0.x and earlier
+         * are in separate locations, concurrent access is almost always safe. The *only* instance
+         * where it is not safe is when a plugin with version 3.0.x or earlier is deleting the
+         * shared cache directory while a plugin with version 3.1.x or later is using a private
+         * cache directory inside the shared cache directory. We accept this risk because: (1) That
+         * scenario should be rare; (2) It will never happen once the user has updated all their AGP
+         * versions to 3.1.x+; (3) We attempted to work around the issue by locking the shared cache
+         * directory for the entire build and unlocking it at the end of the build, but ran into an
+         * issue where the unlocking would fail because the thread that does the unlocking is not
+         * the thread that did the locking (unlocking happens in one of Gradle's buildFinished()
+         * event handlers which could run on a different thread than the thread that executes the
+         * tasks---see https://issuetracker.google.com/80464216).
+         */
 
         // Run cache eviction at regular intervals
         boolean shouldRunCacheEviction =
                 shouldRunCacheEviction(
                         buildCache, Duration.ofDays(DAYS_BETWEEN_CACHE_EVICTION_RUNS));
         if (shouldRunCacheEviction) {
-            // 1. Delete old cache entries created by the current plugin version
+            // 1. Delete old cache entries inside the current private cache directory created by the
+            // current plugin version
             deleteOldCacheEntries(buildCache, Duration.ofDays(CACHE_ENTRY_DAYS_TO_LIVE));
 
-            // 2. Delete old cache directories created by previous plugin versions (back to and
-            // including 3.1.x)
+            // 2. Delete old private cache directories created by plugin versions 3.1.x and later,
+            // but before the current plugin version
             deleteOldCacheDirectories(
                     sharedBuildCacheDir, Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE));
 
-            // 3. Delete old cache entries created by plugin versions 3.0.x and earlier (in these
-            // versions, the cache entries are located directly under the shared build cache
-            // directory). Note that this operation requires a WRITE lock on the shared build cache
-            // directory, but the shared build cache directory is already being locked with a READ
-            // lock (see above). Therefore, we need to do this at the end of the build after the
-            // READ lock has been released; otherwise, it would deadlock as the READ lock cannot be
-            // promoted to a WRITE lock.
-            BuildSessionImpl.getSingleton()
-                    .executeOnceWhenBuildFinished(
-                            actionGroup,
-                            "deleteOldCacheEntriesInSharedBuildCacheDir",
-                            () ->
-                                    deleteOldCacheEntries(
-                                            FileCache.getInstanceWithMultiProcessLocking(
-                                                    sharedBuildCacheDir),
-                                            Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE)));
+            // 3. Delete old cache entries inside the shared cache directory created by plugin
+            // versions 3.0.x and earlier
+            deleteOldCacheEntries(
+                    FileCache.getInstanceWithMultiProcessLocking(sharedBuildCacheDir),
+                    Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE));
         }
 
         // Mark that the current cache was last used at this point
