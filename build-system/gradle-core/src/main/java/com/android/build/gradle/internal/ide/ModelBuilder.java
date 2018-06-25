@@ -933,7 +933,10 @@ public class ModelBuilder<Extension extends AndroidConfig>
         try {
             // This can throw an exception if no package name can be found.
             // Normally, this is fine to throw an exception, but we don't want to crash in sync.
-            applicationId = variantConfiguration.getApplicationId();
+            applicationId =
+                    variantData.getType().isHybrid() || variantData.getType().isDynamicFeature()
+                            ? ""
+                            : variantConfiguration.getApplicationId();
         } catch (RuntimeException e) {
             // don't crash. just throw a sync error.
             applicationId = "";

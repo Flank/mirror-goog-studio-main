@@ -115,12 +115,20 @@ class DynamicAppTest {
         Truth.assertThat(appModel!!.dynamicFeatures)
             .named("feature list in app model")
             .containsExactly(":feature1", ":feature2")
+        Truth.assertThat(appModel.getVariantByName("debug").mainArtifact.applicationId)
+            .named("app applicationId")
+            .isEqualTo("com.example.app")
 
         val featureModel = rootBuildModelMap[":feature1"]
         Truth.assertThat(featureModel).named("feature model").isNotNull()
         Truth.assertThat(featureModel!!.projectType)
             .named("feature model type")
             .isEqualTo(AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE)
+        // The feature's applicationId should be set to "" because we can't access the true
+        // applicationId from the base app at configuration time.
+        Truth.assertThat(featureModel.getVariantByName("debug").mainArtifact.applicationId)
+            .named("feature applicationId")
+            .isEqualTo("")
     }
 
     @Test

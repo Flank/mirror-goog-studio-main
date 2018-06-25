@@ -56,9 +56,10 @@ public interface AndroidArtifact extends BaseArtifact {
     String getSigningConfigName();
 
     /**
-     * Returns the application id of this artifact.
+     * Returns the application id of this artifact, or an empty string if the artifact is from a
+     * feature or dynamic-feature module.
      *
-     * @return the application id.
+     * @return the application id, or an empty string if it's a feature or dynamic-feature module.
      */
     @NonNull
     String getApplicationId();
