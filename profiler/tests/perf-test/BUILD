@@ -45,6 +45,7 @@ java_library(
 
 perf_test(
     name = "BasicTest",
+    size = "medium",
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
     ],
@@ -60,7 +61,7 @@ perf_test(
 
 perf_test(
     name = "HttpTest",
-    size = "medium",
+    size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
@@ -76,6 +77,7 @@ perf_test(
 
 perf_test(
     name = "MemoryTest",
+    size = "medium",
     srcs = [
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
         "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
@@ -92,6 +94,7 @@ perf_test(
 
 perf_test(
     name = "EventTest",
+    size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
     ],
@@ -106,7 +109,7 @@ perf_test(
 
 perf_test(
     name = "EnergyTest",
-    size = "medium",
+    size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/energy/AlarmTest.java",
         "testSrcs/com/android/tools/profiler/energy/JobTest.java",
