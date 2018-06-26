@@ -21,6 +21,7 @@ import java.net.URI
 import java.nio.file.*
 import java.util.ArrayDeque
 import java.util.ArrayList
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * An implementation of a [Path]-like data structure that can represent unix or Windows-style path names.
@@ -38,7 +39,7 @@ class PathString private constructor(
         /**
          * Holds the URI for the filesystem root. This is intended to be the shortest path such that
          * [FileSystems.getFileSystem] will return the correct filesystem. For example, this would be
-         * "file:///" for local filesystem paths on unix.
+         * "file:///" for local filesystem paths on Unix.
          */
         val filesystemUri: URI,
         /**
@@ -71,6 +72,24 @@ class PathString private constructor(
     private constructor(filesystem: URI, path: String, rootLength: Int) :
             this(filesystem, path, rootLength, path.length, rootLength, detectSeparator(path))
 
+    /**
+     * Creates a [PathString] given a filesystem [protocol] and [path]. This constructor is applicable
+     * only to the local filesystem and the filesystems uniquely defined by their protocol, e.g. "jar"
+     * and "apk" filesystems. For other filesystems use alternative constructors.
+     *
+     * @param protocol the filesystem protocol, e.g. "file", "jar", or "apk"
+     * @param path the path within the filesystem
+     */
+    constructor(protocol: String, path: String) : this(getUri(protocol), path, prefixLength(path))
+
+    /**
+     * Creates a [PathString] given a filesystem [URI][filesystemUri] and [path].
+     *
+     * @param filesystemUri the URI used to identify the filesystem. It is intended to contain the shortest
+     *     path such that [FileSystems.getFileSystem] will return the correct filesystem. For example, this
+     *     would be "file:///" for local filesystem paths on Unix.
+     * @param path the path within the filesystem
+     */
     constructor(filesystemUri: URI, path: String) : this(filesystemUri, path, prefixLength(path))
 
     constructor(path: String) : this(defaultFilesystemUri, path)
@@ -785,3 +804,20 @@ private fun detectSeparator(path: String): Char {
 }
 
 private fun String.withSeparator(sep: Char): String = replace('/', sep).replace('\\', sep)
+
+/** Keyed by URI scheme. */
+private val uriCache = ConcurrentHashMap<String, URI>()
+
+private val APK_URI = createRootUri("apk")
+private val JAR_URI = createRootUri("jar")
+
+private fun getUri(scheme: String): URI {
+    return when (scheme) {
+        defaultFilesystemUri.scheme -> defaultFilesystemUri
+        APK_URI.scheme -> APK_URI
+        JAR_URI.scheme -> JAR_URI
+        else -> uriCache.getOrPut(scheme) { createRootUri(scheme) }
+    }
+}
+
+private fun createRootUri(scheme: String) = URI(scheme, "", "/", null)
