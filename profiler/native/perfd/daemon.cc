@@ -243,34 +243,45 @@ bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name) {
 
 void Daemon::GetAgentStatus(const proto::AgentStatusRequest* request,
                             proto::AgentStatusResponse* response) {
-  auto got = agent_status_map_.find(request->pid());
+  int32_t pid = request->pid();
+  auto got = agent_status_map_.find(pid);
   if (got != agent_status_map_.end()) {
     response->set_status(got->second);
   } else {
     response->set_status(AgentStatusResponse::DETACHED);
   }
 
-  string app_name = ProcessManager::GetCmdlineForPid(request->pid());
-  if (app_name.empty()) {
-    // process is not available.
-    response->set_is_agent_attachable(false);
+  // Only query the app's debuggable state if we haven't already, to
+  // avoid calling "run-as" repeatedly.
+  auto attachable_itr = agent_attachable_map_.find(pid);
+  if (attachable_itr != agent_attachable_map_.end()) {
+    response->set_is_agent_attachable(attachable_itr->second);
   } else {
-    if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
-      // pre-O, since the agent is deployed with the app, we should receive a
-      // heartbeat right away. We can simply use that as a signal to determine
-      // whether an agent can be attached.
-      response->set_is_agent_attachable(response->status() ==
-                                        AgentStatusResponse::ATTACHED);
+    string app_name = ProcessManager::GetCmdlineForPid(pid);
+    if (app_name.empty()) {
+      // Process is not available. Do not cache the attachable result here since
+      // we couldn't retrieve the process.
+      response->set_is_agent_attachable(false);
     } else {
-      // In O+, we can attach an jvmti agent as long as the app is debuggable
-      // and the app's data folder is available to us.
-      string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
-      PackageManager package_manager;
-      string data_path;
-      string error;
-      bool has_data_path =
-          package_manager.GetAppDataPath(package_name, &data_path, &error);
-      response->set_is_agent_attachable(has_data_path);
+      if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
+        // pre-O, since the agent is deployed with the app, we should receive a
+        // heartbeat right away. We can simply use that as a signal to determine
+        // whether an agent can be attached.
+        response->set_is_agent_attachable(response->status() ==
+                                          AgentStatusResponse::ATTACHED);
+      } else {
+        // In O+, we can attach an jvmti agent as long as the app is debuggable
+        // and the app's data folder is available to us.
+        string package_name =
+            ProcessManager::GetPackageNameFromAppName(app_name);
+        PackageManager package_manager;
+        string data_path;
+        string error;
+        bool has_data_path =
+            package_manager.GetAppDataPath(package_name, &data_path, &error);
+        response->set_is_agent_attachable(has_data_path);
+      }
+      agent_attachable_map_[pid] = response->is_agent_attachable();
     }
   }
 }

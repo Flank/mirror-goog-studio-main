@@ -124,10 +124,15 @@ class Daemon {
   // Session management across the profiling services in perfd.
   SessionsManager session_manager_;
 
+  // TODO (b/110830616): remove dead entries
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
   // Mapping pid -> latest status of agent (Attached / Detached).
+  // TODO (b/110830616): remove dead entries
   std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>
       agent_status_map_;
+  // Mapping pid -> whether an agent is attachable.
+  // TODO (b/110830616): remove dead entries
+  std::unordered_map<int32_t, bool> agent_attachable_map_;
 };
 
 }  // namespace profiler
