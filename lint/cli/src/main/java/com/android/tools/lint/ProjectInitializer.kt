@@ -704,10 +704,15 @@ private class ProjectInitializer(
         dir: File
     ): File {
         var source = File(path)
-        if (!source.isAbsolute && !source.exists()) {
-            source = File(dir, path)
+        if (!source.isAbsolute) {
             if (!source.exists()) {
-                source = File(root, path)
+                source = File(dir, path)
+                if (!source.exists()) {
+                    source = File(root, path)
+                }
+            } else {
+                // Relative path: make it absolute
+                return source.absoluteFile
             }
         }
 
