@@ -33,7 +33,7 @@ namespace profiler {
 // Note: This class is thread safe
 class SessionsManager final {
  public:
-  SessionsManager(Clock* clock) : clock_(clock) {}
+  SessionsManager(Clock *clock) : clock_(clock) {}
 
   // Return true if a new session has been created, otherwise returns false
   // (session already exists). Note that in both cases, |session| is always
@@ -46,10 +46,6 @@ class SessionsManager final {
 
   // Return true if a matching session is found, false otherwise.
   bool GetSession(int64_t session_id, proto::Session *session) const;
-
-  // Find the currently active session associated with a |pid|.
-  // Return true if an active session is found, false otherwise.
-  bool GetActiveSessionByPid(int32_t pid, proto::Session *session) const;
 
   // Return all sessions between two timestamps. Default values are provided so
   // if you exclude a timestamp, then the search will not be bounded by it.
@@ -79,7 +75,7 @@ class SessionsManager final {
   // that the mutex is already locked.
   void DoEndSession(proto::Session *session);
 
-  Clock* clock_;
+  Clock *clock_;
 
   mutable std::mutex sessions_mutex_;
   // Sessions are sorted from most recent to least recent.

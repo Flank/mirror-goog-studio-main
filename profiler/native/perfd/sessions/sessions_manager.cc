@@ -81,20 +81,6 @@ bool SessionsManager::GetSession(int64_t session_id, Session* session) const {
   }
 }
 
-bool SessionsManager::GetActiveSessionByPid(int32_t pid,
-                                            Session* session) const {
-  lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter({[pid](const Session& s) {
-    return s.pid() == pid && SessionUtils::IsActive(s);
-  }});
-  if (it != sessions_.end()) {
-    session->CopyFrom(*it);
-    return true;
-  } else {
-    return false;
-  }
-}
-
 std::vector<Session> SessionsManager::GetSessions(int64_t start_timestamp,
                                                   int64_t end_timestamp) const {
   lock_guard<mutex> lock(sessions_mutex_);

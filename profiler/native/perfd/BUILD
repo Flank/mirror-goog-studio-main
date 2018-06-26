@@ -6,8 +6,8 @@ cc_library(
         "daemon.h",
         "profiler_component.h",
         "profiler_service.h",
+        "sessions/sessions_manager.h",
         "termination_service.h",
-        "//tools/base/profiler/native/perfd/sessions:sessions_manager.h",
     ],
     copts = [
         "-Itools/base/profiler/native",
@@ -17,8 +17,8 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-cc_binary(
-    name = "perfd",
+cc_library(
+    name = "daemon",
     srcs = [
         "agent_service.cc",
         "agent_service.h",
@@ -28,10 +28,12 @@ cc_binary(
         "daemon.h",
         "generic_component.cc",
         "generic_component.h",
-        "perfd.cc",
         "profiler_component.h",
         "profiler_service.cc",
         "profiler_service.h",
+        "sessions/session_utils.h",
+        "sessions/sessions_manager.cc",
+        "sessions/sessions_manager.h",
         "termination_service.cc",
         "termination_service.h",
     ],
@@ -49,8 +51,38 @@ cc_binary(
         "//tools/base/profiler/native/perfd/graphics:profiler_graphics",
         "//tools/base/profiler/native/perfd/memory:profiler_memory",
         "//tools/base/profiler/native/perfd/network:profiler_network",
-        "//tools/base/profiler/native/perfd/sessions:profiler_sessions",
         "//tools/base/profiler/proto:profiler_cc_proto",
+    ],
+)
+
+cc_binary(
+    name = "perfd",
+    srcs = ["perfd.cc"],
+    copts = ANDROID_COPTS + [
+        "-Itools/base/profiler/native",
+        "-I$(GENDIR)/tools/base/profiler",
+    ],
+    linkopts = ANDROID_LINKOPTS,
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [":daemon"],
+)
+
+cc_test(
+    name = "perfd_test",
+    srcs = [
+        "profiler_service_test.cc",
+    ],
+    copts = [
+        "-Itools/base/profiler/native",
+        "-I$(GENDIR)/tools/base/profiler",
+    ],
+    linkstatic = 1,
+    tags = ["no_windows"],
+    deps = [
+        ":daemon",
+        "//external:gmock_main",
+        "//tools/base/profiler/native/test:testutils",
     ],
 )
 
