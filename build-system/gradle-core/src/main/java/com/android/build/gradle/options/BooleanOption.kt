@@ -89,6 +89,7 @@ enum class BooleanOption(
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn"),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow"),
     DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
+    DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
     ;
     constructor(
         propertyName: String,

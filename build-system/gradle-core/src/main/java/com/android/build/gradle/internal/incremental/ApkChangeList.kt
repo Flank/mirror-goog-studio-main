@@ -20,17 +20,22 @@ import com.google.common.base.Joiner
 import com.google.common.base.Splitter
 import com.google.gson.JsonParser
 import com.google.gson.stream.JsonWriter
+import java.io.File
 import java.io.Reader
 import java.io.Writer
 
-class FolderBasedApkChangeList(val changes: Iterable<String>, val deletions: Iterable<String>) {
+class ApkChangeList(val changes: Iterable<String>, val deletions: Iterable<String>) {
 
     companion object {
 
         const val CHANGE_LIST_FN = "__adt_change_list__.json"
 
         @JvmStatic
-        fun write(source: FolderBasedApkCreator, writer: Writer) {
+        fun changeListFileName(apkFile: File): String=
+            apkFile.nameWithoutExtension + CHANGE_LIST_FN
+
+        @JvmStatic
+        fun write(source: CapturingChangesApkCreator, writer: Writer) {
 
             val jsonWriter = JsonWriter(writer)
             jsonWriter.beginObject()
@@ -46,7 +51,7 @@ class FolderBasedApkChangeList(val changes: Iterable<String>, val deletions: Ite
         }
 
         @JvmStatic
-        fun read(reader: Reader): FolderBasedApkChangeList {
+        fun read(reader: Reader): ApkChangeList {
             val jsonParser = JsonParser()
             val element = jsonParser.parse(reader)
             val changed = element.asJsonObject.get("changed")
@@ -58,7 +63,7 @@ class FolderBasedApkChangeList(val changes: Iterable<String>, val deletions: Ite
             val deletedItems = if (deleted != null) {
                 Splitter.on(",").split(deleted.asString)
             } else listOf()
-            return FolderBasedApkChangeList(
+            return ApkChangeList(
                 changedItems,
                 deletedItems
             )

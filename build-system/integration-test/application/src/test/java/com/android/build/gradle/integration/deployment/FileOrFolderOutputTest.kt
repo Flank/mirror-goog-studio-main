@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.deployment
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.internal.incremental.FolderBasedApkChangeList
+import com.android.build.gradle.internal.incremental.ApkChangeList
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.PathSubject
@@ -26,7 +26,6 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.io.FileReader
-import java.util.Arrays
 import java.util.zip.ZipFile
 
 class FileOrFolderOutputTest {
@@ -63,10 +62,10 @@ class FileOrFolderOutputTest {
             compareContent(apkContentCopy, it.file.toFile(), it.file.toFile())
             assertThat(apkContentCopy.isEmpty())
 
-            val changeListFile = File(it.file.toFile(), FolderBasedApkChangeList.CHANGE_LIST_FN)
+            val changeListFile = File(it.file.toFile(), ApkChangeList.CHANGE_LIST_FN)
             FileSubject.assertThat(changeListFile).exists()
             val changeList = FileReader(changeListFile).use {
-                FolderBasedApkChangeList.read(it)
+                ApkChangeList.read(it)
             }
             assertThat(changeList.changes).containsExactlyElementsIn(apkContent.keys)
         }
@@ -81,6 +80,23 @@ class FileOrFolderOutputTest {
             assertThat(apkContent).containsExactlyEntriesIn(
                 getZipContent(it.file.toFile()))
         }
+
+        // finally rebuild with an APK but requesting a change log.
+        project.executor()
+            .with(BooleanOption.DEPLOYMENT_PROVIDES_LIST_OF_CHANGES, true)
+            .run("clean", "assembleDebug")
+
+        val apkFile = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(apkFile.exists())
+        assertThat(apkFile.file.toFile().isFile)
+
+        val changeListFile = File(apkFile.file.toFile().parentFile,
+            ApkChangeList.changeListFileName(apkFile.file.toFile()))
+        assertThat(changeListFile.exists())
+        val changeList = FileReader(changeListFile).use {
+            ApkChangeList.read(it)
+        }
+        assertThat(changeList.changes).containsExactlyElementsIn(apkContent.keys)
     }
 
     private fun getZipContent(zip: File) : Map<String, Long> {
@@ -105,7 +121,7 @@ class FileOrFolderOutputTest {
     private fun compareContent(content: MutableMap<String, Long>, folder: File, base: File) {
 
         folder.listFiles()
-            .filter{ it.name != FolderBasedApkChangeList.CHANGE_LIST_FN }
+            .filter{ it.name != ApkChangeList.CHANGE_LIST_FN }
             .forEach { file ->
                 if (file.isDirectory) {
                     compareContent(content, file, base)

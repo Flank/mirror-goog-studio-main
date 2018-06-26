@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
 import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -63,12 +64,25 @@ public class IncrementalPackagerBuilder {
             }
         },
 
-        /** Directory with a structure mimicking the APK format. */
-        DIRECTORY {
-            @SuppressWarnings("resource")
+        FILE_WITH_LIST_OF_CHANGES {
+            @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
             @Override
             ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
-                return FolderBasedApkCreator::new;
+                ApkCreatorFactory apk =
+                        ApkCreatorFactories.fromProjectProperties(project, debuggableBuild);
+                return creationData ->
+                        new CapturingChangesApkCreator(creationData, apk.make(creationData));
+            }
+        },
+
+        /** Directory with a structure mimicking the APK format. */
+        DIRECTORY {
+            @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
+            @Override
+            ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
+                return creationData ->
+                        new CapturingChangesApkCreator(
+                                creationData, new FolderBasedApkCreator(creationData));
             }
         };
 

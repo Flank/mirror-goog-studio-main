@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.incremental
 
-import com.android.testutils.truth.FileSubject
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.utils.FileUtils
 import com.google.common.io.Files
@@ -31,7 +30,6 @@ import org.mockito.MockitoAnnotations
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.FileReader
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 
@@ -93,7 +91,6 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
         checkFolderContent(destFolder.root,
             listOf("inFile1", "foo/inFile2", "foo/bar/inFile4"))
-        testChangesList(destFolder.root, listOf(), listOf("foo/bar/inFile3"))
     }
 
     @Test
@@ -112,7 +109,6 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
         checkFolderContent(destFolder.root,
             listOf("inFile1", "new/file", "foo/inFile2", "foo/bar/inFile4"))
-        testChangesList(destFolder.root, listOf("new/file"), listOf("foo/bar/inFile3"))
     }
 
     @Test
@@ -126,7 +122,6 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOf("inFile1"))
-        testChangesList(destFolder.root, listOf("inFile1"), listOf())
     }
 
     @Test
@@ -139,7 +134,6 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOfEntries)
-        testChangesList(destFolder.root, listOfEntries, listOf())
     }
 
     @Test
@@ -172,7 +166,6 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, firstEntries.plus(secondEntries))
-        testChangesList(destFolder.root, firstEntries.plus(secondEntries), listOf())
     }
 
     @Test
@@ -190,7 +183,6 @@ class FolderBasedApkCreatorTest {
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOf("inFile1", "inFile2", "foo/inFile4"))
-        testChangesList(destFolder.root, listOf(), listOf("foo/inFile3"))
     }
 
     @Test(expected = AssertionError::class)
@@ -220,7 +212,7 @@ class FolderBasedApkCreatorTest {
     private fun getFilesInFolder(folder: File) =
         Files.fileTreeTraverser().breadthFirstTraversal(folder)
             .filter(File::isFile)
-            .filter{it.name != FolderBasedApkChangeList.CHANGE_LIST_FN}
+            .filter{it.name != ApkChangeList.CHANGE_LIST_FN}
             .map(File::getAbsolutePath)
             .toList()
 
@@ -239,27 +231,19 @@ class FolderBasedApkCreatorTest {
             expectedEntries.map{ "${folder.absolutePath}/$it".replace('/', File.separatorChar) })
     }
 
-    private fun createJarFile(zipFile: File, expectedEntries: List<String>) {
-        JarOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use {
-            expectedEntries.forEach { entryName ->
-                addJarEntry(it, entryName )
+    companion object {
+        fun createJarFile(zipFile: File, expectedEntries: List<String>) {
+            JarOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use {
+                expectedEntries.forEach { entryName ->
+                    addJarEntry(it, entryName)
+                }
             }
         }
-    }
 
-    private fun addJarEntry(jar: JarOutputStream, name: String) {
-        jar.putNextEntry(JarEntry(name))
-        jar.writer(Charsets.UTF_8).append("Content: $name")
-        jar.closeEntry()
-    }
-
-    private fun testChangesList(folder: File, changes: List<String>, deletions: List<String>) {
-        val changesFile = File(folder, FolderBasedApkChangeList.CHANGE_LIST_FN)
-        FileSubject.assertThat(changesFile).exists()
-
-        val changeList = FolderBasedApkChangeList.read(FileReader(changesFile))
-
-        assertThat(changeList.changes).containsExactlyElementsIn(changes)
-        assertThat(changeList.deletions).containsExactlyElementsIn(deletions)
+        private fun addJarEntry(jar: JarOutputStream, name: String) {
+            jar.putNextEntry(JarEntry(name))
+            jar.writer(Charsets.UTF_8).append("Content: $name")
+            jar.closeEntry()
+        }
     }
 }

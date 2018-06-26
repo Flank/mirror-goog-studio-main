@@ -18,21 +18,20 @@ package com.android.build.gradle.internal.incremental
 
 import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
+import com.android.tools.build.apkzlib.zip.StoredEntry
 import com.android.tools.build.apkzlib.zip.ZFile
 import java.io.File
-import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.function.Function
 import java.util.function.Predicate
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 
 /**
  * Implementation of [ApkCreator] that outputs to a folder.
  */
 class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.CreationData) : ApkCreator {
-
-    val changedItems = mutableListOf<String>()
-    val deletedItems = mutableListOf<String>()
 
     init {
         val apkPath = creationData.apkPath
@@ -42,29 +41,34 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
         assert(apkPath.isDirectory)
     }
 
+    companion object {
+        fun proccessZipEntry(zip: File, isIgnored: Predicate<String>?, action: (StoredEntry) -> Unit) {
+            ZFile(zip).use {
+                it.entries().forEach { entry ->
+                    if (isIgnored?.test(entry.centralDirectoryHeader.name) != true) {
+                        action.invoke(entry)
+                    }
+                }
+            }
+        }
+    }
+
     override fun writeZip(
         zip: File?,
         transform: Function<String, String>?,
         isIgnored: Predicate<String>?
     ) {
         if (zip==null) return
-        ZFile(zip).use {
-            it.entries().forEach { entry ->
-                run {
-                    if (isIgnored?.test(entry.centralDirectoryHeader.name) != true) {
-                        entry.open().use {
-                            val destinationFile =
-                                File(creationData.apkPath, entry.centralDirectoryHeader.name)
-                            destinationFile.parentFile.mkdirs()
-                            Files.copy(
-                                it,
-                                destinationFile.toPath(),
-                                StandardCopyOption.REPLACE_EXISTING
-                            )
-                            changedItems.add(entry.centralDirectoryHeader.name)
-                        }
-                    }
-                }
+        proccessZipEntry(zip, isIgnored) { entry ->
+            entry.open().use {
+                val destinationFile =
+                    File(creationData.apkPath, entry.centralDirectoryHeader.name)
+                destinationFile.parentFile.mkdirs()
+                Files.copy(
+                    it,
+                    destinationFile.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING
+                )
             }
         }
     }
@@ -76,19 +80,13 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
             inputFile.toPath(),
             destinationFile.toPath(),
             StandardCopyOption.REPLACE_EXISTING)
-        changedItems.add(entryPath)
     }
 
     override fun deleteFile(entryPath: String) {
         Files.deleteIfExists(File(creationData.apkPath, entryPath).toPath())
-        deletedItems.add(entryPath)
     }
 
     override fun hasPendingChangesWithWait(): Boolean = false
 
-    override fun close() {
-        FileWriter(File(creationData.apkPath, FolderBasedApkChangeList.CHANGE_LIST_FN))
-            .buffered()
-            .use { FolderBasedApkChangeList.write(this, it) }
-    }
+    override fun close() {}
 }
