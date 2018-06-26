@@ -28,10 +28,11 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,21 +71,24 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
 
     @Override
     public void mergeDexArchives(
-            @NonNull Iterable<Path> inputs,
+            @NonNull Iterator<Path> inputs,
             @NonNull Path outputDir,
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)
             throws DexArchiveMergerException {
-        LOGGER.log(
-                Level.INFO,
-                "Merging to '"
-                        + outputDir.toAbsolutePath().toString()
-                        + "' with D8 from "
-                        + Streams.stream(inputs)
-                                .map(path -> path.toAbsolutePath().toString())
-                                .collect(Collectors.joining(", ")));
-
-        if (Iterables.isEmpty(inputs)) {
+        List<Path> inputsList = Lists.newArrayList(inputs);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(
+                    Level.INFO,
+                    "Merging to '"
+                            + outputDir.toAbsolutePath().toString()
+                            + "' with D8 from "
+                            + inputsList
+                                    .stream()
+                                    .map(path -> path.toAbsolutePath().toString())
+                                    .collect(Collectors.joining(", ")));
+        }
+        if (inputsList.isEmpty()) {
             return;
         }
 
@@ -92,7 +96,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
         D8Command.Builder builder = D8Command.builder(d8DiagnosticsHandler);
         builder.setDisableDesugaring(true);
 
-        for (Path input : inputs) {
+        for (Path input : inputsList) {
             try (DexArchive archive = DexArchives.fromInput(input)) {
                 for (DexArchiveEntry dexArchiveEntry : archive.getFiles()) {
                     builder.addDexProgramData(
@@ -114,7 +118,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     .setIntermediate(false);
             D8.run(builder.build(), forkJoinPool);
         } catch (CompilationFailedException e) {
-            throw getExceptionToRethrow(e, inputs, d8DiagnosticsHandler);
+            throw getExceptionToRethrow(e, inputsList, d8DiagnosticsHandler);
         }
     }
 

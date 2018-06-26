@@ -26,6 +26,7 @@ import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.process.ProcessOutput;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 
@@ -39,7 +40,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final DexingType dexingType;
     @NonNull private final ProcessOutput processOutput;
     @NonNull private final File dexOutputDir;
-    @NonNull private final Iterable<Path> dexArchives;
+    @NonNull private final Iterator<Path> dexArchives;
     @NonNull private final ForkJoinPool forkJoinPool;
     @Nullable private final Path mainDexList;
     @NonNull private final DexMergerTool dexMerger;
@@ -51,7 +52,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
             @NonNull DexingType dexingType,
             @NonNull ProcessOutput processOutput,
             @NonNull File dexOutputDir,
-            @NonNull Iterable<Path> dexArchives,
+            @NonNull Iterator<Path> dexArchives,
             @Nullable Path mainDexList,
             @NonNull ForkJoinPool forkJoinPool,
             @NonNull DexMergerTool dexMerger,
@@ -108,7 +109,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
                 @NonNull DexingType dexingType,
                 @NonNull ProcessOutput processOutput,
                 @NonNull File dexOutputDir,
-                @NonNull Iterable<Path> dexArchives,
+                @NonNull Iterator<Path> dexArchives,
                 @Nullable Path mainDexList,
                 @NonNull ForkJoinPool forkJoinPool,
                 @NonNull DexMergerTool dexMerger,

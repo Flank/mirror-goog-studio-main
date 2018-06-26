@@ -224,6 +224,6 @@ public final class DexArchiveTestUtil {
                 throw new AssertionError();
         }
         Files.createDirectory(outputDir);
-        merger.mergeDexArchives(inputs, outputDir, mainDexList, dexingType);
+        merger.mergeDexArchives(inputs.iterator(), outputDir, mainDexList, dexingType);
     }
 }

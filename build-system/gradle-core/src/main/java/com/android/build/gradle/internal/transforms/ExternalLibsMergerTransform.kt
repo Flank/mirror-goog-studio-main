@@ -85,9 +85,10 @@ class ExternalLibsMergerTransform(
 
         // we need to re-merge all jars except the removed ones.
         val jarInputList = flattenInputs
-                .filter { it.status != Status.REMOVED }
-                .map {it.file.toPath()}
-                .toList()
+            .stream()
+            .filter { it.status != Status.REMOVED }
+            .map { it.file.toPath() }
+            .iterator()
 
         val outputHandler = ParsingProcessOutputHandler(
                 ToolOutputParser(DexParser(), Message.Kind.ERROR, logger),
@@ -101,7 +102,7 @@ class ExternalLibsMergerTransform(
         FileUtils.cleanOutputDir(outputDir)
 
         // if all jars were removed, nothing to do.
-        if (jarInputList.isEmpty()) {
+        if (!jarInputList.hasNext()) {
             return
         }
 

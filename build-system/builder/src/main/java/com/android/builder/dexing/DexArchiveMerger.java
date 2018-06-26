@@ -6,6 +6,7 @@ import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.tools.r8.CompilationMode;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -55,7 +56,7 @@ public interface DexArchiveMerger {
      * @param dexingType specifies how to merge dex files
      */
     void mergeDexArchives(
-            @NonNull Iterable<Path> inputs,
+            @NonNull Iterator<Path> inputs,
             @NonNull Path outputDir,
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)
