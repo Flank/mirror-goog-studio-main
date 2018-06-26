@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.UnitTestVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -127,9 +128,14 @@ public class ApiObjectFactory {
 
         createVariantOutput(variantData, variantApi);
 
-        // Only add the variant API object to the domain object set once it's been fully
-        // initialized.
-        extension.addVariant(variantApi);
+        try {
+            // Only add the variant API object to the domain object set once it's been fully
+            // initialized.
+            extension.addVariant(variantApi);
+        } catch (Throwable t) {
+            // Adding variant to the collection will trigger user-supplied callbacks
+            throw new ExternalApiUsageException(t);
+        }
 
         return variantApi;
     }

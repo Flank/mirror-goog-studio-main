@@ -49,9 +49,7 @@ public class FeaturePlugin extends LibraryPlugin {
     }
 
     @Override
-    public void apply(@NonNull Project project) {
-        super.apply(project);
-
+    protected void pluginSpecificApply(@NonNull Project project) {
         // create the configuration used to declare the feature split in the base split.
         //noinspection deprecation
         Configuration featureSplit =

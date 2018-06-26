@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
+import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -248,7 +249,15 @@ public abstract class BasePlugin<E extends BaseExtension2>
     }
 
     @Override
-    public void apply(@NonNull Project project) {
+    public final void apply(@NonNull Project project) {
+        CrashReporting.runAction(
+                () -> {
+                    basePluginApply(project);
+                    pluginSpecificApply(project);
+                });
+    }
+
+    private void basePluginApply(@NonNull Project project) {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
@@ -265,7 +274,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         PluginInitializer.initialize(project);
         ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
-        
+
         // initialize our workers using the project's options.
         Workers.INSTANCE.initFromProject(
                 projectOptions,
@@ -321,14 +330,18 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
             // after evaluate callbacks
             project.afterEvaluate(
-                    p ->
-                            threadRecorder.record(
-                                    ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
-                                    p.getPath(),
-                                    null,
-                                    delegate::afterEvaluate));
+                    CrashReporting.afterEvaluate(
+                            p -> {
+                                threadRecorder.record(
+                                        ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
+                                        p.getPath(),
+                                        null,
+                                        delegate::afterEvaluate);
+                            }));
         }
     }
+
+    protected abstract void pluginSpecificApply(@NonNull Project project);
 
     /**
      * Returns the typed plugin delegate.
@@ -646,15 +659,16 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 () -> taskManager.createTasksBeforeEvaluate());
 
         project.afterEvaluate(
-                project -> {
-                    sourceSetManager.runBuildableArtifactsActions();
+                CrashReporting.afterEvaluate(
+                        p -> {
+                            sourceSetManager.runBuildableArtifactsActions();
 
-                    threadRecorder.record(
-                            ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
-                            project.getPath(),
-                            null,
-                            () -> createAndroidTasks());
-                });
+                            threadRecorder.record(
+                                    ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
+                                    project.getPath(),
+                                    null,
+                                    this::createAndroidTasks);
+                        }));
     }
 
 

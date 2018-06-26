@@ -69,7 +69,7 @@ object PluginCrashReporter {
             return false
         }
 
-        return PluginExceptionReport.create(Throwables.getRootCause(ex))?.let {
+        return PluginExceptionReport.create(ex)?.let {
             reporter.submit(it)
             return true
         } ?: false

@@ -135,8 +135,8 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
     }
 
     @Override
-    public void apply(@NonNull Project project) {
-        super.apply(project);
+    protected void pluginSpecificApply(@NonNull Project project) {
+        // do nothing
     }
 
     @NonNull

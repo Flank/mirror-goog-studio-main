@@ -117,8 +117,8 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
     }
 
     @Override
-    public void apply(@NonNull Project project) {
-        super.apply(project);
+    protected void pluginSpecificApply(@NonNull Project project) {
+        // do nothing
     }
 
     @NonNull

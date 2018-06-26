@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.crash
 
 import com.android.builder.model.Version
 import com.android.tools.analytics.crash.CrashReport
+import com.google.common.base.Throwables
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import java.lang.IllegalStateException
 
@@ -30,8 +31,11 @@ private constructor(val exception: Throwable):
 
     companion object {
         fun create(ex: Throwable): PluginExceptionReport? {
-            if (isWhiteListedException(ex)) {
-                return PluginExceptionReport(ex)
+            if (ex is ExternalApiUsageException) return null
+
+            val rootCause = Throwables.getRootCause(ex)
+            if (isWhiteListedException(rootCause)) {
+                return PluginExceptionReport(rootCause)
             } else {
                 return null
             }

@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
@@ -1333,8 +1334,12 @@ public class VariantManager implements VariantModel {
                         ignore = !variantFilter.getName().equals(restrictedVariantName);
                     }
                 } else {
-                    // variantFilterAction != null always true here.
-                    variantFilterAction.execute(variantFilter);
+                    try {
+                        // variantFilterAction != null always true here.
+                        variantFilterAction.execute(variantFilter);
+                    } catch (Throwable t) {
+                        throw new ExternalApiUsageException(t);
+                    }
                     ignore = variantFilter.isIgnore();
                 }
             }

@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
+import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
@@ -38,6 +39,11 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
         return GradleBuildProject.PluginType.DYNAMIC_FEATURE;
+    }
+
+    @Override
+    protected void pluginSpecificApply(@NonNull Project project) {
+        // do nothing
     }
 
     @NonNull

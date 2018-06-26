@@ -122,11 +122,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                 recorder);
     }
 
-    @Override
-    public void apply(@NonNull Project project) {
-        super.apply(project);
-    }
-
     @NonNull
     @Override
     protected ApplicationVariantFactory createVariantFactory(

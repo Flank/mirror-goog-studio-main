@@ -53,4 +53,12 @@ class PluginCrashReporterTest {
         assertThat(reportForTest(RuntimeException(), settings)).isFalse()
         assertThat(reportForTest(IllegalStateException(RuntimeException()), settings)).isFalse()
     }
+
+    @Test
+    fun testExternalApiUsageException() {
+        val settings = mock(AnalyticsSettings::class.java)
+        `when`(settings.hasOptedIn()).thenReturn(true)
+
+        assertThat(reportForTest(ExternalApiUsageException(RuntimeException()), settings)).isFalse()
+    }
 }
