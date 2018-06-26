@@ -305,7 +305,9 @@ single_gradle_integration_test(
     name = "VulkanTest",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
-    tags = TAGS,
+    tags = TAGS + [
+        "no_test_mac",  # b/110846203
+    ],
     deps = DEPS,
 )
 
