@@ -4,6 +4,8 @@ cc_binary(
     name = "libswap.so",
     srcs = [
         "capabilities.h",
+        "hotswap.cc",
+        "hotswap.h",
         "instant.cc",
         "jni_class.h",
         "jni_identifiers.h",
@@ -16,6 +18,7 @@ cc_binary(
     tags = [
         "no_windows",
     ],
+    visibility = ["//tools/base/deploy/swapper:__pkg__"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/utils:agent_utils",

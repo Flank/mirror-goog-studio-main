@@ -96,7 +96,14 @@ def select_android(android, default):
         "//conditions:default": default,
         })
 
-def dex_library(name, jars=[], output=None, visibility=None, tags=[]):
+def dex_library(name, jars=[], output=None, visibility=None, tags=[], flags=[], dexer="DX"):
+  if dexer != "D8":
+    cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<"
+    tools = ["//prebuilts/studio/sdk:dx-preview"]
+  else:
+    cmd = "$(location //prebuilts/r8:d8) " + " ".join(flags) + " --output ./$@ ./$<"
+    tools = ["//prebuilts/r8:d8"]
+
   if output == None:
     outs = [name + ".jar"]
   else:
@@ -107,8 +114,8 @@ def dex_library(name, jars=[], output=None, visibility=None, tags=[]):
     outs = outs,
     visibility = visibility,
     tags = tags,
-    cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<",
-    tools = ["//prebuilts/studio/sdk:dx-preview"],
+    cmd = cmd,
+    tools = tools,
   )
 
 ANDROID_COPTS = select_android([

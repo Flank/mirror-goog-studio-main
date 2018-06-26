@@ -21,6 +21,7 @@
 #include <string>
 
 #include "capabilities.h"
+#include "hotswap.h"
 #include "jni_class.h"
 #include "jni_identifiers.h"
 #include "jni_object.h"
@@ -32,8 +33,8 @@ using std::string;
 
 namespace swapper {
 
-// For the sake of illustration that all of this works.
-bool DoHotSwap() { return false; }
+// TODO: Make the agent more C++ like and not use globals.
+string dexdir("");
 
 // Retrieve the current user ID.
 jint GetUserHandle(JNIEnv* jni) {
@@ -95,9 +96,10 @@ extern "C" void JNICALL MethodEntry(jvmtiEnv* jvmti, JNIEnv* jni,
     return;
   }
 
+  HotSwap codeswap(jvmti, jni);
   // If hot swap fails, translate the message into an exit event. This is
   // for illustrative purposes only; in reality, we'll change it to a -1.
-  if (!DoHotSwap()) {
+  if (!codeswap.DoHotSwap(dexdir)) {
     Log::V("Changing event from app-info update to app close.");
     message.SetField(MESSAGE_WHAT, 111);
     jvmti->SetLocalObject(current_thread, 0, messageSlot, message.GetJObject());
@@ -141,7 +143,7 @@ bool Initialize(JavaVM* vm, jvmtiEnv*& jvmti, JNIEnv*& jni) {
 }
 
 // Event that fires when the agent hooks onto a running VM.
-extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
+extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
                                                  void* reserved) {
   jvmtiEnv* jvmti;
   JNIEnv* jni;
@@ -153,14 +155,44 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   Log::V("Agent started");
 
-  // The package to update is passed as the options string, for now.
-  jvalue args[3];
-  args[0].l = jni->NewStringUTF(options);
-  args[1].i = GetFlags(jni);
-  args[2].i = GetUserHandle(jni);
+  // TODO(acleung): Find a better way to pass arguments to the agent. May a PB?
+  // For now we just comma split options...
+  string options(input);
 
-  jvmti->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_METHOD_ENTRY, NULL);
-  ScheduleAppInfoChanged(jni, args);
+  // Argument #1: The package to update.
+  auto pos = options.find(',');
+  if (pos == string::npos) {
+    Log::E(
+        "Invalid agruements to start instant run agent: %s"
+        "Expecting <appid>,<dex_location>",
+        input);
+    return JNI_ERR;
+  }
+  string appid = options.substr(0, pos);
+
+  // Argument #2: The directory on the device that contains all the dex files to
+  dexdir = options.substr(pos + 1, options.length());
+
+  Log::V("app id %s", appid.c_str());
+  if (appid.length() > 0 && appid != "<none>") {
+    // Schedule update app-info first. It will handle hotswap when at the call
+    // back.
+    jvalue args[3];
+    args[0].l = jni->NewStringUTF(appid.c_str());
+    args[1].i = GetFlags(jni);
+    args[2].i = GetUserHandle(jni);
+
+    jvmti->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_METHOD_ENTRY,
+                                    NULL);
+    ScheduleAppInfoChanged(jni, args);
+  } else {
+    // Otherwise, directly hotswap right here.
+    HotSwap codeswap(jvmti, jni);
+    if (!codeswap.DoHotSwap(dexdir)) {
+      // TODO: Return meaningful status.
+      return JNI_ERR;
+    }
+  }
 
   return JNI_OK;
 }

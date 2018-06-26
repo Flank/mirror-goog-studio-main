@@ -35,6 +35,12 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
     private String myAttachAgentPath = null;
     private List<ClassLoader> myClassLoaders = new ArrayList<>();
 
+    // For the most part, the context class loader will be the class loader that loaded the dex
+    // file. There are some rare instances such process-sharing applications where this is not
+    // the case. However, we probably don't need complete re-implementation of the Android
+    // Framework  here.
+    private ClassLoader currentActivityClassLoader = null;
+
     public static void main(String[] args) {
         FakeAndroid app = new FakeAndroid();
         SimpleWebServer webServer = new SimpleWebServer(app);
@@ -48,12 +54,26 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
     private synchronized void block() {
         try {
             wait();
+
+            ClassLoader curClassLoader = null;
+            Thread curThread = null;
+            if (currentActivityClassLoader != null) {
+                curClassLoader = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(currentActivityClassLoader);
+            }
+
             // To simulate cmd activity attach-agent we need to call direclty into the VM and
             // attach the agent manually.
             Class vmDebugClazz = Class.forName("dalvik.system.VMDebug");
             Method attachAgentMethod = vmDebugClazz.getMethod("attachAgent", String.class);
             attachAgentMethod.setAccessible(true);
             attachAgentMethod.invoke(null, myAttachAgentPath);
+            System.out.println("attach-agent " + myAttachAgentPath);
+
+            if (curClassLoader != null) {
+                Thread.currentThread().setContextClassLoader(curClassLoader);
+            }
+
         } catch (InterruptedException ex) {
             System.err.println("Failed to block for webrequest: " + ex);
         } catch (ClassNotFoundException
@@ -82,7 +102,8 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
                     myClassLoaders.size() == 0
                             ? getClass().getClassLoader()
                             : myClassLoaders.get(0);
-            myClassLoaders.add((ClassLoader) ctor.newInstance(dexPath, parent));
+            currentActivityClassLoader = (ClassLoader) ctor.newInstance(dexPath, parent);
+            myClassLoaders.add(currentActivityClassLoader);
             System.out.println("Dex file loaded: " + dexPath);
         } catch (ClassNotFoundException
                 | InstantiationException
@@ -145,6 +166,7 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
                                 ActivityThread.currentActivityThread()
                                         .putActivity((Activity) clazz.newInstance(), false);
                                 found = true;
+                                currentActivityClassLoader = loader;
                             }
                         } catch (ClassNotFoundException ex) {
 

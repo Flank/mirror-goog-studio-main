@@ -124,6 +124,11 @@ public class FakeAndroidDriver extends ProcessRunner {
         sendRequest("trigger-method", String.format("%s,%s", activityClass, methodName));
     }
 
+    public void attachAgent(String loc) {
+        sendRequest("attach-agent", loc);
+        waitForInput(String.format("%s %s", "attach-agent", loc));
+    }
+
     public void setProperty(String propertyKey, String propertyValue) {
         sendRequest("set-property", String.format("%s,%s", propertyKey, propertyValue));
         waitForInput(String.format("%s=%s", propertyKey, propertyValue));
