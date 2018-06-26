@@ -1,0 +1,71 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.deployer;
+
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.InstallException;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.SyncException;
+import com.android.ddmlib.TimeoutException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+public class DdmDevice implements AdbClient {
+    private IDevice device;
+
+    public DdmDevice(IDevice device) {
+        this.device = device;
+    }
+
+    @Override
+    public void shell(String[] parameters) throws DeployerException {
+        try {
+            device.executeShellCommand(String.join(" ", parameters), null);
+        } catch (IOException
+                | TimeoutException
+                | AdbCommandRejectedException
+                | ShellCommandUnresponsiveException e) {
+            throw new DeployerException("Unable to run shell command.", e);
+        }
+    }
+
+    @Override
+    public void pull(String srcDirectory, String dstDirectory) throws DeployerException {
+        try {
+            device.pullFile(srcDirectory, dstDirectory);
+        } catch (IOException | AdbCommandRejectedException | TimeoutException | SyncException e) {
+            throw new DeployerException("Unable to pull files.", e);
+        }
+    }
+
+    @Override
+    public void installMultiple(List<Apk> apks) throws DeployerException {
+        List<File> files = new ArrayList<>();
+        for (Apk apk : apks) {
+            files.add(new File(apk.getPath()));
+        }
+        try {
+            device.installPackages(files, true, null, 10, TimeUnit.SECONDS);
+        } catch (InstallException e) {
+            throw new DeployerException("Unable to install packages.", e);
+        }
+    }
+}
