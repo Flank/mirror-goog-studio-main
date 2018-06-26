@@ -763,7 +763,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             mainCollection =
                     mainCollection.plus(getArtifactFileCollection(configType, ALL, SHARED_CLASSES));
 
-            if (buildArtifactsHolder.hasArtifact(InternalArtifactType.NAMESPACED_CLASSES)) {
+            if (globalScope
+                    .getProjectOptions()
+                    .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 FileCollection namespacedClasses =
                         buildArtifactsHolder
                                 .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_CLASSES_JAR)

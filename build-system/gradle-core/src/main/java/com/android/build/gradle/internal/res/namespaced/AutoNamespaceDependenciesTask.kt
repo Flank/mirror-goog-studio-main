@@ -110,11 +110,9 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             }
         )
 
-    @get:OutputDirectory lateinit var outputRewrittenClasses: File private set
     @get:OutputDirectory
     lateinit var outputStaticLibraries: File
         private set
-    @get:OutputDirectory lateinit var outputRClasses: File private set
     @get:OutputFile lateinit var outputClassesJar: File private set
     @get:OutputFile lateinit var outputRClassesJar: File private set
     @get:OutputDirectory lateinit var outputRewrittenManifests: File private set
@@ -134,9 +132,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         notNamespacedResources: ArtifactCollection = this.externalNotNamespacedResources,
         staticLibraryDependencies: ArtifactCollection = this.externalResStaticLibraries,
         intermediateDirectory: File = this.intermediateDirectory,
-        outputRewrittenClasses: File = this.outputRewrittenClasses,
         outputStaticLibraries: File = this.outputStaticLibraries,
-        outputRClasses: File = this.outputRClasses,
         outputClassesJar: File = this.outputClassesJar,
         outputRClassesJar: File = this.outputRClassesJar,
         outputManifests: File = this.outputRewrittenManifests
@@ -156,19 +152,21 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             )
 
             val rewrittenResources = File(intermediateDirectory, "namespaced_res")
+            val rewrittenClasses = File(intermediateDirectory, "namespaced_classes")
+            val rewrittenRClasses = File(intermediateDirectory, "namespaced_r_classes")
 
             val rewrittenResourcesMap = namespaceDependencies(
                 graph = graph,
                 forkJoinPool = forkJoinPool,
-                outputRewrittenClasses = outputRewrittenClasses,
-                outputRClasses = outputRClasses,
+                outputRewrittenClasses = rewrittenClasses,
+                outputRClasses = rewrittenRClasses,
                 outputManifests = outputManifests,
                 outputResourcesDir = rewrittenResources
             )
 
             // Jar all the classes into two JAR files - one for namespaced classes, one for R classes.
-            jarOutputs(outputClassesJar, outputRewrittenClasses)
-            jarOutputs(outputRClassesJar, outputRClasses)
+            jarOutputs(outputClassesJar, rewrittenClasses)
+            jarOutputs(outputRClassesJar, rewrittenRClasses)
 
             val aapt2ServiceKey = registerAaptService(aapt2FromMaven, logger = iLogger)
 
@@ -408,14 +406,8 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ArtifactType.NON_NAMESPACED_MANIFEST
             )
 
-            task.outputRewrittenClasses = variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.NAMESPACED_CLASSES, task)
-
             task.outputRewrittenManifests = variantScope.artifacts.appendArtifact(
                     InternalArtifactType.NAMESPACED_MANIFESTS, task)
-
-            task.outputRClasses = variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JARS, task)
 
             task.outputClassesJar = variantScope.artifacts.appendArtifact(
                     InternalArtifactType.NAMESPACED_CLASSES_JAR, task, "namespaced-classes.jar")
