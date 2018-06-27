@@ -19,7 +19,9 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
@@ -34,9 +36,27 @@ class AutoNamespaceTest {
 
     @Test
     fun rewriteJavaBytecodeRClassesAndResources() {
+
+        // Check model level 3
+        val model =
+            project.model().level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
+                .fetchAndroidProjects().onlyModel
+        val libraries = model.getDebugVariant().mainArtifact.dependencies.libraries
+        libraries.forEach { lib ->
+            // Not auto namespaced yet
+            assertThat(lib.resStaticLibrary).doesNotExist()
+        }
+
         project.executor()
             .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
             .run("assembleDebug")
+
+        libraries.forEach { lib ->
+            assertThat(lib.resStaticLibrary).exists()
+        }
+
+        // TODO(b/110879504): level 4
 
         assertThat(
                 FileUtils.join(

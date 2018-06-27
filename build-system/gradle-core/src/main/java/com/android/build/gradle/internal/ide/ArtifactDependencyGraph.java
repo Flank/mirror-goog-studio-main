@@ -43,7 +43,11 @@ import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.ModuleLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.res.namespaced.AutoNamespaceLocation;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidLibrary;
@@ -62,6 +66,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -129,6 +134,7 @@ public class ArtifactDependencyGraph {
                                         ? artifact.bundleResult.getFile()
                                         : explodedFolder, // fallback so that the value is non-null
                                 explodedFolder,
+                                // TODO(b/110879504): Auto-namespacing in level4 model
                                 findResStaticLibrary(explodedFolder),
                                 findLocalJarsAsStrings(explodedFolder));
             } else {
@@ -639,7 +645,7 @@ public class ArtifactDependencyGraph {
                                             : explodedFolder, // fallback so that the value is
                                     // non-null
                                     explodedFolder,
-                                    findResStaticLibrary(explodedFolder),
+                                    findResStaticLibrary(variantScope, artifact),
                                     getVariant(artifact),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */
@@ -825,6 +831,45 @@ public class ArtifactDependencyGraph {
         }
 
         return ImmutableList.of();
+    }
+
+    @Nullable
+    private static File findResStaticLibrary(
+            @NonNull VariantScope variantScope,
+            @NonNull HashableResolvedArtifactResult explodedAar) {
+        File file = findResStaticLibrary(explodedAar.getFile());
+        if (file != null) {
+            return file;
+        }
+
+        if (Boolean.TRUE.equals(
+                        variantScope
+                                .getGlobalScope()
+                                .getExtension()
+                                .getAaptOptions()
+                                .getNamespaced())
+                && variantScope
+                        .getGlobalScope()
+                        .getProjectOptions()
+                        .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            if (artifacts.hasArtifact(
+                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
+                // If it will be auto-namespaced.
+                File convertedDirectory =
+                        Iterables.get(
+                                artifacts.getFinalArtifactFiles(
+                                        InternalArtifactType
+                                                .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES),
+                                0);
+                return new File(
+                        convertedDirectory,
+                        AutoNamespaceLocation.getAutoNamespacedLibraryFileName(
+                                explodedAar.getId().getComponentIdentifier()));
+            }
+        }
+        // Not auto-namespaced, nor present in the original artifact
+        return null;
     }
 
     @Nullable

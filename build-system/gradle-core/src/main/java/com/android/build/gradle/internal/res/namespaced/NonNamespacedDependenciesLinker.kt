@@ -185,7 +185,7 @@ class NonNamespacedDependenciesLinker(
             NodeType.REMOTE_NAMESPACED ->
                 node.getFile(AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)!!
             NodeType.REMOTE_NON_NAMESPACED ->
-                File(outputStaticLibrariesDirectory, "${node.sanitizedName}.apk")
+                File(outputStaticLibrariesDirectory, getAutoNamespacedLibraryFileName(node.id))
             NodeType.LOCAL ->
                 error("Invalid dependency graph.")
             NodeType.JAR ->
