@@ -61,9 +61,8 @@ class PluginVersionCheckTest {
         assertThat(syncIssue.type).isEqualTo(TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD)
         assertThat(syncIssue.severity).isEqualTo(SEVERITY_ERROR)
         assertThat(syncIssue.message).contains(
-            "The minimum supported version of the Crashlytics plugin" +
-                    " (io.fabric.tools:gradle) is 1.25.4." +
-                    " Project 'project' is using version 1.22.1."
+            "The Android Gradle plugin supports only Crashlytics Gradle plugin" +
+                    " version 1.25.4 and higher. Project 'project' is using version 1.22.1."
         )
     }
 }

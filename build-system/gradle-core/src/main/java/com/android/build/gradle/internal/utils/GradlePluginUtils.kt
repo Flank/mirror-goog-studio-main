@@ -31,8 +31,18 @@ private const val INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS =
 private const val CRASHLYTICS_PLUGIN_NAME = "Crashlytics"
 private const val CRASHLYTICS_PLUGIN_DEPENDENCY_GROUP_AND_NAME = "io.fabric.tools:gradle"
 private const val CRASHLYTICS_PLUGIN_MINIMUM_VERSION = "1.25.4"
-private const val CRASHLYTICS_PLUGIN_MINIMUM_VERSION_REASON =
-    "See https://issuetracker.google.com/79997489 for details."
+
+// See https://issuetracker.google.com/110564407
+private const val PROTOBUF_PLUGIN_NAME = "Protobuf"
+private const val PROTOBUF_PLUGIN_DEPENDENCY_GROUP_AND_NAME =
+    "com.google.protobuf:protobuf-gradle-plugin"
+private const val PROTOBUF_PLUGIN_MINIMUM_VERSION = "0.8.6"
+
+// See https://issuetracker.google.com/69243050
+private const val KOTLIN_PLUGIN_NAME = "Kotlin"
+private const val KOTLIN_PLUGIN_DEPENDENCY_GROUP_AND_NAME =
+    "org.jetbrains.kotlin:kotlin-gradle-plugin"
+private const val KOTLIN_PLUGIN_MINIMUM_VERSION = "1.2.50"
 
 /**
  * Enforces minimum versions of certain plugins.
@@ -41,13 +51,17 @@ fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: EvalIssueRe
     // We're going to check all projects at the end of the configuration phase, so make sure to do
     // this check only once by marking a custom property of the root project. The access doesn't
     // need to be thread-safe as configuration is single-threaded.
-    val alreadyChecked = project.rootProject.extensions.extraProperties.properties.putIfAbsent(
-        INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS,
-        true
-    ) != null
+    val alreadyChecked =
+        project.rootProject.extensions.extraProperties.has(
+            INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS
+        )
     if (alreadyChecked) {
         return
     }
+    project.rootProject.extensions.extraProperties.set(
+        INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS,
+        true
+    )
 
     project.gradle.projectsEvaluated { gradle ->
         gradle.allprojects {
@@ -56,8 +70,21 @@ fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: EvalIssueRe
                 issueReporter,
                 CRASHLYTICS_PLUGIN_NAME,
                 CRASHLYTICS_PLUGIN_DEPENDENCY_GROUP_AND_NAME,
-                CRASHLYTICS_PLUGIN_MINIMUM_VERSION,
-                CRASHLYTICS_PLUGIN_MINIMUM_VERSION_REASON
+                CRASHLYTICS_PLUGIN_MINIMUM_VERSION
+            )
+            enforceMinimumVersionOfPlugin(
+                it,
+                issueReporter,
+                PROTOBUF_PLUGIN_NAME,
+                PROTOBUF_PLUGIN_DEPENDENCY_GROUP_AND_NAME,
+                PROTOBUF_PLUGIN_MINIMUM_VERSION
+            )
+            enforceMinimumVersionOfPlugin(
+                it,
+                issueReporter,
+                KOTLIN_PLUGIN_NAME,
+                KOTLIN_PLUGIN_DEPENDENCY_GROUP_AND_NAME,
+                KOTLIN_PLUGIN_MINIMUM_VERSION
             )
         }
     }
@@ -68,12 +95,11 @@ private fun enforceMinimumVersionOfPlugin(
     issueReporter: EvalIssueReporter,
     pluginName: String,
     dependencyGroupAndName: String,
-    minimumVersion: String,
-    reason: String
+    minimumVersion: String
 ) {
     // Use 'continue' to avoid too many nesting levels in this loop.
     for (artifact in project.buildscript.configurations.getByName(CLASSPATH_CONFIGURATION)
-            .resolvedConfiguration.resolvedArtifacts) {
+        .resolvedConfiguration.resolvedArtifacts) {
         val artifactId = artifact.moduleVersion.id
         if ("${artifactId.group}:${artifactId.name}" != dependencyGroupAndName) {
             continue
@@ -88,10 +114,9 @@ private fun enforceMinimumVersionOfPlugin(
         issueReporter.reportError(
             EvalIssueReporter.Type.THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD,
             EvalIssueException(
-                "The minimum supported version of the $pluginName plugin" +
-                        " ($dependencyGroupAndName) is $minimumVersion." +
-                        " Project '${project.name}' is using version $currentVersion." +
-                        " $reason",
+                "The Android Gradle plugin supports only $pluginName Gradle plugin" +
+                        " version $minimumVersion and higher." +
+                        " Project '${project.name}' is using version $currentVersion.",
                 project.projectDir.path,
                 null
             )
