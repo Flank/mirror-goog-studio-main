@@ -190,7 +190,7 @@ public class JacocoReportTask extends DefaultTask {
                             coverageFiles,
                             getReportDir(),
                             getClassFileCollection().getFiles(),
-                            getSourceFolders(),
+                            getSourceFolders().getFiles(),
                             getTabWidth(),
                             getReportName());
                 });
