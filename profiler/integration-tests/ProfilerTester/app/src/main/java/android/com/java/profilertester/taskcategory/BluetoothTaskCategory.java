@@ -15,9 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,25 +47,6 @@ public class BluetoothTaskCategory extends TaskCategory {
 
     @Override
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && (ActivityCompat.checkSelfPermission(
-                                        mHostActivity.getApplicationContext(),
-                                        Manifest.permission.ACCESS_COARSE_LOCATION)
-                                != PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(
-                                        mHostActivity.getApplicationContext(),
-                                        Manifest.permission.ACCESS_FINE_LOCATION)
-                                != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(
-                    mHostActivity,
-                    new String[] {
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    },
-                    ActivityRequestCodes.LOCATION.ordinal());
-            return false;
-        }
-
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             return false;
@@ -80,6 +59,17 @@ public class BluetoothTaskCategory extends TaskCategory {
         }
 
         return true;
+    }
+
+    @NonNull
+    @Override
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(
+                new String[] {
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                },
+                ActivityRequestCodes.LOCATION);
     }
 
     private final class ScanningTask extends Task {

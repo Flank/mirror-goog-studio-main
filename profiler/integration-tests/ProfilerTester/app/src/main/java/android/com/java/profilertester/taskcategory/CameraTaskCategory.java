@@ -3,12 +3,9 @@ package android.com.java.profilertester.taskcategory;
 import android.Manifest;
 import android.app.Activity;
 import android.com.java.profilertester.R;
-import android.content.pm.PackageManager;
 import android.hardware.Camera;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import java.util.Arrays;
@@ -36,20 +33,11 @@ public final class CameraTaskCategory extends TaskCategory {
         return "Camera";
     }
 
+    @NonNull
     @Override
-    protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && (ActivityCompat.checkSelfPermission(
-                                mHostActivity.getApplicationContext(), Manifest.permission.CAMERA)
-                        != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(
-                    mHostActivity,
-                    new String[] {Manifest.permission.CAMERA},
-                    ActivityRequestCodes.CAMERA.ordinal());
-            return false;
-        }
-
-        return true;
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(
+                new String[] {Manifest.permission.CAMERA}, ActivityRequestCodes.CAMERA);
     }
 
     private abstract class CameraTask extends Task implements SurfaceHolder.Callback {

@@ -3,12 +3,9 @@ package android.com.java.profilertester.taskcategory;
 import android.Manifest;
 import android.app.Activity;
 import android.com.java.profilertester.R;
-import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -35,21 +32,11 @@ public final class AudioTaskCategory extends TaskCategory {
         return "Audio";
     }
 
+    @NonNull
     @Override
-    protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && (ActivityCompat.checkSelfPermission(
-                                mHostActivity.getApplicationContext(),
-                                Manifest.permission.RECORD_AUDIO)
-                        != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(
-                    mHostActivity,
-                    new String[] {Manifest.permission.RECORD_AUDIO},
-                    ActivityRequestCodes.MICROPHONE.ordinal());
-            return false;
-        }
-
-        return true;
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(
+                new String[] {Manifest.permission.RECORD_AUDIO}, ActivityRequestCodes.MICROPHONE);
     }
 
     private final class PlaybackTask extends Task {

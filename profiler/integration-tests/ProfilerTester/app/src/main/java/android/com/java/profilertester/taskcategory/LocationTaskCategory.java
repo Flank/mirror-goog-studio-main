@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -80,25 +79,12 @@ public final class LocationTaskCategory extends TaskCategory {
         return "Location";
     }
 
+    @NonNull
     @Override
-    protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && (ActivityCompat.checkSelfPermission(
-                mHostActivity.getApplicationContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(
-                mHostActivity.getApplicationContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(
-                    mHostActivity,
-                    new String[]{ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION},
-                    ActivityRequestCodes.LOCATION.ordinal());
-            return false;
-        }
-
-        return true;
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(
+                new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION},
+                ActivityRequestCodes.LOCATION);
     }
 
     private final class LocationUpdateTask extends Task {
@@ -135,14 +121,16 @@ public final class LocationTaskCategory extends TaskCategory {
                 return "Could not acquire LocationManager!";
             }
 
+            // Requires permissions check before the requestLocationUpdates call, they cannot be
+            // separated into different methods.
             if (ActivityCompat.checkSelfPermission(
-                    mHostActivity.getApplicationContext(),
-                    Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED
+                                    mHostActivity.getApplicationContext(),
+                                    Manifest.permission.ACCESS_FINE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED
                     || ActivityCompat.checkSelfPermission(
-                    mHostActivity.getApplicationContext(),
-                    Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+                                    mHostActivity.getApplicationContext(),
+                                    Manifest.permission.ACCESS_COARSE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
                 return "Could not acquire both coarse and fine location permission!";
             }
 
@@ -159,22 +147,20 @@ public final class LocationTaskCategory extends TaskCategory {
                             locations.add(location);
                             mTimes++;
                             Toast.makeText(
-                                    mHostActivity,
-                                    String.format("Location updated (%d times)", mTimes),
-                                    Toast.LENGTH_LONG).show();
+                                            mHostActivity,
+                                            String.format("Location updated (%d times)", mTimes),
+                                            Toast.LENGTH_LONG)
+                                    .show();
                         }
 
                         @Override
-                        public void onStatusChanged(String provider, int status, Bundle extras) {
-                        }
+                        public void onStatusChanged(String provider, int status, Bundle extras) {}
 
                         @Override
-                        public void onProviderEnabled(String provider) {
-                        }
+                        public void onProviderEnabled(String provider) {}
 
                         @Override
-                        public void onProviderDisabled(String provider) {
-                        }
+                        public void onProviderDisabled(String provider) {}
                     };
             manager.requestLocationUpdates(getProvider(), mMinTimeMs, 0, locationListener, mLooper);
 

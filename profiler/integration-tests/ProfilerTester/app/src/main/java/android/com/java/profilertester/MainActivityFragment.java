@@ -14,8 +14,12 @@ import android.com.java.profilertester.taskcategory.NetworkTaskCategory;
 import android.com.java.profilertester.taskcategory.ScreenBrightnessTaskCategory;
 import android.com.java.profilertester.taskcategory.TaskCategory;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -47,6 +51,11 @@ public class MainActivityFragment extends Fragment {
     private List<ArrayAdapter<? extends TaskCategory.Task>> mTaskAdapters;
 
     private final List<TaskCategory.Task.SelectionListener> mSelectionListeners = new ArrayList<>();
+    /**
+     * Tasks waiting for permission request results to run, see {@link
+     * #onRequestPermissionsResult(int, String[], int[])}.
+     */
+    private final List<PendingPermissionTask> mPendingPermissionTasks = new ArrayList<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -198,8 +207,9 @@ public class MainActivityFragment extends Fragment {
             Log.e("ProfilerTester", "Invalid category spinner selection!");
             return;
         }
+        final TaskCategory taskCategory = (TaskCategory) categoryObject;
 
-        final Object taskObject = mTaskSpinner.getSelectedItem();
+        Object taskObject = mTaskSpinner.getSelectedItem();
         if (taskObject == null) {
             return;
         }
@@ -207,20 +217,32 @@ public class MainActivityFragment extends Fragment {
             Log.e("ProfilerTester", "Invalid task spinner selection!");
             return;
         }
+        final TaskCategory.Task task = (TaskCategory.Task) taskObject;
 
-        ((TaskCategory) categoryObject)
-                .executeTask(
-                        (TaskCategory) categoryObject,
-                        (TaskCategory.Task) taskObject,
-                        new TaskCategory.PostExecuteRunner() {
-                            @Override
-                            public void accept(@Nullable String s) {
-                                View view = getView();
-                                if (view != null && s != null) {
-                                    Toast.makeText(getActivity(), s, Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        });
+        TaskCategory.RequestCodePermissions permissions = taskCategory.getPermissionsRequired(task);
+        Runnable taskRunnable =
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        taskCategory.executeTask(
+                                task,
+                                new TaskCategory.PostExecuteRunner() {
+                                    @Override
+                                    public void accept(@Nullable String s) {
+                                        View view = getView();
+                                        if (view != null && s != null) {
+                                            Toast.makeText(getActivity(), s, Toast.LENGTH_LONG)
+                                                    .show();
+                                        }
+                                    }
+                                });
+                    }
+                };
+        if (hasAllPermissions(permissions)) {
+            taskRunnable.run();
+        } else {
+            mPendingPermissionTasks.add(new PendingPermissionTask(permissions, taskRunnable));
+        }
     }
 
     @Override
@@ -231,6 +253,63 @@ public class MainActivityFragment extends Fragment {
 
         for (TaskCategory taskCategory : mTaskCategories) {
             taskCategory.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length == 0) {
+            return;
+        }
+        boolean isGranted = true;
+        for (int grantResult : grantResults) {
+            if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                isGranted = false;
+                break;
+            }
+        }
+        for (PendingPermissionTask task : mPendingPermissionTasks) {
+            if (requestCode == task.mPermissions.getRequestCode().ordinal()) {
+                if (isGranted) {
+                    task.mTaskRunnable.run();
+                }
+                mPendingPermissionTasks.remove(task);
+                break;
+            }
+        }
+    }
+
+    private boolean hasAllPermissions(TaskCategory.RequestCodePermissions codePermissions) {
+        boolean hasAllPermissions = true;
+        String[] permissions = codePermissions.getPermissions();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String p : permissions) {
+                if (ActivityCompat.checkSelfPermission(getActivity().getApplicationContext(), p)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    hasAllPermissions = false;
+                    break;
+                }
+            }
+        }
+        if (!hasAllPermissions) {
+            ActivityCompat.requestPermissions(
+                    getActivity(), permissions, codePermissions.getRequestCode().ordinal());
+        }
+        return hasAllPermissions;
+    }
+
+    private static final class PendingPermissionTask {
+        @NonNull private final TaskCategory.RequestCodePermissions mPermissions;
+        @NonNull private final Runnable mTaskRunnable;
+
+        PendingPermissionTask(
+                @NonNull TaskCategory.RequestCodePermissions permissions,
+                @NonNull Runnable runnable) {
+            mPermissions = permissions;
+            mTaskRunnable = runnable;
         }
     }
 }

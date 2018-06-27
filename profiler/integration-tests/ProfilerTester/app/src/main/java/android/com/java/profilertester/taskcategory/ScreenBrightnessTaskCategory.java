@@ -9,7 +9,6 @@ import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.view.Window;
 import android.view.WindowManager;
 import java.util.Arrays;
@@ -40,11 +39,6 @@ public class ScreenBrightnessTaskCategory extends TaskCategory {
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && !Settings.System.canWrite(mHostActivity)) {
-            ActivityCompat.requestPermissions(
-                    mHostActivity,
-                    new String[] {Manifest.permission.WRITE_SETTINGS},
-                    ActivityRequestCodes.WRITE_SETTINGS.ordinal());
-
             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
             intent.setData(Uri.parse("package:" + mHostActivity.getPackageName()));
             mHostActivity.startActivityForResult(
@@ -63,6 +57,14 @@ public class ScreenBrightnessTaskCategory extends TaskCategory {
         }
 
         return true;
+    }
+
+    @NonNull
+    @Override
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(
+                new String[] {Manifest.permission.WRITE_SETTINGS},
+                ActivityRequestCodes.WRITE_SETTINGS);
     }
 
     @NonNull

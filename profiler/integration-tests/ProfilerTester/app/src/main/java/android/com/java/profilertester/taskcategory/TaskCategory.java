@@ -61,10 +61,8 @@ public abstract class TaskCategory {
     }
 
     public final void executeTask(
-            @NonNull TaskCategory taskCategory,
-            @NonNull Task target,
-            @Nullable PostExecuteRunner postExecuteRunner) {
-        new AsyncTaskWrapper(taskCategory, target, postExecuteRunner).execute();
+            @NonNull Task target, @Nullable PostExecuteRunner postExecuteRunner) {
+        new AsyncTaskWrapper(this, target, postExecuteRunner).execute();
     }
 
     @NonNull
@@ -93,6 +91,11 @@ public abstract class TaskCategory {
      */
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
         return true;
+    }
+
+    @NonNull
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(new String[0], ActivityRequestCodes.NO_REQUEST_CODE);
     }
 
     /**
@@ -150,5 +153,26 @@ public abstract class TaskCategory {
 
     public interface PostExecuteRunner {
         void accept(@Nullable String s);
+    }
+
+    public static final class RequestCodePermissions {
+        @NonNull private final String[] mPermissions;
+        @NonNull private final ActivityRequestCodes mRequestCode;
+
+        RequestCodePermissions(
+                @NonNull String[] permissions, @NonNull ActivityRequestCodes requestCode) {
+            mPermissions = permissions;
+            mRequestCode = requestCode;
+        }
+
+        @NonNull
+        public String[] getPermissions() {
+            return mPermissions;
+        }
+
+        @NonNull
+        public ActivityRequestCodes getRequestCode() {
+            return mRequestCode;
+        }
     }
 }

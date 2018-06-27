@@ -3,15 +3,12 @@ package android.com.java.profilertester.taskcategory;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,23 +38,14 @@ public class FeedbackTaskCategory extends TaskCategory {
     @Override
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
         Vibrator vibrator = (Vibrator) mHostActivity.getSystemService(Context.VIBRATOR_SERVICE);
-        if (vibrator == null || !vibrator.hasVibrator()) {
-            return false;
-        }
+        return vibrator != null && vibrator.hasVibrator();
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && (ActivityCompat.checkSelfPermission(
-                                mHostActivity.getApplicationContext(),
-                                Manifest.permission.BODY_SENSORS)
-                        != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(
-                    mHostActivity,
-                    new String[] {Manifest.permission.BODY_SENSORS},
-                    ActivityRequestCodes.BODY_SENSORS.ordinal());
-            return false;
-        }
-
-        return true;
+    @NonNull
+    @Override
+    public RequestCodePermissions getPermissionsRequired(@NonNull Task taskToRun) {
+        return new RequestCodePermissions(
+                new String[] {Manifest.permission.BODY_SENSORS}, ActivityRequestCodes.BODY_SENSORS);
     }
 
     private final class HapticsTask extends Task {
