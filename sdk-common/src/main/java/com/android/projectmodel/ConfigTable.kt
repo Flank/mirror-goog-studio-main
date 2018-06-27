@@ -89,4 +89,60 @@ data class ConfigTable(
             !it.path.intersects(searchCriteria)
         })
     }
+
+    /**
+     * Generates all possible [Variant] instances for this [ConfigTable] by merging every
+     * combination of schema dimensions.
+     */
+    fun generateVariants(): List<Variant> {
+        val result = ArrayList<Variant>()
+        generateVariants(result, emptyList())
+        return result
+    }
+
+    private fun generateVariants(result: MutableList<Variant>, prefix: List<String>) {
+        if (prefix.size < schema.dimensions.size - 1) {
+            val dimension = schema.dimensions[prefix.size]
+            for (dimensionValue in dimension.values) {
+                generateVariants(result, prefix + dimensionValue)
+            }
+        }
+
+        if (prefix.size == schema.dimensions.size - 1) {
+            val artifacts = schema.dimensions[prefix.size].values.map {
+                val configPath = matchArtifactsWith(prefix + it)
+                Artifact(
+                    name = it,
+                    resolved = configsIntersecting(configPath).merged()
+                )
+            }
+
+            val variantPath = ConfigPath(prefix)
+
+            val mainArtifact = artifacts.find { it.name == ARTIFACT_NAME_MAIN }
+            if (mainArtifact == null) {
+                throw IllegalStateException("No main artifact found")
+            }
+
+            result.add(Variant(
+                name = variantPath.simpleName,
+                configPath = variantPath,
+                mainArtifact = mainArtifact,
+                androidTestArtifact = artifacts.find { it.name == ARTIFACT_NAME_ANDROID_TEST },
+                unitTestArtifact = artifacts.find { it.name == ARTIFACT_NAME_UNIT_TEST },
+                extraArtifacts = artifacts.filter { !defaultArtifactDimension.values.contains(it.name) }
+            ))
+        }
+    }
 }
+
+/**
+ * Constructs a [ConfigTable] from the given [ConfigTableSchema]. This is intended primarily
+ * as a convenient way to construct hardcoded [ConfigTable] instances.
+ *
+ * @param schema the schema to use for the table
+ * @param associations the entries to include in the table, where the keys map onto entries
+ * in the schema.
+ */
+fun configTableWith(schema: ConfigTableSchema, associations: Map<String?, Config>) = ConfigTable(
+    schema, associations.entries.map { ConfigAssociation(schema.pathFor(it.key), it.value) })

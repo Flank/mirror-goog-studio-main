@@ -61,6 +61,16 @@ class ConfigTableTest {
     )
 
     @Test
+    fun testGenerateVariants() {
+        val variants = table.generateVariants()
+
+        val demoLowresDebug = variants.find {it.name == "demoLowresDebug"}!!
+        assertThat(variants.size).isEqualTo(8)
+        assertThat(demoLowresDebug.mainArtifact.name).isEqualTo(ARTIFACT_NAME_MAIN)
+        assertThat(demoLowresDebug.mainArtifact.resolved.applicationIdSuffix).isEqualTo("demolowresdebugapp")
+    }
+
+    @Test
     fun testConfigs() {
         assertThat(table.configs).isEqualTo(listOf(
                 main,
