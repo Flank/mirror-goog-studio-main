@@ -11,6 +11,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiClass;
@@ -764,6 +765,12 @@ public class VersionChecks {
             String codeName = ref2.getResolvedName();
             if (codeName != null) {
                 level = SdkVersionInfo.getApiByBuildCode(codeName, false);
+            }
+            if (level == -1) {
+                Object constant = ConstantEvaluator.evaluate(null, element);
+                if (constant instanceof Number) {
+                    level = ((Number) constant).intValue();
+                }
             }
         } else if (element instanceof ULiteralExpression) {
             ULiteralExpression lit = (ULiteralExpression) element;

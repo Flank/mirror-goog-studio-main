@@ -5447,6 +5447,45 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test110576968() {
+        // Regression test for issue related to 110576968:
+        // We weren't enforcing @RequireApi on calls to default constructors
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class WorkManagerTest {\n"
+                                        + "\n"
+                                        + "    public void test() {\n"
+                                        + "        SystemJobScheduler scheduler = new SystemJobScheduler(); // ERROR\n"
+                                        + "    }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(23)\n"
+                                        + "public class SystemJobScheduler {\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/WorkManagerTest.java:9: Error: Call requires API level 23 (current min is 15): SystemJobScheduler [NewApi]\n"
+                                + "        SystemJobScheduler scheduler = new SystemJobScheduler(); // ERROR\n"
+                                + "                                       ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
