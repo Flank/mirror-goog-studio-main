@@ -228,12 +228,11 @@ TEST_F(ProfilerServiceTest, GetSessionsByTimeRangeWorks) {
     auto sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(5, sessions.sessions_size());
 
-    // Range is returned most recent first.
-    EXPECT_EQ(50, sessions.sessions(0).pid());
-    EXPECT_EQ(40, sessions.sessions(1).pid());
+    EXPECT_EQ(10, sessions.sessions(0).pid());
+    EXPECT_EQ(20, sessions.sessions(1).pid());
     EXPECT_EQ(30, sessions.sessions(2).pid());
-    EXPECT_EQ(20, sessions.sessions(3).pid());
-    EXPECT_EQ(10, sessions.sessions(4).pid());
+    EXPECT_EQ(40, sessions.sessions(3).pid());
+    EXPECT_EQ(50, sessions.sessions(4).pid());
   }
 
   {
@@ -241,10 +240,9 @@ TEST_F(ProfilerServiceTest, GetSessionsByTimeRangeWorks) {
     auto sessions = GetSessions(3250, LLONG_MAX);
     EXPECT_EQ(3, sessions.sessions_size());
 
-    // Range is returned most recent first.
-    EXPECT_EQ(50, sessions.sessions(0).pid());
+    EXPECT_EQ(30, sessions.sessions(0).pid());
     EXPECT_EQ(40, sessions.sessions(1).pid());
-    EXPECT_EQ(30, sessions.sessions(2).pid());
+    EXPECT_EQ(50, sessions.sessions(2).pid());
   }
 
   {
@@ -252,10 +250,9 @@ TEST_F(ProfilerServiceTest, GetSessionsByTimeRangeWorks) {
     auto sessions = GetSessions(0, 3250);
     EXPECT_EQ(3, sessions.sessions_size());
 
-    // Range is returned most recent first.
-    EXPECT_EQ(30, sessions.sessions(0).pid());
+    EXPECT_EQ(10, sessions.sessions(0).pid());
     EXPECT_EQ(20, sessions.sessions(1).pid());
-    EXPECT_EQ(10, sessions.sessions(2).pid());
+    EXPECT_EQ(30, sessions.sessions(2).pid());
   }
 
   {
@@ -263,9 +260,8 @@ TEST_F(ProfilerServiceTest, GetSessionsByTimeRangeWorks) {
     auto sessions = GetSessions(2250, 3250);
     EXPECT_EQ(2, sessions.sessions_size());
 
-    // Range is returned most recent first.
-    EXPECT_EQ(30, sessions.sessions(0).pid());
-    EXPECT_EQ(20, sessions.sessions(1).pid());
+    EXPECT_EQ(20, sessions.sessions(0).pid());
+    EXPECT_EQ(30, sessions.sessions(1).pid());
   }
 
   {
@@ -290,11 +286,10 @@ TEST_F(ProfilerServiceTest, CallingBeginSessionOnActiveSessionSortsItToFront) {
     auto sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(4, sessions.sessions_size());
 
-    // Range is returned most recent first.
-    EXPECT_EQ(40, sessions.sessions(0).pid());
-    EXPECT_EQ(30, sessions.sessions(1).pid());
-    EXPECT_EQ(20, sessions.sessions(2).pid());
-    EXPECT_EQ(10, sessions.sessions(3).pid());
+    EXPECT_EQ(10, sessions.sessions(0).pid());
+    EXPECT_EQ(20, sessions.sessions(1).pid());
+    EXPECT_EQ(30, sessions.sessions(2).pid());
+    EXPECT_EQ(40, sessions.sessions(3).pid());
   }
 
   proto::Session session2_copy;
@@ -307,11 +302,10 @@ TEST_F(ProfilerServiceTest, CallingBeginSessionOnActiveSessionSortsItToFront) {
     auto sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(4, sessions.sessions_size());
 
-    // Range is returned most recent first.
-    EXPECT_EQ(20, sessions.sessions(0).pid());
-    EXPECT_EQ(40, sessions.sessions(1).pid());
-    EXPECT_EQ(30, sessions.sessions(2).pid());
-    EXPECT_EQ(10, sessions.sessions(3).pid());
+    EXPECT_EQ(10, sessions.sessions(0).pid());
+    EXPECT_EQ(30, sessions.sessions(1).pid());
+    EXPECT_EQ(40, sessions.sessions(2).pid());
+    EXPECT_EQ(20, sessions.sessions(3).pid());
   }
 
   // Session #2 is already the most recent. Calling |BeginSession| again is a
@@ -319,7 +313,7 @@ TEST_F(ProfilerServiceTest, CallingBeginSessionOnActiveSessionSortsItToFront) {
   session2_copy = BeginSession(-20, 20);
   {
     auto sessions = GetSessions(LLONG_MIN, LLONG_MAX);
-    EXPECT_EQ(20, sessions.sessions(0).pid());
+    EXPECT_EQ(20, sessions.sessions(3).pid());
   }
 }
 
@@ -339,11 +333,11 @@ TEST_F(ProfilerServiceTest,
   {
     auto sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(2, sessions.sessions_size());
-    EXPECT_EQ(10, sessions.sessions(0).pid());
-    EXPECT_TRUE(SessionUtils::IsActive(sessions.sessions(0)));
-    // Same PID, etc., but this session is dead
     EXPECT_EQ(10, sessions.sessions(1).pid());
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(1)));
+    EXPECT_TRUE(SessionUtils::IsActive(sessions.sessions(1)));
+    // Same PID, etc., but this session is dead
+    EXPECT_EQ(10, sessions.sessions(0).pid());
+    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(0)));
   }
 }
 

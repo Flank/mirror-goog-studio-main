@@ -90,7 +90,7 @@ std::vector<Session> SessionsManager::GetSessions(int64_t start_timestamp,
         start_timestamp > session.end_timestamp()) {
       continue;
     }
-    sessions_range.push_back(session);
+    sessions_range.insert(sessions_range.begin(), session);
   }
   return sessions_range;
 }
