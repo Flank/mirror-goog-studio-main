@@ -50,5 +50,9 @@ data class AndroidProject(
          * may contains a mixture of files and folders. Any file located at or below these paths should
          * be considered derived.
          */
-        val generatedPaths: List<PathString> = emptyList()
+        val generatedPaths: List<PathString> = emptyList(),
+        /**
+         * Namespacing strategy for this project
+         */
+        val namespacing: NamespacingType = NamespacingType.DISABLED
 )

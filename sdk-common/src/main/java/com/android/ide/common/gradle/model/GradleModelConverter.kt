@@ -16,6 +16,7 @@
 @file:JvmName("GradleModelConverterUtil")
 package com.android.ide.common.gradle.model
 
+import com.android.builder.model.AaptOptions
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseArtifact
@@ -39,6 +40,7 @@ import com.android.projectmodel.ConfigTable
 import com.android.projectmodel.ConfigTableSchema
 import com.android.projectmodel.DynamicResourceValue
 import com.android.projectmodel.ManifestAttributes
+import com.android.projectmodel.NamespacingType
 import com.android.projectmodel.ProjectType
 import com.android.projectmodel.SourceSet
 import com.android.projectmodel.Variant
@@ -474,6 +476,14 @@ class GradleModelConverter(
     private fun <K, V> compute(key: K, lambda: K.() -> V): V {
         return cache.computeIfAbsent(key, { key.lambda() })
     }
+}
+
+/**
+ * Convert a [NamespacingType] to an [AaptOptions.Namespacing].
+ */
+fun NamespacingType.toAaptOptionsNamespacing(): AaptOptions.Namespacing = when (this) {
+    NamespacingType.DISABLED -> AaptOptions.Namespacing.DISABLED
+    NamespacingType.REQUIRED -> AaptOptions.Namespacing.REQUIRED
 }
 
 /**
