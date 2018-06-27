@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="studio-analytics-proto">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../out/build/analytics-library/protos/build/libs/protos-26.2.0-dev.jar!/" />
+      <root url="file://$PROJECT_DIR$/../../out/build/analytics-library/protos/build/classes/java/main" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../out/build/analytics-library/protos/build/libs/protos-26.2.0-dev-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../../out/build/analytics-library/protos/build/generated/source/proto/main/java" />
     </SOURCES>
   </library>
 </component>
