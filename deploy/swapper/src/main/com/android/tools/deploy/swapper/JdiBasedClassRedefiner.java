@@ -35,8 +35,7 @@ import java.util.concurrent.TimeUnit;
  */
 class JdiBasedClassRedefiner extends ClassRedefiner {
 
-    private static final long DEBUGGER_TIMEOUT = TimeUnit.SECONDS.toSeconds(10);
-    private static final String DDM_CLIENT_HOST = "localhost";
+    private static final long DEBUGGER_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private VirtualMachine vm;
 
@@ -58,7 +57,7 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
             if (connector instanceof SocketAttachingConnector) {
                 HashMap<String, Connector.Argument> args =
                         new HashMap(connector.defaultArguments());
-                args.get("timeout").setValue("" + DEBUGGER_TIMEOUT);
+                args.get("timeout").setValue(String.valueOf(DEBUGGER_TIMEOUT_MS));
                 args.get("hostname").setValue(hostname);
                 args.get("port").setValue("" + portNumber);
                 return connector.attach(args);

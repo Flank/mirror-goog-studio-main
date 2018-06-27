@@ -11,6 +11,7 @@ java_library(
 
 fake_android_test(
     name = "BasicTest",
+    size = "medium",
     srcs = glob(["src/test/com/android/tools/deploy/swapper/*Test.java"]),
     data = [":test-app"],
     jvm_flags = ["-Dapp.dex.location=$(location :test-app)"],
