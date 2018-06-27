@@ -16,6 +16,7 @@
 
 package com.android.projectmodel
 
+import com.android.ide.common.util.PathString
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -36,5 +37,27 @@ class ConfigTest {
                 minifyEnabled = true
         )
         assertThat(cfg.toString()).isEqualTo("Config(applicationIdSuffix=suffix,minifyEnabled=true)")
+    }
+
+    @Test
+    fun testMerged() {
+        val cfg1 = Config(applicationIdSuffix = "Suffix1")
+        val cfg2 = Config(applicationIdSuffix = "Suffix2")
+
+        val merged = listOf(cfg1, cfg2).merged()
+
+        assertThat(merged.applicationIdSuffix).isEqualTo("Suffix1Suffix2")
+    }
+
+    @Test
+    fun testMergedSourceSet() {
+        val cfg1 = Config(sources = SourceSet(mapOf(AndroidPathType.JAVA to listOf(PathString("foo")))))
+        val cfg2 = Config(sources = SourceSet(mapOf(AndroidPathType.JNI_LIBS to listOf(PathString("bar")))))
+
+        val sourceSet = listOf(cfg1, cfg2).mergedSourceSet()
+
+        assertThat(sourceSet.asMap.keys).containsExactly(AndroidPathType.JAVA, AndroidPathType.JNI_LIBS)
+        assertThat(sourceSet[AndroidPathType.JAVA]).containsExactly(PathString("foo"))
+        assertThat(sourceSet[AndroidPathType.JNI_LIBS]).containsExactly(PathString("bar"))
     }
 }

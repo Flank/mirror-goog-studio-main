@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("ConfigUtil")
 package com.android.projectmodel
 
 import kotlin.reflect.full.memberProperties
@@ -123,6 +124,19 @@ data class Config(
           usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors
       )
 }
+
+/**
+ * Computes the [SourceSet] that includes all sources from all [Config] instances in the list.
+ */
+fun Iterable<Config>.mergedSourceSet(): SourceSet
+  = fold(SourceSet()) {a, b -> a + b.sources}
+
+/**
+ * Returns the [Config] produced by merging all the given configs in order.
+ */
+fun Iterable<Config>.merged(): Config
+  = fold(Config()) {a, b -> a.mergeWith(b)}
+
 
 private fun <T> mergeNullable(deps: T?, moreDeps: T?, merger: (T, T)-> T) : T? =
   when {
