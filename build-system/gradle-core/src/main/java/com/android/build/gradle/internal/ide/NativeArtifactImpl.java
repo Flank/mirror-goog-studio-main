@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
-import com.android.builder.model.NativeFolder;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
@@ -43,8 +42,6 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
     @NonNull
     private final String assembleTaskName;
     @NonNull
-    private final Collection<NativeFolder> sourceFolders;
-    @NonNull
     private final Collection<NativeFile> sourceFiles;
     @NonNull
     private final Collection<File> exportedHeaders;
@@ -62,7 +59,6 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
             @NonNull String toolChain,
             @NonNull String groupName,
             @NonNull String assembleTaskName,
-            @NonNull Collection<NativeFolder> sourceFolders,
             @NonNull Collection<NativeFile> sourceFiles,
             @NonNull Collection<File> exportedHeaders,
             @NonNull File outputFile,
@@ -73,7 +69,6 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
         this.toolChain = toolChain;
         this.groupName = groupName;
         this.assembleTaskName = assembleTaskName;
-        this.sourceFolders = sourceFolders;
         this.sourceFiles = sourceFiles;
         this.exportedHeaders = exportedHeaders;
         this.outputFile = outputFile;
@@ -104,12 +99,6 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
     @NonNull
     public String getAssembleTaskName() {
         return assembleTaskName;
-    }
-
-    @Override
-    @NonNull
-    public Collection<NativeFolder> getSourceFolders() {
-        return sourceFolders;
     }
 
     @Override
@@ -161,7 +150,6 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
                 Objects.equals(toolChain, that.toolChain) &&
                 Objects.equals(groupName, that.groupName) &&
                 Objects.equals(assembleTaskName, that.assembleTaskName) &&
-                Objects.equals(sourceFolders, that.sourceFolders) &&
                 Objects.equals(sourceFiles, that.sourceFiles) &&
                 Objects.equals(exportedHeaders, that.exportedHeaders) &&
                 Objects.equals(outputFile, that.outputFile) &&
@@ -172,9 +160,17 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(name, toolChain, groupName, assembleTaskName, sourceFolders, sourceFiles,
-                        exportedHeaders, outputFile, runtimeFiles, abi, targetName);
+        return Objects.hash(
+                name,
+                toolChain,
+                groupName,
+                assembleTaskName,
+                sourceFiles,
+                exportedHeaders,
+                outputFile,
+                runtimeFiles,
+                abi,
+                targetName);
     }
 
     @Override
@@ -184,7 +180,6 @@ public final class NativeArtifactImpl implements NativeArtifact, Serializable {
                 .add("ToolChain", toolChain)
                 .add("GroupName", groupName)
                 .add("AssembleTaskName", assembleTaskName)
-                .add("SourceFoldersCount", sourceFolders.size())
                 .add("SourceFilesCount", sourceFiles.size())
                 .add("ExportedHeadersSize", exportedHeaders.size())
                 .add("OutputFile", outputFile)

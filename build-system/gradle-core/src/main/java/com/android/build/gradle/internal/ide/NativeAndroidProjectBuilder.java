@@ -167,7 +167,6 @@ class NativeAndroidProjectBuilder {
                             currentLibraryToolchain,
                             variantName,
                             "",
-                            ImmutableList.of(),
                             currentLibrarySourceFiles,
                             ImmutableList.of(),
                             newFileOrNull(currentLibraryOutput),

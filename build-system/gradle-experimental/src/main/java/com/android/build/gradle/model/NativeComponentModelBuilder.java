@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ide.NativeAndroidProjectImpl;
 import com.android.build.gradle.internal.ide.NativeArtifactImpl;
 import com.android.build.gradle.internal.ide.NativeFileImpl;
-import com.android.build.gradle.internal.ide.NativeFolderImpl;
 import com.android.build.gradle.internal.ide.NativeSettingsImpl;
 import com.android.build.gradle.internal.ide.NativeToolchainImpl;
 import com.android.build.gradle.managed.NativeBuildConfig;
@@ -116,16 +115,6 @@ public class NativeComponentModelBuilder implements ToolingModelBuilder {
         List<NativeArtifact> artifacts = Lists.newArrayList();
 
         for (NativeLibrary lib : config.getLibraries()) {
-            List<NativeFolder> folders = lib.getFolders().stream()
-                    .map(src -> {
-                        checkNotNull(src.getSrc());
-                        return new NativeFolderImpl(
-                                src.getSrc(),
-                                ImmutableMap.of(
-                                        "c", getSettingsName(convertFlagFormat(src.getcFlags())),
-                                        "c++", getSettingsName(convertFlagFormat(src.getCppFlags()))),
-                                src.getWorkingDirectory());})
-                    .collect(Collectors.toList());
             List<NativeFile> files = lib.getFiles().stream()
                     .map(src -> {
                         checkNotNull(src.getSrc());
@@ -144,7 +133,6 @@ public class NativeComponentModelBuilder implements ToolingModelBuilder {
                     lib.getToolchain(),
                     Strings.nullToEmpty(lib.getGroupName()),
                     lib.getAssembleTaskName(),
-                    folders,
                     files,
                     ImmutableList.copyOf(lib.getExportedHeaders()),
                     lib.getOutput(),

@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
-import com.android.builder.model.NativeFolder;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -29,7 +28,6 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
     @NonNull private final String myName;
     @NonNull private final String myToolChain;
     @NonNull private final String myGroupName;
-    @NonNull private final Collection<NativeFolder> mySourceFolders;
     @NonNull private final Collection<NativeFile> mySourceFiles;
     @NonNull private final Collection<File> myExportedHeaders;
     @NonNull private final File myOutputFile;
@@ -42,11 +40,6 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
         myName = artifact.getName();
         myToolChain = artifact.getToolChain();
         myGroupName = artifact.getGroupName();
-        mySourceFolders =
-                copy(
-                        artifact.getSourceFolders(),
-                        modelCache,
-                        folder -> new IdeNativeFolder(folder, modelCache));
         mySourceFiles =
                 copy(
                         artifact.getSourceFiles(),
@@ -81,12 +74,6 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
     @NonNull
     public String getAssembleTaskName() {
         throw new UnusedModelMethodException("getAssembleTaskName");
-    }
-
-    @Override
-    @NonNull
-    public Collection<NativeFolder> getSourceFolders() {
-        return mySourceFolders;
     }
 
     @Override
@@ -144,7 +131,6 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
         return Objects.equals(myName, artifact.myName)
                 && Objects.equals(myToolChain, artifact.myToolChain)
                 && Objects.equals(myGroupName, artifact.myGroupName)
-                && Objects.equals(mySourceFolders, artifact.mySourceFolders)
                 && Objects.equals(mySourceFiles, artifact.mySourceFiles)
                 && Objects.equals(myExportedHeaders, artifact.myExportedHeaders)
                 && Objects.equals(myAbi, artifact.myAbi)
@@ -162,7 +148,6 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
                 myName,
                 myToolChain,
                 myGroupName,
-                mySourceFolders,
                 mySourceFiles,
                 myExportedHeaders,
                 myAbi,
@@ -182,8 +167,6 @@ public final class IdeNativeArtifact extends IdeModel implements NativeArtifact 
                 + ", myGroupName='"
                 + myGroupName
                 + '\''
-                + ", mySourceFolders="
-                + mySourceFolders
                 + ", mySourceFiles="
                 + mySourceFiles
                 + ", myExportedHeaders="

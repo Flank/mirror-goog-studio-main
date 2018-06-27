@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
-import com.android.builder.model.NativeFolder;
 import com.android.builder.model.NativeSettings;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -54,28 +53,24 @@ public class NativeModelHelper {
     }
 
     /**
-     * Return a map of C flags for each NativeFolder and NativeFile.
+     * Return a map of C flags for each NativeFile.
      *
-     * The key is the folderPath of a NativeFolder or filePath of a NativeFile.
-     * The value is the list of flags.
+     * <p>The key is the filePath of a NativeFile. The value is the list of flags.
      */
     @NonNull
     public static Map<File, List<String>> getCFlags(
-            @NonNull NativeAndroidProject project,
-            @NonNull NativeArtifact artifact) {
+            @NonNull NativeAndroidProject project, @NonNull NativeArtifact artifact) {
         return getFlags(project, artifact, "c");
     }
 
     /**
-     * Return a map of C++ flags for each NativeFolder and NativeFile.
+     * Return a map of C++ flags for each NativeFile.
      *
-     * The key is the folderPath of a NativeFolder or filePath of a NativeFile.
-     * The value is the list of flags.
+     * <p>The key is the filePath of a NativeFile. The value is the list of flags.
      */
     @NonNull
     public static Map<File, List<String>> getCppFlags(
-            @NonNull NativeAndroidProject project,
-            @NonNull NativeArtifact artifact) {
+            @NonNull NativeAndroidProject project, @NonNull NativeArtifact artifact) {
         return getFlags(project, artifact, "c++");
     }
 
@@ -85,13 +80,6 @@ public class NativeModelHelper {
             @NonNull NativeArtifact artifact,
             @NonNull String language) {
         Map<File, String> settingsMap = Maps.newHashMap();
-
-        for (NativeFolder nativeFolder : artifact.getSourceFolders()) {
-            String setting = nativeFolder.getPerLanguageSettings().get(language);
-            if (setting != null) {
-                settingsMap.put(nativeFolder.getFolderPath(), setting);
-            }
-        }
 
         // Get extensions for the language.
         List<String> extensions = project.getFileExtensions().entrySet().stream()
@@ -114,24 +102,22 @@ public class NativeModelHelper {
     }
 
     /**
-     * Return the C flags for all NativeFolder and NativeFile.
-     * Flags in all NativeFolder and NativeFile in the NativeArtifact is flatten into a single list.
+     * Return the C flags for all NativeFile. Flags in all NativeFile in the NativeArtifact is
+     * flatten into a single list.
      */
     public static List<String> getFlatCFlags(
-            @NonNull NativeAndroidProject project,
-            @NonNull NativeArtifact artifact) {
+            @NonNull NativeAndroidProject project, @NonNull NativeArtifact artifact) {
         return getCFlags(project, artifact).values().stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Return the C++ flags for all NativeFolder and NativeFile.
-     * Flags in all NativeFolder and NativeFile in the NativeArtifact is flatten into a single list.
+     * Return the C++ flags for all NativeFile. Flags in all NativeFile in the NativeArtifact is
+     * flatten into a single list.
      */
     public static List<String> getFlatCppFlags(
-            @NonNull NativeAndroidProject project,
-            @NonNull NativeArtifact artifact) {
+            @NonNull NativeAndroidProject project, @NonNull NativeArtifact artifact) {
         return getCppFlags(project, artifact).values().stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());

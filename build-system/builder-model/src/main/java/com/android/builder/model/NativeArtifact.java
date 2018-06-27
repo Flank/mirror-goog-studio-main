@@ -52,14 +52,6 @@ public interface NativeArtifact {
     String getAssembleTaskName();
 
     /**
-     * Returns thes source folders for the artifact.
-     *
-     * All files in the folders are assumed to be used for compilation of the artifact.
-     */
-    @NonNull
-    Collection<NativeFolder> getSourceFolders();
-
-    /**
      * Returns the source files.
      */
     @NonNull

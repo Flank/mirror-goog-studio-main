@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.stubs;
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
-import com.android.builder.model.NativeFolder;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +28,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
     @NonNull private final String myToolChain;
     @NonNull private final String myGroupName;
     @NonNull private final String myAssembleTaskName;
-    @NonNull private final Collection<NativeFolder> mySourceFolders;
     @NonNull private final Collection<NativeFile> mySourceFiles;
     @NonNull private final Collection<File> myExportedHeaders;
     @NonNull private final String myAbi;
@@ -43,7 +41,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
                 "toolChain",
                 "groupName",
                 "assembleTaskName",
-                Collections.singletonList(new NativeFolderStub()),
                 Collections.singletonList(new NativeFileStub()),
                 Collections.singletonList(new File("exportHeadher")),
                 "abi",
@@ -57,7 +54,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
             @NonNull String toolChain,
             @NonNull String groupName,
             @NonNull String assembleTaskName,
-            @NonNull Collection<NativeFolder> folders,
             @NonNull Collection<NativeFile> files,
             @NonNull Collection<File> exportedHeaders,
             @NonNull String abi,
@@ -68,7 +64,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
         myToolChain = toolChain;
         myGroupName = groupName;
         myAssembleTaskName = assembleTaskName;
-        mySourceFolders = folders;
         mySourceFiles = files;
         myExportedHeaders = exportedHeaders;
         myAbi = abi;
@@ -99,12 +94,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
     @NonNull
     public String getAssembleTaskName() {
         return myAssembleTaskName;
-    }
-
-    @Override
-    @NonNull
-    public Collection<NativeFolder> getSourceFolders() {
-        return mySourceFolders;
     }
 
     @Override
@@ -156,7 +145,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
                 && Objects.equals(getToolChain(), artifact.getToolChain())
                 && Objects.equals(getGroupName(), artifact.getGroupName())
                 && equals(artifact, NativeArtifact::getAssembleTaskName)
-                && Objects.equals(getSourceFolders(), artifact.getSourceFolders())
                 && Objects.equals(getSourceFiles(), artifact.getSourceFiles())
                 && Objects.equals(getExportedHeaders(), artifact.getExportedHeaders())
                 && equals(artifact, NativeArtifact::getAbi)
@@ -172,7 +160,6 @@ public class NativeArtifactStub extends BaseStub implements NativeArtifact {
                 getToolChain(),
                 getGroupName(),
                 getAssembleTaskName(),
-                getSourceFolders(),
                 getSourceFiles(),
                 getExportedHeaders(),
                 getAbi(),
