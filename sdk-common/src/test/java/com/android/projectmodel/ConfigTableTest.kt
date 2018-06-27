@@ -34,14 +34,14 @@ class ConfigTableTest {
     private val tests = Config(applicationIdSuffix = "tests")
     private val fullHires = Config(applicationIdSuffix = "fullHires")
 
-    private val fullHiresReleaseAppPath = matchArtifactsWith("full/hires/release/app")
+    private val fullHiresReleaseAppPath = matchArtifactsWith("full/hires/release/${ARTIFACT_NAME_MAIN}")
 
     private val schema = ConfigTableSchema(
             listOf(
                     ConfigDimension("isDemo", listOf("demo", "full")),
                     ConfigDimension("res", listOf("hires", "lowres")),
                     ConfigDimension("buildType", listOf("debug", "release")),
-                    ConfigDimension("artifact", listOf("app", "tests"))
+                    ConfigDimension("artifact", listOf(ARTIFACT_NAME_MAIN, ARTIFACT_NAME_UNIT_TEST))
             ))
     val table = ConfigTable(
             schema = schema,
@@ -55,8 +55,8 @@ class ConfigTableTest {
                             fullHires),
                     ConfigAssociation(schema.pathFor("debug"), debug),
                     ConfigAssociation(schema.pathFor("release"), release),
-                    ConfigAssociation(schema.pathFor("app"), app),
-                    ConfigAssociation(schema.pathFor("tests"), tests)
+                    ConfigAssociation(schema.pathFor(ARTIFACT_NAME_MAIN), app),
+                    ConfigAssociation(schema.pathFor(ARTIFACT_NAME_UNIT_TEST), tests)
             )
     )
 
@@ -161,19 +161,19 @@ class ConfigTableTest {
     @Test
     fun testFilterContaining() {
         // Locate configs that are used by all variants of the "tests" artifact.
-        val filtered = table.filter { it.path.contains(matchArtifactsWith("*/*/*/tests")) }
+        val filtered = table.filter { it.path.contains(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_UNIT_TEST}")) }
         assertThat(filtered.schema).isEqualTo(table.schema)
         assertThat(filtered.configs).isEqualTo(listOf(main, tests))
         assertThat(filtered.associations).isEqualTo(listOf(
                 ConfigAssociation(matchAllArtifacts(), main),
-                ConfigAssociation(schema.pathFor("tests"), tests)))
+                ConfigAssociation(schema.pathFor("${ARTIFACT_NAME_UNIT_TEST}"), tests)))
     }
 
     @Test
     fun testFilterNotContaining() {
         // Locate all configs that aren't common to the app artifact in the demo/lowres flavor
         // across all build types.
-        val filtered = table.filter { !it.path.contains(matchArtifactsWith("demo/lowres/*/app")) }
+        val filtered = table.filter { !it.path.contains(matchArtifactsWith("demo/lowres/*/${ARTIFACT_NAME_MAIN}")) }
         assertThat(filtered.schema).isEqualTo(table.schema)
         assertThat(filtered.configs).isEqualTo(listOf(
                 full,
@@ -188,14 +188,14 @@ class ConfigTableTest {
                 ConfigAssociation(matchArtifactsWith("full/hires"), fullHires),
                 ConfigAssociation(matchArtifactsWith("*/*/debug"), debug),
                 ConfigAssociation(matchArtifactsWith("*/*/release"), release),
-                ConfigAssociation(matchArtifactsWith("*/*/*/tests"), tests)
+                ConfigAssociation(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_UNIT_TEST}"), tests)
         ))
     }
 
     @Test
     fun testFilterIntersecting() {
         // Locate all configs used by any variant of the hires app artifact
-        val filtered = table.filterIntersecting(matchArtifactsWith("*/hires/*/app"))
+        val filtered = table.filterIntersecting(matchArtifactsWith("*/hires/*/${ARTIFACT_NAME_MAIN}"))
         assertThat(filtered.schema).isEqualTo(table.schema)
         assertThat(filtered.configs).isEqualTo(listOf(main, demo, full, hires, fullHires, debug, release, app))
         assertThat(filtered.associations).isEqualTo(listOf(
@@ -206,19 +206,19 @@ class ConfigTableTest {
                 ConfigAssociation(matchArtifactsWith("full/hires"), fullHires),
                 ConfigAssociation(matchArtifactsWith("*/*/debug"), debug),
                 ConfigAssociation(matchArtifactsWith("*/*/release"), release),
-                ConfigAssociation(matchArtifactsWith("*/*/*/app"), app)
+                ConfigAssociation(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_MAIN}"), app)
         ))
     }
 
     @Test
     fun testFilterNotIntersecting() {
         // Locate all configs that aren't used by any variant of the hires app artifact
-        val filtered = table.filterNotIntersecting(matchArtifactsWith("*/hires/*/app"))
+        val filtered = table.filterNotIntersecting(matchArtifactsWith("*/hires/*/${ARTIFACT_NAME_MAIN}"))
         assertThat(filtered.schema).isEqualTo(table.schema)
         assertThat(filtered.configs).isEqualTo(listOf(lowres, tests))
         assertThat(filtered.associations).isEqualTo(listOf(
                 ConfigAssociation(matchArtifactsWith("*/lowres"), lowres),
-                ConfigAssociation(matchArtifactsWith("*/*/*/tests"), tests)
+                ConfigAssociation(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_UNIT_TEST}"), tests)
         ))
     }
 }

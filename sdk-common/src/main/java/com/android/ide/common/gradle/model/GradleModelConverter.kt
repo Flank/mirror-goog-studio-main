@@ -28,6 +28,7 @@ import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SourceProvider
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathStrings
+import com.android.projectmodel.ARTIFACT_NAME_MAIN
 import com.android.projectmodel.AndroidPathType
 import com.android.projectmodel.AndroidProject
 import com.android.projectmodel.Artifact
@@ -82,8 +83,6 @@ const val DIM_UNNAMED_FLAVOR = "unnamedFlavorDimension"
 const val DIM_BUILD_TYPE = "buildType"
 /** Name assigned to the dimension that contains artifacts. */
 const val DIM_ARTIFACTS = "artifact"
-/** Name of the main artifact. */
-const val MAIN_ARTIFACT_NAME = "main"
 
 data class VariantContext(val parent: IdeAndroidProject, val variant: IdeVariant)
 data class ArtifactContext(val parent: VariantContext, val artifact: IdeBaseArtifact)
@@ -138,7 +137,7 @@ class GradleModelConverter(
         }
 
     private inline fun forEachArtifact(variant: IdeVariant, block: (ConfigPath, BaseArtifact) -> Unit) {
-        block(schema.matchArtifact(MAIN_ARTIFACT_NAME), variant.mainArtifact)
+        block(schema.matchArtifact(ARTIFACT_NAME_MAIN), variant.mainArtifact)
         variant.extraAndroidArtifacts.forEach {
             block(schema.matchArtifact(it.name), it)
         }
@@ -237,7 +236,7 @@ class GradleModelConverter(
     fun convert(artifact: ArtifactContext): Artifact =
         compute(artifact) {
             with(artifact.artifact) {
-                val artifactName = if (this == artifact.parent.variant.mainArtifact) MAIN_ARTIFACT_NAME else name
+                val artifactName = if (this == artifact.parent.variant.mainArtifact) ARTIFACT_NAME_MAIN else name
                 val configTable = convert(ConfigTableContext(artifact.parent.parent))
                 val variantPath = matchArtifactsForVariant(artifact.parent.variant)
                 val artifactPath = variantPath.intersect(configTable.schema.matchArtifact(artifactName))
@@ -363,7 +362,7 @@ class GradleModelConverter(
             // The sources are the (probably empty) set of sources from the flavor metadata itself combined with the sources from
             // the flavor's source provider.
             ConfigAssociation(
-                artifactFilter.intersect(schema.matchArtifact(MAIN_ARTIFACT_NAME)),
+                artifactFilter.intersect(schema.matchArtifact(ARTIFACT_NAME_MAIN)),
                 configWithoutSourceProvider.copy(sources = configWithoutSourceProvider.sources + convert(flavor.sourceProvider))
             )
         )
@@ -390,7 +389,7 @@ class GradleModelConverter(
         result.add(
             // The ConfigPath for the main configuration is a path that matches both the main artifact and the current variant (if any).
             ConfigAssociation(
-                artifactFilter.intersect(schema.matchArtifact(MAIN_ARTIFACT_NAME)),
+                artifactFilter.intersect(schema.matchArtifact(ARTIFACT_NAME_MAIN)),
                 configWithoutSources.copy(sources = configWithoutSources.sources + convert(buildType.sourceProvider))
             )
         )
@@ -423,7 +422,7 @@ class GradleModelConverter(
                 buildTypeDimension.add(it.buildType.name)
             }
             val artifactDimension = builder.getOrPutDimension(DIM_ARTIFACTS)
-            artifactDimension.add(MAIN_ARTIFACT_NAME)
+            artifactDimension.add(ARTIFACT_NAME_MAIN)
             forEachVariant {
                 it.extraAndroidArtifacts.forEach {
                     artifactDimension.add(it.name)

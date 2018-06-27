@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("ConfigTableSchemaUtil")
+
 package com.android.projectmodel
 
 /**
@@ -23,17 +25,25 @@ package com.android.projectmodel
  * dimension corresponds to build type. For all build systems, the last dimension always corresponds
  * to an artifact name.
  */
-data class ConfigTableSchema(
-        /**
-         * Dimensions for the table.
-         */
-        val dimensions: List<ConfigDimension> = emptyList()
+class ConfigTableSchema(
+    /**
+     * Dimensions for the table.
+     */
+    val dimensions: List<ConfigDimension> = listOf(defaultArtifactDimension)
 ) {
+    init {
+        if (dimensions.isEmpty() || !dimensions.last().values.contains(ARTIFACT_NAME_MAIN)) {
+            throw IllegalArgumentException("The main artifact must be present in the config table")
+        }
+    }
+
     /**
      * Returns a [ConfigPath] that matches all [Config] instances that use the given
-     * [dimensionValue].
+     * [dimensionValue]. If dimensionValue is null, the resulting path matches all
+     * artifacts.
      */
-    fun pathFor(dimensionValue: String): ConfigPath {
+    fun pathFor(dimensionValue: String?): ConfigPath {
+        dimensionValue ?: return matchAllArtifacts()
         val index = dimensions.indexOfFirst { it.values.contains(dimensionValue) }
         if (index == -1) {
             return matchNoArtifacts()
@@ -63,4 +73,30 @@ data class ConfigTableSchema(
 
         fun build(): ConfigTableSchema = ConfigTableSchema(dimensions.map { it.build() })
     }
+}
+
+/**
+ * Default last dimension for a config table. It contains the default three artifacts for each
+ * variant (a main artifact, a unit test artifact, and an android test artifact).
+ */
+val defaultArtifactDimension = ConfigDimension(
+    "artifact", listOf(
+        ARTIFACT_NAME_MAIN,
+        ARTIFACT_NAME_UNIT_TEST,
+        ARTIFACT_NAME_ANDROID_TEST
+    )
+)
+
+/**
+ * Construct a [ConfigTableSchema] from a vararg list of pairs. Intended primarily for providing
+ * a concise syntax for hardcoded schema creation in unit tests. Schemas constructed this way always
+ * use the default
+ */
+fun configTableSchemaWith(vararg dimensions: Pair<String, List<String>>): ConfigTableSchema {
+    return ConfigTableSchema(dimensions.map {
+        ConfigDimension(
+            it.first,
+            it.second
+        )
+    } + defaultArtifactDimension)
 }
