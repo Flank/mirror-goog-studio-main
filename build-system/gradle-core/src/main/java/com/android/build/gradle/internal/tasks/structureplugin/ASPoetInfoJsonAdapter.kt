@@ -63,8 +63,7 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
     override fun write(output: JsonWriter, data: ModuleInfo) {
         output.beginObject()
 
-        output.name("moduleName").value(data.moduleName)
-        output.name("modulePath").value(data.path)
+        output.name("moduleName").value(data.name)
         output.name("moduleType").value(data.type.toString().toLowerCase())
 
         writeJavaCounts(output, data)
@@ -122,7 +121,7 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
 
         input.readObjectProperties {
             when (it) {
-                "modulePath" -> data.path = nextString()
+                "moduleName" -> data.name = nextString()
                 "moduleType" -> data.type = ModuleType.valueOf(nextString().toUpperCase())
                 "javaPackageCount" -> data.javaPackageCount = nextInt()
                 "javaClassCount" -> data.javaClassCount = nextInt()

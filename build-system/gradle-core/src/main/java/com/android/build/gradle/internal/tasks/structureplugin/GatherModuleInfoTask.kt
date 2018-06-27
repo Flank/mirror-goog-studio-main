@@ -47,7 +47,9 @@ open class GatherModuleInfoTask : DefaultTask() {
         KotlinUsageCollector().collectInto(moduleDataHolder, this)
         SourceFilesCollector().collectInto(moduleDataHolder, this)
 
-        moduleDataHolder.path = sourceProjectName
+        // Transform the ":" from the path into "_" so Poet can generate directories for each module
+        // correctly. Example: :module1:submoduleA will become module1_submoduleA
+        moduleDataHolder.name = sourceProjectName.replace(':', '_')
         moduleDataHolder.saveAsJsonTo(outputProvider.get().asFile)
     }
 
@@ -191,7 +193,9 @@ private class DependencyCollector : DataCollector {
                 is ProjectDependency -> PoetDependenciesInfo(
                     DependencyType.MODULE,
                     config.name,
-                    dependency.dependencyProject.path
+                    // For sub modules, drop the first ":" from the path and transform the others
+                    // into "_" so Poet can generate directories for each module correctly.
+                    dependency.dependencyProject.path.drop(1).replace(':', '_')
                 )
                 is ModuleDependency -> PoetDependenciesInfo(
                     DependencyType.EXTERNAL_LIBRARY,

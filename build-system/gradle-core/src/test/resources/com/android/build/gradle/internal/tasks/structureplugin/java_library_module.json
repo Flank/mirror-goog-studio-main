@@ -1,6 +1,5 @@
 {
   "moduleName": "javalib",
-  "modulePath": "javalib",
   "moduleType": "pure",
   "javaPackageCount": 10,
   "javaClassCount": 10,

@@ -1,6 +1,5 @@
 {
   "moduleName": "myapp",
-  "modulePath": "myapp",
   "moduleType": "android",
   "javaPackageCount": 5,
   "javaClassCount": 5,

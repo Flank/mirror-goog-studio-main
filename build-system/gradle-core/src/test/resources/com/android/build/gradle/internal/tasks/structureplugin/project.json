@@ -10,7 +10,6 @@
     "moduleConfigs": [
       {
         "moduleName": "javalib",
-        "modulePath": "javalib",
         "moduleType": "pure",
         "javaPackageCount": 10,
         "javaClassCount": 10,
@@ -28,7 +27,6 @@
       },
       {
         "moduleName": "kotlinlib",
-        "modulePath": "kotlinlib",
         "moduleType": "pure",
         "javaPackageCount": 0,
         "javaClassCount": 0,
@@ -50,7 +48,6 @@
       },
       {
         "moduleName": "myapp",
-        "modulePath": "myapp",
         "moduleType": "android",
         "javaPackageCount": 5,
         "javaClassCount": 5,
@@ -81,11 +78,11 @@
             "method": "api"
           },
           {
-            "moduleName": ":javalib",
+            "moduleName": "javalib",
             "method": "implementation"
           },
           {
-            "moduleName": ":kotlinlib",
+            "moduleName": "kotlinlib",
             "method": "implementation"
           }
         ]

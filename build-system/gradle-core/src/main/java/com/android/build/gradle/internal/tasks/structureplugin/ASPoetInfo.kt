@@ -44,7 +44,7 @@ class ASPoetInfo {
 }
 
 class ModuleInfo {
-    lateinit var path: String
+    lateinit var name: String
     var type = ModuleType.PURE
     var javaPackageCount: Int = 0
     var javaClassCount: Int = 0
@@ -59,8 +59,6 @@ class ModuleInfo {
     var hasLaunchActivity: Boolean = false
     var androidBuildConfig = AndroidBuildConfig()
     var resources: PoetResourceInfo = PoetResourceInfo()
-
-    val moduleName get() = this.path.split(':').last()
 
     fun saveAsJsonTo(to: File) {
         FileUtils.mkdirs(to.parentFile)

@@ -34,13 +34,13 @@ class ASPoetInfoTest {
                     PoetDependenciesInfo(
                         DependencyType.MODULE,
                         "implementation",
-                        ":javalib"
+                        "javalib"
                     ))
                 .addDependency(
                     PoetDependenciesInfo(
                         DependencyType.MODULE,
                         "implementation",
-                        ":kotlinlib"
+                        "kotlinlib"
                     )))
 
         validate(project, "project.json")
@@ -71,7 +71,7 @@ private fun getBaseProjectInfo(): ASPoetInfo {
 
 private fun getBaseJavaModule(): ModuleInfo {
     val module = ModuleInfo()
-    module.path = "javalib"
+    module.name = "javalib"
     module.type = ModuleType.PURE
     module.javaClassCount = 10
     module.javaPackageCount = 10
@@ -87,7 +87,7 @@ private fun getBaseJavaModule(): ModuleInfo {
 
 private fun getBaseKotlinModule(): ModuleInfo {
     val module = ModuleInfo()
-    module.path = "kotlinlib"
+    module.name = "kotlinlib"
     module.type = ModuleType.PURE
     module.useKotlin = true
     module.kotlinClassCount = 10
@@ -104,7 +104,7 @@ private fun getBaseKotlinModule(): ModuleInfo {
 
 private fun getBaseAndroidAppModule(): ModuleInfo {
     val module = ModuleInfo()
-    module.path = "myapp"
+    module.name = "myapp"
     module.type = ModuleType.ANDROID
     module.androidBuildConfig.minSdkVersion = 21
     module.androidBuildConfig.targetSdkVersion = 27
