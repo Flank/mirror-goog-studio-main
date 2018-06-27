@@ -21,17 +21,12 @@ import com.android.resources.ResourceType;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A resource value representing a declare-styleable resource.
- *
- * <p>{@link #getValue()} will return null, instead use {@link #getAllAttributes()} to get the list
- * of attributes defined in the declare-styleable.
- */
-public class DeclareStyleableResourceValueImpl extends ResourceValueImpl
-        implements DeclareStyleableResourceValue {
+/** A resource value representing a declare-styleable resource. */
+public class StyleableResourceValueImpl extends ResourceValueImpl
+        implements StyleableResourceValue {
     @NonNull private final List<AttrResourceValue> mAttrs = new ArrayList<>();
 
-    public DeclareStyleableResourceValueImpl(
+    public StyleableResourceValueImpl(
             @NonNull ResourceReference reference,
             @Nullable String value,
             @Nullable String libraryName) {
@@ -39,7 +34,7 @@ public class DeclareStyleableResourceValueImpl extends ResourceValueImpl
         assert reference.getResourceType() == ResourceType.STYLEABLE;
     }
 
-    public DeclareStyleableResourceValueImpl(
+    public StyleableResourceValueImpl(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
             @NonNull String name,

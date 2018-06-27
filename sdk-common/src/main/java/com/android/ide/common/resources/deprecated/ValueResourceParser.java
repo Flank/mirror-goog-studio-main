@@ -45,7 +45,7 @@ public final class ValueResourceParser extends DefaultHandler {
     private ResourceValue mCurrentValue;
     private ArrayResourceValueImpl mArrayResourceValue;
     private StyleResourceValueImpl mCurrentStyle;
-    private DeclareStyleableResourceValueImpl mCurrentDeclareStyleable;
+    private StyleableResourceValueImpl mCurrentDeclareStyleable;
     private AttrResourceValueImpl mCurrentAttr;
     private IValueResourceRepository mRepository;
     private final boolean mIsFramework;
@@ -117,7 +117,7 @@ public final class ValueResourceParser extends DefaultHandler {
                                 break;
                             case STYLEABLE:
                                 mCurrentDeclareStyleable =
-                                        new DeclareStyleableResourceValueImpl(
+                                        new StyleableResourceValueImpl(
                                                 namespace, type, name, null, mLibraryName);
                                 mRepository.addResourceValue(mCurrentDeclareStyleable);
                                 break;

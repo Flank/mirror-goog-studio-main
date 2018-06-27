@@ -24,7 +24,7 @@ import java.util.List;
  * <p>{@link #getValue()} will return null, instead use {@link #getAllAttributes()} to get the list
  * of attributes defined in the declare-styleable.
  */
-public interface DeclareStyleableResourceValue extends ResourceValue {
+public interface StyleableResourceValue extends ResourceValue {
     @NonNull
     List<AttrResourceValue> getAllAttributes();
 }

@@ -39,7 +39,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValueImpl;
 import com.android.ide.common.rendering.api.AttrResourceValueImpl;
 import com.android.ide.common.rendering.api.AttributeFormat;
-import com.android.ide.common.rendering.api.DeclareStyleableResourceValueImpl;
 import com.android.ide.common.rendering.api.DensityBasedResourceValueImpl;
 import com.android.ide.common.rendering.api.PluralsResourceValueImpl;
 import com.android.ide.common.rendering.api.ResourceNamespace;
@@ -49,6 +48,7 @@ import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.rendering.api.StyleItemResourceValue;
 import com.android.ide.common.rendering.api.StyleItemResourceValueImpl;
 import com.android.ide.common.rendering.api.StyleResourceValueImpl;
+import com.android.ide.common.rendering.api.StyleableResourceValueImpl;
 import com.android.ide.common.rendering.api.TextResourceValueImpl;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -435,7 +435,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
             case STYLEABLE:
                 return parseDeclareStyleable(
-                        new DeclareStyleableResourceValueImpl(
+                        new StyleableResourceValueImpl(
                                 mNamespace, mType, getName(), null, mLibraryName));
 
             case ARRAY:
@@ -702,8 +702,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private DeclareStyleableResourceValueImpl parseDeclareStyleable(
-            @NonNull DeclareStyleableResourceValueImpl declareStyleable) {
+    private StyleableResourceValueImpl parseDeclareStyleable(
+            @NonNull StyleableResourceValueImpl declareStyleable) {
         NodeList children = mValue.getChildNodes();
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
