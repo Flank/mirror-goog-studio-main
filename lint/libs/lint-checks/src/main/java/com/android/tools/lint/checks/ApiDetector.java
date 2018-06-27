@@ -348,7 +348,7 @@ public class ApiDetector extends ResourceXmlDetector
             // the dividers attribute is present in API 1, but it won't be read on older
             // versions, so don't flag the common pattern
             //    android:divider="?android:attr/dividerHorizontal"
-            // since this will work just fine. See issue 67440 for more.
+            // since this will work just fine. See issue 36992041 for more.
             if (name.equals("divider")) {
                 return;
             }
@@ -457,6 +457,24 @@ public class ApiDetector extends ResourceXmlDetector
                                 name, api, minSdk, attributeName, attributeApiLevel);
                 context.report(UNSUPPORTED, attribute, location, message, apiLevelFix(api));
             } else {
+                if (api == 17 && RtlDetector.isRtlAttributeName(name)) {
+                    String old = RtlDetector.convertNewToOld(name);
+                    if (!name.equals(old)) {
+                        Element parent = attribute.getOwnerElement();
+                        if (TAG_ITEM.equals(parent.getTagName())) {
+                            // Is the same style also defining the other, older attribute?
+                            for (Element item : Lint.getChildren(parent.getParentNode())) {
+                                String v = item.getAttribute(ATTR_NAME);
+                                if (v.endsWith(old)) {
+                                    return;
+                                }
+                            }
+                        } else if (parent.hasAttributeNS(ANDROID_URI, old)) {
+                            return;
+                        }
+                    }
+                }
+
                 Location location = context.getLocation(attribute);
                 String message =
                         String.format(
