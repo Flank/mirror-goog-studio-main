@@ -42,3 +42,9 @@ data class ArtifactDependency(
          */
         val resolvedMavenCoordinate: GradleCoordinate? = null
 )
+
+/**
+ * Return a depth-first-search of all [ArtifactDependency] in the given list as a [Sequence].
+ */
+fun Iterable<ArtifactDependency>.depthFirstSearch(): Sequence<ArtifactDependency>
+    = asSequence().flatMap { it.dependencies.depthFirstSearch() + it }
