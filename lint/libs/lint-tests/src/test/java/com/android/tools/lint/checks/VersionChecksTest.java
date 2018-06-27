@@ -2421,6 +2421,48 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test110576968() {
+        // Regression test for 110576968: NewApi isn't resolving a static final constant API value
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class WorkManagerTest {\n"
+                                        + "    public void test2() {\n"
+                                        + "        if (Build.VERSION.SDK_INT >= WorkManager.MIN_JOB_SCHEDULER_API_LEVEL) {\n"
+                                        + "            SystemJobScheduler scheduler = new SystemJobScheduler(); // OK\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class WorkManager {\n"
+                                        + "    public static final int MIN_JOB_SCHEDULER_API_LEVEL = 23;\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(WorkManager.MIN_JOB_SCHEDULER_API_LEVEL)\n"
+                                        + "public class SystemJobScheduler {\n"
+                                        + "    public SystemJobScheduler() { }\n"
+                                        + "}\n"),
+                        mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();

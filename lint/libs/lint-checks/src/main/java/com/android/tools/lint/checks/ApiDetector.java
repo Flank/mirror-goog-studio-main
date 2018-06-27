@@ -1552,6 +1552,23 @@ public class ApiDetector extends ResourceXmlDetector
         public void visitCallExpression(@NonNull UCallExpression expression) {
             PsiMethod method = expression.resolve();
             if (method == null) {
+                // If it's a constructor call to a default constructor, resolve() returns
+                // null. But we still want to check @RequiresApi for these; we won't
+                // run into this for the APIs recorded in the database since those
+                // are always referenced from .class files where we have the actual
+                // constructor.
+                UReferenceExpression reference = expression.getClassReference();
+                if (reference != null) {
+                    PsiElement resolved = reference.resolve();
+                    if (resolved instanceof PsiClass) {
+                        PsiClass containingClass = (PsiClass) resolved;
+                        PsiModifierList modifierList = containingClass.getModifierList();
+                        if (modifierList != null) {
+                            checkRequiresApi(expression, method, modifierList);
+                        }
+                    }
+                }
+
                 return;
             }
 
@@ -1968,7 +1985,9 @@ public class ApiDetector extends ResourceXmlDetector
 
         // Look for @RequiresApi in modifier lists
         private boolean checkRequiresApi(
-                UElement expression, PsiMember member, PsiModifierList modifierList) {
+                @NonNull UElement expression,
+                @Nullable PsiMember member,
+                @NonNull PsiModifierList modifierList) {
             int api = getRequiresApiFromAnnotations(modifierList);
             if (api != -1) {
                 int minSdk = getMinSdk(mContext);
@@ -1984,19 +2003,19 @@ public class ApiDetector extends ResourceXmlDetector
                         }
 
                         Location location;
+                        String fqcn;
                         if (UastExpressionUtils.isConstructorCall(expression)
                                 && ((UCallExpression) expression).getClassReference() != null) {
-                            location =
-                                    mContext.getRangeLocation(
-                                            expression,
-                                            0,
-                                            ((UCallExpression) expression).getClassReference(),
-                                            0);
+                            UReferenceExpression classReference =
+                                    ((UCallExpression) expression).getClassReference();
+                            assert classReference != null; // checked above
+                            location = mContext.getRangeLocation(expression, 0, classReference, 0);
+                            fqcn = classReference.getResolvedName();
                         } else {
                             location = mContext.getNameLocation(expression);
+                            fqcn = member.getName();
                         }
 
-                        String fqcn = member.getName();
                         String message =
                                 String.format(
                                         "Call requires API level %1$d (current min is %2$d): `%3$s`",
