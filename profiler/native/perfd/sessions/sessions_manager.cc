@@ -27,57 +27,40 @@ using std::lock_guard;
 using std::mutex;
 using std::vector;
 
-bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
+void SessionsManager::BeginSession(int64_t device_id, int32_t pid,
                                    Session* session, int64_t start_timestamp) {
   lock_guard<mutex> lock(sessions_mutex_);
-  auto it =
-      std::find_if(sessions_.begin(), sessions_.end(), [&](const Session& s) {
-        return s.device_id() == device_id && s.pid() == pid &&
-               SessionUtils::IsActive(s);
-      });
-
-  bool new_session = false;
-  if (it == sessions_.end()) {
-    sessions_.push_front(
-        SessionUtils::CreateSession(device_id, pid, start_timestamp));
-    new_session = true;
-  } else {
-    // If a matching session was already running, move it to the front of the
-    // list (since it now should be the most recent), unless it's already in
-    // the front.
-    if (it != sessions_.begin()) {
-      sessions_.splice(sessions_.begin(), sessions_, it, std::next(it));
+  if (sessions_.size()) {
+    Session& last = sessions_[sessions_.size() - 1];
+    if (SessionUtils::IsActive(last)) {
+      DoEndSession(&last);
     }
   }
 
-  session->CopyFrom(sessions_.front());
-  return new_session;
+  Session new_session =
+      SessionUtils::CreateSession(device_id, pid, start_timestamp);
+  sessions_.push_back(new_session);
+  session->CopyFrom(new_session);
 }
 
-bool SessionsManager::EndSession(int64_t session_id, Session* session) {
+void SessionsManager::EndSession(int64_t session_id, Session* session) {
   lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter({[session_id](const Session& s) {
-    return s.session_id() == session_id;
-  }});
-  if (it != sessions_.end()) {
-    DoEndSession(&(*it));
-    session->CopyFrom(*it);
-    return true;
-  } else {
-    return false;
+
+  if (sessions_.size()) {
+    Session& last = sessions_[sessions_.size() - 1];
+    if (SessionUtils::IsActive(last) && last.session_id() == session_id) {
+      DoEndSession(&last);
+      session->CopyFrom(last);
+    }
   }
 }
 
-bool SessionsManager::GetSession(int64_t session_id, Session* session) const {
+void SessionsManager::GetSession(int64_t session_id, Session* session) const {
   lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter({[session_id](const Session& s) {
-    return s.session_id() == session_id;
-  }});
-  if (it != sessions_.end()) {
-    session->CopyFrom(*it);
-    return true;
-  } else {
-    return false;
+  for (const Session& s : sessions_) {
+    if (s.session_id() == session_id) {
+      session->CopyFrom(s);
+    }
   }
 }
 
@@ -90,30 +73,13 @@ std::vector<Session> SessionsManager::GetSessions(int64_t start_timestamp,
         start_timestamp > session.end_timestamp()) {
       continue;
     }
-    sessions_range.insert(sessions_range.begin(), session);
+    sessions_range.push_back(session);
   }
   return sessions_range;
 }
 
 // This method assumes |sessions_| has already been locked
-list<Session>::iterator SessionsManager::GetSessionIter(
-    const std::function<bool(const Session& s)>& match_func) {
-  return std::find_if(sessions_.begin(), sessions_.end(), match_func);
-}
-
-// This method assumes |sessions_| has already been locked
-list<Session>::const_iterator SessionsManager::GetSessionIter(
-    const std::function<bool(const Session& s)>& match_func) const {
-  return std::find_if(sessions_.begin(), sessions_.end(), match_func);
-}
-
-// This method assumes |sessions_| has already been locked and that
-// |session_index| is valid.
 void SessionsManager::DoEndSession(Session* session) {
-  if (!SessionUtils::IsActive(*session)) {
-    return;
-  }
-
   session->set_end_timestamp(clock_->GetCurrentTime());
   // TODO(b/67508650): Stop all profilers!
 }
