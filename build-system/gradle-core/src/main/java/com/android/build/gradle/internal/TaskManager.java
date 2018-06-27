@@ -1539,6 +1539,23 @@ public abstract class TaskManager {
                                                     .get())
                                     .build());
         }
+
+        if (Boolean.TRUE.equals(
+                        scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())
+                && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+            scope.getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "auto-namespaced-dependencies-classes")
+                                    .addContentTypes(DefaultContentType.CLASSES)
+                                    .addScope(Scope.EXTERNAL_LIBRARIES)
+                                    .setFileCollection(
+                                            artifacts
+                                                    .getFinalArtifactFiles(
+                                                            InternalArtifactType
+                                                                    .NAMESPACED_CLASSES_JAR)
+                                                    .get())
+                                    .build());
+        }
     }
 
     private static void setupCompileTaskDependencies(
