@@ -16,7 +16,7 @@ publishLocal {
             pom.project {
                 name 'aapt2'
                 description 'Android Asset Packaging Tool 2.'
-                url 'http://tools.android.com'
+                url 'https://developer.android.com/studio'
                 inceptionYear '2007'
                 licenses {
                     license {

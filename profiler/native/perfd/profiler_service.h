@@ -104,6 +104,8 @@ class ProfilerServiceImpl final
 
   std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>&
       agent_status_map_;
+  // Mapping pid -> whether an agent is attachable.
+  std::unordered_map<int32_t, bool> agent_attachable_map_;
 };
 
 }  // namespace profiler

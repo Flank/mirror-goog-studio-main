@@ -43,29 +43,20 @@ class JetifierTest {
         project.executor().with(BooleanOption.ENABLE_JETIFIER, false).run("assembleDebug")
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
 
-        // 1. Check that the old support library is not yet replaced with a new one
-        assertThat(apk).containsClass("Landroid/support/v7/preference/Preference;")
-        assertThat(apk).doesNotContainClass("Landroidx/preference/Preference;")
+        apk.use {
+            // 1. Check that the old support library is not yet replaced with a new one
+            assertThat(apk).containsClass("Landroid/support/v7/preference/Preference;")
+            assertThat(apk).doesNotContainClass("Landroidx/preference/Preference;")
 
-        // 2. Check that the library to refactor is not yet refactored
-        assertThat(apk).hasClass("Lcom/example/androidlib/MyPreference;")
-            .that().hasSuperclass("Landroid/support/v7/preference/Preference;")
+            // 2. Check that the library to refactor is not yet refactored
+            assertThat(apk).hasClass("Lcom/example/androidlib/MyPreference;")
+                .that().hasSuperclass("Landroid/support/v7/preference/Preference;")
+        }
     }
 
     @Test
     fun testJetifierEnabledAndroidXEnabled() {
-        // Prepare the project to use AndroidX
-        TestFileUtils.searchAndReplace(
-            project.getSubproject(":app").buildFile,
-            "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-P\""
-        )
-        TestFileUtils.searchAndReplace(
-            project.getSubproject(":app")
-                .file("src/main/java/com/example/app/MainActivity.java"),
-            "import android.support.v7.app.AppCompatActivity;",
-            "import androidx.appcompat.app.AppCompatActivity;"
-        )
+        prepareProjectForAndroidX()
 
         // Build the project with Jetifier enabled and AndroidX enabled
         project.executor()
@@ -74,13 +65,15 @@ class JetifierTest {
             .run("assembleDebug")
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
 
-        // 1. Check that the old support library has been replaced with a new one
-        assertThat(apk).doesNotContainClass("Landroid/support/v7/preference/Preference;")
-        assertThat(apk).containsClass("Landroidx/preference/Preference;")
+        apk.use {
+            // 1. Check that the old support library has been replaced with a new one
+            assertThat(apk).doesNotContainClass("Landroid/support/v7/preference/Preference;")
+            assertThat(apk).containsClass("Landroidx/preference/Preference;")
 
-        // 2. Check that the library to refactor has been refactored
-        assertThat(apk).hasClass("Lcom/example/androidlib/MyPreference;")
-            .that().hasSuperclass("Landroidx/preference/Preference;")
+            // 2. Check that the library to refactor has been refactored
+            assertThat(apk).hasClass("Lcom/example/androidlib/MyPreference;")
+                .that().hasSuperclass("Landroidx/preference/Preference;")
+        }
     }
 
     @Test
@@ -101,18 +94,7 @@ class JetifierTest {
     @Test
     fun testAndroidArchNavigationLibrariesAreJetified() {
         // Regression test for https://issuetracker.google.com/79667498
-        // Prepare the project to use AndroidX
-        TestFileUtils.searchAndReplace(
-            project.getSubproject(":app").buildFile,
-            "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-P\""
-        )
-        TestFileUtils.searchAndReplace(
-            project.getSubproject(":app")
-                .file("src/main/java/com/example/app/MainActivity.java"),
-            "import android.support.v7.app.AppCompatActivity;",
-            "import androidx.appcompat.app.AppCompatActivity;"
-        )
+        prepareProjectForAndroidX()
 
         // Add an android.arch.navigation dependency
         TestFileUtils.appendToFile(
@@ -129,8 +111,30 @@ class JetifierTest {
             .run("assembleDebug")
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
 
-        // Check that the android.arch.navigation library has been jetified
-        assertThat(apk).hasClass("Landroidx/navigation/fragment/NavHostFragment;")
-            .that().hasSuperclass("Landroidx/fragment/app/Fragment;")
+        apk.use {
+            // Check that the android.arch.navigation library has been jetified
+            assertThat(apk).hasClass("Landroidx/navigation/fragment/NavHostFragment;")
+                .that().hasSuperclass("Landroidx/fragment/app/Fragment;")
+        }
+    }
+
+    private fun prepareProjectForAndroidX() {
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app").buildFile,
+            "compileSdkVersion rootProject.latestCompileSdk",
+            "compileSdkVersion \"android-P\""
+        )
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app")
+                .file("src/main/java/com/example/app/MainActivity.java"),
+            "import android.support.v7.app.AppCompatActivity;",
+            "import androidx.appcompat.app.AppCompatActivity;"
+        )
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app")
+                .file("src/main/java/com/example/app/DummyClassToTestAnnotationProcessing.java"),
+            "import android.support.annotation.NonNull;",
+            "import androidx.annotation.NonNull;"
+        )
     }
 }
