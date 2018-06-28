@@ -30,6 +30,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 @RunWith(FilterableParameterized::class)
 class DataBindingMultiModuleTest(useAndroidX: Boolean) {
@@ -121,7 +122,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
         GradleTaskSubject.assertThat(result.getTask(APP_COMPILE_JAVA_TASK)).wasUpToDate()
     }
 
-    //@Test see: b/80553728
+    @Test
     fun checkCompilationAvoidanceOnAdapterChange() {
         project.executor().run(APP_COMPILE_JAVA_TASK)
         createAdapterInInherited("setMyText")
@@ -131,10 +132,24 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
             "app:setMyText=\"@{inheritedInput}\""
         )
         val result = project.executor().run(APP_COMPILE_JAVA_TASK)
+        GradleTaskSubject.assertThat(result.getTask(LIBRARY_COMPILE_JAVA_TASK)).didWork()
         GradleTaskSubject.assertThat(result.getTask(APP_COMPILE_JAVA_TASK)).wasUpToDate()
     }
 
-    private fun createAdapterInInherited(attributeName: String) {
+    @Test
+    fun checkCompilationAvoidanceOnDummyAdapterChange() {
+        val adapterFile = createAdapterInInherited("setMyText")
+        project.executor().run(APP_COMPILE_JAVA_TASK)
+        TestFileUtils.searchVerbatimAndReplace(adapterFile,
+            "public class NewAdapter {",
+            "public class //dummy comment\nNewAdapter {"
+        )
+        val result = project.executor().run(APP_COMPILE_JAVA_TASK)
+        GradleTaskSubject.assertThat(result.getTask(LIBRARY_COMPILE_JAVA_TASK)).wasUpToDate()
+        GradleTaskSubject.assertThat(result.getTask(APP_COMPILE_JAVA_TASK)).wasUpToDate()
+    }
+
+    private fun createAdapterInInherited(attributeName: String) : File {
         val newAdapter = project
             .file("inherited/src/main/java/android/databinding/multimodule/inherited/NewAdapter.java")
         newAdapter
@@ -149,6 +164,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
                     }
                     """.trimIndent()
             )
+        return newAdapter
     }
 
     private fun assertBRs(vararg fields: String) {
@@ -177,6 +193,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
         private val ALL_PKGS = arrayOf(LIB_PKG, APP_PKG, INHERITED_PKG)
         private val BR_CLASSES = ALL_PKGS.map { "$it/BR;" }.toTypedArray()
         private const val APP_COMPILE_JAVA_TASK = ":app:compileReleaseJavaWithJavac"
+        private const val LIBRARY_COMPILE_JAVA_TASK = ":library:compileReleaseJavaWithJavac"
 
         @Parameterized.Parameters(name = "useAndroidX_{0}")
         @JvmStatic
