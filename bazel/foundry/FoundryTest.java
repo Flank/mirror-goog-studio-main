@@ -1,8 +1,10 @@
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -60,6 +62,27 @@ public final class FoundryTest {
             assertTrue(Arrays.asList(tempDir.list()).contains(filename));
         } catch (IOException e) {
             fail("File with non-ascii name failed to be created.");
+        }
+    }
+
+    @Test
+    public void testArmLinuxLinker() {
+        try {
+            String command =
+                    "prebuilts/studio/sdk/linux/build-tools/27.0.3/arm-linux-androideabi-ld --help";
+            Process proc = Runtime.getRuntime().exec(command);
+            BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            int exitVal = proc.waitFor();
+            String line;
+            while ((line = input.readLine()) != null) {
+                System.out.println(line);
+            }
+            input.close();
+            System.out.println("Process exitValue: " + exitVal);
+            assertTrue(exitVal == 0);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            fail("Could not run latest build-tools linker.");
         }
     }
 }

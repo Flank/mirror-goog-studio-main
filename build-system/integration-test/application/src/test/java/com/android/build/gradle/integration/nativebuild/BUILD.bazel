@@ -283,9 +283,7 @@ single_gradle_integration_test(
     name = "RsEnabledAnnotationTest",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
-    tags = TAGS + [
-        "no_test_foundry",  # b/110432155
-    ],
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -295,9 +293,7 @@ single_gradle_integration_test(
     maven_repos = MAVEN_REPOS + [
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/nativebuild:RsSupportModeTest_prebuilts",
     ],
-    tags = TAGS + [
-        "no_test_foundry",  # b/110432155
-    ],
+    tags = TAGS,
     deps = DEPS,
 )
 

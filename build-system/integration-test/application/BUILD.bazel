@@ -116,7 +116,6 @@ gradle_integration_test(
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     #keep sorted
     tags = [
-        "no_test_foundry",  # b/73948555
         "no_test_mac",  # b/69151132
         "no_test_windows",  # b/73306170
     ],

@@ -43,7 +43,6 @@ gradle_integration_test(
     shard_count = 5,
     #keep sorted
     tags = [
-        "no_test_foundry",  # b/73948555
         "no_test_windows",  # b/73306170
     ],
     #keep sorted
