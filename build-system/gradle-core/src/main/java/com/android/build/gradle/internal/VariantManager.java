@@ -775,9 +775,10 @@ public class VariantManager implements VariantModel {
                         .getProjectOptions()
                         .get(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES);
         boolean autoNamespaceDependencies =
-                globalScope
-                        .getProjectOptions()
-                        .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES);
+                globalScope.getExtension().getAaptOptions().getNamespaced()
+                        && globalScope
+                                .getProjectOptions()
+                                .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES);
         for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {

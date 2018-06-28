@@ -89,8 +89,11 @@ class NonNamespacedDependenciesLinker(
     /** Submit worker actions to compile the resources for all AARs that don't have a static library */
 
     fun link() {
-        // At this point, there must be some QueuedDependencyNodes that are ready to be processed.
-        // (Leaves in the dependency graph)
+        /* At this point, either
+         * 1. There are some QueuedDependencyNodes ready to be processed
+         *    (leaves in the dependency graph), or
+         * 2. There is nothing to do and this will complete trivially.
+         */
         enqueueReady()
 
         // Wait for all the jobs to be submitted
@@ -116,6 +119,7 @@ class NonNamespacedDependenciesLinker(
     @Synchronized
     private fun enqueueReady() {
         if (backlog.isEmpty()) {
+            workSubmittedFuture.set(ImmutableList.copyOf(work))
             return
         }
         val wereBlocked = ArrayList<QueuedBlockedNode>(backlog)

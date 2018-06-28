@@ -925,7 +925,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             RUNTIME_CLASSPATH,
                             ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY));
-            if (projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+            if (variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
+                    && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 task.convertedLibraryDependencies =
                         variantScope
                                 .getArtifacts()

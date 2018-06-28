@@ -137,7 +137,8 @@ open class ProcessAndroidAppResourcesTask
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            if (scope.globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+            if (scope.globalScope.extension.aaptOptions.namespaced &&
+                scope.globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 task.convertedLibraryDependencies =
                         scope
                             .artifacts
