@@ -112,8 +112,6 @@ class InstantAppBundleTest {
             "intermediates",
             "merged_manifests",
             "debugFeature",
-            "processDebugFeatureManifest",
-            "merged",
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
         FileSubject.assertThat(manifestFile).contains("featureSplit=\"feature1\"")
@@ -122,8 +120,6 @@ class InstantAppBundleTest {
             "intermediates",
             "merged_manifests",
             "debugFeature",
-            "processDebugFeatureManifest",
-            "merged",
             "AndroidManifest.xml")
         assertThat(baseManifest).isFile()
         assertThat(baseManifest).contains("splitName")

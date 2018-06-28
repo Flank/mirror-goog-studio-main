@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.api.artifact;
 
+import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
 import org.gradle.api.Incubating;
 
@@ -30,5 +31,11 @@ public enum SourceArtifactType implements ArtifactType {
     RENDERSCRIPT,
     JNI,
     JNI_LIBS,
-    SHADERS
+    SHADERS;
+
+    @NonNull
+    @Override
+    public Kind kind() {
+        return Kind.DIRECTORY;
+    }
 }

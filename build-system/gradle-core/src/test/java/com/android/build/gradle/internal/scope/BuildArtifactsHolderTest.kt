@@ -27,9 +27,12 @@ import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 import java.io.File
 
 /**
@@ -199,22 +202,42 @@ class BuildArtifactsHolderTest {
     }
 
     @Test
-    fun finalBuildableLocation() {
-        holder.setArtifactFile(JAVAC_CLASSES, task1, "finalFile")
-        val finalArtifactFiles = holder.getFinalArtifactFiles(JAVAC_CLASSES)
+    fun finalBuildableFileLocation() {
+        holder.setArtifactFile(InternalArtifactType.BUNDLE, task1, "finalFile")
+        val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
+        assertThat(finalArtifactFiles.files).hasSize(1)
+        val outputFile = finalArtifactFiles.files.elementAt(0)
+        val relativeFile = outputFile.relativeTo(project.buildDir)
+        assertThat(relativeFile.path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Category.OUTPUTS.name.toLowerCase(),
+                InternalArtifactType.BUNDLE.name.toLowerCase(),
+                "debug",
+                "finalFile"))
+    }
+
+    @Test
+    fun finalBuildableDirectoryLocation() {
+        val taskProvider = Mockito.mock(TaskProvider::class.java)
+        Mockito.`when`(taskProvider.get()).thenReturn(task1)
+        holder.appendDirectory(InternalArtifactType.MERGED_MANIFESTS,
+            task1.name,
+            taskProvider,
+            "finalFolder")
+        val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
         assertThat(finalArtifactFiles.files).hasSize(1)
         val outputFile = finalArtifactFiles.files.elementAt(0)
         val relativeFile = outputFile.relativeTo(project.buildDir)
         assertThat(relativeFile.path).isEqualTo(
             FileUtils.join(
                 InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                JAVAC_CLASSES.name.toLowerCase(),
+                InternalArtifactType.MERGED_MANIFESTS.name.toLowerCase(),
                 "debug",
-                "finalFile"))
+                "finalFolder"))
     }
 
     @Test
-    fun finalReplacedBuildableLocation() {
+    fun finalReplacedBuildableFileLocation() {
         val task1Output = holder.setArtifactFile(
             InternalArtifactType.BUNDLE, task1, "finalFile")
         val task2Output = holder.setArtifactFile(
@@ -239,6 +262,43 @@ class BuildArtifactsHolderTest {
                 InternalArtifactType.BUNDLE.name.toLowerCase(),
                 "debug",
                 "replacingFile")
+        )
+    }
+
+    @Test
+    fun finalAppendedBuildableDirectoryLocation() {
+        val task1Provider = Mockito.mock(TaskProvider::class.java)
+        Mockito.`when`(task1Provider.get()).thenReturn(task1)
+        val task2Provider = Mockito.mock(TaskProvider::class.java)
+        Mockito.`when`(task2Provider.get()).thenReturn(task2)
+
+        val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
+
+        val task1Output = holder.appendDirectory(
+            InternalArtifactType.MERGED_MANIFESTS, task1.name, task1Provider, "originalFolder")
+        assertThat(task1Output.get().asFile.path).isEqualTo(finalArtifactFiles.files.elementAt(0).path)
+
+        val task2Output = holder.appendDirectory(
+            InternalArtifactType.MERGED_MANIFESTS, task2.name, task2Provider, "addedFolder")
+        assertThat(finalArtifactFiles.files).hasSize(2)
+        // check that our output file
+        assertThat(task2Output.get().asFile.path).isEqualTo(finalArtifactFiles.files.elementAt(1).path)
+        val relativeFile1 = task1Output.get().asFile.relativeTo(project.buildDir)
+        assertThat(relativeFile1.path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Category.INTERMEDIATES.outputPath,
+                InternalArtifactType.MERGED_MANIFESTS.name.toLowerCase(),
+                "debug",
+                "task1",
+                "originalFolder"))
+        val relativeFile2 = task2Output.get().asFile.relativeTo(project.buildDir)
+        assertThat(relativeFile2.path).isEqualTo(
+            FileUtils.join(
+                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
+                InternalArtifactType.MERGED_MANIFESTS.name.toLowerCase(),
+                "debug",
+                "task2",
+                "addedFolder")
         )
     }
 

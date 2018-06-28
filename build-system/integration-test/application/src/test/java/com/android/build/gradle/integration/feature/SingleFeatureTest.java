@@ -49,8 +49,6 @@ public class SingleFeatureTest {
                 featureProject.getIntermediateFile(
                         "merged_manifests",
                         "debugFeature",
-                        "processDebugFeatureManifest",
-                        "merged",
                         "AndroidManifest.xml"));
         checkApkContents(featureProject.getFeatureApk(GradleTestProject.ApkType.DEBUG));
 
@@ -60,8 +58,6 @@ public class SingleFeatureTest {
                 appProject.getIntermediateFile(
                         "merged_manifests",
                         "debug",
-                        "processDebugManifest",
-                        "merged",
                         "AndroidManifest.xml"));
         checkApkContents(appProject.getApk(GradleTestProject.ApkType.DEBUG));
     }

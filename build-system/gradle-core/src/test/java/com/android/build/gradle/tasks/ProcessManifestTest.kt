@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
@@ -28,6 +30,9 @@ import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.build.ApkData
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert
 import org.junit.Before
@@ -55,6 +60,9 @@ class ProcessManifestTest {
     @Mock lateinit var outputScope: OutputScope
     @Mock lateinit var variantConfiguration : GradleVariantConfiguration
     @Mock lateinit var buildArtifactsHolder : BuildArtifactsHolder
+    @Mock lateinit var mergedManifestsProvider : Provider<Directory>
+    @Mock lateinit var mergedManifests : Directory
+    @Mock lateinit var androidManifest: RegularFile
     @Mock lateinit var variantData : BaseVariantData
     @Mock lateinit var mainSplit: ApkData
     @Mock lateinit var androidBuilder: AndroidBuilder
@@ -69,6 +77,7 @@ class ProcessManifestTest {
         `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
         `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
+
         `when`(variantScope.variantData).thenReturn(variantData)
         `when`(variantScope.fullVariantName).thenReturn("fullVariantName")
         `when`(variantScope.getTaskName(any(), any())).thenReturn("processManifest")
@@ -82,7 +91,19 @@ class ProcessManifestTest {
 
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         val configAction = ProcessManifest.ConfigAction(variantScope)
-        task = project!!.tasks.create(configAction.name, configAction.type, configAction)
+        val taskProvider = project!!.tasks.register<ProcessManifest>("fooRelease", ProcessManifest::class.java)
+
+        `when`(buildArtifactsHolder.appendDirectory(
+            InternalArtifactType.MERGED_MANIFESTS, "processManifest", taskProvider, ""))
+            .thenReturn(mergedManifestsProvider)
+
+        `when`(mergedManifestsProvider.get()).thenReturn(mergedManifests)
+        `when`(mergedManifests.file(SdkConstants.FN_ANDROID_MANIFEST_XML))
+            .thenReturn(androidManifest)
+
+        configAction.preConfigure(taskProvider, "processManifest")
+                task = taskProvider.get()
+                configAction.execute(task)
     }
 
     @Test()

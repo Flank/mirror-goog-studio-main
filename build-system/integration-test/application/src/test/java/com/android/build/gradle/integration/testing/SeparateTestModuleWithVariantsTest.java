@@ -51,7 +51,7 @@ public class SeparateTestModuleWithVariantsTest {
 
         assertThat(
                         testProject.file(
-                                "build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "android:name=\"android.support.test.runner.AndroidJUnitRunner\"",
@@ -65,7 +65,7 @@ public class SeparateTestModuleWithVariantsTest {
 
         assertThat(
                         testProject.file(
-                                "build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "<instrumentation",

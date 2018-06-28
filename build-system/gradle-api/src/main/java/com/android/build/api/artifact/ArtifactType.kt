@@ -25,4 +25,15 @@ import org.gradle.api.Incubating
 @Incubating
 interface ArtifactType {
     fun name(): String
+    fun kind(): Kind
+
+    /**
+     * Denotes the expected type of artifact type, this represent a binding contract between
+     * producers and consummers.
+     */
+    @Incubating
+    enum class Kind {
+        FILE,
+        DIRECTORY
+    }
 }

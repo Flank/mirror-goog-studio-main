@@ -78,7 +78,9 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -87,6 +89,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /** A task that processes the manifest */
@@ -158,10 +161,11 @@ public class MergeManifests extends ManifestProcessorTask {
 
             compatibleScreenManifestForSplit = compatibleScreenManifests.element(apkData);
             File manifestOutputFile =
-                    FileUtils.join(
-                            getManifestOutputDirectory(),
-                            apkData.getDirName(),
-                            SdkConstants.ANDROID_MANIFEST_XML);
+                    new File(
+                            getManifestOutputDirectory().get().getAsFile(),
+                            FileUtils.join(
+                                    apkData.getDirName(), SdkConstants.ANDROID_MANIFEST_XML));
+
             File instantRunManifestOutputFile =
                     FileUtils.join(
                             getInstantRunManifestOutputDirectory(),
@@ -223,7 +227,8 @@ public class MergeManifests extends ManifestProcessorTask {
                             instantRunManifestOutputFile,
                             properties));
         }
-        new BuildElements(mergedManifestOutputs.build()).save(getManifestOutputDirectory());
+        new BuildElements(mergedManifestOutputs.build())
+                .save(getManifestOutputDirectory().get().getAsFile());
         new BuildElements(irMergedManifestOutputs.build())
                 .save(getInstantRunManifestOutputDirectory());
     }
@@ -491,6 +496,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
+        @Nullable private Provider<Directory> manifestOutputFolder;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
@@ -510,6 +516,20 @@ public class MergeManifests extends ManifestProcessorTask {
         @Override
         public Class<MergeManifests> getType() {
             return MergeManifests.class;
+        }
+
+        @Override
+        public void preConfigure(
+                @NonNull TaskProvider<? extends MergeManifests> taskProvider,
+                @NonNull String taskName) {
+            manifestOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendDirectory(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    taskName,
+                                    taskProvider,
+                                    "");
         }
 
         @Override
@@ -575,11 +595,7 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
-            processManifestTask.setManifestOutputDirectory(
-                    artifacts.appendArtifact(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            processManifestTask,
-                            "merged"));
+            processManifestTask.setManifestOutputDirectory(manifestOutputFolder);
 
             processManifestTask.setInstantRunManifestOutputDirectory(
                     artifacts.appendArtifact(

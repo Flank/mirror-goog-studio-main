@@ -22,6 +22,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Map;
+import org.gradle.api.file.Directory;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -32,7 +34,7 @@ import org.gradle.api.tasks.OutputFile;
  */
 public abstract class ManifestProcessorTask extends IncrementalTask {
 
-    private File manifestOutputDirectory;
+    private Provider<Directory> manifestOutputDirectory;
 
     private File aaptFriendlyManifestOutputDirectory;
 
@@ -52,11 +54,11 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     /** The processed Manifests files folder. */
     @OutputDirectory
-    public File getManifestOutputDirectory() {
+    public Provider<Directory> getManifestOutputDirectory() {
         return manifestOutputDirectory;
     }
 
-    public void setManifestOutputDirectory(File manifestOutputFolder) {
+    public void setManifestOutputDirectory(Provider<Directory> manifestOutputFolder) {
         this.manifestOutputDirectory = manifestOutputFolder;
     }
 

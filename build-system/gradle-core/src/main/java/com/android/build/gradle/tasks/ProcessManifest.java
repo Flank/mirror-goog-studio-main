@@ -44,6 +44,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import org.apache.tools.ant.BuildException;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -52,6 +55,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
 
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
@@ -65,7 +69,11 @@ public class ProcessManifest extends ManifestProcessorTask {
             variantConfiguration;
     private OutputScope outputScope;
 
-    private File manifestOutputFile;
+    /**
+     * There is no necessity to explicitly declare this as an Output of the task since the file is
+     * located within the manifest output folder which is declared as an output directory.
+     */
+    private RegularFile manifestOutputFile;
 
     @Override
     protected void doFullTaskAction() {
@@ -84,7 +92,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 getMinSdkVersion(),
                                 getTargetSdkVersion(),
                                 getMaxSdkVersion(),
-                                manifestOutputFile.getAbsolutePath(),
+                                manifestOutputFile.getAsFile().getAbsolutePath(),
                                 aaptFriendlyManifestOutputFile.getAbsolutePath(),
                                 null /* outInstantRunManifestLocation */,
                                 ManifestMerger2.MergeType.LIBRARY,
@@ -106,9 +114,9 @@ public class ProcessManifest extends ManifestProcessorTask {
             new BuildOutput(
                             InternalArtifactType.MERGED_MANIFESTS,
                             outputScope.getMainSplit(),
-                            manifestOutputFile,
+                            manifestOutputFile.getAsFile(),
                             properties)
-                    .save(getManifestOutputDirectory());
+                    .save(getManifestOutputDirectory().get().getAsFile());
 
             new BuildOutput(
                             InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
@@ -218,6 +226,8 @@ public class ProcessManifest extends ManifestProcessorTask {
     public static class ConfigAction extends TaskConfigAction<ProcessManifest> {
 
         @NonNull private final VariantScope scope;
+        @Nullable private Provider<Directory> manifestOutputFolder;
+
 
         /**
          * {@code TaskConfigAction} for the library process manifest task.
@@ -238,6 +248,19 @@ public class ProcessManifest extends ManifestProcessorTask {
         @Override
         public Class<ProcessManifest> getType() {
             return ProcessManifest.class;
+        }
+
+        @Override
+        public void preConfigure(
+                @NonNull TaskProvider<? extends ProcessManifest> taskProvider,
+                @NonNull String taskName) {
+            manifestOutputFolder =
+                    scope.getArtifacts()
+                            .appendDirectory(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    taskName,
+                                    taskProvider,
+                                    "");
         }
 
         @Override
@@ -275,12 +298,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
-            processManifest.setManifestOutputDirectory(
-                    scope.getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.MERGED_MANIFESTS,
-                                    processManifest,
-                                    "merged"));
+            processManifest.setManifestOutputDirectory(manifestOutputFolder);
 
             processManifest.setAaptFriendlyManifestOutputDirectory(
                     scope.getArtifacts()
@@ -290,9 +308,10 @@ public class ProcessManifest extends ManifestProcessorTask {
                                     "aapt"));
 
             processManifest.manifestOutputFile =
-                    new File(
-                            processManifest.getManifestOutputDirectory(),
-                            SdkConstants.FN_ANDROID_MANIFEST_XML);
+                    processManifest
+                            .getManifestOutputDirectory()
+                            .get()
+                            .file(SdkConstants.FN_ANDROID_MANIFEST_XML);
 
             scope.getArtifacts()
                     .appendArtifact(

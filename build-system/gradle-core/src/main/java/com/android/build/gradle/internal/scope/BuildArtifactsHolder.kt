@@ -28,12 +28,14 @@ import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskDependency
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.FileReader
 import java.util.Locale
@@ -96,6 +98,7 @@ abstract class BuildArtifactsHolder(
     // associated with the new BuildableArtifact will be recorded here.
     private data class BuildableProducer(
         val fileOrDirProperty: Property<in FileSystemLocation>,
+        // should be Task or TaskProducer<out Task>
         val task: Task,
         val fileName: String)
 
@@ -150,8 +153,8 @@ abstract class BuildArtifactsHolder(
      * @return the possibly empty final [BuildableArtifact] for this artifact type.
      */
     fun getFinalArtifactFiles(artifactType: ArtifactType) : BuildableArtifact {
-        return finalArtifactsMap.computeIfAbsent(artifactType,
-            { FinalBuildableArtifact(artifactType, this) })
+        return finalArtifactsMap.computeIfAbsent(artifactType
+        ) { FinalBuildableArtifact(artifactType, this) }
     }
 
     /**
@@ -235,7 +238,7 @@ abstract class BuildArtifactsHolder(
      */
     fun appendArtifact(
             artifactType: ArtifactType,
-            newFiles : Collection<File>,
+            newFiles : Collection<Any>,
             task : Task) : BuildableArtifact {
         return doAppendArtifact(artifactType,
             createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(task))
@@ -324,17 +327,27 @@ abstract class BuildArtifactsHolder(
 
         // TODO : split this method in 2, replaceArtifactFile, and setArtifactFile.
 
+        if (artifactType.kind() != ArtifactType.Kind.FILE) {
+            throw RuntimeException(
+                "setArtifactFile called with $artifactType which is an ArtifactType" +
+                        " with kind set to DIRECTORY."
+            )
+        }
+
         val artifactRecord = artifactRecordMap[artifactType]
         val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
 
         val lastProducer = artifactRecord?.lastProducer
-        lastProducer?.fileOrDirProperty?.set(project.layout.buildDirectory.file(
-            FileUtils.join(
-                intermediatesOutput,
-                artifactType.name().toLowerCase(),
-                getIdentifier(),
-                lastProducer.task.name,
-                lastProducer.fileName))
+        lastProducer?.fileOrDirProperty?.set(
+            project.layout.buildDirectory.file(
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    lastProducer.task.name,
+                    lastProducer.fileName
+                )
+            )
         )
 
         val provider = project.layout.buildDirectory.file(
@@ -348,8 +361,8 @@ abstract class BuildArtifactsHolder(
                     task.name,
                     requestedFileLocation.name
                 )
-            })
-
+            }
+        )
 
         val fileProperty = project.layout.fileProperty(provider)
         createOutput(artifactType,
@@ -364,6 +377,63 @@ abstract class BuildArtifactsHolder(
         return fileProperty
     }
 
+    /**
+     * Temporary function until all users switch from File to Provider<Directory> or
+     * Provider<RegularFile>
+     */
+    fun appendDirectory(artifactType: ArtifactType,
+        taskName: String,
+        taskProvider: TaskProvider<out Task>,
+        fileName: String = "out"): Provider<Directory> {
+         if (artifactType.kind() != ArtifactType.Kind.DIRECTORY) {
+                throw RuntimeException("appendDirectory called with $artifactType which is an " +
+                        "ArtifactType with kind set to File.")
+         }
+
+        val artifactRecord = artifactRecordMap[artifactType]
+        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
+        val lastProducer = artifactRecord?.lastProducer
+        lastProducer?.fileOrDirProperty?.set(
+            project.layout.buildDirectory.dir(
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    lastProducer.task.name,
+                    lastProducer.fileName)
+            ))
+
+        val provider = project.layout.buildDirectory.dir(
+            if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
+                FileUtils.join(
+                    artifactType.getOutputPath(),
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    fileName)
+            } else {
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    taskName,
+                    fileName)
+            })
+
+        val fileCollection =
+            createFileCollection(artifactRecord, provider).builtBy(taskProvider)
+        val output= project.layout.directoryProperty(provider)
+
+        doAppendArtifact(
+            artifactType,
+            fileCollection,
+            @Suppress("UNCHECKED_CAST")
+            BuildableProducer(
+                output as Property<in FileSystemLocation>,
+                taskProvider.get(),
+                fileName))
+        return output
+    }
+
     private fun createFileCollection(artifactRecord: ArtifactRecord?, newFiles: Any) =
         if (artifactRecord != null) {
             project.files(artifactRecord.last, newFiles)
@@ -371,9 +441,12 @@ abstract class BuildArtifactsHolder(
             project.files(newFiles)
         }
 
-    private fun doAppendArtifact(type: ArtifactType, files: FileCollection) : BuildableArtifact {
+    private fun doAppendArtifact(type: ArtifactType,
+        files: FileCollection,
+        producer: BuildableProducer? = null) : BuildableArtifact {
+
         val newBuildableArtifact = BuildableArtifactImpl(files, dslScope)
-        createOutput(type, newBuildableArtifact)
+        createOutput(type, newBuildableArtifact, producer)
         return newBuildableArtifact
     }
 

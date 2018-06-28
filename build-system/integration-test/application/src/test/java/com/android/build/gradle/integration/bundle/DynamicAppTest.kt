@@ -145,8 +145,6 @@ class DynamicAppTest {
             "intermediates",
             "merged_manifests",
             "debug",
-            "processDebugManifest",
-            "merged",
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
         FileSubject.assertThat(manifestFile).doesNotContain("splitName")
@@ -168,8 +166,6 @@ class DynamicAppTest {
             "intermediates",
             "merged_manifests",
             "debug",
-            "processDebugManifest",
-            "merged",
             "AndroidManifest.xml")
         assertThat(baseManifest).isFile()
         assertThat(baseManifest).doesNotContain("splitName")
@@ -490,8 +486,6 @@ class DynamicAppTest {
                     "intermediates",
                     "merged_manifests",
                     "debug",
-                    "processDebugManifest",
-                    "merged",
                     "AndroidManifest.xml")
             FileSubject.assertThat(manifestFile).isFile()
             FileSubject.assertThat(manifestFile).contains("android:versionCode=\"12\"")

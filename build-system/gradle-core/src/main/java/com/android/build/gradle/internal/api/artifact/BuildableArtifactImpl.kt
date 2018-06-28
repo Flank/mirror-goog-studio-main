@@ -26,7 +26,6 @@ import org.gradle.api.tasks.TaskDependency
 import java.io.File
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.Supplier
 
 /**
  * Implementation of [BuildableArtifact].

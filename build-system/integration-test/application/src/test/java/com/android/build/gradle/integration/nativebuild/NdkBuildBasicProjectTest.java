@@ -135,9 +135,7 @@ public class NdkBuildBasicProjectTest {
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
 
-        assertThat(
-                        project.file(
-                                "build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml"))
+        assertThat(project.file("build/intermediates/merged_manifests/debug/AndroidManifest.xml"))
                 .contains("android:testOnly=\"true\"");
     }
 

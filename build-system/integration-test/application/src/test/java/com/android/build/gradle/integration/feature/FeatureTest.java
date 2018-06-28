@@ -154,8 +154,6 @@ public class FeatureTest {
                 featureProject.getIntermediateFile(
                         "merged_manifests",
                         "releaseFeature",
-                        "processReleaseFeatureManifest",
-                        "merged",
                         "AndroidManifest.xml");
         assertThat(featureManifest).exists();
 
@@ -194,8 +192,6 @@ public class FeatureTest {
                 baseProject.getIntermediateFile(
                         "merged_manifests",
                         "releaseFeature",
-                        "processReleaseFeatureManifest",
-                        "merged",
                         "AndroidManifest.xml");
         assertThat(baseFeatureManifest).exists();
         assertThat(baseFeatureManifest)

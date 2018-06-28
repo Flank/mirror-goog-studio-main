@@ -207,7 +207,7 @@ public enum InternalArtifactType implements ArtifactType {
     // analyzes all of the dynamic feature classes too.
     MAIN_DEX_LIST_FOR_BUNDLE,
     // the full bundle, including feature module. This is only valid for the base module.
-    BUNDLE(Category.OUTPUTS),
+    BUNDLE(Category.OUTPUTS, Kind.FILE),
     // APK Set archive with APKs generated from a bundle.
     APKS_FROM_BUNDLE,
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
@@ -281,12 +281,28 @@ public enum InternalArtifactType implements ArtifactType {
     }
 
     final Category category;
+    final Kind kind;
+
+    @Override
+    @NonNull
+    public Kind kind() {
+        return kind;
+    }
 
     InternalArtifactType() {
-        this.category = Category.INTERMEDIATES;
+        this(Category.INTERMEDIATES, Kind.DIRECTORY);
     }
 
     InternalArtifactType(Category category) {
+        this(category, Kind.DIRECTORY);
+    }
+
+    InternalArtifactType(Kind kind) {
+        this(Category.INTERMEDIATES, kind);
+    }
+
+    InternalArtifactType(Category category, Kind kind) {
         this.category = category;
+        this.kind = kind;
     }
 }

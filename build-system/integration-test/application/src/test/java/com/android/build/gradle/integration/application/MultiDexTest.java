@@ -134,7 +134,7 @@ public class MultiDexTest {
         assertThat(
                         FileUtils.join(
                                 project.getTestDir(),
-                                "build/intermediates/merged_manifests/icsDebug/processIcsDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/icsDebug/AndroidManifest.xml"))
                 .contains("android:name=\"android.support.multidex.MultiDexApplication\"");
     }
 

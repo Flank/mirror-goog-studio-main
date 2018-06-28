@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -40,6 +41,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("WeakerAccess") // These are utility methods, meant to be public.
 public final class FileUtils {
@@ -270,7 +272,7 @@ public final class FileUtils {
      */
     @NonNull
     public static File join(@NonNull File dir, @NonNull Iterable<String> paths) {
-        return new File(dir, PATH_JOINER.join(paths));
+        return new File(dir, PATH_JOINER.join(removeEmpty(paths)));
     }
 
     /**
@@ -282,7 +284,7 @@ public final class FileUtils {
      */
     @NonNull
     public static String join(@NonNull String... paths) {
-        return PATH_JOINER.join(paths);
+        return PATH_JOINER.join(removeEmpty(Lists.newArrayList(paths)));
     }
 
     /**
@@ -297,6 +299,13 @@ public final class FileUtils {
         return PATH_JOINER.join(paths);
     }
 
+
+    private static Iterable<String> removeEmpty(Iterable<String> input) {
+        return Lists.newArrayList(input)
+                .stream()
+                .filter(it -> !it.isEmpty())
+                .collect(Collectors.toList());
+    }
     /**
      * Loads a text file forcing the line separator to be of Unix style '\n' rather than being
      * Windows style '\r\n'.
