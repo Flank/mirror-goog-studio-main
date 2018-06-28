@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.databinding;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
-import static org.junit.Assert.fail;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -33,14 +33,17 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+/** Integration test to ensure correctness of incremental builds when data binding is used. */
 @RunWith(FilterableParameterized.class)
 public class DataBindingIncrementalTest {
 
@@ -69,20 +72,24 @@ public class DataBindingIncrementalTest {
     private static final String USER_JAVA = "src/main/java/android/databinding/testapp/User.java";
 
     private final boolean enableV2;
+    private final boolean withKotlin;
 
     private final List<String> mainActivityBindingClasses;
 
-    @Parameterized.Parameters(name = "useV2_{0}_useAndroidX_{1}")
+    @Parameterized.Parameters(name = "useV2_{0}_useAndroidX_{1}_withKotlin_{2}")
     public static Iterable<Boolean[]> classNames() {
         return ImmutableList.of(
-                new Boolean[] {true, false},
-                new Boolean[] {false, false},
-                new Boolean[] {true, true},
-                new Boolean[] {false, true});
+                new Boolean[] {true, false, false},
+                new Boolean[] {false, false, false},
+                new Boolean[] {true, true, false},
+                new Boolean[] {false, true, false},
+                // Test one scenario with Kotlin is probably enough (instead of four)
+                new Boolean[] {true, true, true});
     }
 
-    public DataBindingIncrementalTest(boolean enableV2, boolean useAndroidX) {
+    public DataBindingIncrementalTest(boolean enableV2, boolean useAndroidX, boolean withKotlin) {
         this.enableV2 = enableV2;
+        this.withKotlin = withKotlin;
         if (enableV2) {
             mainActivityBindingClasses =
                     ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
@@ -96,7 +103,20 @@ public class DataBindingIncrementalTest {
                         .fromTestProject("databindingIncremental")
                         .addGradleProperties(v2Prop)
                         .addGradleProperties(androidXProp)
+                        .withKotlinGradlePlugin(withKotlin)
                         .create();
+    }
+
+    @Before
+    public void setUp() throws IOException {
+        if (withKotlin) {
+            TestFileUtils.searchVerbatimAndReplace(
+                    project.getBuildFile(),
+                    "apply plugin: 'com.android.application'",
+                    "apply plugin: 'com.android.application'\n"
+                            + "apply plugin: 'kotlin-android'\n"
+                            + "apply plugin: 'kotlin-kapt'");
+        }
     }
 
     private File getGeneratedInfoClass() {
@@ -114,7 +134,7 @@ public class DataBindingIncrementalTest {
     private File getGeneratedSourceFile() {
         return project.getGeneratedSourceFile(
                 "source",
-                "apt",
+                withKotlin ? "kapt" : "apt",
                 "debug",
                 "android",
                 "databinding",
@@ -231,11 +251,16 @@ public class DataBindingIncrementalTest {
                 project.file(USER_JAVA),
                 "public String getName() {",
                 "public String getFirstName() {");
-        try {
-            GradleBuildResult result = project.executor().run(COMPILE_JAVA_TASK);
-            fail("Expected exception");
-        } catch (Exception expected) {
-            assertThat(Throwables.getStackTraceAsString(expected))
+        GradleBuildResult result = project.executor().expectFailure().run(COMPILE_JAVA_TASK);
+        String stacktrace = Throwables.getStackTraceAsString(checkNotNull(result.getException()));
+
+        if (withKotlin) {
+            assertThat(stacktrace.contains("Execution failed for task ':kaptDebugKotlin'"));
+            assertThat(result.getStdout())
+                    .contains("Could not find accessor android.databinding.testapp.User.name");
+        } else {
+            assertThat(result.getTask(COMPILE_JAVA_TASK)).failed();
+            assertThat(stacktrace)
                     .contains("Could not find accessor android.databinding.testapp.User.name");
         }
     }

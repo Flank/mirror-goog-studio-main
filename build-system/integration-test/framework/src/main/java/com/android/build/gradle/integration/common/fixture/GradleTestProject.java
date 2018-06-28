@@ -189,6 +189,7 @@ public final class GradleTestProject implements TestRule {
     private final boolean withDeviceProvider;
     private final boolean withSdk;
     private final boolean withAndroidGradlePlugin;
+    private final boolean withKotlinGradlePlugin;
     @NonNull private final List<String> withIncludedBuilds;
     @Nullable private File testDir;
     private File sourceDir;
@@ -245,6 +246,7 @@ public final class GradleTestProject implements TestRule {
             boolean withDeviceProvider,
             boolean withSdk,
             boolean withAndroidGradlePlugin,
+            boolean withKotlinGradlePlugin,
             @NonNull List<String> withIncludedBuilds,
             @Nullable File testDir,
             @Nullable List<Path> repoDirectories,
@@ -257,6 +259,7 @@ public final class GradleTestProject implements TestRule {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
+        this.withKotlinGradlePlugin = withKotlinGradlePlugin;
         this.withIncludedBuilds = withIncludedBuilds;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
@@ -312,6 +315,7 @@ public final class GradleTestProject implements TestRule {
         this.withDeviceProvider = rootProject.withDeviceProvider;
         this.withSdk = rootProject.withSdk;
         this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
+        this.withKotlinGradlePlugin = rootProject.withKotlinGradlePlugin;
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
         this.withIncludedBuilds = ImmutableList.of();
         this.repoDirectories = rootProject.repoDirectories;
@@ -750,9 +754,10 @@ public final class GradleTestProject implements TestRule {
         return cmakeVersionFolderInSdk;
     }
 
-    public String generateCommonBuildScript() throws IOException {
+    public String generateCommonBuildScript() {
         return BuildSystem.get()
-                .getCommonBuildScriptContent(withAndroidGradlePlugin, withDeviceProvider);
+                .getCommonBuildScriptContent(
+                        withAndroidGradlePlugin, withKotlinGradlePlugin, withDeviceProvider);
     }
 
     @NonNull
@@ -1441,7 +1446,9 @@ public final class GradleTestProject implements TestRule {
 
             @Override
             String getCommonBuildScriptContent(
-                    boolean withAndroidGradlePlugin, boolean withDeviceProvider) {
+                    boolean withAndroidGradlePlugin,
+                    boolean withKotlinGradlePlugin,
+                    boolean withDeviceProvider) {
                 StringBuilder buildScript =
                         new StringBuilder(
                                 "\n"
@@ -1477,25 +1484,38 @@ public final class GradleTestProject implements TestRule {
         abstract List<Path> getLocalRepositories();
 
         String getCommonBuildScriptContent(
-                boolean withAndroidGradlePlugin, boolean withDeviceProvider) {
-            StringBuilder stringBuilder =
-                    new StringBuilder(
-                            "def commonScriptFolder = buildscript.sourceFile.parent\n"
-                                    + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
-                                    + "\n"
-                                    + "project.buildscript { buildscript ->\n"
-                                    + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
-                                    + "    dependencies {\n");
+                boolean withAndroidGradlePlugin,
+                boolean withKotlinGradlePlugin,
+                boolean withDeviceProvider) {
+            StringBuilder script = new StringBuilder();
+            script.append("def commonScriptFolder = buildscript.sourceFile.parent\n");
+            script.append(
+                    "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n\n");
+            script.append("project.buildscript { buildscript ->\n");
+            script.append(
+                    "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n");
+            if (withKotlinGradlePlugin) {
+                // To get the Kotlin version
+                script.append("    apply from: '../commonHeader.gradle'\n");
+            }
+
+            script.append("    dependencies {\n");
             if (withAndroidGradlePlugin) {
-                stringBuilder.append(
+                script.append(
                         "        classpath \"com.android.tools.build:gradle:$rootProject.buildVersion\"\n");
             }
+            if (withKotlinGradlePlugin) {
+                script.append(
+                        "        classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion\"\n");
+            }
             if (withDeviceProvider) {
-                stringBuilder.append(
+                script.append(
                         "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n");
             }
-            stringBuilder.append("    }\n" + "}");
-            return stringBuilder.toString();
+            script.append("    }\n");
+
+            script.append("}");
+            return script.toString();
         }
     }
 

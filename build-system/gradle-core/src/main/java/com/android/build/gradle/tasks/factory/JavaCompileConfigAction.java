@@ -142,13 +142,10 @@ public class JavaCompileConfigAction extends TaskConfigAction<AndroidJavaCompile
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
         if (isDataBindingEnabled) {
-
-            // the data binding artifact is created by the annotation processor, so we register this
-            // task output (which also publishes it) with javac as the generating task.
-            javacTask.dataBindingArtifactOutputDirectory =
-                    scope.getBundleArtifactFolderForDataBinding();
-
-            artifacts.appendArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT,
+            // The data binding artifact is created through annotation processing, which is invoked
+            // by the JavaCompile task. Therefore, we register JavaCompile as the generating task.
+            artifacts.appendArtifact(
+                    InternalArtifactType.DATA_BINDING_ARTIFACT,
                     ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
                     javacTask);
         }

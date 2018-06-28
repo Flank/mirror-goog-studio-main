@@ -37,7 +37,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODU
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
@@ -256,7 +255,6 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -3693,12 +3691,12 @@ public abstract class TaskManager {
                                 });
     }
 
-    // TODO we should merge this w/ JavaCompileConfigAction
-    private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
+    private static void configureKaptTaskInScope(
+            @NonNull VariantScope scope, @NonNull Task kaptTask) {
         // HACK ALERT - Remove this when Kapt is fixed (and also enforce a minimum version of Kapt
         // that has the fix).
         if (scope.getDataBindingCompilerArguments() != null) {
-            // 1 - Workaround for https://youtrack.jetbrains.com/issue/KT-23866.
+            // Workaround for https://youtrack.jetbrains.com/issue/KT-23866.
             // Since Kapt is not yet aware of the new compilerArgumentProvider() API, we need to
             // provide the arguments via the arguments() API. The Java compiler might see duplicate
             // arguments (if AndroidJavaCompile is configured after this), but it won't break, and
@@ -3708,35 +3706,17 @@ public abstract class TaskManager {
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions();
             options.getArguments().putAll(scope.getDataBindingCompilerArguments().toMap());
-
-            // 2 - Workaround for https://youtrack.jetbrains.com/issue/KT-23964.
-            // Add all inputs and outputs annotated in DataBindingCompilerArguments to the Kapt
-            // task.
-            scope.getDataBindingCompilerArguments().configureInputsOutputsForTask(kaptTask);
         }
 
-        BuildArtifactsHolder artifacts = scope.getArtifacts();
-        if (artifacts.hasArtifact(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
-            // if data binding is enabled and this variant has merged dependency artifacts, then
-            // make the compilation task depend on them. (test variants don't do the merge so they
-            // could not have the artifacts)
-            kaptTask.getInputs()
-                    .files(artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS))
-                    .withPathSensitivity(PathSensitivity.RELATIVE)
-                    .withPropertyName("dataBindingDependencyArtifacts");
-        }
-
-        // the data binding artifact is created by the annotation processor, so we register this
-        // task output (which also publishes it) with javac as the generating task.
-        kaptTask.getOutputs()
-                .files(scope.getBundleArtifactFolderForDataBinding())
-                .withPropertyName("dataBindingArtifactOutputDir");
-        if (!artifacts.hasArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
-            artifacts.appendArtifact(
-                    InternalArtifactType.DATA_BINDING_ARTIFACT,
-                    ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
-                    kaptTask);
-        }
+        // The data binding artifact is created through annotation processing, which is invoked
+        // by the Kapt task (when the Kapt plugin is used). Therefore, we register Kapt as the
+        // generating task. (This will overwrite the registration of JavaCompile as the generating
+        // task that took place earlier before this method is called).
+        scope.getArtifacts()
+                .appendArtifact(
+                        InternalArtifactType.DATA_BINDING_ARTIFACT,
+                        ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
+                        kaptTask);
     }
 
     protected void configureTestData(AbstractTestDataImpl testData) {
