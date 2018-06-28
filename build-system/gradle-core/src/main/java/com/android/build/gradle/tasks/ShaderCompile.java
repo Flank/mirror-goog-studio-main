@@ -159,8 +159,6 @@ public class ShaderCompile extends AndroidBuilderTask {
         public void execute(@NonNull ShaderCompile compileTask) {
             final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
 
-            scope.getTaskContainer().setShaderCompileTask(compileTask);
-
             compileTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             compileTask.setVariantName(variantConfiguration.getFullName());
 

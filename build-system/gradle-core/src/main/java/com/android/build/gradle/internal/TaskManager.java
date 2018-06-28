@@ -1414,7 +1414,6 @@ public abstract class TaskManager {
                         variantScope);
         Optional<TransformTask> transformTask =
                 transformManager.addTransform(taskFactory, variantScope, mergeTransform);
-        variantScope.getTaskContainer().setMergeJavaResourcesTask(transformTask.orElse(null));
 
         File mergeJavaResOutput =
                 FileUtils.join(

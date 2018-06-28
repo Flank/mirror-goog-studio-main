@@ -203,19 +203,6 @@ public class ApplicationTaskManager extends TaskManager {
         // Add a compile task
         createCompileTask(variantScope);
 
-        if (variantScope.getType().isBaseModule()) {
-            CheckMultiApkLibrariesTask checkMultiApkLibrariesTask =
-                    taskFactory.create(new CheckMultiApkLibrariesTask.ConfigAction(variantScope));
-            // variantScope.setMergeJavaResourcesTask() is called in createCompileTask() above.
-            // We set the merge java resources task to depend on this check, because merging java
-            // resources is the first place an error could be thrown if there are duplicate
-            // libraries.
-            variantScope
-                    .getTaskContainer()
-                    .getMergeJavaResourcesTask()
-                    .dependsOn(checkMultiApkLibrariesTask);
-        }
-
         createStripNativeLibraryTask(taskFactory, variantScope);
 
 
@@ -410,10 +397,20 @@ public class ApplicationTaskManager extends TaskManager {
             AppClasspathCheckTask classpathCheck =
                     taskFactory.create(new AppClasspathCheckTask.ConfigAction(scope));
 
-            return (variantType.isTestComponent()
-                            ? taskFactory.create(new TestPreBuildTask.ConfigAction(scope))
-                            : taskFactory.create(new AppPreBuildTask.ConfigAction(scope)))
-                    .dependsOn(classpathCheck);
+            Task task =
+                    (variantType.isTestComponent()
+                                    ? taskFactory.create(new TestPreBuildTask.ConfigAction(scope))
+                                    : taskFactory.create(new AppPreBuildTask.ConfigAction(scope)))
+                            .dependsOn(classpathCheck);
+
+            if (variantType.isBaseModule() && globalScope.hasDynamicFeatures()) {
+                CheckMultiApkLibrariesTask checkMultiApkLibrariesTask =
+                        taskFactory.create(new CheckMultiApkLibrariesTask.ConfigAction(scope));
+
+                task.dependsOn(checkMultiApkLibrariesTask);
+            }
+
+            return task;
         }
 
         return super.createVariantPreBuildTask(scope);

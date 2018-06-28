@@ -82,7 +82,6 @@ class MutableTaskContainer : TaskContainer {
     var sourceGenTask: Task? = null
     var resourceGenTask: Task? = null
     var assetGenTask: Task? = null
-    var mergeJavaResourcesTask: TransformTask? = null
     var connectedTask: Task? = null
     var microApkTask: GenerateApkDataTask? = null
     var externalNativeBuildTask: ExternalNativeBuildTask? = null
@@ -91,6 +90,5 @@ class MutableTaskContainer : TaskContainer {
     var packageSplitAbiTask: PackageSplitAbi? = null
     var generateResValuesTask: GenerateResValues? = null
     var generateApkDataTask: GenerateApkDataTask? = null
-    var shaderCompileTask: ShaderCompile? = null
     var coverageReportTask: Task? = null
 }
