@@ -19,6 +19,7 @@ import com.android.layoutinspector.ProtocolVersion
 import com.android.layoutinspector.getTestFile
 import org.junit.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class ViewNodeParserTest {
     @Test
@@ -35,5 +36,19 @@ class ViewNodeParserTest {
         val viewNode = ViewNodeParser.parse(testFile.readBytes(), ProtocolVersion.Version2)
 
         assertNotNull(viewNode)
+    }
+
+    @Test
+    fun testV1_skippedPropertiesNotPresent() {
+        val testFile = getTestFile("exampleHierarchyV1")
+        val viewNode = ViewNodeParser.parse(
+            testFile.readBytes(),
+            ProtocolVersion.Version1,
+            LayoutFileDataParser.SKIPPED_PROPERTIES
+        )
+
+        LayoutFileDataParser.SKIPPED_PROPERTIES.forEach { skippedProp ->
+            assertNull(viewNode!!.namedProperties[skippedProp])
+        }
     }
 }

@@ -27,6 +27,13 @@ import java.nio.file.Files
 import javax.imageio.ImageIO
 
 object LayoutFileDataParser {
+    /**
+     * List of [ViewProperty] to be skipped since the framework won't correctly report their data.
+     * See ag/64673340
+     */
+    @JvmStatic
+    val SKIPPED_PROPERTIES = listOf("bg_", "fg_")
+
     @Throws(IOException::class)
     @JvmStatic
     fun parseFromFile(file: File): LayoutFileData {
@@ -35,7 +42,10 @@ object LayoutFileDataParser {
 
     @Throws(IOException::class)
     @JvmStatic
-    fun parseFromBytes(bytes: ByteArray): LayoutFileData {
+    fun parseFromBytes(
+        bytes: ByteArray,
+        skippedProperties: Collection<String> = SKIPPED_PROPERTIES
+    ): LayoutFileData {
         val bufferedImage: BufferedImage?
         var node: ViewNode? = null
         var options = LayoutInspectorCaptureOptions()
@@ -49,7 +59,7 @@ object LayoutFileDataParser {
             // Parse view node
             val nodeBytes = ByteArray(input.readInt())
             input.readFully(nodeBytes)
-            node = ViewNodeParser.parse(nodeBytes, options.version)
+            node = ViewNodeParser.parse(nodeBytes, options.version, skippedProperties)
             if (node == null) {
                 throw IOException("Error parsing view node")
             }

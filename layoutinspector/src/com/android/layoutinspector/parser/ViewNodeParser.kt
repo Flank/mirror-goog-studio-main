@@ -23,6 +23,8 @@ import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.ArrayList
+import java.util.Collections
 import java.util.Stack
 import java.util.function.BiConsumer
 import java.util.function.BinaryOperator
@@ -37,10 +39,11 @@ object ViewNodeParser {
     @JvmOverloads
     fun parse(
         bytes: ByteArray,
-        version: ProtocolVersion = ProtocolVersion.Version1
+        version: ProtocolVersion = ProtocolVersion.Version1,
+        skippedProperties: Collection<String> = Collections.emptyList()
     ): ViewNode? {
         return when (version) {
-            ProtocolVersion.Version1 -> parseV1ViewNode(bytes)
+            ProtocolVersion.Version1 -> parseV1ViewNode(bytes, skippedProperties)
             ProtocolVersion.Version2 -> parseV2ViewNode(bytes)
         }
     }
@@ -49,7 +52,10 @@ object ViewNodeParser {
         return ViewNodeV2Parser().parse(bytes)
     }
 
-    private fun parseV1ViewNode(bytes: ByteArray): ViewNode? {
+    private fun parseV1ViewNode(
+        bytes: ByteArray,
+        skippedProperties: Collection<String>
+    ): ViewNode? {
         var root: ViewNode? = null
         var lastNode: ViewNode? = null
         var lastWhitespaceCount = Integer.MIN_VALUE
@@ -83,7 +89,7 @@ object ViewNodeParser {
             if (!stack.isEmpty()) {
                 parent = stack.peek()
             }
-            lastNode = createViewNode(parent, line.trim())
+            lastNode = createViewNode(parent, line.trim(), skippedProperties)
             if (root == null) {
                 root = lastNode
             }
@@ -93,7 +99,11 @@ object ViewNodeParser {
         return root
     }
 
-    private fun createViewNode(parent: ViewNode?, data: String): ViewNode {
+    private fun createViewNode(
+        parent: ViewNode?,
+        data: String,
+        skippedProperties: Collection<String>
+    ): ViewNode {
         var data = data
         var delimIndex = data.indexOf('@')
         if (delimIndex < 0) {
@@ -107,7 +117,7 @@ object ViewNodeParser {
         node.index = if (parent == null) 0 else parent!!.children.size
 
         if (data.length > delimIndex + 1) {
-            loadProperties(node, data.substring(delimIndex + 1))
+            loadProperties(node, data.substring(delimIndex + 1), skippedProperties)
             node.id = node.getProperty("mID", "id")!!.value
         }
         node.displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
@@ -117,7 +127,11 @@ object ViewNodeParser {
         return node
     }
 
-    private fun loadProperties(node: ViewNode, data: String) {
+    private fun loadProperties(
+        node: ViewNode,
+        data: String,
+        skippedProperties: Collection<String>
+    ) {
         var start = 0
         var stop: Boolean
 
@@ -129,13 +143,14 @@ object ViewNodeParser {
             val length = Integer.parseInt(data.substring(index + 1, index2))
             start = index2 + 1 + length
 
-            val value = data.substring(index2 + 1, index2 + 1 + length)
-            val property = ViewPropertyParser.parse(fullName, value)
+            if (!skippedProperties.contains(fullName)) {
+                val value = data.substring(index2 + 1, index2 + 1 + length)
+                val property = ViewPropertyParser.parse(fullName, value)
 
-            node.properties.add(property)
-            node.namedProperties[property.fullName] = property
-
-            node.addPropertyToGroup(property)
+                node.properties.add(property)
+                node.namedProperties[property.fullName] = property
+                node.addPropertyToGroup(property)
+            }
 
             stop = start >= data.length
             if (!stop) {
