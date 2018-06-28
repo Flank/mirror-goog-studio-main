@@ -53,7 +53,9 @@ class NamespacedResourcesTaskManager(
 
         // Process dependencies making sure everything we consume will be fully namespaced.
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-            taskFactory.create(AutoNamespaceDependenciesTask.ConfigAction(variantScope))
+            val task = taskFactory.create(AutoNamespaceDependenciesTask.ConfigAction(variantScope))
+            // Needed for the IDE
+            variantScope.taskContainer.sourceGenTask!!.dependsOn(task)
         }
 
         // Compile

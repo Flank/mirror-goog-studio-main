@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.utils.getDebugGenerateSourcesCommands
 import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
@@ -38,10 +39,12 @@ class AutoNamespaceTest {
     fun rewriteJavaBytecodeRClassesAndResources() {
 
         // Check model level 3
-        val model =
+        val modelContainer =
             project.model().level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
                 .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-                .fetchAndroidProjects().onlyModel
+                .fetchAndroidProjects()
+        val model = modelContainer.onlyModel
+
         val libraries = model.getDebugVariant().mainArtifact.dependencies.libraries
         libraries.forEach { lib ->
             // Not auto namespaced yet
@@ -50,11 +53,15 @@ class AutoNamespaceTest {
 
         project.executor()
             .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-            .run("assembleDebug")
+            .run(modelContainer.getDebugGenerateSourcesCommands())
 
         libraries.forEach { lib ->
             assertThat(lib.resStaticLibrary).exists()
         }
+
+        project.executor()
+            .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
+            .run("assembleDebug")
 
         // TODO(b/110879504): level 4
 
