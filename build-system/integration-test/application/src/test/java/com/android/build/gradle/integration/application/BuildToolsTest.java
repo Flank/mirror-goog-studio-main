@@ -123,7 +123,7 @@ public class BuildToolsTest {
 
         GradleBuildResult result = project.executor().run("assemble");
 
-        assertThat(result.getDidWorkTasks()).containsAllIn(JAVAC_TASKS);
+        assertThat(result.getDidWorkTasks()).containsAllIn(COMMON_TASKS);
     }
 
     @Test

@@ -43,6 +43,7 @@ TEST_DEPS = [
 #keep sorted
 TEST_DATA = [
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+    "//prebuilts/studio/sdk:build-tools/27.0.3",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:constraint-layout_latest",
     "//prebuilts/studio/sdk:espresso_latest",
