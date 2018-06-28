@@ -115,6 +115,8 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
      * @param namespace the namespace of the resource
      * @param type the type of the resource
      * @param value an optional Node that represents the resource value.
+     * @param libraryName the name of the library the resource belongs to, or null if the resource
+     *     does not belong to a library
      */
     public ResourceMergerItem(
             @NonNull String name,

@@ -25,14 +25,15 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.symbols.ResourceExtraXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.w3c.dom.Document;
@@ -51,10 +52,10 @@ import org.xml.sax.SAXException;
  */
 @Deprecated
 class IdGeneratingResourceParser {
-
-    private final ResourceMergerItem mFileResourceMergerItem;
-    private final List<ResourceMergerItem> mIdResourceMergerItems;
-    private final ResourceNamespace mNamespace;
+    @NonNull private final ResourceMergerItem mFileResourceMergerItem;
+    @NonNull private final List<ResourceMergerItem> mIdResourceMergerItems;
+    @NonNull private final ResourceNamespace mNamespace;
+    @Nullable private final String mLibraryName;
 
     /**
      * Parse the file for new IDs, given the source document's name and type. After this completes,
@@ -65,22 +66,27 @@ class IdGeneratingResourceParser {
      * @param sourceName the name of the file-based resource (derived from xml filename)
      * @param sourceType the type of the file-based resource (e.g., menu).
      * @param namespace the namespace of generated {@link ResourceMergerItem} objects.
+     * @param libraryName the name of the library the parsed file belongs to, or null if the file
+     *     does not belong to a library
      * @throws MergingException if given a data-binding file, or fails to parse.
      */
     IdGeneratingResourceParser(
             @NonNull File file,
             @NonNull String sourceName,
             @NonNull ResourceType sourceType,
-            @NonNull ResourceNamespace namespace)
+            @NonNull ResourceNamespace namespace,
+            @Nullable String libraryName)
             throws MergingException {
+        mLibraryName = libraryName;
         Document mDocument = readDocument(file);
         if (hasDataBindings(mDocument)) {
             throw MergingException.withMessage("Does not handle data-binding files").build();
         }
         mNamespace = namespace;
-        mFileResourceMergerItem = new IdResourceMergerItem(sourceName, mNamespace, sourceType);
-        mIdResourceMergerItems = Lists.newArrayList();
-        final Set<String> pendingResourceIds = Sets.newHashSet();
+        mFileResourceMergerItem =
+                new IdResourceMergerItem(sourceName, mNamespace, sourceType, libraryName);
+        mIdResourceMergerItems = new ArrayList<>();
+        Set<String> pendingResourceIds = new HashSet<>();
         NodeList nodes = mDocument.getChildNodes();
         for (int i = 0; i < nodes.getLength(); ++i) {
             Node child = nodes.item(i);
@@ -88,7 +94,7 @@ class IdGeneratingResourceParser {
         }
         for (String id : pendingResourceIds) {
             ResourceMergerItem resourceItem =
-                    new IdResourceMergerItem(id, mNamespace, ResourceType.ID);
+                    new IdResourceMergerItem(id, mNamespace, ResourceType.ID, libraryName);
             mIdResourceMergerItems.add(resourceItem);
         }
     }
@@ -127,7 +133,8 @@ class IdGeneratingResourceParser {
             @NonNull Set<String> pendingResourceIds) {
         NamedNodeMap attributes = node.getAttributes();
         if (attributes != null) {
-            // For all attributes in the android namespace, check if something has a value of the form "@+id/"
+            // For all attributes in the android namespace, check if something has a value of
+            // the form "@+id/".
             for (int i = 0; i < attributes.getLength(); ++i) {
                 Node attribute = attributes.item(i);
                 String attrNamespace = attribute.getNamespaceURI();
@@ -137,8 +144,8 @@ class IdGeneratingResourceParser {
                     if (value == null) {
                         continue;
                     }
-                    // If the attribute is not android:id, and an item for it hasn't been created yet, add it to
-                    // the list of pending ids.
+                    // If the attribute is not android:id, and an item for it hasn't been created
+                    // yet, add it to the list of pending ids.
                     if (value.startsWith(NEW_ID_PREFIX) && !ATTR_ID.equals(attrName)) {
                         String id = value.substring(NEW_ID_PREFIX.length());
                         if (!id.isEmpty()) {
@@ -149,8 +156,9 @@ class IdGeneratingResourceParser {
                         // Now process the android:id attribute.
                         String id;
                         if (value.startsWith(ID_PREFIX)) {
-                            // If the id is not "@+id/", it may still have been declared as "@+id/" in a preceding view (eg. layout_above).
-                            // So, we test if this is such a pending id.
+                            // If the id is not "@+id/", it may still have been declared as "@+id/"
+                            // in a preceding view (eg. layout_above). So, we test if this is such
+                            // a pending id.
                             id = value.substring(ID_PREFIX.length());
                             if (!pendingResourceIds.contains(id)) {
                                 continue;
@@ -165,7 +173,8 @@ class IdGeneratingResourceParser {
                         pendingResourceIds.remove(id);
                         if (!id.isEmpty()) {
                             ResourceMergerItem item =
-                                    new IdResourceMergerItem(id, mNamespace, ResourceType.ID);
+                                    new IdResourceMergerItem(
+                                            id, mNamespace, ResourceType.ID, mLibraryName);
                             items.add(item);
                         }
                     }
@@ -191,16 +200,19 @@ class IdGeneratingResourceParser {
          *
          * @param name the name of the resource
          * @param type the type of the resource (ID, layout, menu).
+         * @param libraryName the name of the library the resource belongs to, or null if
+         *     the resource does not belong to a library
          */
         public IdResourceMergerItem(
                 @NonNull String name,
                 @NonNull ResourceNamespace namespace,
-                @NonNull ResourceType type) {
+                @NonNull ResourceType type,
+                @Nullable String libraryName) {
             // Use a null value, since the source XML is something like:
             //     <LinearLayout ... id="@+id/xxx">...</LinearLayout>
-            // which is large and inefficient for encoding the resource item, and inefficient to hold on to.
-            // Instead synthesize <item name=x type={id/layout/menu} /> as needed.
-            super(name, namespace, type, null /* value */, null /* libraryName */);
+            // which is large and inefficient for encoding the resource item, and inefficient to
+            // hold on to. Instead synthesize <item name=x type={id/layout/menu} /> as needed.
+            super(name, namespace, type, null, libraryName);
         }
 
         @Override

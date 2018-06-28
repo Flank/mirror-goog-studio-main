@@ -43,7 +43,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
         IdGeneratingResourceParser parser =
                 new IdGeneratingResourceParser(
-                        layoutFile, "layout_for_id_scan", ResourceType.LAYOUT, null);
+                        layoutFile, "layout_for_id_scan", ResourceType.LAYOUT, null, null);
         ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
         assertEquals(fileItem.getName(), "layout_for_id_scan");
         assertEquals(fileItem.getType(), ResourceType.LAYOUT);
@@ -61,7 +61,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         File menuFile = new File(menu, "menu.xml");
 
         IdGeneratingResourceParser parser =
-                new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU, null);
+                new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU, null, null);
 
         ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
         assertEquals(fileItem.getName(), "menu");
@@ -79,7 +79,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
         try {
             new IdGeneratingResourceParser(
-                    layoutFile, "layout_with_databinding", ResourceType.LAYOUT, null);
+                    layoutFile, "layout_with_databinding", ResourceType.LAYOUT, null, null);
             assertTrue("Should have thrown exception", true);
         }
         catch (MergingException e) {
@@ -103,6 +103,6 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
     private static <T> void assertSameElements(Collection<? extends T> collection, Collection<T> expected) {
         assertNotNull(collection);
         assertNotNull(expected);
-        assertEquals(new TreeSet<T>(expected), new TreeSet<T>(collection));
+        assertEquals(new TreeSet<>(expected), new TreeSet<>(collection));
     }
 }
