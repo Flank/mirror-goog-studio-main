@@ -18,6 +18,7 @@
 
 #include <grpc++/grpc++.h>
 
+#include "perfd/commands/command.h"
 #include "perfd/daemon.h"
 #include "proto/profiler.grpc.pb.h"
 
@@ -75,6 +76,25 @@ class ProfilerServiceImpl final
       const profiler::proto::GetSessionsRequest* request,
       profiler::proto::GetSessionsResponse* response) override;
 
+  grpc::Status Execute(grpc::ServerContext* context,
+                       const profiler::proto::ExecuteRequest* request,
+                       profiler::proto::ExecuteResponse* response) override;
+
+  grpc::Status GetEvents(grpc::ServerContext* context,
+                         const profiler::proto::GetEventsRequest* request,
+                         profiler::proto::GetEventsResponse* response) override;
+
+  grpc::Status GetEventGroups(
+      grpc::ServerContext* context,
+      const profiler::proto::GetEventGroupsRequest* request,
+      profiler::proto::GetEventGroupsResponse* response) override;
+
+  grpc::Status GetEventGroup(
+      grpc::ServerContext* context,
+      const profiler::proto::GetEventGroupRequest* request,
+      profiler::proto::GetEventGroupResponse* response) override;
+
+ private:
   // The daemon this service talks to.
   Daemon* daemon_;
 };

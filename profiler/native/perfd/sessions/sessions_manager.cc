@@ -16,72 +16,72 @@
 #include "sessions_manager.h"
 
 #include <algorithm>
-
-#include "perfd/sessions/session_utils.h"
+#include "perfd/daemon.h"
+#include "proto/profiler.pb.h"
 
 namespace profiler {
 
-using proto::Session;
 using std::list;
 using std::lock_guard;
 using std::mutex;
 using std::vector;
 
-void SessionsManager::BeginSession(int64_t device_id, int32_t pid,
-                                   Session* session, int64_t start_timestamp) {
-  lock_guard<mutex> lock(sessions_mutex_);
+void SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
+  int64_t now = daemon_->clock()->GetCurrentTime();
+  for (const auto& component : daemon_->GetComponents()) {
+    now = std::min(now, component->GetEarliestDataTime(pid));
+  }
+
+  if (!sessions_.empty()) {
+    DoEndSession(sessions_.back().get(), now);
+  }
+
+  std::unique_ptr<Session> session(new Session(device_id, pid, now));
+  proto::Event event;
+  event.set_event_id(session->info.session_id());
+  event.set_session_id(session->info.session_id());
+  event.set_timestamp(now);
+  event.set_kind(proto::Event::SESSION);
+  event.set_type(proto::Event::SESSION_STARTED);
+  proto::SessionStarted* session_started = event.mutable_session_started();
+  session_started->set_device_id(device_id);
+  session_started->set_pid(pid);
+  daemon_->buffer()->Add(event);
+
+  sessions_.push_back(std::move(session));
+}
+
+profiler::Session* SessionsManager::GetLastSession() {
   if (sessions_.size()) {
-    Session& last = sessions_[sessions_.size() - 1];
-    if (SessionUtils::IsActive(last)) {
-      DoEndSession(&last);
-    }
+    return sessions_.back().get();
+  } else {
+    return nullptr;
   }
-
-  Session new_session =
-      SessionUtils::CreateSession(device_id, pid, start_timestamp);
-  sessions_.push_back(new_session);
-  session->CopyFrom(new_session);
 }
 
-void SessionsManager::EndSession(int64_t session_id, Session* session) {
-  lock_guard<mutex> lock(sessions_mutex_);
-
-  if (sessions_.size()) {
-    Session& last = sessions_[sessions_.size() - 1];
-    if (SessionUtils::IsActive(last) && last.session_id() == session_id) {
-      DoEndSession(&last);
-      session->CopyFrom(last);
+void SessionsManager::EndSession(int64_t session_id) {
+  auto now = daemon_->clock()->GetCurrentTime();
+  if (sessions_.size() > 0) {
+    if (sessions_.back()->info.session_id() == session_id) {
+      DoEndSession(sessions_.back().get(), now);
     }
   }
 }
 
-void SessionsManager::GetSession(int64_t session_id, Session* session) const {
-  lock_guard<mutex> lock(sessions_mutex_);
-  for (const Session& s : sessions_) {
-    if (s.session_id() == session_id) {
-      session->CopyFrom(s);
-    }
-  }
-}
-
-std::vector<Session> SessionsManager::GetSessions(int64_t start_timestamp,
-                                                  int64_t end_timestamp) const {
-  lock_guard<mutex> lock(sessions_mutex_);
-  vector<Session> sessions_range;
-  for (const auto& session : sessions_) {
-    if (end_timestamp < session.start_timestamp() ||
-        start_timestamp > session.end_timestamp()) {
-      continue;
-    }
-    sessions_range.push_back(session);
-  }
-  return sessions_range;
-}
-
-// This method assumes |sessions_| has already been locked
-void SessionsManager::DoEndSession(Session* session) {
-  session->set_end_timestamp(clock_->GetCurrentTime());
+// This method assumes |sessions_| has already been locked and that
+// |session_index| is valid.
+void SessionsManager::DoEndSession(profiler::Session* session, int64_t time) {
   // TODO(b/67508650): Stop all profilers!
+  if (session->End(time)) {
+    proto::Event event;
+    event.set_timestamp(time);
+    event.set_event_id(session->info.session_id());
+    event.set_session_id(session->info.session_id());
+    event.set_kind(proto::Event::SESSION);
+    event.set_type(proto::Event::SESSION_ENDED);
+    event.mutable_session_ended();
+    daemon_->buffer()->Add(event);
+  }
 }
 
 }  // namespace profiler

@@ -88,54 +88,139 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  // Make sure the pid is valid.
-  string app_name = ProcessManager::GetCmdlineForPid(request->pid());
-  if (app_name.empty()) {
-    return Status(StatusCode::NOT_FOUND,
-                  "Process isn't running. Cannot create session.");
-  }
+  proto::Command command;
+  command.set_type(proto::Command::BEGIN_SESSION);
+  proto::BeginSession* begin = command.mutable_begin_session();
+  auto* jvmti_config = begin->mutable_jvmti_config();
 
-  int64_t start_timestamp = daemon_->clock()->GetCurrentTime();
-  for (const auto& component : daemon_->GetComponents()) {
-    start_timestamp = std::min(start_timestamp,
-                               component->GetEarliestDataTime(request->pid()));
-  }
-  daemon_->sessions()->BeginSession(request->device_id(), request->pid(),
-                                    response->mutable_session(),
-                                    start_timestamp);
-  if (request->jvmti_config().attach_agent()) {
-    daemon_->TryAttachAppAgent(request->pid(), app_name,
-                               request->jvmti_config().agent_lib_file_name());
-  }
+  jvmti_config->set_attach_agent(request->jvmti_config().attach_agent());
+  jvmti_config->set_agent_lib_file_name(
+      request->jvmti_config().agent_lib_file_name());
+  jvmti_config->set_live_allocation_enabled(
+      request->jvmti_config().live_allocation_enabled());
 
-  return Status::OK;
+  begin->set_device_id(request->device_id());
+  begin->set_pid(request->pid());
+  begin->set_request_time_epoch_ms(request->request_time_epoch_ms());
+  begin->set_session_name(request->session_name());
+
+  return daemon_->Execute(command, [this, response]() {
+    profiler::Session* session = daemon_->sessions()->GetLastSession();
+    if (session) {
+      response->mutable_session()->CopyFrom(session->info);
+    }
+  });
 }
 
 Status ProfilerServiceImpl::EndSession(
     ServerContext* context, const profiler::proto::EndSessionRequest* request,
     profiler::proto::EndSessionResponse* response) {
-  daemon_->sessions()->EndSession(request->session_id(),
-                                  response->mutable_session());
+  proto::Command command;
+  command.set_type(proto::Command::END_SESSION);
+  command.set_session_id(request->session_id());
+  command.mutable_end_session();  // No data to fill in.
+
+  return daemon_->Execute(command, [this, response]() {
+    profiler::Session* session = daemon_->sessions()->GetLastSession();
+    if (session) {
+      response->mutable_session()->CopyFrom(session->info);
+    }
+  });
+
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSession(
     ServerContext* context, const profiler::proto::GetSessionRequest* request,
     profiler::proto::GetSessionResponse* response) {
-  daemon_->sessions()->GetSession(request->session_id(),
-                                  response->mutable_session());
+  proto::GetEventGroupRequest req;
+  proto::GetEventGroupResponse res;
+  req.set_event_id(request->session_id());
+  GetEventGroup(context, &req, &res);
+  proto::Session* session = response->mutable_session();
+  const auto& group = res.group();
+  session->set_session_id(group.event_id());
+  for (int i = 0; i < group.events_size(); i++) {
+    const auto& event = group.events(i);
+    if (event.has_session_started()) {
+      session->set_device_id(event.session_started().device_id());
+      session->set_pid(event.session_started().pid());
+      session->set_start_timestamp(event.timestamp());
+      session->set_end_timestamp(LLONG_MAX);
+    }
+    if (event.has_session_ended()) {
+      session->set_end_timestamp(event.timestamp());
+    }
+  }
+
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSessions(
     ServerContext* context, const profiler::proto::GetSessionsRequest* request,
     profiler::proto::GetSessionsResponse* response) {
-  auto matching_sessions = daemon_->sessions()->GetSessions(
-      request->start_timestamp(), request->end_timestamp());
-  for (const auto& session : matching_sessions) {
+  proto::GetEventGroupsRequest req;
+  req.set_kind(proto::Event::SESSION);
+  req.set_end(proto::Event::SESSION_ENDED);
+  req.set_from_timestamp(request->start_timestamp());
+  req.set_to_timestamp(request->end_timestamp());
+  for (auto& group : daemon_->GetEventGroups(&req)) {
+    profiler::proto::Session session;
+    // group ids are sessions id for session events
+    session.set_session_id(group.event_id());
+    for (int i = 0; i < group.events_size(); i++) {
+      const auto& event = group.events(i);
+      if (event.has_session_started()) {
+        session.set_device_id(event.session_started().device_id());
+        session.set_pid(event.session_started().pid());
+        session.set_start_timestamp(event.timestamp());
+        session.set_end_timestamp(LLONG_MAX);
+      }
+      if (event.has_session_ended()) {
+        session.set_end_timestamp(event.timestamp());
+      }
+    }
     response->add_sessions()->CopyFrom(session);
+  }
+
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::Execute(
+    ServerContext* context, const profiler::proto::ExecuteRequest* request,
+    profiler::proto::ExecuteResponse* response) {
+  return daemon_->Execute(request->command());
+}
+
+Status ProfilerServiceImpl::GetEvents(
+    ServerContext* context, const profiler::proto::GetEventsRequest* request,
+    profiler::proto::GetEventsResponse* response) {
+  for (auto& event : daemon_->GetEvents(request)) {
+    response->add_events()->CopyFrom(event);
   }
   return Status::OK;
 }
+
+Status ProfilerServiceImpl::GetEventGroups(
+    ServerContext* context,
+    const profiler::proto::GetEventGroupsRequest* request,
+    profiler::proto::GetEventGroupsResponse* response) {
+  for (auto& group : daemon_->GetEventGroups(request)) {
+    proto::EventGroup* event_group = response->add_groups();
+    event_group->CopyFrom(group);
+  }
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::GetEventGroup(
+    ServerContext* context,
+    const profiler::proto::GetEventGroupRequest* request,
+    profiler::proto::GetEventGroupResponse* response) {
+  proto::EventGroup group;
+  if (daemon_->buffer()->GetGroup(request->event_id(), &group)) {
+    response->mutable_group()->CopyFrom(group);
+  }
+  return Status::OK;
+}  // namespace profiler
 
 }  // namespace profiler

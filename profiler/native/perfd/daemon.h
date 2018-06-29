@@ -20,7 +20,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "perfd/commands/command.h"
+#include "perfd/event_buffer.h"
 #include "perfd/profiler_component.h"
+#include "perfd/sessions/session.h"
 #include "perfd/sessions/sessions_manager.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
@@ -29,18 +32,20 @@
 
 namespace profiler {
 
+class Session;
+class Command;
+
 // A daemon running on the device, collecting, caching, and transporting
 // profiling data. It also includes a gRPC server. The gRPC server contains a
 // number of gRPC services, including 'public' ones that talk to desktop (e.g.,
 // Studio) and 'internal' ones that talk to app processes.
 class Daemon {
  public:
-  // |config_path| is a string that points to a file that can be parsed by
-  // profiler::proto::AgentConfig. If the |config_path| is empty, the file
-  // will fail to load and an empty config will be used.
-  // |cache_path| is a path where a temporary file cache will live. This
-  // cache will be cleared each time the daemon starts up.
-  Daemon(Clock* clock, Config* config, FileCache* file_cache);
+  // Creates a daemon with |clock| as the source for timing values, with
+  // |config| as the configuration, |file_cache| as the manager of temporary
+  // files, and |buffer| as the central storage for all generated events.
+  Daemon(Clock* clock, Config* config, FileCache* file_cache,
+         EventBuffer* buffer);
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
@@ -59,6 +64,19 @@ class Daemon {
   // be responsible for shutting down the server for this call to ever return.
   void RunServer(const std::string& server_address);
 
+  // This is thread safe as each command is executed exclusively.
+  grpc::Status Execute(const proto::Command& command);
+
+  // Temporary version to allow synchronous calls from the legacy API that
+  // allows the callback to be executed thread safely with the command.
+  grpc::Status Execute(const proto::Command& command,
+                       std::function<void(void)> post);
+
+  std::vector<proto::Event> GetEvents(const proto::GetEventsRequest* request);
+
+  std::vector<proto::EventGroup> GetEventGroups(
+      const proto::GetEventGroupsRequest* request);
+
   // Returns the clock to use across the profilers.
   Clock* clock() { return clock_; }
 
@@ -74,6 +92,8 @@ class Daemon {
 
   // Return SessionsManager shared across all profilers.
   SessionsManager* sessions() { return &session_manager_; }
+
+  EventBuffer* buffer() { return buffer_; }
 
   void GetAgentStatus(const proto::AgentStatusRequest* request,
                       proto::AgentStatusResponse* response);
@@ -111,18 +131,25 @@ class Daemon {
   // False otherwise.
   bool CheckAppHeartBeat(int32_t app_pid);
 
+  // All command executions are guarded by this.
+  std::mutex mutex_;
   // Builder of the gRPC server.
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
-  std::vector<ProfilerComponent*> components_{};
+  std::vector<ProfilerComponent*> components_;
   // Clock that timestamps profiling data
   Clock* clock_;
   // Config object for profiling settings
   Config* config_;
   // A shared cache for all profiler services
   FileCache* file_cache_;
+  // The buffer with all the events
+  EventBuffer* buffer_;
   // Session management across the profiling services in perfd.
   SessionsManager session_manager_;
+  // Maps types to factory functions that create commands from proto objects.
+  std::map<proto::Command::CommandType, std::function<Command*(proto::Command)>>
+      commands_;
 
   // TODO (b/110830616): remove dead entries
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;

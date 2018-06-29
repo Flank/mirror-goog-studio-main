@@ -70,11 +70,12 @@ int main(int argc, char** argv) {
 
   profiler::SteadyClock clock;
   profiler::Config config(config_path);
+  profiler::EventBuffer buffer;
   profiler::FileCache file_cache(is_testing_profiler
                                      ? getenv("TEST_TMPDIR")
                                      : profiler::CurrentProcess::dir());
   auto* termination_service = profiler::TerminationService::Instance();
-  profiler::Daemon daemon(&clock, &config, &file_cache);
+  profiler::Daemon daemon(&clock, &config, &file_cache, &buffer);
   auto agent_config = daemon.config()->GetAgentConfig();
 
   profiler::GenericComponent generic_component(&daemon, daemon.sessions());

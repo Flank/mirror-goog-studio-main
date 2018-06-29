@@ -23,42 +23,34 @@
 #include <string>
 #include <vector>
 
+#include "perfd/sessions/session.h"
 #include "proto/common.pb.h"
-#include "utils/clock.h"
 
 namespace profiler {
 
-// Note: This class is thread safe
+class Daemon;
+
 class SessionsManager final {
  public:
-  SessionsManager(Clock *clock) : clock_(clock) {}
+  SessionsManager(Daemon *daemon) : daemon_(daemon) {}
 
-  // Begins a new session and populates it in |session|. If a session was
+  // Begins a new session. If a session was
   // already running it will be ended.
-  void BeginSession(int64_t device_id, int32_t pid, proto::Session *session,
-                    int64_t start_timestamp);
-  // Ends the active session and populates |session| with it.
-  void EndSession(int64_t session_id, proto::Session *session);
+  void BeginSession(int64_t device_id, int32_t pid);
 
-  // Fills in session with with the session of the given id
-  void GetSession(int64_t session_id, proto::Session *session) const;
+  // Returns the last session (which is the only one that can be active),
+  // or nullptr if there are none.
+  profiler::Session *GetLastSession();
 
-  // Returns all sessions between two timestamps. Default values are provided so
-  // if you exclude a timestamp, then the search will not be bounded by it.
-  // |start_timestamp| should always be <= |end_timestamp|, or else this
-  // method's behavior will be undefined.
-  std::vector<proto::Session> GetSessions(
-      int64_t start_timestamp = LLONG_MIN,
-      int64_t end_timestamp = LLONG_MAX) const;
+  // Ends the given session if it was active.
+  void EndSession(int64_t session_id);
 
  private:
-  void DoEndSession(proto::Session *session);
+  void DoEndSession(profiler::Session *session, int64_t timestamp_ns);
 
-  Clock *clock_;
+  Daemon *daemon_;
 
-  mutable std::mutex sessions_mutex_;
-
-  std::vector<proto::Session> sessions_;
+  std::vector<std::unique_ptr<profiler::Session>> sessions_;
 };
 
 }  // namespace profiler

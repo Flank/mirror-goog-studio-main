@@ -54,7 +54,8 @@ service ProfilerService {
   // Makes all necessary configurations needed for attaching agent on startup.
   // Returns |agent_args| to be used with the application launch command,
   // e.g "am start --attach-agent |agent_args|".
-  rpc ConfigureStartupAgent(ConfigureStartupAgentRequest) returns (ConfigureStartupAgentResponse) {
+  rpc ConfigureStartupAgent(ConfigureStartupAgentRequest)
+      returns (ConfigureStartupAgentResponse) {
   }
 
   // Start a new session. As a side effect, this also starts all profilers for
@@ -81,7 +82,8 @@ service ProfilerService {
   // Request a session's meta data by ID.
   // Metadatas are only used on Studio-side to retrieve display-related info.
   rpc GetSessionMetaData(GetSessionMetaDataRequest)
-    returns (GetSessionMetaDataResponse) {}
+      returns (GetSessionMetaDataResponse) {
+  }
 
   // Requests all sessions in the time range from |start_timestamp| (exclusive)
   // to |end_timestamp| (inclusive), or mathematically written as the interval
@@ -94,6 +96,28 @@ service ProfilerService {
   // automatically be called on it.
   rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
   }
+
+  // Executes a |Command| on the daemon.
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse) {
+  }
+
+  // Gets all the events of the given |session_id| that aret timed
+  // between |from_timestamp| and |end_timestamp| (in ns)
+  rpc GetEvents(GetEventsRequest) returns (GetEventsResponse) {
+  }
+
+  // Gets all the event groups (events that share the same event_id) that
+  // intersect the range [|from_timestamp|, |to_timestamp|]. If the paramter |end|
+  // is used, an event_group will be considered "open" until such an event shows up.
+  // For example if we have a "BEGIN_SESSION" at time 1,  and the range requested
+  // is [2,3], and the |end| field is set to END_SESSION",  then the event group will
+  // be considered opened, and this intersecting the range.
+  rpc GetEventGroups(GetEventGroupsRequest) returns (GetEventGroupsResponse) {
+  }
+
+  // Gets all the events of a given |event_id|
+  rpc GetEventGroup(GetEventGroupRequest) returns (GetEventGroupResponse) {
+  }
 }
 
 message TimeRequest {
@@ -101,8 +125,9 @@ message TimeRequest {
 }
 
 message TimeResponse {
-  // What's used as timestamps in all profiler data (unless otherwise specified).
-  // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
+  // What's used as timestamps in all profiler data (unless otherwise
+  // specified). (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns
+  // precision.)
   int64 timestamp_ns = 1;
 
   // The number of microseconds since the Epoch.
@@ -259,4 +284,128 @@ message AgentStatusResponse {
   // return tures if an JVMTI agent can be attached. (e.g. the app is
   // debuggable).
   bool is_agent_attachable = 2;
+}
+
+message ExecuteRequest {
+  Command command = 1;
+}
+
+message ExecuteResponse {
+}
+
+message GetEventsRequest {
+  int64 session_id = 1;
+  int64 from_timestamp = 2;  // inclusive (ns)
+  int64 to_timestamp = 3;    // inclusive (ns)
+}
+
+message GetEventsResponse {
+  repeated Event events = 1;
+}
+
+message GetEventGroupsRequest {
+  int64 session_id = 1;
+  Event.Kind kind = 2;
+  Event.Type end = 3;
+  int64 from_timestamp = 4;  // inclusive
+  int64 to_timestamp = 5;    // inclusive
+}
+
+message GetEventGroupsResponse {
+  repeated EventGroup groups = 1;
+}
+
+message GetEventGroupRequest {
+  int64 session_id = 1;
+  int64 event_id = 2;
+}
+
+message GetEventGroupResponse {
+  EventGroup group = 1;
+}
+
+// An event group is a collection of events
+// that share the same event_id.
+message EventGroup {
+  int64 event_id = 1;
+  repeated Event events = 2;
+}
+
+message Command {
+  enum CommandType {
+    UNSPECIFIED = 0;
+    BEGIN_SESSION = 1;
+    END_SESSION = 2;
+  }
+
+  int64 session_id = 1;  // If ommited the command is applied to all sessions
+                         // (or to create a session)
+  CommandType type = 2;
+  oneof union {
+    BeginSession begin_session = 3;
+    EndSession end_session = 4;
+  }
+}
+
+message BeginSession {
+  message JvmtiConfig {
+    // True if an jvmti agent should be attached, false otherwise.
+    bool attach_agent = 1;
+    // TODO(b/65458869): Remove when moving process discovery to perfd.
+    string agent_lib_file_name = 2;
+    // True if live allocation is used, false otherwise.
+    bool live_allocation_enabled = 3;
+  }
+
+  int64 device_id = 1;
+  int32 pid = 2;
+  JvmtiConfig jvmti_config = 3;
+  int64 request_time_epoch_ms = 4;
+  string session_name = 5;
+}
+
+message EndSession {
+}
+
+message Event {
+  enum Type {
+    UNSPECIFIED = 0;
+    SESSION_STARTED = 1;
+    SESSION_ENDED = 2;
+  }
+  enum Kind {
+    NONE = 0;
+    SESSION = 1;
+  }
+  // The session the event belongs to. For session events this is the same as |event_id|
+  int64 session_id = 1;
+
+  // The id of this event. This is not unique, for concepts that span across a range of
+  // time (network requests, threads, etc), they will all share the same |event_id|. 
+  int64 event_id = 2;
+
+  // The kind of event (a higher level grouping of events that belong to the same area)
+  // Useful for queries such as "all the groups of "kind" SESSION.
+  Event.Kind kind = 3;
+
+  // The actual type of the event.
+  Event.Type type = 4;
+  // Timestamp in device wall clock time (ns).
+
+  int64 timestamp = 5;
+  oneof union {
+    SessionStarted session_started = 6;
+    SessionEnded session_ended = 7;
+  }
+}
+
+message SessionStarted {
+  // A device's unique identifier, references Device's |device_id| property.
+  int64 device_id = 2;
+  // The PID of the app. Note that this is actually an int16, but gRPC only
+  // provides int32.
+  int32 pid = 3;
+}
+
+message SessionEnded {
 }

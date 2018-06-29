@@ -23,8 +23,11 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include "commands/begin_session.h"
+#include "commands/end_session.h"
 #include "perfd/connector.h"
 #include "perfd/generic_component.h"
+#include "perfd/sessions/session.h"
 #include "utils/android_studio_version.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
@@ -155,11 +158,16 @@ bool RunAgent(const string& app_name, const string& package_name,
 
 }  // namespace
 
-Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache)
+Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache,
+               EventBuffer* buffer)
     : clock_(clock),
       config_(config),
       file_cache_(file_cache),
-      session_manager_(clock) {}
+      buffer_(buffer),
+      session_manager_(this) {
+  commands_[proto::Command::BEGIN_SESSION] = &BeginSession::Create;
+  commands_[proto::Command::END_SESSION] = &EndSession::Create;
+}
 
 void Daemon::RegisterComponent(ProfilerComponent* component) {
   if (component == nullptr) return;
@@ -228,6 +236,31 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
   }
 
   return true;
+}
+
+grpc::Status Daemon::Execute(const proto::Command& command_data,
+                             std::function<void(void)> post) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::unique_ptr<Command> command(
+      commands_[command_data.type()](command_data));
+  grpc::Status status = command->ExecuteOn(this);
+  post();
+  return status;
+}
+
+grpc::Status Daemon::Execute(const proto::Command& command_data) {
+  return Execute(command_data, []() {});
+}
+
+std::vector<proto::Event> Daemon::GetEvents(
+    const proto::GetEventsRequest* request) {
+  return buffer_->Get(request->from_timestamp(), request->to_timestamp());
+}
+
+std::vector<proto::EventGroup> Daemon::GetEventGroups(
+    const proto::GetEventGroupsRequest* request) {
+  return buffer_->Get(request->session_id(), request->kind(), request->end(),
+                      request->from_timestamp(), request->to_timestamp());
 }
 
 // Runs the connector as the application user and tries to send a message

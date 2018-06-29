@@ -19,7 +19,6 @@
 
 #include <grpc++/grpc++.h>
 #include "perfd/profiler_service.h"
-#include "perfd/sessions/session_utils.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/config.h"
 #include "utils/fake_clock.h"
@@ -35,7 +34,8 @@ class ProfilerServiceTest : public ::testing::Test {
   ProfilerServiceTest()
       : file_cache_(unique_ptr<FileSystem>(new MemoryFileSystem()), "/"),
         config_(agent_config_),
-        daemon_(&clock_, &config_, &file_cache_),
+        buffer_(10, 5),
+        daemon_(&clock_, &config_, &file_cache_, &buffer_),
         service_(&daemon_) {}
   void SetUp() override {
     grpc::ServerBuilder builder;
@@ -89,18 +89,109 @@ class ProfilerServiceTest : public ::testing::Test {
     return sessions;
   }
 
+  grpc::Status GetEvents(const proto::GetEventsRequest& request,
+                         proto::GetEventsResponse* response) {
+    grpc::ClientContext context;
+    return stub_->GetEvents(&context, request, response);
+  }
+
+  bool IsSessionActive(const proto::Session& session) {
+    return session.end_timestamp() == LLONG_MAX;
+  }
+
   void TearDown() { server_->Shutdown(); }
 
   FakeClock clock_;
   FileCache file_cache_;
   proto::AgentConfig agent_config_;
   Config config_;
+  EventBuffer buffer_;
   Daemon daemon_;
   ProfilerServiceImpl service_;
 
   std::unique_ptr<::grpc::Server> server_;
   std::unique_ptr<proto::ProfilerService::Stub> stub_;
 };
+
+TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
+  proto::ExecuteRequest req;
+  proto::Command* command = req.mutable_command();
+  command->set_type(proto::Command::BEGIN_SESSION);
+  proto::BeginSession* begin = command->mutable_begin_session();
+  begin->set_device_id(100);
+  begin->set_pid(1000);
+
+  proto::ExecuteResponse res;
+  clock_.SetCurrentTime(2);
+  grpc::ClientContext context;
+  stub_->Execute(&context, req, &res);
+  clock_.SetCurrentTime(4);
+
+  grpc::ClientContext context2;
+  begin->set_device_id(101);
+  begin->set_pid(1001);
+  stub_->Execute(&context2, req, &res);
+
+  proto::GetEventsRequest request;
+  request.set_from_timestamp(1);
+  request.set_to_timestamp(3);
+  proto::GetEventsResponse events;
+  GetEvents(request, &events);
+  ASSERT_EQ(1, events.events_size());
+
+  request.set_from_timestamp(1);
+  request.set_to_timestamp(5);
+  GetEvents(request, &events);
+  ASSERT_EQ(3, events.events_size());
+
+  request.set_from_timestamp(3);
+  request.set_to_timestamp(5);
+  GetEvents(request, &events);
+  ASSERT_EQ(2, events.events_size());
+
+  // Test legacy api:
+  grpc::ClientContext sessions_context;
+  proto::GetSessionsRequest sreq;
+  sreq.set_start_timestamp(0);
+  sreq.set_end_timestamp(10);
+  proto::GetSessionsResponse sres;
+  stub_->GetSessions(&sessions_context, sreq, &sres);
+  ASSERT_EQ(2, sres.sessions_size());
+
+  // Test id generation to ensure refactoring maintains same id's.
+  EXPECT_EQ(96, sres.sessions(0).session_id());
+  EXPECT_EQ(100, sres.sessions(0).device_id());
+  EXPECT_EQ(1000, sres.sessions(0).pid());
+  EXPECT_EQ(2, sres.sessions(0).start_timestamp());
+  EXPECT_EQ(4, sres.sessions(0).end_timestamp());
+
+  EXPECT_EQ(109, sres.sessions(1).session_id());
+  EXPECT_EQ(101, sres.sessions(1).device_id());
+  EXPECT_EQ(1001, sres.sessions(1).pid());
+  EXPECT_EQ(4, sres.sessions(1).start_timestamp());
+  EXPECT_EQ(LLONG_MAX, sres.sessions(1).end_timestamp());
+}
+
+TEST_F(ProfilerServiceTest, TestBufferFull) {
+  for (int32_t i = 0; i < 5; i++) {
+    clock_.SetCurrentTime(i);
+    BeginSession(1234, 101);
+    proto::GetSessionsResponse sessions = GetSessions(0, i + 1);
+    ASSERT_EQ(i + 1, sessions.sessions_size());
+  }
+  proto::GetSessionsResponse sessions = GetSessions(0, 6);
+  ASSERT_EQ(5, sessions.sessions_size());
+  auto first = sessions.sessions(0).session_id();
+  auto second = sessions.sessions(1).session_id();
+  // Creating a new session would push the first one out
+  clock_.SetCurrentTime(5);
+  BeginSession(1234, 101);
+  sessions = GetSessions(0, 6);
+  ASSERT_EQ(5, sessions.sessions_size());
+
+  ASSERT_NE(first, second);
+  ASSERT_EQ(second, sessions.sessions(0).session_id());
+}
 
 TEST_F(ProfilerServiceTest, TestBeginSession) {
   clock_.SetCurrentTime(2);
@@ -123,7 +214,7 @@ TEST_F(ProfilerServiceTest, CanBeginAndEndASession) {
   EXPECT_EQ(begin.end_timestamp(), LONG_MAX);
   EXPECT_EQ(begin.device_id(), 2222);
   EXPECT_EQ(begin.pid(), 1);
-  EXPECT_TRUE(SessionUtils::IsActive(begin));
+  EXPECT_TRUE(IsSessionActive(begin));
 
   clock_.Elapse(10);
   // Session ended_session;
@@ -132,31 +223,31 @@ TEST_F(ProfilerServiceTest, CanBeginAndEndASession) {
   // Test ids to ensure they are stable
   EXPECT_EQ(0x10A, end.session_id());
   EXPECT_EQ(end.end_timestamp(), 1234 + 10);
-  EXPECT_FALSE(SessionUtils::IsActive(end));
+  EXPECT_FALSE(IsSessionActive(end));
 }
 
 TEST_F(ProfilerServiceTest, BeginClosesPreviousSession) {
   clock_.SetCurrentTime(1234);
   proto::Session session1 = BeginSession(-1, 1);
   clock_.Elapse(10);
-  EXPECT_TRUE(SessionUtils::IsActive(session1));
+  EXPECT_TRUE(IsSessionActive(session1));
   EXPECT_EQ(1, session1.pid());
 
   proto::Session session2 = BeginSession(-2, 2);
   clock_.Elapse(10);
-  EXPECT_TRUE(SessionUtils::IsActive(session2));
+  EXPECT_TRUE(IsSessionActive(session2));
   EXPECT_EQ(2, session2.pid());
 
   proto::Session session3 = BeginSession(-3, 3);
   clock_.Elapse(10);
-  EXPECT_TRUE(SessionUtils::IsActive(session3));
+  EXPECT_TRUE(IsSessionActive(session3));
   EXPECT_EQ(3, session3.pid());
   {
     proto::GetSessionsResponse sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(3, sessions.sessions_size());
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(0)));
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(1)));
-    EXPECT_TRUE(SessionUtils::IsActive(sessions.sessions(2)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(0)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(1)));
+    EXPECT_TRUE(IsSessionActive(sessions.sessions(2)));
   }
 
   // End and already ended session
@@ -164,9 +255,9 @@ TEST_F(ProfilerServiceTest, BeginClosesPreviousSession) {
   {
     proto::GetSessionsResponse sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(3, sessions.sessions_size());
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(0)));
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(1)));
-    EXPECT_TRUE(SessionUtils::IsActive(sessions.sessions(2)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(0)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(1)));
+    EXPECT_TRUE(IsSessionActive(sessions.sessions(2)));
   }
 
   // End the last session
@@ -174,9 +265,9 @@ TEST_F(ProfilerServiceTest, BeginClosesPreviousSession) {
   {
     proto::GetSessionsResponse sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(3, sessions.sessions_size());
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(0)));
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(1)));
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(2)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(0)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(1)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(2)));
   }
 }
 
@@ -223,7 +314,7 @@ TEST_F(ProfilerServiceTest, GetSessionsByTimeRangeWorks) {
   // Session from 5000 to present.
   clock_.Elapse(500);
   session = BeginSession(-50, 50);
-  EXPECT_TRUE(SessionUtils::IsActive(session));
+  EXPECT_TRUE(IsSessionActive(session));
 
   {
     // Get all
@@ -281,21 +372,25 @@ TEST_F(ProfilerServiceTest, BeginingTwiceIsTheSameAsEndingInBetween) {
 
   EXPECT_EQ(0, GetSessions(LLONG_MIN, LLONG_MAX).sessions_size());
   session = BeginSession(-10, 10);
+  clock_.Elapse(10);
   EXPECT_EQ(1, GetSessions(LLONG_MIN, LLONG_MAX).sessions_size());
   session = BeginSession(-10, 10);
+  clock_.Elapse(10);
   EXPECT_EQ(2, GetSessions(LLONG_MIN, LLONG_MAX).sessions_size());
   session = EndSession(-1, session.session_id());
+  clock_.Elapse(10);
   session = BeginSession(-10, 10);
+  clock_.Elapse(10);
 
   {
     auto sessions = GetSessions(LLONG_MIN, LLONG_MAX);
     EXPECT_EQ(3, sessions.sessions_size());
     EXPECT_EQ(10, sessions.sessions(0).pid());
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(0)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(0)));
     EXPECT_EQ(10, sessions.sessions(1).pid());
-    EXPECT_FALSE(SessionUtils::IsActive(sessions.sessions(1)));
+    EXPECT_FALSE(IsSessionActive(sessions.sessions(1)));
     EXPECT_EQ(10, sessions.sessions(2).pid());
-    EXPECT_TRUE(SessionUtils::IsActive(sessions.sessions(2)));
+    EXPECT_TRUE(IsSessionActive(sessions.sessions(2)));
   }
 }
 
@@ -312,5 +407,4 @@ TEST_F(ProfilerServiceTest, UniqueSessionIds) {
     }
   }
 }
-
 }  // namespace profiler
