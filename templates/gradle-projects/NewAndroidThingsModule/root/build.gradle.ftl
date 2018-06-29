@@ -9,7 +9,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
-    <#if compareVersionsIgnoringQualifiers(gradlePluginVersion, '3.0.0') lt 0>buildToolsVersion "${buildToolsVersion}"</#if>
+    <#if explicitBuildToolsVersion!false>buildToolsVersion "${buildToolsVersion}"</#if>
 
     defaultConfig {
     <#if isApplicationProject>
