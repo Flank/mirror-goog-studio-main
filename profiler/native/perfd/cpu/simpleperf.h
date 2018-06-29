@@ -20,6 +20,8 @@
 #include <string>
 
 #include "utils/bash_command.h"
+#include "utils/current_process.h"
+#include "utils/device_info.h"
 
 namespace profiler {
 
@@ -35,6 +37,8 @@ const int kStartupProfilingPid = -12345;
 // Designed to be easily inherited and used in tests.
 class Simpleperf {
  public:
+  explicit Simpleperf()
+      : Simpleperf(CurrentProcess::dir(), DeviceInfo::is_emulator()) {}
   explicit Simpleperf(const std::string& simpleperf_dir, const bool is_emulator)
       : simpleperf_dir_(simpleperf_dir), is_emulator_(is_emulator) {}
   ~Simpleperf() = default;

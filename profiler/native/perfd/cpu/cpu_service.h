@@ -29,8 +29,6 @@
 #include "perfd/termination_service.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/cpu.grpc.pb.h"
-#include "utils/current_process.h"
-#include "utils/device_info.h"
 
 namespace profiler {
 
@@ -46,7 +44,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
         cpu_config_(cpu_config),
-        simpleperf_manager_(clock, simpleperf_),
+        simpleperf_manager_(clock),
         // Number of millis to wait between atrace dumps when profiling.
         // The average user will run a capture around 20 seconds, however to
         // support longer captures we should dump the data (causing a hitch).
@@ -129,8 +127,6 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   ThreadMonitor& thread_monitor_;
 
   const proto::AgentConfig::CpuConfig& cpu_config_;
-  const Simpleperf simpleperf_{CurrentProcess::dir(),
-                               DeviceInfo::is_emulator()};
   SimpleperfManager simpleperf_manager_;
   AtraceManager atrace_manager_;
 };

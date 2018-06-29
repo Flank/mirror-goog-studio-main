@@ -68,7 +68,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
     Log::D("%s app has pid:%d", app_name.c_str(), pid);
   }
 
-  if (!simpleperf_.EnableProfiling()) {
+  if (!simpleperf_->EnableProfiling()) {
     error->append("\n");
     error->append("Unable to setprop to enable profiling.");
     return false;
@@ -95,7 +95,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
       break;  // Useless but make the compiler happy.
     }
     case 0: {  // Child Process
-      simpleperf_.Record(
+      simpleperf_->Record(
           pid, ProcessManager::GetPackageNameFromAppName(app_name), abi_arch,
           entry.raw_trace_path, sampling_interval_us, entry.log_file_path);
       exit(EXIT_FAILURE);
@@ -202,7 +202,7 @@ bool SimpleperfManager::StopSimpleperf(
   Log::D("Sending SIGTERM to simpleperf(%d).",
          ongoing_recording.simpleperf_pid);
   bool kill_simpleperf_result =
-      simpleperf_.KillSimpleperf(ongoing_recording.simpleperf_pid);
+      simpleperf_->KillSimpleperf(ongoing_recording.simpleperf_pid);
 
   if (!kill_simpleperf_result) {
     string msg = "Failed to send SIGTERM to simpleperf";
@@ -224,7 +224,7 @@ void SimpleperfManager::CleanUp(
 bool SimpleperfManager::ConvertRawToProto(
     const OnGoingProfiling &ongoing_recording, string *error) const {
   string output;
-  bool report_sample_result = simpleperf_.ReportSample(
+  bool report_sample_result = simpleperf_->ReportSample(
       ongoing_recording.raw_trace_path, ongoing_recording.trace_path,
       ongoing_recording.abi_arch, &output);
   if (!report_sample_result) {

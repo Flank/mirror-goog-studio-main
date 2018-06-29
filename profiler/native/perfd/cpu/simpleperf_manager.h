@@ -18,6 +18,7 @@
 #define PERFD_CPU_SIMPLEPERFMANAGER_H_
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -48,8 +49,14 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
-  explicit SimpleperfManager(Clock* clock, const Simpleperf &simpleperf)
-      : clock_(clock), simpleperf_(simpleperf) {}
+  explicit SimpleperfManager(Clock *clock)
+      : SimpleperfManager(clock,
+                          std::unique_ptr<Simpleperf>(new Simpleperf())) {}
+
+  explicit SimpleperfManager(Clock *clock,
+                             std::unique_ptr<Simpleperf> simpleperf)
+      : clock_(clock), simpleperf_(std::move(simpleperf)) {}
+
   ~SimpleperfManager();
 
   // Returns true if profiling of app |app_name| was started successfully.
@@ -72,10 +79,10 @@ class SimpleperfManager {
   bool IsProfiling(const std::string &app_name);
 
  private:
-  Clock* clock_;
+  Clock *clock_;
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
-  const Simpleperf &simpleperf_;
+  std::unique_ptr<Simpleperf> simpleperf_;
 
   // Generate the filename pattern used for trace and log (a name guaranteed
   // not to collide and without an extension).
