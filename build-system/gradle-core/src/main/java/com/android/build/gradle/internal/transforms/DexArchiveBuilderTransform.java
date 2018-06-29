@@ -35,6 +35,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.crash.PluginCrashReporter;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -195,6 +196,8 @@ public class DexArchiveBuilderTransform extends Transform {
     private final boolean includeFeaturesInScopes;
     private boolean isInstantRun;
 
+    private boolean enableDexingArtifactTransform;
+
     DexArchiveBuilderTransform(
             @NonNull Supplier<List<File>> androidJarClasspath,
             @NonNull DexOptions dexOptions,
@@ -210,7 +213,8 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull String projectVariant,
             @Nullable Integer numberOfBuckets,
             boolean includeFeaturesInScopes,
-            boolean isInstantRun) {
+            boolean isInstantRun,
+            boolean enableDexingArtifactTransform) {
         this.androidJarClasspath = androidJarClasspath;
         this.dexOptions = dexOptions;
         this.messageReceiver = messageReceiver;
@@ -235,6 +239,7 @@ public class DexArchiveBuilderTransform extends Transform {
         }
         this.includeFeaturesInScopes = includeFeaturesInScopes;
         this.isInstantRun = isInstantRun;
+        this.enableDexingArtifactTransform = enableDexingArtifactTransform;
     }
 
     @NonNull
@@ -258,28 +263,43 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
-        if (includeFeaturesInScopes) {
+        if (enableDexingArtifactTransform) {
+            return Sets.immutableEnumSet(Scope.PROJECT);
+        } else if (includeFeaturesInScopes) {
             return TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES;
+        } else {
+            return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
         }
-        return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 
     @NonNull
     @Override
     public Set<? super Scope> getReferencedScopes() {
-        return ImmutableSet.of(Scope.PROVIDED_ONLY, Scope.TESTED_CODE);
+        Set<? super QualifiedContent.ScopeType> referenced =
+                Sets.newHashSet(Scope.PROVIDED_ONLY, Scope.TESTED_CODE);
+        if (enableDexingArtifactTransform) {
+            referenced.add(Scope.SUB_PROJECTS);
+            referenced.add(Scope.EXTERNAL_LIBRARIES);
+            referenced.add(InternalScope.MAIN_SPLIT);
+            if (includeFeaturesInScopes) {
+                referenced.add(InternalScope.FEATURES);
+            }
+        }
+
+        return referenced;
     }
 
     @NonNull
     @Override
     public Map<String, Object> getParameterInputs() {
         try {
-            Map<String, Object> params = Maps.newHashMapWithExpectedSize(4);
+            Map<String, Object> params = Maps.newHashMapWithExpectedSize(6);
             params.put("optimize", !dexOptions.getAdditionalParameters().contains("--no-optimize"));
             params.put("jumbo", dexOptions.getJumboMode());
             params.put("min-sdk-version", minSdkVersion);
             params.put("dex-builder-tool", dexer.name());
             params.put("instant-run", isInstantRun);
+            params.put("enable-dexing-artifact-transform", enableDexingArtifactTransform);
 
             return params;
         } catch (Exception e) {

@@ -26,11 +26,11 @@ import com.google.common.base.Joiner
 import com.google.common.collect.Iterables
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import org.gradle.api.logging.Logger
+import org.slf4j.Logger
 
 class MessageReceiverImpl constructor(
     private val errorFormatMode: ErrorFormatMode,
-        private val logger: Logger): MessageReceiver {
+    private val logger: Logger): MessageReceiver {
 
     private val mGson: Gson?
 

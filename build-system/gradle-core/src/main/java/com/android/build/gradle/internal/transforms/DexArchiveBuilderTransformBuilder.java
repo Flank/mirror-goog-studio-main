@@ -44,6 +44,7 @@ public class DexArchiveBuilderTransformBuilder {
     private Integer numberOfBuckets;
     private boolean includeFeaturesInScopes;
     private boolean isInstantRun;
+    private boolean enableDexingArtifactTransform;
 
     @NonNull
     public DexArchiveBuilderTransformBuilder setAndroidJarClasspath(
@@ -140,6 +141,13 @@ public class DexArchiveBuilderTransformBuilder {
     }
 
     @NonNull
+    public DexArchiveBuilderTransformBuilder setEnableDexingArtifactTransform(
+            boolean enableDexingArtifactTransform) {
+        this.enableDexingArtifactTransform = enableDexingArtifactTransform;
+        return this;
+    }
+
+    @NonNull
     public DexArchiveBuilderTransform createDexArchiveBuilderTransform() {
         Preconditions.checkNotNull(androidJarClasspath);
         Preconditions.checkNotNull(dexOptions);
@@ -162,6 +170,7 @@ public class DexArchiveBuilderTransformBuilder {
                 projectVariant,
                 numberOfBuckets,
                 includeFeaturesInScopes,
-                isInstantRun);
+                isInstantRun,
+                enableDexingArtifactTransform);
     }
 }

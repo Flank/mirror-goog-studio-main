@@ -84,7 +84,8 @@ enum class BooleanOption(
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false),
     ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true),
     INJECT_SDK_MAVEN_REPOS("android.injectSdkMavenRepos", true),
-    NAMESPACED_R_CLASS("android.namespacedRClass", false)
+    NAMESPACED_R_CLASS("android.namespacedRClass", false),
+    ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", false),
     ;
     constructor(
         propertyName: String,

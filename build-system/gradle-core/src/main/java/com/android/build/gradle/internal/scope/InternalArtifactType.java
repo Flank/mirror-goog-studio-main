@@ -37,6 +37,11 @@ public enum InternalArtifactType implements ArtifactType {
     // Packaged classes for AAR intermediate publishing
     // This is for external usage. For usage inside a module use ALL_CLASSES
     LIBRARY_CLASSES,
+
+    // External libraries' dex files only.
+    EXTERNAL_LIBS_DEX,
+    // The final dex files that will get packaged in the APK or bundle.
+    DEX,
     // the packaged classes published by APK modules.
     // This is for external usage. For usage inside a module use ALL_CLASSES
     APP_CLASSES,

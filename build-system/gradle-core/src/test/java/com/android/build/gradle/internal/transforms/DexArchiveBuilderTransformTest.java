@@ -814,6 +814,54 @@ public class DexArchiveBuilderTransformTest {
         assertThat(dexA.toPath().resolveSibling("C.dex")).exists();
     }
 
+    @Test
+    public void testDexingArtifactTransformOnlyProjectDexed() throws Exception {
+        Path folder = tmpDir.getRoot().toPath().resolve("dir_input");
+        dirWithEmptyClasses(folder, ImmutableList.of(PACKAGE + "/A"));
+        TransformInput projectInput =
+                TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .build();
+        Path folderExternal = tmpDir.getRoot().toPath().resolve("external");
+        dirWithEmptyClasses(folderExternal, ImmutableList.of(PACKAGE + "/B"));
+        TransformInput externalInput =
+                TransformTestHelper.directoryBuilder(folderExternal.toFile())
+                        .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .build();
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setTransformOutputProvider(outputProvider)
+                        .setInputs(ImmutableSet.of(projectInput, externalInput))
+                        .setIncremental(false)
+                        .build();
+
+        DexArchiveBuilderTransform transform =
+                new DexArchiveBuilderTransformBuilder()
+                        .setAndroidJarClasspath(Collections::emptyList)
+                        .setDexOptions(new DefaultDexOptions())
+                        .setMessageReceiver(new NoOpMessageReceiver())
+                        .setUserLevelCache(userCache)
+                        .setMinSdkVersion(21)
+                        .setDexer(dexerTool)
+                        .setUseGradleWorkers(false)
+                        .setInBufferSize(10)
+                        .setOutBufferSize(10)
+                        .setIsDebuggable(true)
+                        .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                        .setProjectVariant("myVariant")
+                        .setIncludeFeaturesInScope(false)
+                        .setEnableDexingArtifactTransform(true)
+                        .createDexArchiveBuilderTransform();
+
+        transform.transform(invocation);
+
+        File dex = Objects.requireNonNull(FileUtils.find(out.toFile(), "A.dex").orNull());
+        assertThat(dex.toPath().resolveSibling("A.dex")).exists();
+        assertThat(dex.toPath().resolveSibling("B.dex")).doesNotExist();
+    }
+
     @NonNull
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {

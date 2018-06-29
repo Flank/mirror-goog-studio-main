@@ -31,6 +31,8 @@ public interface StreamFilter {
 
     StreamFilter DEX = (types, scopes) -> types.contains(ExtendedContentType.DEX);
 
+    StreamFilter DEX_ARCHIVE = (types, scopes) -> types.contains(ExtendedContentType.DEX_ARCHIVE);
+
     StreamFilter RESOURCES =
             (types, scopes) ->
                     types.contains(QualifiedContent.DefaultContentType.RESOURCES)

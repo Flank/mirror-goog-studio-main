@@ -104,6 +104,8 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.DexMergingAction;
+import com.android.build.gradle.internal.tasks.DexMergingTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
@@ -2405,6 +2407,12 @@ public abstract class TaskManager {
         }
 
         boolean minified = variantScope.getCodeShrinker() != null;
+        boolean enableDexingArtifactTransform =
+                globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
+                        && extension.getTransforms().isEmpty()
+                        && !minified
+                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode()
+                        && variantScope.getJava8LangSupportType() == Java8LangSupport.UNUSED;
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransformBuilder()
@@ -2436,11 +2444,21 @@ public abstract class TaskManager {
                         .setIncludeFeaturesInScope(variantScope.consumesFeatureJars())
                         .setIsInstantRun(
                                 variantScope.getInstantRunBuildContext().isInInstantRunMode())
+                        .setEnableDexingArtifactTransform(enableDexingArtifactTransform)
                         .createDexArchiveBuilderTransform();
         transformManager
                 .addTransform(taskFactory, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
 
+        if (enableDexingArtifactTransform) {
+            createDexMergingWithArtifactTransforms(variantScope, dexingType);
+        } else {
+            createDexMerging(variantScope, dexingType);
+        }
+    }
+
+    private void createDexMerging(
+            @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
         boolean isDebuggable = variantScope.getVariantConfiguration().getBuildType().isDebuggable();
         if (dexingType != DexingType.LEGACY_MULTIDEX
                 && variantScope.getCodeShrinker() == null
@@ -2454,7 +2472,9 @@ public abstract class TaskManager {
                             variantScope.getGlobalScope().getMessageReceiver(),
                             DexMergerTransformCallable::new);
 
-            transformManager.addTransform(taskFactory, variantScope, externalLibsMergerTransform);
+            variantScope
+                    .getTransformManager()
+                    .addTransform(taskFactory, variantScope, externalLibsMergerTransform);
         }
 
         DexMergerTransform dexTransform =
@@ -2473,10 +2493,74 @@ public abstract class TaskManager {
                         variantScope.consumesFeatureJars(),
                         variantScope.getInstantRunBuildContext().isInInstantRunMode());
         Optional<TransformTask> dexTask =
-                transformManager.addTransform(taskFactory, variantScope, dexTransform);
-        // need to manually make dex task depend on MultiDexTransform since there's no stream
-        // consumption making this automatic
+                variantScope
+                        .getTransformManager()
+                        .addTransform(taskFactory, variantScope, dexTransform);
         dexTask.ifPresent(variantScope::addColdSwapBuildTask);
+    }
+
+    /**
+     * Set up dex merging tasks when artifact transforms are used.
+     *
+     * <p>External libraries are always merged. In case of a native multidex debuggable variant
+     * these dex files get packaged. In other cases, we will re-merge these files. Because this task
+     * will be almost always up-to-date, having a second merger run over the external libraries will
+     * not cause a performance regression. In addition to that, second dex merger will perform less
+     * I/O compared to reading all external library dex files individually.
+     *
+     * <p>When merging native multidex, debuggable variant, project's dex files are merged
+     * independently. Also, the library projects' dex files are merged independently.
+     *
+     * <p>For all other variants (release, mono-dex, legacy-multidex), we merge all dex files in a
+     * single invocation. This means that external libraries, library projects and project dex files
+     * will be merged in a single task.
+     */
+    private void createDexMergingWithArtifactTransforms(
+            @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
+        boolean produceSeparateOutputs =
+                dexingType == DexingType.NATIVE_MULTIDEX
+                        && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
+        taskFactory.create(
+                new DexMergingTask.ConfigAction(
+                        variantScope,
+                        DexMergingAction.MERGE_EXTERNAL_LIBS,
+                        DexingType.NATIVE_MULTIDEX,
+                        produceSeparateOutputs
+                                ? InternalArtifactType.DEX
+                                : InternalArtifactType.EXTERNAL_LIBS_DEX));
+
+        if (produceSeparateOutputs) {
+            DexMergingTask.ConfigAction mergeProject =
+                    new DexMergingTask.ConfigAction(
+                            variantScope, DexMergingAction.MERGE_PROJECT, dexingType);
+            taskFactory.create(mergeProject);
+
+            DexMergingTask.ConfigAction mergeLibraries =
+                    new DexMergingTask.ConfigAction(
+                            variantScope,
+                            DexMergingAction.MERGE_LIBRARY_PROJECTS,
+                            dexingType,
+                            InternalArtifactType.DEX);
+            taskFactory.create(mergeLibraries);
+        } else {
+            DexMergingTask.ConfigAction configAction =
+                    new DexMergingTask.ConfigAction(
+                            variantScope, DexMergingAction.MERGE_ALL, dexingType);
+            taskFactory.create(configAction);
+        }
+
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "final-dex")
+                                .addContentTypes(ExtendedContentType.DEX)
+                                .addScope(Scope.PROJECT)
+                                .setFileCollection(
+                                        variantScope
+                                                .getArtifacts()
+                                                .getFinalArtifactFiles(InternalArtifactType.DEX)
+                                                .get())
+                                .build());
     }
 
     @NonNull

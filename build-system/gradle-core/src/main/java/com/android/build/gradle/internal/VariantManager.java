@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
@@ -46,6 +47,9 @@ import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
+import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
+import com.android.build.gradle.internal.dependency.DexingTransform;
+import com.android.build.gradle.internal.dependency.DexingTransformKt;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.IdentityTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
@@ -381,6 +385,7 @@ public class VariantManager implements VariantModel {
                     variantScope.getFullVariantName(),
                     () -> createTasksForVariantData(variantScope));
         }
+
         taskManager.createSourceSetArtifactReportTask(globalScope);
 
         taskManager.createReportTasks(variantScopes);
@@ -855,6 +860,48 @@ public class VariantManager implements VariantModel {
         setupFlavorStrategy(schema);
     }
 
+    /** Configure artifact transforms that require variant-specific attribute information. */
+    private void configureVariantArtifactTransforms(
+            @NonNull Collection<VariantScope> variantScopes) {
+        DependencyHandler dependencies = project.getDependencies();
+
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)) {
+
+            for (DexingArtifactConfiguration artifactConfiguration :
+                    getDexingArtifactConfigurations(variantScopes)) {
+                dependencies.registerTransform(
+                        reg -> {
+                            reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                            reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.DEX.getType());
+
+                            reg.getFrom()
+                                    .attribute(
+                                            DexingTransformKt.ATTR_IS_DEBUGGABLE,
+                                            Boolean.toString(artifactConfiguration.isDebuggable()));
+                            reg.getTo()
+                                    .attribute(
+                                            DexingTransformKt.ATTR_IS_DEBUGGABLE,
+                                            Boolean.toString(artifactConfiguration.isDebuggable()));
+                            reg.getFrom()
+                                    .attribute(
+                                            DexingTransformKt.ATTR_MIN_SDK,
+                                            Integer.toString(artifactConfiguration.getMinSdk()));
+                            reg.getTo()
+                                    .attribute(
+                                            DexingTransformKt.ATTR_MIN_SDK,
+                                            Integer.toString(artifactConfiguration.getMinSdk()));
+                            reg.artifactTransform(
+                                    DexingTransform.class,
+                                    config -> {
+                                        config.params(
+                                                artifactConfiguration.getMinSdk(),
+                                                artifactConfiguration.isDebuggable());
+                                    });
+                        });
+            }
+        }
+    }
+
     private static <F, T> List<T> convert(
             @NonNull Collection<F> values,
             @NonNull Function<F, ?> function,
@@ -1043,6 +1090,8 @@ public class VariantManager implements VariantModel {
                         (List<ProductFlavor>) (List) flavorCombo.getFlavorList());
             }
         }
+
+        configureVariantArtifactTransforms(variantScopes);
     }
 
     private BaseVariantData createVariantDataForVariantType(

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.build.gradle.internal.tasks.DexMergingTaskTestKt.generateArchive;
 import static com.android.build.gradle.internal.transforms.DexMergerTransform.ANDROID_L_MAX_DEX_FILES;
 import static com.android.build.gradle.internal.transforms.DexMergerTransform.EXTERNAL_DEPS_DEX_FILES;
 import static com.android.testutils.truth.MoreTruth.assertThat;
@@ -35,15 +36,9 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.builder.dexing.ClassFileInput;
-import com.android.builder.dexing.ClassFileInputs;
-import com.android.builder.dexing.DexArchiveBuilder;
-import com.android.builder.dexing.DexArchiveBuilderConfig;
+import com.android.build.gradle.internal.tasks.DexMergingTaskTestKt;
 import com.android.builder.dexing.DexMergerTool;
-import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
-import com.android.dx.command.dexer.DxContext;
-import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
@@ -544,25 +539,8 @@ public class DexMergerTransformTest {
         return inputs;
     }
 
-    private void generateArchive(@NonNull Collection<String> classes, @NonNull Path dexArchivePath)
-            throws Exception {
-        Path classesInput = tmpDir.newFolder().toPath().resolve("input");
-        TestInputsGenerator.dirWithEmptyClasses(classesInput, classes);
-
-        // now convert to dex archive
-        DexArchiveBuilder builder =
-                DexArchiveBuilder.createDxDexBuilder(
-                        new DexArchiveBuilderConfig(
-                                new DxContext(System.out, System.err),
-                                true,
-                                10,
-                                0,
-                                DexerTool.DX,
-                                10,
-                                true));
-
-        try (ClassFileInput input = ClassFileInputs.fromPath(classesInput)) {
-            builder.convert(input.entries(p -> true), dexArchivePath, false);
-        }
+    private void generateArchive(
+            @NonNull Collection<String> classes, @NonNull Path dexArchivePath) {
+        DexMergingTaskTestKt.generateArchive(tmpDir, dexArchivePath, classes);
     }
 }

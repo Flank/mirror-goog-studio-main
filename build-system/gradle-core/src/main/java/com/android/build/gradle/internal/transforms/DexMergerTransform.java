@@ -74,6 +74,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This transform processes dex archives, {@link ExtendedContentType#DEX_ARCHIVE}, and merges them
@@ -250,6 +251,8 @@ public class DexMergerTransform extends Transform {
                     // ignore this one
                 }
             }
+            forkJoinPool.shutdown();
+            forkJoinPool.awaitTermination(100, TimeUnit.SECONDS);
         }
     }
 
