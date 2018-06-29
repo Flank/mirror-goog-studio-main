@@ -34,5 +34,9 @@ data class DisplayInfo(
     val scaleX: Float,
     val scaleY: Float,
     val contentDesc: String?
-)
+) {
+  fun getCopyAtOrigin() : DisplayInfo {
+    return this.copy(left = 0, top = 0)
+  }
+}
 

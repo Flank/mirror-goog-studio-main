@@ -108,7 +108,7 @@ data class ViewNode internal constructor(private val parent: ViewNode?, val name
     }
 
     override fun toString(): String {
-        return name + "@" + hash
+        return "$name@$hash"
     }
 
     override fun getChildAt(childIndex: Int): ViewNode {
