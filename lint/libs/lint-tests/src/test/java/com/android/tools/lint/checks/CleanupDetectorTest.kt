@@ -1688,6 +1688,82 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testUse1() {
+        // Regression test from 62377185
+        lint().files(
+            kotlin("""
+                package test.pkg
+                import android.content.ContentResolver
+
+                class MyTest {
+                    fun onCreate(resolver: ContentResolver) {
+                        val cursorOpened = resolver.query(null, null, null, null, null) // ERROR
+                        val cursorClosed = resolver.query(null, null, null, null, null) // OK
+                        cursorClosed.close()
+                        val cursorUsed = resolver.query(null, null, null, null, null) // OK
+                        cursorUsed.use {  }
+                        resolver.query(null, null, null, null, null).use { } // OK
+                    }
+                }
+            """).indented()
+        ).run().expect("""
+            src/test/pkg/MyTest.kt:6: Warning: This Cursor should be freed up after use with #close() [Recycle]
+                    val cursorOpened = resolver.query(null, null, null, null, null) // ERROR
+                                                ~~~~~
+            0 errors, 1 warnings
+        """)
+    }
+
+    fun testUse2() {
+        // Regression test from 79936228
+        lint().files(
+            kotlin(
+                """
+                    package test.pkg
+                    import android.content.ContentProviderClient
+                    import android.database.Cursor
+                    import android.net.Uri
+
+                    internal inline fun <T, U> ContentProviderClient.queryOne(
+                        uri: Uri,
+                        projection: Array<String>?,
+                        selection: String?,
+                        args: Array<String>?,
+                        wrapper: (Cursor) -> T,
+                        mapper: (T) -> U
+                    ): U? {
+                        return query(uri, projection, selection, args, null)?.use { cursor ->
+                            val wrapped = wrapper.invoke(cursor)
+                            if (cursor.moveToFirst()) {
+                                val result = mapper.invoke(wrapped)
+                                check(!cursor.moveToNext()) { "Cursor has more than one item" }
+                                return result
+                            }
+                            return null
+                        }
+                    }
+
+                    internal inline fun <T, U> ContentProviderClient.queryList(
+                        uri: Uri,
+                        projection: Array<String>?,
+                        selection: String?,
+                        args: Array<String>?,
+                        wrapper: (Cursor) -> T,
+                        mapper: (T) -> U
+                    ): List<U> {
+                        return query(uri, projection, selection, args, null)?.use { cursor ->
+                            val wrapped = wrapper.invoke(cursor)
+                            return List(cursor.count) { index ->
+                                cursor.moveToPosition(index)
+                                mapper.invoke(wrapped)
+                            }
+                        } ?: emptyList()
+                    }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;
