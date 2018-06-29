@@ -64,6 +64,7 @@ import org.jetbrains.uast.ULocalVariable;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UResolvable;
 import org.jetbrains.uast.UReturnExpression;
 import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UVariable;
@@ -367,8 +368,10 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                             // resolve returns null on these usages.
                             // Now make sure we're calling it on the right variable
                             UExpression operand = call.getReceiver();
-                            if (operand instanceof UReferenceExpression) {
-                                PsiElement resolved = ((UReferenceExpression) operand).resolve();
+                            if (getInstances().contains(operand)) {
+                                return true;
+                            } else if (operand instanceof UResolvable) {
+                                PsiElement resolved = ((UResolvable) operand).resolve();
                                 //noinspection SuspiciousMethodCalls
                                 if (resolved != null && getReferences().contains(resolved)) {
                                     return true;
@@ -478,8 +481,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                             // resolve returns null on these usages.
                             // Now make sure we're calling it on the right variable
                             UExpression operand = call.getReceiver();
-                            if (operand instanceof UReferenceExpression) {
-                                PsiElement resolved = ((UReferenceExpression) operand).resolve();
+                            if (operand instanceof UResolvable) {
+                                PsiElement resolved = ((UResolvable) operand).resolve();
                                 //noinspection SuspiciousMethodCalls
                                 if (resolved != null && mVariables.contains(resolved)) {
                                     return true;
@@ -498,9 +501,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                                 // Yes, called the right recycle() method; now make sure
                                 // we're calling it on the right variable
                                 UExpression operand = call.getReceiver();
-                                if (operand instanceof UReferenceExpression) {
-                                    PsiElement resolved =
-                                            ((UReferenceExpression) operand).resolve();
+                                if (operand instanceof UResolvable) {
+                                    PsiElement resolved = ((UResolvable) operand).resolve();
                                     //noinspection SuspiciousMethodCalls
                                     if (resolved != null && mVariables.contains(resolved)) {
                                         return true;
@@ -582,9 +584,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                                             while (operand instanceof UCallExpression) {
                                                 operand = ((UCallExpression) operand).getReceiver();
                                             }
-                                            if (operand instanceof UReferenceExpression) {
-                                                resolved =
-                                                        ((UReferenceExpression) operand).resolve();
+                                            if (operand instanceof UResolvable) {
+                                                resolved = ((UResolvable) operand).resolve();
                                                 //noinspection SuspiciousMethodCalls
                                                 if (resolved != null
                                                         && mVariables.contains(resolved)) {
@@ -722,9 +723,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
                                             while (operand instanceof UCallExpression) {
                                                 operand = ((UCallExpression) operand).getReceiver();
                                             }
-                                            if (operand instanceof UReferenceExpression) {
-                                                resolved =
-                                                        ((UReferenceExpression) operand).resolve();
+                                            if (operand instanceof UResolvable) {
+                                                resolved = ((UResolvable) operand).resolve();
                                                 //noinspection SuspiciousMethodCalls
                                                 if (resolved != null
                                                         && mVariables.contains(resolved)) {
@@ -980,8 +980,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             // Look for escapes
             if (!mEscapes) {
                 for (UExpression expression : call.getValueArguments()) {
-                    if (expression instanceof UReferenceExpression) {
-                        PsiElement resolved = ((UReferenceExpression) expression).resolve();
+                    if (expression instanceof UResolvable) {
+                        PsiElement resolved = ((UResolvable) expression).resolve();
                         //noinspection SuspiciousMethodCalls
                         if (resolved != null && mVariables.contains(resolved)) {
                             boolean wasEscaped = mEscapes;
@@ -1011,8 +1011,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         public boolean visitVariable(UVariable variable) {
             if (variable instanceof ULocalVariable) {
                 UExpression initializer = variable.getUastInitializer();
-                if (initializer instanceof UReferenceExpression) {
-                    PsiElement resolved = ((UReferenceExpression) initializer).resolve();
+                if (initializer instanceof UResolvable) {
+                    PsiElement resolved = ((UResolvable) initializer).resolve();
                     //noinspection SuspiciousMethodCalls
                     if (resolved != null && mVariables.contains(resolved)) {
                         mVariables.add(variable.getPsi());
@@ -1035,8 +1035,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             boolean clearLhs = false;
 
             UExpression rhs = expression.getRightOperand();
-            if (rhs instanceof UReferenceExpression) {
-                PsiElement resolved = ((UReferenceExpression) rhs).resolve();
+            if (rhs instanceof UResolvable) {
+                PsiElement resolved = ((UResolvable) rhs).resolve();
                 //noinspection SuspiciousMethodCalls
                 if (resolved != null && mVariables.contains(resolved)) {
                     clearLhs = false;
@@ -1066,8 +1066,8 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
         @Override
         public boolean visitReturnExpression(UReturnExpression node) {
             UExpression returnValue = node.getReturnExpression();
-            if (returnValue instanceof UReferenceExpression) {
-                PsiElement resolved = ((UReferenceExpression) returnValue).resolve();
+            if (returnValue instanceof UResolvable) {
+                PsiElement resolved = ((UResolvable) returnValue).resolve();
                 //noinspection SuspiciousMethodCalls
                 if (resolved != null && mVariables.contains(resolved)) {
                     mEscapes = true;
