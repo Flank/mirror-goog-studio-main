@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.java.model.impl
 
-package com.android.java.model.builder
+import nl.jqno.equalsverifier.EqualsVerifier
+import org.junit.Test
 
-import javax.inject.Inject
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
-
-/** Custom plugin for Java Library.  */
-class JavaLibraryPlugin @Inject
-internal constructor(private val registry: ToolingModelBuilderRegistry) : Plugin<Project> {
-
-  override fun apply(project: Project) {
-    registry.register(JavaModelBuilder())
-    registry.register(ArtifactModelBuilder())
-    registry.register(GradlePluginModelBuilder())
-  }
+/**
+ * Test class for [GradlePluginModelImpl].
+ */
+class GradlePluginModelImplTest {
+    @Test
+    @Throws(Exception::class)
+    fun equals() {
+        EqualsVerifier.forClass(GradlePluginModelImpl::class.java).verify()
+    }
 }

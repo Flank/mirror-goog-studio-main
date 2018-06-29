@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.java.model.builder
+package com.android.java.model.impl
 
-import javax.inject.Inject
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import com.android.java.model.GradlePluginModel
+import java.io.Serializable
 
-/** Custom plugin for Java Library.  */
-class JavaLibraryPlugin @Inject
-internal constructor(private val registry: ToolingModelBuilderRegistry) : Plugin<Project> {
+/**
+ * Implementation of the [GradlePluginModel] model object.
+ */
+data class GradlePluginModelImpl(
+  private val myGradlePluginList: Collection<String>) : GradlePluginModel, Serializable {
 
-  override fun apply(project: Project) {
-    registry.register(JavaModelBuilder())
-    registry.register(ArtifactModelBuilder())
-    registry.register(GradlePluginModelBuilder())
+  override fun getGraldePluginList(): Collection<String> {
+    return myGradlePluginList
+  }
+
+  companion object {
+    private const val serialVersionUID = 1L
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.java.model.builder
 
-import javax.inject.Inject
-import org.gradle.api.Plugin
+import com.android.java.model.GradlePluginModel
+import com.android.java.model.impl.GradlePluginModelImpl
 import org.gradle.api.Project
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.gradle.tooling.provider.model.ToolingModelBuilder
 
-/** Custom plugin for Java Library.  */
-class JavaLibraryPlugin @Inject
-internal constructor(private val registry: ToolingModelBuilderRegistry) : Plugin<Project> {
+class GradlePluginModelBuilder : ToolingModelBuilder {
 
-  override fun apply(project: Project) {
-    registry.register(JavaModelBuilder())
-    registry.register(ArtifactModelBuilder())
-    registry.register(GradlePluginModelBuilder())
+  override fun canBuild(modelName: String): Boolean {
+    return modelName == GradlePluginModel::class.java.name
+  }
+
+  override fun buildAll(modelName: String, project: Project): Any? {
+    return GradlePluginModelImpl(project.plugins.map { it.javaClass.name })
   }
 }
