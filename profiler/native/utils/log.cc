@@ -57,6 +57,11 @@ void Log::Handle(const char level, const char *fmt, va_list args) {
   printf("%s[%c]: ", kTag, level);
   vprintf(fmt, args);
   printf("\n");
+  // If debuging threading issues with test uncomment line below
+  // to force log lines to flush immediatly.
+  // Note: This may impact chance of threading issue to occur however
+  // you will have log statements printed as they get called.
+  //fflush(stdout);
 }
 
 }  // namespace profiler

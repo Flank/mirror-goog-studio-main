@@ -90,13 +90,16 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
               buffer_size_arg_);
     isRunning = IsAtraceRunning();
   }
+  // This is checked for in the thread below.
+  // Setting the value here ensures the thread reads the correct value
+  // before executing.
+  is_profiling_ = isRunning;
   if (!isRunning) {
     assert(error != nullptr);
     error->append("Failed to run atrace start.");
   } else {
     atrace_thread_ = std::thread(&AtraceManager::DumpData, this);
   }
-  is_profiling_ = isRunning;
   return isRunning;
 }
 

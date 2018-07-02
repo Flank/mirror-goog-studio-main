@@ -37,7 +37,7 @@ class FakeAtraceManager final : public AtraceManager {
   FakeAtraceManager(
       Clock* clock,
       std::function<void(const std::string&, int)> write_data_callback)
-      : AtraceManager(clock, 50), write_data_callback_(write_data_callback) {
+      : AtraceManager(clock, 1), write_data_callback_(write_data_callback) {
     ResetState();
   }
   FakeAtraceManager(Clock* clock)
