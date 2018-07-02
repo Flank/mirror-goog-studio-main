@@ -42,10 +42,6 @@ enum class BooleanOption(
 
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", true),
-    ENABLE_D8_MAIN_DEX_LIST(
-            "android.enableD8MainDexList",
-            true,
-            DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
 
     ENABLE_R8(
         "android.enableR8",

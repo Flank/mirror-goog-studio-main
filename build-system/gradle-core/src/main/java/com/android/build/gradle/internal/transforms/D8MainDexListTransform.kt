@@ -29,8 +29,6 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.transforms.MainDexListTransform.ProguardInput.INPUT_JAR
-import com.android.build.gradle.internal.transforms.MainDexListTransform.ProguardInput.LIBRARY_JAR
 import com.android.builder.multidex.D8MainDexList
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -113,9 +111,9 @@ class D8MainDexListTransform(
     override fun transform(invocation: TransformInvocation) {
         logger.verbose("Generating the main dex list using D8.")
         try {
-            val inputs = MainDexListTransform.getByInputType(invocation)
-            val programFiles = inputs[INPUT_JAR]!!.map { it.toPath() }
-            val libraryFiles = inputs[LIBRARY_JAR]!!.map { it.toPath() } + bootClasspath.get()
+            val inputs = getByInputType(invocation)
+            val programFiles = inputs[ProguardInput.INPUT_JAR]!!
+            val libraryFiles = inputs[ProguardInput.LIBRARY_JAR]!! + bootClasspath.get()
             logger.verbose("Program files: %s", programFiles.joinToString())
             logger.verbose("Library files: %s", libraryFiles.joinToString())
             logger.verbose(
@@ -126,13 +124,14 @@ class D8MainDexListTransform(
                 listOfNotNull(manifestProguardRules.singleFile().toPath(), userProguardRules)
             val mainDexClasses = mutableSetOf<String>()
 
-            val keepRules = MainDexListTransform.getPlatformRules().map { it -> "-keep " + it }
             mainDexClasses.addAll(
-                    D8MainDexList.generate(
-                            keepRules,
-                            proguardRules,
-                            programFiles,
-                            libraryFiles))
+                D8MainDexList.generate(
+                    getPlatformRules(),
+                    proguardRules,
+                    programFiles,
+                    libraryFiles
+                )
+            )
 
             if (userClasses != null) {
                 mainDexClasses.addAll(Files.readAllLines(userClasses))
@@ -143,6 +142,44 @@ class D8MainDexListTransform(
         } catch (e: D8MainDexList.MainDexListException) {
             throw TransformException("Error while generating the main dex list.", e)
         }
-
     }
+
+    private fun getByInputType(invocation: TransformInvocation): Map<ProguardInput, List<Path>> {
+        val libraryScopes = Sets.immutableEnumSet(Scope.PROVIDED_ONLY, Scope.TESTED_CODE)
+
+        val (inputs, libraries) =
+                invocation.referencedInputs
+                    .flatMap { it.directoryInputs + it.jarInputs }
+                    .asSequence().partition {
+                        !it.scopes.minus(
+                            libraryScopes
+                        ).isEmpty()
+                    }
+
+        return mapOf(
+            ProguardInput.INPUT_JAR to inputs.map { it.file.toPath() },
+            ProguardInput.LIBRARY_JAR to libraries.map { it.file.toPath() })
+    }
+}
+
+internal fun getPlatformRules(): List<String> = listOf(
+    "-keep public class * extends android.app.Instrumentation {\n"
+            + "  <init>(); \n"
+            + "  void onCreate(...);\n"
+            + "  android.app.Application newApplication(...);\n"
+            + "  void callApplicationOnCreate(android.app.Application);\n"
+            + "  Z onException(java.lang.Object, java.lang.Throwable);\n"
+            + "}",
+    "-keep public class * extends android.app.Application { "
+            + "  <init>();\n"
+            + "  void attachBaseContext(android.content.Context);\n"
+            + "}",
+    "-keep public class * extends android.app.backup.BackupAgent { <init>(); }",
+    "-keep public class * implements java.lang.annotation.Annotation { *;}",
+    "-keep public class * extends android.test.InstrumentationTestCase { <init>(); }"
+)
+
+private enum class ProguardInput {
+    INPUT_JAR,
+    LIBRARY_JAR
 }

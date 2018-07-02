@@ -137,7 +137,6 @@ import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.FixStackFramesTransform;
 import com.android.build.gradle.internal.transforms.JacocoTransform;
-import com.android.build.gradle.internal.transforms.MainDexListTransform;
 import com.android.build.gradle.internal.transforms.MainDexListWriter;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
@@ -2295,14 +2294,7 @@ public abstract class TaskManager {
             // ---------
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
-            Transform multiDexTransform;
-
-            if (projectOptions.get(BooleanOption.ENABLE_D8_MAIN_DEX_LIST)) {
-                multiDexTransform = new D8MainDexListTransform(variantScope);
-            } else {
-                multiDexTransform =
-                        new MainDexListTransform(variantScope, extension.getDexOptions());
-            }
+            Transform multiDexTransform = new D8MainDexListTransform(variantScope);
             transformManager
                     .addTransform(taskFactory, variantScope, multiDexTransform)
                     .ifPresent(

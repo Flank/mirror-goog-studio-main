@@ -74,6 +74,9 @@ enum class RemovedOptions(
             "This property has no effect and AAPT2 from maven.google.com is now always used. "
                     + "If you wish to use a local executable of AAPT2 please use the "
                     + "'android.aapt2FromMavenOverride' option."),
+    ENABLE_D8_MAIN_DEX_LIST(
+        "android.enableD8MainDexList",
+        "This property has no effect, D8 is always used to compute the main dex list."),
     ;
 
     override val status: Option.Status

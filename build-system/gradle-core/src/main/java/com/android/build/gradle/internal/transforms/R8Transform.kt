@@ -180,7 +180,7 @@ class R8Transform(
         val mainDexListConfig = MainDexListConfig(
                 mainDexRulesFiles.files.map { it.toPath() },
                 mainDexListFiles.files.map { it.toPath() },
-                MainDexListTransform.getPlatformRules().map { it -> "-keep $it" }
+                getPlatformRules()
         )
 
         val output = outputProvider.getContentLocation(

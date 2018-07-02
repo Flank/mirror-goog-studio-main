@@ -47,7 +47,6 @@ public class MultiDexConnectedTest {
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         project.executor()
-                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8)
                 .run(
                         "assembleIcsDebug",
                         "assembleIcsDebugAndroidTest",
@@ -55,7 +54,6 @@ public class MultiDexConnectedTest {
                         "assembleLollipopDebugAndroidTest");
         adb.exclusiveAccess();
         project.executor()
-                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8)
                 .run("connectedCheck");
     }
 }

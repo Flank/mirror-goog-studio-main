@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -58,7 +57,6 @@ import org.junit.runners.Parameterized;
 public class MultiDexTest {
 
     enum MainDexListTool {
-        DX,
         D8,
         R8,
     }
@@ -77,46 +75,15 @@ public class MultiDexTest {
     @Parameterized.Parameter public MainDexListTool tool;
 
     @Test
-    public void checkNormalBuild() throws Exception {
-        // D8/R8 main dex list tool has a better understanding which classes should be kept
-        // so this test is overapproximation in D8 case.
-        Assume.assumeTrue(tool == MainDexListTool.DX);
-        checkNormalBuild(true);
-    }
-
-    @Test
     public void checkBuildWithoutKeepRuntimeAnnotatedClasses() throws Exception {
-        checkNormalBuild(false);
-    }
-
-    @Test
-    public void checkApplicationNameAdded() throws IOException, InterruptedException {
-        // noinspection ResultOfMethodCallIgnored
-        FileUtils.join(project.getTestDir(), "src/ics/AndroidManifest.xml").delete();
-        executor().run("processIcsDebugManifest");
-        assertThat(
-                        FileUtils.join(
-                                project.getTestDir(),
-                                "build/intermediates/merged_manifests/icsDebug/processIcsDebugManifest/merged/AndroidManifest.xml"))
-                .contains("android:name=\"android.support.multidex.MultiDexApplication\"");
-    }
-
-    private void checkNormalBuild(boolean keepRuntimeAnnotatedClasses) throws Exception {
-
-        if (!keepRuntimeAnnotatedClasses) {
-            TestFileUtils.appendToFile(
-                    project.getBuildFile(),
-                    "\nandroid.dexOptions.keepRuntimeAnnotatedClasses false");
-        }
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "\nandroid.dexOptions.keepRuntimeAnnotatedClasses false");
 
         executor()
                 .run("assembleDebug", "makeApkFromBundleForIcsDebug", "assembleAndroidTest");
 
         List<String> mandatoryClasses =
                 Lists.newArrayList("Lcom/android/tests/basic/MyAnnotation;");
-        if (keepRuntimeAnnotatedClasses) {
-            mandatoryClasses.add("Lcom/android/tests/basic/ClassWithRuntimeAnnotation;");
-        }
 
         assertMainDexContains("debug", mandatoryClasses);
 
@@ -157,6 +124,18 @@ public class MultiDexTest {
                 .containsClass("Lcom/android/tests/basic/NotUsed;");
         assertThat(project.getApk("ics", "debug"))
                 .containsClass("Lcom/android/tests/basic/DeadCode;");
+    }
+
+    @Test
+    public void checkApplicationNameAdded() throws IOException, InterruptedException {
+        // noinspection ResultOfMethodCallIgnored
+        FileUtils.join(project.getTestDir(), "src/ics/AndroidManifest.xml").delete();
+        executor().run("processIcsDebugManifest");
+        assertThat(
+                        FileUtils.join(
+                                project.getTestDir(),
+                                "build/intermediates/merged_manifests/icsDebug/processIcsDebugManifest/merged/AndroidManifest.xml"))
+                .contains("android:name=\"android.support.multidex.MultiDexApplication\"");
     }
 
     private Apk getStandaloneBundleApk() throws IOException {
@@ -300,8 +279,6 @@ public class MultiDexTest {
 
     @NonNull
     private GradleTaskExecutor executor() {
-        return project.executor()
-                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8)
-                .with(BooleanOption.ENABLE_R8, tool == MainDexListTool.R8);
+        return project.executor().with(BooleanOption.ENABLE_R8, tool == MainDexListTool.R8);
     }
 }
