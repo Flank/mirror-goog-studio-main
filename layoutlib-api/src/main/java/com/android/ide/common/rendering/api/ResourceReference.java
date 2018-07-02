@@ -39,19 +39,10 @@ public final class ResourceReference implements Serializable {
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String name) {
+        assert name.indexOf(':') < 0 : "Qualified name is not allowed: " + name;
         this.namespace = namespace;
         this.resourceType = resourceType;
         this.name = name;
-    }
-
-    /**
-     * Used by layoutlib still. TODO(namespaces): remove this.
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public ResourceReference(@NonNull String name, boolean isFramework) {
-        this(ResourceNamespace.fromBoolean(isFramework), ResourceType.LAYOUT, name);
     }
 
     @Deprecated
@@ -60,10 +51,22 @@ public final class ResourceReference implements Serializable {
         this(ResourceNamespace.fromBoolean(isFramework), type, name);
     }
 
+    /** A shorthand for creating a {@link ResourceType#ATTR} resource reference. */
+    public static ResourceReference attr(
+            @NonNull ResourceNamespace namespace, @NonNull String name) {
+        return new ResourceReference(namespace, ResourceType.ATTR, name);
+    }
+
     /** A shorthand for creating a {@link ResourceType#STYLE} resource reference. */
     public static ResourceReference style(
             @NonNull ResourceNamespace namespace, @NonNull String name) {
         return new ResourceReference(namespace, ResourceType.STYLE, name);
+    }
+
+    /** A shorthand for creating a {@link ResourceType#STYLEABLE} resource reference. */
+    public static ResourceReference styleable(
+            @NonNull ResourceNamespace namespace, @NonNull String name) {
+        return new ResourceReference(namespace, ResourceType.STYLEABLE, name);
     }
 
     /** Returns the name of the resource, as defined in the XML. */
