@@ -27,7 +27,7 @@ import org.jf.dexlib2.util.DexUtil;
 public final class DexFiles {
 
     public static final int MAX_SUPPORTED_DEX_VERSION = 38;
-    public static final int API = 15;
+    private static final Opcodes DEFAULT_OPCODES = Opcodes.getDefault();
 
     private DexFiles() {}
 
@@ -39,15 +39,15 @@ public final class DexFiles {
     @NonNull
     public static DexBackedDexFile getDexFile(@NonNull byte[] contents) {
         try {
-            return new DexBackedDexFile(Opcodes.forApi(API), contents);
+            return new DexBackedDexFile(DEFAULT_OPCODES, contents);
         } catch (DexUtil.UnsupportedFile e) {
             // b/65186612: if dex version is too new,
             // fallback by trying the latest dex version we do support.
             if (HeaderItem.getVersion(contents, 0) > MAX_SUPPORTED_DEX_VERSION) {
                 contents[4] = '0';
-                contents[5] = '3';
-                contents[6] = '8';
-                return new DexBackedDexFile(Opcodes.forApi(API), contents);
+                contents[5] = '0' + MAX_SUPPORTED_DEX_VERSION / 10 % 10;
+                contents[6] = '0' + MAX_SUPPORTED_DEX_VERSION % 10;
+                return new DexBackedDexFile(DEFAULT_OPCODES, contents);
             } else {
                 throw e;
             }
