@@ -39,7 +39,7 @@ public class JacocoWithButterKnifeTest {
 
     @Test
     public void build() throws Exception {
-        project.execute("transformClassesWithJacocoForDebug");
+        project.execute("jacocoDebug");
 
         File javaFile =
                 FileUtils.join(

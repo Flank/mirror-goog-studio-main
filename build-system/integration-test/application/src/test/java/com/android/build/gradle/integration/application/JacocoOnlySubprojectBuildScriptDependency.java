@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.Rule;
 import org.junit.Test;
 
-
 /**
  * Check Jacoco doesn't get broken with annotation processor that dumps .java files in the
  * compiler out folder.
@@ -34,6 +33,6 @@ public class JacocoOnlySubprojectBuildScriptDependency {
 
     @Test
     public void build() throws Exception {
-        project.execute("transformClassesWithJacocoForDebug");
+        project.execute("jacocoDebug");
     }
 }

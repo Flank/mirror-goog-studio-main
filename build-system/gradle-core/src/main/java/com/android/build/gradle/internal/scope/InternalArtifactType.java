@@ -56,6 +56,8 @@ public enum InternalArtifactType implements ArtifactType {
     // Full jar with both classes and java res.
     FULL_JAR,
 
+    JACOCO_INSTRUMENTED_CLASSES,
+
     // --- android res ---
     // output of the resource merger ready for aapt.
     MERGED_RES,

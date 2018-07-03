@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,176 +13,186 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.transforms;
+
+package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.Format;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.SecondaryFile;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.workers.IsolationMode;
+import org.gradle.workers.WorkerExecutor;
 import org.jacoco.core.instr.Instrumenter;
 import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
 
-/**
- * Jacoco Transform
- */
-public class JacocoTransform extends Transform {
+/** Delegate for {@link JacocoTask}. */
+public class JacocoTaskDelegate {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile(".*\\.class$");
     // META-INF/*.kotlin_module files need to be copied to output so they show up
     // in the intermediate classes jar.
     private static final Pattern KOTLIN_MODULE_PATTERN =
             Pattern.compile("^META-INF/.*\\.kotlin_module$");
-    @NonNull private final Configuration jacocoAntTaskConfiguration;
 
-    public JacocoTransform(@NonNull Configuration jacocoAntTaskConfiguration) {
+    @NonNull private final FileCollection jacocoAntTaskConfiguration;
+    @NonNull private final File output;
+    @NonNull private final BuildableArtifact inputClasses;
+
+    public JacocoTaskDelegate(
+            @NonNull FileCollection jacocoAntTaskConfiguration,
+            @NonNull File output,
+            @NonNull BuildableArtifact inputClasses) {
         this.jacocoAntTaskConfiguration = jacocoAntTaskConfiguration;
+        this.output = output;
+        this.inputClasses = inputClasses;
     }
 
-    @NonNull
-    @Override
-    public String getName() {
-        return "jacoco";
+    public void run(@NonNull WorkerExecutor executor, @NonNull IncrementalTaskInputs inputs)
+            throws IOException {
+        for (File file : inputClasses.getFiles()) {
+            if (file.exists()) {
+                Preconditions.checkState(
+                        file.isDirectory(),
+                        "Jacoco instrumentation supports only directory inputs: %s",
+                        file.toString());
+            }
+        }
+
+        if (inputs.isIncremental()) {
+            processIncrementally(executor, inputs);
+        } else {
+            for (File file : inputClasses.getFiles()) {
+                Map<Action, List<File>> nonIncToProcess =
+                        getFilesForInstrumentationNonIncrementally(file, output);
+                executor.submit(
+                        JacocoWorkerAction.class,
+                        workerConfiguration -> {
+                            workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
+                            workerConfiguration.classpath(jacocoAntTaskConfiguration.getFiles());
+                            workerConfiguration.setParams(nonIncToProcess, file, output);
+                        });
+            }
+        }
+
+        executor.await();
     }
 
-    @NonNull
-    @Override
-    public Set<QualifiedContent.ContentType> getInputTypes() {
-        return TransformManager.CONTENT_CLASS;
-    }
+    private void processIncrementally(
+            @NonNull WorkerExecutor executor, @NonNull IncrementalTaskInputs inputs)
+            throws IOException {
+        Multimap<Path, Path> basePathToRemove =
+                Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
+        Multimap<Path, Path> basePathToProcess =
+                Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
 
-    @NonNull
-    @Override
-    public Set<QualifiedContent.Scope> getScopes() {
-        // only run on the project classes
-        return Sets.immutableEnumSet(QualifiedContent.Scope.PROJECT);
-    }
+        Set<Path> baseDirs = new HashSet<>(inputClasses.getFiles().size());
+        for (File file : inputClasses.getFiles()) {
+            baseDirs.add(file.toPath());
+        }
 
-    @Override
-    public boolean isIncremental() {
-        return true;
-    }
+        inputs.outOfDate(
+                info -> {
+                    Path file = info.getFile().toPath();
+                    Path baseDir = findBase(baseDirs, file);
+                    if (info.isAdded()) {
+                        basePathToProcess.put(baseDir, file);
+                    } else if (info.isModified()) {
+                        basePathToRemove.put(baseDir, file);
+                        basePathToProcess.put(baseDir, file);
+                    } else if (info.isRemoved()) {
+                        basePathToRemove.put(baseDir, file);
+                    }
+                });
+        inputs.removed(
+                info -> {
+                    Path file = info.getFile().toPath();
+                    Path baseDir = findBase(baseDirs, file);
+                    basePathToRemove.put(baseDir, file);
+                });
 
-    @Override
-    public boolean isCacheable() {
-        return true;
-    }
-
-    @NonNull
-    @Override
-    public Collection<SecondaryFile> getSecondaryFiles() {
-        return ImmutableList.of(SecondaryFile.nonIncremental(jacocoAntTaskConfiguration));
-    }
-
-    @Override
-    public void transform(@NonNull TransformInvocation invocation)
-            throws IOException, TransformException, InterruptedException {
-
-        for (TransformInput input : invocation.getInputs()) {
-            // we don't want jar inputs.
-            Preconditions.checkState(input.getJarInputs().isEmpty());
-
-            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                File inputDir = directoryInput.getFile();
-
-                File outputDir =
-                        invocation
-                                .getOutputProvider()
-                                .getContentLocation(
-                                        directoryInput.getName(),
-                                        getOutputTypes(),
-                                        getScopes(),
-                                        Format.DIRECTORY);
-                FileUtils.mkdirs(outputDir);
-
-                Map<Action, List<File>> toProcess;
-                if (invocation.isIncremental()) {
-                    toProcess =
-                            getFilesForInstrumentationIncrementally(
-                                    inputDir, outputDir, directoryInput.getChangedFiles());
-                } else {
-                    toProcess = getFilesForInstrumentationNonIncrementally(inputDir, outputDir);
+        // remove old output
+        for (Path basePath : basePathToRemove.keys()) {
+            for (Path toRemove : basePathToRemove.get(basePath)) {
+                Action action = calculateAction(toRemove.toFile(), basePath.toFile());
+                if (action == Action.IGNORE) {
+                    continue;
                 }
 
-                invocation
-                        .getContext()
-                        .getWorkerExecutor()
-                        .submit(
-                                JacocoWorkerAction.class,
-                                workerConfiguration -> {
-                                    workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
-                                    workerConfiguration.classpath(
-                                            jacocoAntTaskConfiguration.getFiles());
-                                    workerConfiguration.setParams(toProcess, inputDir, outputDir);
-                                });
+                Path outputPath = getOutputPath(basePath, toRemove, output.toPath());
+                PathUtils.deleteRecursivelyIfExists(outputPath);
             }
         }
-        invocation.getContext().getWorkerExecutor().await();
+
+        // process changes
+        for (Path basePath : basePathToProcess.keys()) {
+            Map<Action, List<File>> toProcess = new EnumMap<>(Action.class);
+            for (Path changed : basePathToProcess.get(basePath)) {
+                Action action = calculateAction(changed.toFile(), basePath.toFile());
+                if (action == Action.IGNORE) {
+                    continue;
+                }
+
+                List<File> byAction = toProcess.getOrDefault(action, new ArrayList<>());
+                byAction.add(changed.toFile());
+                toProcess.put(action, byAction);
+            }
+
+            executor.submit(
+                    JacocoWorkerAction.class,
+                    workerConfiguration -> {
+                        workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
+                        workerConfiguration.classpath(jacocoAntTaskConfiguration.getFiles());
+                        workerConfiguration.setParams(toProcess, basePath.toFile(), output);
+                    });
+        }
     }
 
     @NonNull
-    private static Map<Action, List<File>> getFilesForInstrumentationIncrementally(
-            @NonNull File inputDir,
-            @NonNull File outputDir,
-            @NonNull Map<File, Status> changedFiles)
-            throws IOException {
-        Map<Action, List<File>> toProcess = Maps.newHashMap();
-        for (Map.Entry<File, Status> changedInput : changedFiles.entrySet()) {
-            File inputFile = changedInput.getKey();
-            Action fileAction = calculateAction(inputFile, inputDir);
-            if (fileAction == Action.IGNORE) {
-                continue;
-            }
-            Preconditions.checkState(fileAction == Action.COPY || fileAction == Action.INSTRUMENT);
-
-            switch (changedInput.getValue()) {
-                case REMOVED:
-                    File outputFile =
-                            new File(
-                                    outputDir,
-                                    FileUtils.relativePossiblyNonExistingPath(inputFile, inputDir));
-                    FileUtils.delete(outputFile);
-                    break;
-                case ADDED:
-                    // fall through
-                case CHANGED:
-                    List<File> files = toProcess.getOrDefault(fileAction, new ArrayList<>());
-                    files.add(inputFile);
-                    toProcess.put(fileAction, files);
-                    break;
-                case NOTCHANGED:
-                    // do nothing
-                    break;
+    private static Path findBase(@NonNull Set<Path> baseDirs, @NonNull Path file) {
+        for (Path baseDir : baseDirs) {
+            if (file.startsWith(baseDir)) {
+                return baseDir;
             }
         }
-        return toProcess;
+
+        throw new RuntimeException(
+                String.format(
+                        "Unable to find base directory for %s. List of base dirs: %s",
+                        file,
+                        baseDirs.stream().map(Path::toString).collect(Collectors.joining(","))));
     }
 
+    @NonNull
+    private static Path getOutputPath(
+            @NonNull Path baseDir, @NonNull Path inputFile, @NonNull Path outputBaseDir) {
+        Path relativePath = baseDir.relativize(inputFile);
+        return outputBaseDir.resolve(relativePath);
+    }
+
+    @NonNull
     private static Map<Action, List<File>> getFilesForInstrumentationNonIncrementally(
             @NonNull File inputDir, @NonNull File outputDir) throws IOException {
         Map<Action, List<File>> toProcess = Maps.newHashMap();

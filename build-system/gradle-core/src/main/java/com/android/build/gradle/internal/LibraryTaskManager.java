@@ -197,7 +197,7 @@ public class LibraryTaskManager extends TaskManager {
 
         // ----- Code Coverage first -----
         if (instrumented) {
-            createJacocoTransform(variantScope);
+            createJacocoTask(variantScope);
         }
 
         // ----- External Transforms -----

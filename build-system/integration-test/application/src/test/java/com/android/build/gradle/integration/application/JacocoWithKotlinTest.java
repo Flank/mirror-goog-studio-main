@@ -18,16 +18,12 @@ package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
-import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.utils.FileUtils;
-import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
-import java.util.function.Predicate;
-import org.junit.After;
+import java.nio.file.Files;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,28 +50,18 @@ public class JacocoWithKotlinTest {
                         + "}");
     }
 
-    @After
-    public void cleanUp() {
-        project = null;
-    }
-
     @Test
     public void build() throws IOException, InterruptedException {
-        project.execute("transformClassesWithJacocoForDebug");
+        project.execute("jacocoDebug");
 
         File outputDir =
-                FileUtils.join(project.getIntermediatesDir(), "transforms", "jacoco", "debug");
-        TransformOutputContent content = new TransformOutputContent(outputDir);
+                FileUtils.join(project.getIntermediatesDir(), "jacoco_instrumented_classes/debug");
 
-        Predicate<SubStream> containsHelloWorld =
-                subStream ->
-                        FileUtils.getAllFiles(content.getLocation(subStream))
-                                .transform(File::getName)
-                                .contains("HelloWorld.class");
-
-        // There's one stream for Java classes and one for Kotlin classes. Exactly one should
-        // contain HelloWorld.
-        Truth.assertThat(Lists.newArrayList(content).stream().filter(containsHelloWorld).count())
+        // check HelloWorld class is in the Jacoco task output.
+        Truth.assertThat(
+                        Files.walk(outputDir.toPath())
+                                .filter(f -> f.getFileName().toString().equals("HelloWorld.class"))
+                                .count())
                 .isEqualTo(1);
     }
 }

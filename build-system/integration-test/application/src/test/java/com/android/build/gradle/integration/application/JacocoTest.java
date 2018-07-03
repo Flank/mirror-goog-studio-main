@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class JacocoTransformTest {
+public class JacocoTest {
 
     private static final String CLASS_NAME = "com/example/B";
     private static final String CLASS_FULL_TYPE = "L" + CLASS_NAME + ";";

@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -323,7 +324,53 @@ public class TransformManager extends FilterableStreamCollection {
         }
 
         Set<ContentType> requestedTypes = transform.getInputTypes();
+        consumeStreams(requestedScopes, requestedTypes, inputStreams);
 
+        // create the output stream.
+        // create single combined output stream for all types and scopes
+        Set<ContentType> outputTypes = transform.getOutputTypes();
+
+        File outRootFolder =
+                FileUtils.join(
+                        buildDir,
+                        StringHelper.toStrings(
+                                AndroidProject.FD_INTERMEDIATES,
+                                FD_TRANSFORMS,
+                                transform.getName(),
+                                scope.getDirectorySegments()));
+
+        // create the output
+        IntermediateStream outputStream =
+                IntermediateStream.builder(
+                                project,
+                                transform.getName() + "-" + scope.getFullVariantName(),
+                                taskName)
+                        .addContentTypes(outputTypes)
+                        .addScopes(requestedScopes)
+                        .setRootLocation(outRootFolder)
+                        .build();
+        // and add it to the list of available streams for next transforms.
+        streams.add(outputStream);
+
+        return outputStream;
+    }
+
+    /**
+     * <p>This method will remove all streams matching the specified scopes and types from the
+     * available streams.
+     *
+     * @deprecated Use this method only for migration from transforms to tasks.
+     */
+    @Deprecated
+    public void consumeStreams(
+            @NonNull Set<? super Scope> requestedScopes, @NonNull Set<ContentType> requestedTypes) {
+        consumeStreams(requestedScopes, requestedTypes, new ArrayList<>());
+    }
+
+    private void consumeStreams(
+            @NonNull Set<? super Scope> requestedScopes,
+            @NonNull Set<ContentType> requestedTypes,
+            @NonNull List<TransformStream> inputStreams) {
         // list to hold the list of unused streams in the manager after everything is done.
         // they'll be put back in the streams collection, along with the new outputs.
         List<TransformStream> oldStreams = Lists.newArrayListWithExpectedSize(streams.size());
@@ -373,34 +420,9 @@ public class TransformManager extends FilterableStreamCollection {
             }
         }
 
-        // create the output stream.
-        // create single combined output stream for all types and scopes
-        Set<ContentType> outputTypes = transform.getOutputTypes();
-
-        File outRootFolder = FileUtils.join(buildDir, StringHelper.toStrings(
-                AndroidProject.FD_INTERMEDIATES,
-                FD_TRANSFORMS,
-                transform.getName(),
-                scope.getDirectorySegments()));
-
         // update the list of available streams.
         streams.clear();
         streams.addAll(oldStreams);
-
-        // create the output
-        IntermediateStream outputStream =
-                IntermediateStream.builder(
-                                project,
-                                transform.getName() + "-" + scope.getFullVariantName(),
-                                taskName)
-                        .addContentTypes(outputTypes)
-                        .addScopes(requestedScopes)
-                        .setRootLocation(outRootFolder)
-                        .build();
-        // and add it to the list of available streams for next transforms.
-        streams.add(outputStream);
-
-        return outputStream;
     }
 
     @NonNull

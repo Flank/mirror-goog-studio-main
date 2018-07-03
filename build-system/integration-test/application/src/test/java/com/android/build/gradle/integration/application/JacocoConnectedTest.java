@@ -36,7 +36,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class JacocoTransformConnectedTest {
+public class JacocoConnectedTest {
     @Rule
     public final GradleTestProject project =
             GradleTestProject.builder()

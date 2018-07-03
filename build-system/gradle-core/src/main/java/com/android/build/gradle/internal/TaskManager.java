@@ -108,6 +108,7 @@ import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
+import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
@@ -135,7 +136,6 @@ import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.FixStackFramesTransform;
-import com.android.build.gradle.internal.transforms.JacocoTransform;
 import com.android.build.gradle.internal.transforms.MainDexListWriter;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
@@ -2117,7 +2117,7 @@ public abstract class TaskManager {
 
             Configuration jacocoAntConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
-                            project, getJacocoVersion(testVariantScope));
+                            project, JacocoTask.getJacocoVersion(testVariantScope));
             JacocoReportTask reportTask =
                     taskFactory.create(
                             new JacocoReportTask.ConfigAction(
@@ -2194,7 +2194,7 @@ public abstract class TaskManager {
                         && !config.getType().isForTesting()
                         && !variantScope.getInstantRunBuildContext().isInInstantRunMode();
         if (isTestCoverageEnabled) {
-            createJacocoTransform(variantScope);
+            createJacocoTask(variantScope);
         }
 
         maybeCreateDesugarTask(variantScope, config.getMinSdkVersion(), transformManager);
@@ -2609,7 +2609,8 @@ public abstract class TaskManager {
             }
 
             String jacocoAgentRuntimeDependency =
-                    JacocoConfigurations.getAgentRuntimeDependency(getJacocoVersion(variantScope));
+                    JacocoConfigurations.getAgentRuntimeDependency(
+                            JacocoTask.getJacocoVersion(variantScope));
             project.getDependencies()
                     .add(
                             variantScope.getVariantDependencies().getRuntimeClasspath().getName(),
@@ -2623,22 +2624,13 @@ public abstract class TaskManager {
         }
     }
 
-    @NonNull
-    public String getJacocoVersion(@NonNull VariantScope scope) {
-        if (scope.getDexer() == DexerTool.DX) {
-            return JacocoConfigurations.VERSION_FOR_DX;
-        } else {
-            return extension.getJacoco().getVersion();
-        }
-    }
-
     /**
      * If a fix in Desugar should be enabled to handle broken bytecode produced by older Jacoco, see
      * http://b/62623509.
      */
     private boolean enableDesugarBugFixForJacoco(@NonNull VariantScope scope) {
         try {
-            GradleVersion current = GradleVersion.parse(getJacocoVersion(scope));
+            GradleVersion current = GradleVersion.parse(JacocoTask.getJacocoVersion(scope));
             return JacocoConfigurations.MIN_WITHOUT_BROKEN_BYTECODE.compareTo(current) > 0;
         } catch (Throwable ignored) {
             // Cannot determine using version comparison, avoid passing the flag.
@@ -2646,14 +2638,28 @@ public abstract class TaskManager {
         }
     }
 
-    public void createJacocoTransform(
-            @NonNull final VariantScope variantScope) {
-        JacocoTransform jacocoTransform =
-                new JacocoTransform(
-                        JacocoConfigurations.getJacocoAntTaskConfiguration(
-                                project, getJacocoVersion(variantScope)));
+    public void createJacocoTask(@NonNull final VariantScope variantScope) {
+        variantScope
+                .getTransformManager()
+                .consumeStreams(
+                        ImmutableSet.of(Scope.PROJECT),
+                        ImmutableSet.of(DefaultContentType.CLASSES));
+        taskFactory.create(new JacocoTask.ConfigAction(variantScope));
 
-        variantScope.getTransformManager().addTransform(taskFactory, variantScope, jacocoTransform);
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "jacoco-instrumented-classes")
+                                .addContentTypes(DefaultContentType.CLASSES)
+                                .addScope(Scope.PROJECT)
+                                .setFileCollection(
+                                        variantScope
+                                                .getArtifacts()
+                                                .getFinalArtifactFiles(
+                                                        InternalArtifactType
+                                                                .JACOCO_INSTRUMENTED_CLASSES)
+                                                .get())
+                                .build());
     }
 
     private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
