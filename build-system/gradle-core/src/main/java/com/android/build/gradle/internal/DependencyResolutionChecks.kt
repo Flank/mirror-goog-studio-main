@@ -57,7 +57,8 @@ private class EarlyDependencyResolutionListener(
         if (configuration.name == "classpath") {
             return
         }
-        if (project.findProperty(BooleanOption.IDE_BUILD_MODEL_ONLY.propertyName) == true) {
+        if (project.findProperty(BooleanOption.IDE_BUILD_MODEL_ONLY.propertyName)
+                ?.let { BooleanOption.IDE_BUILD_MODEL_ONLY.parse(it) } == true) {
             return
         }
 

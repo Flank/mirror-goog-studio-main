@@ -55,5 +55,9 @@ class DependencyCheckerTest {
             .contains("Configuration 'debugRuntimeClasspath' was resolved")
         assertThat(warning.stdout)
             .contains(app.buildFile.absolutePath.toString() + ":")
+
+        // Assert no exceptions while fetching the models
+        val models = app.model().fetchAndroidProjects()
+        assertThat(models).isNotNull()
     }
 }
