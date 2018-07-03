@@ -14,32 +14,19 @@
  * limitations under the License.
  *
  */
-#ifndef HOTSWAP_H
-#define HOTSWAP_H
 
-#include "jni.h"
-#include "jvmti.h"
-
-#include <string>
+#ifndef JNI_SIGNATURE_H
+#define JNI_SIGNATURE_H
 
 namespace swapper {
 
-class HotSwap {
- public:
-  HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
+struct JniSignature {
+  const char* name = nullptr;
+  const char* signature = nullptr;
 
-  // Invokes JVMTI RedefineClasses with on all .dex files in the 'dir' and
-  // delete them afterward.
-  bool DoHotSwap(const std::string& dir) const;
-
- private:
-  // Invoke JVMTI RedefineClasses on the class with the given 'name' using the
-  // content from 'location'
-  bool RedefineClass(const std::string& name,
-                     const std::string& location) const;
-  jvmtiEnv* jvmti_;
-  JNIEnv* jni_;
+  JniSignature(const char* n, const char* s) : name(n), signature(s) {}
 };
 
 }  // namespace swapper
+
 #endif

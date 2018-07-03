@@ -43,7 +43,7 @@ jobject GetThreadClassLoader(JNIEnv* env) {
   return Loader;
 }
 
-bool HotSwap::RedefineClass(string& name, string& location) {
+bool HotSwap::RedefineClass(const string& name, const string& location) const {
   jclass classLoaderClass = jni_->FindClass("java/lang/ClassLoader");
   jmethodID gFindClassMethod = jni_->GetMethodID(
       classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
@@ -95,7 +95,7 @@ bool HotSwap::RedefineClass(string& name, string& location) {
   }
 }
 
-bool HotSwap::DoHotSwap(string& dexdir) {
+bool HotSwap::DoHotSwap(const string& dexdir) const {
   bool success = true;
   const char* dexloc = dexdir.c_str();
   struct dirent* de;

@@ -14,32 +14,28 @@
  * limitations under the License.
  *
  */
-#ifndef HOTSWAP_H
-#define HOTSWAP_H
+
+#ifndef JNI_UTIL_H
+#define JNI_UTIL_H
 
 #include "jni.h"
 #include "jvmti.h"
 
 #include <string>
 
+using std::string;
+
 namespace swapper {
 
-class HotSwap {
- public:
-  HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
+// Sets the parameter jni to point to the current jni function table.
+bool GetJni(JavaVM* vm, JNIEnv*& jni);
 
-  // Invokes JVMTI RedefineClasses with on all .dex files in the 'dir' and
-  // delete them afterward.
-  bool DoHotSwap(const std::string& dir) const;
+// Sets the parameter jvmti to point to the current jvmti function table.
+bool GetJvmti(JavaVM* vm, jvmtiEnv*& jvmti);
 
- private:
-  // Invoke JVMTI RedefineClasses on the class with the given 'name' using the
-  // content from 'location'
-  bool RedefineClass(const std::string& name,
-                     const std::string& location) const;
-  jvmtiEnv* jvmti_;
-  JNIEnv* jni_;
-};
+// Gets an std::string from a jstring. Does not delete the jni local jstring.
+string JStringToString(JNIEnv* jni, jstring str);
 
 }  // namespace swapper
+
 #endif

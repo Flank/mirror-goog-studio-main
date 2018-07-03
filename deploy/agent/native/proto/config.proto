@@ -1,0 +1,17 @@
+syntax = "proto3";
+package swapper.proto;
+
+message Config {
+
+  // The path to the jar containing instrumentation data.
+  string instrumentation_jar = 1;
+
+  // The application package.
+  string package_name = 2;
+
+  // If true, restarts the current activity after a successful hot-swap.
+  bool restart_activity = 3;
+
+  // The classes to be hot-swapped.
+  string dex_dir = 4;
+}

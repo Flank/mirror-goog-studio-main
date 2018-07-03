@@ -18,9 +18,11 @@
 #ifndef JNI_CLASS_H
 #define JNI_CLASS_H
 
+#define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
+
 #include "jni.h"
 #include "jni_object.h"
-#include "jni_util.h"
+#include "jni_signature.h"
 
 namespace swapper {
 
@@ -35,23 +37,15 @@ class JniClass {
 
   ~JniClass() { jni_->DeleteLocalRef(class_); }
 
-  jmethodID GetMethodID(const JniSignature& method) {
-    return jni_->GetMethodID(class_, method.name, method.signature);
-  }
-
-  jfieldID GetFieldID(const JniSignature& field) {
-    return jni_->GetFieldID(class_, field.name, field.signature);
-  }
-
   template <typename T>
-  T CallStatic(const JniSignature& method) {
+  T CallStaticMethod(const JniSignature& method) {
     jmethodID id =
         jni_->GetStaticMethodID(class_, method.name, method.signature);
     return JniCallStaticMethod<T>(id, {});
   }
 
   template <typename T>
-  T CallStatic(const JniSignature& method, jvalue* args) {
+  T CallStaticMethod(const JniSignature& method, jvalue* args) {
     jmethodID id =
         jni_->GetStaticMethodID(class_, method.name, method.signature);
     return JniCallStaticMethod<T>(id, args);
@@ -81,33 +75,21 @@ class JniClass {
   }
 };
 
-// Add specializations as needed.
-
-// Get static int fields.
 template <>
-jint JniClass::JniGetStaticField(jfieldID field) {
-  return jni_->GetStaticIntField(class_, field);
-}
+jint JniClass::JniGetStaticField(jfieldID);
 
-// Call static void methods.
 template <>
-void JniClass::JniCallStaticMethod(jmethodID method, jvalue* args) {
-  jni_->CallStaticVoidMethodA(class_, method, args);
-}
+void JniClass::JniCallStaticMethod(jmethodID, jvalue*);
 
-// Call static int methods.
 template <>
-jint JniClass::JniCallStaticMethod(jmethodID method, jvalue* args) {
-  return jni_->CallStaticIntMethodA(class_, method, args);
-}
+jint JniClass::JniCallStaticMethod(jmethodID, jvalue*);
 
-// Call static object methods.
 template <>
-JniObject JniClass::JniCallStaticMethod(jmethodID method, jvalue* args) {
-  jobject obj = jni_->CallStaticObjectMethodA(class_, method, args);
-  return JniObject(jni_, obj);
-}
+jboolean JniClass::JniCallStaticMethod(jmethodID, jvalue*);
 
-} // namespace swapper
+template <>
+JniObject JniClass::JniCallStaticMethod(jmethodID, jvalue*);
+
+}  // namespace swapper
 
 #endif

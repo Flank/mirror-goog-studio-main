@@ -210,6 +210,7 @@ java_import(
     neverlink = 1,
     visibility = [
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
+        "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/instant-run/instant-run-server:__pkg__",
         "//tools/base/profiler/app:__pkg__",
     ],

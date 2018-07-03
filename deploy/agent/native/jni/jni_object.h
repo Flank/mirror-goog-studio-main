@@ -1,9 +1,31 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 #ifndef JNI_OBJECT_H
 #define JNI_OBJECT_H
 
+#define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
+
 #include "jni.h"
-#include "jni_util.h"
-#include "utils/log.h"
+#include "jni_signature.h"
+
+#include <string>
+
+using std::string;
 
 namespace swapper {
 
@@ -21,16 +43,16 @@ class JniObject {
     jni_->DeleteLocalRef(class_);
   }
 
-  jobject GetJObject() { return object_; }
+  string ToString();
 
   template <typename T>
-  T Call(const JniSignature& method) {
+  T CallMethod(const JniSignature& method) {
     jmethodID id = jni_->GetMethodID(class_, method.name, method.signature);
     return JniCallMethod<T>(id, {});
   }
 
   template <typename T>
-  T Call(const JniSignature& method, jvalue* args) {
+  T CallMethod(const JniSignature& method, jvalue* args) {
     jmethodID id = jni_->GetMethodID(class_, method.name, method.signature);
     return JniCallMethod<T>(id, args);
   }
@@ -71,33 +93,21 @@ class JniObject {
   }
 };
 
-// Add specializations as needed.
-
-// Call void methods.
 template <>
-void JniObject::JniCallMethod(jmethodID method, jvalue* args) {
-  jni_->CallVoidMethodA(object_, method, args);
-}
+void JniObject::JniCallMethod(jmethodID, jvalue*);
 
-// Call object methods.
 template <>
-JniObject JniObject::JniCallMethod(jmethodID method, jvalue* args) {
-  jobject obj = jni_->CallObjectMethodA(object_, method, args);
-  return JniObject(jni_, obj);
-}
+jobject JniObject::JniCallMethod(jmethodID, jvalue*);
 
-// Get int fields.
 template <>
-jint JniObject::JniGetField(jfieldID field) {
-  return jni_->GetIntField(object_, field);
-}
+JniObject JniObject::JniCallMethod(jmethodID, jvalue*);
 
-// Set int fields.
 template <>
-void JniObject::JniSetField(jfieldID field, jint value) {
-  jni_->SetIntField(object_, field, value);
-}
+jint JniObject::JniGetField(jfieldID);
 
-} // namespace swapper
+template <>
+void JniObject::JniSetField(jfieldID, jint);
+
+}  // namespace swapper
 
 #endif

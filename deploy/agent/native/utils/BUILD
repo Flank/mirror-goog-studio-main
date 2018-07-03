@@ -1,6 +1,6 @@
 load("//tools/base/bazel:android.bzl", "select_android")
 
-package(default_visibility = ["//tools/base/deploy/agent/native:__pkg__"])
+package(default_visibility = ["//tools/base/deploy/agent/native:all"])
 
 cc_library(
     name = "agent_utils",

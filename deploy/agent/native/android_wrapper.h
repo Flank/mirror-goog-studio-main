@@ -14,32 +14,38 @@
  * limitations under the License.
  *
  */
-#ifndef HOTSWAP_H
-#define HOTSWAP_H
+
+#ifndef ANDROID_WRAPPER_H
+#define ANDROID_WRAPPER_H
 
 #include "jni.h"
-#include "jvmti.h"
 
-#include <string>
+#include "jni/jni_signature.h"
 
 namespace swapper {
-
-class HotSwap {
+class AndroidWrapper {
  public:
-  HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
+  AndroidWrapper(JNIEnv* jni) : jni_(jni) {}
 
-  // Invokes JVMTI RedefineClasses with on all .dex files in the 'dir' and
-  // delete them afterward.
-  bool DoHotSwap(const std::string& dir) const;
+  void RestartActivity(const char* package);
 
  private:
-  // Invoke JVMTI RedefineClasses on the class with the given 'name' using the
-  // content from 'location'
-  bool RedefineClass(const std::string& name,
-                     const std::string& location) const;
-  jvmtiEnv* jvmti_;
-  JNIEnv* jni_;
-};
+  jint GetUserHandle();
+  jint GetFlags();
 
+  JNIEnv* jni_;
+
+  static const char* USER_HANDLE;
+  static const char* PACKAGE_MANAGER;
+  static const char* ACTIVITY_THREAD;
+  static const JniSignature MY_USER_ID;
+  static const JniSignature GET_SHARED_LIBRARY_FILES;
+  static const JniSignature GET_PACKAGE_MANAGER;
+  static const JniSignature GET_APPLICATION_INFO;
+  static const JniSignature CURRENT_ACTIVITY_THREAD;
+  static const JniSignature GET_APPLICATION_THREAD;
+  static const JniSignature SCHEDULE_APP_INFO_CHANGED;
+};
 }  // namespace swapper
+
 #endif

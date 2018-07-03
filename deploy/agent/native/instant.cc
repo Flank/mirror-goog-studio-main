@@ -18,128 +18,176 @@
 #include "jni.h"
 #include "jvmti.h"
 
-#include <string>
+#include <memory>
+#include <vector>
 
+#include "android_wrapper.h"
 #include "capabilities.h"
+#include "config.h"
 #include "hotswap.h"
-#include "jni_class.h"
-#include "jni_identifiers.h"
-#include "jni_object.h"
-#include "jni_util.h"
+#include "instrumenter.h"
+#include "native_callbacks.h"
 
+#include "jni/jni_class.h"
+#include "jni/jni_object.h"
+#include "jni/jni_util.h"
+
+#include "proto/config.pb.h"
 #include "utils/log.h"
 
 using std::string;
+using std::unique_ptr;
+using std::vector;
+
+using swapper::proto::Config;
 
 namespace swapper {
 
-// TODO: Make the agent more C++ like and not use globals.
-string dexdir("");
-
-// Retrieve the current user ID.
-jint GetUserHandle(JNIEnv* jni) {
-  JniClass userHandle(jni, USER_HANDLE);
-  return userHandle.CallStatic<jint>(MY_USER_ID);
+const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
+const char* kHandlerWrapperClass =
+    "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
+    
+// Event that fires when the agent loads a class file.
+extern "C" void JNICALL Agent_ClassFileLoadHook(
+    jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined, jobject loader,
+    const char* name, jobject protection_domain, jint class_data_len,
+    const unsigned char* class_data, jint* new_class_data_len,
+    unsigned char** new_class_data) {
+  TransformClass(jvmti, name, class_data_len, class_data, new_class_data_len,
+                 new_class_data);
 }
 
-// Retrieve the flags needed to get application info.
-jint GetFlags(JNIEnv* jni) {
-  JniClass packageManager(jni, PACKAGE_MANAGER);
-  return packageManager.GetStaticField<jint>(GET_SHARED_LIBRARY_FILES);
+bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
+                            const string& instrumentation_jar) {
+  // Check for the existence of a breadcrumb class, indicating a previous agent
+  // has already loaded instrumentation. If no previous agent has run on this
+  // jvm, add our instrumentation classes to the bootstrap class loader.
+  jclass unused = jni->FindClass(kBreadcrumbClass);
+  if (unused == nullptr) {
+    Log::V("No existing instrumentation found. Loading instrmentation from %s",
+           instrumentation_jar.c_str());
+    jni->ExceptionClear();
+    if (jvmti->AddToBootstrapClassLoaderSearch(instrumentation_jar.c_str()) !=
+        JVMTI_ERROR_NONE) {
+      return false;
+    }
+  } else {
+    jni->DeleteLocalRef(unused);
+  }
+  return true;
 }
 
-// Enqueue an application info changed event.
-void ScheduleAppInfoChanged(JNIEnv* jni, jvalue* appInfoArgs) {
-  JniClass activityThread(jni, ACTIVITY_THREAD);
+bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni,
+                const string& instrumentation_jar) {
+  // The breadcrumb class stores some checks between runs of the agent.
+  // We can't use the class from the FindClass call because it may not have
+  // actually found the class.
+  JniClass breadcrumb(jni, kBreadcrumbClass);
 
-  JniObject applicationInfo =
-      activityThread.CallStatic<JniObject>(GET_PACKAGE_MANAGER)
-          .Call<JniObject>(GET_APPLICATION_INFO, appInfoArgs);
+  // Ensure that the jar hasn't changed since we last instrumented. If it has,
+  // fail out for now. This is an important scenario to guard against, since it
+  // would likely cause silent failures.
+  jvalue jar_path = {.l = jni->NewStringUTF(instrumentation_jar.c_str())};
+  jboolean matches = breadcrumb.CallStaticMethod<jboolean>(
+      {"checkHash", "(Ljava/lang/String;)Z"}, &jar_path);
+  jni->DeleteLocalRef(jar_path.l);
 
-  JniObject applicationThread =
-      activityThread.CallStatic<JniObject>(CURRENT_ACTIVITY_THREAD)
-          .Call<JniObject>(GET_APPLICATION_THREAD);
-
-  jvalue args = {.l = applicationInfo.GetJObject()};
-  applicationThread.Call<void>(SCHEDULE_APP_INFO_CHANGED, &args);
-}
-
-extern "C" void JNICALL MethodEntry(jvmtiEnv* jvmti, JNIEnv* jni,
-                                    jthread current_thread, jmethodID method) {
-  static jmethodID handler = 0;
-  static jint messageSlot = 0;
-  static jint appInfoChanged = 0;
-
-  // Do this work once. It's safe to hold onto method ids and constant values.
-  if (handler == 0) {
-    JniClass activityThreadH(jni, ACTIVITY_THREAD_HANDLER);
-
-    handler = activityThreadH.GetMethodID(HANDLE_MESSAGE);
-    messageSlot = GetLocalVariableSlot(jvmti, handler, "msg");
-    appInfoChanged = activityThreadH.GetStaticField<jint>(APP_INFO_CHANGED);
-  }
-
-  // If we're not in the correct method, return quickly. This handler is called
-  // for every method entry that occurs in the JVM; thus, even if it will only
-  // be on for a short time, it is probably best to exit early.
-  if (method != handler) {
-    return;
-  }
-
-  // Retrieve the message object from the current (0th) stack frame.
-  jobject msg;
-  jvmti->GetLocalObject(current_thread, 0, messageSlot, &msg);
-
-  // Check to see if the message is an application info changed message.
-  JniObject message(jni, msg);
-  if (message.GetField<jint>(MESSAGE_WHAT) != appInfoChanged) {
-    return;
-  }
-
-  HotSwap codeswap(jvmti, jni);
-  // If hot swap fails, translate the message into an exit event. This is
-  // for illustrative purposes only; in reality, we'll change it to a -1.
-  if (!codeswap.DoHotSwap(dexdir)) {
-    Log::V("Changing event from app-info update to app close.");
-    message.SetField(MESSAGE_WHAT, 111);
-    jvmti->SetLocalObject(current_thread, 0, messageSlot, message.GetJObject());
-  }
-
-  // Disable this event, because keeping it on is expensive.
-  jvmti->SetEventNotificationMode(JVMTI_DISABLE, JVMTI_EVENT_METHOD_ENTRY,
-                                  NULL);
-  // We can't detach from the VM, so just relinquish all our capabilities.
-  jvmti->RelinquishCapabilities(&CODE_AND_RESOURCE_SWAP);
-}
-
-// Initializer for JVMTI and JNI.
-bool Initialize(JavaVM* vm, jvmtiEnv*& jvmti, JNIEnv*& jni) {
-  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
-    Log::E("Error initializing JVMTI");
+  if (!matches) {
+    Log::E(
+        "The instrumentation jar at %s does not match the jar previously used "
+        "to instrument. The application must be restarted.",
+        instrumentation_jar.c_str());
     return false;
   }
 
-  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
-    Log::E("Error initializing JNI");
-    return false;
-  }
+  // Check if we need to instrument, or if a previous agent successfully did.
+  if (!breadcrumb.CallStaticMethod<jboolean>(
+          {"isFinishedInstrumenting", "()Z"})) {
+    vector<NativeBinding> native_bindings;
 
-  // Always assume code and resource swap, for now.
-  if (jvmti->AddCapabilities(&CODE_AND_RESOURCE_SWAP) != JVMTI_ERROR_NONE) {
-    Log::E("Error setting capabilities");
-    return false;
-  }
+    native_bindings.emplace_back(kHandlerWrapperClass,
+                                 "getApplicationInfoChangedValue", "()I",
+                                 (void*)&Native_GetAppInfoChanged);
 
-  jvmtiEventCallbacks callbacks;
-  callbacks.MethodEntry = MethodEntry;
+    native_bindings.emplace_back(kHandlerWrapperClass, "tryRedefineClasses",
+                                 "(Ljava/lang/String;)Z",
+                                 (void*)&Native_TryRedefineClasses);
 
-  if (jvmti->SetEventCallbacks(&callbacks, sizeof(jvmtiEventCallbacks)) !=
-      JVMTI_ERROR_NONE) {
-    Log::E("Error setting event callbacks");
-    return false;
+    RegisterNatives(jni, native_bindings);
+
+    // Instrument the activity thread handler using RetransformClasses.
+    // TODO: If we instrument more, make this more general.
+
+    AddTransform("android/app/ActivityThread$H",
+                 new ActivityThreadHandlerTransform());
+
+    jclass activity_thread_h = jni->FindClass("android/app/ActivityThread$H");
+    if (jni->ExceptionCheck()) {
+      Log::E("Could not find activity thread handler");
+      jni->ExceptionClear();
+      return false;
+    }
+
+    jvmti->SetEventNotificationMode(JVMTI_ENABLE,
+                                    JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL);
+    jvmti->RetransformClasses(1, &activity_thread_h);
+    jvmti->SetEventNotificationMode(JVMTI_DISABLE,
+                                    JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL);
+
+    jni->DeleteLocalRef(activity_thread_h);
+
+    DeleteTransforms();
+
+    // Mark that we've finished instrumentation.
+    breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
   }
 
   return true;
+}
+
+jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
+  HotSwap code_swap(jvmti, jni);
+  if (!code_swap.DoHotSwap(config.dex_dir())) {
+    // TODO: Log meaningful error.
+    Log::E("Hot swap failed.");
+    return JNI_ERR;
+  }
+
+  return JNI_OK;
+}
+
+jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
+  jvmtiEventCallbacks callbacks;
+  callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
+
+  if (jvmti->SetEventCallbacks(&callbacks, sizeof(jvmtiEventCallbacks)) !=
+      JVMTI_ERROR_NONE) {
+    Log::E("Error setting event callbacks.");
+    return JNI_ERR;
+  }
+
+  if (!LoadInstrumentationJar(jvmti, jni,
+                              config.instrumentation_jar().c_str())) {
+    Log::E("Error loading instrumentation jar.");
+    return JNI_ERR;
+  }
+
+  if (!Instrument(jvmti, jni, config.instrumentation_jar().c_str())) {
+    Log::E("Error instrumenting application.");
+    return JNI_ERR;
+  }
+
+  // Enable hot-swapping via the callback.
+  JniClass handlerWrapper(jni, kHandlerWrapperClass);
+  jvalue dex_path = {.l = jni->NewStringUTF(config.dex_dir().c_str())};
+  handlerWrapper.CallStaticMethod<void>(
+      {"prepareForHotSwap", "(Ljava/lang/String;)V"}, &dex_path);
+
+  // Perform hot swap through the activity restart callback path.
+  AndroidWrapper wrapper(jni);
+  wrapper.RestartActivity(config.package_name().c_str());
+
+  return JNI_OK;
 }
 
 // Event that fires when the agent hooks onto a running VM.
@@ -148,53 +196,37 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
-  if (!Initialize(vm, jvmti, jni)) {
-    Log::E("Could not start agent");
+  auto config = unique_ptr<Config>(ParseConfig(input));
+  if (!config) {
+    Log::E("Could not parse config");
     return JNI_ERR;
   }
 
-  Log::V("Agent started");
-
-  // TODO(acleung): Find a better way to pass arguments to the agent. May a PB?
-  // For now we just comma split options...
-  string options(input);
-
-  // Argument #1: The package to update.
-  auto pos = options.find(',');
-  if (pos == string::npos) {
-    Log::E(
-        "Invalid agruements to start instant run agent: %s"
-        "Expecting <appid>,<dex_location>",
-        input);
+  if (!GetJvmti(vm, jvmti)) {
+    Log::E("Error retrieving JVMTI function table.");
     return JNI_ERR;
   }
-  string appid = options.substr(0, pos);
 
-  // Argument #2: The directory on the device that contains all the dex files to
-  dexdir = options.substr(pos + 1, options.length());
+  if (!GetJni(vm, jni)) {
+    Log::E("Error retrieving JNI function table.");
+    return JNI_ERR;
+  }
 
-  Log::V("app id %s", appid.c_str());
-  if (appid.length() > 0 && appid != "<none>") {
-    // Schedule update app-info first. It will handle hotswap when at the call
-    // back.
-    jvalue args[3];
-    args[0].l = jni->NewStringUTF(appid.c_str());
-    args[1].i = GetFlags(jni);
-    args[2].i = GetUserHandle(jni);
+  if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
+    Log::E("Error setting capabilities.");
+    return JNI_ERR;
+  }
 
-    jvmti->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_METHOD_ENTRY,
-                                    NULL);
-    ScheduleAppInfoChanged(jni, args);
+  jint ret = JNI_ERR;
+  if (config->restart_activity()) {
+    ret = DoHotSwapAndRestart(jvmti, jni, *config);
   } else {
-    // Otherwise, directly hotswap right here.
-    HotSwap codeswap(jvmti, jni);
-    if (!codeswap.DoHotSwap(dexdir)) {
-      // TODO: Return meaningful status.
-      return JNI_ERR;
-    }
+    ret = DoHotSwap(jvmti, jni, *config);
   }
 
-  return JNI_OK;
+  jvmti->RelinquishCapabilities(&REQUIRED_CAPABILITIES);
+  Log::V("Finished.");
+  return ret;
 }
 
 }  // namespace swapper

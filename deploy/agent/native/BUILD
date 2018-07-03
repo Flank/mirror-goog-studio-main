@@ -1,18 +1,27 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
+# Used for build rule visibility.
+package_group(
+    name = "all",
+    packages = ["//tools/base/deploy/agent/..."],
+)
+
 cc_binary(
     name = "libswap.so",
     srcs = [
+        "android_wrapper.cc",
+        "android_wrapper.h",
         "capabilities.h",
+        "config.h",
         "hotswap.cc",
         "hotswap.h",
         "instant.cc",
-        "jni_class.h",
-        "jni_identifiers.h",
-        "jni_object.h",
-        "jni_util.h",
+        "instrumenter.cc",
+        "instrumenter.h",
+        "native_callbacks.cc",
+        "native_callbacks.h",
     ],
-    copts = ANDROID_COPTS,
+    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/agent/native"],
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
     tags = [
@@ -20,7 +29,10 @@ cc_binary(
     ],
     visibility = ["//tools/base/deploy/swapper:__pkg__"],
     deps = [
+        "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/deploy/agent/native/jni:agent_jni",
+        "//tools/base/deploy/agent/native/proto:agent_cc_proto",
         "//tools/base/deploy/agent/native/utils:agent_utils",
     ],
 )
