@@ -128,11 +128,7 @@ class FakeDependencySet: DependencySet {
         TODO("not implemented")
     }
 
-    override fun configureEachLater(p0: Action<in Dependency>?) {
-        TODO("not implemented")
-    }
-
-    override fun <S : Dependency?> configureEachLater(p0: Class<S>?, p1: Action<in S>?) {
+    override fun configureEach(p0: Action<in Dependency>?) {
         TODO("not implemented")
     }
 

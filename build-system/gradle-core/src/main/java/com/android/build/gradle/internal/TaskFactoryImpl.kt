@@ -48,9 +48,8 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer): TaskFactory {
 
     override fun <T : Task> create(configAction: TaskConfigAction<T>): T {
         val task = taskContainer.create(configAction.name, configAction.type)
-        // FIXME replace with TaskContainer.named() in Gradle 4.9
         @Suppress("UNCHECKED_CAST")
-        val taskProvider = taskContainer.getByNameLater(Task::class.java, task.name) as TaskProvider<T>
+        val taskProvider = taskContainer.named(task.name) as TaskProvider<T>
         configAction.preConfigure(taskProvider, task.name)
         configAction.execute(task)
         return task

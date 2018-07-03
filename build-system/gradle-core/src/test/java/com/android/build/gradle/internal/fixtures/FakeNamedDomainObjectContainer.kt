@@ -227,11 +227,7 @@ open class FakeNamedDomainObjectContainer<T>(
         TODO("not implemented")
     }
 
-    override fun configureEachLater(p0: Action<in T>?) {
-        TODO("not implemented")
-    }
-
-    override fun <S : T> configureEachLater(p0: Class<S>?, p1: Action<in S>?) {
+    override fun configureEach(p0: Action<in T>?) {
         TODO("not implemented")
     }
 

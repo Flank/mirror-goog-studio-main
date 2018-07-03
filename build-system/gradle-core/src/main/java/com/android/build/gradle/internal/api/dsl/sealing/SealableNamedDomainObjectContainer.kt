@@ -326,11 +326,7 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun configureEachLater(p0: Action<in InterfaceT>?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun <S : InterfaceT> configureEachLater(p0: Class<S>?, p1: Action<in S>?) {
+    override fun configureEach(p0: Action<in InterfaceT>?) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
