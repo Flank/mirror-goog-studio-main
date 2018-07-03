@@ -22,6 +22,7 @@ import static com.android.ide.common.gradle.model.IdeLibraries.computeAddress;
 import static com.android.ide.common.gradle.model.IdeLibraries.isLocalAarModule;
 import static com.android.utils.FileUtils.join;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
@@ -137,12 +138,12 @@ class IdeLibraryFactory {
         return join(libraryFolderPath, fileName).getPath();
     }
 
-    @Nullable
+    @NonNull
     private static String getSymbolFilePath(@NonNull AndroidLibrary androidLibrary) {
         try {
             return androidLibrary.getSymbolFile().getPath();
         } catch (UnsupportedOperationException e) {
-            return null;
+            return new File(androidLibrary.getFolder(), SdkConstants.FN_RESOURCE_TEXT).getPath();
         }
     }
 

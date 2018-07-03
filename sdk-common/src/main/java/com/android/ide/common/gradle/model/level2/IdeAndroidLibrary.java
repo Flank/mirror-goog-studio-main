@@ -45,8 +45,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
     @NonNull private final String myExternalAnnotations;
     @NonNull private final String myPublicResources;
     @NonNull private final File myArtifactFile;
-
-    @Nullable private final String mySymbolFile;
+    @NonNull private final String mySymbolFile;
     private final int myType;
     private final int myHashCode;
 
@@ -69,7 +68,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
             @NonNull String externalAnnotations,
             @NonNull String publicResources,
             @NonNull File artifactFile,
-            @Nullable String symbolFile) {
+            @NonNull String symbolFile) {
         super(original, modelCache);
         myType = LIBRARY_ANDROID;
         myArtifactAddress = artifactAddress;
@@ -196,11 +195,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
     @Override
     @NonNull
     public String getSymbolFile() {
-        if (mySymbolFile != null) {
-            return mySymbolFile;
-        }
-        throw new UnsupportedOperationException(
-                "Unsupported method: AndroidLibrary.getSymbolFile()");
+        return mySymbolFile;
     }
 
     @Override
