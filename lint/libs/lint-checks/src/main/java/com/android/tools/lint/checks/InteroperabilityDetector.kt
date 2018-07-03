@@ -45,7 +45,9 @@ import org.jetbrains.uast.UField
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParameter
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.getContainingMethod
 import org.jetbrains.uast.getContainingUClass
+import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 
 /**
@@ -460,10 +462,30 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 return
             }
             for (annotation in node.annotations) {
-                val name = annotation.qualifiedName
-                if (name != null && (isNullableAnnotation(name) || isNonNullAnnotation(name))) {
+                val name = annotation.qualifiedName ?: continue
+
+                if (isNullableAnnotation(name)) {
+                    if (isToStringMethod(node)) {
+                        val location = context.getLocation(annotation)
+                        val message = "Unexpected `@Nullable`: `toString` should never return null"
+                        context.report(PLATFORM_NULLNESS, node as UElement, location, message)
+                    }
                     return
                 }
+
+                if (isNonNullAnnotation(name)) {
+                    if (isEqualsParameter(node)) {
+                        val location = context.getLocation(annotation)
+                        val message = "Unexpected @NonNull: The `equals` contract allows the parameter to be null"
+                        context.report(PLATFORM_NULLNESS, node as UElement, location, message)
+                    }
+                    return
+                }
+            }
+
+            // Known nullability: don't complain
+            if (isEqualsParameter(node) || isToStringMethod(node)) {
+                return
             }
 
             val location: Location =
@@ -511,6 +533,28 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     .build()
             )
             context.report(PLATFORM_NULLNESS, node as UElement, location, message, fix)
+        }
+
+        private fun isEqualsParameter(node: UDeclaration): Boolean {
+            if (node is UParameter) {
+                val method = node.getContainingUMethod() ?: return false
+                if (method.name == "equals" && method.uastParameters.size == 1) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        private fun isToStringMethod(node: UDeclaration): Boolean {
+            if (node is UMethod) {
+                val method = node
+                if (method.name == "toString" && method.uastParameters.isEmpty()) {
+                    return true
+                }
+            }
+
+            return false
         }
 
         private fun getNonNullAnnotation(context: JavaContext): String {

@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.InteroperabilityDetector.Issues.KOTLIN_PROPERTY
+import com.android.tools.lint.checks.InteroperabilityDetector.Issues.PLATFORM_NULLNESS
 import com.android.tools.lint.detector.api.Detector
 
 class InteroperabilityDetectorTest : AbstractCheckTest() {
@@ -689,6 +690,70 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 public final void setIsRecyclable(boolean recyclable) {
                                   ~~~~~~~~~~~~~~~
             0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testEqualsAndToString1() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public class NullnessTest {
+                    @Override
+                    public boolean equals(Object obj) {
+                        return super.equals(obj);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return super.toString();
+                    }
+                }
+            """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(PLATFORM_NULLNESS).run().expectClean()
+    }
+
+    fun testIncorrectNullnessAnnotations() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.NonNull;
+                import android.support.annotation.Nullable;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public class NullnessTest {
+                    @Override
+                    public boolean equals(@NonNull Object obj) {
+                        return super.equals(obj);
+                    }
+
+                    @Nullable
+                    @Override
+                    public String toString() {
+                        return super.toString();
+                    }
+                }
+            """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(PLATFORM_NULLNESS).run().expect(
+            """
+            src/test/pkg/NullnessTest.java:9: Warning: Unexpected @NonNull: The equals contract allows the parameter to be null [UnknownNullness]
+                public boolean equals(@NonNull Object obj) {
+                                      ~~~~~~~~
+            src/test/pkg/NullnessTest.java:13: Warning: Unexpected @Nullable: toString should never return null [UnknownNullness]
+                @Nullable
+                ~~~~~~~~~
+            0 errors, 2 warnings
             """
         )
     }
