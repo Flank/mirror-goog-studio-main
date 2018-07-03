@@ -2271,6 +2271,33 @@ public final class SdkConstants {
     /** The com.google.android.material. package prefix */
     public static final String ANDROID_MATERIAL_PKG = "com.google.android.material.";
 
+    /** The android.support.constraint. package prefix */
+    public static final String CONSTRAINT_LAYOUT_PKG = "android.support.constraint.";
+
+    /** The androidx.constraintlayout. package prefix */
+    public static final String ANDROIDX_CONSTRAINT_LAYOUT_PKG = "androidx.constraintlayout.";
+
+    /** The androidx.recyclerview. package prefix */
+    public static final String ANDROIDX_RECYCLER_VIEW_PKG = "androidx.recyclerview.";
+
+    /** The androidx.cardview. package prefix */
+    public static final String ANDROIDX_CARD_VIEW_PKG = "androidx.cardview.";
+
+    /** The androidx.gridlayout. package prefix */
+    public static final String ANDROIDX_GRID_LAYOUT_PKG = "androidx.gridlayout.";
+
+    /** The androidx.leanback. package prefix */
+    public static final String ANDROIDX_LEANBACK_PKG = "androidx.leanback.";
+
+    /** The androidx.core. package prefix */
+    public static final String ANDROIDX_CORE_PKG = "androidx.core.";
+
+    /** The androidx.viewpager. package prefix */
+    public static final String ANDROIDX_VIEWPAGER_PKG = "androidx.viewpager.";
+
+    /** The androidx.appcompat. package prefix */
+    public static final String ANDROIDX_APPCOMPAT_PKG = "androidx.appcompat.";
+
     /** The android.support.v17.leanback. package prefix */
     public static final String ANDROID_SUPPORT_LEANBACK_V17_PKG =
             ANDROID_SUPPORT_PKG_PREFIX + "v17.leanback."; //$NON-NLS-1$
@@ -2454,7 +2481,10 @@ public final class SdkConstants {
     public static final String ANDROIDX_LEANBACK_ARTIFACT = "androidx.leanback:leanback";
     public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotations:annotations";
     public static final String ANDROIDX_SUPPORT_LIB_ARTIFACT = "androidx.legacy:legacy-support-v4";
+    public static final String ANDROIDX_VIEW_PAGER_LIB_ARTIFACT = "androidx.viewpager:viewpager";
     public static final String ANDROIDX_APPCOMPAT_LIB_ARTIFACT = "androidx.appcompat:appcompat";
+    public static final String ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT =
+            "androidx.constraintlayout:constraintlayout";
 
     // Annotations
     public static final AndroidxName SUPPORT_ANNOTATIONS_PREFIX =
