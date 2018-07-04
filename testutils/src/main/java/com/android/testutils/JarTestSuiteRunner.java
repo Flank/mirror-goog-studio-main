@@ -29,7 +29,18 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -57,12 +68,15 @@ public class JarTestSuiteRunner extends Suite {
         Class<?>[] value();
     }
 
+    private static final String JAVA_CLASS_PATH = "java.class.path";
+
     public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
         super(builder, suiteClass, getTestClasses(suiteClass));
         final String seed = System.getProperty("test.seed");
         if (seed != null) {
             randomizeTestOrder(Long.parseLong(seed));
         }
+        useAbsoluteForClasspath();
     }
 
     private void randomizeTestOrder(long seed) {
@@ -77,6 +91,27 @@ public class JarTestSuiteRunner extends Suite {
         values.put(description, random.nextInt());
         for (Description child : description.getChildren()) {
             assign(child, random, values);
+        }
+    }
+
+    /**
+     * Rewrite java.class.path system property to use absolute paths. This is to work around the
+     * limitation in Gradle 4.9-rc-1 that prevents relative paths in the classpath.
+     */
+    private static void useAbsoluteForClasspath() {
+        Object javaClassPath = System.getProperties().get(JAVA_CLASS_PATH);
+        if (javaClassPath instanceof String) {
+            String classPath = (String) javaClassPath;
+            String[] paths = classPath.split(File.pathSeparator);
+
+            Path workspace = TestUtils.getWorkspaceRoot().toPath();
+            String absolutePaths =
+                    Arrays.stream(paths)
+                            .map(workspace::resolve)
+                            .map(Path::toString)
+                            .collect(Collectors.joining(File.pathSeparator));
+
+            System.setProperty(JAVA_CLASS_PATH, absolutePaths);
         }
     }
 
