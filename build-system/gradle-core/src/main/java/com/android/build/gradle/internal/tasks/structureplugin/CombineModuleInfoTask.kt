@@ -60,12 +60,13 @@ open class CombineModuleInfoTask : DefaultTask() {
             }
         }
 
-        // TODO anonymize names/paths
-
         val poetInfo = ASPoetInfo()
         poetInfo.gradleVersion = project.gradle.gradleVersion
         poetInfo.agpVersion = findAgpVersion()
         poetInfo.modules = moduleList.toMutableList()
+
+        // Remove PII.
+        poetInfo.anonymize()
 
         poetInfo.saveAsJsonTo(outputProvider.get().asFile)
     }

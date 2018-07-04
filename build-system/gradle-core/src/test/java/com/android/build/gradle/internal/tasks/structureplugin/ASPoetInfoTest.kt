@@ -25,30 +25,20 @@ import java.io.File
 class ASPoetInfoTest {
     @Test
     fun testMultiModuleProject() {
-        val project = getBaseProjectInfo()
-        project.modules.add(getBaseJavaModule())
-        project.modules.add(getBaseKotlinModule())
-        project.modules.add(
-            getBaseAndroidAppModule()
-                .addDependency(
-                    PoetDependenciesInfo(
-                        DependencyType.MODULE,
-                        "implementation",
-                        "javalib"
-                    ))
-                .addDependency(
-                    PoetDependenciesInfo(
-                        DependencyType.MODULE,
-                        "implementation",
-                        "kotlinlib"
-                    )))
-
+        val project = getFullProjectInfo()
         validate(project, "project.json")
     }
 
     @Test
+    fun testMultiModuleProjectAnonymized() {
+        val project = getFullProjectInfo()
+        project.anonymize()
+        validate(project, "project_anon.json")
+    }
+
+    @Test
     fun testSimpleJavaLibrary() {
-        validate(getBaseJavaModule(), "java_library_module.json")
+        validate(getKotlinJavaSubmodule(), "java_library_module.json")
     }
 
     @Test
@@ -62,6 +52,15 @@ class ASPoetInfoTest {
     }
 }
 
+private fun getFullProjectInfo(): ASPoetInfo {
+    val project = getBaseProjectInfo()
+    project.modules.add(getKotlinJavaSubmodule())
+    project.modules.add(getBaseKotlinModule())
+    project.modules.add(getBaseAndroidAppModule())
+
+    return project
+}
+
 private fun getBaseProjectInfo(): ASPoetInfo {
     val poetInfo = ASPoetInfo()
     poetInfo.agpVersion = "3.2.0"
@@ -69,9 +68,9 @@ private fun getBaseProjectInfo(): ASPoetInfo {
     return poetInfo
 }
 
-private fun getBaseJavaModule(): ModuleInfo {
+private fun getKotlinJavaSubmodule(): ModuleInfo {
     val module = ModuleInfo()
-    module.name = "javalib"
+    module.name = "kotlinlib_javalib"
     module.type = ModuleType.PURE
     module.javaClassCount = 10
     module.javaPackageCount = 10
@@ -94,11 +93,11 @@ private fun getBaseKotlinModule(): ModuleInfo {
     module.kotlinPackageCount = 10
     module.kotlinMethodsPerClass = 10
     module.addDependency(
-        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "implementation", "my.org:lib1:1.0")
-    )
+        PoetDependenciesInfo(DependencyType.MODULE, "implementation", "kotlinlib_javalib"))
     module.addDependency(
-        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "api", "my.org:lib2:3.1")
-    )
+        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "implementation", "my.org:lib1:1.0"))
+    module.addDependency(
+        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "api", "my.org:lib2:3.1"))
     return module
 }
 
@@ -123,11 +122,11 @@ private fun getBaseAndroidAppModule(): ModuleInfo {
     module.kotlinPackageCount = 5
     module.kotlinMethodsPerClass = 5
     module.addDependency(
-        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "implementation", "my.org:lib1:1.0")
-    )
+        PoetDependenciesInfo(DependencyType.MODULE, "implementation", "kotlinlib"))
     module.addDependency(
-        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "api", "my.org:lib2:3.1")
-    )
+        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "implementation", "my.org:lib1:1.0"))
+    module.addDependency(
+        PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "api", "my.org:lib2:3.1"))
     return module
 }
 

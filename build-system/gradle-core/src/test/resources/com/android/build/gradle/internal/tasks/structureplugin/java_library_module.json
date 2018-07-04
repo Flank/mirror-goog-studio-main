@@ -1,5 +1,5 @@
 {
-  "moduleName": "javalib",
+  "moduleName": "kotlinlib_javalib",
   "moduleType": "pure",
   "javaPackageCount": 10,
   "javaClassCount": 10,

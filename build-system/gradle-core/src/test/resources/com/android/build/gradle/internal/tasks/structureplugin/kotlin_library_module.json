@@ -10,6 +10,10 @@
   "kotlinMethodsPerClass": 10,
   "dependencies": [
     {
+      "moduleName": "kotlinlib_javalib",
+      "method": "implementation"
+    },
+    {
       "library": "my.org:lib1:1.0",
       "method": "implementation"
     },

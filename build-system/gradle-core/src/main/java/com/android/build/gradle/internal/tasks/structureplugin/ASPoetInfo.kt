@@ -100,7 +100,7 @@ enum class DependencyType(val jsonValue: String) {
 data class PoetDependenciesInfo(
     val type: DependencyType,
     val scope: String,
-    val dependency: String
+    var dependency: String
 )
 
 data class PoetResourceInfo(
