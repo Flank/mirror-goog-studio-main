@@ -145,10 +145,11 @@ private fun validate(module: ModuleInfo, targetGoldenFile: String) {
     Truth.assertThat(module.toJson()).isEqualTo(expectedJson)
 
     // reload and check it's same value
-    val newModule = ModuleInfo.fromJson(expectedJson)
-    Truth.assertThat(newModule.toJson()).isEqualTo(expectedJson)
+    val loadedModule = ModuleInfo.fromJson(expectedJson)
+    Truth.assertThat(loadedModule.toJson()).isEqualTo(expectedJson)
 
-    // TODO add isEqual check to the java/kotlin object itself after we lock down the data class
+    // check if both java objects contains the same information
+    Truth.assertThat(module).isEqualTo(loadedModule)
 }
 
 private fun loadGoldenFile(filename: String): File {

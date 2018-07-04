@@ -23,11 +23,11 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import java.io.File
 
-class ASPoetInfo {
-    val poetVersion: String = "0.1"
-    lateinit var gradleVersion: String
-    var agpVersion: String = ""
-    var modules: MutableList<ModuleInfo> = mutableListOf()
+data class ASPoetInfo(
+    val poetVersion: String = "0.1",
+    var gradleVersion: String = "",
+    var agpVersion: String = "",
+    var modules: MutableList<ModuleInfo> = mutableListOf()) {
 
     fun saveAsJsonTo(to: File) {
         FileUtils.mkdirs(to.parentFile)
@@ -43,22 +43,22 @@ class ASPoetInfo {
     }
 }
 
-class ModuleInfo {
-    lateinit var name: String
-    var type = ModuleType.PURE
-    var javaPackageCount: Int = 0
-    var javaClassCount: Int = 0
-    var javaMethodsPerClass: Int = 0
-    var useKotlin: Boolean = false
-    var kotlinPackageCount: Int = 0
-    var kotlinClassCount: Int = 0
-    var kotlinMethodsPerClass: Int = 0
-    var dependencies: MutableList<PoetDependenciesInfo> = mutableListOf()
+data class ModuleInfo(
+    var name: String = "",
+    var type: ModuleType = ModuleType.PURE,
+    var javaPackageCount: Int = 0,
+    var javaClassCount: Int = 0,
+    var javaMethodsPerClass: Int = 0,
+    var useKotlin: Boolean = false,
+    var kotlinPackageCount: Int = 0,
+    var kotlinClassCount: Int = 0,
+    var kotlinMethodsPerClass: Int = 0,
+    var dependencies: MutableList<PoetDependenciesInfo> = mutableListOf(),
     // Android Specific:
-    var activityCount: Int = 0
-    var hasLaunchActivity: Boolean = false
-    var androidBuildConfig = AndroidBuildConfig()
-    var resources: PoetResourceInfo = PoetResourceInfo()
+    var activityCount: Int = 0,
+    var hasLaunchActivity: Boolean = false,
+    var androidBuildConfig: AndroidBuildConfig = AndroidBuildConfig(),
+    var resources: PoetResourceInfo = PoetResourceInfo()) {
 
     fun saveAsJsonTo(to: File) {
         FileUtils.mkdirs(to.parentFile)
