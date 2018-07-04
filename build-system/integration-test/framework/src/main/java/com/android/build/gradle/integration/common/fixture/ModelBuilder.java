@@ -29,11 +29,11 @@ import com.android.builder.model.SyncIssue;
 import com.android.utils.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +44,7 @@ import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildActionExecuter;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.events.OperationType;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.GradleTask;
 
@@ -163,6 +164,28 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
         return container.getOnlyModel();
     }
 
+    /**
+     * Fetches AndroidProject and its Variants via Tooling API and schedule IDE setup tasks to run
+     *
+     * @param modelConsumer validations to be run against the fetched model
+     * @return the build result
+     */
+    @NonNull
+    public GradleBuildResult fetchAndroidModelAndGenerateSources(
+            Consumer<ParameterizedAndroidProject> modelConsumer) throws IOException {
+        BuildActionExecuter<Void> executor =
+                projectConnection
+                        .action()
+                        .projectsLoaded(
+                                new GetAndroidModelAction<>(
+                                        ParameterizedAndroidProject.class, true, true),
+                                models -> modelConsumer.accept(models.getOnlyModel()))
+                        .build()
+                        .forTasks(Collections.emptyList());
+
+        return buildModel(executor, modelLevel).getSecond();
+    }
+
     /** Fetches the multi-project Android models via the tooling API. */
     @NonNull
     public ModelContainer<AndroidProject> fetchAndroidProjects() throws IOException {
@@ -249,7 +272,18 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     @NonNull
     private <T> ModelContainer<T> buildModel(
             @NonNull BuildAction<ModelContainer<T>> action, int modelLevel) throws IOException {
+        BuildActionExecuter<ModelContainer<T>> executor = projectConnection.action(action);
+        return buildModel(executor, modelLevel).getFirst();
+    }
 
+    /**
+     * Returns a project model container and the build result.
+     *
+     * <p>Can be used both when just fetching models or when also scheduling tasks to be run.
+     */
+    @NonNull
+    private <T> Pair<T, GradleBuildResult> buildModel(
+            @NonNull BuildActionExecuter<T> executor, int modelLevel) throws IOException {
         with(BooleanOption.IDE_BUILD_MODEL_ONLY, true);
         with(BooleanOption.IDE_INVOKED_FROM_IDE, true);
 
@@ -268,7 +302,6 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 throw new RuntimeException("Unsupported ModelLevel: " + modelLevel);
         }
 
-        BuildActionExecuter<ModelContainer<T>> executor = projectConnection.action(action);
         setJvmArguments(executor);
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -276,16 +309,20 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         setStandardError(executor, stderr);
 
+        CollectingProgressListener progressListener = new CollectingProgressListener();
+        executor.addProgressListener(progressListener, OperationType.TASK);
+
         try {
-            ModelContainer<T> result = executor.withArguments(getArguments()).run();
+            T model = executor.withArguments(getArguments()).run();
+            GradleBuildResult buildResult =
+                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), null);
 
-            lastBuildResultConsumer.accept(
-                    new GradleBuildResult(stdout, stderr, ImmutableList.of(), null));
+            lastBuildResultConsumer.accept(buildResult);
 
-            return result;
+            return Pair.of(model, buildResult);
         } catch (GradleConnectionException e) {
             lastBuildResultConsumer.accept(
-                    new GradleBuildResult(stdout, stderr, ImmutableList.of(), e));
+                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), e));
             maybePrintJvmLogs(e);
             throw e;
         }

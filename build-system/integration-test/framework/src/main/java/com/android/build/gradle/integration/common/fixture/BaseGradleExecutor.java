@@ -25,6 +25,7 @@ import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -37,6 +38,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +46,8 @@ import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.ProgressListener;
 
 /**
  * Common flags shared by {@link ModelBuilder} and {@link GradleTaskExecutor}.
@@ -305,4 +309,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
     }
 
+    protected static class CollectingProgressListener implements ProgressListener {
+        final ConcurrentLinkedQueue<ProgressEvent> events;
+
+        protected CollectingProgressListener() {
+            events = new ConcurrentLinkedQueue<>();
+        }
+
+        @Override
+        public void statusChanged(ProgressEvent progressEvent) {
+            events.add(progressEvent);
+        }
+
+        ImmutableList<ProgressEvent> getEvents() {
+            return ImmutableList.copyOf(events);
+        }
+    }
 }

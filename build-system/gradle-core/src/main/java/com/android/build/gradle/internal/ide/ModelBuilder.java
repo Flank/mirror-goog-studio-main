@@ -71,6 +71,7 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
+import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
@@ -114,6 +115,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.gradle.StartParameter;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -216,6 +218,9 @@ public class ModelBuilder<Extension extends AndroidConfig>
             @NonNull String modelName,
             @NonNull ModelBuilderParameter parameter,
             @NonNull Project project) {
+        // Prevents parameter interface evolution from breaking the model builder.
+        parameter = new FailsafeModelBuilderParameter(parameter);
+
         // build a map from included build name to rootDir (as rootDir is the only thing
         // that we have access to on the tooling API side).
         initBuildMapping(project);
@@ -223,7 +228,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
             return buildAndroidProject(project, parameter.getShouldBuildVariant());
         }
         if (modelName.equals(Variant.class.getName())) {
-            return buildVariant(parameter.getVariantName());
+            return buildVariant(
+                    project, parameter.getVariantName(), parameter.getShouldGenerateSources());
         }
         return buildNonParameterizedModels(modelName);
     }
@@ -448,18 +454,57 @@ public class ModelBuilder<Extension extends AndroidConfig>
     }
 
     @NonNull
-    private VariantImpl buildVariant(@Nullable String variantName) {
+    private VariantImpl buildVariant(
+            @NonNull Project project,
+            @Nullable String variantName,
+            boolean shouldScheduleSourceGeneration) {
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isTestComponent()
                     && variantScope.getFullVariantName().equals(variantName)) {
-                return createVariant(variantScope.getVariantData());
+                VariantImpl variant = createVariant(variantScope.getVariantData());
+                if (shouldScheduleSourceGeneration) {
+                    scheduleSourceGeneration(project, variant);
+                }
+                return variant;
             }
         }
         throw new IllegalArgumentException(
                 String.format("Variant with name '%s' doesn't exist.", variantName));
+    }
+
+    /**
+     * Used when fetching Android model and generating sources in the same Gradle invocation.
+     *
+     * <p>As this method modify Gradle tasks, it has to be run before task graph is calculated,
+     * which means using {@link org.gradle.tooling.BuildActionExecuter.Builder#projectsLoaded(
+     * org.gradle.tooling.BuildAction, org.gradle.tooling.IntermediateResultHandler)} to register
+     * the {@link org.gradle.tooling.BuildAction}.
+     */
+    private static void scheduleSourceGeneration(
+            @NonNull Project project, @NonNull Variant variant) {
+        List<BaseArtifact> artifacts = Lists.newArrayList(variant.getMainArtifact());
+        artifacts.addAll(variant.getExtraAndroidArtifacts());
+        artifacts.addAll(variant.getExtraJavaArtifacts());
+
+        Set<String> sourceGenerationTasks =
+                artifacts
+                        .stream()
+                        .map(BaseArtifact::getIdeSetupTaskNames)
+                        .flatMap(Collection::stream)
+                        .map(taskName -> project.getPath() + ":" + taskName)
+                        .collect(Collectors.toSet());
+
+        try {
+            StartParameter startParameter = project.getGradle().getStartParameter();
+            Set<String> tasks = new HashSet<>(startParameter.getTaskNames());
+            tasks.addAll(sourceGenerationTasks);
+            startParameter.setTaskNames(tasks);
+        } catch (Throwable e) {
+            throw new RuntimeException("Can't modify scheduled tasks at current build step", e);
+        }
     }
 
     @NonNull

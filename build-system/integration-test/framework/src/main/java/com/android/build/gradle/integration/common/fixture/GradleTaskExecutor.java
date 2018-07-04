@@ -38,15 +38,12 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.ResultHandler;
 import org.gradle.tooling.events.OperationType;
-import org.gradle.tooling.events.ProgressEvent;
-import org.gradle.tooling.events.ProgressListener;
 
 /** A Gradle tooling api build builder. */
 public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecutor> {
@@ -174,23 +171,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             throw failure;
         }
         return result;
-    }
-
-    private static class CollectingProgressListener implements ProgressListener {
-        final ConcurrentLinkedQueue<ProgressEvent> events;
-
-        private CollectingProgressListener() {
-            events = new ConcurrentLinkedQueue<>();
-        }
-
-        @Override
-        public void statusChanged(ProgressEvent progressEvent) {
-            events.add(progressEvent);
-        }
-
-        ImmutableList<ProgressEvent> getEvents() {
-            return ImmutableList.copyOf(events);
-        }
     }
 
     private static class WaitingResultHandler implements ResultHandler<Void> {

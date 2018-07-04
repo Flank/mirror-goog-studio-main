@@ -46,6 +46,8 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
 
     private final Class<T> type;
 
+    private final boolean shouldGenerateSources;
+
     // Determines whether models are fetched with multiple threads.
     private final boolean isMultiThreaded;
 
@@ -54,9 +56,15 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
     }
 
     public GetAndroidModelAction(Class<T> type, boolean isMultiThreaded) {
+        this(type, isMultiThreaded, false);
+    }
+
+    public GetAndroidModelAction(
+            Class<T> type, boolean isMultiThreaded, boolean shouldGenerateSource) {
         this.type = type;
         // parallelization hit a change in Gradle 3.2 which makes it not work.
         this.isMultiThreaded = false; //isMultiThreaded;
+        this.shouldGenerateSources = shouldGenerateSource;
     }
 
     @Override
@@ -226,7 +234,10 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
                                     project,
                                     Variant.class,
                                     ModelBuilderParameter.class,
-                                    p -> p.setVariantName(variantName));
+                                    p -> {
+                                        p.setVariantName(variantName);
+                                        p.setShouldGenerateSources(shouldGenerateSources);
+                                    });
                     if (variant != null) {
                         variants.add(variant);
                     }
