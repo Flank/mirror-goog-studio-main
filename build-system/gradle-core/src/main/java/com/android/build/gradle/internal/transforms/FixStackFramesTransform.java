@@ -234,7 +234,7 @@ public class FixStackFramesTransform extends Transform {
 
                     File output =
                             outputProvider.getContentLocation(
-                                    jarInput.getName(),
+                                    jarInput.getFile().toString(),
                                     jarInput.getContentTypes(),
                                     jarInput.getScopes(),
                                     Format.JAR);

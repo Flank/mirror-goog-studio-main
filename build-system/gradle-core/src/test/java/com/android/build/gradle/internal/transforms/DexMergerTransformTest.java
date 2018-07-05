@@ -48,6 +48,7 @@ import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -418,6 +419,56 @@ public class DexMergerTransformTest {
 
         assertThat(new Dex(out.resolve("main/classes.dex")))
                 .containsExactlyClassesIn(expectedClasses);
+    }
+
+    @Test
+    public void testStreamNameChange() throws Exception {
+        // make output provider that outputs based on name
+        outputProvider =
+                new TestTransformOutputProvider(out) {
+                    @NonNull
+                    @Override
+                    public File getContentLocation(
+                            @NonNull String name,
+                            @NonNull Set<QualifiedContent.ContentType> types,
+                            @NonNull Set<? super QualifiedContent.Scope> scopes,
+                            @NonNull Format format) {
+                        return out.resolve(Long.toString(name.hashCode())).toFile();
+                    }
+                };
+        Path dexArchive = tmpDir.getRoot().toPath().resolve("dexArchive_input");
+        generateArchive(ImmutableList.of(PKG + "/C"), dexArchive);
+
+        TransformInput dirInput =
+                TransformTestHelper.directoryBuilder(dexArchive.toFile())
+                        .setName("first-run")
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(dirInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        getTransform(DexingType.NATIVE_MULTIDEX).transform(invocation);
+
+        dirInput =
+                TransformTestHelper.directoryBuilder(dexArchive.toFile())
+                        .setName("second-run")
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        dexArchive.resolve(PKG + "C.dex").toFile(), Status.REMOVED))
+                        .build();
+        invocation =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(dirInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
+        getTransform(DexingType.NATIVE_MULTIDEX).transform(invocation);
+
+        List<File> dexFiles = FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex$"));
+        Truth.assertThat(dexFiles).hasSize(1);
     }
 
     private DexMergerTransform getTransform(@NonNull DexingType dexingType) throws IOException {

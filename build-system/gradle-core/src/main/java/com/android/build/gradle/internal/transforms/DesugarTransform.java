@@ -628,7 +628,7 @@ public class DesugarTransform extends Transform {
             @NonNull TransformOutputProvider outputProvider, @NonNull QualifiedContent content) {
         return outputProvider
                 .getContentLocation(
-                        content.getName(),
+                        content.getFile().toString(),
                         content.getContentTypes(),
                         content.getScopes(),
                         content instanceof DirectoryInput ? Format.DIRECTORY : Format.JAR)

@@ -23,6 +23,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
@@ -388,8 +389,7 @@ public class DexMergerTransform extends Transform {
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
 
         for (JarInput jarInput : inputs) {
-            File dexOutput =
-                    getDexOutputLocation(outputProvider, jarInput.getName(), jarInput.getScopes());
+            File dexOutput = getDexOutputLocation(outputProvider, jarInput);
 
             if (!isIncremental || jarInput.getStatus() != Status.NOTCHANGED) {
                 FileUtils.cleanOutputDir(dexOutput);
@@ -505,19 +505,11 @@ public class DexMergerTransform extends Transform {
             }
         } else {
             for (DirectoryInput directoryInput : deleted) {
-                File dexOutput =
-                        getDexOutputLocation(
-                                outputProvider,
-                                directoryInput.getName(),
-                                directoryInput.getScopes());
+                File dexOutput = getDexOutputLocation(outputProvider, directoryInput);
                 FileUtils.cleanOutputDir(dexOutput);
             }
             for (DirectoryInput directoryInput : changed) {
-                File dexOutput =
-                        getDexOutputLocation(
-                                outputProvider,
-                                directoryInput.getName(),
-                                directoryInput.getScopes());
+                File dexOutput = getDexOutputLocation(outputProvider, directoryInput);
                 FileUtils.cleanOutputDir(dexOutput);
                 subTasks.add(
                         submitForMerging(
@@ -590,6 +582,19 @@ public class DexMergerTransform extends Transform {
                         minSdkVersion,
                         isDebuggable);
         return forkJoinPool.submit(callable);
+    }
+
+    @NonNull
+    private File getDexOutputLocation(
+            @NonNull TransformOutputProvider outputProvider, @NonNull QualifiedContent content) {
+        String name;
+        if (content.getName().startsWith("slice_")) {
+            name = content.getName();
+        } else {
+            name = content.getFile().toString();
+        }
+        return outputProvider.getContentLocation(
+                name, getOutputTypes(), content.getScopes(), Format.DIRECTORY);
     }
 
     @NonNull

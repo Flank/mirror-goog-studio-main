@@ -28,6 +28,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
+import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
@@ -61,6 +62,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -726,6 +728,72 @@ public class DexArchiveBuilderTransformTest {
 
         dirInput =
                 TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        folder.resolve(PACKAGE + "/A.class").toFile(),
+                                        Status.REMOVED))
+                        .build();
+        invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
+        transform.transform(invocation);
+
+        File dexA = Objects.requireNonNull(FileUtils.find(out.toFile(), "B.dex").orNull());
+        assertThat(dexA.toPath().resolveSibling("A.dex")).doesNotExist();
+        assertThat(dexA.toPath().resolveSibling("C.dex")).exists();
+    }
+
+    @Test
+    public void testChangingStreamName() throws Exception {
+        // make output provider that outputs based on name
+        outputProvider =
+                new TestTransformOutputProvider(out) {
+                    @NonNull
+                    @Override
+                    public File getContentLocation(
+                            @NonNull String name,
+                            @NonNull Set<QualifiedContent.ContentType> types,
+                            @NonNull Set<? super QualifiedContent.Scope> scopes,
+                            @NonNull Format format) {
+                        return out.resolve(Long.toString(name.hashCode())).toFile();
+                    }
+                };
+
+        Path folder = tmpDir.getRoot().toPath().resolve("dir_input");
+        dirWithEmptyClasses(
+                folder, ImmutableList.of(PACKAGE + "/A", PACKAGE + "/B", PACKAGE + "/C"));
+        TransformInput dirInput =
+                TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setName("first-run")
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        DexArchiveBuilderTransform transform =
+                new DexArchiveBuilderTransformBuilder()
+                        .setAndroidJarClasspath(Collections::emptyList)
+                        .setDexOptions(new DefaultDexOptions())
+                        .setMessageReceiver(new NoOpMessageReceiver())
+                        .setMinSdkVersion(21)
+                        .setDexer(dexerTool)
+                        .setIsDebuggable(true)
+                        .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                        .setProjectVariant("myVariant")
+                        .createDexArchiveBuilderTransform();
+        transform.transform(invocation);
+
+        dirInput =
+                TransformTestHelper.directoryBuilder(folder.toFile())
+                        .setName("second-run")
                         .setScope(QualifiedContent.Scope.PROJECT)
                         .putChangedFiles(
                                 ImmutableMap.of(

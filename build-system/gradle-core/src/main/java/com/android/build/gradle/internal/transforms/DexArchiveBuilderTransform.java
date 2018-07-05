@@ -938,7 +938,7 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull JarInput qualifiedContent,
             @Nullable Integer bucketId) {
         return output.getContentLocation(
-                qualifiedContent.getName() + (bucketId == null ? "" : ("-" + bucketId)),
+                qualifiedContent.getFile().toString() + (bucketId == null ? "" : ("-" + bucketId)),
                 ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
                 qualifiedContent.getScopes(),
                 Format.JAR);
@@ -956,7 +956,7 @@ public class DexArchiveBuilderTransform extends Transform {
                         .isEmpty()) {
             name = getSliceName(bucketId);
         } else {
-            name = directoryInput.getName();
+            name = directoryInput.getFile().toString();
         }
         return output.getContentLocation(
                 name,

@@ -148,11 +148,12 @@ public class StripDebugSymbolTransform extends Transform {
         for (TransformInput transformInput : transformInvocation.getInputs()) {
             for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
                 File folder = directoryInput.getFile();
-                File output = outputProvider.getContentLocation(
-                        directoryInput.getName(),
-                        getInputTypes(),
-                        directoryInput.getScopes(),
-                        Format.DIRECTORY);
+                File output =
+                        outputProvider.getContentLocation(
+                                directoryInput.getFile().toString(),
+                                getInputTypes(),
+                                directoryInput.getScopes(),
+                                Format.DIRECTORY);
                 if (isIncremental) {
                     for (Map.Entry<File, Status> fileStatus
                             : directoryInput.getChangedFiles().entrySet()) {
@@ -205,11 +206,12 @@ public class StripDebugSymbolTransform extends Transform {
             }
 
             for (JarInput jarInput : transformInput.getJarInputs()) {
-                File outFile = outputProvider.getContentLocation(
-                        jarInput.getName(),
-                        getInputTypes(),
-                        jarInput.getScopes(),
-                        Format.JAR);
+                File outFile =
+                        outputProvider.getContentLocation(
+                                jarInput.getFile().toString(),
+                                getInputTypes(),
+                                jarInput.getScopes(),
+                                Format.JAR);
                 if (!isIncremental
                         || jarInput.getStatus() == Status.ADDED
                         || jarInput.getStatus() == Status.CHANGED) {

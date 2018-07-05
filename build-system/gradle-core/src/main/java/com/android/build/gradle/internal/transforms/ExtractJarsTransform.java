@@ -118,7 +118,7 @@ public class ExtractJarsTransform extends Transform {
                 for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                     File dirOutput =
                             outputProvider.getContentLocation(
-                                    dirInput.getName(),
+                                    dirInput.getFile().toString(),
                                     dirInput.getContentTypes(),
                                     dirInput.getScopes(),
                                     Format.DIRECTORY);
@@ -139,7 +139,7 @@ public class ExtractJarsTransform extends Transform {
                     // create an output folder for this jar, keeping its type and scopes.
                     final File outJarFolder =
                             outputProvider.getContentLocation(
-                                    jarInput.getName(),
+                                    jarInput.getFile().toString(),
                                     jarInput.getContentTypes(),
                                     jarInput.getScopes(),
                                     Format.DIRECTORY);

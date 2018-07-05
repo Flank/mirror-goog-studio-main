@@ -25,6 +25,7 @@ import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 /** Transform output provider used for testing. */
@@ -48,6 +49,9 @@ public class TestTransformOutputProvider implements TransformOutputProvider {
             @NonNull Set<QualifiedContent.ContentType> types,
             @NonNull Set<? super QualifiedContent.Scope> scopes,
             @NonNull Format format) {
-        return rootDir.resolve(name + (format == Format.JAR ? SdkConstants.DOT_JAR : "")).toFile();
+        return rootDir.resolve(
+                        Paths.get(name).getFileName().toString()
+                                + (format == Format.JAR ? SdkConstants.DOT_JAR : ""))
+                .toFile();
     }
 }
