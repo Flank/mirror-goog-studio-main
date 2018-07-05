@@ -842,12 +842,7 @@ public class ArtifactDependencyGraph {
             return file;
         }
 
-        if (Boolean.TRUE.equals(
-                        variantScope
-                                .getGlobalScope()
-                                .getExtension()
-                                .getAaptOptions()
-                                .getNamespaced())
+        if (variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
                 && variantScope
                         .getGlobalScope()
                         .getProjectOptions()

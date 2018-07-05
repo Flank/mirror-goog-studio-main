@@ -98,7 +98,7 @@ open class BundleAar : Zip() {
             }
             task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522
-            if (java.lang.Boolean.TRUE != variantScope.globalScope.extension.aaptOptions.namespaced) {
+            if (!variantScope.globalScope.extension.aaptOptions.namespaced) {
                 task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
                 task.from(
                     artifacts.getFinalArtifactFiles(InternalArtifactType.PACKAGED_RES),

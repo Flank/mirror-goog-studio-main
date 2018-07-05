@@ -1162,8 +1162,7 @@ public abstract class TaskManager {
         // even if legacy multidex is not explicitly enabled.
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
 
-        if (Boolean.TRUE.equals(
-                scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+        if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             new NamespacedResourcesTaskManager(globalScope, taskFactory, scope)
                     .createNamespacedResourceTasks(
                             packageOutputType,
@@ -1536,8 +1535,7 @@ public abstract class TaskManager {
                                     .build());
         }
 
-        if (Boolean.TRUE.equals(
-                        scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())
+        if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
                 && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
             scope.getTransformManager()
                     .addStream(

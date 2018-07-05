@@ -19,8 +19,6 @@ package com.android.build.gradle.tasks
 import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
-import com.android.build.gradle.internal.dsl.AaptOptions
-import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable
@@ -34,6 +32,7 @@ import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
+import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
@@ -148,7 +147,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 .setManifestFile(manifestFile)
                 .setResourceDir(resDir)
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
-                .setOptions(AaptOptions().convert())
+                .setOptions(AaptOptions(failOnMissingConfigEntry = false))
                 .setVariantType(VariantTypeImpl.LIBRARY)
                 .setAndroidTarget(builder.target)
                 .build()

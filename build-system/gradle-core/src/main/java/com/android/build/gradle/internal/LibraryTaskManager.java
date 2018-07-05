@@ -147,12 +147,7 @@ public class LibraryTaskManager extends TaskManager {
 
         // Only verify resources if in Release and not namespaced.
         if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()
-                && !Boolean.TRUE.equals(
-                        variantScope
-                                .getGlobalScope()
-                                .getExtension()
-                                .getAaptOptions()
-                                .getNamespaced())) {
+                && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             createVerifyLibraryResTask(variantScope);
         }
 
@@ -439,8 +434,7 @@ public class LibraryTaskManager extends TaskManager {
 
     private void createMergeResourcesTasks(@NonNull VariantScope variantScope) {
         ImmutableSet<MergeResources.Flag> flags;
-        if (Boolean.TRUE.equals(
-                variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+        if (variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             flags =
                     Sets.immutableEnumSet(
                             MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,

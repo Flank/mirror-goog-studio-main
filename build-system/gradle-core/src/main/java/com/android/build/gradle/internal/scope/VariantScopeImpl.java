@@ -748,7 +748,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         mainCollection =
                 mainCollection.plus(getVariantData().getGeneratedBytecode(generatedBytecodeKey));
 
-        if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
+        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             mainCollection =
                     mainCollection.plus(
                             buildArtifactsHolder

@@ -119,7 +119,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope
             task.modulePath = globalScope.project.path
-            if (java.lang.Boolean.TRUE == globalScope.extension.aaptOptions.namespaced) {
+            if (globalScope.extension.aaptOptions.namespaced) {
                 task.thisRClassClasses = scope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 task.dependencyRClassClasses = scope.getArtifactFileCollection(

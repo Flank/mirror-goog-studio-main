@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -220,7 +221,10 @@ public abstract class BaseExtension implements AndroidConfig {
                         extraModelInfo.getDeprecationReporter(),
                         project.getLogger());
 
-        aaptOptions = objectFactory.newInstance(AaptOptions.class);
+        aaptOptions =
+                objectFactory.newInstance(
+                        AaptOptions.class,
+                        projectOptions.get(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT));
         dexOptions =
                 objectFactory.newInstance(
                         DexOptions.class, extraModelInfo.getDeprecationReporter());

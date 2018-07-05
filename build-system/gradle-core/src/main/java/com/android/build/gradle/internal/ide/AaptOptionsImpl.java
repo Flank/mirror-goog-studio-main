@@ -57,9 +57,7 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
                 aaptOptions.getNoCompress(),
                 aaptOptions.getFailOnMissingConfigEntry(),
                 aaptOptions.getAdditionalParameters(),
-                Boolean.TRUE.equals(aaptOptions.getNamespaced())
-                        ? Namespacing.REQUIRED
-                        : Namespacing.DISABLED);
+                aaptOptions.getNamespaced() ? Namespacing.REQUIRED : Namespacing.DISABLED);
     }
 
     public static AaptOptions createDummy() {

@@ -478,8 +478,8 @@ public class ApplicationTaskManager extends TaskManager {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
-        if (Boolean.TRUE.equals(
-                scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+        // TODO(b/111168382): Remove this
+        if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             return;
         }
 

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
@@ -31,7 +32,12 @@ import org.gradle.api.tasks.Optional;
 /** DSL object for configuring aapt options. */
 public class AaptOptions {
 
-    @Nullable private Boolean namespaced;
+    @Inject
+    public AaptOptions(boolean namespaced) {
+        this.namespaced = namespaced;
+    }
+
+    private boolean namespaced;
 
     @Nullable
     private String ignoreAssetsPattern;
@@ -245,16 +251,15 @@ public class AaptOptions {
      * <p>This property is incubating and may change in a future release.
      */
     @Internal
-    @Nullable
-    public Boolean getNamespaced() {
+    public boolean getNamespaced() {
         return namespaced;
     }
 
-    public void setNamespaced(@Nullable Boolean namespaced) {
+    public void setNamespaced(boolean namespaced) {
         this.namespaced = namespaced;
     }
 
-    public void namespaced(@Nullable Boolean namespaced) {
+    public void namespaced(boolean namespaced) {
         this.namespaced = namespaced;
     }
 }

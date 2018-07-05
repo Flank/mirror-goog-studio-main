@@ -45,7 +45,6 @@ import org.objectweb.asm.Opcodes
 class ResourceNamespaceTest {
 
     private val buildScriptContent = """
-android.aaptOptions.namespaced = true
 android.defaultConfig.minSdkVersion 21
 """
 
@@ -153,7 +152,7 @@ android.defaultConfig.minSdkVersion 21
     private val instantApp = MinimalSubProject.instantApp()
 
     private val notNamespacedLib = MinimalSubProject.lib("com.example.notNamespaced")
-        .appendToBuild("android.defaultConfig.minSdkVersion 21")
+        .appendToBuild("android.defaultConfig.minSdkVersion 21\nandroid.aaptOptions.namespaced false")
         .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -191,6 +190,7 @@ android.defaultConfig.minSdkVersion 21
         AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor()
                 .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
+                .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
                 .run(
                     ":lib:assembleDebug",
                     ":lib:assembleDebugAndroidTest",
