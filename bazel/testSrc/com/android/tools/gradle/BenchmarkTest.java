@@ -41,6 +41,8 @@ public class BenchmarkTest {
         String benchmarkName = null;
         int warmUps = 0;
         int iterations = 0;
+        int removeUpperOutliers = 0;
+        int removeLowerOutliers = 0;
         List<String> tasks = new ArrayList<>();
         List<String> startups = new ArrayList<>();
         List<String> cleanups = new ArrayList<>();
@@ -60,6 +62,10 @@ public class BenchmarkTest {
                 warmUps = Integer.valueOf(it.next());
             } else if (arg.equals("--iterations") && it.hasNext()) {
                 iterations = Integer.valueOf(it.next());
+            } else if (arg.equals("--remove_upper_outliers") && it.hasNext()) {
+                removeUpperOutliers = Integer.valueOf(it.next());
+            } else if (arg.equals("--remove_lower_outliers") && it.hasNext()) {
+                removeLowerOutliers = Integer.valueOf(it.next());
             } else if (arg.equals("--startup_task") && it.hasNext()) {
                 startups.add(it.next());
             } else if (arg.equals("--task") && it.hasNext()) {
@@ -83,8 +89,8 @@ public class BenchmarkTest {
                         benchmarkName,
                         distribution,
                         repo,
-                        warmUps,
-                        iterations,
+                        new BenchmarkRun(
+                                warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
                         mutations,
                         startups,
                         cleanups,
@@ -117,8 +123,7 @@ public class BenchmarkTest {
             String benchmarkName,
             File distribution,
             File repo,
-            int warmUps,
-            int iterations,
+            BenchmarkRun benchmarkRun,
             List<File> mutations,
             List<String> startups,
             List<String> cleanups,
@@ -148,25 +153,25 @@ public class BenchmarkTest {
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
-            listeners.forEach(it -> it.configure(home, gradle));
+            listeners.forEach(it -> it.configure(home, gradle, benchmarkRun));
 
             gradle.run(startups);
 
             Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
             listeners.forEach(it -> it.benchmarkStarting(benchmark));
-            for (int i = 0; i < warmUps + iterations; i++) {
+            for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
                 gradle.run(cleanups);
 
                 for (int j = 0; j < diffs.length; j++) {
                     diffs[j].apply(src, 3);
                     diffs[j] = diffs[j].invert();
                 }
-                if (i >= warmUps) {
+                if (i >= benchmarkRun.warmUps) {
                     listeners.forEach(it -> it.iterationStarting());
                 }
                 long start = System.currentTimeMillis();
                 gradle.run(tasks);
-                if (i >= warmUps) {
+                if (i >= benchmarkRun.warmUps) {
                     totalBuildTime.addSamples(
                             benchmark, new MetricSample(start, System.currentTimeMillis() - start));
                     listeners.forEach(BenchmarkListener::iterationDone);

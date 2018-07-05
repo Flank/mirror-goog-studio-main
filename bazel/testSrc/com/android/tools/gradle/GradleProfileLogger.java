@@ -16,6 +16,7 @@
 
 package com.android.tools.gradle;
 
+import com.android.annotations.NonNull;
 import com.android.tools.perflogger.Benchmark;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.BufferedInputStream;
@@ -27,16 +28,19 @@ import java.io.IOException;
 public class GradleProfileLogger implements BenchmarkListener {
     File testLogsDir;
     ProfilerToBenchmarkAdapter profilerToBenchmarkAdapter;
+    BenchmarkRun benchmarkRun;
 
     @Override
-    public void configure(File home, Gradle gradle) {
+    public void configure(
+            @NonNull File home, @NonNull Gradle gradle, @NonNull BenchmarkRun benchmarkRun) {
         testLogsDir = new File(new File(home, "test_logs"), "project");
+        this.benchmarkRun = benchmarkRun;
         gradle.addArgument("-Pandroid.advanced.profileOutputDir=" + testLogsDir.getAbsolutePath());
     }
 
     @Override
-    public void benchmarkStarting(Benchmark benchmark) {
-        this.profilerToBenchmarkAdapter = new ProfilerToBenchmarkAdapter(benchmark);
+    public void benchmarkStarting(@NonNull Benchmark benchmark) {
+        this.profilerToBenchmarkAdapter = new ProfilerToBenchmarkAdapter(benchmark, benchmarkRun);
     }
 
     @Override

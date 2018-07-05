@@ -16,6 +16,7 @@
 
 package com.android.tools.gradle;
 
+import com.android.annotations.NonNull;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.android.tools.perflogger.Benchmark;
@@ -23,7 +24,10 @@ import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -38,37 +42,67 @@ public class ProfilerToBenchmarkAdapter {
     private static final Logger LOGGER =
             Logger.getLogger(ProfilerToBenchmarkAdapter.class.getName());
 
-    private Benchmark benchmark;
-    private Map<String, Metric> metrics;
+    @NonNull private final Benchmark benchmark;
+    @NonNull private final BenchmarkRun benchmarkRun;
+    @NonNull private final Map<String, Metric> metrics;
 
-    public ProfilerToBenchmarkAdapter(Benchmark benchmark) {
+    @NonNull
+    private final List<ConsolidatedRunTimings> consolidatedTimingsPerIterations = new ArrayList<>();
+
+    public ProfilerToBenchmarkAdapter(
+            @NonNull Benchmark benchmark, @NonNull BenchmarkRun benchmarkRun) {
         this.benchmark = benchmark;
+        this.benchmarkRun = benchmarkRun;
         metrics = new HashMap<>();
     }
 
     @SuppressWarnings("MethodMayBeStatic")
-    public void adapt(GradleBuildProfile profile) {
+    public void adapt(@NonNull GradleBuildProfile profile) {
 
-        final long utcMs = Instant.now().toEpochMilli();
-
-        consolidate(profile, isTransform.negate(), (it) -> it.getTask().getType())
-                .forEach(
-                        (type, timing) ->
-                                addMetricSample(
-                                        GradleTaskExecutionType.forNumber(type).name(),
-                                        utcMs,
-                                        timing));
-
-        consolidate(profile, isTransform, (it) -> it.getTransform().getType())
-                .forEach(
-                        (type, timing) ->
-                                addMetricSample(
-                                        GradleTransformExecutionType.forNumber(type).name(),
-                                        utcMs,
-                                        timing));
+        consolidatedTimingsPerIterations.add(
+                new ConsolidatedRunTimings(
+                        Instant.now().toEpochMilli(),
+                        profile.getBuildTime(),
+                        consolidate(profile, isTransform.negate(), (it) -> it.getTask().getType()),
+                        consolidate(profile, isTransform, (it) -> it.getTask().getType())));
     }
 
     public void commit() {
+
+        final int upperLimit =
+                benchmarkRun.iterations
+                        - (benchmarkRun.removeUpperOutliers + benchmarkRun.removeLowerOutliers);
+        if (upperLimit < benchmarkRun.removeLowerOutliers || benchmarkRun.removeLowerOutliers < 0) {
+            throw new RuntimeException(
+                    String.format(
+                            "Invalid upper (%d) and/or lower (%d) outliers removal settings",
+                            benchmarkRun.removeLowerOutliers, benchmarkRun.removeUpperOutliers));
+        }
+
+        consolidatedTimingsPerIterations
+                .stream()
+                .sorted(Comparator.comparingLong(ConsolidatedRunTimings::getBuildTime))
+                .skip(benchmarkRun.removeLowerOutliers)
+                .limit(
+                        benchmarkRun.iterations
+                                - (benchmarkRun.removeUpperOutliers
+                                        + benchmarkRun.removeLowerOutliers))
+                .forEach(
+                        consolidatedRunTimings -> {
+                            consolidatedRunTimings.timingsForTasks.forEach(
+                                    (type, timing) ->
+                                            addMetricSample(
+                                                    GradleTaskExecutionType.forNumber(type).name(),
+                                                    consolidatedRunTimings.startTime,
+                                                    timing));
+                            consolidatedRunTimings.timingsForTransforms.forEach(
+                                    (type, timing) ->
+                                            addMetricSample(
+                                                    GradleTransformExecutionType.forNumber(type)
+                                                            .name(),
+                                                    consolidatedRunTimings.startTime,
+                                                    timing));
+                        });
         metrics.values().forEach(Metric::commit);
     }
 
@@ -104,12 +138,11 @@ public class ProfilerToBenchmarkAdapter {
                 .stream()
                 .filter(predicate)
                 .forEach(
-                        it -> {
-                            consolidatedTimings.put(
-                                    idProvider.apply(it),
-                                    consolidatedTimings.getOrDefault(idProvider.apply(it), 0L)
-                                            + it.getDurationInMs());
-                        });
+                        it ->
+                                consolidatedTimings.put(
+                                        idProvider.apply(it),
+                                        consolidatedTimings.getOrDefault(idProvider.apply(it), 0L)
+                                                + it.getDurationInMs()));
         return consolidatedTimings;
     }
 
@@ -117,4 +150,26 @@ public class ProfilerToBenchmarkAdapter {
             gradleBuildProfileSpan ->
                     gradleBuildProfileSpan.getType()
                             == GradleBuildProfileSpan.ExecutionType.TASK_TRANSFORM;
+
+    private static final class ConsolidatedRunTimings {
+        final long startTime;
+        final long buildTime;
+        final Map<Integer, Long> timingsForTasks;
+        final Map<Integer, Long> timingsForTransforms;
+
+        private ConsolidatedRunTimings(
+                long startTime,
+                long buildTime,
+                Map<Integer, Long> timingsForTasks,
+                Map<Integer, Long> timingsForTransforms) {
+            this.startTime = startTime;
+            this.buildTime = buildTime;
+            this.timingsForTasks = timingsForTasks;
+            this.timingsForTransforms = timingsForTransforms;
+        }
+
+        long getBuildTime() {
+            return buildTime;
+        }
+    }
 }

@@ -16,6 +16,7 @@
 
 package com.android.tools.gradle;
 
+import com.android.annotations.NonNull;
 import com.android.tools.perflogger.Benchmark;
 import java.io.File;
 
@@ -34,14 +35,15 @@ public interface BenchmarkListener {
      *
      * @param home the user.home for the test instance.
      * @param gradle the gradle instance that will run the test.
+     * @param benchmarkRun information about the benchmark run request.
      */
-    void configure(File home, Gradle gradle);
+    void configure(@NonNull File home, @NonNull Gradle gradle, @NonNull BenchmarkRun benchmarkRun);
 
     /**
      * notification of benchmark creation with the {@link Benchmark} instance and the {#link Metric}
      * that will log all the benchmark metrics.
      */
-    void benchmarkStarting(Benchmark benchmark);
+    void benchmarkStarting(@NonNull Benchmark benchmark);
 
     /** notification of benchmark completion */
     void benchmarkDone();

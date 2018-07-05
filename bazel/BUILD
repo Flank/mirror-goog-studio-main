@@ -272,6 +272,7 @@ java_library(
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/base/annotations",
         "//tools/base/bazel:gradle",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
     ],
