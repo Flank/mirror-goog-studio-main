@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../analytics-library/android.sdktools.analytics.iml" filepath="$PROJECT_DIR$/../analytics-library/android.sdktools.analytics.iml" />
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/crash/android.sdktools.analytics.crash-base.iml" filepath="$PROJECT_DIR$/../analytics-library/crash/android.sdktools.analytics.crash-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/inspector/android.sdktools.analytics.inspector-base.iml" filepath="$PROJECT_DIR$/../analytics-library/inspector/android.sdktools.analytics.inspector-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/publisher/android.sdktools.analytics.publisher-base.iml" filepath="$PROJECT_DIR$/../analytics-library/publisher/android.sdktools.analytics.publisher-base.iml" />
