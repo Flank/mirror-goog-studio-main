@@ -57,7 +57,8 @@ class Simpleperf {
   virtual bool EnableProfiling() const;
 
   // Kill simpleperf and returns true if it was killed successfully.
-  virtual bool KillSimpleperf(int simpleperf_pid) const;
+  // Technically this function could be const, but we mark it not for testing.
+  virtual bool KillSimpleperf(int simpleperf_pid);
 
   // Invokes `simpleperf report-sample` passing |input_path| as input file and
   // |output_path| as the protobuf output file. Adds the command output to

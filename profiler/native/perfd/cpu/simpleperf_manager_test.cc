@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 #include "perfd/cpu/simpleperf_manager.h"
-#include "perfd/cpu/simpleperf.h"
+#include "perfd/cpu/fake_simpleperf.h"
+
 #include "utils/fake_clock.h"
 
 #include <gmock/gmock.h>
@@ -24,47 +25,6 @@ using std::string;
 using testing::HasSubstr;
 
 namespace profiler {
-
-// A subclass of Simpleperf to be used in tests. All the methods are noop and
-// return either true (success) or false (failure). This way we can test
-// |SimpleperfManager| without caring too much about implementation details of
-// |Simpleperf|.
-class FakeSimpleperf final : public Simpleperf {
- public:
-  explicit FakeSimpleperf()
-      : Simpleperf("/fake/path/", false),
-        enable_profiling_success_(true),
-        kill_simpleperf_success_(true),
-        report_sample_success_(true) {}
-
-  bool EnableProfiling() const { return enable_profiling_success_; }
-
-  bool KillSimpleperf(int simpleperf_pid) const {
-    return kill_simpleperf_success_;
-  }
-
-  bool ReportSample(const string& input_path, const string& output_path,
-                    const string& abi_arch, string* output) const {
-    return report_sample_success_;
-  }
-
-  void SetEnableProfilingSuccess(bool success) {
-    enable_profiling_success_ = success;
-  }
-
-  void SetKillSimpleperfSuccess(bool success) {
-    kill_simpleperf_success_ = success;
-  }
-
-  void SetReportSampleSuccess(bool success) {
-    report_sample_success_ = success;
-  }
-
- private:
-  bool enable_profiling_success_;
-  bool kill_simpleperf_success_;
-  bool report_sample_success_;
-};
 
 TEST(SimpleperfManagerTest, StartProfiling) {
   FakeClock fake_clock(0);

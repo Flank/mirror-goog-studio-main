@@ -34,9 +34,17 @@ using std::string;
 namespace profiler {
 
 SimpleperfManager::~SimpleperfManager() {
+  // This is not necessary thanks to TerminationService. But keep it to be safe.
+  Shutdown();
+}
+
+void SimpleperfManager::Shutdown() {
+  // Intentionally not protected by |start_stop_mutex_| so this function can
+  // proceed without being blocked.
   string error;
   for (auto const &record : profiled_) {
-    StopSimpleperf(record.second, &error);
+    const OnGoingProfiling &ongoing = record.second;
+    StopSimpleperf(ongoing, &error);
   }
 }
 

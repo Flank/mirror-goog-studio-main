@@ -47,7 +47,10 @@ cc_test(
     srcs = [
         "atrace_manager_test.cc",
         "cpu_config_test.cc",
+        "cpu_service_test.cc",
         "cpu_usage_sampler_test.cc",
+        "fake_atrace_manager.h",
+        "fake_simpleperf.h",
         "simpleperf_manager_test.cc",
         "simpleperf_test.cc",
     ],
@@ -63,6 +66,7 @@ cc_test(
     deps = [
         ":profiler_cpu",
         "//external:gmock_main",
+        "//tools/base/profiler/native/perfd:daemon",
         "//tools/base/profiler/native/test:testutils",
     ],
 )

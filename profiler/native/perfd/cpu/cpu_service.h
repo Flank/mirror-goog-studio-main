@@ -29,6 +29,9 @@
 #include "perfd/termination_service.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/cpu.grpc.pb.h"
+#include "utils/activity_manager.h"
+#include "utils/current_process.h"
+#include "utils/device_info.h"
 
 namespace profiler {
 
@@ -37,21 +40,37 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
-                 const proto::AgentConfig::CpuConfig& cpu_config,
+                 const profiler::proto::AgentConfig::CpuConfig& cpu_config,
                  TerminationService* termination_service)
+      : CpuServiceImpl(
+            clock, cpu_cache, usage_sampler, thread_monitor, cpu_config,
+            termination_service, ActivityManager::Instance(),
+            std::unique_ptr<SimpleperfManager>(new SimpleperfManager(clock)),
+            // Number of millis to wait between atrace dumps when profiling.
+            // The average user will run a capture around 20 seconds, however to
+            // support longer captures we should dump the data (causing a
+            // hitch). This data dump enables us to have long captures.
+            std::unique_ptr<AtraceManager>(
+                new AtraceManager(clock, 1000 * 30))) {}
+
+  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
+                 CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
+                 const profiler::proto::AgentConfig::CpuConfig& cpu_config,
+                 TerminationService* termination_service,
+                 ActivityManager* activity_manager,
+                 std::unique_ptr<SimpleperfManager> simpleperf_manager,
+                 std::unique_ptr<AtraceManager> atrace_manager)
       : cache_(*cpu_cache),
         clock_(clock),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
         cpu_config_(cpu_config),
-        simpleperf_manager_(clock),
-        // Number of millis to wait between atrace dumps when profiling.
-        // The average user will run a capture around 20 seconds, however to
-        // support longer captures we should dump the data (causing a hitch).
-        // This data dump enables us to have long captures.
-        atrace_manager_(clock, 1000 * 30) {
-    termination_service->RegisterShutdownCallback(
-        [this](int signal) { this->atrace_manager_.Shutdown(); });
+        simpleperf_manager_(std::move(simpleperf_manager)),
+        atrace_manager_(std::move(atrace_manager)) {
+    termination_service->RegisterShutdownCallback([this](int signal) {
+      this->simpleperf_manager_->Shutdown();
+      this->atrace_manager_->Shutdown();
+    });
   }
 
   grpc::Status GetData(grpc::ServerContext* context,
@@ -110,6 +129,9 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::CpuCoreConfigRequest* request,
       profiler::proto::CpuCoreConfigResponse* response) override;
 
+  // Visible for testing.
+  SimpleperfManager* simpleperf_manager() { return simpleperf_manager_.get(); }
+
  private:
   // Stops profiling process of |pid|, regardless of whether it is alive or
   // dead. If |response| is not null, populate it with the capture data (trace);
@@ -127,8 +149,8 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   ThreadMonitor& thread_monitor_;
 
   const proto::AgentConfig::CpuConfig& cpu_config_;
-  SimpleperfManager simpleperf_manager_;
-  AtraceManager atrace_manager_;
+  std::unique_ptr<SimpleperfManager> simpleperf_manager_;
+  std::unique_ptr<AtraceManager> atrace_manager_;
 };
 
 }  // namespace profiler

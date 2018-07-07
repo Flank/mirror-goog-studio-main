@@ -48,7 +48,7 @@ bool Simpleperf::EnableProfiling() const {
   return enable_profiling.Run("security.perf_harden 0", nullptr);
 }
 
-bool Simpleperf::KillSimpleperf(int simpleperf_pid) const {
+bool Simpleperf::KillSimpleperf(int simpleperf_pid) {
   BashCommandRunner kill_simpleperf("kill");
   ostringstream string_pid;
   string_pid << simpleperf_pid;

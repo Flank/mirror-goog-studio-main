@@ -16,10 +16,20 @@ using std::shared_ptr;
 using std::string;
 using std::vector;
 
+namespace {
+// When running on host, we are testing. Use a URL as the cmdline of the app.
+const char* const kTestAppCmdline = "http://127.0.0.1:";
+}  // namespace
+
 namespace profiler {
 int ProcessManager::GetPidForBinary(const std::string& binary_name) const {
-  // Not required for test.
-  // TODO Implement if required.
+  // This is the counter part of GetCmdlineForPid(..) where the binary_name is
+  // assumed in a well defined format.
+  string app_name;
+  int32_t pid = -1;
+  std::istringstream iss(binary_name);
+  iss >> app_name >> pid;
+  if (app_name.compare(kTestAppCmdline) == 0 && pid != -1) return pid;
   return 0;
 }
 
@@ -35,9 +45,9 @@ std::string ProcessManager::GetCmdlineForPid(int pid) {
   // To talk to the test framework we issue a curl command to
   // a web server setup by the host. This allows us to communicate
   // in a similar fashion to calling cmd attach-agent on the device.
-  std::ostringstream stringStream;
-  stringStream << "http://127.0.0.1:" << pid;
-  return stringStream.str();
+  std::ostringstream oss;
+  oss << kTestAppCmdline << pid;
+  return oss.str();
 }
 
 std::string ProcessManager::GetPackageNameFromAppName(

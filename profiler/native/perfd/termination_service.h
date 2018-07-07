@@ -39,15 +39,16 @@ class TerminationService {
     shutdown_callbacks_.push_back(shutdown_callback);
   }
 
- private:
-  std::list<ShutdownCallback> shutdown_callbacks_;
-
-  TerminationService();
-
+  // Visible only for testing.
   // If we properly terminate, then we should notify all callbacks with
   // user-defined shutdown signal. This way, we only need to worry about
   // shutdown in one place.
   ~TerminationService() { NotifyShutdown(SIGUSR1); }
+
+ private:
+  std::list<ShutdownCallback> shutdown_callbacks_;
+
+  TerminationService();
 
   void NotifyShutdown(int signal);
 

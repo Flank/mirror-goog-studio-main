@@ -49,11 +49,11 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
-  explicit SimpleperfManager(Clock *clock)
+  explicit SimpleperfManager(Clock* clock)
       : SimpleperfManager(clock,
                           std::unique_ptr<Simpleperf>(new Simpleperf())) {}
 
-  explicit SimpleperfManager(Clock *clock,
+  explicit SimpleperfManager(Clock* clock,
                              std::unique_ptr<Simpleperf> simpleperf)
       : clock_(clock), simpleperf_(std::move(simpleperf)) {}
 
@@ -77,6 +77,12 @@ class SimpleperfManager {
   // Returns true if the app is currently being profiled by a simpleperf
   // process.
   bool IsProfiling(const std::string &app_name);
+
+  // Stops all ongoing profiling.
+  void Shutdown();
+
+  // Visible for testing.
+  Simpleperf *simpleperf() { return simpleperf_.get(); }
 
  private:
   Clock *clock_;

@@ -216,11 +216,11 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   string trace_path;
   const CpuProfilerConfiguration& configuration = request->configuration();
   if (configuration.profiler_type() == CpuProfilerType::SIMPLEPERF) {
-    success = simpleperf_manager_.StartProfiling(
+    success = simpleperf_manager_->StartProfiling(
         app_pkg_name, request->abi_cpu_arch(),
         configuration.sampling_interval_us(), &trace_path, &error);
   } else if (configuration.profiler_type() == CpuProfilerType::ATRACE) {
-    success = atrace_manager_.StartProfiling(
+    success = atrace_manager_->StartProfiling(
         app_pkg_name, configuration.sampling_interval_us(),
         configuration.buffer_size_in_mb(), &trace_path, &error);
   } else {
@@ -276,11 +276,11 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
   bool success = false;
   bool need_trace = response != nullptr;
   if (profiler_type == CpuProfilerType::SIMPLEPERF) {
-    success = simpleperf_manager_.StopProfiling(app->app_pkg_name, need_trace,
+    success = simpleperf_manager_->StopProfiling(app->app_pkg_name, need_trace,
                                                 &error);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
     success =
-        atrace_manager_.StopProfiling(app->app_pkg_name, need_trace, &error);
+        atrace_manager_->StopProfiling(app->app_pkg_name, need_trace, &error);
   } else {  // Profiler is ART
     ActivityManager* manager = ActivityManager::Instance();
     success = manager->StopProfiling(app->app_pkg_name, need_trace, &error,
@@ -358,12 +358,12 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
                             &app.trace_path, &error, true);
     response->set_file_path(app.trace_path);
   } else if (profiler_type == CpuProfilerType::SIMPLEPERF) {
-    simpleperf_manager_.StartProfiling(app.app_pkg_name,
+    simpleperf_manager_->StartProfiling(app.app_pkg_name,
                                        request->abi_cpu_arch(),
                                        app.configuration.sampling_interval_us(),
                                        &app.trace_path, &error, true);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
-    atrace_manager_.StartProfiling(
+    atrace_manager_->StartProfiling(
         app.app_pkg_name, app.configuration.sampling_interval_us(),
         app.configuration.buffer_size_in_mb(), &app.trace_path, &error);
   }
