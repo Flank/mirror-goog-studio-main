@@ -83,6 +83,14 @@ open class CheckMultiApkLibrariesTask : AndroidVariantTask() {
                         .append(" all package the same library [$library].\n")
                 }
             }
+            output.append(
+                """
+
+                    Multiple APKs packaging the same library can cause runtime errors.
+                    Adding the above library as a dependency of the base module will resolve this
+                    issue by packaging the library with the base APK instead.
+                    """.trimIndent()
+            )
             throw GradleException(output.toString())
         }
     }

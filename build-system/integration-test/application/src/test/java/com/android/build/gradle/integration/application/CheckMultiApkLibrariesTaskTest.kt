@@ -121,6 +121,9 @@ class CheckMultiApkLibrariesTaskTest(val multiApkMode: MultiApkMode) {
             "[:otherFeature1, :otherFeature2] all package the same library [:lib].")
         assertThat(result.failureMessage).contains(
             "[:otherFeature1, :otherFeature2] all package the same library [com.android.support:support-core-utils].")
+        assertThat(result.failureMessage).contains(
+            "Multiple APKs packaging the same library can cause runtime errors."
+        )
     }
 
     private fun createFeatureSplit(packageName: String) =
