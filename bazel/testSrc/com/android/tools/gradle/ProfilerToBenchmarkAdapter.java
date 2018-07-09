@@ -63,7 +63,7 @@ public class ProfilerToBenchmarkAdapter {
                 new ConsolidatedRunTimings(
                         Instant.now().toEpochMilli(),
                         profile.getBuildTime(),
-                        consolidate(profile, isTransform.negate(), (it) -> it.getTask().getType()),
+                        consolidate(profile, isTask, (it) -> it.getTask().getType()),
                         consolidate(profile, isTransform, (it) -> it.getTask().getType())));
     }
 
@@ -150,6 +150,15 @@ public class ProfilerToBenchmarkAdapter {
             gradleBuildProfileSpan ->
                     gradleBuildProfileSpan.getType()
                             == GradleBuildProfileSpan.ExecutionType.TASK_TRANSFORM;
+
+    private static final Predicate<GradleBuildProfileSpan> isTask =
+            // ignore task type 65 because those are transform tasks, which are accounted for in the
+            // transform spans.
+            gradleBuildProfileSpan ->
+                    gradleBuildProfileSpan.getType()
+                                    == GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION
+                            && gradleBuildProfileSpan.getTask() != null
+                            && gradleBuildProfileSpan.getTask().getType() != 65;
 
     private static final class ConsolidatedRunTimings {
         final long startTime;
