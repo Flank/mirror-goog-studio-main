@@ -156,8 +156,7 @@ fun runR8(
         override fun getDataResourceProvider() = R8DataResourceProvider(dirResources)
     })
 
-
-    libraries.forEach { p -> r8CommandBuilder.addLibraryFiles(p) }
+    r8CommandBuilder.addLibraryFiles(libraries)
 
     val logger: Logger = Logger.getLogger("R8")
     if (logger.isLoggable(Level.FINE)) {
