@@ -160,10 +160,10 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             // https://issuetracker.google.com/78202536.
             return requestedDependency.group == "com.android.databinding"
                     && requestedDependency.module == "baseLibrary"
-                    && configuration.allDependencies.any({ dependency ->
+                    && configuration.allDependencies.any { dependency ->
                 dependency.group == "androidx.databinding"
                         && dependency.name == "databinding-compiler"
-            })
+            }
         }
     }
 
