@@ -114,6 +114,15 @@ public class VmTraceParserTest extends TestCase {
         assertEquals("startMethodTracingö", info.methodName);
     }
 
+    public void testCharWith2Bytes() throws IOException {
+        VmTraceData traceData = getVmTraceData("/char_2_bytes.trace");
+
+        MethodInfo info = traceData.getMethod(0x259c);
+        assertEquals("ˊ", info.methodName);
+        assertEquals(1, info.methodName.length());
+        assertEquals(2, info.methodName.getBytes().length);
+    }
+
     public void testMisMatchedTrace() throws IOException {
         String expected =
                   " -> AsyncTask #1.:  -> com/test/android/traceview/MisMatched.foo: ()V -> com/test/android/traceview/MisMatched.bar: ()V -> android/os/Debug.startMethodTracing: (Ljava/lang/String;)V -> android/os/Debug.startMethodTracing: (Ljava/lang/String;II)V -> dalvik/system/VMDebug.startMethodTracing: (Ljava/lang/String;II)V\n"

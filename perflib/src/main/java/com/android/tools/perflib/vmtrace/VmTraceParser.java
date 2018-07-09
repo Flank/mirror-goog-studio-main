@@ -104,9 +104,9 @@ public class VmTraceParser {
                     throw new IOException("Key section does not have an *end marker");
                 }
 
-                // Calculate how much we have read from the file so far.  The
-                // extra byte is for the line ending not included by readLine().
-                offset += line.length() + 1;
+                // Calculate how much we have read from the file so far. The extra byte is for the line ending not included by readLine().
+                // We can't use line.length() as unicode characters can be represented by more than 1 byte.
+                offset += line.getBytes(Charsets.UTF_8).length + 1;
 
                 if (line.startsWith("*")) {
                     if (line.equals(HEADER_SECTION_VERSION)) {

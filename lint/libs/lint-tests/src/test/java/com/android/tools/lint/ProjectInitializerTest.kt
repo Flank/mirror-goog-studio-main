@@ -24,6 +24,7 @@ import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.checks.AbstractCheckTest.base64gzip
 import com.android.tools.lint.checks.AbstractCheckTest.jar
+import com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY
 import com.android.tools.lint.checks.infrastructure.TestFile
@@ -667,6 +668,75 @@ class ProjectInitializerTest {
                 "--quiet",
                 "--check",
                 "ParcelCreator",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
+    @Test
+    fun testClasspathJar() {
+        // Ensure that class path jars are properly included for type resolution
+        val root = temp.newFolder()
+
+        val projects = lint().files(
+
+            java(
+                """
+                    package test.pkg;
+
+                    import android.support.annotation.RequiresApi;
+                    import android.util.Log;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class RequiresApiFieldTest {
+                        @RequiresApi(24)
+                        private int Method24() {
+                            return 42;
+                        }
+
+                        private void ReferenceMethod24() {
+                            Log.d("zzzz", "ReferenceField24: " + Method24());
+                        }
+                    }
+                    """
+            ).indented(),
+            base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP),
+            xml(
+                "project.xml", """
+            <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <module name="M" android="true" library="false">
+            <classpath jar="libs/support-annotations.jar" />
+            <src file="src/test/pkg/RequiresApiFieldTest.java" />
+            </module>
+            </project>
+            """
+            ).indented()
+        ).createProjects(root)
+        val projectDir = projects[0]
+        val descriptorFile = File(projectDir, "project.xml")
+
+        MainTest.checkDriver(
+            "" +
+                    // We only find this error if we correctly include the jar dependency
+                    // which provides the parent class which implements Parcelable.
+                    "src/test/pkg/RequiresApiFieldTest.java:14: Error: Call requires API level 24 (current min is 1): Method24 [NewApi]\n" +
+                    "        Log.d(\"zzzz\", \"ReferenceField24: \" + Method24());\n" +
+                    "                                             ~~~~~~~~\n" +
+                    "1 errors, 0 warnings\n".replace('/', File.separatorChar),
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "NewApi",
                 "--project",
                 descriptorFile.path
             ),
