@@ -19,24 +19,39 @@ repositories {
 }
 
 dependencies {
+    // Basic dependency for MainActivity
     implementation "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
-    implementation 'com.example.androidlib:androidLibToRefactor:1.0'
 
-    // This raises the version used by androidLibToRefactor to be consistent with the app to avoid 
-    // lint errors.
-    implementation "com.android.support:preference-v7:${rootProject.supportLibVersion}"
+    // Example third-party library that should be jetified and its support library dependencies
+    // should be replaced with AndroidX
+    implementation 'com.example.androidlib:androidLibToRefactor:1.0'
 }
 
-// TODO (AGP): Many AndroidX dependencies do not have version 1.0.0-alpha3 available in prebuilts
-// yet, so we need to correct their versions here for testing only. In practice, the users will
-// still get version 1.0.0-alpha3 of these libraries from GMaven. This workaround needs to be
-// removed once the libraries are added to prebuilts.
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if ((requested.group.startsWith('androidx')
-                        || requested.group == 'com.google.android.material')
-                && requested.version == '1.0.0-alpha3') {
-            useVersion '1.0.0-alpha1'
+// TODO (AGP): The expected versions of several dependencies may not be available in prebuits yet,
+// so we need to adjust them here. This is for testing only; in practice, the users don't need to do
+// this. This workaround can be removed once the expected versions are added to prebuilts.
+afterEvaluate {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            def groupAndName = requested.group + ":" + requested.name
+            if (findProperty("android.enableJetifier") == "true") {
+                if (groupAndName == 'androidx.annotation:annotation'
+                        || groupAndName == 'androidx.appcompat:appcompat'
+                        || groupAndName == 'androidx.legacy:legacy-support-v4'
+                        || groupAndName == 'androidx.preference:preference') {
+                    useVersion '1.0.0-alpha1'
+                } else if (groupAndName == 'android.arch.persistence.room:runtime') {
+                    useTarget 'androidx.room:room-runtime:2.0.0-alpha1'
+                } else if (groupAndName == 'com.android.support.constraint:constraint-layout') {
+                    useTarget 'androidx.constraintlayout:constraintlayout:1.1.0'
+                }
+            } else {
+                if (groupAndName == 'com.android.support:preference-v7'
+                        || groupAndName == 'com.android.support:support-annotations'
+                        || groupAndName == 'com.android.support:support-v4') {
+                    useVersion rootProject.supportLibVersion
+                }
+            }
         }
     }
 }
