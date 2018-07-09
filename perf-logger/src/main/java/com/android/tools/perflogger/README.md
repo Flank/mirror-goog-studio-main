@@ -1,6 +1,6 @@
 # Performance Tracking in Studio Tests
 
-BenchmarkLogger is a helper class in logging performance data while running
+Metric is a helper class in logging performance data while running
 Android Studio tests on our post-submit queue. The data is then auto-uploaded
 to a dashboard system for visualization and further regression analysis.
 
@@ -11,20 +11,20 @@ the following code in a test:
 
 ```
 // “My Test” represents a data series within a single dashboard
-BenchmarkLogger logger = new BenchmarkLogger("My Test");
+Metric myTestMetric = new Metric("My Test");
 // “Total Time” refers to the dashboard the data will be uploaded to.
 Benchmark benchmark = new Benchmark("Total Time");
 
-// Your test code goes here... 
+// Your test code goes here...
 
 // Log a sample point for “My Test” onto “Total Run Time”
 // timeMs is milliseconds relative to Unix Epoch.
-logger.addSamples(benchmark, new MetricSample(timeMs, testRunTimeMs));
+myTestMetric.addSamples(benchmark, new MetricSample(timeMs, testRunTimeMs));
 // Saves the data.
-logger.commit();
+myTestMetric.commit();
 ```
 
-Please see the documentation and references of the BenchmarkLogger class for more
+Please see the documentation and references of the Metric class for more
 usage examples.
 
 ## Dashboards
@@ -34,7 +34,7 @@ an internal dashboard system located at [go/adt-perfgate](go/adt-perfgate).
 
 If the dashboard(s) and data series do not exist already, they will be auto-
 generated based on the String parameters provided to Benchmark (dashboard name)
-and BenchmarkLogger (data series name).
+and Metric (data series name).
 
 The uploaded data are tagged with the buildbot recipe, build # and the name of
 the machine where the test(s) were run on, so you can navigate back to the build
