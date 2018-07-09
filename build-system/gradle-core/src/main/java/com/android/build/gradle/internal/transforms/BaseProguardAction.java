@@ -20,10 +20,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -128,10 +130,6 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
         configuration.lastModified = Long.MAX_VALUE;
     }
 
-    protected void applyMapping(@NonNull File testedMappingFile) {
-        configuration.applyMapping = testedMappingFile;
-    }
-
     public void applyConfigurationFile(@NonNull File file) throws IOException, ParseException {
         // file might not actually exist if it comes from a sub-module library where publication
         // happen whether the file is there or not.
@@ -139,8 +137,24 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
             return;
         }
 
+        applyConfigurationText(
+                Files.asCharSource(file, Charsets.UTF_8).read(),
+                fileDescription(file.getPath()),
+                file.getParentFile());
+    }
+
+    public void printconfiguration(@NonNull File file) {
+        configuration.printConfiguration = file;
+    }
+
+    protected void applyMapping(@NonNull File testedMappingFile) {
+        configuration.applyMapping = testedMappingFile;
+    }
+
+    private void applyConfigurationText(@NonNull String lines, String description, File baseDir)
+            throws IOException, ParseException {
         ConfigurationParser parser =
-                new ConfigurationParser(file, System.getProperties());
+                new ConfigurationParser(lines, description, baseDir, System.getProperties());
         try {
             parser.parse(configuration);
         } finally {
@@ -148,8 +162,9 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
         }
     }
 
-    public void printconfiguration(@NonNull File file) {
-        configuration.printConfiguration = file;
+    protected void applyConfigurationText(@NonNull String lines, String fileName)
+            throws IOException, ParseException {
+        applyConfigurationText(lines, fileDescription(fileName), null);
     }
 
     protected void inJar(@NonNull File jarFile, @Nullable List<String> filter) {
@@ -181,5 +196,9 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
         }
 
         classPath.add(classPathEntry);
+    }
+
+    private static String fileDescription(String fileName) {
+        return "file '" + fileName + "'";
     }
 }

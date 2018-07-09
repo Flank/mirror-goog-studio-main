@@ -37,6 +37,7 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.SimpleWorkQueue;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
@@ -54,10 +55,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import org.gradle.api.UncheckedIOException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import proguard.ClassPath;
+import proguard.ParseException;
 
 /**
  * ProGuard support as a transform
@@ -212,6 +215,16 @@ public class ProGuardTransform extends BaseProguardAction {
         }
     }
 
+    private void applyRuleFile(
+            @NonNull String jarName, @NonNull String ruleFileName, @NonNull String rules) {
+        try {
+            applyConfigurationText(rules, jarName + File.separator + ruleFileName);
+        } catch (IOException | ParseException ex) {
+            throw new UncheckedIOException(
+                    "Failed to apply proguard rules for '" + ruleFileName + "' in '" + jarName, ex);
+        }
+    }
+
     private void doMinification(
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedInputs,
@@ -252,6 +265,18 @@ public class ProGuardTransform extends BaseProguardAction {
             for (File configFile : getAllConfigurationFiles()) {
                 LOG.info("Applying ProGuard configuration file {}", configFile);
                 applyConfigurationFile(configFile);
+            }
+
+            if (globalScope
+                    .getProjectOptions()
+                    .get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
+                ProGuardRulesExtractor.extractRulesTexts(inputs)
+                        .forEach(
+                                (jarName, rulesMap) ->
+                                        rulesMap.forEach(
+                                                (ruleFileName, rules) ->
+                                                        applyRuleFile(
+                                                                jarName, ruleFileName, rules)));
             }
 
             configuration.printMapping = printMapping;

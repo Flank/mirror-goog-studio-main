@@ -86,6 +86,7 @@ enum class BooleanOption(
     DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false),
+    ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true),
     ;
     constructor(
         propertyName: String,

@@ -44,7 +44,7 @@ public class TransformInputUtil {
         return getAllFiles(transformInputs, true, false);
     }
 
-    private static Collection<File> getAllFiles(
+    static Collection<File> getAllFiles(
             Iterable<TransformInput> transformInputs,
             boolean includeDirectoryInput,
             boolean includeJarInput) {

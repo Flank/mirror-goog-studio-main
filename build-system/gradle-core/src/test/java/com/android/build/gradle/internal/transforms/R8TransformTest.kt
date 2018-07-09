@@ -21,6 +21,8 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.testdata.Animal
@@ -28,7 +30,6 @@ import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
-import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -143,7 +144,7 @@ class R8TransformTest {
         mainDexRuleFile.printWriter().use {
             it.println("-keep class " + Animal::class.java.name)
         }
-        val mainDexRulesFileCollection = mockFileCollection(setOf(mainDexRuleFile))
+        val mainDexRulesFileCollection = FakeFileCollection(setOf(mainDexRuleFile))
 
         val transform =
                 getTransform(mainDexRulesFiles = mainDexRulesFileCollection, minSdkVersion = 19)
@@ -211,7 +212,7 @@ class R8TransformTest {
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
         }
-        val proguardConfigurationFileCollection = mockFileCollection(setOf(proguardConfiguration))
+        val proguardConfigurationFileCollection = FakeConfigurableFileCollection(setOf(proguardConfiguration))
         val transform = getTransform(
                 java8Support = VariantScope.Java8LangSupport.R8,
                 proguardRulesFiles = proguardConfigurationFileCollection)
@@ -344,24 +345,24 @@ class R8TransformTest {
     }
 
     private fun getTransform(
-        mainDexRulesFiles: FileCollection = emptyFileCollection,
+        mainDexRulesFiles: FileCollection = FakeFileCollection(),
         java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
-        proguardRulesFiles: ConfigurableFileCollection = emptyFileCollection,
+        proguardRulesFiles: ConfigurableFileCollection = FakeConfigurableFileCollection(),
         typesToOutput: MutableSet<QualifiedContent.ContentType> = TransformManager.CONTENT_DEX,
         outputProguardMapping: File = tmp.newFile(),
         disableMinification: Boolean = true,
         minSdkVersion: Int = 21
     ): R8Transform {
         return R8Transform(
-                bootClasspath = lazy { bootClasspath },
+                bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
                 minSdkVersion = minSdkVersion,
                 isDebuggable = true,
                 java8Support = java8Support,
                 disableTreeShaking = false,
                 disableMinification = disableMinification,
-                mainDexListFiles = emptyFileCollection,
+                mainDexListFiles = FakeFileCollection(),
                 mainDexRulesFiles = mainDexRulesFiles,
-                inputProguardMapping = emptyFileCollection,
+                inputProguardMapping = FakeFileCollection(),
                 outputProguardMapping = outputProguardMapping,
                 typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
@@ -369,22 +370,5 @@ class R8TransformTest {
                 includeFeaturesInScopes = false,
                 messageReceiver = NoOpMessageReceiver()
         )
-    }
-
-    companion object {
-        val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar"))
-        val emptyFileCollection: ConfigurableFileCollection = mockFileCollection()
-
-        init {
-            Mockito.`when`(emptyFileCollection.isEmpty).thenReturn(true)
-            Mockito.`when`(emptyFileCollection.files).thenReturn(setOf())
-        }
-
-        fun mockFileCollection(files: Set<File> = setOf()): ConfigurableFileCollection {
-            val collection = Mockito.mock(ConfigurableFileCollection::class.java)
-            Mockito.`when`(collection.isEmpty).thenReturn(files.isEmpty())
-            Mockito.`when`(collection.files).thenReturn(files)
-            return collection
-        }
     }
 }

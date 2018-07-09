@@ -20,6 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
@@ -182,24 +183,24 @@ class DexSplitterTransformTest {
     }
 
     private fun getR8Transform(
-        mainDexRulesFiles: FileCollection = emptyFileCollection,
+        mainDexRulesFiles: FileCollection = FakeFileCollection(),
         java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
-        proguardRulesFiles: ConfigurableFileCollection = emptyFileCollection,
+        proguardRulesFiles: ConfigurableFileCollection = FakeConfigurableFileCollection(),
         typesToOutput: MutableSet<QualifiedContent.ContentType> = TransformManager.CONTENT_DEX,
         outputProguardMapping: File = tmp.newFile(),
         disableMinification: Boolean = true,
         minSdkVersion: Int = 21
     ): R8Transform {
         return R8Transform(
-                bootClasspath = lazy { bootClasspath },
+                bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
                 minSdkVersion = minSdkVersion,
                 isDebuggable = true,
                 java8Support = java8Support,
                 disableTreeShaking = false,
                 disableMinification = disableMinification,
-                mainDexListFiles = emptyFileCollection,
+                mainDexListFiles = FakeFileCollection(),
                 mainDexRulesFiles = mainDexRulesFiles,
-                inputProguardMapping = emptyFileCollection,
+                inputProguardMapping = FakeFileCollection(),
                 outputProguardMapping = outputProguardMapping,
                 typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
@@ -207,22 +208,5 @@ class DexSplitterTransformTest {
                 includeFeaturesInScopes = false,
                 messageReceiver= NoOpMessageReceiver()
         )
-    }
-
-    companion object {
-        val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar"))
-        val emptyFileCollection: ConfigurableFileCollection = mockFileCollection()
-
-        init {
-            Mockito.`when`(emptyFileCollection.isEmpty).thenReturn(true)
-            Mockito.`when`(emptyFileCollection.files).thenReturn(setOf())
-        }
-
-        fun mockFileCollection(files: Set<File> = setOf()): ConfigurableFileCollection {
-            val collection = Mockito.mock(ConfigurableFileCollection::class.java)
-            Mockito.`when`(collection.isEmpty).thenReturn(files.isEmpty())
-            Mockito.`when`(collection.files).thenReturn(files)
-            return collection
-        }
     }
 }
