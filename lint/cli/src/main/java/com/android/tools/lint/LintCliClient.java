@@ -314,7 +314,7 @@ public class LintCliClient extends LintClient {
             message +=
                     ""
                             + "\n"
-                            + "You can set the system property lint.baselines.continue=true\n"
+                            + "You can run lint with -Dlint.baselines.continue=true\n"
                             + "if you want to create many missing baselines in one go.";
         }
 
