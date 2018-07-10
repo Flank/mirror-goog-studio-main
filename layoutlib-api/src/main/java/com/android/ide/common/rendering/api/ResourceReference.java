@@ -35,11 +35,19 @@ public final class ResourceReference implements Serializable {
     @NonNull private final ResourceNamespace namespace;
     @NonNull private final String name;
 
+    /**
+     * Initializes a ResourceReference.
+     *
+     * @param namespace the namespace of the resource
+     * @param resourceType the type of the resource
+     * @param name the name of the resource, should not be qualified
+     */
     public ResourceReference(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String name) {
-        assert name.indexOf(':') < 0 : "Qualified name is not allowed: " + name;
+        assert resourceType == ResourceType.SAMPLE_DATA || name.indexOf(':') < 0
+                : "Qualified name is not allowed: " + name;
         this.namespace = namespace;
         this.resourceType = resourceType;
         this.name = name;
