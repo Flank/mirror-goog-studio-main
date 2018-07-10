@@ -143,6 +143,10 @@ public class VectorDetector extends ResourceXmlDetector {
             return;
         }
 
+        if (usingSupportLibVectors(project)) {
+            return;
+        }
+
         // TODO: Check to see if there already is a -?dpi version of the file; if so,
         // we also won't be generating a bitmap image.
 
@@ -150,11 +154,6 @@ public class VectorDetector extends ResourceXmlDetector {
                 containsGradient(document) && isVectorGenerationSupportedForGradient(project);
 
         if (!generationDueToGradient) {
-            // TODO: When support library starts supporting gradients (http://b/62421666), this
-            // check should be moved up.
-            if (usingSupportLibVectors(project)) {
-                return;
-            }
             boolean generationDueToFillType =
                     containsFillType(document) && isVectorGenerationSupportedForFillType(project);
             if (!generationDueToFillType) {

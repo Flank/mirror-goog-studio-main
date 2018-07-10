@@ -126,19 +126,20 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
     }
 
     /**
-     * Returns the reason for preprocessing, or null if preprocessing is not required.
-     * A vector drawable file may need preprocessing for one of the following reasons:
+     * Returns the reason for preprocessing, or null if preprocessing is not required. A vector
+     * drawable file may need preprocessing for one of the following reasons:
+     *
      * <ul>
-     *     <li>Min SDK is below 21 and the support library is not used</li>
-     *     <li>The drawable contains a gradient and min SDK is below 24</li>
-     *     <li>The drawable contains android:fillType attribute, min SDK is below 24 and the support
-     *     library is not used</li>
+     *   <li>Min SDK is below 21 and the support library is not used
+     *   <li>The drawable contains a gradient or android:fillType attribute and min SDK is below 24
+     *       and the support library is not used
      * </ul>
      */
     @Nullable
-    private PreprocessingReason getReasonForPreprocessing(@NonNull File resourceFile,
-            @NonNull FolderConfiguration folderConfig)
+    private PreprocessingReason getReasonForPreprocessing(
+            @NonNull File resourceFile, @NonNull FolderConfiguration folderConfig)
             throws IOException {
+        if (mSupportLibraryIsUsed) return null;
         if (mMinSdk >= PreprocessingReason.GRADIENT_SUPPORT.getSdkThreshold()) return null;
         if (!isXml(resourceFile) || !isInDrawable(resourceFile)) return null;
         VersionQualifier versionQualifier = folderConfig.getVersionQualifier();
@@ -159,27 +160,23 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                         }
                         beforeFirstTag = false;
                     } else {
-                        // TODO This logic will need to change when http://b/62421666 is fixed.
                         if (TAG_GRADIENT.equals(xmlReader.getLocalName())) {
                             return PreprocessingReason.GRADIENT_SUPPORT;
                         }
-                        if (!mSupportLibraryIsUsed) {
-                            int n = xmlReader.getAttributeCount();
-                            for (int i = 0; i < n; i++) {
-                                if ("fillType".equals(xmlReader.getAttributeLocalName(i)) &&
-                                        NS_RESOURCES.equals(xmlReader.getAttributeNamespace(i))) {
-                                    return PreprocessingReason.FILLTYPE_SUPPORT;
-                                }
+                        int n = xmlReader.getAttributeCount();
+                        for (int i = 0; i < n; i++) {
+                            if ("fillType".equals(xmlReader.getAttributeLocalName(i))
+                                    && NS_RESOURCES.equals(xmlReader.getAttributeNamespace(i))) {
+                                return PreprocessingReason.FILLTYPE_SUPPORT;
                             }
                         }
                     }
                 }
             }
 
-            // The drawable contains no gradients. Preprocessing is needed if the support library
-            // is not used and the API level is below 21.
+            // The drawable contains no gradients. Preprocessing is needed if the API level
+            // is below 21.
             if (!beforeFirstTag
-                    && !mSupportLibraryIsUsed
                     && mMinSdk < PreprocessingReason.VECTOR_SUPPORT.getSdkThreshold()
                     && fileVersion < PreprocessingReason.VECTOR_SUPPORT.getSdkThreshold()) {
                 return PreprocessingReason.VECTOR_SUPPORT;
