@@ -19,34 +19,23 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
-import joptsimple.internal.Strings;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -57,37 +46,22 @@ import org.gradle.api.tasks.TaskAction;
  *
  * <p>The task will also persist the list of splits in a gson file for consumption on subsequent
  * builds when there is no input changes to avoid rerunning it.
+ *
+ * TODO: Remove this and make users of InternalArtifactType.SPLIT_LIST read from VariantData.
  */
+@Deprecated
 @CacheableTask
 public class SplitsDiscovery extends AndroidBuilderTask {
 
-    @Nullable BuildableArtifact mergedResourcesFolders;
     Set<String> densityFilters;
-    boolean densityAuto;
     Set<String> languageFilters;
-    boolean languageAuto;
     Set<String> abiFilters;
-    boolean resConfigAuto;
     Collection<String> resourceConfigs;
-
-    @InputFiles
-    @Optional
-    @Nullable
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getMergedResourcesFolders() {
-        return mergedResourcesFolders;
-    }
 
     @Input
     @Optional
     public Set<String> getDensityFilters() {
         return densityFilters;
-    }
-
-    @Input
-    @Optional
-    public boolean isDensityAuto() {
-        return densityAuto;
     }
 
     @Input
@@ -98,19 +72,8 @@ public class SplitsDiscovery extends AndroidBuilderTask {
 
     @Input
     @Optional
-    public boolean isLanguageAuto() {
-        return languageAuto;
-    }
-
-    @Input
-    @Optional
     public Set<String> getAbiFilters() {
         return abiFilters;
-    }
-
-    @Input
-    public boolean isResConfigAuto() {
-        return resConfigAuto;
     }
 
     @Input
@@ -127,198 +90,32 @@ public class SplitsDiscovery extends AndroidBuilderTask {
 
     @TaskAction
     void taskAction() throws IOException {
-
-        Set<File> mergedResourcesFolderFiles =
-                mergedResourcesFolders != null ? mergedResourcesFolders.getFiles() : null;
-        Collection<String> resConfigs = resourceConfigs;
-        if (resConfigAuto) {
-            resConfigs = discoverListOfResourceConfigsNotDensities();
-        }
         SplitList.save(
                 getPersistedList(),
-                getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.DENSITY),
-                getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.LANGUAGE),
-                // no need to pass the source folders, we don't support Auto for ABI splits so far.
-                getFilters(ImmutableList.of(), DiscoverableFilterType.ABI),
-                resConfigs.stream().map(SplitList.Filter::new).collect(Collectors.toList()));
+                getFilters(getDensityFilters()),
+                getFilters(getLanguageFilters()),
+                getFilters(getAbiFilters()),
+                getFilters(getResourceConfigs()));
     }
 
     /**
      * Gets the list of filter values for a filter type either from the user specified build.gradle
      * settings or through a discovery mechanism using folders names.
      *
-     * @param resourceFolders the list of source folders to discover from.
-     * @param filterType the filter type
+     * @param filters the raw filter collection.
      * @return a possibly empty list of filter value for this filter type.
      */
     @NonNull
-    private List<SplitList.Filter> getFilters(
-            @Nullable Iterable<File> resourceFolders, @NonNull DiscoverableFilterType filterType) {
+    private static List<SplitList.Filter> getFilters(Collection<String> filters) {
 
         Set<String> filtersList = new HashSet<>();
-        if (filterType.isAuto(this)) {
-            Preconditions.checkNotNull(
-                    resourceFolders,
-                    "Merged resources must be supplied to perform automatic discovery of splits.");
-            filtersList.addAll(getAllFilters(resourceFolders, filterType.folderPrefix));
-            if (filterType == DiscoverableFilterType.LANGUAGE) {
-                return mergeFiltersByRootLanguage(filtersList);
-            }
-        } else {
-            filtersList.addAll(filterType.getConfiguredFilters(this));
+        if (filters != null) {
+            filtersList.addAll(filters);
         }
         return filtersList.stream().map(SplitList.Filter::new).collect(Collectors.toList());
     }
 
-    @NonNull
-    public List<String> discoverListOfResourceConfigsNotDensities() {
-        Preconditions.checkNotNull(
-                mergedResourcesFolders,
-                "Merged resources must be supplied to perform automatic discovery of resource configs.");
-        return new ArrayList<>(
-                getAllFilters(
-                        mergedResourcesFolders, DiscoverableFilterType.LANGUAGE.folderPrefix));
-    }
-
-    /**
-     * Discover all sub-folders of all the resource folders which names are starting with one of the
-     * provided prefixes.
-     *
-     * @param resourceFolders the list of resource folders
-     * @param prefixes the list of prefixes to look for folders.
-     * @return a possibly empty list of folders.
-     */
-    @NonNull
-    private static List<String> getAllFilters(
-            @NonNull Iterable<File> resourceFolders, @NonNull String... prefixes) {
-        List<String> providedResFolders = new ArrayList<>();
-        for (File resFolder : resourceFolders) {
-            File[] subResFolders = resFolder.listFiles();
-            if (subResFolders != null) {
-                for (File subResFolder : subResFolders) {
-                    for (String prefix : prefixes) {
-                        if (subResFolder.getName().startsWith(prefix)) {
-                            providedResFolders
-                                    .add(getFilter(subResFolder, prefix));
-                        }
-                    }
-                }
-            }
-        }
-        return providedResFolders;
-    }
-
-
-    @NonNull
-    private static List<SplitList.Filter> mergeFiltersByRootLanguage(
-            @NonNull Collection<String> filters) {
-        // Group the filters by root language, then sort the resulting groups with TreeSets.
-        // Then, join the resulting sets of strings with commas to get the merged filters
-
-        return filters.stream()
-                .collect(
-                        Collectors.groupingBy(
-                                SplitsDiscovery::getRootLanguage,
-                                Collectors.collectingAndThen(
-                                        Collectors.toCollection(TreeSet::new),
-                                        sortedStrings -> String.join(",", sortedStrings))))
-                .entrySet()
-                .stream()
-                .map(entry -> new SplitList.Filter(entry.getValue(), entry.getKey()))
-                .collect(Collectors.toList());
-    }
-
-    @NonNull
-    private static String getRootLanguage(String fullFilter) {
-        return fullFilter.split("\\P{Alpha}")[0];
-    }
-
-    private static String getFilter(File file, String prefix) {
-        // File can either be a resource directory (e.g. drawable-hdpi) if we're using AAPT1 or it
-        // can be a .flat file (e.g. drawable-hdpi_ic_launcher.png.flat) if we're using AAPT2.
-        if (file.isDirectory()) {
-            return file.getName().substring(prefix.length());
-        } else if (file.isFile() && file.getName().endsWith(".flat")) {
-            // The format of AAPT2 compiled files is:
-            // {@code <type>(-<filter1>)*_<original-name-of-file>(.arsc).flat}
-            int firstUnderscore = file.getName().indexOf('_');
-            if (firstUnderscore > -1) {
-                return file.getName().substring(prefix.length(), firstUnderscore);
-            }
-        }
-        return Strings.EMPTY;
-    }
-
-    /**
-     * Defines the discoverability attributes of filters.
-     */
-    private enum DiscoverableFilterType {
-
-        DENSITY("drawable-") {
-            @NonNull
-            @Override
-            Collection<String> getConfiguredFilters(@NonNull SplitsDiscovery task) {
-                return task.getDensityFilters() != null
-                        ? task.getDensityFilters()
-                        : ImmutableList.of();
-            }
-
-            @Override
-            boolean isAuto(@NonNull SplitsDiscovery task) {
-                return task.isDensityAuto();
-            }
-
-        }, LANGUAGE("values-") {
-            @NonNull
-            @Override
-            Collection<String> getConfiguredFilters(@NonNull SplitsDiscovery task) {
-                return task.getLanguageFilters() != null
-                        ? task.getLanguageFilters()
-                        : ImmutableList.of();
-            }
-
-            @Override
-            boolean isAuto(@NonNull SplitsDiscovery task) {
-                return task.isLanguageAuto();
-            }
-        }, ABI("") {
-            @NonNull
-            @Override
-            Collection<String> getConfiguredFilters(@NonNull SplitsDiscovery task) {
-                return task.getAbiFilters() != null
-                        ? task.getAbiFilters()
-                        : ImmutableList.of();
-            }
-
-            @Override
-            boolean isAuto(@NonNull SplitsDiscovery task) {
-                // so far, we never auto-discover abi filters.
-                return false;
-            }
-        };
-
-        /** The folder prefix that filter specific resources must start with. */
-        private final String folderPrefix;
-
-        DiscoverableFilterType(String folderPrefix) {
-            this.folderPrefix = folderPrefix;
-        }
-
-        /**
-         * Returns the applicable filters configured in the build.gradle for this filter type.
-         * @return a list of filters.
-         */
-        @NonNull
-        abstract Collection<String> getConfiguredFilters(@NonNull SplitsDiscovery task);
-
-        /**
-         * Returns true if the user wants the build system to auto discover the splits for this
-         * split type.
-         * @return true to use auto-discovery, false to use the build.gradle configuration.
-         */
-        abstract boolean isAuto(@NonNull SplitsDiscovery task);
-    }
-
+    @Deprecated
     public static final class ConfigAction extends TaskConfigAction<SplitsDiscovery> {
 
         private final VariantScope variantScope;
@@ -343,17 +140,18 @@ public class SplitsDiscovery extends AndroidBuilderTask {
         public void execute(@NonNull SplitsDiscovery task) {
             task.setVariantName(variantScope.getFullVariantName());
             Splits splits = variantScope.getGlobalScope().getExtension().getSplits();
-            task.persistedList = variantScope.getArtifacts().appendArtifact(
-                    InternalArtifactType.SPLIT_LIST,
-                    task,
-                    FN_SPLIT_LIST);
+
+            // TODO: Check if this is still needed.
+            task.persistedList =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(InternalArtifactType.SPLIT_LIST, task, FN_SPLIT_LIST);
+
             if (splits.getDensity().isEnable()) {
                 task.densityFilters = splits.getDensityFilters();
-                task.densityAuto = splits.getDensity().isAuto();
             }
             if (splits.getLanguage().isEnable()) {
                 task.languageFilters = splits.getLanguageFilters();
-                task.languageAuto = splits.getLanguage().isAuto();
             }
             if (splits.getAbi().isEnable()) {
                 task.abiFilters = splits.getAbiFilters();
@@ -364,17 +162,6 @@ public class SplitsDiscovery extends AndroidBuilderTask {
                             .getVariantConfiguration()
                             .getMergedFlavor()
                             .getResourceConfigurations();
-
-            task.resConfigAuto =
-                    task.resourceConfigs.size() == 1
-                            && Iterables.getOnlyElement(task.resourceConfigs).equals("auto");
-
-            // Only consume the merged resources if auto is being used.
-            if (task.densityAuto || task.languageAuto || task.resConfigAuto) {
-                task.mergedResourcesFolders =
-                        variantScope.getArtifacts().getFinalArtifactFiles(
-                                InternalArtifactType.MERGED_RES);
-            }
         }
     }
 }

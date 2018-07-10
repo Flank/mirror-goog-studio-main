@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5891c1df24b4d8011f8ede0bd361358df25ce48835b73e0d178a2616e953176e
+7bd0cd2259689320d9d81352e259baf381fd0700f22d623e87fa979095b6af64
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -331,10 +331,8 @@ com.android.build.api.dsl.options.BuildArtifactsOptions.builder: com.android.bui
 com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
 com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
 com.android.build.api.dsl.options.DensitySplitOptions
-com.android.build.api.dsl.options.DensitySplitOptions.getAuto: boolean ()
 com.android.build.api.dsl.options.DensitySplitOptions.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.options.DensitySplitOptions.getStrict: boolean ()
-com.android.build.api.dsl.options.DensitySplitOptions.setAuto: void (boolean)
 com.android.build.api.dsl.options.DensitySplitOptions.setStrict: void (boolean)
 com.android.build.api.dsl.options.DexOptions
 com.android.build.api.dsl.options.DexOptions.getAdditionalParameters: java.util.List<java.lang.String> ()
@@ -410,10 +408,8 @@ com.android.build.api.dsl.options.JavaCompileOptions.setTargetCompatibility: voi
 com.android.build.api.dsl.options.JavaCompileOptions.setTargetCompatibility: void (org.gradle.api.JavaVersion)
 com.android.build.api.dsl.options.LanguageSplitOptions
 com.android.build.api.dsl.options.LanguageSplitOptions.getApplicationFilters: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.options.LanguageSplitOptions.getAuto: boolean ()
 com.android.build.api.dsl.options.LanguageSplitOptions.getEnabled: boolean ()
 com.android.build.api.dsl.options.LanguageSplitOptions.getInclude: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.options.LanguageSplitOptions.setAuto: void (boolean)
 com.android.build.api.dsl.options.LanguageSplitOptions.setEnabled: void (boolean)
 com.android.build.api.dsl.options.LintOptions
 com.android.build.api.dsl.options.LintOptions.baseline: void (java.io.File)

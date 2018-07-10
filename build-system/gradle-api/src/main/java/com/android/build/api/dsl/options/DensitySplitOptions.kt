@@ -40,12 +40,4 @@ interface DensitySplitOptions : SplitOptions {
      * in the manifest. This is optional.
      */
     val compatibleScreens: Set<String>
-
-    /**
-     * Sets whether the build system should automatically determine the splits based on the
-     * "language-*" folders in the resources.
-     *
-     * FIXME this makes no sense for Density?
-     */
-    var auto: Boolean
 }

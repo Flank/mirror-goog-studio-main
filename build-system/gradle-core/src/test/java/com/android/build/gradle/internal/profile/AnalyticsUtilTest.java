@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -67,8 +66,8 @@ public class AnalyticsUtilTest {
     }
 
     @Test
-    public void splitConverterTest() throws IOException {
-        Splits splits = new Splits(new FakeObjectFactory(), new FakeDeprecationReporter());
+    public void splitConverterTest() {
+        Splits splits = new Splits(new FakeObjectFactory());
         // Defaults
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
@@ -99,32 +98,29 @@ public class AnalyticsUtilTest {
         splits.density(
                 it -> {
                     it.setEnable(true);
-                    it.setAuto(true);
                     it.reset();
                     it.include("xxxhdpi", "xxhdpi");
                 });
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getDensityEnabled()).isTrue();
-            assertThat(proto.getDensityAuto()).isTrue();
+            assertThat(proto.getDensityAuto()).isFalse();
             assertThat(proto.getDensityValuesList()).containsExactly(640, 480);
         }
 
         splits.language(
                 it -> {
                     it.setEnable(true);
-                    it.setAuto(true);
                 });
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getLanguageEnabled()).isTrue();
-            assertThat(proto.getLanguageAuto()).isTrue();
+            assertThat(proto.getLanguageAuto()).isFalse();
             assertThat(proto.getLanguageIncludesList()).isEmpty();
         }
 
         splits.language(
                 it -> {
-                    it.setAuto(false);
                     it.include("en", null);
                 });
         {

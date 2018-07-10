@@ -23,12 +23,9 @@ import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.After;
@@ -37,7 +34,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
@@ -76,7 +72,6 @@ public class SplitsDiscoveryTest {
 
     @Test
     public void testDensityFilters() throws IOException {
-        task.densityAuto = false;
         task.densityFilters = ImmutableSet.of("hdpi", "xhdpi");
 
         task.taskAction();
@@ -90,7 +85,6 @@ public class SplitsDiscoveryTest {
 
     @Test
     public void testLanguageFilters() throws IOException {
-        task.languageAuto = false;
         task.languageFilters = ImmutableSet.of("en", "fr", "de");
 
         task.taskAction();
@@ -115,9 +109,7 @@ public class SplitsDiscoveryTest {
 
     @Test
     public void testAllFilters() throws IOException {
-        task.densityAuto = false;
         task.densityFilters = ImmutableSet.of("hdpi", "xhdpi");
-        task.languageAuto = false;
         task.languageFilters = ImmutableSet.of("en", "fr", "de");
         task.abiFilters = ImmutableSet.of("x86", "arm", "arm-v4");
 
@@ -129,154 +121,5 @@ public class SplitsDiscoveryTest {
                 .containsExactly("en", "fr", "de");
         assertThat(splitList.getFilters(VariantOutput.FilterType.ABI))
                 .containsExactly("x86", "arm", "arm-v4");
-    }
-
-    @Test
-    public void testAutoDensityFilters() throws IOException {
-        File mergedFolder = temporaryFolder.newFolder();
-        assertThat(new File(mergedFolder, "drawable-xhdpi").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "drawable-hdpi").mkdirs()).isTrue();
-        // wrong name, should not be picked up
-        assertThat(new File(mergedFolder, "xxhdpi").mkdirs()).isTrue();
-
-        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
-
-        task.densityAuto = true;
-        task.taskAction();
-
-        SplitList splitList = SplitList.load(outputs);
-        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
-                .containsExactly("hdpi", "xhdpi");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
-        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
-    }
-
-    @Test
-    public void testAutoLanguageFilters() throws IOException {
-        File mergedFolder = temporaryFolder.newFolder();
-        assertThat(new File(mergedFolder, "values-fr").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-de").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_be").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_ca").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_ma").mkdirs()).isTrue();
-        // wrong name, should not be picked up
-        assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
-
-        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
-
-        task.languageAuto = true;
-        task.taskAction();
-        SplitList splitList = SplitList.load(outputs);
-        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
-        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr,fr_be,fr_ca,fr_ma", "de");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
-
-        Map<String, String> expectedLanguageFiltersAndNames =
-                ImmutableMap.of("fr,fr_be,fr_ca,fr_ma", "fr", "de", "de");
-        validateLanguageFilterNames(splitList, expectedLanguageFiltersAndNames);
-    }
-
-    @Test
-    public void testAllAutoFilters() throws IOException {
-        File mergedFolder = temporaryFolder.newFolder();
-        assertThat(new File(mergedFolder, "drawable-xhdpi").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "drawable-hdpi").mkdirs()).isTrue();
-        // wrong name, should not be picked up
-        assertThat(new File(mergedFolder, "xxhdpi").mkdirs()).isTrue();
-
-        assertThat(new File(mergedFolder, "values-fr").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-de").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "values-fr_be").mkdirs()).isTrue();
-        // wrong name, should not be picked up
-        assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
-        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
-
-        task.densityAuto = true;
-        task.languageAuto = true;
-        task.taskAction();
-
-        SplitList splitList = SplitList.load(outputs);
-        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
-                .containsExactly("hdpi", "xhdpi");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr,fr_be", "de");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
-
-        Map<String, String> expectedLanguageFiltersAndNames =
-                ImmutableMap.of("fr,fr_be", "fr", "de", "de");
-        validateLanguageFilterNames(splitList, expectedLanguageFiltersAndNames);
-    }
-
-    @Test
-    public void testAllAutoFiltersWithAapt2() throws IOException {
-        File mergedFolder = temporaryFolder.newFolder();
-        assertThat(new File(mergedFolder, "drawable-xhdpi_ic_launcher.png.flat").createNewFile())
-                .isTrue();
-        assertThat(new File(mergedFolder, "drawable-hdpi_ic_launcher.png.flat").createNewFile())
-                .isTrue();
-        // wrong name, should not be picked up
-        assertThat(new File(mergedFolder, "xxhdpi_ic_launger.png.flat").mkdirs()).isTrue();
-
-        assertThat(new File(mergedFolder, "values-fr_values-fr.arsc.flat").createNewFile())
-                .isTrue();
-        assertThat(new File(mergedFolder, "values-de_values-fr.arsc.flat").createNewFile())
-                .isTrue();
-        assertThat(new File(mergedFolder, "values-fr-rBE_values-fr-rBE.arsc.flat").createNewFile())
-                .isTrue();
-        // Empty qualifier should not end up in the final list.
-        assertThat(new File(mergedFolder, "values_values.arsc.flat").createNewFile())
-                .isTrue();
-        // Wrong name, should not be picked up.
-        assertThat(new File(mergedFolder, "en_values-en.arsc.flat").mkdirs()).isTrue();
-        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
-        task.densityAuto = true;
-        task.languageAuto = true;
-        task.taskAction();
-
-        SplitList splitList = SplitList.load(outputs);
-        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
-                .containsExactly("hdpi", "xhdpi");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr,fr-rBE", "de");
-        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
-
-        Map<String, String> expectedLanguageFiltersAndNames =
-                ImmutableMap.of("fr,fr-rBE", "fr", "de", "de");
-        validateLanguageFilterNames(splitList, expectedLanguageFiltersAndNames);
-    }
-
-    @Test
-    public void testNoAutoForAbiFilters() throws IOException {
-        File mergedFolder = temporaryFolder.newFolder();
-        assertThat(new File(mergedFolder, "arm").mkdirs()).isTrue();
-        assertThat(new File(mergedFolder, "x86").mkdirs()).isTrue();
-        task.mergedResourcesFolders = createBuildableArtifact(mergedFolder);
-        task.taskAction();
-
-        SplitList splitList = SplitList.load(outputs);
-        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
-        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
-        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
-    }
-
-    private BuildableArtifact createBuildableArtifact(File mergedFolder) {
-        BuildableArtifact buildableArtifact = Mockito.mock(BuildableArtifact.class);
-        when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.of(mergedFolder));
-        when(buildableArtifact.getBuildDependencies()).thenReturn(t -> ImmutableSet.of(task));
-        return buildableArtifact;
-    }
-
-    private static void validateLanguageFilterNames(
-            SplitList splitList, Map<String, String> expected) {
-        Map<String, String> actual = new HashMap<>();
-        splitList.forEach(
-                (filterType, filters) -> {
-                    if (filterType == VariantOutput.FilterType.LANGUAGE) {
-                        filters.forEach(
-                                filter -> actual.put(filter.getValue(), filter.getDisplayName()));
-                    }
-                });
-        assertThat(actual).isEqualTo(expected);
     }
 }

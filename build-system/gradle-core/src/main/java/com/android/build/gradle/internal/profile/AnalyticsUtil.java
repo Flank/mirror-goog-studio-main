@@ -120,7 +120,6 @@ public class AnalyticsUtil {
         GradleBuildSplits.Builder builder = GradleBuildSplits.newBuilder();
         if (splits.getDensity().isEnable()) {
             builder.setDensityEnabled(true);
-            builder.setDensityAuto(splits.getDensity().isAuto());
 
             for (String compatibleScreen : splits.getDensity().getCompatibleScreens()) {
                 builder.addDensityCompatibleScreens(getCompatibleScreen(compatibleScreen));
@@ -134,7 +133,7 @@ public class AnalyticsUtil {
 
         if (splits.getLanguage().isEnable()) {
             builder.setLanguageEnabled(true);
-            builder.setLanguageAuto(splits.getLanguage().isAuto());
+
             for (String split : splits.getLanguage().getApplicationFilters()) {
                 builder.addLanguageIncludes(split != null ? split : "null");
             }

@@ -398,11 +398,9 @@ public abstract class BaseVariantData {
      * @param splits the splits configuration from the build.gradle.
      */
     public void calculateFilters(Splits splits) {
-        List<File> folders = Lists.newArrayList(getGeneratedResFolders());
-        folders.addAll(variantConfiguration.getSourceFiles(SourceProvider::getResDirectories));
-        densityFilters = getFilters(folders, DiscoverableFilterType.DENSITY, splits);
-        languageFilters = getFilters(folders, DiscoverableFilterType.LANGUAGE, splits);
-        abiFilters = getFilters(folders, DiscoverableFilterType.ABI, splits);
+        densityFilters = getFilters(DiscoverableFilterType.DENSITY, splits);
+        languageFilters = getFilters(DiscoverableFilterType.LANGUAGE, splits);
+        abiFilters = getFilters(DiscoverableFilterType.ABI, splits);
     }
 
     /**
@@ -428,35 +426,6 @@ public abstract class BaseVariantData {
             default:
                 throw new RuntimeException("Unhandled filter type");
         }
-    }
-
-    /**
-     * Returns the list of generated res folders for this variant.
-     */
-    private List<File> getGeneratedResFolders() {
-        List<File> generatedResFolders = Lists.newArrayList(
-                scope.getRenderscriptResOutputDir(),
-                scope.getGeneratedResOutputDir());
-        if (extraGeneratedResFolders != null) {
-            generatedResFolders.addAll(extraGeneratedResFolders.getFiles());
-        }
-        if (taskContainer.getMicroApkTask() != null
-                && getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-            generatedResFolders.add(scope.getMicroApkResDirectory());
-        }
-        return generatedResFolders;
-    }
-
-    @NonNull
-    public List<String> discoverListOfResourceConfigs() {
-        List<String> resFoldersOnDisk = new ArrayList<String>();
-        Set<File> resourceFolders =
-                variantConfiguration.getSourceFiles(SourceProvider::getResDirectories);
-        resFoldersOnDisk.addAll(getAllFilters(
-                resourceFolders,
-                DiscoverableFilterType.LANGUAGE.folderPrefix,
-                DiscoverableFilterType.DENSITY.folderPrefix));
-        return resFoldersOnDisk;
     }
 
     @NonNull
@@ -504,51 +473,27 @@ public abstract class BaseVariantData {
      */
     private enum DiscoverableFilterType {
 
-        DENSITY("drawable-") {
+        DENSITY {
             @NonNull
             @Override
             Collection<String> getConfiguredFilters(@NonNull Splits splits) {
                 return splits.getDensityFilters();
             }
-
-            @Override
-            boolean isAuto(@NonNull Splits splits) {
-                return splits.getDensity().isAuto();
-            }
-
-        }, LANGUAGE("values-") {
+        },
+        LANGUAGE {
             @NonNull
             @Override
             Collection<String> getConfiguredFilters(@NonNull Splits splits) {
                 return splits.getLanguageFilters();
             }
-
-            @Override
-            boolean isAuto(@NonNull Splits splits) {
-                return splits.getLanguage().isAuto();
-            }
-        }, ABI("") {
+        },
+        ABI {
             @NonNull
             @Override
             Collection<String> getConfiguredFilters(@NonNull Splits splits) {
                 return splits.getAbiFilters();
             }
-
-            @Override
-            boolean isAuto(@NonNull Splits splits) {
-                // so far, we never auto-discover abi filters.
-                return false;
-            }
         };
-
-        /**
-         * Sets the folder prefix that filter specific resources must start with.
-         */
-        private String folderPrefix;
-
-        DiscoverableFilterType(String folderPrefix) {
-            this.folderPrefix = folderPrefix;
-        }
 
         /**
          * Returns the applicable filters configured in the build.gradle for this filter type.
@@ -557,63 +502,21 @@ public abstract class BaseVariantData {
          */
         @NonNull
         abstract Collection<String> getConfiguredFilters(@NonNull Splits splits);
-
-        /**
-         * Returns true if the user wants the build system to auto discover the splits for this
-         * split type.
-         * @param splits the build.gradle splits configuration.
-         * @return true to use auto-discovery, false to use the build.gradle configuration.
-         */
-        abstract boolean isAuto(@NonNull Splits splits);
     }
 
     /**
      * Gets the list of filter values for a filter type either from the user specified build.gradle
      * settings or through a discovery mechanism using folders names.
-     * @param resourceFolders the list of source folders to discover from.
      * @param filterType the filter type
      * @param splits the variant's configuration for splits.
      * @return a possibly empty list of filter value for this filter type.
      */
     @NonNull
     private static Set<String> getFilters(
-            @NonNull List<File> resourceFolders,
             @NonNull DiscoverableFilterType filterType,
             @NonNull Splits splits) {
 
-        Set<String> filtersList = new HashSet<String>();
-        if (filterType.isAuto(splits)) {
-            filtersList.addAll(getAllFilters(resourceFolders, filterType.folderPrefix));
-        } else {
-            filtersList.addAll(filterType.getConfiguredFilters(splits));
-        }
-        return filtersList;
-    }
-
-    /**
-     * Discover all sub-folders of all the resource folders which names are
-     * starting with one of the provided prefixes.
-     * @param resourceFolders the list of resource folders
-     * @param prefixes the list of prefixes to look for folders.
-     * @return a possibly empty list of folders.
-     */
-    @NonNull
-    private static List<String> getAllFilters(Iterable<File> resourceFolders, String... prefixes) {
-        List<String> providedResFolders = new ArrayList<>();
-        for (File resFolder : resourceFolders) {
-            File[] subResFolders = resFolder.listFiles();
-            if (subResFolders != null) {
-                for (File subResFolder : subResFolders) {
-                    for (String prefix : prefixes) {
-                        if (subResFolder.getName().startsWith(prefix)) {
-                            providedResFolders
-                                    .add(subResFolder.getName().substring(prefix.length()));
-                        }
-                    }
-                }
-            }
-        }
-        return providedResFolders;
+        return new HashSet<>(filterType.getConfiguredFilters(splits));
     }
 
     /**

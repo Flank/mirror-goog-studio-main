@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -67,12 +66,10 @@ public class Splits {
     private final LanguageSplitOptions language;
 
     @Inject
-    public Splits(
-            @NonNull ObjectFactory objectFactory,
-            @NonNull DeprecationReporter deprecationReporter) {
-        density = objectFactory.newInstance(DensitySplitOptions.class, deprecationReporter);
+    public Splits(@NonNull ObjectFactory objectFactory) {
+        density = objectFactory.newInstance(DensitySplitOptions.class);
         abi = objectFactory.newInstance(AbiSplitOptions.class);
-        language = objectFactory.newInstance(LanguageSplitOptions.class, deprecationReporter);
+        language = objectFactory.newInstance(LanguageSplitOptions.class);
     }
 
     /**

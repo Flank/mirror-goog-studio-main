@@ -16,23 +16,29 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
-import com.google.common.collect.Iterables
 import com.google.common.truth.Truth
 import org.junit.Test
 
 class LanguageSplitOptionsTest {
 
     @Test
-    fun testAutoDeprecation() {
+    fun testDisabled() {
+        val options = LanguageSplitOptions()
+        options.include("en")
 
-        val deprecationReporter = FakeDeprecationReporter()
-        val options = LanguageSplitOptions(deprecationReporter)
-        options.isAuto = true
+        val values = options.applicationFilters
+        Truth.assertThat(values).isEmpty()
+    }
 
-        val deprecationWarnings = deprecationReporter.deprecationWarnings
-        Truth.assertThat(deprecationWarnings).hasSize(1)
-        Truth.assertThat(Iterables.getOnlyElement(deprecationWarnings))
-                .contains("LanguageSplitOptions.auto")
+    @Test
+    fun testEnabled() {
+        val options = LanguageSplitOptions()
+        options.include("en")
+
+        // Only when the filter is enabled, the included values should be returned.
+        options.isEnable = true
+
+        val values = options.applicationFilters
+        Truth.assertThat(values).containsExactly("en")
     }
 }

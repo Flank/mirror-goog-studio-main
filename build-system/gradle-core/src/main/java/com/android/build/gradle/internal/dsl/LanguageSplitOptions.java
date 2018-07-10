@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Encapsulates settings for <a
@@ -38,14 +36,7 @@ import javax.inject.Inject;
 public class LanguageSplitOptions {
 
     private boolean enable = false;
-    private boolean auto = false;
     private Set<String> include;
-    private final DeprecationReporter deprecationReporter;
-
-    @Inject
-    public LanguageSplitOptions(@NonNull DeprecationReporter deprecationReporter) {
-        this.deprecationReporter = deprecationReporter;
-    }
 
     /**
      * Collection of include patterns.
@@ -72,7 +63,7 @@ public class LanguageSplitOptions {
 
     @NonNull
     public Set<String> getApplicationFilters() {
-        return include == null || !enable ? new HashSet<String>() : include;
+        return include == null || !enable ? new HashSet<>() : include;
     }
 
     /**
@@ -90,31 +81,18 @@ public class LanguageSplitOptions {
     }
 
     /**
-     * Sets whether the build system should determine the splits based on the "values-*" folders in
-     * the resources. If the auto mode is set to true, the include list will be ignored.
+     * Sets whether the build system should determine the splits based on the "language-*" folders
+     * in the resources.
      *
-     * <p>Additionally, if AAPT2 is enabled and resources are included targeting multiple regional
-     * variants of the same language, a single APK will be generated for each such language,
-     * containing all of the resources for all of the targeted regions. For example: if resources
-     * are included in "values-fr/," "values-fr-rCA/", and "values-fr-rBE/", a single configuration
-     * APK will be built containing all of those resources.
+     * <p>If the auto mode is set to true, the include list will be ignored.
      *
-     * @param auto true to automatically set the splits list based on the folders presence, false to
-     *     use the include list.
+     * @param auto true to automatically set the splits list based on the folders presence, false
+     *             to use the include list.
+     *
+     * @deprecated LanguageSplitOptions.auto is not supported anymore.
      */
+    @Deprecated
     public void setAuto(boolean auto) {
-        deprecationReporter.reportObsoleteUsage(
-                "LanguageSplitOptions.auto",
-                DeprecationReporter.DeprecationTarget.AUTO_SPLITS_OR_RES_CONFIG);
-        this.auto = auto;
-    }
-
-    /**
-     * Returns whether to use the automatic discovery mechanism for supported languages (true) or
-     * the manual include list (false).
-     * @return true for automatic, false for manual mode.
-     */
-    public boolean isAuto() {
-        return auto;
+        throw new RuntimeException("LanguageSplitOptions.auto is not supported anymore.");
     }
 }

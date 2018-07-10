@@ -16,40 +16,33 @@
 
 package com.android.build.gradle.internal.dsl
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.resources.Density
-import com.google.common.collect.Iterables
-import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth
 import org.junit.Test
 
 class DensitySplitOptionsTest {
 
     @Test
     fun testDisabled() {
-        val options = DensitySplitOptions(FakeDeprecationReporter())
+        val options = DensitySplitOptions()
 
         val values = options.applicableFilters
-
-        assertEquals(0, values.size.toLong())
+        Truth.assertThat(values).isEmpty()
     }
 
     @Test
     fun testUniversal() {
-        val options = DensitySplitOptions(FakeDeprecationReporter())
+        val options = DensitySplitOptions()
         options.isEnable = true
 
         val values = options.applicableFilters
         // at this time we have 6 densities, maybe more later.
-        assertTrue(values.size >= 6)
+        Truth.assertThat(values.size).isAtLeast(6)
     }
 
     @Test
     fun testNonDefaultInclude() {
-        val options = DensitySplitOptions(FakeDeprecationReporter())
+        val options = DensitySplitOptions()
         options.isEnable = true
 
         options.include(Density.TV.resourceValue)
@@ -57,14 +50,14 @@ class DensitySplitOptionsTest {
         val values = options.applicableFilters
 
         // test TV is showing up.
-        assertTrue(values.contains(Density.TV.resourceValue))
+        Truth.assertThat(values).contains(Density.TV.resourceValue)
         // test another default value also shows up
-        assertTrue(values.contains(Density.HIGH.resourceValue))
+        Truth.assertThat(values).contains(Density.HIGH.resourceValue)
     }
 
     @Test
     fun testUnallowedInclude() {
-        val options = DensitySplitOptions(FakeDeprecationReporter())
+        val options = DensitySplitOptions()
         options.isEnable = true
 
         options.include(Density.ANYDPI.resourceValue)
@@ -72,34 +65,19 @@ class DensitySplitOptionsTest {
         val values = options.applicableFilters
 
         // test ANYDPI isn't there.
-        assertFalse(values.contains(Density.ANYDPI.resourceValue))
-
+        Truth.assertThat(values).doesNotContain(Density.ANYDPI.resourceValue)
         // test another default value shows up
-        assertTrue(values.contains(Density.XHIGH.resourceValue))
+        Truth.assertThat(values).contains(Density.XHIGH.resourceValue)
     }
 
     @Test
     fun testExclude() {
-        val options = DensitySplitOptions(FakeDeprecationReporter())
+        val options = DensitySplitOptions()
         options.isEnable = true
 
         options.exclude(Density.XXHIGH.resourceValue)
 
         val values = options.applicableFilters
-
-        assertFalse(values.contains(Density.XXHIGH.resourceValue))
-    }
-
-    @Test
-    fun testAutoDeprecation() {
-
-        val deprecationReporter = FakeDeprecationReporter()
-        val options = DensitySplitOptions(deprecationReporter)
-        options.isAuto = true
-
-        val deprecationWarnings = deprecationReporter.deprecationWarnings
-        assertThat(deprecationWarnings).hasSize(1)
-        assertThat(Iterables.getOnlyElement(deprecationWarnings))
-                .contains("DensitySplitOptions.auto")
+        Truth.assertThat(values).doesNotContain(Density.XXHIGH.resourceValue)
     }
 }
