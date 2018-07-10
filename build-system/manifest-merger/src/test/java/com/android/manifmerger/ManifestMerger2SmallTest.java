@@ -826,6 +826,11 @@ public class ManifestMerger2SmallTest {
 
     @Test
     public void testAddingMultiDexApplicationWhenMissing() throws Exception {
+        doTestAddingMultiDexApplicationWhenMissing(true);
+        doTestAddingMultiDexApplicationWhenMissing(false);
+    }
+
+    private void doTestAddingMultiDexApplicationWhenMissing(boolean useAndroidX) throws Exception {
         String xml =
                 ""
                         + "<manifest\n"
@@ -842,14 +847,20 @@ public class ManifestMerger2SmallTest {
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .withFeatures(
-                                ManifestMerger2.Invoker.Feature.ADD_MULTIDEX_APPLICATION_IF_NO_NAME)
+                                useAndroidX
+                                        ? ManifestMerger2.Invoker.Feature
+                                                .ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME
+                                        : ManifestMerger2.Invoker.Feature
+                                                .ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
         String xmlText = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
         Document xmlDocument = parse(xmlText);
         assertEquals(
-                SdkConstants.SUPPORT_MULTI_DEX_APPLICATION,
+                useAndroidX
+                        ? SdkConstants.MULTI_DEX_APPLICATION.newName()
+                        : SdkConstants.MULTI_DEX_APPLICATION.oldName(),
                 xmlDocument
                         .getElementsByTagName(SdkConstants.TAG_APPLICATION)
                         .item(0)
@@ -876,7 +887,8 @@ public class ManifestMerger2SmallTest {
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .withFeatures(
-                                ManifestMerger2.Invoker.Feature.ADD_MULTIDEX_APPLICATION_IF_NO_NAME)
+                                ManifestMerger2.Invoker.Feature
+                                        .ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());

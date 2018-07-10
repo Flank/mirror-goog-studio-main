@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
@@ -723,7 +724,14 @@ public class MergeManifests extends ManifestProcessorTask {
             features.add(Feature.INSTANT_RUN_REPLACEMENT);
         }
         if (variantScope.getVariantConfiguration().getDexingType() == DexingType.LEGACY_MULTIDEX) {
-            features.add(Feature.ADD_MULTIDEX_APPLICATION_IF_NO_NAME);
+            if (variantScope
+                    .getGlobalScope()
+                    .getProjectOptions()
+                    .get(BooleanOption.USE_ANDROID_X)) {
+                features.add(Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME);
+            } else {
+                features.add(Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME);
+            }
         }
         return features.isEmpty() ? EnumSet.noneOf(Feature.class) : EnumSet.copyOf(features);
     }
