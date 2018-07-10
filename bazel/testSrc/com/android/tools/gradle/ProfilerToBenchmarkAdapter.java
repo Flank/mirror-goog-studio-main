@@ -23,7 +23,6 @@ import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -57,14 +56,14 @@ public class ProfilerToBenchmarkAdapter {
     }
 
     @SuppressWarnings("MethodMayBeStatic")
-    public void adapt(@NonNull GradleBuildProfile profile) {
+    public void adapt(long iterationStartTime, @NonNull GradleBuildProfile profile) {
 
         consolidatedTimingsPerIterations.add(
                 new ConsolidatedRunTimings(
-                        Instant.now().toEpochMilli(),
+                        iterationStartTime,
                         profile.getBuildTime(),
                         consolidate(profile, isTask, (it) -> it.getTask().getType()),
-                        consolidate(profile, isTransform, (it) -> it.getTask().getType())));
+                        consolidate(profile, isTransform, (it) -> it.getTransform().getType())));
     }
 
     public void commit() {
@@ -78,6 +77,7 @@ public class ProfilerToBenchmarkAdapter {
                             "Invalid upper (%d) and/or lower (%d) outliers removal settings",
                             benchmarkRun.removeLowerOutliers, benchmarkRun.removeUpperOutliers));
         }
+        Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
 
         consolidatedTimingsPerIterations
                 .stream()
@@ -89,6 +89,12 @@ public class ProfilerToBenchmarkAdapter {
                                         + benchmarkRun.removeLowerOutliers))
                 .forEach(
                         consolidatedRunTimings -> {
+                            totalBuildTime.addSamples(
+                                    benchmark,
+                                    new Metric.MetricSample(
+                                            consolidatedRunTimings.startTime,
+                                            consolidatedRunTimings.buildTime));
+
                             consolidatedRunTimings.timingsForTasks.forEach(
                                     (type, timing) ->
                                             addMetricSample(
@@ -104,6 +110,7 @@ public class ProfilerToBenchmarkAdapter {
                                                     timing));
                         });
         metrics.values().forEach(Metric::commit);
+        totalBuildTime.commit();
     }
 
     /**

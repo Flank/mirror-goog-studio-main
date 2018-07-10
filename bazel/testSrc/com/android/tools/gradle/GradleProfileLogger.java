@@ -23,12 +23,14 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Instant;
 
 @SuppressWarnings("unused")
 public class GradleProfileLogger implements BenchmarkListener {
     File testLogsDir;
     ProfilerToBenchmarkAdapter profilerToBenchmarkAdapter;
     BenchmarkRun benchmarkRun;
+    long iterationStartTime;
 
     @Override
     public void configure(
@@ -51,6 +53,7 @@ public class GradleProfileLogger implements BenchmarkListener {
     @Override
     public void iterationStarting() {
         cleanOutputDir(testLogsDir);
+        iterationStartTime = Instant.now().toEpochMilli();
     }
 
     @Override
@@ -73,7 +76,7 @@ public class GradleProfileLogger implements BenchmarkListener {
             throw new RuntimeException(e);
         }
 
-        profilerToBenchmarkAdapter.adapt(gradleBuildProfile);
+        profilerToBenchmarkAdapter.adapt(iterationStartTime, gradleBuildProfile);
     }
 
     private static void cleanOutputDir(File outputDir) {

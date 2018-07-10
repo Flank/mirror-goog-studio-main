@@ -157,7 +157,6 @@ public class BenchmarkTest {
 
             gradle.run(startups);
 
-            Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
             listeners.forEach(it -> it.benchmarkStarting(benchmark));
             for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
                 gradle.run(cleanups);
@@ -169,16 +168,12 @@ public class BenchmarkTest {
                 if (i >= benchmarkRun.warmUps) {
                     listeners.forEach(it -> it.iterationStarting());
                 }
-                long start = System.currentTimeMillis();
                 gradle.run(tasks);
                 if (i >= benchmarkRun.warmUps) {
-                    totalBuildTime.addSamples(
-                            benchmark, new MetricSample(start, System.currentTimeMillis() - start));
                     listeners.forEach(BenchmarkListener::iterationDone);
                 }
             }
             listeners.forEach(BenchmarkListener::benchmarkDone);
-            totalBuildTime.commit();
         }
     }
 }
