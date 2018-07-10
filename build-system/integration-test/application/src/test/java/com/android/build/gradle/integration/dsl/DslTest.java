@@ -43,62 +43,6 @@ public class DslTest {
                     .create();
 
     @Test
-    public void autoResConfigDeprecation() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "    defaultConfig {\n"
-                        + "        versionName 'foo'\n"
-                        + "        resConfig 'auto'\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    buildTypes {\n"
-                        + "        debug {\n"
-                        + "            versionNameSuffix '-suffix'\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
-        // no need to do a full build. Let's just run the manifest task.
-        ModelContainer<AndroidProject> model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects();
-
-        Collection<SyncIssue> syncIssues = model.getOnlyModel().getSyncIssues();
-        assertThat(syncIssues).isNotEmpty();
-        assertThat(syncIssues).hasSize(1);
-        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
-                .contains("'ProductFlavor.resConfig' has a value 'auto'");
-    }
-
-    @Test
-    public void autoResConfigsDeprecation() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "    defaultConfig {\n"
-                        + "        versionName 'foo'\n"
-                        + "        resConfigs 'xxhdpi', 'auto', 'xhdpi'\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    buildTypes {\n"
-                        + "        debug {\n"
-                        + "            versionNameSuffix '-suffix'\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
-        // no need to do a full build. Let's just run the manifest task.
-        ModelContainer<AndroidProject> model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects();
-
-        Collection<SyncIssue> syncIssues = model.getOnlyModel().getSyncIssues();
-        assertThat(syncIssues).isNotEmpty();
-        assertThat(syncIssues).hasSize(1);
-        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
-                .contains("'ProductFlavor.resConfigs' has a value 'auto'");
-    }
-
-    @Test
     public void versionNameSuffix() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

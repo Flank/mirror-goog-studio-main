@@ -493,7 +493,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      * alternative resources</a>.
      */
     public void resConfig(@NonNull String config) {
-        checkResConfigValue("resConfig", config);
         addResourceConfiguration(config);
     }
 
@@ -534,9 +533,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      * alternative resources</a>.
      */
     public void resConfigs(@NonNull String... config) {
-        for (String aConfig : config) {
-            checkResConfigValue("resConfigs", aConfig);
-        }
         addResourceConfigurations(config);
     }
 
@@ -577,21 +573,7 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      * alternative resources</a>.
      */
     public void resConfigs(@NonNull Collection<String> config) {
-        for (String aConfig : config) {
-            checkResConfigValue("resConfigs", aConfig);
-        }
         addResourceConfigurations(config);
-    }
-
-    private void checkResConfigValue(String dslElement, String resConfigValue) {
-        if (resConfigValue.equals("auto")) {
-            deprecationReporter.reportDeprecatedValue(
-                    "ProductFlavor." + dslElement,
-                    "auto",
-                    null,
-                    "https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.ProductFlavor.html#com.android.build.gradle.internal.dsl.ProductFlavor:resConfig(java.lang.String)",
-                    DeprecationReporter.DeprecationTarget.AUTO_SPLITS_OR_RES_CONFIG);
-        }
     }
 
     /** Options for configuration Java compilation. */

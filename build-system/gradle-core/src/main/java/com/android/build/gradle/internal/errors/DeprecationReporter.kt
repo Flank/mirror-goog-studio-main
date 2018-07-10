@@ -35,8 +35,6 @@ interface DeprecationReporter {
         OLD_DSL("at the end of 2018."),
         // Obsolete Dex Options
         DEX_OPTIONS("at the end of 2018."),
-        // "auto" in splits and resConfigs.
-        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018."),
         // Deprecation of AAPT, replaced by AAPT2.
         AAPT("at the end of 2018."),
         // When legacy dexer will be removed and fully replaced by D8.
