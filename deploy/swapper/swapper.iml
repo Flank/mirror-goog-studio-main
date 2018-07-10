@@ -8,6 +8,15 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/r8/r8-master.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+       </library>
+     </orderEntry>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />

@@ -6,7 +6,10 @@ package(default_testonly = True)
 java_library(
     name = "libhotswap",
     srcs = glob(["src/main/com/android/tools/deploy/swapper/*.java"]),
-    deps = ["//tools/base/bazel:langtools"],
+    deps = [
+        "//prebuilts/r8:d8-master",
+        "//tools/base/bazel:langtools",
+    ],
 )
 
 fake_android_test(
@@ -16,6 +19,8 @@ fake_android_test(
     data = [
         ":test-app",
         "//tools/base/deploy/agent/native:libswap.so",
+        "//tools/base/deploy/swapper/src/apk1:apk",
+        "//tools/base/deploy/swapper/src/apk2:apk",
     ],
     jvm_flags = [
         # Location of the inital test app.
@@ -26,6 +31,10 @@ fake_android_test(
 
         # JVMTI Agent for the host.
         "-Dswap.agent.location=$(location //tools/base/deploy/agent/native:libswap.so)",
+
+        # APKs for testing the DexArchiveComparator
+        "-Dapk1.location=$(location //tools/base/deploy/swapper/src/apk1:apk)",
+        "-Dapk2.location=$(location //tools/base/deploy/swapper/src/apk2:apk)",
     ],
     deps = [
         ":libhotswap",
@@ -33,6 +42,8 @@ fake_android_test(
         ":test-app-swap",
         "//tools/base/bazel:langtools",
         "//tools/base/deploy/agent/native:libswap.so",
+        "//tools/base/deploy/swapper/src/apk1:apk",
+        "//tools/base/deploy/swapper/src/apk2:apk",
         "//tools/base/fakeandroid",
         "//tools/idea/.idea/libraries:JUnit4",
     ],
