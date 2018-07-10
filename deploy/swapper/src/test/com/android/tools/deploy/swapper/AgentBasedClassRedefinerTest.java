@@ -77,6 +77,31 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
     }
 
     /**
+     * This method test a few things: 1. We can redefine a class before the class is loaded. 2.
+     * Class initializiers are not loaded when redefinition completes. 3. Class is succesfully
+     * redefined and initializers are invoke upon class loading and behave as expected.
+     */
+    @Test
+    public void testRedefiningNotLoaded() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        redefiner.redefineClass(
+                "com.android.tools.deploy.swapper.testapp.ClinitTarget",
+                getSplittedDex("com/android/tools/deploy/swapper/testapp/ClinitTarget.dex"));
+        redefiner.commit();
+
+        android.triggerMethod(ACTIVITY_CLASS, "printCounter");
+        Assert.assertTrue(android.waitForInput("TestActivity.counter = 0", RETURN_VALUE_TIMEOUT));
+
+        android.triggerMethod(ACTIVITY_CLASS, "getClassInitializerStatus");
+        Assert.assertTrue(android.waitForInput("ClinitTarget JUST SWAPPED", RETURN_VALUE_TIMEOUT));
+
+        android.triggerMethod(ACTIVITY_CLASS, "printCounter");
+        Assert.assertTrue(android.waitForInput("TestActivity.counter = 1", RETURN_VALUE_TIMEOUT));
+    }
+
+    /**
      * Modified the Redefiner to:
      *
      * <p>1. "Push" the dex files by just copying to a local temp directory.

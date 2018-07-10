@@ -60,7 +60,12 @@ dex_library(
 
 java_binary(
     name = "test-app-swap_java",
-    srcs = glob(["src/test_swap/com/android/tools/deploy/swapper/testapp/**/*.java"]),
+    srcs =
+        glob(["src/test_swap/com/android/tools/deploy/swapper/testapp/**/*.java"]) + [
+            "src/test/com/android/tools/deploy/swapper/testapp/TestActivity.java",
+        ],
     create_executable = 0,
-    deps = ["//tools/base/fakeandroid:android-mock"],
+    deps = [
+        "//tools/base/fakeandroid:android-mock",
+    ],
 )
