@@ -154,7 +154,13 @@ public class JarTestSuiteRunner extends Suite {
                                     URL url = new URL(path);
                                     urls.add(url);
                                 } catch (MalformedURLException e) {
-                                    // We ignore relative paths
+                                    File relFile = new File(file.getParentFile(), path);
+                                    if (relFile.exists()) {
+                                        urls.add(relFile.toURI().toURL());
+                                    } else {
+                                        System.err.println(
+                                                "Cannot find class-path jar: " + relFile);
+                                    }
                                 }
                             }
                         }
