@@ -18,12 +18,12 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.tasks.WorkerExecutorAdapter
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorFacade
+import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
+import java.io.Serializable
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 
 /**
@@ -67,11 +67,37 @@ object Workers {
      * invoking [getWorker] API.
      */
     fun initFromProject(options: ProjectOptions, defaultExecutor: ExecutorService) {
-
         factory = if (options.get(BooleanOption.ENABLE_GRADLE_WORKERS)) {
             { worker, _ -> WorkerExecutorAdapter(worker) }
         } else {
             { _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor)}
+        }
+    }
+
+    /**
+     * Simple implementation of [WorkerExecutorFacade] that uses a Gradle [WorkerExecutor]
+     * to submit new work actions.
+     *
+     */
+    private class WorkerExecutorAdapter(private val workerExecutor: WorkerExecutor) :
+        WorkerExecutorFacade {
+
+        override fun submit(
+            actionClass: Class<out Runnable>,
+            parameter: Serializable
+        ) {
+            workerExecutor.submit(actionClass) {
+                it.isolationMode = IsolationMode.NONE
+                it.params(parameter)
+            }
+        }
+
+        override fun await() {
+            workerExecutor.await()
+        }
+
+        override fun close() {
+            // do nothing.
         }
     }
 }
