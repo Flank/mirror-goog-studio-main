@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
@@ -24,21 +25,60 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.base.Throwables
 import org.gradle.tooling.BuildException
 import org.junit.Assert.fail
+import org.junit.Assume.assumeFalse
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import java.io.IOException
 
 /**
  * Integration test for the Jetifier feature.
  */
-class JetifierTest {
+@RunWith(FilterableParameterized::class)
+class JetifierTest(private val withKotlin: Boolean) {
+
+    companion object {
+
+        @Parameterized.Parameters(name = "withKotlin_{0}")
+        @JvmStatic
+        fun parameters() = listOf(
+            arrayOf(true),
+            arrayOf(false)
+        )
+    }
 
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("jetifier")
+        .withKotlinGradlePlugin(withKotlin)
         .create()
+
+    @Before
+    @Throws(IOException::class)
+    fun setUp() {
+        if (withKotlin) {
+            TestFileUtils.searchVerbatimAndReplace(
+                project.getSubproject(":app").buildFile,
+                "apply plugin: 'com.android.application'",
+                "apply plugin: 'com.android.application'\n" +
+                        "apply plugin: 'kotlin-android'\n" +
+                        "apply plugin: 'kotlin-kapt'"
+            )
+            TestFileUtils.searchVerbatimAndReplace(
+                project.getSubproject(":app").buildFile,
+                "annotationProcessor 'com.example.annotationprocessor:annotationProcessor:1.0'",
+                "kapt 'com.example.annotationprocessor:annotationProcessor:1.0'"
+            )
+        }
+    }
 
     @Test
     fun testJetifierDisabled() {
+        // It's enough to test without Kotlin (to save test execution time)
+        assumeFalse(withKotlin)
+
         // Build the project with Jetifier disabled
         project.executor().with(BooleanOption.ENABLE_JETIFIER, false).run("assembleDebug")
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
@@ -78,6 +118,9 @@ class JetifierTest {
 
     @Test
     fun testJetifierEnabledAndroidXDisabled() {
+        // It's enough to test without Kotlin (to save test execution time)
+        assumeFalse(withKotlin)
+
         // Build the project with Jetifier enabled but AndroidX disabled, expect failure
         try {
             project.executor()
@@ -93,6 +136,9 @@ class JetifierTest {
 
     @Test
     fun testAndroidArchNavigationLibrariesAreJetified() {
+        // It's enough to test without Kotlin (to save test execution time)
+        assumeFalse(withKotlin)
+
         // Regression test for https://issuetracker.google.com/79667498
         prepareProjectForAndroidX()
 

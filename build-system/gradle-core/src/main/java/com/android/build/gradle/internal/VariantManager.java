@@ -827,6 +827,19 @@ public class VariantManager implements VariantModel {
                     });
         }
 
+        // The Kotlin Kapt plugin should query for PROCESSED_JAR, but it is currently querying for
+        // JAR, so we need to have the workaround below to make it get PROCESSED_JAR. See
+        // http://issuetracker.google.com/111009645.
+        project.getConfigurations()
+                .all(
+                        configuration -> {
+                            if (configuration.getName().equals("kapt")) {
+                                configuration
+                                        .getAttributes()
+                                        .attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                            }
+                        });
+
         AttributesSchema schema = dependencies.getAttributesSchema();
 
         // custom strategy for AndroidTypeAttr
