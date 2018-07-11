@@ -2,7 +2,7 @@
     package="com.example.feature1" android:versionCode="1">
 <!-- do not change the versionCode above, as it is overridden by the one from the base manifest -->
 
-    <dist:module dist:onDemand="true">
+    <dist:module dist:onDemand="true" dist:title="@string/feature1_title">
       <dist:fusing dist:include="true" />
     </dist:module>
 
