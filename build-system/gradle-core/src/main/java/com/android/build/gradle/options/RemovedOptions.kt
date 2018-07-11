@@ -77,6 +77,9 @@ enum class RemovedOptions(
     ENABLE_D8_MAIN_DEX_LIST(
         "android.enableD8MainDexList",
         "This property has no effect, D8 is always used to compute the main dex list."),
+    EXCLUDE_R_AND_MANIFEST_DOT_JAVA_FROM_GENERATED_SOURCES(
+        "android.excludeRAndManifestDotJavaFromGeneratedSources",
+        "Subsumed by android.enableSeparateRClassCompilation"),
     ;
 
     override val status: Option.Status

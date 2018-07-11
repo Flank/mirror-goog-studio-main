@@ -81,7 +81,6 @@ enum class BooleanOption(
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
     ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
     ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true),
-    EXCLUDE_R_AND_MANIFEST_DOT_JAVA_FROM_GENERATED_SOURCES("android.excludeRAndManifestDotJavaFromGeneratedSources", false),
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn"),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow"),
     DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
