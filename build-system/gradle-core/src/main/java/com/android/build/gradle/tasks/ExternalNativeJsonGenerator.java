@@ -58,6 +58,7 @@ import com.android.repository.Revision;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -88,6 +89,7 @@ import org.gradle.api.tasks.OutputFiles;
  */
 public abstract class ExternalNativeJsonGenerator {
     @NonNull final JsonGenerationVariantConfiguration config;
+    @NonNull final List<String> configurationFailures = Lists.newArrayList();
     @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull protected final GradleBuildVariant.Builder stats;
 
@@ -98,6 +100,35 @@ public abstract class ExternalNativeJsonGenerator {
         this.config = config;
         this.androidBuilder = androidBuilder;
         this.stats = stats;
+
+        // Check some basic configuration information at sync time.
+        if (!getNdkFolder().isDirectory()) {
+            recordConfigurationError(
+                    String.format(
+                            "NDK not configured (%s).\n"
+                                    + "Download the NDK from http://developer.android.com/tools/sdk/ndk/."
+                                    + "Then add ndk.dir=path/to/ndk in local.properties.\n"
+                                    + "(On Windows, make sure you escape backslashes, "
+                                    + "e.g. C:\\\\ndk rather than C:\\ndk)",
+                            getNdkFolder()));
+        }
+    }
+
+    /**
+     * Record a sync/configuration error. Should only be called at configuration time. If this
+     * function is called then a sync error will be issue, a message will be printed to stderr, and
+     * if build is ever called it will fail immediately.
+     */
+    protected void recordConfigurationError(String message) {
+        configurationFailures.add(message);
+        GradleException e = new GradleException(message);
+        androidBuilder.getLogger().error(e, message);
+        androidBuilder
+                .getIssueReporter()
+                .reportError(
+                        Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                        new EvalIssueException(e, message));
+
     }
 
     /**
@@ -152,35 +183,40 @@ public abstract class ExternalNativeJsonGenerator {
         List<Callable<Void>> buildSteps = new ArrayList<>(config.abiConfigurations.size());
         for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
             buildSteps.add(
-                    () -> {
-                        try {
-                            buildForOneConfiguration(forceJsonGeneration, configuration);
-                        } catch (@NonNull IOException | GradleException e) {
-                            synchronized (androidBuilder.getIssueReporter()) {
-                                androidBuilder
-                                        .getIssueReporter()
-                                        .reportError(
-                                                Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                                                new EvalIssueException(e, config.variantName));
-                            }
-                        } catch (ProcessException e) {
-                            synchronized (androidBuilder.getIssueReporter()) {
-                                androidBuilder
-                                        .getIssueReporter()
-                                        .reportError(
-                                                Type.EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
-                                                new EvalIssueException(
-                                                        String.format(
-                                                                "executing external native build for %s %s",
-                                                                getNativeBuildSystem().getName(),
-                                                                config.makefile),
-                                                        e.getMessage()));
-                            }
-                        }
-                        return null;
-                    });
+                    () ->
+                            buildForOneConfigurationConvertExceptions(
+                                    forceJsonGeneration, configuration));
         }
         return buildSteps;
+    }
+
+    @Nullable
+    private Void buildForOneConfigurationConvertExceptions(
+            boolean forceJsonGeneration, JsonGenerationAbiConfiguration configuration) {
+        try {
+            buildForOneConfiguration(forceJsonGeneration, configuration);
+        } catch (@NonNull IOException | GradleException e) {
+            synchronized (androidBuilder.getIssueReporter()) {
+                androidBuilder
+                        .getIssueReporter()
+                        .reportError(
+                                Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                                new EvalIssueException(e, config.variantName));
+            }
+        } catch (ProcessException e) {
+            synchronized (androidBuilder.getIssueReporter()) {
+                androidBuilder
+                        .getIssueReporter()
+                        .reportError(
+                                Type.EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
+                                new EvalIssueException(
+                                        String.format(
+                                                "executing external native build for %s %s",
+                                                getNativeBuildSystem().getName(), config.makefile),
+                                        e.getMessage()));
+            }
+        }
+        return null;
     }
 
     @NonNull
@@ -217,9 +253,29 @@ public abstract class ExternalNativeJsonGenerator {
         }
     }
 
+    public void buildForOneAbiName(boolean forceJsonGeneration, String abiName) {
+        int built = 0;
+        for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
+            if (!configuration.getAbi().getName().equals(abiName)) {
+                continue;
+            }
+            built++;
+            buildForOneConfigurationConvertExceptions(forceJsonGeneration, configuration);
+        }
+        assert (built == 1);
+    }
+
+    private void checkForConfigurationErrors() {
+        if (!configurationFailures.isEmpty()) {
+            throw new GradleException(Joiner.on("\r\n").join(configurationFailures));
+        }
+    }
+
     private void buildForOneConfiguration(
             boolean forceJsonGeneration, JsonGenerationAbiConfiguration configuration)
             throws GradleException, IOException, ProcessException {
+        checkForConfigurationErrors();
+
         String abi = configuration.getAbi().getName();
         GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
                 GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
@@ -353,7 +409,7 @@ public abstract class ExternalNativeJsonGenerator {
                         GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
                                 .SUCCESS_UP_TO_DATE);
             }
-            diagnosticForAbi(abi, "JSON generation for ABI: %s completed without problems");
+            diagnosticForAbi(abi, "JSON generation completed without problems");
         } catch (@NonNull GradleException | IOException | ProcessException e) {
             variantStats.setOutcome(
                     GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.FAILED);
@@ -489,23 +545,6 @@ public abstract class ExternalNativeJsonGenerator {
      */
     void warn(String format, Object... args) {
         androidBuilder.getLogger().warning(format, args);
-    }
-
-    /**
-     * General configuration errors that apply to both CMake and ndk-build.
-     */
-    @NonNull
-    List<String> getBaseConfigurationErrors() {
-        List<String> messages = Lists.newArrayList();
-        if (!getNdkFolder().isDirectory()) {
-            messages.add(String.format(
-                    "NDK not configured (%s).\n" +
-                            "Download the NDK from http://developer.android.com/tools/sdk/ndk/." +
-                            "Then add ndk.dir=path/to/ndk in local.properties.\n" +
-                            "(On Windows, make sure you escape backslashes, "
-                            + "e.g. C:\\\\ndk rather than C:\\ndk)", getNdkFolder()));
-        }
-        return messages;
     }
 
     /** @return the variant name for this generator */
@@ -776,6 +815,11 @@ public abstract class ExternalNativeJsonGenerator {
                 }
             }
         }
+    }
+
+    @NonNull
+    public JsonGenerationVariantConfiguration getConfig() {
+        return this.config;
     }
 
     @NonNull

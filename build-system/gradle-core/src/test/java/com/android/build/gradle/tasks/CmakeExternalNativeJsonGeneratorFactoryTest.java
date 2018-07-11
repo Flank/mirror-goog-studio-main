@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConf
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.repository.Revision;
 import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
@@ -43,6 +44,8 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     String variantName;
     List<JsonGenerationAbiConfiguration> abis;
     AndroidBuilder androidBuilder;
+    ILogger logger;
+    EvalIssueReporter issueReporter;
     File sdkFolder;
     File ndkFolder;
     File soFolder;
@@ -75,6 +78,8 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
                             31));
         }
         androidBuilder = Mockito.mock(AndroidBuilder.class);
+        logger = Mockito.mock(ILogger.class);
+        issueReporter = Mockito.mock(EvalIssueReporter.class);
         sdkFolder = Mockito.mock(File.class);
         ndkFolder = Mockito.mock(File.class);
         soFolder = Mockito.mock(File.class);
@@ -94,6 +99,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     @Test
     public void testCmakeStrategy() {
         Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
+        Mockito.when(androidBuilder.getIssueReporter()).thenReturn(issueReporter);
         Revision revision = Revision.parseRevision("3.6.0-rc2", Revision.Precision.MICRO);
         assertThat(getCmakeStrategy(revision))
                 .isInstanceOf(CmakeAndroidNinjaExternalNativeJsonGenerator.class);

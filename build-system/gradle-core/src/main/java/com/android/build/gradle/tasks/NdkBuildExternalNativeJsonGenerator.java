@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import org.gradle.api.GradleException;
 
 /**
  * ndk-build JSON generation logic. This is separated from the corresponding ndk-build task so that
@@ -60,6 +59,20 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         this.projectDir = projectDir;
         this.stats.setNativeBuildSystemType(
                 GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD);
+
+        // Do some basic sync time checks.
+        if (getMakefile().isDirectory()) {
+            recordConfigurationError(
+                    String.format(
+                            "Gradle project ndkBuild.path %s is a folder. "
+                                    + "Only files (like Android.mk) are allowed.",
+                            getMakefile()));
+        } else if (!getMakefile().exists()) {
+            recordConfigurationError(
+                    String.format(
+                            "Gradle project ndkBuild.path is %s but that file doesn't exist",
+                            getMakefile()));
+        }
     }
 
     @Override
@@ -140,7 +153,6 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     @Override
     ProcessInfoBuilder getProcessBuilder(@NonNull String abi, int abiPlatformVersion,
             @NonNull File outputJson) {
-        checkConfiguration();
         // Discover Application.mk if one exists next to Android.mk
         // If there is an Application.mk file next to Android.mk then pick it up.
         File applicationMk = new File(getMakeFile().getParent(), "Application.mk");
@@ -212,17 +224,6 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             return new File(getMakefile(), "Android.mk");
         }
         return getMakefile();
-    }
-
-    /**
-     * Check whether the configuration looks good enough to generate JSON files and expect that the
-     * result will be valid.
-     */
-    private void checkConfiguration() {
-        List<String> configurationErrors = getConfigurationErrors();
-        if (!configurationErrors.isEmpty()) {
-            throw new GradleException(Joiner.on("\n").join(configurationErrors));
-        }
     }
 
     /** Get the base list of arguments for invoking ndk-build. */
@@ -326,27 +327,5 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 + " "
                 + Joiner.on(" ")
                         .join(getBaseArgs(abi, abiPlatformVersion, applicationMk, removeJobsFlag));
-    }
-
-    /**
-     * Construct list of errors that can be known at configuration time.
-     */
-    @NonNull
-    private List<String> getConfigurationErrors() {
-        List<String> messages = Lists.newArrayList();
-        if (getMakefile().isDirectory()) {
-            messages.add(
-                    String.format(
-                            "Gradle project ndkBuild.path %s is a folder. "
-                                    + "Only files (like Android.mk) are allowed.",
-                            getMakefile()));
-        } else if (!getMakefile().exists()) {
-            messages.add(
-                    String.format("Gradle project ndkBuild.path is %s but that file doesn't exist",
-                            getMakefile()));
-        }
-
-        messages.addAll(getBaseConfigurationErrors());
-        return messages;
     }
 }

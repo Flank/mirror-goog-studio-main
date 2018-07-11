@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
@@ -127,6 +128,9 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         cFlags = Arrays.asList("c-flags1", "c-flag2");
         cppFlags = Arrays.asList("cpp-flags1", "cpp-flag2");
         nativeBuildConfigurationsJsons = Mockito.mock(List.class);
+        Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
+        Mockito.when(androidBuilder.getIssueReporter())
+                .thenReturn(Mockito.mock(EvalIssueReporter.class));
     }
 
     @Test

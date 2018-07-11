@@ -76,8 +76,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
-import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
-import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -111,15 +109,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
@@ -612,7 +606,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         registerModelBuilder(registry, globalScope, variantManager, config, extraModelInfo);
 
         // Register a builder for the native tooling model
-        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(variantManager);
+        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantManager);
         registry.register(nativeModelBuilder);
     }
 
@@ -812,92 +806,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
             variantManager.publishBuildArtifacts(variantScope);
         }
 
-        // Create and read external native build JSON files depending on what's happening right
-        // now.
-        //
-        // CREATE PHASE:
-        // Creates JSONs by shelling out to external build system when:
-        //   - Any one of AndroidProject.PROPERTY_INVOKED_FROM_IDE,
-        //      AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED,
-        //      AndroidProject.PROPERTY_BUILD_MODEL_ONLY,
-        //      AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL are set.
-        //   - *and* AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL is set
-        //      or JSON files don't exist or are out-of-date.
-        // Create phase may cause ProcessException (from cmake.exe for example)
-        //
-        // READ PHASE:
-        // Reads and deserializes JSONs when:
-        //   - Any one of AndroidProject.PROPERTY_INVOKED_FROM_IDE,
-        //      AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED,
-        //      AndroidProject.PROPERTY_BUILD_MODEL_ONLY,
-        //      AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL are set.
-        // Read phase may produce IOException if the file can't be read for standard IO reasons.
-        // Read phase may produce JsonSyntaxException in the case that the content of the file is
-        // corrupt.
-        boolean forceRegeneration =
-                projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
-
         checkSplitConfiguration();
-
-        if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(projectOptions)) {
-            regenerateNativeJson(forceRegeneration);
-        }
         BuildableArtifactImpl.Companion.enableResolution();
         variantManager.setHasCreatedTasks(true);
-    }
-
-    private void regenerateNativeJson(boolean forceRegeneration) {
-        threadRecorder.record(
-                ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
-                project.getPath(),
-                null,
-                () -> {
-                    if (projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)) {
-                        if (nativeJsonGenExecutor == null) {
-                            nativeJsonGenExecutor = createNativeJsonGenExecutor();
-                        }
-                        List<Callable<Void>> buildSteps = new ArrayList<>();
-                        for (VariantScope variantScope : variantManager.getVariantScopes()) {
-                            ExternalNativeJsonGenerator generator =
-                                    variantScope
-                                            .getTaskContainer()
-                                            .getExternalNativeJsonGenerator();
-                            if (generator != null) {
-                                // This will generate any out-of-date or non-existent JSONs.
-                                // When refreshExternalNativeModel() is true it will also
-                                // force update all JSONs.
-                                buildSteps.addAll(generator.parallelBuild(forceRegeneration));
-                            }
-                        }
-                        try {
-                            nativeJsonGenExecutor.invokeAll(buildSteps);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(
-                                    "Thread was interrupted while native build JSON generation"
-                                            + " was in progress.",
-                                    e);
-                        }
-                    } else {
-                        for (VariantScope variantScope : variantManager.getVariantScopes()) {
-                            ExternalNativeJsonGenerator generator =
-                                    variantScope
-                                            .getTaskContainer()
-                                            .getExternalNativeJsonGenerator();
-                            if (generator != null) {
-                                // This will generate any out-of-date or non-existent JSONs.
-                                // When refreshExternalNativeModel() is true it will also
-                                // force update all JSONs.
-                                generator.build(forceRegeneration);
-                            }
-                        }
-                    }
-                });
-    }
-
-    private static ExecutorService createNativeJsonGenExecutor() {
-        int cpuCores = Runtime.getRuntime().availableProcessors();
-        int threadNumber = Math.min(cpuCores, 8);
-        return Executors.newFixedThreadPool(threadNumber);
     }
 
     private void checkSplitConfiguration() {

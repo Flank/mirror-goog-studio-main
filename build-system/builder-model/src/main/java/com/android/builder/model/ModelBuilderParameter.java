@@ -67,4 +67,19 @@ public interface ModelBuilderParameter {
      * @param variantName the name of the variant to build.
      */
     void setVariantName(@NonNull String variantName);
+
+    /**
+     * If not null then this is the name of the ABI to build.
+     *
+     * @return the name of the ABI to build.
+     */
+    @Nullable
+    String getAbiName();
+
+    /**
+     * Sets the ABI to build.
+     *
+     * @param abi the ABI to build.
+     */
+    void setAbiName(@NonNull String abi);
 }

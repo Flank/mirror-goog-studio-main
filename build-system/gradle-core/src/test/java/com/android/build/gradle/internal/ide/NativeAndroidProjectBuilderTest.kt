@@ -73,7 +73,7 @@ class NativeAndroidProjectBuilderTest {
             )
         )
         AndroidBuildGradleJsonStreamingParser(reader, visitor).parse()
-        val result = builder.buildOrNull()!!
+        val result = builder.buildNativeAndroidProject()!!
         val sourceFiles = result.artifacts.toTypedArray()[0].sourceFiles
         assertThat(sourceFiles.size).isEqualTo(1)
         assertThat(
@@ -132,7 +132,7 @@ class NativeAndroidProjectBuilderTest {
             )
         )
         AndroidBuildGradleJsonStreamingParser(reader, visitor).parse()
-        val result = builder.buildOrNull()!!
+        val result = builder.buildNativeAndroidProject()!!
         val sourceFiles = result.artifacts.toTypedArray()[0].sourceFiles
         val settings = result.settings.toTypedArray()[0].compilerFlags
         assertThat(sourceFiles.size).isEqualTo(1)
@@ -192,7 +192,7 @@ class NativeAndroidProjectBuilderTest {
             "variant-name",
             GradleBuildVariant.NativeBuildConfigInfo.newBuilder()
         )
-        val result = builder.buildOrNull()!!
+        val result = builder.buildNativeAndroidProject()!!
         val flags = result.settings.toTypedArray()[0].compilerFlags
         assertThat(flags).contains("-g")
 
@@ -249,7 +249,7 @@ class NativeAndroidProjectBuilderTest {
             "variant-name",
             GradleBuildVariant.NativeBuildConfigInfo.newBuilder()
         )
-        val result = builder.buildOrNull()!!
+        val result = builder.buildNativeAndroidProject()!!
         assertThat(result.settings.size).isEqualTo(1)
         val flags = result.settings.toTypedArray()[0].compilerFlags
         assertThat(flags).contains("-g")

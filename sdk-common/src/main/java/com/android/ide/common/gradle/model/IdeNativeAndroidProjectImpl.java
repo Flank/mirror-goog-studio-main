@@ -21,9 +21,11 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.NativeVariantInfo;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -37,6 +39,7 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
     @NonNull private final List<File> myBuildFiles;
+    @NonNull private final Map<String, NativeVariantInfo> myVariantInfos;
     @NonNull private final Collection<NativeArtifact> myArtifacts;
     @NonNull private final Collection<NativeToolchain> myToolChains;
     @NonNull private final Collection<NativeSettings> mySettings;
@@ -57,6 +60,7 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
         myApiVersion = project.getApiVersion();
         myName = project.getName();
         myBuildFiles = ImmutableList.copyOf(project.getBuildFiles());
+        myVariantInfos = copyVariantInfos(project, modelCache);
         myArtifacts =
                 copy(
                         project.getArtifacts(),
@@ -75,6 +79,19 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
         myFileExtensions = ImmutableMap.copyOf(project.getFileExtensions());
         myBuildSystems = copyBuildSystems(project);
         myHashCode = calculateHashCode();
+    }
+
+    @NonNull
+    private static Map<String, NativeVariantInfo> copyVariantInfos(
+            @NonNull NativeAndroidProject project, @NonNull ModelCache modelCache) {
+        try {
+            return copy(
+                    project.getVariantInfos(),
+                    modelCache,
+                    variantInfo -> new IdeNativeVariantInfo(variantInfo.getAbiNames()));
+        } catch (UnsupportedOperationException e) {
+            return Maps.newHashMap();
+        }
     }
 
     @Nullable
@@ -101,6 +118,12 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
     @NonNull
     public String getName() {
         return myName;
+    }
+
+    @NonNull
+    @Override
+    public Map<String, NativeVariantInfo> getVariantInfos() {
+        return myVariantInfos;
     }
 
     @Override
@@ -156,6 +179,7 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
                 && Objects.equals(myModelVersion, project.myModelVersion)
                 && Objects.equals(myName, project.myName)
                 && Objects.equals(myBuildFiles, project.myBuildFiles)
+                && Objects.equals(myVariantInfos, project.myVariantInfos)
                 && Objects.equals(myArtifacts, project.myArtifacts)
                 && Objects.equals(myToolChains, project.myToolChains)
                 && Objects.equals(mySettings, project.mySettings)
@@ -173,6 +197,7 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
                 myModelVersion,
                 myName,
                 myBuildFiles,
+                myVariantInfos,
                 myArtifacts,
                 myToolChains,
                 mySettings,

@@ -20,6 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ModelBuilderParameter;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeVariantAbi;
+import com.android.builder.model.NativeVariantInfo;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.utils.Pair;
@@ -149,7 +152,7 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         }
 
         long t2 = System.currentTimeMillis();
-        System.out.println("GetAndroidModelAction: " + (t2-t1) + "ms");
+        System.out.println("GetAndroidModelAction: " + (t2 - t1) + "ms");
 
         return new ModelContainer<>(rootBuildId, modelMap, globalLibraryMap);
     }
@@ -227,7 +230,14 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
                             ModelBuilderParameter.class,
                             p -> p.setShouldBuildVariant(false));
             if (androidProject != null) {
+                NativeAndroidProject nativeAndroidProject =
+                        buildController.findModel(
+                                project,
+                                NativeAndroidProject.class,
+                                ModelBuilderParameter.class,
+                                p -> p.setShouldBuildVariant(false));
                 List<Variant> variants = new ArrayList<>();
+                List<NativeVariantAbi> nativeVariantAbis = new ArrayList<>();
                 for (String variantName : androidProject.getVariantNames()) {
                     Variant variant =
                             buildController.findModel(
@@ -240,9 +250,30 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
                                     });
                     if (variant != null) {
                         variants.add(variant);
+                        if (nativeAndroidProject != null) {
+                            NativeVariantInfo variantinfo =
+                                    nativeAndroidProject.getVariantInfos().get(variantName);
+                            assert variantinfo
+                                    != null; // This should exist if the variant exists in AndroidProject
+                            for (String abi : variantinfo.getAbiNames()) {
+                                NativeVariantAbi nativeVariantAbi =
+                                        buildController.findModel(
+                                                project,
+                                                NativeVariantAbi.class,
+                                                ModelBuilderParameter.class,
+                                                p -> {
+                                                    p.setVariantName(variantName);
+                                                    p.setAbiName(abi);
+                                                });
+                                if (nativeVariantAbi != null) {
+                                    nativeVariantAbis.add(nativeVariantAbi);
+                                }
+                            }
+                        }
                     }
                 }
-                return new ParameterizedAndroidProject(androidProject, variants);
+                return new ParameterizedAndroidProject(
+                        androidProject, variants, nativeAndroidProject, nativeVariantAbis);
             }
             return null;
         }

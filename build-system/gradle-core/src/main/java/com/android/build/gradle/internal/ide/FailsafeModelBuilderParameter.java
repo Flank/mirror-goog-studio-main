@@ -78,4 +78,19 @@ class FailsafeModelBuilderParameter implements ModelBuilderParameter {
     public void setVariantName(@NonNull String variantName) {
         throw new UnsupportedOperationException();
     }
+
+    @Nullable
+    @Override
+    public String getAbiName() {
+        try {
+            return delegate.getAbiName();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    @Override
+    public void setAbiName(@NonNull String abi) {
+        throw new UnsupportedOperationException();
+    }
 }

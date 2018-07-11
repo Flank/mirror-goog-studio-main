@@ -22,6 +22,7 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.NativeVariantInfo;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
@@ -43,10 +44,9 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
     private final String name;
     @NonNull
     private final Collection<File> buildFiles;
-    @NonNull
-    private final Collection<NativeArtifact> artifacts;
-    @NonNull
-    private final Collection<NativeToolchain> toolChains;
+    @NonNull private final Map<String, NativeVariantInfo> variantInfos;
+    @NonNull private final Collection<NativeArtifact> artifacts;
+    @NonNull private final Collection<NativeToolchain> toolChains;
     @NonNull
     private final Collection<NativeSettings> settings;
     @NonNull
@@ -58,6 +58,7 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
             @NonNull String modelVersion,
             @NonNull String name,
             @NonNull Collection<File> buildFiles,
+            @NonNull Map<String, NativeVariantInfo> variantInfos,
             @NonNull Collection<NativeArtifact> artifacts,
             @NonNull Collection<NativeToolchain> toolChains,
             @NonNull Collection<NativeSettings> settings,
@@ -67,6 +68,7 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
         this.modelVersion = modelVersion;
         this.name = name;
         this.buildFiles = buildFiles;
+        this.variantInfos = variantInfos;
         this.artifacts = artifacts;
         this.toolChains = toolChains;
         this.settings = settings;
@@ -90,6 +92,12 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
     @NonNull
     public String getName() {
         return name;
+    }
+
+    @Override
+    @NonNull
+    public Map<String, NativeVariantInfo> getVariantInfos() {
+        return variantInfos;
     }
 
     @Override
@@ -137,22 +145,31 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
             return false;
         }
         NativeAndroidProjectImpl that = (NativeAndroidProjectImpl) o;
-        return apiVersion == that.apiVersion &&
-                Objects.equals(modelVersion, that.modelVersion) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(buildFiles, that.buildFiles) &&
-                Objects.equals(artifacts, that.artifacts) &&
-                Objects.equals(toolChains, that.toolChains) &&
-                Objects.equals(settings, that.settings) &&
-                Objects.equals(fileExtensions, that.fileExtensions) &&
-                Objects.equals(buildSystems, that.buildSystems);
+        return apiVersion == that.apiVersion
+                && Objects.equals(modelVersion, that.modelVersion)
+                && Objects.equals(name, that.name)
+                && Objects.equals(variantInfos, that.variantInfos)
+                && Objects.equals(buildFiles, that.buildFiles)
+                && Objects.equals(artifacts, that.artifacts)
+                && Objects.equals(toolChains, that.toolChains)
+                && Objects.equals(settings, that.settings)
+                && Objects.equals(fileExtensions, that.fileExtensions)
+                && Objects.equals(buildSystems, that.buildSystems);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(apiVersion, modelVersion, name, buildFiles, artifacts, toolChains, settings,
-                        fileExtensions, buildSystems);
+        return Objects.hash(
+                apiVersion,
+                modelVersion,
+                name,
+                variantInfos,
+                buildFiles,
+                artifacts,
+                toolChains,
+                settings,
+                fileExtensions,
+                buildSystems);
     }
 
     @Override
@@ -161,6 +178,7 @@ public final class NativeAndroidProjectImpl implements NativeAndroidProject, Ser
                 .add("apiVersion", apiVersion)
                 .add("modelVersion", modelVersion)
                 .add("name", name)
+                .add("variantInfos", variantInfos)
                 .add("buildFiles", buildFiles)
                 .add("artifacts", artifacts)
                 .add("toolChains", toolChains)

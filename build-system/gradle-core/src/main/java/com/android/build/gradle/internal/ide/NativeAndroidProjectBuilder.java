@@ -29,6 +29,8 @@ import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.NativeVariantAbi;
+import com.android.builder.model.NativeVariantInfo;
 import com.android.builder.model.Version;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -42,20 +44,26 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
-/** Builder class for {@link NativeAndroidProject}. */
+/** Builder class for {@link NativeAndroidProject} or {@link NativeVariantAbi}. */
 class NativeAndroidProjectBuilder {
     @NonNull private final String projectName;
     @NonNull private final Set<File> buildFiles = Sets.newHashSet();
+    @NonNull private final Map<String, NativeVariantInfo> variantInfos = Maps.newHashMap();
     @NonNull private final Map<String, String> extensions = Maps.newHashMap();
     @NonNull private final List<NativeArtifact> artifacts = Lists.newArrayList();
     @NonNull private final List<NativeToolchain> toolChains = Lists.newArrayList();
     @NonNull private final Map<List<String>, NativeSettings> settingsMap = Maps.newHashMap();
     @NonNull private final Set<String> buildSystems = Sets.newHashSet();
-    int settingIndex = 0;
 
     NativeAndroidProjectBuilder(@NonNull String projectName) {
         this.projectName = projectName;
+    }
+
+    /** Add information about a particular variant. */
+    void addVariantInfo(String variantName, List<String> abiNames) {
+        this.variantInfos.put(variantName, new NativeVariantInfoImpl(abiNames));
     }
 
     /**
@@ -67,7 +75,7 @@ class NativeAndroidProjectBuilder {
 
     /**
      * Add a per-variant Json to builder. JSon is streamed so it is not read into memory all at
-     * once.
+     * once. Simultaneously updates stats in NativeBuildConfigInfo.Builder.
      */
     void addJson(
             @NonNull JsonReader reader,
@@ -86,11 +94,19 @@ class NativeAndroidProjectBuilder {
     }
 
     /**
-     * Build the final {@link NativeAndroidProject}. Return null if there are no build files (which
-     * is taken as a sign that there's nothing to show the user in Android Studio).
+     * Add a per-variant Json to builder. Json is streamed so it is not read into memory all at
+     * once.
      */
-    @Nullable
-    NativeAndroidProject buildOrNull() {
+    void addJson(@NonNull JsonReader reader, @NonNull String variantName) throws IOException {
+        JsonStreamingVisitor modelBuildingVisitor = new JsonStreamingVisitor(this, variantName);
+        try (AndroidBuildGradleJsonStreamingParser parser =
+                new AndroidBuildGradleJsonStreamingParser(reader, modelBuildingVisitor)) {
+            parser.parse();
+        }
+    }
+
+    /** Build the final {@link NativeAndroidProject}. */
+    NativeAndroidProject buildNativeAndroidProject() {
         // If there are no build files (therefore no native configurations) don't return a model
         if (this.buildFiles.isEmpty()) {
             return null;
@@ -99,12 +115,27 @@ class NativeAndroidProjectBuilder {
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 this.projectName,
                 this.buildFiles,
+                this.variantInfos,
                 this.artifacts,
                 this.toolChains,
                 ImmutableList.copyOf(this.settingsMap.values()),
                 this.extensions,
                 buildSystems,
                 Version.BUILDER_MODEL_API_VERSION);
+    }
+
+    /** Build a {@link NativeVariantAbi} which is partial information about a project. */
+    NativeVariantAbi buildNativeVariantAbi() {
+        // If there are no build files (therefore no native configurations) don't return a model
+        if (this.buildFiles.isEmpty()) {
+            return null;
+        }
+        return new NativeVariantAbiImpl(
+                this.buildFiles,
+                this.artifacts,
+                this.toolChains,
+                ImmutableList.copyOf(this.settingsMap.values()),
+                this.extensions);
     }
 
     /**
@@ -309,9 +340,10 @@ class NativeAndroidProjectBuilder {
             List<String> flagsCopy = ImmutableList.copyOf(flags);
             NativeSettings setting = builder.settingsMap.get(flags);
             if (setting == null) {
-                setting = new NativeSettingsImpl("setting" + builder.settingIndex, flagsCopy);
+                // Settings needs to be unique so that AndroidStudio can combine settings
+                // from multiple NativeAndroidAbi without worrying about collision.
+                setting = new NativeSettingsImpl("setting" + UUID.randomUUID(), flagsCopy);
                 builder.settingsMap.put(flagsCopy, setting);
-                builder.settingIndex++;
             }
             return setting.getName();
         }

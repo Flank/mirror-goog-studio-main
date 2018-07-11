@@ -24,13 +24,14 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
+import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
@@ -45,11 +46,12 @@ import org.mockito.Mockito;
 
 public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
     File sdkDirectory;
-    NdkHandler ndkHandler;
     int minSdkVersion;
     String variantName;
     List<JsonGenerationAbiConfiguration> abis;
     AndroidBuilder androidBuilder;
+    ILogger logger;
+    EvalIssueReporter issueReporter;
     File sdkFolder;
     File ndkFolder;
     File soFolder;
@@ -82,6 +84,8 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                             31));
         }
         androidBuilder = Mockito.mock(AndroidBuilder.class);
+        logger = Mockito.mock(ILogger.class);
+        issueReporter = Mockito.mock(EvalIssueReporter.class);
         sdkFolder = TestUtils.getSdk();
         ndkFolder = TestUtils.getNdk();
         soFolder = Mockito.mock(File.class);
@@ -122,6 +126,8 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                         abis,
                         Revision.parseRevision("15"),
                         nativeBuildConfigurationsJsons);
+        Mockito.when(androidBuilder.getLogger()).thenReturn(logger);
+        Mockito.when(androidBuilder.getIssueReporter()).thenReturn(issueReporter);
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
                 new CmakeAndroidNinjaExternalNativeJsonGenerator(
                         config, androidBuilder, cmakeFolder, stats);

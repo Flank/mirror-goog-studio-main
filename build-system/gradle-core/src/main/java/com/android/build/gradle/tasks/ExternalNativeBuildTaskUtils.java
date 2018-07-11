@@ -25,8 +25,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
@@ -47,9 +45,8 @@ import java.util.Map;
  * Shared utility methods for dealing with external native build tasks.
  */
 public class ExternalNativeBuildTaskUtils {
-    // Forked CMake version is the one we get when we execute "cmake --version" commond.
+    // Forked CMake version is the one we get when we execute "cmake --version" command.
     public static final String CUSTOM_FORK_CMAKE_VERSION = "3.6.0-rc2";
-
 
     /**
      * File 'derived' is consider to depend on the contents of file 'source' this function return
@@ -60,7 +57,7 @@ public class ExternalNativeBuildTaskUtils {
      * @param source -- original file (must exist)
      * @param derived -- derived file
      * @return true if derived is more recent than original
-     * @throws IOException if there was a problem reading the timestampe of one of the files
+     * @throws IOException if there was a problem reading the timestamp of one of the files
      */
     public static boolean fileIsUpToDate(@NonNull File source, @NonNull File derived)
             throws IOException {
@@ -118,14 +115,6 @@ public class ExternalNativeBuildTaskUtils {
             outputs.add(getOutputJson(jsonFolder, abi));
         }
         return outputs;
-    }
-
-    /** Return true if we should regenerate out-of-date JSON files. */
-    public static boolean shouldRegenerateOutOfDateJsons(@NonNull ProjectOptions options) {
-        return options.get(BooleanOption.IDE_BUILD_MODEL_ONLY)
-                || options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)
-                || options.get(BooleanOption.IDE_INVOKED_FROM_IDE)
-                || options.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
     }
 
     public static boolean isExternalNativeBuildEnabled(@NonNull CoreExternalNativeBuild config) {

@@ -17,6 +17,8 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.NativeAndroidProject
+import com.android.builder.model.NativeVariantAbi
 import com.android.builder.model.Variant
 import java.io.Serializable
 
@@ -25,5 +27,8 @@ import java.io.Serializable
  * When AndroidProject is requested with parameterized APIs, the AndroidProject model doesn't
  * contain Variant, and Variant model is requested separately.
  */
-data class ParameterizedAndroidProject(val androidProject: AndroidProject,
-        val variants: List<Variant>) : Serializable
+data class ParameterizedAndroidProject(
+        val androidProject: AndroidProject,
+        val variants: List<Variant>,
+        val nativeAndroidProject: NativeAndroidProject?,
+        val nativeVariantAbis: List<NativeVariantAbi>) : Serializable

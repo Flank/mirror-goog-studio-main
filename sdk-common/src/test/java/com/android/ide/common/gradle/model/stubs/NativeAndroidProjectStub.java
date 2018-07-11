@@ -20,6 +20,7 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.NativeVariantInfo;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.*;
@@ -28,6 +29,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
     @NonNull private final List<File> myBuildFiles;
+    @NonNull private final Map<String, NativeVariantInfo> myVariantInfos;
     @NonNull private final Collection<NativeArtifact> myArtifacts;
     @NonNull private final Collection<NativeToolchain> myToolChains;
     @NonNull private final Collection<NativeSettings> mySettings;
@@ -40,6 +42,9 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
                 "1.0",
                 "name",
                 Collections.singletonList(new File("buildFile")),
+                ImmutableMap.<String, NativeVariantInfo>builder()
+                        .put("myVariantName", new NativeVariantInfoStub())
+                        .build(),
                 Collections.singletonList(new NativeArtifactStub()),
                 Collections.singletonList(new NativeToolchainStub()),
                 Collections.singletonList(new NativeSettingsStub()),
@@ -52,6 +57,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
             @NonNull String modelVersion,
             @NonNull String name,
             @NonNull List<File> buildFiles,
+            @NonNull Map<String, NativeVariantInfo> variantInfos,
             @NonNull Collection<NativeArtifact> artifacts,
             @NonNull Collection<NativeToolchain> toolChains,
             @NonNull Collection<NativeSettings> settings,
@@ -61,6 +67,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
         myModelVersion = modelVersion;
         myName = name;
         myBuildFiles = buildFiles;
+        myVariantInfos = variantInfos;
         myArtifacts = artifacts;
         myToolChains = toolChains;
         mySettings = settings;
@@ -84,6 +91,12 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
     @NonNull
     public String getName() {
         return myName;
+    }
+
+    @NonNull
+    @Override
+    public Map<String, NativeVariantInfo> getVariantInfos() {
+        return myVariantInfos;
     }
 
     @Override
@@ -135,6 +148,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
                 && Objects.equals(getModelVersion(), project.getModelVersion())
                 && Objects.equals(getName(), project.getName())
                 && Objects.equals(getBuildFiles(), project.getBuildFiles())
+                && Objects.equals(getVariantInfos(), project.getVariantInfos())
                 && Objects.equals(getArtifacts(), project.getArtifacts())
                 && Objects.equals(getToolChains(), project.getToolChains())
                 && Objects.equals(getSettings(), project.getSettings())
@@ -148,6 +162,7 @@ public class NativeAndroidProjectStub extends BaseStub implements NativeAndroidP
                 getModelVersion(),
                 getName(),
                 getBuildFiles(),
+                getVariantInfos(),
                 getArtifacts(),
                 getToolChains(),
                 getSettings(),

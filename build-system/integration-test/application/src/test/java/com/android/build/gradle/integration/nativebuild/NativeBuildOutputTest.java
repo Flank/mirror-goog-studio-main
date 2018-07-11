@@ -181,10 +181,9 @@ public class NativeBuildOutputTest {
         checkFailed(
                 ImmutableList.of(
                         FileUtils.toSystemDependentPath("non/existent/CMakeLists.txt"),
-                        "externalNativeJsonGenerator.makefile",
-                        "does not exist"),
+                        "doesn't exist"),
                 ImmutableList.of("cmake.path", "CMakeLists.txt but that file doesn't exist"),
-                2);
+                1);
     }
 
     @Test
@@ -294,10 +293,9 @@ public class NativeBuildOutputTest {
         checkFailed(
                 ImmutableList.of(
                         FileUtils.toSystemDependentPath("non/existent/Android.mk"),
-                        "externalNativeJsonGenerator.makefile",
-                        "does not exist"),
+                        "doesn't exist"),
                 ImmutableList.of("ndkBuild.path", "Android.mk but that file doesn't exist"),
-                2);
+                1);
     }
 
     @Test
@@ -428,6 +426,8 @@ public class NativeBuildOutputTest {
         // Check the sync
         AndroidProject androidProject =
                 project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
+        // Make sure we can get a NativeAndroidProject
+        project.model().fetch(NativeAndroidProject.class);
 
         // Check for expected sync issues
         assertThat(androidProject.getSyncIssues()).hasSize(expectedSyncIssueCount);
