@@ -321,18 +321,18 @@ class NamespaceRewriterTest {
 
     <integer name="version_code">@integer/remote_value</integer>
 
-    <style name="MyStyle" parent="@style/Parent">
+    <style name="MyStyle" parent="@style/StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
     </style>
 
-    <style name="MyStyle2" parent="Parent">
+    <style name="MyStyle2" parent="StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
         <item name="showText">true</item>
     </style>
 
-    <declare-styleable name="PieChart">
+    <declare-styleable name="PieChart" parent="StyleableParent">
         <attr name="showText" format="boolean" />
         <attr name="labelPosition" format="enum">
             <enum name="left" value="0"/>
@@ -343,7 +343,6 @@ class NamespaceRewriterTest {
 </resources>"""
         )
         val namespaced = File(temporaryFolder.newFolder("namespaced", "values"), "values.xml")
-        // TODO: add mock platform attributes, styles and styleables
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
             .add(symbol("integer", "version_code"))
@@ -352,13 +351,15 @@ class NamespaceRewriterTest {
             .add(symbol("string", "activity_name")) // overrides library string
             .add(symbol("string", "activity_ref")) // to make sure we will reference the app one
             .add(symbol("attr", "showText"))
+            .add(symbol("attr", "labelPosition"))
             .build()
         val dependencyTable = SymbolTable.builder()
             .tablePackage("com.example.dependency")
             .add(symbol("string", "reference"))
             .add(symbol("integer", "remote_value"))
             .add(symbol("string", "activity_name"))
-            .add(symbol("style", "Parent"))
+            .add(symbol("style", "StyleParent"))
+            .add(symbol("styleable", "StyleableParent"))
             .build()
 
         NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
@@ -375,20 +376,20 @@ class NamespaceRewriterTest {
 
     <integer name="version_code">@com.example.dependency:integer/remote_value</integer>
 
-    <style name="MyStyle" parent="@com.example.dependency:style/Parent">
+    <style name="MyStyle" parent="@com.example.dependency:style/StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
     </style>
 
-    <style name="MyStyle2" parent="@com.example.dependency:style/Parent">
+    <style name="MyStyle2" parent="@com.example.dependency:style/StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
         <item name="com.example.module:showText">true</item>
     </style>
 
-    <declare-styleable name="PieChart">
-        <attr name="showText" format="boolean" />
-        <attr name="labelPosition" format="enum">
+    <declare-styleable name="PieChart" parent="@com.example.dependency:styleable/StyleableParent">
+        <attr name="com.example.module:showText" format="boolean" />
+        <attr name="com.example.module:labelPosition" format="enum">
             <enum name="left" value="0" />
             <enum name="right" value="1" />
         </attr>

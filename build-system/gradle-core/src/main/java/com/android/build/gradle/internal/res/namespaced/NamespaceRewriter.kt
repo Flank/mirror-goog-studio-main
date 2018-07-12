@@ -201,6 +201,9 @@ class NamespaceRewriter(
             // Styles need to be handled separately.
             rewriteStyleElement(node as Element)
             return
+        } else if (node.nodeType == Node.ELEMENT_NODE && node.nodeName == "declare-styleable") {
+            rewriteStyleableElement(node as Element)
+            return
         }
 
         // First fix the attributes.
@@ -230,11 +233,11 @@ class NamespaceRewriter(
      * ```
      * */
     private fun rewriteStyleElement(element: Element) {
-        rewriteStyleParent(element)
+        rewriteParent(element, "style")
         rewriteStyleItems(element)
     }
 
-    private fun rewriteStyleParent(element: Element) {
+    private fun rewriteParent(element: Element, type: String) {
         val name: String = element.attributes.getNamedItem("name")!!.nodeValue
 
         val originalParent: String? = element.attributes.getNamedItem("parent")?.nodeValue
@@ -244,7 +247,7 @@ class NamespaceRewriter(
             val possibleParent = name.substringBeforeLast('.', "")
             if (!possibleParent.isEmpty()) {
                 val possiblePackage = maybeFindPackage(
-                    "style",
+                    type,
                     possibleParent,
                     logger,
                     symbolTables
@@ -259,7 +262,7 @@ class NamespaceRewriter(
             // Rewrite explicitly included parents
             parent = originalParent
             if (!parent.startsWith("@")) {
-                parent = "@style/$parent"
+                parent = "@$type/$parent"
             }
             parent = rewritePossibleReference(parent)
         }
@@ -268,7 +271,31 @@ class NamespaceRewriter(
             parentAttribute.value = parent
             element.attributes.setNamedItem(parentAttribute)
         }
+    }
 
+    private fun rewriteStyleableElement(element: Element) {
+        // Rewrite the parent, if it exists.
+        rewriteParent(element, "styleable")
+
+        // Take care of the styleable children.
+        element.childNodes.forEach { child ->
+            if (child.nodeType == Node.ELEMENT_NODE &&
+                    (child.nodeName == "attr" || child.nodeName == "item")) {
+                child as Element
+                child.attributes.forEach {
+                    if (it.nodeName == "name") {
+                        val content = "@attr/${it.nodeValue}"
+                        // TODO(b/110088465): use a better heuristic for finding the package.
+                        val namespacedContent = rewritePossibleReference(content)
+                        if (content != namespacedContent) {
+                            val foundPackage =
+                                    namespacedContent.substring(1, namespacedContent.indexOf(":"))
+                            it.nodeValue = "$foundPackage:${it.nodeValue}"
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun rewriteStyleItems(styleElement: Element) {
