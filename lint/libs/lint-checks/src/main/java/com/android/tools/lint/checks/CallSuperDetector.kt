@@ -150,9 +150,8 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
             val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
-                if (targetMethod == resolved ||
-                    // Avoid false positives when there are type resolution problems
-                    resolved == null
+                if (resolved == null || // Avoid false positives for type resolution problems
+                    targetMethod.isEquivalentTo(resolved)
                 ) {
                     callsSuper = true
                 }
