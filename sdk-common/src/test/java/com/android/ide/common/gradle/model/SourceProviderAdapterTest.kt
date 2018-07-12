@@ -22,6 +22,7 @@ import com.android.projectmodel.Config
 import com.android.projectmodel.ConfigAssociation
 import com.android.projectmodel.SourceSet
 import com.android.projectmodel.matchArtifactsWith
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
@@ -153,7 +154,7 @@ class SourceProviderAdapterTest {
     fun testSuccessfulBidirectionalConversion() {
         val input = SourceSet(
             mapOf(
-                AndroidPathType.MANIFEST to listOf("folder/MyManifest.xml"),
+                AndroidPathType.MANIFEST to listOf("folder${File.separator}MyManifest.xml"),
                 AndroidPathType.JAVA to listOf("java1", "java2"),
                 AndroidPathType.AIDL to listOf("aidl1", "aidl2"),
                 AndroidPathType.RESOURCE to listOf("resource1", "resource2"),
