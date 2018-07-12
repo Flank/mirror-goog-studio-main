@@ -512,4 +512,14 @@ public interface BaseVariant {
     @Incubating
     @NonNull
     FileCollection getAllRawAndroidResources();
+
+    /**
+     * Registers a task to be executed before any main output tasks like the assemble or bundle
+     * tasks are invoked.
+     *
+     * <p>The task will need to set up its dependencies on the build outputs (whether it is an
+     * intermediate output or the final one) independently of this call.
+     */
+    @Incubating
+    void register(Task task);
 }

@@ -394,5 +394,10 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         public FileCollection getAllRawAndroidResources() {
             return variant.getAllRawAndroidResources();
         }
+
+        @Override
+        public void register(Task task) {
+            variant.register(task);
+        }
     }
 }
