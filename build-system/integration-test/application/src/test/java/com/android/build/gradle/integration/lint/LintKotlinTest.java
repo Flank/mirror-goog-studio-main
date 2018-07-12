@@ -55,6 +55,7 @@ public class LintKotlinTest {
                 .contains(
                         "errorLine1=\"    public SampleFragment(String foo) { // Deliberate lint error\"");
         assertThat(lintReport).contains("id=\"ValidFragment\"");
+        assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
 
         // Make sure quickfixes worked too
         File source = project.file("app/src/main/kotlin/test/pkg/AccessTest2.kt");
