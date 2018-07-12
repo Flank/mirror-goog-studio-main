@@ -125,7 +125,8 @@ public class ResourceUsageAnalyzerTest {
                         mergedManifest,
                         mapping,
                         resources,
-                        null);
+                        null,
+                        ResourceUsageAnalyzer.ApkFormat.BINARY);
         analyzer.analyze();
         checkState(analyzer);
         assertEquals(""
@@ -1198,7 +1199,13 @@ public class ResourceUsageAnalyzerTest {
         File mappingFile = createMappingFile(Files.createTempDir());
         ResourceUsageAnalyzer analyzer =
                 new ResourceUsageAnalyzer(
-                        dummy, Collections.singleton(dummy), dummy, mappingFile, dummy, null);
+                        dummy,
+                        Collections.singleton(dummy),
+                        dummy,
+                        mappingFile,
+                        dummy,
+                        null,
+                        ResourceUsageAnalyzer.ApkFormat.BINARY);
         analyzer.getModel().addDeclaredResource(ResourceType.LAYOUT, "structure_status_view", null, true);
         analyzer.recordMapping(mappingFile);
         assertTrue(analyzer.isResourceClass("android/support/v7/appcompat/R$attr.class"));
