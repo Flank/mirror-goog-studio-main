@@ -1,4 +1,21 @@
-#load("//tools/base/bazel:bazel.bzl")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.deployer",
+    srcs = ["src"],
+    iml_files = ["android.sdktools.deployer.iml"],
+    test_data = glob(["test/resource/**"]),
+    test_srcs = ["test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+    ],
+)
 
 java_library(
     name = "deployer",
@@ -7,7 +24,7 @@ java_library(
     ]),
     deps = [
         "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:studio.android.sdktools.ddmlib",
+        "//tools/base/ddmlib:tools.ddmlib",
     ],
 )
 
@@ -16,7 +33,7 @@ java_binary(
     main_class = "com.android.tools.deployer.DeployerRunner",
     runtime_deps = [
         ":deployer",
-        "//tools/base/ddmlib:studio.android.sdktools.ddmlib",
+        "//tools/base/ddmlib:tools.ddmlib",
     ],
 )
 
@@ -24,14 +41,13 @@ java_test(
     name = "deployer.tests",
     srcs = glob(["test/java/**"]),
     data = glob(["test/resource/**"]),
-    tags = ["no_test_windows"],  # b/77288863
-    test_class = "com.android.tools.deployer.TestDeployer",
+    jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":deployer",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.smali_dexlib2",
     ],
 )
