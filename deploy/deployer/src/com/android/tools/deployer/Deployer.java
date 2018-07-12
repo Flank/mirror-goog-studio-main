@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -44,7 +45,7 @@ public class Deployer {
     }
 
     public Deployer(
-            String packageName, ArrayList<String> apkPaths, InstallerCallBack cb, AdbClient adb) {
+            String packageName, List<String> apkPaths, InstallerCallBack cb, AdbClient adb) {
         this.stopWatch = new StopWatch();
         this.packageName = packageName;
         this.installerCallBack = cb;

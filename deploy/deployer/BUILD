@@ -23,6 +23,7 @@ java_library(
         "src/**/*.java",
     ]),
     deps = [
+        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
     ],
@@ -45,7 +46,6 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":deployer",
-        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
