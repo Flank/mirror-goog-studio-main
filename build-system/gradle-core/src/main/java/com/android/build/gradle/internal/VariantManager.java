@@ -834,7 +834,7 @@ public class VariantManager implements VariantModel {
         project.getConfigurations()
                 .all(
                         configuration -> {
-                            if (configuration.getName().equals("kapt")) {
+                            if (configuration.getName().startsWith("kapt")) {
                                 configuration
                                         .getAttributes()
                                         .attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
