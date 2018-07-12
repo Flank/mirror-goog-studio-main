@@ -76,8 +76,11 @@ class ProcessOutputJunction(
                 .assertNormalExitValue()
         } catch (e: ProcessException) {
             throw BuildCommandException(
-                """${e.message}
-                   ${stderrFile.readText()}""".trimIndent()
+                """
+                |${e.message}
+                |${stdoutFile.readText()}
+                |${stderrFile.readText()}
+                """.trimMargin()
             )
         }
     }
