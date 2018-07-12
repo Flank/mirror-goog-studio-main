@@ -256,7 +256,9 @@ public class DataBindingIncrementalTest {
 
         if (withKotlin) {
             assertThat(stacktrace.contains("Execution failed for task ':kaptDebugKotlin'"));
-            assertThat(result.getStdout())
+            // The root cause could be printed out on stdout or stderr, possibly based on build bot
+            // configurations.
+            assertThat(result.getStdout() + result.getStderr())
                     .contains("Could not find accessor android.databinding.testapp.User.name");
         } else {
             assertThat(result.getTask(COMPILE_JAVA_TASK)).failed();
