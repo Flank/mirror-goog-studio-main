@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
@@ -65,12 +66,123 @@ public class ShrinkResourcesTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("shrink").create();
 
-    @Parameterized.Parameters(name = "shrinker {0}")
-    public static CodeShrinker[] data() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
+    @Parameterized.Parameters(name = "shrinker {0} bundle={1}")
+    public static Iterable<Object[]> data() {
+        return ImmutableList.of(
+                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE},
+                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE},
+                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.BUNDLE},
+                new Object[] {CodeShrinker.R8, ApkPipeline.BUNDLE});
     }
 
     @Parameterized.Parameter public CodeShrinker shrinker;
+
+    @Parameterized.Parameter(1)
+    public ApkPipeline apkPipeline;
+
+    private enum ApkPipeline {
+        NO_BUNDLE("assemble", ""),
+        BUNDLE("package", "UniversalApk"),
+        ;
+        private final String taskPrefix;
+        private final String taskSuffix;
+
+        ApkPipeline(String taskPrefix, String taskSuffix) {
+            this.taskPrefix = taskPrefix;
+            this.taskSuffix = taskSuffix;
+        }
+
+        String taskName(String variant) {
+            return taskPrefix + variant + taskSuffix;
+        }
+    }
+
+    private Apk getApk(@NonNull ApkType apkType) throws IOException {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                return project.getApk(apkType);
+            case BUNDLE:
+                return project.getBundleUniversalApk(apkType);
+        }
+        throw new IllegalStateException();
+    }
+
+    private File getCompressed(@NonNull GradleTestProject project) {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                return project.getIntermediateFile(
+                        "res_stripped", "release", "resources-release-stripped.ap_");
+            case BUNDLE:
+                return project.getIntermediateFile(
+                        "shrunk_linked_res_for_bundle",
+                        "release",
+                        "shrinkReleaseResources",
+                        "shrunk-bundled-res.ap_");
+        }
+        throw new IllegalStateException();
+    }
+
+    private File getUncompressed(@NonNull GradleTestProject project) {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                return project.getIntermediateFile(
+                        "processed_res",
+                        "release",
+                        "processReleaseResources",
+                        "out",
+                        "resources-release.ap_");
+            case BUNDLE:
+                return project.getIntermediateFile(
+                        "linked_res_for_bundle",
+                        "release",
+                        "bundleReleaseResources",
+                        "bundled-res.ap_");
+        }
+        throw new IllegalStateException();
+    }
+
+    private byte[] getIntermediateCompressedXml() {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                return ResourceUsageAnalyzer.TINY_BINARY_XML;
+            case BUNDLE:
+                return ResourceUsageAnalyzer.TINY_PROTO_XML;
+        }
+        throw new IllegalStateException();
+    }
+
+    private String getIntermediateResourceTableName() {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                //noinspection SpellCheckingInspection
+                return "resources.arsc";
+            case BUNDLE:
+                return "resources.pb";
+        }
+        throw new IllegalStateException();
+    }
+
+    private String getIntermediateResourceTableNameAndMethod() {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                //noinspection SpellCheckingInspection
+                return "  stored  resources.arsc";
+            case BUNDLE:
+                return "deflated  resources.pb";
+        }
+        throw new IllegalStateException();
+    }
+
+    private void useIntermediateResourceTableName(@NonNull List<String> expected) {
+        switch (apkPipeline) {
+            case NO_BUNDLE:
+                return;
+            case BUNDLE:
+                expected.set(expected.indexOf("resources.arsc"), "resources.pb");
+                return;
+        }
+        throw new IllegalStateException();
+    }
 
     @Test
     public void checkShrinkResources() throws IOException, InterruptedException {
@@ -80,7 +192,11 @@ public class ShrinkResourcesTest {
 
         project.executor()
                 .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
-                .run("clean", "assembleRelease", "assembleDebug", "assembleMinifyDontShrink");
+                .run(
+                        "clean",
+                        apkPipeline.taskName("Release"),
+                        apkPipeline.taskName("Debug"),
+                        apkPipeline.taskName("MinifyDontShrink"));
 
         File intermediates = project.file("build/" + AndroidProject.FD_INTERMEDIATES);
 
@@ -88,9 +204,9 @@ public class ShrinkResourcesTest {
         // The minifyDontShrink target has proguard but no shrinking enabled.
         // The debug target has neither proguard nor shrinking enabled.
 
-        Apk apkRelease = project.getApk(ApkType.RELEASE);
-        Apk apkDebug = project.getApk(ApkType.DEBUG);
-        Apk apkProguardOnly = project.getApk(ApkType.of("minifyDontShrink", false));
+        Apk apkRelease = getApk(ApkType.RELEASE);
+        Apk apkDebug = getApk(ApkType.DEBUG);
+        Apk apkProguardOnly = getApk(ApkType.of("minifyDontShrink", false));
 
         assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));
         assertTrue(
@@ -100,18 +216,8 @@ public class ShrinkResourcesTest {
                 apkProguardOnly.toString() + " is not a file",
                 Files.isRegularFile(apkProguardOnly.getFile()));
 
-        File compressed =
-                new File(
-                        intermediates,
-                        "res_stripped/release" + separator + "resources-release-stripped.ap_");
-        File uncompressed =
-                FileUtils.join(
-                        intermediates,
-                        "processed_res",
-                        "release",
-                        "processReleaseResources",
-                        "out",
-                        "resources-release.ap_");
+        File compressed = getCompressed(project);
+        File uncompressed = getUncompressed(project);
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
 
@@ -281,6 +387,7 @@ public class ShrinkResourcesTest {
                             "AndroidManifest.xml",
                             "classes.dex",
                             "res/drawable/force_remove.xml",
+                            "res/raw/keep.xml",
                             "res/layout/l_used_a.xml",
                             "res/layout/l_used_b2.xml",
                             "res/layout/l_used_c.xml",
@@ -385,6 +492,7 @@ public class ShrinkResourcesTest {
         // we expect
         List<String> expectedUncompressed = new ArrayList<>(expectedUnstrippedApk);
         expectedUncompressed.remove("classes.dex");
+        useIntermediateResourceTableName(expectedUncompressed);
         assertThat(dumpZipContents(uncompressed))
                 .named("uncompressed")
                 .containsExactlyElementsIn(expectedUncompressed)
@@ -402,13 +510,14 @@ public class ShrinkResourcesTest {
         if (REPLACE_DELETED_WITH_EMPTY) {
             assertThatZip(compressed)
                     .containsFileWithContent(
-                            "res/drawable/force_remove.xml", ResourceUsageAnalyzer.TINY_XML);
+                            "res/drawable/force_remove.xml", getIntermediateCompressedXml());
         }
 
         // Check the compressed .ap_:
         List<String> actualCompressed = dumpZipContents(compressed);
         List<String> expectedCompressed = new ArrayList<>(expectedStrippedApkContents);
         expectedCompressed.remove("classes.dex");
+        useIntermediateResourceTableName(expectedCompressed);
         assertThat(actualCompressed).containsExactlyElementsIn(expectedCompressed).inOrder();
         if (!REPLACE_DELETED_WITH_EMPTY) {
             assertThat(Joiner.on('\n').join(expectedCompressed)).doesNotContain("unused");
@@ -418,50 +527,50 @@ public class ShrinkResourcesTest {
                 .containsExactlyElementsIn(expectedStrippedApkContents)
                 .inOrder();
 
-        // Check splits -- just sample one of them
-        //noinspection SpellCheckingInspection
-        compressed =
-                project.file(
-                        "abisplits/build/intermediates/res_stripped/release/resources-arm64-v8a-release-stripped.ap_");
-        //noinspection SpellCheckingInspection
-        uncompressed =
-                project.file(
-                        "abisplits/build/intermediates/processed_res/release/processReleaseResources/out/resources-arm64-v8aRelease.ap_");
-        assertTrue(compressed.toString() + " is not a file", compressed.isFile());
-        assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
-        //noinspection SpellCheckingInspection
-        if (REPLACE_DELETED_WITH_EMPTY) {
-            assertThat(dumpZipContents(compressed))
+        // Bundle handles splits anyway.
+        if (apkPipeline == ApkPipeline.NO_BUNDLE) {
+            // Check splits -- just sample one of them
+            //noinspection SpellCheckingInspection
+            compressed =
+                    project.file(
+                            "abisplits/build/intermediates/res_stripped/release/resources-arm64-v8a-release-stripped.ap_");
+            //noinspection SpellCheckingInspection
+            uncompressed =
+                    project.file(
+                            "abisplits/build/intermediates/processed_res/release/processReleaseResources/out/resources-arm64-v8aRelease.ap_");
+            assertTrue(compressed.toString() + " is not a file", compressed.isFile());
+            assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
+            //noinspection SpellCheckingInspection
+            if (REPLACE_DELETED_WITH_EMPTY) {
+                assertThat(dumpZipContents(compressed))
+                        .containsExactly(
+                                "AndroidManifest.xml",
+                                "resources.arsc",
+                                "res/layout/unused.xml",
+                                "res/layout/used.xml")
+                        .inOrder();
+            } else {
+                assertThat(dumpZipContents(compressed))
+                        .containsExactly(
+                                "AndroidManifest.xml", "resources.arsc", "res/layout/used.xml")
+                        .inOrder();
+            }
+
+            //noinspection SpellCheckingInspection
+            assertThat(dumpZipContents(uncompressed))
                     .containsExactly(
                             "AndroidManifest.xml",
                             "resources.arsc",
                             "res/layout/unused.xml",
                             "res/layout/used.xml")
                     .inOrder();
-        } else {
-            assertThat(dumpZipContents(compressed))
-                    .containsExactly("AndroidManifest.xml", "resources.arsc", "res/layout/used.xml")
-                    .inOrder();
         }
-
-        //noinspection SpellCheckingInspection
-        assertThat(dumpZipContents(uncompressed))
-                .containsExactly(
-                        "AndroidManifest.xml",
-                        "resources.arsc",
-                        "res/layout/unused.xml",
-                        "res/layout/used.xml")
-                .inOrder();
         // Check WebView string handling (android_res strings etc)
 
         //noinspection SpellCheckingInspection
-        uncompressed =
-                project.file(
-                        "webview/build/intermediates/processed_res/release/processReleaseResources/out/resources-release.ap_");
+        uncompressed = getUncompressed(project.getSubproject("webview"));
         //noinspection SpellCheckingInspection
-        compressed =
-                project.file(
-                        "webview/build/intermediates/res_stripped/release/resources-release-stripped.ap_");
+        compressed = getCompressed(project.getSubproject("webview"));
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
 
@@ -470,7 +579,7 @@ public class ShrinkResourcesTest {
                 .containsExactly(
                         "AndroidManifest.xml",
                         "res/xml/my_xml.xml",
-                        "resources.arsc",
+                        getIntermediateResourceTableName(),
                         "res/raw/unknown",
                         "res/raw/unused_icon.png",
                         "res/raw/unused_index.html",
@@ -493,7 +602,7 @@ public class ShrinkResourcesTest {
                     .containsExactly(
                             "AndroidManifest.xml",
                             "res/xml/my_xml.xml",
-                            "resources.arsc",
+                            getIntermediateResourceTableName(),
                             "res/raw/unknown",
                             "res/raw/unused_icon.png",
                             "res/raw/unused_index.html",
@@ -514,7 +623,7 @@ public class ShrinkResourcesTest {
             assertThat(dumpZipContents(compressed))
                     .containsExactly(
                             "AndroidManifest.xml",
-                            "resources.arsc",
+                            getIntermediateResourceTableName(),
                             "res/raw/unknown",
                             "res/drawable/used1.xml",
                             "res/raw/used_icon.png",
@@ -535,7 +644,7 @@ public class ShrinkResourcesTest {
         // This is the state of the original source _ap file:
         assertThat(dumpZipContents(uncompressed, true))
                 .containsExactly(
-                        "  stored  resources.arsc",
+                        getIntermediateResourceTableNameAndMethod(),
                         "deflated  AndroidManifest.xml",
                         "deflated  res/xml/my_xml.xml",
                         "deflated  res/raw/unknown",
@@ -552,15 +661,14 @@ public class ShrinkResourcesTest {
                         "deflated  res/layout/used_layout3.xml",
                         "deflated  res/raw/used_script.js",
                         "deflated  res/raw/used_styles.css",
-                        "deflated  res/layout/webview.xml")
-                .inOrder();
+                        "deflated  res/layout/webview.xml");
 
         // This is the state of the rewritten ap_ file: the zip states should match
 
         if (REPLACE_DELETED_WITH_EMPTY) {
             assertThat(dumpZipContents(compressed, true))
                     .containsExactly(
-                            "  stored  resources.arsc",
+                            getIntermediateResourceTableNameAndMethod(),
                             "deflated  AndroidManifest.xml",
                             "deflated  res/xml/my_xml.xml",
                             "deflated  res/raw/unknown",
@@ -577,12 +685,11 @@ public class ShrinkResourcesTest {
                             "deflated  res/layout/used_layout3.xml",
                             "deflated  res/raw/used_script.js",
                             "deflated  res/raw/used_styles.css",
-                            "deflated  res/layout/webview.xml")
-                    .inOrder();
+                            "deflated  res/layout/webview.xml");
         } else {
             assertThat(dumpZipContents(compressed, true))
                     .containsExactly(
-                            "  stored  resources.arsc",
+                            getIntermediateResourceTableNameAndMethod(),
                             "deflated  AndroidManifest.xml",
                             "deflated  res/raw/unknown",
                             "deflated  res/drawable/used1.xml",
@@ -596,8 +703,7 @@ public class ShrinkResourcesTest {
                             "deflated  res/layout/used_layout3.xml",
                             "deflated  res/raw/used_script.js",
                             "deflated  res/raw/used_styles.css",
-                            "deflated  res/layout/webview.xml")
-                    .inOrder();
+                            "deflated  res/layout/webview.xml");
         }
 
         // Make sure the (remaining) binary contents of the files in the compressed APK are
@@ -627,18 +733,20 @@ public class ShrinkResourcesTest {
                 if (REPLACE_DELETED_WITH_EMPTY) {
                     switch (name1) {
                         case "res/xml/my_xml.xml":
-                            assertTrue(
-                                    name1, Arrays.equals(bytes1, ResourceUsageAnalyzer.TINY_XML));
+                            assertThat(bytes1)
+                                    .named(name1)
+                                    .isEqualTo(getIntermediateCompressedXml());
                             break;
                         case "res/raw/unused_icon.png":
-                            assertTrue(
-                                    name1, Arrays.equals(bytes1, ResourceUsageAnalyzer.TINY_PNG));
+                            assertThat(bytes1)
+                                    .named(name1)
+                                    .isEqualTo(ResourceUsageAnalyzer.TINY_PNG);
                             break;
                         case "res/raw/unused_index.html":
-                            assertTrue(name1, Arrays.equals(bytes1, new byte[0]));
+                            assertThat(bytes1).named(name1).isEmpty();
                             break;
                         default:
-                            assertTrue(name1, Arrays.equals(bytes1, bytes2));
+                            assertThat(bytes1).named(name1).isEqualTo(bytes2);
                             break;
                     }
                 } else {
@@ -655,13 +763,9 @@ public class ShrinkResourcesTest {
         zis2.close();
 
         //noinspection SpellCheckingInspection
-        uncompressed =
-                project.file(
-                        "keep/build/intermediates/processed_res/release/processReleaseResources/out/resources-release.ap_");
+        uncompressed = getUncompressed(project.getSubproject("keep"));
         //noinspection SpellCheckingInspection
-        compressed =
-                project.file(
-                        "keep/build/intermediates/res_stripped/release/resources-release-stripped.ap_");
+        compressed = getCompressed(project.getSubproject("keep"));
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
 
@@ -670,7 +774,7 @@ public class ShrinkResourcesTest {
                 .containsExactly(
                         "AndroidManifest.xml",
                         "res/raw/keep.xml",
-                        "resources.arsc",
+                        getIntermediateResourceTableName(),
                         "res/layout/unused1.xml",
                         "res/layout/unused2.xml",
                         "res/layout/used1.xml")
@@ -681,7 +785,8 @@ public class ShrinkResourcesTest {
             assertThat(dumpZipContents(compressed))
                     .containsExactly(
                             "AndroidManifest.xml",
-                            "resources.arsc",
+                            "res/raw/keep.xml",
+                            getIntermediateResourceTableName(),
                             "res/layout/unused1.xml",
                             "res/layout/unused2.xml",
                             "res/layout/used1.xml")
@@ -689,7 +794,9 @@ public class ShrinkResourcesTest {
         } else {
             assertThat(dumpZipContents(compressed))
                     .containsExactly(
-                            "AndroidManifest.xml", "resources.arsc", "res/layout/used1.xml")
+                            "AndroidManifest.xml",
+                            getIntermediateResourceTableName(),
+                            "res/layout/used1.xml")
                     .inOrder();
         }
     }

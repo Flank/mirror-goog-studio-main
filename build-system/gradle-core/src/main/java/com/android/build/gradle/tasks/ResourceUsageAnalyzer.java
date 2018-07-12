@@ -204,6 +204,7 @@ public class ResourceUsageAnalyzer {
     private final File mReportFile;
     private final StringWriter mDebugOutput;
     private final PrintWriter mDebugPrinter;
+    private final ApkFormat format;
 
     private boolean mVerbose;
     private boolean mDebug;
@@ -232,7 +233,8 @@ public class ResourceUsageAnalyzer {
             @NonNull File manifest,
             @Nullable File mapping,
             @NonNull File resources,
-            @Nullable File reportFile) {
+            @Nullable File reportFile,
+            @NonNull ApkFormat format) {
         mResourceClassDir = rDir;
         mProguardMapping = mapping;
         mClasses = classes;
@@ -247,6 +249,12 @@ public class ResourceUsageAnalyzer {
             mDebugOutput = null;
             mDebugPrinter = null;
         }
+        this.format = format;
+    }
+
+    public enum ApkFormat {
+        BINARY,
+        PROTO,
     }
 
     public void dispose() {
@@ -350,28 +358,34 @@ public class ResourceUsageAnalyzer {
     public static final long TINY_9PNG_CRC = 0x1148f987L;
 
     // The XML document <x/> as binary-packed with AAPT
-    public static final byte[] TINY_XML = new byte[] {
-            (byte)   3, (byte)   0, (byte)   8, (byte)   0, (byte) 104, (byte)   0,
-            (byte)   0, (byte)   0, (byte)   1, (byte)   0, (byte)  28, (byte)   0,
-            (byte)  36, (byte)   0, (byte)   0, (byte)   0, (byte)   1, (byte)   0,
-            (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   0,
-            (byte)   0, (byte)   1, (byte)   0, (byte)   0, (byte)  32, (byte)   0,
-            (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   0,
-            (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   1, (byte)   1,
-            (byte) 120, (byte)   0, (byte)   2, (byte)   1, (byte)  16, (byte)   0,
-            (byte)  36, (byte)   0, (byte)   0, (byte)   0, (byte)   1, (byte)   0,
-            (byte)   0, (byte)   0, (byte)  -1, (byte)  -1, (byte)  -1, (byte)  -1,
-            (byte)  -1, (byte)  -1, (byte)  -1, (byte)  -1, (byte)   0, (byte)   0,
-            (byte)   0, (byte)   0, (byte)  20, (byte)   0, (byte)  20, (byte)   0,
-            (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   0, (byte)   0,
-            (byte)   0, (byte)   0, (byte)   3, (byte)   1, (byte)  16, (byte)   0,
-            (byte)  24, (byte)   0, (byte)   0, (byte)   0, (byte)   1, (byte)   0,
-            (byte)   0, (byte)   0, (byte)  -1, (byte)  -1, (byte)  -1, (byte)  -1,
-            (byte)  -1, (byte)  -1, (byte)  -1, (byte)  -1, (byte)   0, (byte)   0,
-            (byte)   0, (byte)   0
-    };
+    public static final byte[] TINY_BINARY_XML =
+            new byte[] {
+                (byte) 3, (byte) 0, (byte) 8, (byte) 0, (byte) 104, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 1, (byte) 0, (byte) 28, (byte) 0,
+                (byte) 36, (byte) 0, (byte) 0, (byte) 0, (byte) 1, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+                (byte) 0, (byte) 1, (byte) 0, (byte) 0, (byte) 32, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 1, (byte) 1,
+                (byte) 120, (byte) 0, (byte) 2, (byte) 1, (byte) 16, (byte) 0,
+                (byte) 36, (byte) 0, (byte) 0, (byte) 0, (byte) 1, (byte) 0,
+                (byte) 0, (byte) 0, (byte) -1, (byte) -1, (byte) -1, (byte) -1,
+                (byte) -1, (byte) -1, (byte) -1, (byte) -1, (byte) 0, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 20, (byte) 0, (byte) 20, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+                (byte) 0, (byte) 0, (byte) 3, (byte) 1, (byte) 16, (byte) 0,
+                (byte) 24, (byte) 0, (byte) 0, (byte) 0, (byte) 1, (byte) 0,
+                (byte) 0, (byte) 0, (byte) -1, (byte) -1, (byte) -1, (byte) -1,
+                (byte) -1, (byte) -1, (byte) -1, (byte) -1, (byte) 0, (byte) 0,
+                (byte) 0, (byte) 0
+            };
 
-    public static final long TINY_XML_CRC = 0xd7e65643L;
+    public static final long TINY_BINARY_XML_CRC = 0xd7e65643L;
+
+    // The XML document <x/> as a proto packed with AAPT2
+    public static final byte[] TINY_PROTO_XML =
+            new byte[] {0xa, 0x3, 0x1a, 0x1, 0x78, 0x1a, 0x2, 0x8, 0x1};
+    public static final long TINY_PROTO_XML_CRC = 3204905971L;
 
     /**
      * "Removes" resources from an .ap_ file by writing it out while filtering out
@@ -408,11 +422,7 @@ public class ResourceUsageAnalyzer {
                 Resource resource = getResourceByJarPath(name);
                 if (resource == null || resource.isReachable()) {
                     copyToOutput(zis, zos, entry, name, directory);
-
-                } else if (REPLACE_DELETED_WITH_EMPTY
-                        && !directory
-                        // Canonical name for resource file that only contains keep rules
-                        && !name.equals("res/raw/keep.xml")) {
+                } else if (REPLACE_DELETED_WITH_EMPTY && !directory) {
                     replaceWithDummyEntry(zos, entry, name);
                 } else if (isVerbose() || mDebugPrinter != null) {
                     String message =
@@ -467,8 +477,18 @@ public class ResourceUsageAnalyzer {
             bytes = TINY_PNG;
             crc = TINY_PNG_CRC;
         } else if (name.endsWith(DOT_XML)) {
-            bytes = TINY_XML;
-            crc = TINY_XML_CRC;
+            switch (format) {
+                case BINARY:
+                    bytes = TINY_BINARY_XML;
+                    crc = TINY_BINARY_XML_CRC;
+                    break;
+                case PROTO:
+                    bytes = TINY_PROTO_XML;
+                    crc = TINY_PROTO_XML_CRC;
+                    break;
+                default:
+                    throw new IllegalStateException("");
+            }
         } else {
             bytes = new byte[0];
             crc = 0L;

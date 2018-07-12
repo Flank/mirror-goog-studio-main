@@ -308,7 +308,8 @@ public class ShrinkResourcesTransform extends Transform {
                         mergedManifest.getOutputFile(),
                         mappingFile,
                         BuildableArtifactUtil.singleFile(resourceDir),
-                        reportFile);
+                        reportFile,
+                        ResourceUsageAnalyzer.ApkFormat.BINARY);
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));
             analyzer.setDebug(logger.isEnabled(LogLevel.DEBUG));

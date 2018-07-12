@@ -91,6 +91,7 @@ public enum InternalArtifactType implements ArtifactType {
     INSTANT_RUN_SPLIT_APK_RESOURCES,
     // linked res for the unified bundle
     LINKED_RES_FOR_BUNDLE,
+    SHRUNK_LINKED_RES_FOR_BUNDLE,
 
     // Artifacts for legacy multidex
     LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,

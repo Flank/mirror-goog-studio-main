@@ -142,6 +142,7 @@ import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
+import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
 import com.android.build.gradle.internal.transforms.StripDebugSymbolTransform;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
@@ -2252,8 +2253,8 @@ public abstract class TaskManager {
 
         // ----- Minify next -----
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
-        maybeCreateResourcesShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
+            maybeCreateResourcesShrinkerTransform(variantScope);
             maybeCreateDexSplitterTransform(variantScope);
             // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
             return;
@@ -2336,6 +2337,7 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
+        maybeCreateResourcesShrinkerTransform(variantScope);
 
         // TODO: support DexSplitterTransform when IR enabled (http://b/77585545)
         maybeCreateDexSplitterTransform(variantScope);
@@ -3450,6 +3452,9 @@ public abstract class TaskManager {
                             new EvalIssueException(
                                     "Internal error, could not add the ShrinkResourcesTransform"));
         }
+
+        // And for the bundle
+        taskFactory.create(new ShrinkBundleResourcesTask.ConfigAction(scope));
     }
 
     public void createReportTasks(final List<VariantScope> variantScopes) {
