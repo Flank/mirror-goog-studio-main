@@ -34,7 +34,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public final class ValueResourceParser extends DefaultHandler {
 
     private static final ResourceReference TMP_REF =
-            new ResourceReference(ResourceType.STRING, "_tmp", false);
+            new ResourceReference(ResourceNamespace.RES_AUTO, ResourceType.STRING, "_tmp");
 
     public interface IValueResourceRepository {
         void addResourceValue(ResourceValue value);

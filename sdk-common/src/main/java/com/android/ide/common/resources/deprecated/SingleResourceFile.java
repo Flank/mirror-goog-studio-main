@@ -17,10 +17,7 @@ package com.android.ide.common.resources.deprecated;
 
 import static com.android.SdkConstants.DOT_XML;
 
-import com.android.ide.common.rendering.api.DensityBasedResourceValueImpl;
-import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.ResourceValueImpl;
+import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.io.IAbstractFile;
@@ -64,12 +61,18 @@ public class SingleResourceFile extends ResourceFile {
         if (!ResourceQualifier.isValid(qualifier)) {
             mValue =
                     new ResourceValueImpl(
-                            new ResourceReference(mType, getResourceName(mType), isFramework()),
+                            new ResourceReference(
+                                    ResourceNamespace.fromBoolean(isFramework()),
+                                    mType,
+                                    getResourceName(mType)),
                             file.getOsLocation());
         } else {
             mValue =
                     new DensityBasedResourceValueImpl(
-                            new ResourceReference(mType, getResourceName(mType), isFramework()),
+                            new ResourceReference(
+                                    ResourceNamespace.fromBoolean(isFramework()),
+                                    mType,
+                                    getResourceName(mType)),
                             file.getOsLocation(),
                             qualifier.getValue());
         }

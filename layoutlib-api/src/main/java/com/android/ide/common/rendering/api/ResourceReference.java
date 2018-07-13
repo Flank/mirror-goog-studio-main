@@ -53,12 +53,6 @@ public final class ResourceReference implements Serializable {
         this.name = name;
     }
 
-    @Deprecated
-    public ResourceReference(
-            @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
-        this(ResourceNamespace.fromBoolean(isFramework), type, name);
-    }
-
     /** A shorthand for creating a {@link ResourceType#ATTR} resource reference. */
     public static ResourceReference attr(
             @NonNull ResourceNamespace namespace, @NonNull String name) {
@@ -100,17 +94,6 @@ public final class ResourceReference implements Serializable {
     @NonNull
     public ResourceNamespace getNamespace() {
         return namespace;
-    }
-
-    /**
-     * Returns whether the resource is a framework resource ({@code true}) or a project resource
-     * ({@code false}).
-     *
-     * @deprecated all namespaces should be handled not just "android:".
-     */
-    @Deprecated
-    public final boolean isFramework() {
-        return ResourceNamespace.ANDROID.equals(namespace);
     }
 
     @NonNull

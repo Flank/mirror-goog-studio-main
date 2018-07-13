@@ -18,6 +18,7 @@ package com.android.ide.common.resources.deprecated;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.ResourceValueImpl;
@@ -141,7 +142,10 @@ public class IdResourceParser {
                         String id = value.substring(value.indexOf('/') + 1);
                         ResourceValue newId =
                                 new ResourceValueImpl(
-                                        new ResourceReference(ResourceType.ID, id, mIsFramework),
+                                        new ResourceReference(
+                                                ResourceNamespace.fromBoolean(mIsFramework),
+                                                ResourceType.ID,
+                                                id),
                                         null);
                         mRepository.addResourceValue(newId);
                     }

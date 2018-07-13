@@ -476,7 +476,9 @@ public class ResourceResolver extends RenderResources {
                 // one). In effect we assumed {@link ResourceType#ID} resources in the framework
                 // namespace always exist. The repo for framework resources needs to know which ids
                 // exist and which don't, so we can get rid of this.
-                boolean idExists = reference.isFramework() || mProjectIdChecker.test(reference);
+                boolean idExists =
+                        ResourceNamespace.ANDROID.equals(reference.getNamespace())
+                                || mProjectIdChecker.test(reference);
 
                 if (idExists) {
                     // TODO(namespaces): Cache these?
