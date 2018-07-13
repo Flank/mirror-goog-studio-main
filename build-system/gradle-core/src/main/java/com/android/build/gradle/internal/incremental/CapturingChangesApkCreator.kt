@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.incremental
 
 import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
-import com.android.tools.build.apkzlib.zip.ZFile
 import java.io.File
 import java.io.FileWriter
 import java.util.function.Function
@@ -32,8 +31,8 @@ class CapturingChangesApkCreator(
     private val creationData: ApkCreatorFactory.CreationData,
     private val delegate: ApkCreator): ApkCreator {
 
-    val changedItems = mutableListOf<String>()
-    val deletedItems = mutableListOf<String>()
+    val changedItems = mutableListOf<ApkChangeList.ChangedItem>()
+    val deletedItems = mutableListOf<ApkChangeList.ChangedItem>()
 
     override fun writeZip(
         zip: File?,
@@ -41,20 +40,26 @@ class CapturingChangesApkCreator(
         isIgnored: Predicate<String>?
     ) {
         if (zip==null) return
+        val zipFileLastModified = zip.lastModified()
         delegate.writeZip(zip, transform, isIgnored)
         FolderBasedApkCreator.proccessZipEntry(zip, isIgnored) { entry ->
-            changedItems.add(entry.centralDirectoryHeader.name)
+            changedItems.add(
+                ApkChangeList.ChangedItem(
+                    entry.centralDirectoryHeader.name,
+                    zipFileLastModified
+                )
+            )
         }
     }
 
     override fun writeFile(inputFile: File, entryPath: String) {
         delegate.writeFile(inputFile, entryPath)
-        changedItems.add(entryPath)
+        changedItems.add(ApkChangeList.ChangedItem(entryPath, inputFile.lastModified()))
     }
 
     override fun deleteFile(entryPath: String) {
         delegate.deleteFile(entryPath)
-        deletedItems.add(entryPath)
+        deletedItems.add(ApkChangeList.ChangedItem(entryPath, 0))
     }
 
     override fun hasPendingChangesWithWait(): Boolean {
@@ -65,7 +70,6 @@ class CapturingChangesApkCreator(
         delegate.close()
         val outputFile = if (creationData.apkPath.isDirectory) {
             File(creationData.apkPath, ApkChangeList.CHANGE_LIST_FN)
-
         } else {
             File(creationData.apkPath.parentFile,
                 ApkChangeList.changeListFileName(creationData.apkPath))

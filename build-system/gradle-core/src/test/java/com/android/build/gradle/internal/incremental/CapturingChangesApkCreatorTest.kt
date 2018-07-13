@@ -60,10 +60,21 @@ class CapturingChangesApkCreatorTest {
     fun simpleAdd() {
         val listOfEntries =
             listOf("inFile1", "foo/inFile2", "foo/bar/inFile3", "foo/bar/inFile4")
-        listOfEntries.forEach { writeFile(it) }
+
+        val entries = listOfEntries.map { it to writeFile(it) }
+            .toMap()
+
         apkCreator.close()
 
-        assertThat(apkCreator.changedItems).containsExactlyElementsIn(listOfEntries)
+        assertThat(apkCreator.changedItems
+            .map(ApkChangeList.ChangedItem::path))
+            .containsExactlyElementsIn(listOfEntries)
+
+        apkCreator.changedItems.forEach { changedItem ->
+            assertThat(changedItem.lastModified).isEqualTo(
+                entries[changedItem.path]?.lastModified())
+        }
+
         Mockito.verify(delegatedApkCreator, times(listOfEntries.size)).writeFile(
             ArgumentMatchers.any(), ArgumentMatchers.any())
         Mockito.verify(delegatedApkCreator).close()
@@ -78,7 +89,8 @@ class CapturingChangesApkCreatorTest {
         listOfEntries.forEach { apkCreator.deleteFile(it) }
         apkCreator.close()
 
-        assertThat(apkCreator.deletedItems).containsExactlyElementsIn(listOfEntries)
+        assertThat(apkCreator.deletedItems.map(ApkChangeList.ChangedItem::path))
+            .containsExactlyElementsIn(listOfEntries)
         Mockito.verify(delegatedApkCreator, times(listOfEntries.size)).deleteFile(
             ArgumentMatchers.any())
         Mockito.verify(delegatedApkCreator).close()
@@ -93,7 +105,14 @@ class CapturingChangesApkCreatorTest {
         apkCreator.writeZip(zipFile, null,null)
         apkCreator.close()
 
-        assertThat(apkCreator.changedItems).containsExactlyElementsIn(listOfEntries)
+        assertThat(apkCreator.changedItems.map(ApkChangeList.ChangedItem::path))
+            .containsExactlyElementsIn(listOfEntries)
+
+        apkCreator.changedItems.forEach { changedItem ->
+            assertThat(changedItem.lastModified).isEqualTo(
+                zipFile.lastModified())
+        }
+
         Mockito.verify(delegatedApkCreator).writeZip(
             ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())
         Mockito.verify(delegatedApkCreator).close()
@@ -117,7 +136,7 @@ class CapturingChangesApkCreatorTest {
 
         val changeList = ApkChangeList.read(FileReader(changesFile))
 
-        assertThat(changeList.changes).containsExactlyElementsIn(changes)
-        assertThat(changeList.deletions).containsExactlyElementsIn(deletions)
+        assertThat(changeList.changes.map(ApkChangeList.ChangedItem::path)).containsExactlyElementsIn(changes)
+        assertThat(changeList.deletions.map(ApkChangeList.ChangedItem::path)).containsExactlyElementsIn(deletions)
     }
 }

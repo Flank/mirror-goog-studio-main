@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.internal.incremental
 
-import com.google.common.base.Joiner
-import com.google.common.base.Splitter
-import com.google.gson.JsonParser
+import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.File
 import java.io.Reader
 import java.io.Writer
 
-class ApkChangeList(val changes: Iterable<String>, val deletions: Iterable<String>) {
+class ApkChangeList(val changes: Iterable<ChangedItem>, val deletions: Iterable<ChangedItem>) {
 
     companion object {
 
@@ -41,32 +39,63 @@ class ApkChangeList(val changes: Iterable<String>, val deletions: Iterable<Strin
             jsonWriter.beginObject()
             if (source.changedItems.size > 0) {
                 jsonWriter.name("changed")
-                    .value(Joiner.on(",").join(source.changedItems))
+                jsonWriter.beginArray()
+                source.changedItems.forEach {
+                    jsonWriter.beginObject()
+                    jsonWriter.name(it.path).value(it.lastModified)
+                    jsonWriter.endObject()
+                }
+                jsonWriter.endArray()
             }
             if (source.deletedItems.size > 0) {
                 jsonWriter.name("deleted")
-                    .value(Joiner.on(",").join(source.deletedItems))
+                jsonWriter.beginArray()
+                source.deletedItems.forEach {
+                    jsonWriter.beginObject()
+                    jsonWriter.name(it.path).value(0)
+                    jsonWriter.endObject()
+                }
+                jsonWriter.endArray()
             }
             jsonWriter.endObject()
         }
 
         @JvmStatic
         fun read(reader: Reader): ApkChangeList {
-            val jsonParser = JsonParser()
-            val element = jsonParser.parse(reader)
-            val changed = element.asJsonObject.get("changed")
-            val changedItems = if (changed != null) {
-                Splitter.on(",").split(changed.asString)
-            } else listOf()
-
-            val deleted = element.asJsonObject.get("deleted")
-            val deletedItems = if (deleted != null) {
-                Splitter.on(",").split(deleted.asString)
-            } else listOf()
+            val jsonReader = JsonReader(reader)
+            jsonReader.beginObject()
+            val changedItems = mutableListOf<ChangedItem>()
+            val deletedItems = mutableListOf<ChangedItem>()
+            while (jsonReader.hasNext()) {
+                val name = jsonReader.nextName()
+                if (name == "changed") {
+                    jsonReader.beginArray()
+                    while(jsonReader.hasNext()) {
+                        jsonReader.beginObject()
+                        changedItems.add(ChangedItem(jsonReader.nextName(), jsonReader.nextLong()))
+                        jsonReader.endObject()
+                    }
+                    jsonReader.endArray()
+                }
+                if (name == "deleted") {
+                    jsonReader.beginArray()
+                    while(jsonReader.hasNext()) {
+                        jsonReader.beginObject()
+                        deletedItems.add(ChangedItem(jsonReader.nextName(), jsonReader.nextLong()))
+                        jsonReader.endObject()
+                    }
+                    jsonReader.endArray()
+                }
+            }
             return ApkChangeList(
-                changedItems,
-                deletedItems
+                changedItems.toList(),
+                deletedItems.toList()
             )
         }
     }
+
+    data class ChangedItem(
+        val path: String,
+        val lastModified: Long
+    )
 }

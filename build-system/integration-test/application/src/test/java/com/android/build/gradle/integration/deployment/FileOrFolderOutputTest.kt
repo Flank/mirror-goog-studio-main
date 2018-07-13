@@ -67,7 +67,8 @@ class FileOrFolderOutputTest {
             val changeList = FileReader(changeListFile).use {
                 ApkChangeList.read(it)
             }
-            assertThat(changeList.changes).containsExactlyElementsIn(apkContent.keys)
+            assertThat(changeList.changes.map(ApkChangeList.ChangedItem::path))
+                .containsExactlyElementsIn(apkContent.keys)
         }
 
         // now rebuild incrementally looking for the APK rather than folder.
@@ -96,7 +97,8 @@ class FileOrFolderOutputTest {
         val changeList = FileReader(changeListFile).use {
             ApkChangeList.read(it)
         }
-        assertThat(changeList.changes).containsExactlyElementsIn(apkContent.keys)
+        assertThat(changeList.changes.map(ApkChangeList.ChangedItem::path))
+            .containsExactlyElementsIn(apkContent.keys)
     }
 
     private fun getZipContent(zip: File) : Map<String, Long> {
