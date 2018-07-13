@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +34,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
@@ -41,6 +43,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -144,254 +147,256 @@ public class ShrinkResourcesTest {
                                         + "resources-minifyDontShrink-stripped.ap_")
                         .exists());
 
-        String expectedUnstrippedApk =
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "classes.dex\n"
-                        + "res/drawable/force_remove.xml\n"
-                        + "res/raw/keep.xml\n"
-                        + "res/layout/l_used_a.xml\n"
-                        + "res/layout/l_used_b2.xml\n"
-                        + "res/layout/l_used_c.xml\n"
-                        + "res/layout/lib_unused.xml\n"
-                        + "res/layout-v17/notification_action.xml\n"
-                        + "res/layout-v21/notification_action.xml\nres/layout/notification_action.xml\n"
-                        + "res/drawable-v21/notification_action_background.xml\n"
-                        + "res/layout-v17/notification_action_tombstone.xml\n"
-                        + "res/layout-v21/notification_action_tombstone.xml\n"
-                        + "res/layout/notification_action_tombstone.xml\n"
-                        + "res/drawable/notification_bg.xml\n"
-                        + "res/drawable/notification_bg_low.xml\n"
-                        + "res/drawable-hdpi-v4/notification_bg_low_normal.9.png\n"
-                        + "res/drawable-mdpi-v4/notification_bg_low_normal.9.png\n"
-                        + "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png\n"
-                        + "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png\n"
-                        + "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png\n"
-                        + "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png\n"
-                        + "res/drawable-hdpi-v4/notification_bg_normal.9.png\n"
-                        + "res/drawable-mdpi-v4/notification_bg_normal.9.png\n"
-                        + "res/drawable-xhdpi-v4/notification_bg_normal.9.png\n"
-                        + "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png\n"
-                        + "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png\n"
-                        + "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png\n"
-                        + "res/drawable/notification_icon_background.xml\n"
-                        + "res/layout/notification_media_action.xml\n"
-                        + "res/layout/notification_media_cancel_action.xml\n"
-                        + "res/layout-v17/notification_template_big_media.xml\n"
-                        + "res/layout/notification_template_big_media.xml\n"
-                        + "res/layout-v17/notification_template_big_media_custom.xml\n"
-                        + "res/layout/notification_template_big_media_custom.xml\n"
-                        + "res/layout-v17/notification_template_big_media_narrow.xml\n"
-                        + "res/layout/notification_template_big_media_narrow.xml\n"
-                        + "res/layout-v17/notification_template_big_media_narrow_custom.xml\n"
-                        + "res/layout/notification_template_big_media_narrow_custom.xml\n"
-                        + "res/layout-v16/notification_template_custom_big.xml\n"
-                        + "res/layout-v17/notification_template_custom_big.xml\n"
-                        + "res/layout-v21/notification_template_custom_big.xml\n"
-                        + "res/layout-v21/notification_template_icon_group.xml\n"
-                        + "res/layout/notification_template_icon_group.xml\n"
-                        + "res/layout-v17/notification_template_lines_media.xml\n"
-                        + "res/layout/notification_template_lines_media.xml\n"
-                        + "res/layout-v17/notification_template_media.xml\n"
-                        + "res/layout/notification_template_media.xml\n"
-                        + "res/layout-v17/notification_template_media_custom.xml\n"
-                        + "res/layout/notification_template_media_custom.xml\n"
-                        + "res/layout/notification_template_part_chronometer.xml\n"
-                        + "res/layout/notification_template_part_time.xml\n"
-                        + "res/drawable/notification_tile_bg.xml\n"
-                        + "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png\n"
-                        + "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png\n"
-                        + "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png\n"
-                        + "res/layout/prefix_3_suffix.xml\n"
-                        + "res/layout/prefix_used_1.xml\n"
-                        + "res/layout/prefix_used_2.xml\n"
-                        + "resources.arsc\n"
-                        + "res/layout/unused1.xml\n"
-                        + "res/layout/unused2.xml\n"
-                        + "res/drawable/unused9.xml\n"
-                        + "res/drawable/unused10.xml\n"
-                        + "res/drawable/unused11.xml\n"
-                        + "res/menu/unused12.xml\n"
-                        + "res/layout/unused13.xml\n"
-                        + "res/layout/unused14.xml\n"
-                        + "res/layout/used1.xml\n"
-                        + "res/layout/used2.xml\n"
-                        + "res/layout/used3.xml\n"
-                        + "res/layout/used4.xml\n"
-                        + "res/layout/used5.xml\n"
-                        + "res/layout/used6.xml\n"
-                        + "res/layout/used7.xml\n"
-                        + "res/layout/used8.xml\n"
-                        + "res/drawable/used9.xml\n"
-                        + "res/drawable/used10.xml\n"
-                        + "res/drawable/used11.xml\n"
-                        + "res/drawable/used12.xml\n"
-                        + "res/menu/used13.xml\n"
-                        + "res/layout/used14.xml\n"
-                        + "res/drawable/used15.xml\n"
-                        + "res/layout/used16.xml\n"
-                        + "res/layout/used17.xml\n"
-                        + "res/layout/used18.xml\n"
-                        + "res/layout/used19.xml\n"
-                        + "res/layout/used20.xml\n"
-                        + "res/layout/used21.xml";
+        List<String> expectedUnstrippedApk =
+                ImmutableList.of(
+                        "AndroidManifest.xml",
+                        "classes.dex",
+                        "res/drawable/force_remove.xml",
+                        "res/raw/keep.xml",
+                        "res/layout/l_used_a.xml",
+                        "res/layout/l_used_b2.xml",
+                        "res/layout/l_used_c.xml",
+                        "res/layout/lib_unused.xml",
+                        "res/layout-v17/notification_action.xml",
+                        "res/layout-v21/notification_action.xml",
+                        "res/layout/notification_action.xml",
+                        "res/drawable-v21/notification_action_background.xml",
+                        "res/layout-v17/notification_action_tombstone.xml",
+                        "res/layout-v21/notification_action_tombstone.xml",
+                        "res/layout/notification_action_tombstone.xml",
+                        "res/drawable/notification_bg.xml",
+                        "res/drawable/notification_bg_low.xml",
+                        "res/drawable-hdpi-v4/notification_bg_low_normal.9.png",
+                        "res/drawable-mdpi-v4/notification_bg_low_normal.9.png",
+                        "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png",
+                        "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png",
+                        "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png",
+                        "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png",
+                        "res/drawable-hdpi-v4/notification_bg_normal.9.png",
+                        "res/drawable-mdpi-v4/notification_bg_normal.9.png",
+                        "res/drawable-xhdpi-v4/notification_bg_normal.9.png",
+                        "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png",
+                        "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png",
+                        "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png",
+                        "res/drawable/notification_icon_background.xml",
+                        "res/layout/notification_media_action.xml",
+                        "res/layout/notification_media_cancel_action.xml",
+                        "res/layout-v17/notification_template_big_media.xml",
+                        "res/layout/notification_template_big_media.xml",
+                        "res/layout-v17/notification_template_big_media_custom.xml",
+                        "res/layout/notification_template_big_media_custom.xml",
+                        "res/layout-v17/notification_template_big_media_narrow.xml",
+                        "res/layout/notification_template_big_media_narrow.xml",
+                        "res/layout-v17/notification_template_big_media_narrow_custom.xml",
+                        "res/layout/notification_template_big_media_narrow_custom.xml",
+                        "res/layout-v16/notification_template_custom_big.xml",
+                        "res/layout-v17/notification_template_custom_big.xml",
+                        "res/layout-v21/notification_template_custom_big.xml",
+                        "res/layout-v21/notification_template_icon_group.xml",
+                        "res/layout/notification_template_icon_group.xml",
+                        "res/layout-v17/notification_template_lines_media.xml",
+                        "res/layout/notification_template_lines_media.xml",
+                        "res/layout-v17/notification_template_media.xml",
+                        "res/layout/notification_template_media.xml",
+                        "res/layout-v17/notification_template_media_custom.xml",
+                        "res/layout/notification_template_media_custom.xml",
+                        "res/layout/notification_template_part_chronometer.xml",
+                        "res/layout/notification_template_part_time.xml",
+                        "res/drawable/notification_tile_bg.xml",
+                        "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png",
+                        "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png",
+                        "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png",
+                        "res/layout/prefix_3_suffix.xml",
+                        "res/layout/prefix_used_1.xml",
+                        "res/layout/prefix_used_2.xml",
+                        "resources.arsc",
+                        "res/layout/unused1.xml",
+                        "res/layout/unused2.xml",
+                        "res/drawable/unused9.xml",
+                        "res/drawable/unused10.xml",
+                        "res/drawable/unused11.xml",
+                        "res/menu/unused12.xml",
+                        "res/layout/unused13.xml",
+                        "res/layout/unused14.xml",
+                        "res/layout/used1.xml",
+                        "res/layout/used2.xml",
+                        "res/layout/used3.xml",
+                        "res/layout/used4.xml",
+                        "res/layout/used5.xml",
+                        "res/layout/used6.xml",
+                        "res/layout/used7.xml",
+                        "res/layout/used8.xml",
+                        "res/drawable/used9.xml",
+                        "res/drawable/used10.xml",
+                        "res/drawable/used11.xml",
+                        "res/drawable/used12.xml",
+                        "res/menu/used13.xml",
+                        "res/layout/used14.xml",
+                        "res/drawable/used15.xml",
+                        "res/layout/used16.xml",
+                        "res/layout/used17.xml",
+                        "res/layout/used18.xml",
+                        "res/layout/used19.xml",
+                        "res/layout/used20.xml",
+                        "res/layout/used21.xml");
 
-        String expectedStrippedApkContents =
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "classes.dex\n"
-                        + "res/layout/l_used_a.xml\n"
-                        + "res/layout/l_used_b2.xml\n"
-                        + "res/layout/l_used_c.xml\n"
-                        + "res/layout/prefix_3_suffix.xml\n"
-                        + "res/layout/prefix_used_1.xml\n"
-                        + "res/layout/prefix_used_2.xml\n"
-                        + "resources.arsc\n"
-                        + "res/layout/used1.xml\n"
-                        + "res/layout/used2.xml\n"
-                        + "res/layout/used3.xml\n"
-                        + "res/layout/used4.xml\n"
-                        + "res/layout/used5.xml\n"
-                        + "res/layout/used6.xml\n"
-                        + "res/layout/used7.xml\n"
-                        + "res/layout/used8.xml\n"
-                        + "res/drawable/used9.xml\n"
-                        + "res/drawable/used10.xml\n"
-                        + "res/drawable/used11.xml\n"
-                        + "res/drawable/used12.xml\n"
-                        + "res/menu/used13.xml\n"
-                        + "res/layout/used14.xml\n"
-                        + "res/drawable/used15.xml\n"
-                        + "res/layout/used16.xml\n"
-                        + "res/layout/used17.xml\n"
-                        + "res/layout/used18.xml\n"
-                        + "res/layout/used19.xml\n"
-                        + "res/layout/used20.xml\n"
-                        + "res/layout/used21.xml";
+        List<String> expectedStrippedApkContents =
+                ImmutableList.of(
+                        "AndroidManifest.xml",
+                        "classes.dex",
+                        "res/layout/l_used_a.xml",
+                        "res/layout/l_used_b2.xml",
+                        "res/layout/l_used_c.xml",
+                        "res/layout/prefix_3_suffix.xml",
+                        "res/layout/prefix_used_1.xml",
+                        "res/layout/prefix_used_2.xml",
+                        "resources.arsc",
+                        "res/layout/used1.xml",
+                        "res/layout/used2.xml",
+                        "res/layout/used3.xml",
+                        "res/layout/used4.xml",
+                        "res/layout/used5.xml",
+                        "res/layout/used6.xml",
+                        "res/layout/used7.xml",
+                        "res/layout/used8.xml",
+                        "res/drawable/used9.xml",
+                        "res/drawable/used10.xml",
+                        "res/drawable/used11.xml",
+                        "res/drawable/used12.xml",
+                        "res/menu/used13.xml",
+                        "res/layout/used14.xml",
+                        "res/drawable/used15.xml",
+                        "res/layout/used16.xml",
+                        "res/layout/used17.xml",
+                        "res/layout/used18.xml",
+                        "res/layout/used19.xml",
+                        "res/layout/used20.xml",
+                        "res/layout/used21.xml");
         if (REPLACE_DELETED_WITH_EMPTY) {
             // If replacing deleted files with empty files, the file list will include
             // the "unused" files too, though they will be much smaller. This is checked
             // later on in the test.
             expectedStrippedApkContents =
-                    ""
-                            + "AndroidManifest.xml\n"
-                            + "classes.dex\n"
-                            + "res/drawable/force_remove.xml\n"
-                            + "res/layout/l_used_a.xml\n"
-                            + "res/layout/l_used_b2.xml\n"
-                            + "res/layout/l_used_c.xml\n"
-                            + "res/layout/lib_unused.xml\n"
-                            + "res/layout-v17/notification_action.xml\n"
-                            + "res/layout-v21/notification_action.xml\n"
-                            + "res/layout/notification_action.xml\n"
-                            + "res/drawable-v21/notification_action_background.xml\n"
-                            + "res/layout-v17/notification_action_tombstone.xml\n"
-                            + "res/layout-v21/notification_action_tombstone.xml\n"
-                            + "res/layout/notification_action_tombstone.xml\n"
-                            + "res/drawable/notification_bg.xml\n"
-                            + "res/drawable/notification_bg_low.xml\n"
-                            + "res/drawable-hdpi-v4/notification_bg_low_normal.9.png\n"
-                            + "res/drawable-mdpi-v4/notification_bg_low_normal.9.png\n"
-                            + "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png\n"
-                            + "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png\n"
-                            + "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png\n"
-                            + "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png\n"
-                            + "res/drawable-hdpi-v4/notification_bg_normal.9.png\n"
-                            + "res/drawable-mdpi-v4/notification_bg_normal.9.png\n"
-                            + "res/drawable-xhdpi-v4/notification_bg_normal.9.png\n"
-                            + "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png\n"
-                            + "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png\n"
-                            + "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png\n"
-                            + "res/drawable/notification_icon_background.xml\n"
-                            + "res/layout/notification_media_action.xml\n"
-                            + "res/layout/notification_media_cancel_action.xml\n"
-                            + "res/layout-v17/notification_template_big_media.xml\n"
-                            + "res/layout/notification_template_big_media.xml\n"
-                            + "res/layout-v17/notification_template_big_media_custom.xml\n"
-                            + "res/layout/notification_template_big_media_custom.xml\n"
-                            + "res/layout-v17/notification_template_big_media_narrow.xml\n"
-                            + "res/layout/notification_template_big_media_narrow.xml\n"
-                            + "res/layout-v17/notification_template_big_media_narrow_custom.xml\n"
-                            + "res/layout/notification_template_big_media_narrow_custom.xml\n"
-                            + "res/layout-v16/notification_template_custom_big.xml\n"
-                            + "res/layout-v17/notification_template_custom_big.xml\n"
-                            + "res/layout-v21/notification_template_custom_big.xml\n"
-                            + "res/layout-v21/notification_template_icon_group.xml\n"
-                            + "res/layout/notification_template_icon_group.xml\n"
-                            + "res/layout-v17/notification_template_lines_media.xml\n"
-                            + "res/layout/notification_template_lines_media.xml\n"
-                            + "res/layout-v17/notification_template_media.xml\n"
-                            + "res/layout/notification_template_media.xml\n"
-                            + "res/layout-v17/notification_template_media_custom.xml\n"
-                            + "res/layout/notification_template_media_custom.xml\n"
-                            + "res/layout/notification_template_part_chronometer.xml\n"
-                            + "res/layout/notification_template_part_time.xml\n"
-                            + "res/drawable/notification_tile_bg.xml\n"
-                            + "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png\n"
-                            + "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png\n"
-                            + "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png\n"
-                            + "res/layout/prefix_3_suffix.xml\n"
-                            + "res/layout/prefix_used_1.xml\n"
-                            + "res/layout/prefix_used_2.xml\n"
-                            + "resources.arsc\n"
-                            + "res/layout/unused1.xml\n"
-                            + "res/layout/unused2.xml\n"
-                            + "res/drawable/unused9.xml\n"
-                            + "res/drawable/unused10.xml\n"
-                            + "res/drawable/unused11.xml\n"
-                            + "res/menu/unused12.xml\n"
-                            + "res/layout/unused13.xml\n"
-                            + "res/layout/unused14.xml\n"
-                            + "res/layout/used1.xml\n"
-                            + "res/layout/used2.xml\n"
-                            + "res/layout/used3.xml\n"
-                            + "res/layout/used4.xml\n"
-                            + "res/layout/used5.xml\n"
-                            + "res/layout/used6.xml\n"
-                            + "res/layout/used7.xml\n"
-                            + "res/layout/used8.xml\n"
-                            + "res/drawable/used9.xml\n"
-                            + "res/drawable/used10.xml\n"
-                            + "res/drawable/used11.xml\n"
-                            + "res/drawable/used12.xml\n"
-                            + "res/menu/used13.xml\n"
-                            + "res/layout/used14.xml\n"
-                            + "res/drawable/used15.xml\n"
-                            + "res/layout/used16.xml\n"
-                            + "res/layout/used17.xml\n"
-                            + "res/layout/used18.xml\n"
-                            + "res/layout/used19.xml\n"
-                            + "res/layout/used20.xml\n"
-                            + "res/layout/used21.xml";
+                    ImmutableList.of(
+                            "AndroidManifest.xml",
+                            "classes.dex",
+                            "res/drawable/force_remove.xml",
+                            "res/layout/l_used_a.xml",
+                            "res/layout/l_used_b2.xml",
+                            "res/layout/l_used_c.xml",
+                            "res/layout/lib_unused.xml",
+                            "res/layout-v17/notification_action.xml",
+                            "res/layout-v21/notification_action.xml",
+                            "res/layout/notification_action.xml",
+                            "res/drawable-v21/notification_action_background.xml",
+                            "res/layout-v17/notification_action_tombstone.xml",
+                            "res/layout-v21/notification_action_tombstone.xml",
+                            "res/layout/notification_action_tombstone.xml",
+                            "res/drawable/notification_bg.xml",
+                            "res/drawable/notification_bg_low.xml",
+                            "res/drawable-hdpi-v4/notification_bg_low_normal.9.png",
+                            "res/drawable-mdpi-v4/notification_bg_low_normal.9.png",
+                            "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png",
+                            "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png",
+                            "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png",
+                            "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png",
+                            "res/drawable-hdpi-v4/notification_bg_normal.9.png",
+                            "res/drawable-mdpi-v4/notification_bg_normal.9.png",
+                            "res/drawable-xhdpi-v4/notification_bg_normal.9.png",
+                            "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png",
+                            "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png",
+                            "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png",
+                            "res/drawable/notification_icon_background.xml",
+                            "res/layout/notification_media_action.xml",
+                            "res/layout/notification_media_cancel_action.xml",
+                            "res/layout-v17/notification_template_big_media.xml",
+                            "res/layout/notification_template_big_media.xml",
+                            "res/layout-v17/notification_template_big_media_custom.xml",
+                            "res/layout/notification_template_big_media_custom.xml",
+                            "res/layout-v17/notification_template_big_media_narrow.xml",
+                            "res/layout/notification_template_big_media_narrow.xml",
+                            "res/layout-v17/notification_template_big_media_narrow_custom.xml",
+                            "res/layout/notification_template_big_media_narrow_custom.xml",
+                            "res/layout-v16/notification_template_custom_big.xml",
+                            "res/layout-v17/notification_template_custom_big.xml",
+                            "res/layout-v21/notification_template_custom_big.xml",
+                            "res/layout-v21/notification_template_icon_group.xml",
+                            "res/layout/notification_template_icon_group.xml",
+                            "res/layout-v17/notification_template_lines_media.xml",
+                            "res/layout/notification_template_lines_media.xml",
+                            "res/layout-v17/notification_template_media.xml",
+                            "res/layout/notification_template_media.xml",
+                            "res/layout-v17/notification_template_media_custom.xml",
+                            "res/layout/notification_template_media_custom.xml",
+                            "res/layout/notification_template_part_chronometer.xml",
+                            "res/layout/notification_template_part_time.xml",
+                            "res/drawable/notification_tile_bg.xml",
+                            "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png",
+                            "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png",
+                            "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png",
+                            "res/layout/prefix_3_suffix.xml",
+                            "res/layout/prefix_used_1.xml",
+                            "res/layout/prefix_used_2.xml",
+                            "resources.arsc",
+                            "res/layout/unused1.xml",
+                            "res/layout/unused2.xml",
+                            "res/drawable/unused9.xml",
+                            "res/drawable/unused10.xml",
+                            "res/drawable/unused11.xml",
+                            "res/menu/unused12.xml",
+                            "res/layout/unused13.xml",
+                            "res/layout/unused14.xml",
+                            "res/layout/used1.xml",
+                            "res/layout/used2.xml",
+                            "res/layout/used3.xml",
+                            "res/layout/used4.xml",
+                            "res/layout/used5.xml",
+                            "res/layout/used6.xml",
+                            "res/layout/used7.xml",
+                            "res/layout/used8.xml",
+                            "res/drawable/used9.xml",
+                            "res/drawable/used10.xml",
+                            "res/drawable/used11.xml",
+                            "res/drawable/used12.xml",
+                            "res/menu/used13.xml",
+                            "res/layout/used14.xml",
+                            "res/drawable/used15.xml",
+                            "res/layout/used16.xml",
+                            "res/layout/used17.xml",
+                            "res/layout/used18.xml",
+                            "res/layout/used19.xml",
+                            "res/layout/used20.xml",
+                            "res/layout/used21.xml");
         }
 
         // Should not have any unused resources in the compressed list
         if (!REPLACE_DELETED_WITH_EMPTY) {
-            assertFalse(
-                    expectedStrippedApkContents, expectedStrippedApkContents.contains("unused"));
+            assertThat(Joiner.on('\n').join(expectedStrippedApkContents)).doesNotContain("unused");
         }
         // Should have *all* the used resources, currently 1-21
         for (int i = 1; i <= 21; i++) {
+            String name = "/used" + i + ".";
             assertTrue(
                     "Missing used" + i + " in " + expectedStrippedApkContents,
-                    expectedStrippedApkContents.contains("/used" + i + "."));
+                    expectedStrippedApkContents.stream().anyMatch((it) -> it.contains(name)));
         }
 
         // Check that the uncompressed resources (.ap_) for the release target have everything
         // we expect
-        String expectedUncompressed = expectedUnstrippedApk.replace("classes.dex\n", "");
-        assertEquals(
-                "expectedUncompressed", expectedUncompressed, dumpZipContents(uncompressed).trim());
+        List<String> expectedUncompressed = new ArrayList<>(expectedUnstrippedApk);
+        expectedUncompressed.remove("classes.dex");
+        assertThat(dumpZipContents(uncompressed))
+                .named("uncompressed")
+                .containsExactlyElementsIn(expectedUncompressed)
+                .inOrder();
 
         // The debug target should have everything there in the APK
-        assertEquals(
-                "The debug target should have everything there in the APK",
-                expectedUnstrippedApk,
-                dumpZipContents(apkDebug.getFile()));
-        assertEquals(
-                "The debug target should have everything there in the APK",
-                expectedUnstrippedApk,
-                dumpZipContents(apkProguardOnly.getFile()));
+        assertThat(dumpZipContents(apkDebug.getFile()))
+                .containsExactlyElementsIn(expectedUnstrippedApk)
+                .inOrder();
+        assertThat(dumpZipContents(apkProguardOnly.getFile()))
+                .containsExactlyElementsIn(expectedUnstrippedApk)
+                .inOrder();
 
         // Make sure force_remove was replaced with a small file if replacing rather than removing
         if (REPLACE_DELETED_WITH_EMPTY) {
@@ -401,18 +406,17 @@ public class ShrinkResourcesTest {
         }
 
         // Check the compressed .ap_:
-        String actualCompressed = dumpZipContents(compressed);
-        String expectedCompressed = expectedStrippedApkContents.replace("classes.dex\n", "");
-        assertEquals("Check the compressed .ap_:", expectedCompressed, actualCompressed);
+        List<String> actualCompressed = dumpZipContents(compressed);
+        List<String> expectedCompressed = new ArrayList<>(expectedStrippedApkContents);
+        expectedCompressed.remove("classes.dex");
+        assertThat(actualCompressed).containsExactlyElementsIn(expectedCompressed).inOrder();
         if (!REPLACE_DELETED_WITH_EMPTY) {
-            assertFalse(
-                    "expectedCompressed does not contain unused resources",
-                    expectedCompressed.contains("unused"));
+            assertThat(Joiner.on('\n').join(expectedCompressed)).doesNotContain("unused");
         }
-        assertEquals(
-                "expectedStrippedApkContents",
-                expectedStrippedApkContents,
-                dumpZipContents(apkRelease.getFile()));
+        assertThat(dumpZipContents(apkRelease.getFile()))
+                .named("strippedApkContents")
+                .containsExactlyElementsIn(expectedStrippedApkContents)
+                .inOrder();
 
         // Check splits -- just sample one of them
         //noinspection SpellCheckingInspection
@@ -426,22 +430,28 @@ public class ShrinkResourcesTest {
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile());
         //noinspection SpellCheckingInspection
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "resources.arsc\n"
-                        + (REPLACE_DELETED_WITH_EMPTY ? "res/layout/unused.xml\n" : "")
-                        + "res/layout/used.xml",
-                dumpZipContents(compressed));
-        //noinspection SpellCheckingInspection
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "resources.arsc\n"
-                        + "res/layout/unused.xml\n"
-                        + "res/layout/used.xml",
-                dumpZipContents(uncompressed));
+        if (REPLACE_DELETED_WITH_EMPTY) {
+            assertThat(dumpZipContents(compressed))
+                    .containsExactly(
+                            "AndroidManifest.xml",
+                            "resources.arsc",
+                            "res/layout/unused.xml",
+                            "res/layout/used.xml")
+                    .inOrder();
+        } else {
+            assertThat(dumpZipContents(compressed))
+                    .containsExactly("AndroidManifest.xml", "resources.arsc", "res/layout/used.xml")
+                    .inOrder();
+        }
 
+        //noinspection SpellCheckingInspection
+        assertThat(dumpZipContents(uncompressed))
+                .containsExactly(
+                        "AndroidManifest.xml",
+                        "resources.arsc",
+                        "res/layout/unused.xml",
+                        "res/layout/used.xml")
+                .inOrder();
         // Check WebView string handling (android_res strings etc)
 
         //noinspection SpellCheckingInspection
@@ -456,99 +466,139 @@ public class ShrinkResourcesTest {
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
 
         //noinspection SpellCheckingInspection
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "res/xml/my_xml.xml\n"
-                        + "resources.arsc\n"
-                        + "res/raw/unknown\n"
-                        + "res/raw/unused_icon.png\n"
-                        + "res/raw/unused_index.html\n"
-                        + "res/drawable/used1.xml\n"
-                        + "res/raw/used_icon.png\n"
-                        + "res/raw/used_icon2.png\n"
-                        + "res/raw/used_index.html\n"
-                        + "res/raw/used_index2.html\n"
-                        + "res/raw/used_index3.html\n"
-                        + "res/layout/used_layout1.xml\n"
-                        + "res/layout/used_layout2.xml\n"
-                        + "res/layout/used_layout3.xml\n"
-                        + "res/raw/used_script.js\n"
-                        + "res/raw/used_styles.css\n"
-                        + "res/layout/webview.xml",
-                dumpZipContents(uncompressed));
+        assertThat(dumpZipContents(uncompressed))
+                .containsExactly(
+                        "AndroidManifest.xml",
+                        "res/xml/my_xml.xml",
+                        "resources.arsc",
+                        "res/raw/unknown",
+                        "res/raw/unused_icon.png",
+                        "res/raw/unused_index.html",
+                        "res/drawable/used1.xml",
+                        "res/raw/used_icon.png",
+                        "res/raw/used_icon2.png",
+                        "res/raw/used_index.html",
+                        "res/raw/used_index2.html",
+                        "res/raw/used_index3.html",
+                        "res/layout/used_layout1.xml",
+                        "res/layout/used_layout2.xml",
+                        "res/layout/used_layout3.xml",
+                        "res/raw/used_script.js",
+                        "res/raw/used_styles.css",
+                        "res/layout/webview.xml");
 
         //noinspection SpellCheckingInspection
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml\n"
-                        + (REPLACE_DELETED_WITH_EMPTY ? "res/xml/my_xml.xml\n" : "")
-                        + "resources.arsc\n"
-                        + "res/raw/unknown\n"
-                        + (REPLACE_DELETED_WITH_EMPTY ? "res/raw/unused_icon.png\n" : "")
-                        + (REPLACE_DELETED_WITH_EMPTY ? "res/raw/unused_index.html\n" : "")
-                        + "res/drawable/used1.xml\n"
-                        + "res/raw/used_icon.png\n"
-                        + "res/raw/used_icon2.png\n"
-                        + "res/raw/used_index.html\n"
-                        + "res/raw/used_index2.html\n"
-                        + "res/raw/used_index3.html\n"
-                        + "res/layout/used_layout1.xml\n"
-                        + "res/layout/used_layout2.xml\n"
-                        + "res/layout/used_layout3.xml\n"
-                        + "res/raw/used_script.js\n"
-                        + "res/raw/used_styles.css\n"
-                        + "res/layout/webview.xml",
-                dumpZipContents(compressed));
+        if (REPLACE_DELETED_WITH_EMPTY) {
+            assertThat(dumpZipContents(compressed))
+                    .containsExactly(
+                            "AndroidManifest.xml",
+                            "res/xml/my_xml.xml",
+                            "resources.arsc",
+                            "res/raw/unknown",
+                            "res/raw/unused_icon.png",
+                            "res/raw/unused_index.html",
+                            "res/drawable/used1.xml",
+                            "res/raw/used_icon.png",
+                            "res/raw/used_icon2.png",
+                            "res/raw/used_index.html",
+                            "res/raw/used_index2.html",
+                            "res/raw/used_index3.html",
+                            "res/layout/used_layout1.xml",
+                            "res/layout/used_layout2.xml",
+                            "res/layout/used_layout3.xml",
+                            "res/raw/used_script.js",
+                            "res/raw/used_styles.css",
+                            "res/layout/webview.xml")
+                    .inOrder();
+        } else {
+            assertThat(dumpZipContents(compressed))
+                    .containsExactly(
+                            "AndroidManifest.xml",
+                            "resources.arsc",
+                            "res/raw/unknown",
+                            "res/drawable/used1.xml",
+                            "res/raw/used_icon.png",
+                            "res/raw/used_icon2.png",
+                            "res/raw/used_index.html",
+                            "res/raw/used_index2.html",
+                            "res/raw/used_index3.html",
+                            "res/layout/used_layout1.xml",
+                            "res/layout/used_layout2.xml",
+                            "res/layout/used_layout3.xml",
+                            "res/raw/used_script.js",
+                            "res/raw/used_styles.css",
+                            "res/layout/webview.xml")
+                    .inOrder();
+        }
 
         // Check stored vs deflated state:
         // This is the state of the original source _ap file:
-        assertEquals(
-                ""
-                        + "  stored  resources.arsc\n"
-                        + "deflated  AndroidManifest.xml\n"
-                        + "deflated  res/xml/my_xml.xml\n"
-                        + "deflated  res/raw/unknown\n"
-                        + "  stored  res/raw/unused_icon.png\n"
-                        + "deflated  res/raw/unused_index.html\n"
-                        + "deflated  res/drawable/used1.xml\n"
-                        + "  stored  res/raw/used_icon.png\n"
-                        + "  stored  res/raw/used_icon2.png\n"
-                        + "deflated  res/raw/used_index.html\n"
-                        + "deflated  res/raw/used_index2.html\n"
-                        + "deflated  res/raw/used_index3.html\n"
-                        + "deflated  res/layout/used_layout1.xml\n"
-                        + "deflated  res/layout/used_layout2.xml\n"
-                        + "deflated  res/layout/used_layout3.xml\n"
-                        + "deflated  res/raw/used_script.js\n"
-                        + "deflated  res/raw/used_styles.css\n"
-                        + "deflated  res/layout/webview.xml",
-                dumpZipContents(uncompressed, true));
+        assertThat(dumpZipContents(uncompressed, true))
+                .containsExactly(
+                        "  stored  resources.arsc",
+                        "deflated  AndroidManifest.xml",
+                        "deflated  res/xml/my_xml.xml",
+                        "deflated  res/raw/unknown",
+                        "  stored  res/raw/unused_icon.png",
+                        "deflated  res/raw/unused_index.html",
+                        "deflated  res/drawable/used1.xml",
+                        "  stored  res/raw/used_icon.png",
+                        "  stored  res/raw/used_icon2.png",
+                        "deflated  res/raw/used_index.html",
+                        "deflated  res/raw/used_index2.html",
+                        "deflated  res/raw/used_index3.html",
+                        "deflated  res/layout/used_layout1.xml",
+                        "deflated  res/layout/used_layout2.xml",
+                        "deflated  res/layout/used_layout3.xml",
+                        "deflated  res/raw/used_script.js",
+                        "deflated  res/raw/used_styles.css",
+                        "deflated  res/layout/webview.xml")
+                .inOrder();
 
         // This is the state of the rewritten ap_ file: the zip states should match
-        assertEquals(
-                ""
-                        + "  stored  resources.arsc\n"
-                        + "deflated  AndroidManifest.xml\n"
-                        + (REPLACE_DELETED_WITH_EMPTY ? "deflated  res/xml/my_xml.xml\n" : "")
-                        + "deflated  res/raw/unknown\n"
-                        + (REPLACE_DELETED_WITH_EMPTY ? "  stored  res/raw/unused_icon.png\n" : "")
-                        + (REPLACE_DELETED_WITH_EMPTY
-                                ? "deflated  res/raw/unused_index.html\n"
-                                : "")
-                        + "deflated  res/drawable/used1.xml\n"
-                        + "  stored  res/raw/used_icon.png\n"
-                        + "  stored  res/raw/used_icon2.png\n"
-                        + "deflated  res/raw/used_index.html\n"
-                        + "deflated  res/raw/used_index2.html\n"
-                        + "deflated  res/raw/used_index3.html\n"
-                        + "deflated  res/layout/used_layout1.xml\n"
-                        + "deflated  res/layout/used_layout2.xml\n"
-                        + "deflated  res/layout/used_layout3.xml\n"
-                        + "deflated  res/raw/used_script.js\n"
-                        + "deflated  res/raw/used_styles.css\n"
-                        + "deflated  res/layout/webview.xml",
-                dumpZipContents(compressed, true));
+
+        if (REPLACE_DELETED_WITH_EMPTY) {
+            assertThat(dumpZipContents(compressed, true))
+                    .containsExactly(
+                            "  stored  resources.arsc",
+                            "deflated  AndroidManifest.xml",
+                            "deflated  res/xml/my_xml.xml",
+                            "deflated  res/raw/unknown",
+                            "  stored  res/raw/unused_icon.png",
+                            "deflated  res/raw/unused_index.html",
+                            "deflated  res/drawable/used1.xml",
+                            "  stored  res/raw/used_icon.png",
+                            "  stored  res/raw/used_icon2.png",
+                            "deflated  res/raw/used_index.html",
+                            "deflated  res/raw/used_index2.html",
+                            "deflated  res/raw/used_index3.html",
+                            "deflated  res/layout/used_layout1.xml",
+                            "deflated  res/layout/used_layout2.xml",
+                            "deflated  res/layout/used_layout3.xml",
+                            "deflated  res/raw/used_script.js",
+                            "deflated  res/raw/used_styles.css",
+                            "deflated  res/layout/webview.xml")
+                    .inOrder();
+        } else {
+            assertThat(dumpZipContents(compressed, true))
+                    .containsExactly(
+                            "  stored  resources.arsc",
+                            "deflated  AndroidManifest.xml",
+                            "deflated  res/raw/unknown",
+                            "deflated  res/drawable/used1.xml",
+                            "  stored  res/raw/used_icon.png",
+                            "  stored  res/raw/used_icon2.png",
+                            "deflated  res/raw/used_index.html",
+                            "deflated  res/raw/used_index2.html",
+                            "deflated  res/raw/used_index3.html",
+                            "deflated  res/layout/used_layout1.xml",
+                            "deflated  res/layout/used_layout2.xml",
+                            "deflated  res/layout/used_layout3.xml",
+                            "deflated  res/raw/used_script.js",
+                            "deflated  res/raw/used_styles.css",
+                            "deflated  res/layout/webview.xml")
+                    .inOrder();
+        }
 
         // Make sure the (remaining) binary contents of the files in the compressed APK are
         // identical to the ones in uncompressed:
@@ -616,25 +666,32 @@ public class ShrinkResourcesTest {
         assertTrue(compressed.toString() + " is not a file", compressed.isFile());
 
         //noinspection SpellCheckingInspection
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "res/raw/keep.xml\n"
-                        + "resources.arsc\n"
-                        + "res/layout/unused1.xml\n"
-                        + "res/layout/unused2.xml\n"
-                        + "res/layout/used1.xml",
-                dumpZipContents(uncompressed));
+        assertThat(dumpZipContents(uncompressed))
+                .containsExactly(
+                        "AndroidManifest.xml",
+                        "res/raw/keep.xml",
+                        "resources.arsc",
+                        "res/layout/unused1.xml",
+                        "res/layout/unused2.xml",
+                        "res/layout/used1.xml")
+                .inOrder();
 
         //noinspection SpellCheckingInspection
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml\n"
-                        + "resources.arsc\n"
-                        + (REPLACE_DELETED_WITH_EMPTY ? "res/layout/unused1.xml\n" : "")
-                        + (REPLACE_DELETED_WITH_EMPTY ? "res/layout/unused2.xml\n" : "")
-                        + "res/layout/used1.xml",
-                dumpZipContents(compressed));
+        if (REPLACE_DELETED_WITH_EMPTY) {
+            assertThat(dumpZipContents(compressed))
+                    .containsExactly(
+                            "AndroidManifest.xml",
+                            "resources.arsc",
+                            "res/layout/unused1.xml",
+                            "res/layout/unused2.xml",
+                            "res/layout/used1.xml")
+                    .inOrder();
+        } else {
+            assertThat(dumpZipContents(compressed))
+                    .containsExactly(
+                            "AndroidManifest.xml", "resources.arsc", "res/layout/used1.xml")
+                    .inOrder();
+        }
     }
 
     private static List<String> getZipPaths(File zipFile, boolean includeMethod)
@@ -674,15 +731,15 @@ public class ShrinkResourcesTest {
         return lines;
     }
 
-    private static String dumpZipContents(File zipFile) throws IOException {
+    private static List<String> dumpZipContents(File zipFile) throws IOException {
         return dumpZipContents(zipFile, false);
     }
 
-    private static String dumpZipContents(Path zipFile) throws IOException {
+    private static List<String> dumpZipContents(Path zipFile) throws IOException {
         return dumpZipContents(zipFile.toFile(), false);
     }
 
-    private static String dumpZipContents(File zipFile, final boolean includeMethod)
+    private static List<String> dumpZipContents(File zipFile, final boolean includeMethod)
             throws IOException {
         List<String> lines = getZipPaths(zipFile, includeMethod);
 
@@ -722,6 +779,6 @@ public class ShrinkResourcesTest {
                     return line1.compareTo(line2);
                 });
 
-        return Joiner.on('\n').join(lines);
+        return ImmutableList.copyOf(lines);
     }
 }
