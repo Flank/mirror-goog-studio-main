@@ -18,12 +18,16 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.build.apkzlib.zip.StoredEntry;
-import com.android.tools.build.apkzlib.zip.ZFile;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 final class JarClassFileInput implements ClassFileInput {
 
@@ -36,7 +40,7 @@ final class JarClassFileInput implements ClassFileInput {
     }
 
     @NonNull private final Path rootPath;
-    @Nullable private ZFile jarFile;
+    @Nullable private ZipFile jarFile;
 
     public JarClassFileInput(@NonNull Path rootPath) {
         this.rootPath = rootPath;
@@ -54,7 +58,7 @@ final class JarClassFileInput implements ClassFileInput {
     public Stream<ClassFileEntry> entries(Predicate<String> filter) {
         if (jarFile == null) {
             try {
-                jarFile = new ZFile(rootPath.toFile());
+                jarFile = new ZipFile(rootPath.toFile());
             } catch (IOException e) {
                 throw new JarClassFileInputsException(
                         "Unable to read jar file " + rootPath.toString(), e);
@@ -63,10 +67,16 @@ final class JarClassFileInput implements ClassFileInput {
 
         Predicate<String> newFilter = CLASS_MATCHER.and(filter);
 
-        return jarFile.entries()
-                .stream()
-                .filter(entry -> newFilter.test(entry.getCentralDirectoryHeader().getName()))
-                .map(this::createEntryFromEntry);
+        List<ZipEntry> entryList = new ArrayList<>(jarFile.size());
+        Enumeration<? extends ZipEntry> entries = jarFile.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry zipEntry = entries.nextElement();
+            if (newFilter.test(zipEntry.getName())) {
+                entryList.add(zipEntry);
+            }
+        }
+
+        return entryList.stream().map(this::createEntryFromEntry);
     }
 
     @Override
@@ -75,7 +85,7 @@ final class JarClassFileInput implements ClassFileInput {
     }
 
     @NonNull
-    private ClassFileEntry createEntryFromEntry(@NonNull StoredEntry storedEntry) {
-        return new NoCacheJarClassFileEntry(storedEntry, this);
+    private ClassFileEntry createEntryFromEntry(@NonNull ZipEntry entry) {
+        return new NoCacheJarClassFileEntry(entry, Objects.requireNonNull(jarFile), this);
     }
 }

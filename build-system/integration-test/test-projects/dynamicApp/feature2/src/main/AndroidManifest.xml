@@ -2,7 +2,7 @@
     package="com.example.feature2"
     android:versionCode="1">
 
-    <dist:module dist:onDemand="true">
+    <dist:module dist:onDemand="true" dist:title="@string/feature2_title">
       <dist:fusing dist:include="true" />
     </dist:module>
 

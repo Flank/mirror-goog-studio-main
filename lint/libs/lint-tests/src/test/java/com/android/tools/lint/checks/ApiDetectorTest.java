@@ -5415,6 +5415,77 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "2 errors, 0 warnings");
     }
 
+    public void test110576964() {
+        // Regression test for
+        // 110576964: android:layout_marginEnd requires API level 17 (current min is 15)
+
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        xml(
+                                "res/values/styles.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "<style name=\"CallToActionButtonStyle\">\n"
+                                        + "  <item name=\"android:layout_marginEnd\">@dimen/content_margin_xxl</item>\n"
+                                        + "  <item name=\"android:layout_marginLeft\">@dimen/content_margin_xxl</item>\n"
+                                        + "  <item name=\"android:layout_marginRight\">@dimen/content_margin_xxl</item>\n"
+                                        + "  <item name=\"android:layout_marginStart\">@dimen/content_margin_xxl</item>\n"
+                                        + "</style>\n"
+                                        + "</resources>"),
+                        xml(
+                                "res/layout/divider.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    android:layout_marginLeft=\"16dp\"\n"
+                                        + "    android:layout_marginStart=\"16dp\">\n"
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void test110576968() {
+        // Regression test for issue related to 110576968:
+        // We weren't enforcing @RequireApi on calls to default constructors
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class WorkManagerTest {\n"
+                                        + "\n"
+                                        + "    public void test() {\n"
+                                        + "        SystemJobScheduler scheduler = new SystemJobScheduler(); // ERROR\n"
+                                        + "    }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(23)\n"
+                                        + "public class SystemJobScheduler {\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/WorkManagerTest.java:9: Error: Call requires API level 23 (current min is 15): SystemJobScheduler [NewApi]\n"
+                                + "        SystemJobScheduler scheduler = new SystemJobScheduler(); // ERROR\n"
+                                + "                                       ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement

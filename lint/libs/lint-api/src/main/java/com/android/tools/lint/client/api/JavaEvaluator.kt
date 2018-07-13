@@ -30,6 +30,7 @@ import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiEllipsisType
 import com.intellij.psi.PsiMember
@@ -277,6 +278,24 @@ class JavaEvaluator {
             return null
         }
         val superMethods = method.findSuperMethods()
+        if (superMethods.size > 1) {
+            // Prefer non-compiled concrete methods
+            for (m in superMethods) {
+                if (m !is PsiCompiledElement && m.containingClass?.isInterface == false) {
+                    return m
+                }
+            }
+            for (m in superMethods) {
+                if (m.containingClass?.isInterface == false) {
+                    return m
+                }
+            }
+            for (m in superMethods) {
+                if (m !is PsiCompiledElement) {
+                    return m
+                }
+            }
+        }
         return if (superMethods.isNotEmpty()) {
             superMethods[0]
         } else null

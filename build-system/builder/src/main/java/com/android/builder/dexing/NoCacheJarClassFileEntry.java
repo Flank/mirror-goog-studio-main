@@ -17,33 +17,39 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
-import com.android.tools.build.apkzlib.zip.StoredEntry;
+import com.google.common.io.ByteStreams;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 final class NoCacheJarClassFileEntry implements ClassFileEntry {
 
-    @NonNull private final StoredEntry entry;
+    @NonNull private final ZipEntry entry;
+    @NonNull private final ZipFile zipFile;
     @NonNull private final ClassFileInput input;
 
     public NoCacheJarClassFileEntry(
-            @NonNull StoredEntry storedEntry, @NonNull ClassFileInput input) {
-        this.entry = storedEntry;
+            @NonNull ZipEntry entry, @NonNull ZipFile zipFile, @NonNull ClassFileInput input) {
+        this.entry = entry;
+        this.zipFile = zipFile;
         this.input = input;
     }
 
     @Override
     public String name() {
-        return "Zip:" + entry.getCentralDirectoryHeader().getName();
+        return "Zip:" + entry.getName();
     }
 
     @Override
     public long getSize() {
-        return entry.getCentralDirectoryHeader().getUncompressedSize();
+        return entry.getSize();
     }
 
     @Override
     public String getRelativePath() {
-        return entry.getCentralDirectoryHeader().getName();
+        return entry.getName();
     }
 
     @NonNull
@@ -54,11 +60,13 @@ final class NoCacheJarClassFileEntry implements ClassFileEntry {
 
     @Override
     public byte[] readAllBytes() throws IOException {
-        return entry.read();
+        return ByteStreams.toByteArray(new BufferedInputStream(zipFile.getInputStream(entry)));
     }
 
     @Override
     public int readAllBytes(byte[] bytes) throws IOException {
-        return entry.read(bytes);
+        try (InputStream is = new BufferedInputStream(zipFile.getInputStream(entry))) {
+            return ByteStreams.read(is, bytes, 0, bytes.length);
+        }
     }
 }

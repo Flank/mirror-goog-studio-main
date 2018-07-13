@@ -17,7 +17,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.core.VariantType;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +24,6 @@ import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.PathSensitivity;
 
 /**
  * Configuration Action for a JavaCompile task.
@@ -156,13 +154,10 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
         if (isDataBindingEnabled) {
-
-            // the data binding artifact is created by the annotation processor, so we register this
-            // task output (which also publishes it) with javac as the generating task.
-            javacTask.dataBindingArtifactOutputDirectory =
-                    scope.getBundleArtifactFolderForDataBinding();
-
-            artifacts.appendArtifact(InternalArtifactType.DATA_BINDING_ARTIFACT,
+            // The data binding artifact is created through annotation processing, which is invoked
+            // by the JavaCompile task. Therefore, we register JavaCompile as the generating task.
+            artifacts.appendArtifact(
+                    InternalArtifactType.DATA_BINDING_ARTIFACT,
                     ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
                     javacTask);
         }
