@@ -13,7 +13,8 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/.idea/libraries:gradle-api",
+        "//tools/idea/.idea/libraries:Gradle",
+        "//tools/idea/.idea/libraries:javax-inject",
         "//tools/base/build-system/java-lib-plugin/java-lib-model:studio.android.sdktools.java-lib-model[module]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
