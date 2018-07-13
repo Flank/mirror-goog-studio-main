@@ -189,10 +189,13 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
 
         override fun execute(task: BundleToStandaloneApkTask) {
             task.variantName = scope.fullVariantName
+            // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
+            val suffix = if (scope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
+
             task.outputFile = scope.artifacts.setArtifactFile(
                 InternalArtifactType.UNIVERSAL_APK,
                 task,
-                "${scope.globalScope.projectBaseName}-universal.apk"
+                "${scope.globalScope.projectBaseName}-${scope.variantConfiguration.baseName}-universal$suffix"
             )
             task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)

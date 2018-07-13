@@ -41,6 +41,7 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
+import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -76,7 +77,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.gradle.internal.impldep.org.codehaus.plexus.util.StringUtils;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -1035,6 +1035,17 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
+     * Return the bundle universal output apk File from the application plugin for the given
+     * dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getBundleUniversalApk(@NonNull ApkType apk) throws IOException {
+        return getOutputApk("universal_apk", null, apk, ImmutableList.of(), "universal");
+    }
+
+    /**
      * Return the output full split apk File from the application plugin for the given dimension.
      *
      * <p>Expected dimensions orders are: - product flavors -
@@ -1042,19 +1053,29 @@ public final class GradleTestProject implements TestRule {
     @NonNull
     public Apk getApk(@Nullable String filterName, ApkType apkType, String... dimensions)
             throws IOException {
+        return getOutputApk("apk", filterName, apkType, ImmutableList.copyOf(dimensions), null);
+    }
+
+    @NonNull
+    private Apk getOutputApk(
+            @NonNull String pathPrefix,
+            @Nullable String filterName,
+            @NonNull ApkType apkType,
+            @NonNull ImmutableList<String> dimensions,
+            @Nullable String suffix)
+            throws IOException {
         return _getApk(
                 getOutputFile(
-                        "apk"
+                        pathPrefix
                                 + (apkType.getTestName() != null
                                         ? File.separatorChar + apkType.getTestName()
                                         : "")
                                 + File.separatorChar
-                                + mangleDimensions(dimensions)
+                                + StringHelper.combineAsCamelCase(dimensions)
                                 + File.separatorChar
                                 + apkType.getBuildType()
                                 + File.separatorChar
-                                + mangleApkName(
-                                        apkType, filterName, ImmutableList.copyOf(dimensions))
+                                + mangleApkName(apkType, filterName, dimensions, suffix)
                                 + (apkType.isSigned()
                                         ? SdkConstants.DOT_ANDROID_PACKAGE
                                         : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
@@ -1103,19 +1124,22 @@ public final class GradleTestProject implements TestRule {
                                 + File.separatorChar
                                 + "feature"
                                 + File.separatorChar
-                                + mangleDimensions(dimensions)
+                                + StringHelper.combineAsCamelCase(ImmutableList.copyOf(dimensions))
                                 + File.separatorChar
                                 + apkType.getBuildType()
                                 + File.separatorChar
                                 + mangleApkName(
-                                        apkType, filterName, ImmutableList.copyOf(dimensions))
+                                        apkType, filterName, ImmutableList.copyOf(dimensions), null)
                                 + (apkType.isSigned()
                                         ? SdkConstants.DOT_ANDROID_PACKAGE
                                         : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
     }
 
     private String mangleApkName(
-            @NonNull ApkType apkType, @Nullable String filterName, List<String> dimensions) {
+            @NonNull ApkType apkType,
+            @Nullable String filterName,
+            List<String> dimensions,
+            @Nullable String suffix) {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
         dimensionList.add(getName());
         dimensionList.addAll(dimensions);
@@ -1128,20 +1152,10 @@ public final class GradleTestProject implements TestRule {
         if (!Strings.isNullOrEmpty(apkType.getTestName())) {
             dimensionList.add(apkType.getTestName());
         }
+        if (suffix != null) {
+            dimensionList.add(suffix);
+        }
         return Joiner.on("-").join(dimensionList);
-    }
-
-    private static String mangleDimensions(String... dimensions) {
-        StringBuilder sb = new StringBuilder();
-        Arrays.stream(dimensions)
-                .forEach(
-                        dimension -> {
-                            sb.append(
-                                    sb.length() == 0
-                                            ? dimension
-                                            : StringUtils.capitalise(dimension));
-                        });
-        return sb.toString();
     }
 
     @NonNull
@@ -1180,7 +1194,7 @@ public final class GradleTestProject implements TestRule {
         return new Zip(
                 getOutputFile(
                         "apk",
-                        mangleDimensions(dimensions),
+                        StringHelper.combineAsCamelCase(ImmutableList.copyOf(dimensions)),
                         Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP));
     }
 

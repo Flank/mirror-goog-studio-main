@@ -307,8 +307,7 @@ class DynamicAppTest {
             .executor()
             .run(":app:packageDebugUniversalApk")
 
-        val univeralApk = project.getSubproject("app").getOutputFile("universal_apk", "debug", "app-universal.apk")
-        Zip(univeralApk).use {
+        project.getSubproject("app").getBundleUniversalApk(GradleTestProject.ApkType.DEBUG).use {
             Truth.assertThat(it.entries.map { it.toString() })
                 .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
         }
