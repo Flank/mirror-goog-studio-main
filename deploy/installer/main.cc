@@ -16,26 +16,56 @@
 
 #include <unistd.h>
 
+#include <getopt.h>
+#include <libgen.h>
 #include <stdlib.h>
 #include <iostream>
 
-#include "apk_toolkit.h"
+#include <map>
+
+#include "dump.h"
 #include "trace.h"
 
 using namespace deployer;
 
-int main(int argc, char** argv) {
+void PrintUsage(char *invokedPath) {
+  std::string binaryName = basename(invokedPath);
+  std::cerr
+      << "Usages:" << std::endl
+      << binaryName << " command [command_parameters]" << std::endl
+      << std::endl
+      << "Commands available:" << std::endl
+      << "   dump   : Extract CDs and Signatures for a given applicationID."
+      << std::endl
+      << std::endl;
+}
+
+int main(int argc, char **argv) {
   if (argc < 2) {
-    std::cout << "Usage:" << argv[0] << " [packageName]" << std::endl;
+    PrintUsage(argv[0]);
     return EXIT_FAILURE;
   }
 
   Trace::Init();
 
-  // TODO Add a -v "version" flag which can be used by the Deployer to check the
-  // installer is up to date.
+  auto binaryName = argv[0];
+  auto commandName = argv[1];
 
-  char* packageName = argv[1];
-  ApkToolkit toolkit(packageName);
-  return !toolkit.extractCDsandSignatures();
+  // Retrieve Command to be invoked.
+  auto task = GetCommand(commandName);
+  if (task == nullptr) {
+    PrintUsage(binaryName);
+    return EXIT_FAILURE;
+  }
+
+  // Allow command to parse its parameters and invoke it.
+  task->ParseParameters(argc - 2, argv + 2);
+  if (!task->ReadyToRun()) {
+    return EXIT_FAILURE;
+  }
+  if (!task->Run()) {
+    return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
 }

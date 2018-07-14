@@ -17,18 +17,23 @@
 #ifndef INSTALLER_APK_TOOLKIT_H_
 #define INSTALLER_APK_TOOLKIT_H_
 
+#include "command.h"
+
 #include <string>
 
 namespace deployer {
 
-class ApkToolkit {
+class DumpCommand : public Command {
  public:
-  ApkToolkit(const char *packageName);
-  bool extractCDsandSignatures() const noexcept;
+  DumpCommand();
+  virtual ~DumpCommand() {}
+  virtual void ParseParameters(int argc, char** argv);
+  virtual bool Run();
 
  private:
-  std::string getBase();
-
+  // TODO: Move all these to a Workspace object (and re-use "fs" from profiler
+  // for it).
+  std::string GetBase();
   std::string base_;
   std::string dumpBase_;
   std::string packageName_;

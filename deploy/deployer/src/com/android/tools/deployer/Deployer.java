@@ -127,7 +127,9 @@ public class Deployer {
 
     private void getRemoteApkDumps(String packageName, String dst) throws DeployerException {
         // Generate dumps on remote device.
-        String[] cmd = {"cd", "/data/local/tmp/.ir2/bin", "&&", "./ir2_installer", packageName};
+        String[] cmd = {
+            "cd", "/data/local/tmp/.ir2/bin", "&&", "./ir2_installer", "dump", packageName
+        };
         adb.shell(cmd);
 
         // Pull entire directory of dumps from remote device.

@@ -27,7 +27,7 @@
 namespace deployer {
 
 void ApkRetriever::retrieve() noexcept {
-  std::cout << "Retrieving apks..." << std::endl;
+  std::cout << "Retrieving apks for " << packageName_ << std::endl;
   // First try with cmd. It may fail since path capability was added to "cmd" in
   // Android P.
   CmdCommand cmd;

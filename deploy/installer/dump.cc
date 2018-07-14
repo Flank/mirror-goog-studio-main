@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "apk_toolkit.h"
+#include "dump.h"
 
 #include <libgen.h>
 #include <stdlib.h>
@@ -25,6 +25,7 @@
 
 #include "apk_archive.h"
 #include "apk_retriever.h"
+#include "trace.h"
 
 namespace deployer {
 
@@ -33,8 +34,8 @@ const char* kBasename = ".ir2";
 uint32_t kPathMax = 1024;
 }  // namespace
 
-ApkToolkit::ApkToolkit(const char* packageName) : packageName_(packageName) {
-  base_ = getBase();
+DumpCommand::DumpCommand() {
+  base_ = GetBase();
   constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
   std::string dumpFolder = base_ + "/dumps/";
   mkdir(dumpFolder.c_str(), kDirectoryMode);
@@ -45,7 +46,8 @@ ApkToolkit::ApkToolkit(const char* packageName) : packageName_(packageName) {
 
 // Retrieves the base folder which is expected to be ".ir2" somewhere in the
 // path.e.g: /data/local/tmp/.ir2/bin base is /data/local/tmp/.ir2 .
-std::string ApkToolkit::getBase() {
+// TODO: Create an object "Workspace" to handle all filesystem work.
+std::string DumpCommand::GetBase() {
   char cwdbuffer[kPathMax];
   getcwd(cwdbuffer, kPathMax);
   char* directoryCursor = cwdbuffer;
@@ -62,13 +64,18 @@ std::string ApkToolkit::getBase() {
   return "";
 }
 
-bool ApkToolkit::extractCDsandSignatures() const noexcept {
-  std::cout << "Using base   : '" << base_ << "'" << std::endl;
-  std::cout << "Package name : '" << packageName_ << "'" << std::endl;
+void DumpCommand::ParseParameters(int argc, char** argv) {
+  if (argc < 1) {
+    return;
+  }
 
+  packageName_ = argv[0];
+  ready_to_run_ = true;
+}
+
+bool DumpCommand::Run() {
   ApkRetriever apkRetriever(packageName_);
   for (std::string& apkPath : apkRetriever.get()) {
-    std::cout << "Processing apk: '" << apkPath << "'" << std::endl;
     ApkArchive archive(apkPath);
     archive.ExtractMetadata(packageName_, dumpBase_);
   }
