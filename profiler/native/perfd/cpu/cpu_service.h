@@ -65,9 +65,11 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
         cpu_config_(cpu_config),
+        activity_manager_(activity_manager),
         simpleperf_manager_(std::move(simpleperf_manager)),
         atrace_manager_(std::move(atrace_manager)) {
     termination_service->RegisterShutdownCallback([this](int signal) {
+      this->activity_manager_->Shutdown();
       this->simpleperf_manager_->Shutdown();
       this->atrace_manager_->Shutdown();
     });
@@ -149,6 +151,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   ThreadMonitor& thread_monitor_;
 
   const proto::AgentConfig::CpuConfig& cpu_config_;
+  ActivityManager* activity_manager_;
   std::unique_ptr<SimpleperfManager> simpleperf_manager_;
   std::unique_ptr<AtraceManager> atrace_manager_;
 };

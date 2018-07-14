@@ -38,7 +38,7 @@ const char *const kAmExecutable = "/system/bin/am";
 namespace profiler {
 
 ActivityManager::ActivityManager()
-    : bash_(new BashCommandRunner(kAmExecutable)) {}
+    : bash_(new BashCommandRunner(kAmExecutable, true /* log command */)) {}
 
 bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
@@ -101,10 +101,7 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   }
 
   // Run stop command via actual am.
-  string parameters;
-  parameters.append("profile stop ");
-  parameters.append(app_package_name);
-  if (!bash_->Run(parameters, error_string)) {
+  if (!RunProfileStopCmd(app_package_name, error_string)) {
     *error_string = "Unable to run profile stop command";
     return false;
   }
@@ -136,6 +133,15 @@ bool ActivityManager::TriggerHeapDump(int pid, const std::string &file_path,
   std::stringstream ss;
   ss << "dumpheap " << pid << " " << file_path;
   return bash_->Run(ss.str(), error_string);
+}
+
+void ActivityManager::Shutdown() {
+  // Intentionally not protected by |profiled_lock_| so this function can
+  // proceed without being blocked.
+  string error;
+  for (auto const &record : profiled_) {
+    RunProfileStopCmd(record.first, &error);
+  }
 }
 
 std::string ActivityManager::GenerateTracePath(
@@ -177,6 +183,14 @@ string ActivityManager::GetProfiledAppTracePath(
     const std::string &app_package_name) const {
   auto it = profiled_.find(app_package_name);
   return it->second.trace_path;
+}
+
+bool ActivityManager::RunProfileStopCmd(const string &app_package_name,
+                                        string *error_string) {
+  string parameters;
+  parameters.append("profile stop ");
+  parameters.append(app_package_name);
+  return bash_->Run(parameters, error_string);
 }
 
 }  // namespace profiler

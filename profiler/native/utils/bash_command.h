@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_PROFILER_BASH_COMMAND_RUNNER_H
-#define UTILS_PROFILER_BASH_COMMAND_RUNNER_H
+#ifndef UTILS_BASH_COMMAND_H_
+#define UTILS_BASH_COMMAND_H_
 
 #include <string>
 
@@ -29,7 +29,12 @@ class BashCommandRunner {
  public:
   // Expected executable_path can be either absolute, relative or even
   // executable name only path.
-  explicit BashCommandRunner(const std::string &executable_path);
+  explicit BashCommandRunner(const std::string &executable_path)
+      : BashCommandRunner(executable_path, false) {}
+  explicit BashCommandRunner(const std::string &executable_path,
+                             bool log_command)
+      : executable_path_(executable_path), log_command_(log_command) {}
+
   virtual ~BashCommandRunner() = default;
   // Returns true if the command runs successfully (exiting with 0).
   // If |output| is not null, it is populated with stdin and stderr from
@@ -41,7 +46,11 @@ class BashCommandRunner {
 
  private:
   const std::string executable_path_;
-  virtual bool RunAndReadOutput(const std::string &cmd, std::string *output) const;
+  // True writes running commands to logs.
+  const bool log_command_;
+  virtual bool RunAndReadOutput(const std::string &cmd,
+                                std::string *output) const;
 };
+
 }  // namespace profiler
-#endif  // UTILS_PROFILER_BASH_COMMAND_RUNNER_H
+#endif  // UTILS_BASH_COMMAND_H_

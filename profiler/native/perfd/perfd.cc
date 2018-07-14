@@ -73,8 +73,7 @@ int main(int argc, char** argv) {
   profiler::FileCache file_cache(is_testing_profiler
                                      ? getenv("TEST_TMPDIR")
                                      : profiler::CurrentProcess::dir());
-  auto termination_service =
-      profiler::TerminationService::GetTerminationService();
+  auto* termination_service = profiler::TerminationService::Instance();
   profiler::Daemon daemon(&clock, &config, &file_cache);
   auto agent_config = daemon.config()->GetAgentConfig();
 

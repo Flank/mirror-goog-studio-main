@@ -17,28 +17,18 @@
 
 #include "utils/log.h"
 
-namespace {
-
-profiler::TerminationService* g_termination_service_ = nullptr;
-
-}  // namespace
-
 namespace profiler {
 
 extern "C" void SignalHandler(int signal) {
   std::signal(signal, SIG_DFL);
   Log::D("Profiler:Signal received %d", signal);
-  if (g_termination_service_ != nullptr) {
-    TerminationService::GetTerminationService()->NotifyShutdown(signal);
-  }
+  TerminationService::Instance()->NotifyShutdown(signal);
   std::raise(signal);
 }
 
-TerminationService* TerminationService::GetTerminationService() {
-  if (g_termination_service_ == nullptr) {
-    g_termination_service_ = new TerminationService();
-  }
-  return g_termination_service_;
+TerminationService* TerminationService::Instance() {
+  static TerminationService* instance = new TerminationService();
+  return instance;
 }
 
 TerminationService::TerminationService() { std::signal(SIGHUP, SignalHandler); }

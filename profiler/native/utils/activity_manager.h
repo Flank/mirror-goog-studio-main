@@ -58,6 +58,9 @@ class ActivityManager {
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;
 
+  // Stops all ongoing profiling.
+  void Shutdown();
+
  protected:
   // A protected constructor designed for testing.
   ActivityManager(std::unique_ptr<BashCommandRunner> bash)
@@ -95,8 +98,13 @@ class ActivityManager {
   std::string GetProfiledAppTracePath(
       const std::string &app_package_name) const;
 
+  // Returns true if running 'am profile stop ...' command succeeds.
+  bool RunProfileStopCmd(const std::string &app_package_name,
+                         std::string *error_string);
+
   std::unique_ptr<BashCommandRunner> bash_;
 };
+
 }  // namespace profiler
 
 #endif  // UTILS_PROFILER_ACTIVITYMANAGER_H

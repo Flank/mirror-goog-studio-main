@@ -8,8 +8,6 @@
 using std::string;
 
 namespace profiler {
-BashCommandRunner::BashCommandRunner(const string &executable_path)
-    : executable_path_(executable_path) {}
 
 bool BashCommandRunner::Run(const string &parameters, string *output) const {
   string cmd;
@@ -24,6 +22,7 @@ bool BashCommandRunner::Run(const string &parameters, string *output) const {
 bool BashCommandRunner::RunAndReadOutput(const string &cmd,
                                          string *output) const {
   Trace trace(executable_path_);
+  if (log_command_) Log::D("Running bash command: '%s'", cmd.c_str());
   char buffer[1024];
   FILE *pipe = popen(cmd.c_str(), "r");
   if (pipe == nullptr) {
