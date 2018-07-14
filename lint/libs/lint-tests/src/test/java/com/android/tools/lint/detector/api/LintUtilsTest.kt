@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
 import com.android.builder.model.ApiVersion
@@ -29,9 +30,13 @@ import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.checks.infrastructure.ClassName
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles
+import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.findKotlinStdlibPath
 import com.android.tools.lint.client.api.LintClient.Companion.CLIENT_UNIT_TESTS
 import com.android.tools.lint.client.api.LintDriver
@@ -764,12 +769,13 @@ class LintUtilsTest : TestCase() {
         private fun createTestProjectForFile(
             dir: File,
             relativePath: File,
-            source: String?
+            source: String,
+            libs: List<File> = emptyList()
         ): Project {
             val fullPath = File(dir, relativePath.path)
             fullPath.parentFile.mkdirs()
             try {
-                Files.write(source!!, fullPath, Charsets.UTF_8)
+                Files.asCharSink(fullPath, Charsets.UTF_8).write(source)
             } catch (e: IOException) {
                 fail(e.message)
             }
@@ -777,7 +783,7 @@ class LintUtilsTest : TestCase() {
             val client = object : LintCliClient(CLIENT_UNIT_TESTS) {
                 override fun readFile(file: File): CharSequence {
                     return if (file.path == fullPath.path) {
-                        source!!
+                        source
                     } else super.readFile(file)
                 }
 
@@ -801,7 +807,7 @@ class LintUtilsTest : TestCase() {
                     project: Project,
                     includeProvided: Boolean
                 ): List<File> {
-                    return findKotlinStdlibPath().map { File(it) }
+                    return libs + findKotlinStdlibPath().map { File(it) }
                 }
             }
             val project = client.getProject(dir, dir)
@@ -812,7 +818,7 @@ class LintUtilsTest : TestCase() {
         fun createXmlContext(@Language("XML") xml: String?, relativePath: File): XmlContext {
             val dir = File(System.getProperty("java.io.tmpdir"))
             val fullPath = File(dir, relativePath.path)
-            val project = createTestProjectForFile(dir, relativePath, xml)
+            val project = createTestProjectForFile(dir, relativePath, xml!!)
             val client = project.getClient() as LintCliClient
 
             val request = LintRequest(client, listOf(fullPath))
@@ -821,7 +827,7 @@ class LintUtilsTest : TestCase() {
             val folderType = ResourceFolderType.getFolderType(relativePath.parentFile.name)
 
             val parser = client.xmlParser
-            val document = parser.parseXml(xml!!, fullPath)
+            val document = parser.parseXml(xml, fullPath)
             return XmlTestContext(driver, project, xml, fullPath, folderType!!, parser, document!!)
         }
 
@@ -847,7 +853,7 @@ class LintUtilsTest : TestCase() {
                 )
             }
 
-            return doParse(javaSource, path)
+            return parse(java(path.path, javaSource))
         }
 
         @JvmStatic
@@ -872,22 +878,28 @@ class LintUtilsTest : TestCase() {
                 )
             }
 
-            return doParse(kotlinSource, path)
+            return parse(kotlin(path.path, kotlinSource))
         }
 
         @JvmStatic
-        fun doParse(source: String, relativePath: File): Pair<JavaContext, Disposable> {
-            // TODO: Clean up -- but where?
+        fun parse(vararg testFiles: TestFile): Pair<JavaContext, Disposable> {
             val dir = Files.createTempDir()
-            val fullPath = File(dir, relativePath.path)
-            fullPath.parentFile.mkdirs()
-            try {
-                Files.asCharSink(fullPath, Charsets.UTF_8).write(source)
-            } catch (e: IOException) {
-                fail(e.message)
+
+            val libs: List<File> = if (testFiles.size > 1) {
+                val projects = TestLintTask().files(*testFiles).createProjects(dir)
+                testFiles.filter { it.targetRelativePath.endsWith(DOT_JAR) }
+                    .map { File(projects[0], it.targetRelativePath) }
+            } else {
+                emptyList()
             }
 
-            val project = createTestProjectForFile(dir, relativePath, source)
+            val primary = testFiles[0]
+            val relativePath = File(primary.targetRelativePath)
+            val source = primary.getContents()!!
+
+            val fullPath = File(dir, relativePath.path)
+            val project = createTestProjectForFile(dir, relativePath, source, libs)
+
             val client = project.getClient() as LintCliClient
             val request = LintRequest(client, listOf(fullPath))
 
@@ -902,7 +914,10 @@ class LintUtilsTest : TestCase() {
             context.uastFile = uFile
             assert(uFile != null)
             context.setJavaFile(uFile!!.psi)
-            val disposable = Disposable { client.disposeProjects(listOf(project)) }
+            val disposable = Disposable {
+                client.disposeProjects(listOf(project))
+                dir.deleteRecursively()
+            }
             return Pair.of<JavaContext, Disposable>(context, disposable)
         }
 

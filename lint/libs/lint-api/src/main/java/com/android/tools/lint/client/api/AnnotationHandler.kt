@@ -22,10 +22,12 @@ import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.google.common.collect.Multimap
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
@@ -420,7 +422,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
             if (signature == null ||
-                signature.startsWith("java.") && !relevantAnnotations.contains(signature)
+                (signature.startsWith("kotlin.") ||
+                        signature.startsWith("java.")) && !relevantAnnotations.contains(signature)
             ) {
                 // @Override, @SuppressWarnings etc. Ignore
                 continue
@@ -445,8 +448,14 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
             // Here we want to map from @foo.bar.Baz to the corresponding int def.
             // Don't need to compute this if performing @IntDef or @StringDef lookup
-            val ref = annotation.nameReferenceElement ?: continue
-            val cls = ref.resolve()
+
+            val cls = annotation.nameReferenceElement?.resolve() ?: run {
+                val project = annotation.project
+                JavaPsiFacade.getInstance(project).findClass(
+                    signature,
+                    GlobalSearchScope.projectScope(project)
+                )
+            } ?: continue
             if (cls !is PsiClass || !cls.isAnnotationType) {
                 continue
             }

@@ -76,7 +76,7 @@ class TypesTest : TestCase() {
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "            UParameter (name = times) [@org.jetbrains.annotations.NotNull var times: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                    "            UBlockExpression [{...}] : PsiType:Unit\n" +
+                    "            UBlockExpression [{...}] : PsiType:void\n" +
                     "        UAnnotationMethod (name = getProperty2) [public final fun getProperty2() : java.lang.String = UastEmptyExpression]\n" +
                     "        UAnnotationMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable p: java.lang.String) : void = UastEmptyExpression]\n" +
                     "            UParameter (name = p) [@org.jetbrains.annotations.Nullable var p: java.lang.String]\n" +
@@ -306,7 +306,7 @@ class TypesTest : TestCase() {
 
     fun testJavaEnums() {
         // Regression test for https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FKT-23456
-        val pair = LintUtilsTest.parseKotlin(
+        val pair = LintUtilsTest.parse(
             "" +
                     "package test.pkg;\n" +
                     "public enum JavaEnum {\n" +

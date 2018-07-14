@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
@@ -121,6 +122,11 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                     if (target == containingClass.psi) {
                         return
                     }
+
+                    if (!isSameCompilationUnit(target, node)) {
+                        return
+                    }
+
                     reportError(context, node, target, target)
                 } else {
                     if (!context.evaluator.isPrivate(method)) {
@@ -130,9 +136,20 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                     if (aClass == containingClass.psi) {
                         return
                     }
+
+                    if (!isSameCompilationUnit(aClass, node)) {
+                        return
+                    }
+
                     // Mention it's an implicit constructor here?
                     reportError(context, node, method, aClass)
                 }
+            }
+
+            private fun isSameCompilationUnit(aClass: PsiClass, node: UElement): Boolean {
+                val file1 = UastLintUtils.getContainingFile(aClass)
+                val file2 = UastLintUtils.getContainingFile(node.sourcePsi)
+                return file1 == file2
             }
 
             override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression) {
@@ -155,6 +172,11 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                 if (memberClass == null || memberClass == containingClass.psi) {
                     return
                 }
+
+                if (!isSameCompilationUnit(memberClass, node)) {
+                    return
+                }
+
                 reportError(context, node, member, memberClass)
             }
         }
@@ -173,10 +195,8 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             return
         }
         val location =
-            if (node is UCallExpression)
-                context.getCallLocation(node, true, false)
-            else
-                context.getLocation(node)
+            if (node is UCallExpression) { context.getCallLocation(node, true, false) }
+            else { context.getLocation(node) }
 
         val isKotlin = isKotlin(member)
         val name = if (isKotlin) "Make internal" else "Make package protected"
@@ -198,9 +218,9 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                 if (isKotlin(member) && member.modifierList.text.contains("sealed")) {
                     return
                 }
-            if (context.evaluator.isStatic(member)) {
-                return
-            }
+                if (context.evaluator.isStatic(member)) {
+                    return
+                }
                 "constructor"
             } else {
                 "method `${member.name}`"
@@ -210,10 +230,6 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
         }
         val message =
             "Access to `private` $memberType of class `${target.name}` requires synthetic accessor"
-        context.report(
-            ISSUE, node, location,
-            message,
-            fix
-        )
+        context.report(ISSUE, node, location, message, fix)
     }
 }

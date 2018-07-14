@@ -417,4 +417,23 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testStdlib() {
+        // Some inline stdlib methods are marked as "private" in the bytecode; don't flag these
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                class Foo {
+                    fun foo(scheme: String) {
+                        require(scheme == "file") {
+                            "Uri lacks 'file' scheme: " + this
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }
