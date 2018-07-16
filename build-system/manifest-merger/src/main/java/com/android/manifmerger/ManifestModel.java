@@ -20,17 +20,20 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.manifmerger.AttributeModel.Hexadecimal32BitsWithMinimumValue;
+import static com.android.manifmerger.AttributeModel.OR_MERGING_POLICY;
 import static com.android.manifmerger.AttributeModel.SeparatedValuesValidator;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.manifmerger.XmlDocument.Type;
 import com.android.utils.SdkUtils;
 import com.android.xml.AndroidManifest;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import java.util.EnumSet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -262,15 +265,39 @@ class ManifestModel {
                 AttributeModel.newModel(SdkConstants.ATTR_NAME).setIsPackageDependent()),
 
         /**
-         * Application (contained in manifest)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/application-element.html>
-         *     Application Xml documentation</a>}
+         * Application (contained in manifest) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/application-element.html>
+         * Application Xml documentation</a>}
          */
-        APPLICATION(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER,
+        APPLICATION(
+                MergeType.MERGE,
+                DEFAULT_NO_KEY_NODE_RESOLVER,
                 AttributeModel.newModel("backupAgent").setIsPackageDependent(),
-                AttributeModel.newModel(SdkConstants.ATTR_NAME).setIsPackageDependent()),
+                AttributeModel.newModel(SdkConstants.ATTR_NAME).setIsPackageDependent(),
+                AttributeModel.newModel(SdkConstants.ATTR_HAS_CODE)
+                        .setMergingPolicy(
+                                new AttributeModel.MergingPolicy() {
+                                    @Override
+                                    public boolean shouldMergeDefaultValues() {
+                                        return false;
+                                    }
+
+                                    @NonNull
+                                    @Override
+                                    public EnumSet<Type> getMergeableLowerPriorityTypes() {
+                                        return EnumSet.of(Type.MAIN, Type.OVERLAY);
+                                    }
+
+                                    @Nullable
+                                    @Override
+                                    public String merge(
+                                            @NonNull String higherPriority,
+                                            @NonNull String lowerPriority) {
+                                        return OR_MERGING_POLICY.merge(
+                                                higherPriority, lowerPriority);
+                                    }
+                                })),
 
         /**
          * Category (contained in intent-filter)
