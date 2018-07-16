@@ -73,7 +73,13 @@ public class Workspace {
         if (pkg == null) {
             return null;
         }
-        String label = directory.toPath().relativize(pkg.toPath()).normalize().toString();
+        String label =
+                directory
+                        .toPath()
+                        .relativize(pkg.toPath())
+                        .normalize()
+                        .toString()
+                        .replace("\\", "/");
 
         Package result = packages.get(label);
         if (result == null) {

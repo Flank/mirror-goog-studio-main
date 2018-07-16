@@ -87,18 +87,23 @@ public class Package {
 
         if (buildFile != null) {
             File tmp = File.createTempFile("BUILD", "test");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(tmp);
-                 PrintWriter writer = new PrintWriter(fileOutputStream)) {
-                buildFile.write(writer);
-            }
-            String before = Files.toString(build, StandardCharsets.UTF_8);
-            String after = Files.toString(tmp, StandardCharsets.UTF_8);
-            if (!before.equals(after)) {
-                if (listener.packageUpdated(name)) {
-                    Files.copy(tmp, build);
-                } else {
-                    System.err.println("diff " + tmp.getAbsolutePath() + " " + build.getAbsolutePath());
+            try {
+                try (FileOutputStream fileOutputStream = new FileOutputStream(tmp);
+                        PrintWriter writer = new PrintWriter(fileOutputStream)) {
+                    buildFile.write(writer);
                 }
+                String before = Files.toString(build, StandardCharsets.UTF_8);
+                String after = Files.toString(tmp, StandardCharsets.UTF_8);
+                if (!before.equals(after)) {
+                    if (listener.packageUpdated(name)) {
+                        Files.copy(tmp, build);
+                    } else {
+                        System.err.println(
+                                "diff " + tmp.getAbsolutePath() + " " + build.getAbsolutePath());
+                    }
+                }
+            } finally {
+                tmp.delete();
             }
         }
     }
@@ -117,7 +122,7 @@ public class Package {
     }
 
     public String getRelativePath(File file) {
-        return getPackageDir().toPath().relativize(file.toPath()).toString();
+        return getPackageDir().toPath().relativize(file.toPath()).toString().replace("\\", "/");
     }
 
     public String getName() {
