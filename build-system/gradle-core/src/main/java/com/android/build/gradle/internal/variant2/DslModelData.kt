@@ -339,7 +339,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 compileName,
                 getConfigDescriptionOld("compile", sourceSet.name, implementationName),
                 "compile" == compileName || "testCompile" == compileName /*canBeResolved*/)
-        compile.allDependencies
+        compile.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(implementationName, compileName, dslScope.deprecationReporter))
 
@@ -352,7 +352,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
         val apkName = sourceSet._packageConfigurationName
         val apk = createConfiguration(
                 configurationContainer, apkName, packageConfigDescription)
-        apk.allDependencies
+        apk.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(
                                 runtimeOnlyName, apkName, dslScope.deprecationReporter))
@@ -362,7 +362,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 configurationContainer,
                 providedName,
                 getConfigDescriptionOld("provided", sourceSet.name, compileOnlyName))
-        provided.allDependencies
+        provided.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(
                                 compileOnlyName, providedName, dslScope.deprecationReporter))

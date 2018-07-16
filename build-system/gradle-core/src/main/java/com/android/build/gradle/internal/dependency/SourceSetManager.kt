@@ -77,10 +77,11 @@ class SourceSetManager(
                 compileName,
                 getDeprecatedConfigDesc("Compile", sourceSet.name, implementationName),
                 "compile" == compileName || "testCompile" == compileName /*canBeResolved*/)
-        compile.allDependencies
+        compile.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(
-                                "$implementationName' and '$apiName",
+                                if (isTestComponent) implementationName
+                                else "$implementationName' and '$apiName",
                                 compileName,
                                 dslScope.deprecationReporter,
                                 dependencyUrl,
@@ -99,7 +100,7 @@ class SourceSetManager(
 
         val apkName = sourceSet.packageConfigurationName
         val apk = createConfiguration(apkName, packageConfigDescription)
-        apk.allDependencies
+        apk.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(
                                 runtimeOnlyName,
@@ -112,7 +113,7 @@ class SourceSetManager(
         val provided = createConfiguration(
                 providedName,
                 getDeprecatedConfigDesc("Provided", sourceSet.name, compileOnlyName))
-        provided.allDependencies
+        provided.dependencies
                 .whenObjectAdded(
                         RenamedConfigurationAction(
                                 compileOnlyName,
@@ -125,7 +126,7 @@ class SourceSetManager(
         val api = createConfiguration(apiName, getConfigDesc("API", sourceSet.name))
         api.extendsFrom(compile)
         if (isTestComponent) {
-            api.allDependencies
+            api.dependencies
                     .whenObjectAdded(
                             RenamedConfigurationAction(
                                     implementationName,

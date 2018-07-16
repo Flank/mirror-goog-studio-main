@@ -67,6 +67,8 @@ class FakeConfiguration(private val name: String): Configuration {
 
     override fun getAllDependencies() = dependencySet
 
+    override fun getDependencies() = dependencySet
+
     override fun extendsFrom(vararg p0: Configuration): Configuration {
         extendsConfigs.addAll(p0.asList())
         return this
@@ -293,10 +295,6 @@ class FakeConfiguration(private val name: String): Configuration {
     }
 
     override fun getAsPath(): String {
-        TODO("not implemented")
-    }
-
-    override fun getDependencies(): DependencySet {
         TODO("not implemented")
     }
 
