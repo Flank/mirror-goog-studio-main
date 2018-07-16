@@ -316,9 +316,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/jetbrains/",
                 "com/android/tools/r8/jetbrains/kotlin/",
                 "com/android/tools/r8/jetbrains/kotlin/annotation/",
-                "com/android/tools/r8/jetbrains/kotlin/annotation/annotation.kotlin_builtins",
                 "com/android/tools/r8/jetbrains/kotlin/collections/",
-                "com/android/tools/r8/jetbrains/kotlin/collections/collections.kotlin_builtins",
                 "com/android/tools/r8/jetbrains/kotlin/comparisons/",
                 "com/android/tools/r8/jetbrains/kotlin/concurrent/",
                 "com/android/tools/r8/jetbrains/kotlin/coroutines/",
@@ -329,20 +327,16 @@ public class JarContentsTest {
                 "com/android/tools/r8/jetbrains/kotlin/experimental/",
                 "com/android/tools/r8/jetbrains/kotlin/internal/",
                 "com/android/tools/r8/jetbrains/kotlin/internal/contracts/",
-                "com/android/tools/r8/jetbrains/kotlin/internal/internal.kotlin_builtins",
                 "com/android/tools/r8/jetbrains/kotlin/io/",
                 "com/android/tools/r8/jetbrains/kotlin/jvm/",
                 "com/android/tools/r8/jetbrains/kotlin/jvm/functions/",
                 "com/android/tools/r8/jetbrains/kotlin/jvm/internal/",
                 "com/android/tools/r8/jetbrains/kotlin/jvm/internal/markers/",
                 "com/android/tools/r8/jetbrains/kotlin/jvm/internal/unsafe/",
-                "com/android/tools/r8/jetbrains/kotlin/kotlin.kotlin_builtins",
                 "com/android/tools/r8/jetbrains/kotlin/math/",
                 "com/android/tools/r8/jetbrains/kotlin/properties/",
                 "com/android/tools/r8/jetbrains/kotlin/ranges/",
-                "com/android/tools/r8/jetbrains/kotlin/ranges/ranges.kotlin_builtins",
                 "com/android/tools/r8/jetbrains/kotlin/reflect/",
-                "com/android/tools/r8/jetbrains/kotlin/reflect/reflect.kotlin_builtins",
                 "com/android/tools/r8/jetbrains/kotlin/sequences/",
                 "com/android/tools/r8/jetbrains/kotlin/system/",
                 "com/android/tools/r8/jetbrains/kotlin/text/",
@@ -350,6 +344,15 @@ public class JarContentsTest {
                 "com/android/tools/r8/jetbrains/kotlinx/metadata/",
                 "com/android/tools/r8/jetbrains/kotlinx/metadata/impl/",
                 "com/android/tools/r8/jetbrains/kotlinx/metadata/impl/extensions/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/builtins/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/deserialization/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/jvm/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/jvm/deserialization/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/jvm/serialization/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/metadata/serialization/",
+                "com/android/tools/r8/jetbrains/kotlinx/metadata/internal/protobuf/",
                 "com/android/tools/r8/jetbrains/kotlinx/metadata/jvm/",
                 "com/android/tools/r8/jetbrains/kotlinx/metadata/jvm/impl/",
                 "com/android/tools/r8/joptsimple/",
@@ -366,15 +369,6 @@ public class JarContentsTest {
                 "com/android/tools/r8/org/intellij/lang/annotations/",
                 "com/android/tools/r8/org/jetbrains/",
                 "com/android/tools/r8/org/jetbrains/annotations/",
-                "com/android/tools/r8/org/jetbrains/kotlin/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/builtins/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/deserialization/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/jvm/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/jvm/deserialization/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/jvm/serialization/",
-                "com/android/tools/r8/org/jetbrains/kotlin/metadata/serialization/",
-                "com/android/tools/r8/org/jetbrains/kotlin/protobuf/",
                 "com/android/tools/r8/org/objectweb/",
                 "com/android/tools/r8/org/objectweb/asm/",
                 "com/android/tools/r8/org/objectweb/asm/commons/",
@@ -446,6 +440,8 @@ public class JarContentsTest {
                 "libthrowable_extension.jar:META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/services/",
+                "META-INF/services/com.android.tools.r8.jetbrains.kotlinx.metadata.impl.extensions.MetadataExtensions",
                 "NOTICE",
                 "r8-version.properties");
         expected.putAll(
@@ -1401,6 +1397,14 @@ public class JarContentsTest {
 
     private static boolean shouldCheckFile(String fileName) {
         if (fileName.endsWith(".class")) {
+            return false;
+        }
+
+        if (fileName.endsWith(".kotlin_builtins")) {
+            return false;
+        }
+
+        if (fileName.endsWith(".kotlin_metadata")) {
             return false;
         }
 
