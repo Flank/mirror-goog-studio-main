@@ -160,8 +160,6 @@ def _iml_module_jar_impl(ctx,
 def _iml_module_impl(ctx):
   names = [iml.basename[:-4] for iml in ctx.files.iml_files if iml.basename.endswith(".iml")]
 
-  module_jars = dict()
-  module_runtime = dict()
   transitive_data = depset()
   java_deps = []
   form_deps = []
@@ -172,8 +170,6 @@ def _iml_module_impl(ctx):
   for this_dep in ctx.attr.deps:
     if hasattr(this_dep, "module"):
       transitive_data += this_dep.module.transitive_data
-      module_jars.update(this_dep.module.module_jars)
-      module_runtime.update(this_dep.module.module_runtime)
       form_deps += this_dep.module.forms
     if java_common.provider in this_dep:
       java_deps, transitive_runtime_jars, transitive_compile_time_jars = accumulate_provider(
@@ -190,8 +186,6 @@ def _iml_module_impl(ctx):
           this_dep[java_common.provider], test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars)
     if hasattr(this_dep, "module"):
       transitive_data += this_dep.module.transitive_data
-      module_jars.update(this_dep.module.module_jars)
-      module_runtime.update(this_dep.module.module_runtime)
       test_form_deps += this_dep.module.test_forms
       test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
           this_dep.module.test_provider, test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars)
@@ -204,10 +198,8 @@ def _iml_module_impl(ctx):
     if hasattr(export, "module"):
       test_exports += [export.module.test_provider]
 
-
-  for name in names:
-    module_jars[name] = ctx.outputs.production_jar
-    module_runtime[name] = transitive_runtime_jars
+  module_jars = ctx.outputs.production_jar
+  module_runtime = transitive_runtime_jars
 
   transitive_data += depset(ctx.files.iml_files + ctx.files.data)
 
@@ -304,9 +296,10 @@ _iml_module_ = rule(
 
 def _iml_runtime_impl(ctx):
   providers = [ctx.attr.iml_module.module.main_provider]
-  module_runtime = dict()
-  module_jars = dict()
+  module_runtime = depset()
   transitive_data = depset()
+  names = []
+  module_jars = None
 
   for dep in ctx.attr.runtime_deps:
     if java_common.provider in dep:
@@ -314,13 +307,14 @@ def _iml_runtime_impl(ctx):
     if hasattr(dep, "runtime_info"):
       fail("runtime should not depend on runtime")
     if hasattr(dep, "module"):
-      module_runtime.update(dep.module.module_runtime)
-      module_jars.update(dep.module.module_jars)
+      module_runtime += dep.module.module_runtime
+      module_jars = dep.module.module_jars
       transitive_data += dep.module.transitive_data
+      names = dep.module.names
 
   combined_provider = java_common.merge(providers)
-  for name in ctx.attr.iml_module.module.names:
-    module_runtime[name] = combined_provider.transitive_runtime_jars
+  # for name in ctx.attr.iml_module.module.names:
+  module_runtime += combined_provider.transitive_runtime_jars
 
   return struct(
     providers = [combined_provider],
@@ -328,6 +322,7 @@ def _iml_runtime_impl(ctx):
       module_runtime = module_runtime,
       module_jars = module_jars,
       transitive_data = transitive_data,
+      names = names,
     )
   )
 
@@ -531,8 +526,9 @@ def _iml_project_impl(ctx):
 
   for dep in ctx.attr.modules:
     if hasattr(dep, "runtime_info"):
-      module_runtime.update(dep.runtime_info.module_runtime)
-      module_jars.update(dep.runtime_info.module_jars)
+      for name in dep.runtime_info.names:
+        module_runtime[name] = dep.runtime_info.module_runtime
+        module_jars[name] = dep.runtime_info.module_jars
       transitive_data += dep.runtime_info.transitive_data
     if hasattr(dep, "module"):
       fail("Don't depend on modules directly: " + str(dep.label))
