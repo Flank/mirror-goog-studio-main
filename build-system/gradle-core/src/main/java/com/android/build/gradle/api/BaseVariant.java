@@ -32,7 +32,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.DomainObjectCollection;
-import org.gradle.api.Incubating;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -494,13 +493,4 @@ public interface BaseVariant {
      */
     boolean getOutputsAreSigned();
 
-    /**
-     * Registers a task to be executed before any main output tasks like the assemble or bundle
-     * tasks are invoked.
-     *
-     * <p>The task will need to set up its dependencies on the build outputs (whether it is an
-     * intermediate output or the final one) independently of this call.
-     */
-    @Incubating
-    void register(Task task);
 }

@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -446,19 +445,5 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public boolean getOutputsAreSigned() {
         return getVariantData().outputsAreSigned;
-    }
-
-    @Override
-    public void register(Task task) {
-        MutableTaskContainer taskContainer = getVariantData().getScope().getTaskContainer();
-        taskContainer.getAssembleTask().dependsOn(task);
-        Task bundleTask = taskContainer.getBundleTask();
-        if (bundleTask != null) {
-            bundleTask.dependsOn(task);
-        }
-        Task bundleTaskLibrary = taskContainer.getBundleLibraryTask();
-        if (bundleTaskLibrary != null) {
-            bundleTaskLibrary.dependsOn(task);
-        }
     }
 }

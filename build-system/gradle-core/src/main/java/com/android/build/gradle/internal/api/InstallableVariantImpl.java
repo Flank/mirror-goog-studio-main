@@ -17,14 +17,11 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
 
@@ -53,20 +50,5 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @Override
     public DefaultTask getUninstall() {
         return getVariantData().uninstallTask;
-    }
-
-    /**
-     * Semi Private APIs that we share with friends until BuildableArtifact are accessible with a
-     * public API.
-     *
-     * <p>Provides a facility to retrieve the final version of an artifact type.
-     *
-     * @param artifactType requested artifact type.
-     * @return the {@see BuildableArtifact} for this artifact type, possibly empty.
-     */
-    @NonNull
-    @Incubating
-    public BuildableArtifact getFinalArtifact(@NonNull ArtifactType artifactType) {
-        return getVariantData().getScope().getArtifacts().getFinalArtifactFiles(artifactType);
     }
 }
