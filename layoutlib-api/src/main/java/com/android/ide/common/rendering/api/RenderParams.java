@@ -270,17 +270,17 @@ public abstract class RenderParams {
         return mHardwareConfig.getScreenSize();
     }
 
-    /** Returns the application icon resource, or null if there is no icon. */
-    @Nullable
-    public ResourceValue getAppIconResource() {
-        return mAppIcon;
-    }
-
-    /** @deprecated Use {@link #getAppIconResource()}. */
+    /** @deprecated Use {@link #getAppIcon()}. */
     @Deprecated
     @Nullable
-    public String getAppIcon() {
-        return mAppIcon == null ? null : mAppIcon.getValue();
+    public ResourceValue getAppIconResource() {
+        return getAppIcon();
+    }
+
+    /** Returns the application icon resource, or null if there is no icon. */
+    @Nullable
+    public final ResourceValue getAppIcon() {
+        return mAppIcon;
     }
 
     /**
@@ -288,27 +288,27 @@ public abstract class RenderParams {
      * and does not require further resource resolution.
      */
     @Nullable
-    public String getAppLabel() {
+    public final String getAppLabel() {
         return mAppLabel;
     }
 
-    public String getLocale() {
+    public final String getLocale() {
         return mLocale;
     }
 
-    public String getActivityName() {
+    public final String getActivityName() {
         return mActivityName;
     }
 
-    public boolean isForceNoDecor() {
+    public final boolean isForceNoDecor() {
         return mForceNoDecor;
     }
 
-    public boolean isRtlSupported() {
+    public final boolean isRtlSupported() {
         return mSupportsRtl;
     }
 
-    public boolean isQuickStepEnabled() {
+    public final boolean isQuickStepEnabled() {
         return mEnableQuickStep;
     }
 
@@ -320,7 +320,6 @@ public abstract class RenderParams {
     }
 
     public <T> T getFlag(Key<T> key) {
-
         // noinspection since the values in the map can be added only by setFlag which ensures that
         // the types match.
         //noinspection unchecked
