@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+@SuppressWarnings("DefaultLocale")
 public class NetworkTaskCategory extends TaskCategory {
     private static final String URL_STRING =
             "https://dl.google.com/dl/android/studio/ide-zips/2.4.0.3/android-studio-ide-171.3870562-windows.zip";
@@ -52,6 +54,8 @@ public class NetworkTaskCategory extends TaskCategory {
                     new OkHttpPostJsonTask(),
                     new HttpPostFormDataTask(),
                     new OkHttpPostFormDataTask(),
+                    new HttpPostHtmlDataTask(),
+                    new HttpPostXmlDataTask(),
                     new OkHttp2LargeDownloadTask(),
                     new WifiScanningTask(),
                     new WifiHighPerformanceModeTask(),
@@ -497,6 +501,92 @@ public class NetworkTaskCategory extends TaskCategory {
         }
     }
 
+    private static class HttpPostHtmlDataTask extends Task {
+        private int mCounter = 0;
+
+        @Nullable
+        @Override
+        protected String execute() throws Exception {
+            ServerTest postHtmlDataTest =
+                    new ServerTest() {
+                        @Override
+                        public void runWith(SimpleWebServer server) throws IOException {
+                            URL url = new URL(getUrl(server.getPort()));
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setDoOutput(true);
+                            connection.setRequestProperty("Content-Type", "text/html");
+                            OutputStream out = connection.getOutputStream();
+                            out.write(createHtmlString().getBytes());
+                            out.close();
+                            InputStream in = connection.getInputStream();
+                            while (in.read() != -1) ;
+                            in.close();
+                        }
+                    };
+            for (int k = 0; k < ITERATION_NUMBER; ++k) {
+                runWithServer(postHtmlDataTest);
+                TimeUnit.SECONDS.sleep(PERIOD_TIME);
+            }
+            return null;
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Http Post HTML Request";
+        }
+
+        @NonNull
+        private String createHtmlString() {
+            return String.format(
+                    "<!DOCTYPE html><html><body><h1>Html Data %d</h1><p>Test paragraph.</p></body></html>\n",
+                    ++mCounter);
+        }
+    }
+
+    private static class HttpPostXmlDataTask extends Task {
+        private int mCounter = 0;
+
+        @Nullable
+        @Override
+        protected String execute() throws Exception {
+            ServerTest postXmlDataTest =
+                    new ServerTest() {
+                        @Override
+                        public void runWith(SimpleWebServer server) throws IOException {
+                            URL url = new URL(getUrl(server.getPort()));
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setDoOutput(true);
+                            connection.setRequestProperty("Content-Type", "application/xml");
+                            OutputStream out = connection.getOutputStream();
+                            out.write(createXmlString().getBytes());
+                            out.close();
+                            InputStream in = connection.getInputStream();
+                            while (in.read() != -1) ;
+                            in.close();
+                        }
+                    };
+            for (int k = 0; k < ITERATION_NUMBER; ++k) {
+                runWithServer(postXmlDataTest);
+                TimeUnit.SECONDS.sleep(PERIOD_TIME);
+            }
+            return null;
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Http Post XML Request";
+        }
+
+        @NonNull
+        private String createXmlString() {
+            return String.format(
+                    "<?xml version=\"1.0\"?><note><title>Test Reminder %d</title><body>Please test every scenario!</body></note>",
+                    ++mCounter);
+        }
+    }
+
     interface ServerTest {
         void runWith(SimpleWebServer server) throws IOException;
     }
@@ -507,7 +597,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
     /**
      * Start a new server to run a single test against. The test can then send requests to it.
-     * <p>
+     *
      * <p>The server will automatically be started before the test begins and stopped on its
      * completion.
      */
@@ -528,11 +618,15 @@ public class NetworkTaskCategory extends TaskCategory {
         }
     }
 
+    @NonNull
     private static String createJSONString() {
         try {
             JSONObject json = new JSONObject().put("name", "student");
-            JSONObject arrayItem = new JSONObject().put("id", 3).put("name", "course1");
-            JSONArray array = new JSONArray().put(arrayItem);
+            JSONArray array = new JSONArray();
+            int counter = new Random().nextInt(100);
+            for (int i = 0; i < 5; i++) {
+                array.put(new JSONObject().put("id", ++counter).put("name", "value"));
+            }
             json.put("course", array);
             return json.toString();
         } catch (JSONException e) {
