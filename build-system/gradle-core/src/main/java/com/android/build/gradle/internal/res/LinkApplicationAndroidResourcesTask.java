@@ -613,212 +613,23 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
     }
 
-    public static class ConfigAction extends TaskConfigAction<LinkApplicationAndroidResourcesTask> {
-        protected final VariantScope variantScope;
-        protected final Supplier<File> symbolLocation;
-        private final File symbolsWithPackageNameOutputFile;
-        private final boolean generateLegacyMultidexMainDexProguardRules;
-        private final TaskManager.MergeType sourceArtifactType;
-        private final String baseName;
-        private final boolean isLibrary;
-
-        public ConfigAction(
-                @NonNull VariantScope scope,
-                @NonNull Supplier<File> symbolLocation,
-                @NonNull File symbolsWithPackageNameOutputFile,
-                boolean generateLegacyMultidexMainDexProguardRules,
-                @NonNull TaskManager.MergeType sourceArtifactType,
-                @NonNull String baseName,
-                boolean isLibrary) {
-            this.variantScope = scope;
-            this.symbolLocation = symbolLocation;
-            this.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
-            this.generateLegacyMultidexMainDexProguardRules =
-                    generateLegacyMultidexMainDexProguardRules;
-            this.baseName = baseName;
-            this.sourceArtifactType = sourceArtifactType;
-            this.isLibrary = isLibrary;
-        }
-
-        @NonNull
-        @Override
-        public String getName() {
-            return variantScope.getTaskName("process", "Resources");
-        }
-
-        @NonNull
-        @Override
-        public Class<LinkApplicationAndroidResourcesTask> getType() {
-            return LinkApplicationAndroidResourcesTask.class;
-        }
-
-        @Override
-        public void execute(@NonNull LinkApplicationAndroidResourcesTask processResources) {
-            final BaseVariantData variantData = variantScope.getVariantData();
-
-            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
-
-            variantScope.getTaskContainer().setProcessAndroidResTask(processResources);
-
-            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
-
-            processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
-            processResources.setVariantName(config.getFullName());
-            processResources.resPackageOutputFolder =
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.PROCESSED_RES, processResources, "out");
-            processResources.aapt2FromMaven =
-                    Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
-
-            if (variantData.getType().isAar()) {
-                throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
-            } else {
-                Preconditions.checkState(
-                        sourceArtifactType == TaskManager.MergeType.MERGE,
-                        "source output type should be MERGE",
-                        sourceArtifactType);
-            }
-
-            processResources.applicationId = config::getApplicationId;
-
-            // per exec
-            processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
-
-            if (variantData.getType().getCanHaveSplits()) {
-                processResources.splitListInput =
-                        variantScope.getArtifacts().getFinalArtifactFiles(
-                                InternalArtifactType.SPLIT_LIST);
-            }
-
-            processResources.apkList =
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
-
-            processResources.multiOutputPolicy = variantData.getMultiOutputPolicy();
-
-            processResources.dependenciesFileCollection =
-                    variantScope.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH,
-                            ALL,
-                            AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
-
-            // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
-            processResources.setSourceOutputDir(
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                                    processResources,
-                                    SdkConstants.FD_RES_CLASS));
-
-            processResources.textSymbolOutputDir = symbolLocation;
-            processResources.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
-
-            if (generatesProguardOutputFile(variantScope)) {
-                processResources.setProguardOutputFile(
-                        variantScope.getProcessAndroidResourcesProguardOutputFile());
-                variantScope
-                        .getArtifacts()
-                        .appendArtifact(
-                                InternalArtifactType.AAPT_PROGUARD_FILE,
-                                ImmutableList.of(
-                                        variantScope
-                                                .getProcessAndroidResourcesProguardOutputFile()),
-                                processResources);
-            }
-
-            if (generateLegacyMultidexMainDexProguardRules) {
-                processResources.setAaptMainDexListProguardOutputFile(
-                        variantScope
-                                .getArtifacts()
-                                .appendArtifact(
-                                        InternalArtifactType
-                                                .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
-                                        processResources,
-                                        "manifest_keep.txt"));
-            }
-
-            processResources.variantScope = variantScope;
-            processResources.outputScope = variantData.getOutputScope();
-            processResources.outputFactory = variantData.getOutputFactory();
-            processResources.originalApplicationId =
-                    TaskInputHelper.memoize(config::getOriginalApplicationId);
-
-            boolean aaptFriendlyManifestsFilePresent =
-                    variantScope
-                            .getArtifacts()
-                            .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
-            processResources.taskInputType =
-                    aaptFriendlyManifestsFilePresent
-                            ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                            : variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                                    ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
-                                    : InternalArtifactType.MERGED_MANIFESTS;
-            processResources.setManifestFiles(
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(processResources.taskInputType));
-
-            processResources.inputResourcesDir =
-                    variantScope.getArtifacts()
-                            .getFinalArtifactFiles(sourceArtifactType.getOutputType());
-
-            processResources.setType(config.getType());
-            processResources.setDebuggable(config.getBuildType().isDebuggable());
-            processResources.setAaptOptions(
-                    variantScope.getGlobalScope().getExtension().getAaptOptions());
-
-            processResources.buildTargetDensity =
-                    projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
-
-            processResources.setMergeBlameLogFolder(variantScope.getResourceBlameLogDir());
-
-            processResources.buildContext = variantScope.getInstantRunBuildContext();
-
-            if (!variantScope.getType().isForTesting()) {
-                // Tests should not have feature dependencies, however because they include the
-                // tested production component in their dependency graph, we see the tested feature
-                // package in their graph. Therefore we have to manually not set this up for tests.
-                processResources.featureResourcePackages =
-                        variantScope.getArtifactFileCollection(
-                                COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
-            }
-
-            processResources.projectBaseName = baseName;
-            processResources.isLibrary = isLibrary;
-            processResources.supportDirectory =
-                    new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
-
-            if (variantScope.getType().isFeatureSplit()) {
-                processResources.resOffsetSupplier =
-                        FeatureSetMetadata.getInstance()
-                                .getResOffsetSupplierForTask(variantScope, processResources);
-            }
-            processResources.minSdkVersion = variantScope.getMinSdkVersion().getApiLevel();
-        }
-    }
-
-    /**
-     * TODO: extract in to a separate task implementation once splits are calculated in the split
-     * discovery task.
-     */
-    public static final class NamespacedConfigAction
+    private abstract static class BaseConfigAction
             extends TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
+        private final boolean isLibrary;
 
-        public NamespacedConfigAction(
+        public BaseConfigAction(
                 @NonNull VariantScope scope,
                 boolean generateLegacyMultidexMainDexProguardRules,
-                @Nullable String baseName) {
+                @Nullable String baseName,
+                boolean isLibrary) {
             this.variantScope = scope;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
+            this.isLibrary = isLibrary;
         }
 
         @NonNull
@@ -833,11 +644,16 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             return LinkApplicationAndroidResourcesTask.class;
         }
 
+        protected void preconditionsCheck(BaseVariantData variantData) {}
+        protected void postExecute(@NonNull LinkApplicationAndroidResourcesTask task) {}
+
         @Override
         public final void execute(@NonNull LinkApplicationAndroidResourcesTask task) {
             final BaseVariantData variantData = variantScope.getVariantData();
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+
+            preconditionsCheck(variantData);
 
             task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             task.setVariantName(config.getFullName());
@@ -849,23 +665,17 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.applicationId = TaskInputHelper.memoize(config::getApplicationId);
 
-            // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             if (variantData.getType().getCanHaveSplits()) {
-                task.splitListInput = variantScope.getArtifacts()
-                        .getFinalArtifactFiles(InternalArtifactType.SPLIT_LIST);
+                task.splitListInput =
+                        variantScope.getArtifacts().getFinalArtifactFiles(
+                                InternalArtifactType.SPLIT_LIST);
             }
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
             task.apkList =
                     variantScope
                             .getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
-
-            task.sourceOutputDir =
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, task, "out");
 
             if (generatesProguardOutputFile(variantScope)) {
                 task.setProguardOutputFile(
@@ -909,6 +719,124 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.setManifestFiles(
                     variantScope.getArtifacts().getFinalArtifactFiles(task.taskInputType));
 
+            task.setType(config.getType());
+            task.setDebuggable(config.getBuildType().isDebuggable());
+            task.setAaptOptions(variantScope.getGlobalScope().getExtension().getAaptOptions());
+
+            task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
+
+            task.setMergeBlameLogFolder(variantScope.getResourceBlameLogDir());
+
+            task.buildContext = variantScope.getInstantRunBuildContext();
+
+            VariantType variantType = variantScope.getType();
+
+            // Tests should not have feature dependencies, however because they include the
+            // tested production component in their dependency graph, we see the tested feature
+            // package in their graph. Therefore we have to manually not set this up for tests.
+            task.featureResourcePackages = variantType.isForTesting() ? null :
+                    variantScope.getArtifactFileCollection(
+                            COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
+
+            if (variantType.isFeatureSplit()) {
+                task.resOffsetSupplier =
+                        FeatureSetMetadata.getInstance()
+                                .getResOffsetSupplierForTask(variantScope, task);
+            }
+
+            task.projectBaseName = baseName;
+            task.isLibrary = isLibrary;
+            task.supportDirectory =
+                    new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
+
+            postExecute(task);
+        }
+
+    }
+
+    public static final class ConfigAction extends BaseConfigAction {
+        protected final Supplier<File> symbolLocation;
+        private final File symbolsWithPackageNameOutputFile;
+        private final TaskManager.MergeType sourceArtifactType;
+
+        public ConfigAction(
+                @NonNull VariantScope scope,
+                @NonNull Supplier<File> symbolLocation,
+                @NonNull File symbolsWithPackageNameOutputFile,
+                boolean generateLegacyMultidexMainDexProguardRules,
+                @NonNull TaskManager.MergeType sourceArtifactType,
+                @NonNull String baseName,
+                boolean isLibrary) {
+            super(scope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary);
+            this.symbolLocation = symbolLocation;
+            this.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
+            this.sourceArtifactType = sourceArtifactType;
+        }
+
+        @Override
+        protected final void preconditionsCheck(BaseVariantData variantData) {
+            if (variantData.getType().isAar()) {
+                throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
+            } else {
+                Preconditions.checkState(
+                        sourceArtifactType == TaskManager.MergeType.MERGE,
+                        "source output type should be MERGE",
+                        sourceArtifactType);
+            }
+        }
+
+        @Override
+        protected final void postExecute(@NonNull LinkApplicationAndroidResourcesTask task) {
+            // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
+            task.sourceOutputDir =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                                    task,
+                                    SdkConstants.FD_RES_CLASS);
+
+            task.dependenciesFileCollection =
+                    variantScope.getArtifactFileCollection(
+                            RUNTIME_CLASSPATH,
+                            ALL,
+                            AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
+
+            task.inputResourcesDir =
+                    variantScope.getArtifacts()
+                            .getFinalArtifactFiles(sourceArtifactType.getOutputType());
+
+            task.textSymbolOutputDir = symbolLocation;
+            task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
+
+            task.minSdkVersion = variantScope.getMinSdkVersion().getApiLevel();
+
+            variantScope.getTaskContainer().setProcessAndroidResTask(task);
+        }
+    }
+
+    /**
+     * TODO: extract in to a separate task implementation once splits are calculated in the split
+     * discovery task.
+     */
+    public static final class NamespacedConfigAction extends BaseConfigAction {
+        public NamespacedConfigAction(
+                @NonNull VariantScope scope,
+                boolean generateLegacyMultidexMainDexProguardRules,
+                @Nullable String baseName) {
+            super(scope, generateLegacyMultidexMainDexProguardRules, baseName, false);
+        }
+
+        @Override
+        protected final void postExecute(@NonNull LinkApplicationAndroidResourcesTask task) {
+            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
+
+            task.sourceOutputDir =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, task, "out");
+
             List<FileCollection> dependencies = new ArrayList<>(2);
             dependencies.add(
                     variantScope
@@ -932,44 +860,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.dependenciesFileCollection =
                     variantScope.getGlobalScope().getProject().files(dependencies);
+
             task.sharedLibraryDependencies =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY);
-            task.setType(config.getType());
-            task.setDebuggable(config.getBuildType().isDebuggable());
-            task.setAaptOptions(variantScope.getGlobalScope().getExtension().getAaptOptions());
 
-            task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
-
-            task.setMergeBlameLogFolder(variantScope.getResourceBlameLogDir());
-
-            task.buildContext = variantScope.getInstantRunBuildContext();
-
-            VariantType variantType = variantScope.getType();
-
-            if (variantType.isForTesting()) {
-                // Tests should not have feature dependencies, however because they include the
-                // tested production component in their dependency graph, we see the tested feature
-                // package in their graph. Therefore we have to manually not set this up for tests.
-                task.featureResourcePackages = null;
-            } else {
-                task.featureResourcePackages =
-                        variantScope.getArtifactFileCollection(
-                                COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
-
-                if (variantType.isFeatureSplit()) {
-                    task.resOffsetSupplier =
-                            FeatureSetMetadata.getInstance()
-                                    .getResOffsetSupplierForTask(variantScope, task);
-                }
-            }
-
-            task.projectBaseName = baseName;
-            task.isLibrary = false;
-            task.supportDirectory =
-                    new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
             task.isNamespaced = true;
         }
     }
