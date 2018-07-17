@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
+import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -177,7 +178,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @NonNull
     @Internal
     private Set<String> getSplits(@NonNull SplitList splitList) {
-        return SplitList.getSplits(splitList, multiOutputPolicy);
+        return splitList.getSplits(multiOutputPolicy);
     }
 
     @Input
@@ -190,8 +191,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return minSdkVersion;
     }
 
-    BuildableArtifact splitListInput;
-
+    SplitList splitList;
 
     private OutputFactory outputFactory;
 
@@ -230,9 +230,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 this.featureResourcePackages != null
                         ? this.featureResourcePackages.getFiles()
                         : ImmutableSet.of();
-
-        SplitList splitList =
-                splitListInput == null ? SplitList.EMPTY : SplitList.load(splitListInput);
 
         Set<File> dependencies =
                 dependenciesFileCollection != null
@@ -327,9 +324,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     ApkData configurationApkData =
                                             outputFactory.addConfigurationSplit(
                                                     filterType,
-                                                    filter.getValue(),
+                                                    filter,
                                                     "" /* replaced later */,
-                                                    filter.getDisplayName());
+                                                    filter);
                                     configurationApkData.setVersionCode(
                                             variantScope
                                                     .getVariantConfiguration()
@@ -442,9 +439,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 densityFilterData != null
                         ? densityFilterData.getIdentifier()
                         // if resConfigs is set, we should not use our preferredDensity.
-                        : splitList.getFilters(SplitList.RESOURCE_CONFIGS).isEmpty()
-                                ? buildTargetDensity
-                                : null;
+                        : splitList.getResourceConfigs().isEmpty() ? buildTargetDensity : null;
 
         try {
 
@@ -481,8 +476,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setMainDexListProguardOutputFile(mainDexListProguardOutputFile)
                                 .setVariantType(getType())
                                 .setDebuggable(getDebuggable())
-                                .setResourceConfigs(
-                                        splitList.getFilters(SplitList.RESOURCE_CONFIGS))
+                                .setResourceConfigs(splitList.getResourceConfigs())
                                 .setSplits(getSplits(splitList))
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(getResOffset())
@@ -667,10 +661,37 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             if (variantData.getType().getCanHaveSplits()) {
-                task.splitListInput =
-                        variantScope.getArtifacts().getFinalArtifactFiles(
-                                InternalArtifactType.SPLIT_LIST);
+                Splits splits = variantScope.getGlobalScope().getExtension().getSplits();
+
+                ImmutableSet<String> densitySet =
+                        splits.getDensity().isEnable()
+                                ? ImmutableSet.copyOf(splits.getDensityFilters())
+                                : ImmutableSet.of();
+                ImmutableSet<String> languageSet =
+                        splits.getLanguage().isEnable()
+                                ? ImmutableSet.copyOf(splits.getLanguageFilters())
+                                : ImmutableSet.of();
+                ImmutableSet<String> abiSet =
+                        splits.getAbi().isEnable()
+                                ? ImmutableSet.copyOf(splits.getAbiFilters())
+                                : ImmutableSet.of();
+                ImmutableSet<String> resConfigSet =
+                        ImmutableSet.copyOf(
+                                variantScope
+                                        .getVariantConfiguration()
+                                        .getMergedFlavor()
+                                        .getResourceConfigurations());
+
+                task.splitList = new SplitList(densitySet, languageSet, abiSet, resConfigSet);
+            } else {
+                task.splitList =
+                        new SplitList(
+                                ImmutableSet.of(),
+                                ImmutableSet.of(),
+                                ImmutableSet.of(),
+                                ImmutableSet.of());
             }
+
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
             task.apkList =
                     variantScope
@@ -1037,11 +1058,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return originalApplicationId.get();
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @Nested
     @Optional
-    public BuildableArtifact getSplitListInput() {
-        return splitListInput;
+    public SplitList getSplitListInput() {
+        return splitList;
     }
 
     @Input

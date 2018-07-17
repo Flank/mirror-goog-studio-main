@@ -188,7 +188,6 @@ import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
-import com.android.build.gradle.tasks.SplitsDiscovery;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
@@ -1157,8 +1156,6 @@ public abstract class TaskManager {
 
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
 
-        createSplitsDiscovery(scope);
-
         // The manifest main dex list proguard rules are always needed for the bundle,
         // even if legacy multidex is not explicitly enabled.
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
@@ -1823,15 +1820,6 @@ public abstract class TaskManager {
 
         // This hides the assemble unit test task from the task list.
         variantScope.getTaskContainer().getAssembleTask().setGroup(null);
-    }
-
-    protected void createSplitsDiscovery(VariantScope variantScope) {
-        if (variantScope.getVariantData().getType().getCanHaveSplits()) {
-            // split list calculation and save to this file.
-            SplitsDiscovery splitsDiscoveryAndroidTask =
-                    taskFactory.create(
-                            new SplitsDiscovery.ConfigAction(variantScope));
-        }
     }
 
     /** Creates the tasks to build android tests. */

@@ -108,7 +108,6 @@ public final class SdkConstants {
     public static final String FN_INTERMEDIATE_FULL_JAR = "full.jar"; //$NON-NLS-1$
 
     /** list of splits for a variant */
-    public static final String FN_SPLIT_LIST = "split-list.gson";                     //$NON-NLS-1$
     public static final String FN_APK_LIST = "apk-list.gson"; //$NON-NLS-1$
 
     /** An SDK Project's build.xml file */
