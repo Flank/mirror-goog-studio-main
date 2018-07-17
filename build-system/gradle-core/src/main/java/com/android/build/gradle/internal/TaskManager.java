@@ -2751,9 +2751,6 @@ public abstract class TaskManager {
                             getLogger().isDebugEnabled(),
                             dataBindingBuilder.getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
-
-            // Set these so we can use them later to configure Kapt.
-            scope.setDataBindingCompilerArguments(dataBindingArgs);
         } else {
             getLogger().error("Cannot setup data binding for %s because java compiler options"
                     + " is not an instance of AnnotationProcessorOptions", processorOptions);
@@ -3775,21 +3772,6 @@ public abstract class TaskManager {
 
     private static void configureKaptTaskInScope(
             @NonNull VariantScope scope, @NonNull Task kaptTask) {
-        // HACK ALERT - Remove this when Kapt is fixed (and also enforce a minimum version of Kapt
-        // that has the fix).
-        if (scope.getDataBindingCompilerArguments() != null) {
-            // Workaround for https://youtrack.jetbrains.com/issue/KT-23866.
-            // Since Kapt is not yet aware of the new compilerArgumentProvider() API, we need to
-            // provide the arguments via the arguments() API. The Java compiler might see duplicate
-            // arguments (if AndroidJavaCompile is configured after this), but it won't break, and
-            // it will pass a list of unique arguments to the annotation processors.
-            AnnotationProcessorOptions options =
-                    scope.getVariantConfiguration()
-                            .getJavaCompileOptions()
-                            .getAnnotationProcessorOptions();
-            options.getArguments().putAll(scope.getDataBindingCompilerArguments().toMap());
-        }
-
         // The data binding artifact is created through annotation processing, which is invoked
         // by the Kapt task (when the Kapt plugin is used). Therefore, we register Kapt as the
         // generating task. (This will overwrite the registration of JavaCompile as the generating

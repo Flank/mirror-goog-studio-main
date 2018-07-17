@@ -284,12 +284,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     InstantRunTaskManager getInstantRunTaskManager();
     void setInstantRunTaskManager(InstantRunTaskManager taskManager);
 
-    void setDataBindingCompilerArguments(
-            @NonNull DataBindingCompilerArguments dataBindingCompilerArguments);
-
-    @Nullable
-    DataBindingCompilerArguments getDataBindingCompilerArguments();
-
     @NonNull
     VariantDependencies getVariantDependencies();
 

@@ -160,8 +160,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
 
-    @Nullable private DataBindingCompilerArguments dataBindingCompilerArguments;
-
     private FileCollection bootClasspath;
 
     public VariantScopeImpl(
@@ -1604,18 +1602,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return result;
-    }
-
-    @Override
-    public void setDataBindingCompilerArguments(
-            @NonNull DataBindingCompilerArguments dataBindingCompilerArguments) {
-        this.dataBindingCompilerArguments = dataBindingCompilerArguments;
-    }
-
-    @Override
-    @Nullable
-    public DataBindingCompilerArguments getDataBindingCompilerArguments() {
-        return dataBindingCompilerArguments;
     }
 
     @Override
