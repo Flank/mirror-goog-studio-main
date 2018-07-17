@@ -18,7 +18,6 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.Collection;
 
 /**
@@ -92,7 +91,11 @@ public class SimpleRepositorySource implements RepositorySource {
         return mEnabled;
     }
     @Override
-    public void setEnabled(boolean enabled) {mEnabled = enabled;}
+    public void setEnabled(boolean enabled) {
+        if (getProvider().isModifiable()) {
+            mEnabled = enabled;
+        }
+    }
 
     @Override
     @Nullable
