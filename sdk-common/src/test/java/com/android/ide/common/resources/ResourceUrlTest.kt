@@ -83,6 +83,7 @@ class ResourceUrlTest {
 
     @Test
     fun parseAttrReference() {
+        assertNull(ResourceUrl.parseAttrReference(""))
         assertEquals(
                 ResourceUrl.createAttrReference(null, "foo"),
                 ResourceUrl.parseAttrReference("foo")
@@ -107,6 +108,7 @@ class ResourceUrlTest {
 
     @Test
     fun parseStyleParentReference() {
+        assertNull(ResourceUrl.parseStyleParentReference(""))
         assertEquals(
                 ResourceUrl.create(null, STYLE, "foo"),
                 ResourceUrl.parseStyleParentReference("foo")

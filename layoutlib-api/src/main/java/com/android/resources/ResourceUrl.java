@@ -15,7 +15,9 @@
  */
 package com.android.resources;
 
-import static com.android.ide.common.rendering.api.RenderResources.*;
+import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_EMPTY;
+import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_NULL;
+import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_UNDEFINED;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -255,6 +257,10 @@ public class ResourceUrl implements Serializable {
     public static ResourceUrl parseAttrReference(@NonNull String input) {
         String namespace = null;
         String name;
+
+        if (input.isEmpty()) {
+            return null;
+        }
 
         if (input.charAt(0) == '@' || input.charAt(0) == '?') {
             return null;
