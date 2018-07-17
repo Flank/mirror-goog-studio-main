@@ -770,7 +770,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
 
         // setup SDK repositories.
-        sdkHandler.addLocalRepositories(project);
+        if (projectOptions.get(BooleanOption.INJECT_SDK_MAVEN_REPOS)) {
+            sdkHandler.addLocalRepositories(project);
+        }
 
         threadRecorder.record(
                 ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
