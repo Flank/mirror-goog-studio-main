@@ -132,8 +132,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private boolean debuggable;
 
-    private boolean pseudoLocalesEnabled;
-
     private AaptOptions aaptOptions;
 
     private File mergeBlameLogFolder;
@@ -483,7 +481,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setMainDexListProguardOutputFile(mainDexListProguardOutputFile)
                                 .setVariantType(getType())
                                 .setDebuggable(getDebuggable())
-                                .setPseudoLocalize(getPseudoLocalesEnabled())
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
                                 .setSplits(getSplits(splitList))
@@ -773,8 +770,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.setDebuggable(config.getBuildType().isDebuggable());
             processResources.setAaptOptions(
                     variantScope.getGlobalScope().getExtension().getAaptOptions());
-            processResources.setPseudoLocalesEnabled(
-                    config.getBuildType().isPseudoLocalesEnabled());
 
             processResources.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
@@ -945,7 +940,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.setType(config.getType());
             task.setDebuggable(config.getBuildType().isDebuggable());
             task.setAaptOptions(variantScope.getGlobalScope().getExtension().getAaptOptions());
-            task.setPseudoLocalesEnabled(config.getBuildType().isPseudoLocalesEnabled());
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
 
@@ -1107,15 +1101,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     public void setDebuggable(boolean debuggable) {
         this.debuggable = debuggable;
-    }
-
-    @Input
-    public boolean getPseudoLocalesEnabled() {
-        return pseudoLocalesEnabled;
-    }
-
-    public void setPseudoLocalesEnabled(boolean pseudoLocalesEnabled) {
-        this.pseudoLocalesEnabled = pseudoLocalesEnabled;
     }
 
     @Nested

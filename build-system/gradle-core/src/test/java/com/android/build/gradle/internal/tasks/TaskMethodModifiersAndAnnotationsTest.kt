@@ -24,7 +24,6 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Console
 import org.gradle.api.tasks.Destroys
-import java.lang.reflect.Modifier
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -40,6 +39,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.junit.Test
 import java.lang.reflect.AnnotatedElement
+import java.lang.reflect.Modifier
 
 class TaskMethodModifiersAndAnnotationsTest {
 
@@ -110,7 +110,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setDebuggable",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setMergeBlameLogFolder",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setProguardOutputFile",
-                "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setPseudoLocalesEnabled",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setSourceOutputDir",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setType",
                 "com.android.build.gradle.internal.tasks.AndroidBuilderTask::setAndroidBuilder",

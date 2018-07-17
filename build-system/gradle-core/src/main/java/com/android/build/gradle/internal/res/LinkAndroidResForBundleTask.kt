@@ -71,8 +71,6 @@ open class LinkAndroidResForBundleTask
     var debuggable: Boolean = false
         private set
 
-    private var pseudoLocalesEnabled: Boolean = false
-
     private lateinit var aaptOptions: com.android.build.gradle.internal.dsl.AaptOptions
 
     private var mergeBlameLogFolder: File? = null
@@ -156,7 +154,6 @@ open class LinkAndroidResForBundleTask
                 packageId =  resOffset,
                 allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
                 dependentFeatures = featurePackagesBuilder.build(),
-                pseudoLocalize = getPseudoLocalesEnabled(),
                 resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).single()),
                 resourceConfigs = ImmutableSet.copyOf(resConfig))
         if (logger.isInfoEnabled) {
@@ -195,11 +192,6 @@ open class LinkAndroidResForBundleTask
     @Input
     fun getBuildToolsVersion(): String {
         return buildTools.revision.toString()
-    }
-
-    @Input
-    fun getPseudoLocalesEnabled(): Boolean {
-        return pseudoLocalesEnabled
     }
 
     @Nested
@@ -262,7 +254,6 @@ open class LinkAndroidResForBundleTask
 
             task.debuggable = config.buildType.isDebuggable
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
-            task.pseudoLocalesEnabled = config.buildType.isPseudoLocalesEnabled
 
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)

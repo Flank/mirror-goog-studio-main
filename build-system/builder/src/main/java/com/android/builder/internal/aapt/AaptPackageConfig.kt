@@ -43,7 +43,6 @@ data class AaptPackageConfig(
         val splits: ImmutableCollection<String>? = null,
         val debuggable: Boolean = false,
         val customPackageForR: String? = null,
-        val pseudoLocalize: Boolean = false,
         val preferredDensity: String? = null,
         val resourceConfigs: ImmutableSet<String> = ImmutableSet.of(),
         val generateProtos: Boolean = false,
@@ -76,7 +75,6 @@ data class AaptPackageConfig(
         private var splits: ImmutableCollection<String>? = null
         private var debuggable: Boolean = false
         private var customPackageForR: String? = null
-        private var pseudoLocalize: Boolean = false
         private var preferredDensity: String? = null
         private var androidJarPath: String? = null
         private var resourceConfigs: ImmutableSet<String> = ImmutableSet.of()
@@ -112,7 +110,6 @@ data class AaptPackageConfig(
                     splits = splits,
                     debuggable = debuggable,
                     customPackageForR = customPackageForR,
-                    pseudoLocalize = pseudoLocalize,
                     preferredDensity = preferredDensity,
                     resourceConfigs = resourceConfigs,
                     generateProtos = isGenerateProtos,
@@ -201,11 +198,6 @@ data class AaptPackageConfig(
 
         fun setDebuggable(debuggable: Boolean): Builder {
             this.debuggable = debuggable
-            return this
-        }
-
-        fun setPseudoLocalize(pseudoLocalize: Boolean): Builder {
-            this.pseudoLocalize = pseudoLocalize
             return this
         }
 
