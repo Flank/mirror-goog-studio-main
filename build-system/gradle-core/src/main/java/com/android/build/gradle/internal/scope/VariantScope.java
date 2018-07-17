@@ -312,12 +312,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @Nullable
     DataBindingExportBuildInfoTask getDataBindingExportBuildInfoTask();
 
-    void setDataBindingCompilerArguments(
-            @NonNull DataBindingCompilerArguments dataBindingCompilerArguments);
-
-    @Nullable
-    DataBindingCompilerArguments getDataBindingCompilerArguments();
-
     @NonNull
     VariantDependencies getVariantDependencies();
 

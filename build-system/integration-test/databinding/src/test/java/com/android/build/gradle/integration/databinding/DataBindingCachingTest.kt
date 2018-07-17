@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
-import org.junit.Assume.assumeFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -71,38 +70,20 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     @Throws(IOException::class)
     fun setUp() {
         if (withKotlin) {
-            TestFileUtils.searchVerbatimAndReplace(
-                project.buildFile,
-                "apply plugin: 'com.android.application'",
-                "apply plugin: 'com.android.application'\n" +
-                        "apply plugin: 'kotlin-android'\n" +
-                        "apply plugin: 'kotlin-kapt'"
-            )
+            for (project in listOf(project, projectCopy)) {
+                TestFileUtils.searchVerbatimAndReplace(
+                    project.buildFile,
+                    "apply plugin: 'com.android.application'",
+                    "apply plugin: 'com.android.application'\n" +
+                            "apply plugin: 'kotlin-android'\n" +
+                            "apply plugin: 'kotlin-kapt'"
+                )
+            }
         }
     }
 
     @Test
-    fun testSameProjectLocation() {
-        // Run the first build to populate the Gradle build cache
-        val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-
-        project.executor().withArgument("--build-cache").run("clean", JAVA_COMPILE_TASK)
-        assertThat(buildCacheDir).exists()
-
-        // In the second build, the Java compile task should get their outputs from the build cache
-        val result = project.executor().withArgument("--build-cache")
-            .run("clean", JAVA_COMPILE_TASK)
-        assertThat(result.getTask(JAVA_COMPILE_TASK)).wasFromCache()
-
-        FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-    }
-
-    @Test
     fun testDifferentProjectLocations() {
-        // TODO Test with Kotlin once issues with Kapt are fixed.
-        assumeFalse(withKotlin)
-
         // Build the first project to populate the Gradle build cache
         val buildCacheDir = File(project.testDir.parent, GRADLE_BUILD_CACHE)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)

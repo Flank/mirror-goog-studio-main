@@ -114,8 +114,8 @@ class DataBindingCompilerArguments constructor(
     @Input
     fun getModulePackage() = modulePackageProvider()
 
-    fun toMap(): Map<String, String> {
-        return CompilerArguments(
+    override fun asArguments(): Iterable<String> {
+        val arguments = CompilerArguments(
             artifactType = artifactType,
             modulePackage = getModulePackage(),
             minApi = minApi,
@@ -133,13 +133,11 @@ class DataBindingCompilerArguments constructor(
             isEnabledForTests = isEnabledForTests,
             isEnableV2 = isEnableV2
         ).toMap()
-    }
 
-    override fun asArguments(): Iterable<String> {
         // Don't need to sort the returned list as the order shouldn't matter to Gradle.
         // Also don't need to escape the key and value strings as they will be passed as-is to
         // the Java compiler.
-        return toMap().map { entry -> "-A${entry.key}=${entry.value}" }
+        return arguments.map { entry -> "-A${entry.key}=${entry.value}" }
     }
 
     companion object {
