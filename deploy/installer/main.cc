@@ -29,10 +29,10 @@
 using namespace deployer;
 
 void PrintUsage(char *invokedPath) {
-  std::string binaryName = basename(invokedPath);
+  std::string binary_name = basename(invokedPath);
   std::cerr
       << "Usages:" << std::endl
-      << binaryName << " command [command_parameters]" << std::endl
+      << binary_name << " command [command_parameters]" << std::endl
       << std::endl
       << "Commands available:" << std::endl
       << "   dump   : Extract CDs and Signatures for a given applicationID."
@@ -48,13 +48,13 @@ int main(int argc, char **argv) {
 
   Trace::Init();
 
-  auto binaryName = argv[0];
-  auto commandName = argv[1];
+  auto binary_name = argv[0];
+  auto command_name = argv[1];
 
   // Retrieve Command to be invoked.
-  auto task = GetCommand(commandName);
+  auto task = GetCommand(command_name);
   if (task == nullptr) {
-    PrintUsage(binaryName);
+    PrintUsage(binary_name);
     return EXIT_FAILURE;
   }
 
