@@ -689,27 +689,76 @@ class NamespaceRewriterTest {
 
 
     @Test
-    fun checkPublicFileGeneration() {
+    fun checkPublicFileGenerationWithPublicTxt() {
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
             .add(symbol("color", "abc_color_highlight_material"))
             .add(symbol("style", "Base.Widget.Design.TabLayout"))
             .add(symbol("string", "private"))
+            .add(symbol("attr", "normal_attr"))
+            .add(symbol("attr", "local_attr", true))
+            .add(symbol("attr", "remote_attr", true))
+            .add(symbol("attr", "private_attr"))
             .build()
 
         val publicTable = SymbolTable.builder()
             .tablePackage("com.example.module")
             .add(symbol("color", "abc_color_highlight_material"))
             .add(symbol("style", "Base_Widget_Design_TabLayout"))
+            .add(symbol("attr", "local_attr"))
+            .add(symbol("attr", "normal_attr"))
             .build()
 
+        val dependencyTable = SymbolTable.builder()
+            .tablePackage("com.example.dependency")
+            .add(symbol("attr", "remote_attr"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
+
         val result = StringWriter().apply {
-            writePublicFile(this, moduleTable, publicTable)
+            namespaceRewriter.writePublicFile(this, moduleTable, publicTable)
         }.toString().trim()
 
         assertThat(result).isEqualTo("""
             <resources>
+            <public name="local_attr" type="attr" />
+            <public name="normal_attr" type="attr" />
             <public name="abc_color_highlight_material" type="color" />
+            <public name="Base.Widget.Design.TabLayout" type="style" />
+            </resources>
+        """.xmlFormat())
+    }
+
+    @Test
+    fun checkPublicFileGenerationWithoutPublicTxt() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("color", "abc_color_highlight_material"))
+            .add(symbol("style", "Base.Widget.Design.TabLayout"))
+            .add(symbol("string", "local"))
+            .add(symbol("attr", "normal_attr"))
+            .add(symbol("attr", "local_attr", true))
+            .add(symbol("attr", "remote_attr", true))
+            .build()
+
+        val dependencyTable = SymbolTable.builder()
+            .tablePackage("com.example.dependency")
+            .add(symbol("attr", "remote_attr"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
+
+        val result = StringWriter().apply {
+            namespaceRewriter.writePublicFile(this, moduleTable, moduleTable)
+        }.toString().trim()
+
+        assertThat(result).isEqualTo("""
+            <resources>
+            <public name="local_attr" type="attr" />
+            <public name="normal_attr" type="attr" />
+            <public name="abc_color_highlight_material" type="color" />
+            <public name="local" type="string" />
             <public name="Base.Widget.Design.TabLayout" type="style" />
             </resources>
         """.xmlFormat())
