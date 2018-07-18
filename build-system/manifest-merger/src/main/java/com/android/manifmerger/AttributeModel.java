@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -210,6 +211,15 @@ class AttributeModel {
          * the attribute declaration.
          */
         boolean shouldMergeDefaultValues();
+
+        /**
+         * Returns an XmlDocument.Type EnumSet which contains the types of lower priority
+         * XmlDocuments this attribute can be merged from.
+         */
+        @NonNull
+        default EnumSet<XmlDocument.Type> getMergeableLowerPriorityTypes() {
+            return EnumSet.allOf(XmlDocument.Type.class);
+        }
 
         /**
          * Merges the two attributes values and returns the merged value. If the values cannot be

@@ -381,5 +381,10 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         public void setUnitTestVariant(@Nullable UnitTestVariant testVariant) {
             variant.setUnitTestVariant(testVariant);
         }
+
+        @Override
+        public void register(Task task) {
+            variant.register(task);
+        }
     }
 }

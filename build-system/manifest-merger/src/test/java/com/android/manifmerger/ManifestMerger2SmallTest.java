@@ -32,6 +32,7 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.truth.Truth;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -761,7 +762,148 @@ public class ManifestMerger2SmallTest {
         assertTrue(Boolean.parseBoolean(applicationAttributes.getNamedItemNS(
                 SdkConstants.ANDROID_URI, SdkConstants.ATTR_HAS_CODE).getNodeValue()));
     }
-    
+
+    /**
+     * If android:hasCode is set in a lower priority manifest, but not in the higher priority
+     * overlay, we want the hasCode setting from the lower priority manifest to be merged in, so
+     * that users only have to set it once in the main manifest if all their variants have no code.
+     * This test matches the existing behavior.
+     */
+    @Test
+    public void testWhenHasCodeIsFalseInMainAndUnspecifiedInOverlay() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application android:hasCode=\"false\"/>\n"
+                        + "</manifest>";
+
+        String overlay =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testHasCode1Input", input);
+        File overlayFile = TestUtils.inputAsFile("testHasCode1Overlay", overlay);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .addFlavorAndBuildTypeManifest(overlayFile)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+
+        NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
+        assertEquals(1, applications.getLength());
+        Node application = applications.item(0);
+        // verify hasCode is false.
+        NamedNodeMap applicationAttributes = application.getAttributes();
+        Truth.assertThat(
+                        Boolean.parseBoolean(
+                                applicationAttributes
+                                        .getNamedItemNS(
+                                                SdkConstants.ANDROID_URI,
+                                                SdkConstants.ATTR_HAS_CODE)
+                                        .getNodeValue()))
+                .isFalse();
+    }
+
+    /**
+     * If android:hasCode is set in lower and higher priority manifests, we want the hasCode setting
+     * to be merged with an OR merging policy, to allow for a module with some variants having code
+     * and some not.
+     */
+    @Test
+    public void testWhenHasCodeIsFalseInMainAndTrueInOverlay() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application android:hasCode=\"false\"/>\n"
+                        + "</manifest>";
+
+        String overlay =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application android:hasCode=\"true\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testHasCode2Input", input);
+        File overlayFile = TestUtils.inputAsFile("testHasCode2Overlay", overlay);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .addFlavorAndBuildTypeManifest(overlayFile)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+
+        NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
+        assertEquals(1, applications.getLength());
+        Node application = applications.item(0);
+        // verify hasCode if true.
+        NamedNodeMap applicationAttributes = application.getAttributes();
+        Truth.assertThat(
+                        Boolean.parseBoolean(
+                                applicationAttributes
+                                        .getNamedItemNS(
+                                                SdkConstants.ANDROID_URI,
+                                                SdkConstants.ATTR_HAS_CODE)
+                                        .getNodeValue()))
+                .isTrue();
+    }
+
+    /** android:hasCode should never be merged from a library (or feature) module. */
+    @Test
+    public void testThatHasCodeFromLibraryIsNotMerged() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        String library =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.baz\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application android:hasCode=\"false\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testHasCode3Input", input);
+        File libraryFile = TestUtils.inputAsFile("testHasCode3Library", library);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .addLibraryManifest(libraryFile)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+
+        NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
+        assertEquals(1, applications.getLength());
+        Node application = applications.item(0);
+        // verify hasCode is unspecified.
+        NamedNodeMap applicationAttributes = application.getAttributes();
+        Truth.assertThat(
+                        applicationAttributes.getNamedItemNS(
+                                SdkConstants.ANDROID_URI, SdkConstants.ATTR_HAS_CODE))
+                .isNull();
+    }
+
     @Test
     public void testAddingTestOnlyAttribute() throws Exception {
         String xml = ""
