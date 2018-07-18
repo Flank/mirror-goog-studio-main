@@ -18,8 +18,6 @@ package com.android.tools.gradle;
 
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.perflogger.Benchmark;
-import com.android.tools.perflogger.Metric;
-import com.android.tools.perflogger.Metric.MetricSample;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,6 +45,7 @@ public class BenchmarkTest {
         List<String> startups = new ArrayList<>();
         List<String> cleanups = new ArrayList<>();
         List<File> mutations = new ArrayList<>();
+        List<String> buildProperties = new ArrayList<>();
         List<BenchmarkListener> listeners = new ArrayList<>();
 
         Iterator<String> it = Arrays.asList(args).iterator();
@@ -76,6 +75,8 @@ public class BenchmarkTest {
                 benchmarkName = it.next();
             } else if (arg.equals("--mutation") && it.hasNext()) {
                 mutations.add(new File(it.next()));
+            } else if (arg.equals("--build_property") && it.hasNext()) {
+                buildProperties.add(it.next());
             } else if (arg.equals("--listener") && it.hasNext()) {
                 listeners.add(locateListener(it.next()).newInstance());
             } else {
@@ -95,7 +96,8 @@ public class BenchmarkTest {
                         startups,
                         cleanups,
                         tasks,
-                        listeners);
+                        listeners,
+                        buildProperties);
     }
 
     @SuppressWarnings("unchecked")
@@ -128,7 +130,8 @@ public class BenchmarkTest {
             List<String> startups,
             List<String> cleanups,
             List<String> tasks,
-            List<BenchmarkListener> listeners)
+            List<BenchmarkListener> listeners,
+            List<String> buildProperties)
             throws Exception {
 
         Benchmark benchmark =
@@ -153,6 +156,7 @@ public class BenchmarkTest {
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
+            buildProperties.forEach(gradle::addArgument);
             listeners.forEach(it -> it.configure(home, gradle, benchmarkRun));
 
             gradle.run(startups);
