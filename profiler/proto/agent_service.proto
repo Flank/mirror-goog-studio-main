@@ -68,8 +68,6 @@ message AgentConfig {
   string service_address = 3;
   // address used for jvmti devices that use unix sockets.
   string service_socket_name = 4;
-  // equivalent to StudioFlags.PROFILER_NETWORK_REQUEST_PAYLOAD.
-  bool profiler_network_request_payload = 5;
   // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
   bool energy_profiler_enabled = 6;
   // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.

@@ -233,7 +233,6 @@ public class PerfDriver implements TestRule {
                             .setMemConfig(memConfig)
                             .setServiceAddress(LOCAL_HOST + ":" + getAvailablePort())
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
-                            .setProfilerNetworkRequestPayload(true)
                             .setEnergyProfilerEnabled(true)
                             .setAndroidFeatureLevel(sdkLevel)
                             .build();

@@ -17,7 +17,6 @@ package com.android.tools.profiler.support;
 
 import android.os.Debug;
 import com.android.tools.profiler.support.memory.VmStatsSampler;
-import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.profilers.EventProfiler;
 import com.android.tools.profiler.support.profilers.MemoryProfiler;
 import com.android.tools.profiler.support.profilers.ProfilerComponent;
@@ -35,9 +34,8 @@ public class ProfilerService {
      *
      * @param useMemoryProfiler whether to use {@link VmStatsSampler} for legacy gc and object count
      *     tracking.
-     * @param trackRequestPayload whether to track network request body details.
      */
-    public static void initialize(boolean useMemoryProfiler, boolean trackRequestPayload) {
+    public static void initialize(boolean useMemoryProfiler) {
         if (sInstance != null) {
             return;
         }
@@ -53,7 +51,6 @@ public class ProfilerService {
             Runtime.getRuntime().gc();
             Debug.startAllocCounting();
         }
-        HttpTracker.setRequestPayloadEnabled(trackRequestPayload);
         sInstance = new ProfilerService(useMemoryProfiler);
     }
 

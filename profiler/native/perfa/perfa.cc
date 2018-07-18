@@ -204,11 +204,9 @@ void ProfilerInitializationWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
   proto::AgentConfig* config = static_cast<proto::AgentConfig*>(ptr);
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
-  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(ZZ)V");
+  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(Z)V");
   bool log_live_alloc_count = config->mem_config().use_live_alloc();
-  bool network_request_payload = config->profiler_network_request_payload();
-  jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count,
-                            network_request_payload);
+  jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count);
 }
 
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
