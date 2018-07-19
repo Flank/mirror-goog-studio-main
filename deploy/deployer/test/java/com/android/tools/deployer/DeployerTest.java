@@ -38,4 +38,11 @@ public class DeployerTest {
         long manifestCrc = crcs.get("AndroidManifest.xml");
         assertEquals(0x5804A053, manifestCrc);
     }
+
+    @Test
+    public void testApkId() {
+        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        Apk apk = new Apk(file.getAbsolutePath());
+        assertEquals(apk.getDigestString(), "ec25d183db88a0ad6c9cc7199388d31331907e09");
+    }
 }

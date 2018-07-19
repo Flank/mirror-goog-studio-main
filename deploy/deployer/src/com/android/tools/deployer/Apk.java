@@ -17,6 +17,7 @@
 package com.android.tools.deployer;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.BaseEncoding;
 import com.google.devrel.gmscore.tools.apk.arsc.BinaryResourceFile;
 import com.google.devrel.gmscore.tools.apk.arsc.Chunk;
 import com.google.devrel.gmscore.tools.apk.arsc.XmlAttribute;
@@ -24,9 +25,13 @@ import com.google.devrel.gmscore.tools.apk.arsc.XmlChunk;
 import com.google.devrel.gmscore.tools.apk.arsc.XmlStartElementChunk;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -44,10 +49,13 @@ public class Apk {
         DELETED
     }
 
+    private static final String DIGEST_ALGORITHM = "SHA-1";
     private final ZipFile zipFile;
+
+    private byte[] digest = null;
     private String onDeviceName = null;
 
-    public Apk(String path) throws DeployerException {
+    public Apk(String path) {
         try {
             zipFile = new ZipFile(path);
         } catch (IOException e) {
@@ -145,6 +153,35 @@ public class Apk {
             }
         }
         return null;
+    }
+
+    public byte[] getDigest() {
+        if (digest != null) {
+            return digest;
+        }
+
+        byte[] backingArray = new byte[zipFile.size() * Long.BYTES];
+        LongBuffer crcs = ByteBuffer.wrap(backingArray).asLongBuffer();
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
+            crcs.put(entry.getCrc());
+        }
+        crcs.rewind();
+
+        MessageDigest messageDigest;
+        try {
+            messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
+        } catch (NoSuchAlgorithmException e) {
+            throw new DeployerException("MessageDigest:" + DIGEST_ALGORITHM + " unavailable.", e);
+        }
+        digest = messageDigest.digest(backingArray);
+        return digest;
+    }
+
+    public String getDigestString() {
+        byte[] digest = getDigest();
+        return BaseEncoding.base16().lowerCase().encode(digest);
     }
 
     // Retrieve the local APK crcs. The expected file is a valid zip archive which
