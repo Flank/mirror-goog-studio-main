@@ -58,25 +58,23 @@ message AgentConfig {
     int32 art_stop_timeout_sec = 1;
   }
 
-  // equivalent to profiler.jvmti flag in Studio
-  bool use_jvmti = 1;
-  MemoryConfig mem_config = 2;
+  MemoryConfig mem_config = 1;
   // Which socket type we are using when setting up our service
   // if the device is O+ we use service_socket_name and
   // ABSTRACT_SOCKET. If the device is pre O we use
   // UNSPECIFIED_SOCKET and use the service_address.
-  SocketType socket_type = 3;
+  SocketType socket_type = 2;
   // address used for legacy devices (Nougat or older).
-  string service_address = 4;
+  string service_address = 3;
   // address used for jvmti devices that use unix sockets.
-  string service_socket_name = 5;
+  string service_socket_name = 4;
   // equivalent to StudioFlags.PROFILER_NETWORK_REQUEST_PAYLOAD.
-  bool profiler_network_request_payload = 6;
+  bool profiler_network_request_payload = 5;
   // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
-  bool energy_profiler_enabled = 8;
+  bool energy_profiler_enabled = 6;
   // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.
-  bool cpu_api_tracing_enabled = 9;
+  bool cpu_api_tracing_enabled = 7;
   // Android API level as defined in com.android.sdklib.AndroidVersion.
-  int32 android_feature_level = 10;
-  CpuConfig cpu_config = 11;
+  int32 android_feature_level = 8;
+  CpuConfig cpu_config = 9;
 }

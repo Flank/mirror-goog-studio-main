@@ -40,7 +40,6 @@ import org.junit.runners.model.Statement;
  * this base class.
  */
 public class PerfDriver implements TestRule {
-
     // Folder to create temporary config files, which is chained in TestRule and will be deleted
     // at the test's end.
     private final TemporaryFolder myTemporaryFolder = new TemporaryFolder();
@@ -164,7 +163,6 @@ public class PerfDriver implements TestRule {
             myMockApp.loadDex(ProcessRunner.getProcessPath("profiler.service.location"));
             myMockApp.loadDex(ProcessRunner.getProcessPath("instrumented.app.dex.location"));
         } else {
-
             myMockApp.loadDex(ProcessRunner.getProcessPath("jvmti.app.dex.location"));
         }
         // Load our mock application, and launch our test activity.
@@ -190,24 +188,22 @@ public class PerfDriver implements TestRule {
             File perfaJarFile = new File(ProcessRunner.getProcessPath("perfa.jar.location"));
             if (libPerfaFile.exists()) {
                 Files.copy(
-                    libPerfaFile.toPath(),
-                    new File("./libperfa.so").toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
+                        libPerfaFile.toPath(),
+                        new File("./libperfa.so").toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
             }
             if (perfaJarFile.exists()) {
                 Files.copy(
-                    perfaJarFile.toPath(),
-                    new File("./perfa.jar").toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
+                        perfaJarFile.toPath(),
+                        new File("./perfa.jar").toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException ex) {
             Assert.fail("Failed to copy required file: " + ex);
         }
     }
 
-    /**
-     * @return an available port to be used by the test framework.
-     */
+    /** @return an available port to be used by the test framework. */
     private int getAvailablePort() {
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
@@ -228,16 +224,12 @@ public class PerfDriver implements TestRule {
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
             Agent.AgentConfig.MemoryConfig memConfig =
                     Agent.AgentConfig.MemoryConfig.newBuilder()
-                    .setTrackGlobalJniRefs(true)
-                    .setAppDir("/")
-                    .build();
+                            .setTrackGlobalJniRefs(true)
+                            .setAppDir("/")
+                            .build();
 
             Agent.AgentConfig config =
                     Agent.AgentConfig.newBuilder()
-                            // The test below are using JVMTI, however this flag controls if we are
-                            // using an abstract unix socket or if we are using a host and port.
-                            // TODO: Update framework to support abstract sockets.
-                            .setUseJvmti(false)
                             .setMemConfig(memConfig)
                             .setServiceAddress(LOCAL_HOST + ":" + getAvailablePort())
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
