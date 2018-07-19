@@ -244,6 +244,11 @@ platform_filegroup(
 )
 
 platform_filegroup(
+    name = "platforms/android-25",
+    visibility = ["//tools/adt/idea/android-uitests:__pkg__"],
+)
+
+platform_filegroup(
     name = "platforms/android-24",
     visibility = [
         "//tools/adt/idea/android-uitests:__pkg__",
@@ -255,7 +260,10 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-23",
-    visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
+    visibility = [
+        "//tools/adt/idea/android-uitests:__pkg__",
+        "//tools/base/build-system/integration-test:__subpackages__",
+    ],
 )
 
 platform_filegroup(
