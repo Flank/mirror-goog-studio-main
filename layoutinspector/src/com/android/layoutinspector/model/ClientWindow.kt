@@ -15,6 +15,7 @@
  */
 package com.android.layoutinspector.model
 
+import com.android.annotations.VisibleForTesting
 import com.android.ddmlib.ChunkHandler
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 /** Represents a root window.  */
-class ClientWindow(val title: String, private val client: Client) {
+class ClientWindow(val title: String, private val client: Client, val clientViewInspector: ClientViewInspector = object : ClientViewInspector {}) {
 
     /**
      * Returns the name for the window suitable for displaying on the UI. Returns the class name if
@@ -51,30 +52,19 @@ class ClientWindow(val title: String, private val client: Client) {
         options: LayoutInspectorCaptureOptions,
         timeout: Long,
         unit: TimeUnit
-    ): ByteArray? {
-        val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
-        try {
-            HandleViewDebug.dumpViewHierarchy(
-                client, title, false, true, options.version == ProtocolVersion.Version2, handler
-            )
-        } catch (e: IOException) {
-            return null
-        }
-
-        return handler.getData(timeout, unit)
-    }
+    ): ByteArray? = clientViewInspector.dumpViewHierarchy(
+        client,
+        title,
+        false,
+        true,
+        options.version == ProtocolVersion.Version2,
+        timeout,
+        unit
+    )
 
     /** Byte array representing image preview of the provided node.  */
-    fun loadViewImage(node: ViewNode, timeout: Long, unit: TimeUnit): ByteArray? {
-        val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VUOP)
-        try {
-            HandleViewDebug.captureView(client, title, node.toString(), handler)
-        } catch (e: IOException) {
-            return null
-        }
-
-        return handler.getData(timeout, unit)
-    }
+    fun loadViewImage(node: ViewNode, timeout: Long, unit: TimeUnit): ByteArray? =
+      clientViewInspector.captureView(client, title, node, timeout, unit)
 
     private class ListViewRootsHandler :
         HandleViewDebug.ViewDumpHandler(HandleViewDebug.CHUNK_VULW) {
@@ -130,6 +120,46 @@ class ClientWindow(val title: String, private val client: Client) {
             return if (cd.hasFeature(ClientData.FEATURE_VIEW_HIERARCHY)) {
                 ListViewRootsHandler().getWindows(client, timeout, unit)
             } else null
+        }
+    }
+
+    @VisibleForTesting
+    interface ClientViewInspector {
+        fun dumpViewHierarchy(
+            client: Client,
+            title: String,
+            skipChildren: Boolean,
+            includeProperties: Boolean,
+            useV2: Boolean,
+            timeout: Long,
+            timeUnit: TimeUnit): ByteArray? {
+
+            val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
+            HandleViewDebug.dumpViewHierarchy(
+                client, title, skipChildren, includeProperties, useV2, handler
+            )
+
+            return try {
+                handler.getData(timeout, timeUnit)
+            } catch(e: IOException) {
+                null
+            }
+        }
+
+        fun captureView(
+            client: Client,
+            title: String,
+            node: ViewNode,
+            timeout: Long,
+            timeUnit: TimeUnit): ByteArray? {
+
+            val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
+            HandleViewDebug.captureView(client, title, node.toString(), handler)
+            return try {
+                handler.getData(timeout, timeUnit)
+            } catch(e: IOException) {
+                null
+            }
         }
     }
 }
