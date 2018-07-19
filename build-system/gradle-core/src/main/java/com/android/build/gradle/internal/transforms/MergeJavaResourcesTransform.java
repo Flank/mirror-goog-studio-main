@@ -29,6 +29,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.PackagingFileAction;
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions;
@@ -362,55 +363,67 @@ public class MergeJavaResourcesTransform extends Transform {
 
         /*
          * We need a custom output to handle the case in which the same path appears in multiple
-         * inputs and the action is NONE, but only one input is actually PROJECT. In this specific
-         * case we will ignore all other inputs.
+         * inputs and the action is NONE, but only one input is actually PROJECT or FEATURES. In
+         * this specific case we will ignore all other inputs.
          */
 
-        Set<IncrementalFileMergerInput> projectInputs =
-                contentMap.keySet().stream()
-                        .filter(i -> contentMap.get(i).getScopes().contains(Scope.PROJECT))
+        Set<IncrementalFileMergerInput> highPriorityInputs =
+                contentMap
+                        .keySet()
+                        .stream()
+                        .filter(
+                                input ->
+                                        containsHighPriorityScope(
+                                                contentMap.get(input).getScopes()))
                         .collect(Collectors.toSet());
 
-        IncrementalFileMergerOutput output = new DelegateIncrementalFileMergerOutput(baseOutput) {
-            @Override
-            public void create(
-                    @NonNull String path,
-                    @NonNull List<IncrementalFileMergerInput> inputs) {
-                super.create(path, filter(path, inputs));
-            }
+        IncrementalFileMergerOutput output =
+                new DelegateIncrementalFileMergerOutput(baseOutput) {
+                    @Override
+                    public void create(
+                            @NonNull String path,
+                            @NonNull List<IncrementalFileMergerInput> inputs) {
+                        super.create(path, filter(path, inputs));
+                    }
 
-            @Override
-            public void update(
-                    @NonNull String path,
-                    @NonNull List<String> prevInputNames,
-                    @NonNull List<IncrementalFileMergerInput> inputs) {
-                super.update(path, prevInputNames, filter(path, inputs));
-            }
+                    @Override
+                    public void update(
+                            @NonNull String path,
+                            @NonNull List<String> prevInputNames,
+                            @NonNull List<IncrementalFileMergerInput> inputs) {
+                        super.update(path, prevInputNames, filter(path, inputs));
+                    }
 
-            @Override
-            public void remove(@NonNull String path) {
-                super.remove(path);
-            }
+                    @Override
+                    public void remove(@NonNull String path) {
+                        super.remove(path);
+                    }
 
-            @NonNull
-            private ImmutableList<IncrementalFileMergerInput> filter(
-                    @NonNull String path,
-                    @NonNull List<IncrementalFileMergerInput> inputs) {
-                PackagingFileAction packagingAction = packagingOptions.getAction(path);
-                if (packagingAction == PackagingFileAction.NONE
-                        && inputs.stream().anyMatch(projectInputs::contains)) {
-                    inputs = inputs.stream()
-                            .filter(projectInputs::contains)
-                            .collect(ImmutableCollectors.toImmutableList());
-                }
+                    @NonNull
+                    private ImmutableList<IncrementalFileMergerInput> filter(
+                            @NonNull String path,
+                            @NonNull List<IncrementalFileMergerInput> inputs) {
+                        PackagingFileAction packagingAction = packagingOptions.getAction(path);
+                        if (packagingAction == PackagingFileAction.NONE
+                                && inputs.stream().anyMatch(highPriorityInputs::contains)) {
+                            inputs =
+                                    inputs.stream()
+                                            .filter(highPriorityInputs::contains)
+                                            .collect(ImmutableCollectors.toImmutableList());
+                        }
 
-                return ImmutableList.copyOf(inputs);
-            }
-        };
+                        return ImmutableList.copyOf(inputs);
+                    }
+                };
 
         state = IncrementalFileMerger.merge(ImmutableList.copyOf(inputs), output, state);
         saveMergeState(state);
 
         cacheUpdates.forEach(Runnable::run);
+    }
+
+    private static boolean containsHighPriorityScope(Collection<? super Scope> scopes) {
+        return scopes.stream()
+                .anyMatch(scope -> scope == Scope.PROJECT || scope == InternalScope.FEATURES);
     }
 }

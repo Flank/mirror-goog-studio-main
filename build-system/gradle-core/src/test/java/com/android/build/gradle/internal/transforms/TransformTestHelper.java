@@ -24,6 +24,7 @@ import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.SecondaryInput;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
@@ -271,8 +272,8 @@ class TransformTestHelper {
         protected Status status = Status.NOTCHANGED;
         protected String name;
         protected File jarFile;
-        protected final Set<ContentType> contentTypes = new HashSet<>();
-        protected final Set<? super Scope> scopes = new HashSet<>();
+        protected Set<ContentType> contentTypes = ImmutableSet.of();
+        protected Set<? super Scope> scopes = ImmutableSet.of();
 
         BaseJarInputBuilder(File jarFile) {
             this.jarFile = jarFile;
@@ -285,12 +286,12 @@ class TransformTestHelper {
         }
 
         public T setContentTypes(@NonNull ContentType... types) {
-            this.contentTypes.addAll(Arrays.asList(types));
+            this.contentTypes = ImmutableSet.copyOf(types);
             return (T) this;
         }
 
-        public T setScopes(Scope... scopes) {
-            this.scopes.addAll(Arrays.asList(scopes));
+        public T setScopes(@NonNull ScopeType... scopes) {
+            this.scopes = ImmutableSet.copyOf(scopes);
             return (T) this;
         }
     }

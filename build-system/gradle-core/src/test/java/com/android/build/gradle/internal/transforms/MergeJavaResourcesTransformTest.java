@@ -25,9 +25,11 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.merge.DuplicateRelativeFileException;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
@@ -97,5 +99,43 @@ public class MergeJavaResourcesTransformTest {
         assertThat(new File(outputDir, "resources.jar")).exists();
         assertThat(new File(outputDir, "resources/fileEndingWithDot.")).doesNotExist();
         assertThat(new File(outputDir, "resources/fileNotEndingWithDot")).doesNotExist();
+    }
+
+    @Test(expected = DuplicateRelativeFileException.class)
+    public void testErrorWhenDuplicateJavaResInFeature() throws Exception {
+        // Create a jar file containing resources
+        File jarFile = new File(tmpDir.getRoot(), "foo.jar");
+        try (ZFile zf = new ZFile(jarFile)) {
+            zf.add("foo.txt", new ByteArrayInputStream(new byte[0]));
+        }
+        MergeJavaResourcesTransform transform =
+                new MergeJavaResourcesTransform(
+                        new PackagingOptions(),
+                        TransformManager.SCOPE_FULL_WITH_FEATURES,
+                        QualifiedContent.DefaultContentType.RESOURCES,
+                        "mergeJavaRes",
+                        variantScope);
+        JarInput baseJarInput =
+                TransformTestHelper.jarBuilder(jarFile)
+                        .setStatus(Status.ADDED)
+                        .setScopes(QualifiedContent.Scope.PROJECT)
+                        .build();
+        JarInput featureJarInput =
+                TransformTestHelper.jarBuilder(jarFile)
+                        .setStatus(Status.ADDED)
+                        .setScopes(InternalScope.FEATURES)
+                        .build();
+        TransformInput jarTransformInput =
+                TransformTestHelper.inputBuilder()
+                        .addInput(baseJarInput)
+                        .addInput(featureJarInput)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(ImmutableSet.of(jarTransformInput))
+                        .addReferenceInput(jarTransformInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        transform.transform(invocation);
     }
 }
