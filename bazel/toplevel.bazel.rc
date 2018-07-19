@@ -103,6 +103,11 @@ build:remote --remote_timeout=3600
 # account credential instead.
 build:remote --auth_enabled=true
 
+# Enable Upsalite test reporting.
+build:remote --bes_backend=buildeventservice.googleapis.com
+build:remote --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
+build:remote --project_id=908081808034
+
 # Enable the remote cache so action results can be shared across machines,
 # developers, and workspaces.
 build:remote-cache --remote_cache=remotebuildexecution.googleapis.com
