@@ -34,8 +34,6 @@ class DumpCommand : public Command {
   // TODO: Move all these to a Workspace object (and re-use "fs" from profiler
   // for it).
   std::string GetBase();
-  std::string base_;
-  std::string dumpBase_;
   std::string packageName_;
 };
 

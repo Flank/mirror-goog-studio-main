@@ -34,15 +34,7 @@ const char* kBasename = ".ir2";
 uint32_t kPathMax = 1024;
 }  // namespace
 
-DumpCommand::DumpCommand() {
-  base_ = GetBase();
-  constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
-  std::string dumpFolder = base_ + "/dumps/";
-  mkdir(dumpFolder.c_str(), kDirectoryMode);
-
-  dumpBase_ = dumpFolder + packageName_ + "/";
-  mkdir(dumpBase_.c_str(), kDirectoryMode);
-}
+DumpCommand::DumpCommand() {}
 
 // Retrieves the base folder which is expected to be ".ir2" somewhere in the
 // path.e.g: /data/local/tmp/.ir2/bin base is /data/local/tmp/.ir2 .
@@ -74,6 +66,14 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
 }
 
 bool DumpCommand::Run() {
+  std::string base_ = GetBase();
+  constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
+  std::string dumpFolder = base_ + "/dumps/";
+  mkdir(dumpFolder.c_str(), kDirectoryMode);
+
+  std::string dumpBase_ = dumpFolder + packageName_ + "/";
+  mkdir(dumpBase_.c_str(), kDirectoryMode);
+
   ApkRetriever apkRetriever(packageName_);
   for (std::string& apkPath : apkRetriever.get()) {
     ApkArchive archive(apkPath);
