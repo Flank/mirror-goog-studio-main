@@ -300,6 +300,7 @@
   <migrate old-name="android.support.percent" new-name="androidx.percentlayout.widget" type="PACKAGE"/>
   <migrate old-name="android.support.content" new-name="androidx.contentpager.content" type="PACKAGE"/>
   <migrate old-name="android.arch.lifecycle" new-name="androidx.lifecycle" type="PACKAGE"/>
+  <migrate old-name="android.support.wearable" new-name="android.support.wearable" type="PACKAGE"/>
   <migrate old-name="android.support.wear.ambient" new-name="androidx.wear.ambient" type="PACKAGE"/>
   <migrate old-name="android.support.wear.internal.widget.drawer" new-name="androidx.wear.internal.widget.drawer" type="PACKAGE"/>
   <migrate old-name="android.support.wear.internal.widget" new-name="androidx.wear.internal.widget" type="PACKAGE"/>
