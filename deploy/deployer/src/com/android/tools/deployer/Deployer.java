@@ -16,18 +16,23 @@
 
 package com.android.tools.deployer;
 
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Deployer {
 
+    private static final ILogger LOGGER = new StdLogger(StdLogger.Level.VERBOSE);
     private final String packageName;
     private final ArrayList<Apk> apks = new ArrayList<>();
     private final InstallerCallBack installerCallBack;
@@ -63,12 +68,7 @@ public class Deployer {
      * the hash entry will be null.
      */
     public HashMap<String, HashMap<String, Apk.ApkEntryStatus>> run() {
-
         stopWatch.start();
-
-        if (apks.size() > 1) {
-            throw new DeployerException("Multiple apk not supported yet.");
-        }
 
         Path workingDirectory;
         try {
@@ -81,10 +81,20 @@ public class Deployer {
         getRemoteApkDumps(packageName, workingDirectory.toAbsolutePath().toString());
         stopWatch.mark("Dumps retrieved");
 
+        // Make sure all splits have valid spit attribute and there is only one base.
+        Set<String> expectedAPKNmes = new HashSet<>();
+        for (Apk apk : apks) {
+            String onDeviceName = apk.getOnDeviceName();
+            if (expectedAPKNmes.contains(onDeviceName)) {
+                throw new DeployerException("APK set expects '" + onDeviceName + "' twice.");
+            }
+            expectedAPKNmes.add(onDeviceName);
+        }
+
         // Generate diffs for all apks in the list
         HashMap<String, HashMap<String, Apk.ApkEntryStatus>> diffs = new HashMap<>();
         for (Apk apk : apks) {
-            String dumpFilename = getExpectedDumpFilename();
+            String dumpFilename = getExpectedDumpFilename(apk);
             diffs.put(
                     apk.getPath(),
                     apk.diff(
@@ -105,14 +115,15 @@ public class Deployer {
                     boolean succeeded = true;
                     try {
                         adb.installMultiple(apks);
+                        stopWatch.mark("Install succeeded");
                     } catch (DeployerException e) {
                         succeeded = false;
                         stopWatch.mark("Install failed");
+                        LOGGER.error(e, null);
                     } finally {
+                        installerCallBack.onInstallationFinished(succeeded);
                         installerThread.shutdown();
                     }
-                    installerCallBack.onInstallationFinished(succeeded);
-                    stopWatch.mark("Install succeeded");
                 });
     }
 
@@ -121,8 +132,8 @@ public class Deployer {
     //  - Parse AndroidManifest binary XML.
     //  - Look for "manifest" node, attribute "split". If not present, return base.apk. Otherwise
     //    return the value found.
-    private String getExpectedDumpFilename() {
-        return "base.apk.remotecd";
+    private String getExpectedDumpFilename(Apk apk) throws DeployerException {
+        return apk.getOnDeviceName() + ".remotecd";
     }
 
     private void getRemoteApkDumps(String packageName, String dst) throws DeployerException {

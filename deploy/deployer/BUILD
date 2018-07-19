@@ -14,6 +14,8 @@ iml_module(
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
     ],
 )
 
@@ -23,7 +25,9 @@ java_library(
         "src/**/*.java",
     ]),
     deps = [
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//tools/base/annotations",
+        "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
     ],

@@ -61,11 +61,12 @@ public class AdbCmdline implements AdbClient {
 
     @Override
     public void installMultiple(List<Apk> apks) throws DeployerException {
-        String[] parameters = new String[apks.size() + 2];
+        String[] parameters = new String[apks.size() + 3];
         parameters[0] = "install-multiple";
         parameters[1] = "-r";
+        parameters[2] = "-t";
         for (int i = 0; i < apks.size(); i++) {
-            parameters[i + 2] = apks.get(i).getPath();
+            parameters[i + 3] = apks.get(i).getPath();
         }
         run(parameters);
     }
