@@ -296,6 +296,7 @@
   <migrate old-name="android.support.percent" new-name="androidx.percentlayout.widget" type="PACKAGE"/>
   <migrate old-name="android.support.content" new-name="androidx.contentpager.content" type="PACKAGE"/>
   <migrate old-name="android.arch.lifecycle" new-name="androidx.lifecycle" type="PACKAGE"/>
+  <migrate old-name="android.support.wearable" new-name="android.support.wearable" type="PACKAGE"/>
   <migrate old-name="android.support.wear.ambient" new-name="androidx.wear.ambient" type="PACKAGE"/>
   <migrate old-name="android.support.wear.internal.widget.drawer" new-name="androidx.wear.internal.widget.drawer" type="PACKAGE"/>
   <migrate old-name="android.support.wear.internal.widget" new-name="androidx.wear.internal.widget" type="PACKAGE"/>
@@ -303,7 +304,7 @@
   <migrate old-name="android.support.wear.widget.drawer" new-name="androidx.wear.widget.drawer" type="PACKAGE"/>
   <migrate old-name="android.support.wear.widget" new-name="androidx.wear.widget" type="PACKAGE"/>
   <migrate old-name="android.support.wear" new-name="androidx.wear" type="PACKAGE"/>
-  <migrate old-name="android.support.test" new-name="androidx.test" type="PACKAGE"/>
+  <migrate old-name="android.support.test" new-name="android.support.test" type="PACKAGE"/>
   <migrate old-name="android.support.v13.app" new-name="androidx.core.app" type="PACKAGE"/>
   <migrate old-name="android.support.v13.view.inputmethod" new-name="androidx.core.view.inputmethod" type="PACKAGE"/>
   <migrate old-name="android.support.v13.view" new-name="androidx.core.view" type="PACKAGE"/>
