@@ -104,7 +104,7 @@ public class AndroidJarReader {
                         // fields
                         for (Object field : classNode.fields) {
                             FieldNode fieldNode = (FieldNode) field;
-                            if ((fieldNode.access & Opcodes.ACC_PRIVATE) != 0) {
+                            if (((fieldNode.access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0)) {
                                 continue;
                             }
                             if (!fieldNode.name.startsWith("this$") &&
@@ -117,7 +117,7 @@ public class AndroidJarReader {
                         // methods
                         for (Object method : classNode.methods) {
                             MethodNode methodNode = (MethodNode) method;
-                            if ((methodNode.access & Opcodes.ACC_PRIVATE) != 0) {
+                            if (((methodNode.access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0)) {
                                 continue;
                             }
                             if (!methodNode.name.equals("<clinit>")) {
