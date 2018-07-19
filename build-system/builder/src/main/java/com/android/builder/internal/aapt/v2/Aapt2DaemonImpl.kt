@@ -20,9 +20,11 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.SettableFuture
 import java.io.IOException
 import java.io.Writer
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Locale
 import java.util.concurrent.TimeoutException
@@ -134,6 +136,12 @@ class Aapt2DaemonImpl(
         try {
             processOutput.delegate = waitForTask
             Aapt2DaemonUtil.requestCompile(writer, request)
+            // Temporary workaround for b/111629686, manually generate the partial R file for raw res.
+            request.partialRFile?.let {
+                if (request.inputDirectoryName.startsWith("raw")) {
+                    Files.write(it.toPath(), ImmutableList.of("default int raw " + com.google.common.io.Files.getNameWithoutExtension(request.inputFile.name)))
+                }
+            }
             val result = waitForTask.future.get(daemonTimeouts.compile, daemonTimeouts.compileUnit)
             when (result) {
                 is WaitForTaskCompletion.Result.Succeeded -> {}

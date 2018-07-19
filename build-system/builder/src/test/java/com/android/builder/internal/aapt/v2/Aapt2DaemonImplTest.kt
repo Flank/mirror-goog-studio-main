@@ -83,6 +83,32 @@ class Aapt2DaemonImplTest {
     }
 
     @Test
+    fun testPartialR() {
+        val outDir = temporaryFolder.newFolder()
+        val partialRDir = temporaryFolder.newFolder()
+        val partialRvalue = File(partialRDir, "values_strings.txt")
+        val partialRRaw = File(partialRDir, "raw.txt")
+        val requests = listOf(
+            CompileResourceRequest(
+                inputFile = valuesFile("strings", "<resources></resources>"),
+                outputDirectory = outDir,
+                partialRFile = partialRvalue),
+            CompileResourceRequest(
+                inputFile = resourceFile("raw", "my_raw_resource.txt", "Raw Content"),
+                outputDirectory = outDir,
+                partialRFile = partialRRaw)
+        )
+        val daemon = createDaemon()
+        requests.forEach { daemon.compile(it, logger) }
+        assertThat(outDir.list()).asList()
+            .containsExactlyElementsIn(
+                requests.map { Aapt2RenamingConventions.compilationRename(it.inputFile) })
+
+        assertThat(partialRvalue).isFile()
+        assertThat(partialRRaw).isFile()
+    }
+
+    @Test
     fun testWarningsDoNotFailBuild() {
         val outDir = temporaryFolder.newFolder()
         val request = CompileResourceRequest(

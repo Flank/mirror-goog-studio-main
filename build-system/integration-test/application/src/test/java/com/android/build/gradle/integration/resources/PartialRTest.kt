@@ -59,6 +59,7 @@ class PartialRTest {
                        <java-symbol type="string" name="private_string"/>
                    </resources>"""
         )
+        .withFile("src/main/res/raw/raw_resource.txt", "Raw resource content")
 
     val testApp =
             MultiModuleTestProject.builder()
@@ -112,6 +113,11 @@ class PartialRTest {
             checkResource(testC, "default_string")
             checkResource(testC, "string2")
             checkResourceNotPresent(testC, "invalid")
+        }
+
+        URLClassLoader(arrayOf(rJar.toURI().toURL()), null).use { classLoader ->
+            val testC = classLoader.loadClass("com.example.app.R\$raw")
+            checkResource(testC, "raw_resource")
         }
 
         // Check that deletes are handled properly too.
