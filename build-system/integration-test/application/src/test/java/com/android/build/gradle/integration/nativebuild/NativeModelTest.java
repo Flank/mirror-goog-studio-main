@@ -640,6 +640,7 @@ public class NativeModelTest {
 
         checkProblematicCompilerFlags(model);
         checkNativeBuildOutputPath(config, project);
+        checkIncludesPresent(model);
     }
 
     @Test
@@ -963,6 +964,23 @@ public class NativeModelTest {
                     assertThat(new File(workingDirectory)).exists();
                 }
             }
+        }
+    }
+
+    private static void checkIncludesPresent(NativeAndroidProject model) {
+        for (NativeSettings settings : model.getSettings()) {
+            boolean sawInclude = false;
+            boolean sawSystemInclude = false;
+            for (String flag : settings.getCompilerFlags()) {
+                if (flag.startsWith("-I")) {
+                    sawInclude = true;
+                }
+                if (flag.startsWith("-system")) {
+                    sawSystemInclude = true;
+                }
+            }
+            assertThat(sawInclude).isTrue();
+            assertThat(sawSystemInclude).isTrue();
         }
     }
 

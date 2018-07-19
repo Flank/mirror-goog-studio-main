@@ -407,7 +407,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         "/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
         assertThat(table.get(1))
                 .isEqualTo(
-                        "-g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC  ");
+                        "-g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC   -DTest1_EXPORTS -system /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -system /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -system /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward");
     }
 
     // Reference http://b/72065334
@@ -448,69 +448,6 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         assertThat(table.get(1))
                 .isEqualTo(
                         "-isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=16 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -fno-integrated-as -mthumb -Wa,--noexecstack -Wformat -Werror=format-security  -O0 -fno-limit-debug-info  -fPIC  ");
-    }
-
-    // Reference http://b/72065334
-    @Test
-    public void getNativeLibraryValue_FlagsFromServerModelNotPresentCompilationDatabaseUsed() {
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-        String targetStr =
-                " {  \n"
-                        + "     \"artifacts\":[  \n"
-                        + "        \"/usr/local/google/home/AndroidStudioProjects/BugTest/app/build/intermediates/cmake/debug/obj/x86_64/libTest1.so\"\n"
-                        + "     ],\n"
-                        + "     \"buildDirectory\":\"/usr/local/google/home/AndroidStudioProjects/BugTest/app/.externalNativeBuild/cmake/debug/x86_64/src/main/test\",\n"
-                        + "     \"fileGroups\":[  \n"
-                        + "        {  \n"
-                        + "           \"defines\":[  \n"
-                        + "              \"Test1_EXPORTS\"\n"
-                        + "           ],\n"
-                        + "           \"includePath\":[  \n"
-                        + "              {  \n"
-                        + "                 \"isSystem\":true,\n"
-                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include\"\n"
-                        + "              },\n"
-                        + "              {  \n"
-                        + "                 \"isSystem\":true,\n"
-                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include\"\n"
-                        + "              },\n"
-                        + "              {  \n"
-                        + "                 \"isSystem\":true,\n"
-                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward\"\n"
-                        + "              }\n"
-                        + "           ],\n"
-                        + "           \"isGenerated\":false,\n"
-                        + "           \"language\":\"CXX\",\n"
-                        + "           \"sources\":[  \n"
-                        + "              \"Test1.cpp\"\n"
-                        + "           ]\n"
-                        + "        }\n"
-                        + "     ],\n"
-                        + "     \"fullName\":\"libTest1.so\",\n"
-                        + "     \"linkFlags\":\"-Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now -Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now\",\n"
-                        + "     \"linkLibraries\":\"-lm \\\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/libgnustl_static.a\\\"\",\n"
-                        + "     \"linkerLanguage\":\"CXX\",\n"
-                        + "     \"name\":\"Test1\",\n"
-                        + "     \"sourceDirectory\":\"/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test\",\n"
-                        + "     \"sysroot\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64\",\n"
-                        + "     \"type\":\"SHARED_LIBRARY\"\n"
-                        + "}";
-        Map<Integer, String> table = Maps.newHashMap();
-        StringTable stringTable = new StringTable(table);
-        NativeLibraryValue nativeLibraryValue =
-                cmakeServerStrategy.getNativeLibraryValue(
-                        "x86", getTestTarget(targetStr), stringTable);
-
-        assertThat(nativeLibraryValue.files).hasSize(1);
-        NativeSourceFileValue nativeSourceFileValue = Iterables.get(nativeLibraryValue.files, 0);
-        assertThat(nativeSourceFileValue.src.getAbsolutePath())
-                .isEqualTo(
-                        "/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
-        String flags = table.get(3);
-        assertThat(flags)
-                .isEqualTo(
-                        "/usr/local/google/home/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64 -DTest1_EXPORTS -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info -fPIC");
     }
 
     /** Returns InteractiveMessage object from the given message string. */

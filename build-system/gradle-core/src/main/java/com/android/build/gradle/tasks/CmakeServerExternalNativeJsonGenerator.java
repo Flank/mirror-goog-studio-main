@@ -36,6 +36,7 @@ import com.android.build.gradle.external.cmake.server.ConfigureCommandResult;
 import com.android.build.gradle.external.cmake.server.FileGroup;
 import com.android.build.gradle.external.cmake.server.HandshakeRequest;
 import com.android.build.gradle.external.cmake.server.HandshakeResult;
+import com.android.build.gradle.external.cmake.server.IncludePath;
 import com.android.build.gradle.external.cmake.server.Project;
 import com.android.build.gradle.external.cmake.server.ProtocolVersion;
 import com.android.build.gradle.external.cmake.server.Server;
@@ -518,7 +519,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                         strings.intern(target.buildDirectory);
                 File sourceFile = new File(target.sourceDirectory, source);
                 nativeSourceFileValue.src = sourceFile;
-                if (Strings.isNullOrEmpty(fileGroup.compileFlags)) {
+                String compileFlags = compileFlagsFromFileGroup(fileGroup);
+
+                if (Strings.isNullOrEmpty(compileFlags)) {
                     // If flags weren't available in the CMake server model then fall back to using
                     // compilation_database.json.
                     // This is related to http://b/72065334 in which the compilation database did
@@ -534,13 +537,38 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                                 compilationDatabaseFlags.get(sourceFile.toString());
                     }
                 } else {
-                    nativeSourceFileValue.flagsOrdinal = strings.intern(fileGroup.compileFlags);
+                    nativeSourceFileValue.flagsOrdinal = strings.intern(compileFlags);
                 }
                 nativeLibraryValue.files.add(nativeSourceFileValue);
             }
         }
 
         return nativeLibraryValue;
+    }
+
+    private static String compileFlagsFromFileGroup(FileGroup fileGroup) {
+        StringBuilder flags = new StringBuilder();
+        flags.append(fileGroup.compileFlags);
+        if (fileGroup.defines != null) {
+            for (String define : fileGroup.defines) {
+                flags.append(" -D").append(define);
+            }
+        }
+        if (fileGroup.includePath != null) {
+            for (IncludePath includePath : fileGroup.includePath) {
+                if (includePath == null || includePath.path == null) {
+                    continue;
+                }
+                if (includePath.isSystem != null && includePath.isSystem) {
+                    flags.append(" -system ");
+                } else {
+                    flags.append(" -I ");
+                }
+                flags.append(includePath.path);
+            }
+        }
+
+        return flags.toString();
     }
 
     /**
