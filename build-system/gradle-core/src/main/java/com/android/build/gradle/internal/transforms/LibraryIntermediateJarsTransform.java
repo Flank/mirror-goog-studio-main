@@ -31,51 +31,45 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.builder.packaging.JarMerger;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
-import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /**
- * A Transforms that takes the project/project local streams for CLASSES and RESOURCES, and
- * processes and outputs fine grained jars/directories that can be consumed by other projects.
+ * A Transforms that takes the project/project local streams for CLASSES and RESOURCES,
+ * and processes and outputs fine grained jars that can be consumed by other projects.
  *
- * <p>This typically tries to output the following jars: - main jar (classes only, all coming from
- * jars) - main classes dir (classes only, all coming from directories) - local jars (class only) -
- * java resources (both scopes).
+ * This typically tries to output the following jars:
+ * - main jar (class only)
+ * - local jars (class only)
+ * - java resources (both scopes).
  *
- * <p>If the input contains both scopes, then the output will only be in the main jar.
+ * If the input contains both scopes, then the output will only be in the main jar.
  *
- * <p>Regarding Streams, this is a no-op transform as it does not write any output to any stream. It
+ * Regarding Streams, this is a no-op transform as it does not write any output to any stream. It
  * uses secondary outputs to write directly into the given folder.
  */
 public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile(".*\\.class$");
     private static final Pattern META_INF_PATTERN = Pattern.compile("^META-INF/.*$");
-    @NonNull private final File resJarLocation;
-    @NonNull private final File mainClassDir;
+    @NonNull
+    private final File resJarLocation;
 
     public LibraryIntermediateJarsTransform(
-            @NonNull File mainClassJar,
-            @NonNull File mainClassDir,
+            @NonNull File mainClassLocation,
             @NonNull File resJarLocation,
             @NonNull Supplier<String> packageNameSupplier,
             boolean packageBuildConfig) {
-        super(mainClassJar, null, null, packageNameSupplier, packageBuildConfig);
-        this.mainClassDir = mainClassDir;
+        super(mainClassLocation, null, null, packageNameSupplier, packageBuildConfig);
         this.resJarLocation = resJarLocation;
     }
 
@@ -89,12 +83,6 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public Collection<File> getSecondaryFileOutputs() {
         return ImmutableList.of(mainClassLocation, resJarLocation);
-    }
-
-    @NonNull
-    @Override
-    public Collection<File> getSecondaryDirectoryOutputs() {
-        return ImmutableList.of(mainClassDir);
     }
 
     @Override
@@ -113,8 +101,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         // first look for what inputs we have. There shouldn't be that many inputs so it should
         // be quick and it'll allow us to minimize jar merging if we don't have to.
         boolean mainClassInputChanged = incrementalDisabled;
-        List<DirectoryInput> mainClassDirs = new ArrayList<>();
-        List<JarInput> mainClassJars = new ArrayList<>();
+        List<QualifiedContent> mainClassInputs = new ArrayList<>();
         boolean resJarInputChanged = incrementalDisabled;
         List<QualifiedContent> resJarInputs = new ArrayList<>();
 
@@ -130,7 +117,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 }
 
                 if (jarInput.getContentTypes().contains(CLASSES)) {
-                    mainClassJars.add(jarInput);
+                    mainClassInputs.add(jarInput);
                     mainClassInputChanged |= changed;
                 }
             }
@@ -146,7 +133,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 }
 
                 if (dirInput.getContentTypes().contains(CLASSES)) {
-                    mainClassDirs.add(dirInput);
+                    mainClassInputs.add(dirInput);
                     mainClassInputChanged |= changed;
                 }
             }
@@ -155,11 +142,10 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         if (mainClassInputChanged) {
-            executor.execute(
-                    () -> {
-                        handleMainClass(mainClassJars, mainClassDirs, excludePatterns);
-                        return null;
-                    });
+            executor.execute(() -> {
+                handleMainClass(mainClassInputs, excludePatterns);
+                return null;
+            });
         }
 
         if (resJarInputChanged) {
@@ -173,10 +159,8 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     }
 
     private void handleMainClass(
-            @NonNull List<JarInput> mainClassJars,
-            @NonNull List<DirectoryInput> mainClassDirs,
-            @NonNull List<Pattern> excludePatterns)
-            throws IOException {
+            @NonNull List<QualifiedContent> mainClassInputs,
+            @NonNull List<Pattern> excludePatterns) throws IOException {
         FileUtils.deleteIfExists(mainClassLocation);
         FileUtils.mkdirs(mainClassLocation.getParentFile());
 
@@ -190,37 +174,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                                         || META_INF_PATTERN.matcher(archivePath).matches())
                                 && checkEntry(excludePatterns, archivePath);
 
-        handleJarOutput(mainClassJars, mainClassLocation, filter);
-        handleDirOutput(mainClassDirs, mainClassDir, filter);
-    }
-
-    private static void handleDirOutput(
-            @NonNull List<DirectoryInput> mainClassDirs,
-            @NonNull File mainClassDir,
-            @NonNull Predicate<String> filter)
-            throws IOException {
-        FileUtils.cleanOutputDir(mainClassDir);
-
-        for (DirectoryInput classDir : mainClassDirs) {
-            File file = classDir.getFile();
-
-            try (Stream<Path> walk = Files.walk(file.toPath())) {
-                walk.forEach(
-                        p -> {
-                            Path relative = file.toPath().relativize(p);
-                            String relativePath = PathUtils.toSystemIndependentPath(relative);
-                            if (filter.test(relativePath)) {
-                                Path copyPath = mainClassDir.toPath().resolve(relative);
-                                try {
-                                    Files.createDirectories(copyPath.getParent());
-                                    Files.copy(p, copyPath);
-                                } catch (IOException e) {
-                                    throw new UncheckedIOException(e);
-                                }
-                            }
-                        });
-            }
-        }
+        handleJarOutput(mainClassInputs, mainClassLocation, filter);
     }
 
     private void handleMainRes(
@@ -238,7 +192,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     }
 
     private static void handleJarOutput(
-            @NonNull List<? extends QualifiedContent> inputs,
+            @NonNull List<QualifiedContent> inputs,
             @NonNull File toFile,
             @Nullable Predicate<String> filter)
             throws IOException {
