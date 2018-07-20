@@ -15,7 +15,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
+        "//tools/idea/.idea/libraries:Guava",
     ],
 )
 
