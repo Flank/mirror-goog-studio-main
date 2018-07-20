@@ -67,7 +67,7 @@ class BasicInstaller extends AbstractInstaller {
             // TODO: allow resuming of partial downloads
             String checksum = archive.getComplete().getChecksum();
             getDownloader()
-                    .downloadFully(
+                    .downloadFullyWithCaching(
                             url, downloadLocation, checksum, progress.createSubProgress(0.5));
             if (progress.isCanceled()) {
                 progress.setFraction(1);

@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,16 +56,55 @@ public interface Downloader {
     Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator) throws IOException;
 
     /**
-     * Downloads the content at the given URL to the given file.
+     * Downloads the content at the given URL to the given file. Calling this method instructs the
+     * downloader to fetch the content from the original server and bypass any caches.
      *
-     * @param url       The URL to fetch.
-     * @param target    The location to download to.
-     * @param checksum  If specified, first check {@code target} to see if the given checksum
-     *                  matches the existing file. If so, returns immediately.
+     * <p>For example, in case of HTTP connections, calling this method may be equivalent to adding
+     * "Cache-Control: no-cache" and "Pragma: no-cache" headers to the request, thus instructing the
+     * network facilities that no caching is expected to take place (e.g., on proxy servers).
+     *
+     * @param url The URL to fetch.
+     * @param target The location to download to.
+     * @param checksum If specified, first check {@code target} to see if the given checksum matches
+     *     the existing file. If so, returns immediately.
      * @param indicator Facility for showing download progress and logging.
      */
-    void downloadFully(@NonNull URL url, @NonNull File target, @Nullable String checksum,
-            @NonNull ProgressIndicator indicator) throws IOException;
+    void downloadFully(
+            @NonNull URL url,
+            @NonNull File target,
+            @Nullable String checksum,
+            @NonNull ProgressIndicator indicator)
+            throws IOException;
+
+    /**
+     * Downloads the content at the given URL to the given file, using caching techniques if
+     * possible. Which specific caching techniques to use is defined by the implementation. As far
+     * as the contract goes, calling this method instructs the downloader that the caller does not
+     * require the content to be fetched from the original server, and a previously cached copy may
+     * be re-used.
+     *
+     * <p>Note that calling this method does not guarantee caching or a better performance: it is an
+     * implementation detail how exactly this hint is used. For example, when checking for software
+     * updates availability, the caller will know that no caching must be used, so it should not
+     * call this method, and call {@link #downloadFully} instead. On the other hand, for a large
+     * download which is not expected to change on the original server, the caller typically would
+     * not mind against intrinsic optimizations and caching, so in that case it should call this
+     * method.
+     *
+     * @param url The URL to fetch.
+     * @param target The location to download to.
+     * @param checksum If specified, first check {@code target} to see if the given checksum matches
+     *     the existing file. If so, returns immediately.
+     * @param indicator Facility for showing download progress and logging.
+     */
+    default void downloadFullyWithCaching(
+            @NonNull URL url,
+            @NonNull File target,
+            @Nullable String checksum,
+            @NonNull ProgressIndicator indicator)
+            throws IOException {
+        downloadFully(url, target, checksum, indicator);
+    }
 
     /**
      * Hash the given input stream.
