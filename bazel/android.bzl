@@ -47,17 +47,17 @@ def _android_cc_binary_impl(ctx):
         )
 
 _android_cc_binary = rule(
-  implementation = _android_cc_binary_impl,
-  attrs = {
-    "filename": attr.string(),
-    "binary": attr.label(
-        cfg = android_common.multi_cpu_configuration,
-        allow_files = True,
-    ),
-    "abis": attr.string_list(),
-    "outs": attr.output_list(),
-  },
-  fragments = ["cpp"],
+    attrs = {
+        "filename": attr.string(),
+        "binary": attr.label(
+            cfg = android_common.multi_cpu_configuration,
+            allow_files = True,
+        ),
+        "abis": attr.string_list(),
+        "outs": attr.output_list(),
+    },
+    fragments = ["cpp"],
+    implementation = _android_cc_binary_impl,
 )
 
 def android_cc_binary(name, binary, abis, filename, **kwargs):
@@ -74,16 +74,20 @@ def android_cc_binary(name, binary, abis, filename, **kwargs):
   )
 
 jni_library = rule(
-  implementation = _jni_library_impl,
-  attrs = {
-    "deps": attr.label_list(
-        cfg = android_common.multi_cpu_configuration,
-        allow_files = True,
-    ),
-    "$zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
-  },
-  outputs = {"zip": "%{name}.jar"},
-  fragments = ["cpp"],
+    attrs = {
+        "deps": attr.label_list(
+            cfg = android_common.multi_cpu_configuration,
+            allow_files = True,
+        ),
+        "$zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+    },
+    fragments = ["cpp"],
+    outputs = {"zip": "%{name}.jar"},
+    implementation = _jni_library_impl,
 )
 
 def select_android(android, default):
@@ -118,19 +122,24 @@ def dex_library(name, jars=[], output=None, visibility=None, tags=[], flags=[], 
     tools = tools,
   )
 
-ANDROID_COPTS = select_android([
-    "-fPIC",
-  ], [])
+ANDROID_COPTS = select_android(
+    [
+        "-fPIC",
+    ],
+    [],
+)
 
-ANDROID_LINKOPTS = select_android([
-    "-llog",
-    "-latomic",
-    "-lm",
-    "-ldl",
-    "-pie",
-    "-Wl,--gc-sections",
-    "-Wl,--as-needed",
-    "-fuse-ld=gold",
-    "-Wl,--icf=safe",
-  ], [])
-
+ANDROID_LINKOPTS = select_android(
+    [
+        "-llog",
+        "-latomic",
+        "-lm",
+        "-ldl",
+        "-pie",
+        "-Wl,--gc-sections",
+        "-Wl,--as-needed",
+        "-fuse-ld=gold",
+        "-Wl,--icf=safe",
+    ],
+    [],
+)

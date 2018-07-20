@@ -134,60 +134,59 @@ def _maven_pom_impl(ctx):
     clsjars = clsjars,
   ))
 
-
 maven_pom = rule(
-  implementation = _maven_pom_impl,
-  attrs = {
-    "deps": attr.label_list(),
-    "library": attr.label(
-        allow_files = True
-    ),
-    "export_pom": attr.label(),
-    "classifiers": attr.string_list(
-      default = [],
-    ),
-    "classified_libraries": attr.label_list(
-        allow_files = True,
-        default = [],
-    ),
-    "file": attr.label(
-        allow_files = True
-    ),
-    "classified_files": attr.label_list(
-        allow_files = True,
-        default = [],
-    ),
-    "group" : attr.string(),
-    "version" : attr.string(),
-    "artifact" : attr.string(),
-    "source" : attr.label(
-        allow_files = True,
-        single_file = True,
-    ),
-    "properties" : attr.label(
-        allow_files = True,
-        single_file = True,
-    ),
-    "properties_files": attr.label_list(
-        allow_files = True,
-        default = [],
-    ),
-    "version_property" : attr.string(),
-    "parent" : attr.label(
-        allow_files = True,
-        single_file = True,
-    ),
-    "exclusions" : attr.string_list_dict(),
-    "_pom": attr.label(
-        executable = True,
-        cfg = "host",
-        default = Label("//tools/base/bazel:pom_generator"),
-        allow_files = True
-    ),
+    attrs = {
+        "deps": attr.label_list(),
+        "library": attr.label(
+            allow_files = True,
+        ),
+        "export_pom": attr.label(),
+        "classifiers": attr.string_list(
+            default = [],
+        ),
+        "classified_libraries": attr.label_list(
+            allow_files = True,
+            default = [],
+        ),
+        "file": attr.label(
+            allow_files = True,
+        ),
+        "classified_files": attr.label_list(
+            allow_files = True,
+            default = [],
+        ),
+        "group": attr.string(),
+        "version": attr.string(),
+        "artifact": attr.string(),
+        "source": attr.label(
+            allow_files = True,
+            single_file = True,
+        ),
+        "properties": attr.label(
+            allow_files = True,
+            single_file = True,
+        ),
+        "properties_files": attr.label_list(
+            allow_files = True,
+            default = [],
+        ),
+        "version_property": attr.string(),
+        "parent": attr.label(
+            allow_files = True,
+            single_file = True,
+        ),
+        "exclusions": attr.string_list_dict(),
+        "_pom": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:pom_generator"),
+            allow_files = True,
+        ),
     },
     outputs = {
-      "pom": "%{name}.pom",
+        "pom": "%{name}.pom",
     },
+    implementation = _maven_pom_impl,
 )
 
 # A java library that can be used in a maven_repo rule.
@@ -333,19 +332,20 @@ def _maven_repo_impl(ctx):
   )
 
 _maven_repo = rule(
-   implementation = _maven_repo_impl,
-   attrs = {
-       "artifacts" : attr.label_list(),
-       "include_sources" : attr.bool(),
+    attrs = {
+        "artifacts": attr.label_list(),
+        "include_sources": attr.bool(),
         "_repo": attr.label(
             executable = True,
             cfg = "host",
             default = Label("//tools/base/bazel:repo_builder"),
-            allow_files = True),
-   },
-   outputs = {
-     "repo": "%{name}.zip",
-   },
+            allow_files = True,
+        ),
+    },
+    outputs = {
+        "repo": "%{name}.zip",
+    },
+    implementation = _maven_repo_impl,
 )
 
 # Creates a maven repo with the given artifacts and all their transitive

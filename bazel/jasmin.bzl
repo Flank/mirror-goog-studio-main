@@ -1,4 +1,5 @@
 load(":functions.bzl", "create_java_compiler_args")
+
 def _jasmin_jar_impl(ctx):
   class_jar = ctx.outputs.class_jar
   args, option_files = create_java_compiler_args(ctx, class_jar, [])
@@ -21,14 +22,14 @@ _jasmin_jar = rule(
             executable = True,
             cfg = "host",
             default = Label("//tools/base/bazel:jasmin-compiler"),
-            allow_files = True),
+            allow_files = True,
+        ),
     },
     outputs = {
         "class_jar": "lib%{name}.jar",
     },
     implementation = _jasmin_jar_impl,
 )
-
 
 def jasmin_library(name, srcs=None, visibility=None):
   jar_name = "_" + name

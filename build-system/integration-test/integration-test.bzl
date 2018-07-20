@@ -1,4 +1,4 @@
-load('//tools/base/bazel:kotlin.bzl', 'kotlin_library', 'kotlin_jar')
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_jar")
 
 # A gradle integration test
 #
@@ -85,7 +85,6 @@ def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test
       ] + runtime_deps + [':' + name for name in test_classes_target_names],
       **kwargs
   )
-
 
 def single_gradle_integration_test(name, deps, data, maven_repos, runtime_deps=[], tags=[], **kwargs):
   gradle_integration_test(

@@ -27,7 +27,8 @@ _instrument = rule(
         "instrumenter": attr.label(
             executable = True,
             cfg = "host",
-            allow_files = True),
+            allow_files = True,
+        ),
     },
     outputs = {
         "instrumented_classes": "instrumented_%{patch_name}.jar",

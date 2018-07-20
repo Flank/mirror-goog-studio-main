@@ -11,10 +11,14 @@ def _merge_archives_impl(ctx):
   )
 
 merge_archives = rule(
-  attrs = {
-    "zips": attr.label_list(allow_files = True),
-    "output_file" : attr.output(),
-    "_singlejar": attr.label(default = Label("//tools/base/bazel:singlejar"), cfg = "host", executable=True),
-  },
-  implementation = _merge_archives_impl,
+    attrs = {
+        "zips": attr.label_list(allow_files = True),
+        "output_file": attr.output(),
+        "_singlejar": attr.label(
+            default = Label("//tools/base/bazel:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
+    },
+    implementation = _merge_archives_impl,
 )

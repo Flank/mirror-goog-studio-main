@@ -4,8 +4,8 @@ load(":maven.bzl", "maven_java_library")
 # Enum-like values to determine the language the gen_proto rule will compile
 # the .proto files to.
 proto_languages = struct(
-  CPP = 0,
-  JAVA = 1
+    CPP = 0,
+    JAVA = 1,
 )
 
 def _gen_proto_impl(ctx):
@@ -77,34 +77,37 @@ def _gen_proto_impl(ctx):
   )
 
 _gen_proto_rule = rule(
-  attrs = {
-      "srcs": attr.label_list(
-          allow_files = FileType([".proto"]),
-      ),
-      "deps": attr.label_list(
-          allow_files = False,
-          providers = ["proto_src","proto_package"],
-      ),
-      "include": attr.label(
-          allow_files = FileType([".proto"]),
-      ),
-      "proto_include_version": attr.string(),
-      "protoc": attr.label(
-          cfg = "host",
-          executable = True,
-          mandatory = True,
-          single_file = True,
-      ),
-      "grpc_plugin": attr.label(
-          cfg = "host",
-          executable = True,
-          single_file = True,
-      ),
-      "target_language": attr.int(),
-      "outs": attr.output_list(),
-  },
-  output_to_genfiles = True,
-  implementation = _gen_proto_impl,
+    attrs = {
+        "srcs": attr.label_list(
+            allow_files = FileType([".proto"]),
+        ),
+        "deps": attr.label_list(
+            allow_files = False,
+            providers = [
+                "proto_src",
+                "proto_package",
+            ],
+        ),
+        "include": attr.label(
+            allow_files = FileType([".proto"]),
+        ),
+        "proto_include_version": attr.string(),
+        "protoc": attr.label(
+            cfg = "host",
+            executable = True,
+            mandatory = True,
+            single_file = True,
+        ),
+        "grpc_plugin": attr.label(
+            cfg = "host",
+            executable = True,
+            single_file = True,
+        ),
+        "target_language": attr.int(),
+        "outs": attr.output_list(),
+    },
+    output_to_genfiles = True,
+    implementation = _gen_proto_impl,
 )
 
 def java_proto_library(
@@ -178,4 +181,3 @@ def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, 
     visibility = visibility,
     tags = tags,
   )
-

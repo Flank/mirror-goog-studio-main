@@ -18,7 +18,6 @@ def _get_label_and_tags(label):
     return label, []
   return label[:rfind], [tag.strip() for tag in label[rfind+1:-1].split(",")]
 
-
 # Returns the paths of the given files relative to any of the roots. Were
 # files is a list of File objects, and roots is a list strings represnting
 # paths of directories relative to the package
@@ -31,7 +30,6 @@ def relative_paths(ctx, files, roots):
       if file.path.startswith(path):
         paths += [(file.path[len(path) + 1:], file)]
   return paths
-
 
 def resources_impl(ctx, name, roots, resources, resources_jar):
   zipper_args = ["c", resources_jar.path]
@@ -47,13 +45,11 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
     mnemonic = "zipper",
   )
 
-
 def accumulate_provider(provider, deps, runtime, compile_time):
   deps += [provider]
   runtime += provider.transitive_runtime_jars
   compile_time += provider.transitive_compile_time_jars
   return deps, runtime, compile_time
-
 
 def _iml_module_jar_impl(ctx,
     name,
@@ -255,36 +251,68 @@ def _iml_module_impl(ctx):
 
 _iml_module_ = rule(
     attrs = {
-      "iml_files" : attr.label_list(allow_files = True, allow_empty = False, mandatory = True),
-      "java_srcs" : attr.label_list(allow_files = True),
-      "kotlin_srcs" : attr.label_list(allow_files = True),
-      "groovy_srcs" : attr.label_list(allow_files = True),
-      "form_srcs" : attr.label_list(allow_files = True),
-      "java_test_srcs" : attr.label_list(allow_files = True),
-      "kotlin_test_srcs" : attr.label_list(allow_files = True),
-      "groovy_test_srcs" : attr.label_list(allow_files = True),
-      "form_test_srcs" : attr.label_list(allow_files = True),
-      "javacopts": attr.string_list(),
-      "resources": attr.label_list(allow_files = True),
-      "test_resources": attr.label_list(allow_files = True),
-      "package_prefixes": attr.string_dict(),
-      "test_class": attr.string(),
-      "exports": attr.label_list(),
-      "roots":  attr.string_list(),
-      "test_roots":  attr.string_list(),
-      "deps" : attr.label_list(),
-      "test_deps" : attr.label_list(),
-      "data" : attr.label_list(allow_files = True),
-      "test_data": attr.label_list(allow_files = True),
-      "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:toolchain")),
-      "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
-      "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
-      "_singlejar": attr.label(default = Label("//tools/base/bazel:singlejar"), cfg = "host", executable=True),
-      "_kotlinc": attr.label(default = Label("//tools/base/bazel:kotlinc"), cfg = "host", executable = True),
-      "_kotlin": attr.label(default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"), allow_files = True),
-      "_groovyc": attr.label(default = Label("//tools/base/bazel:groovyc"), cfg = "host", executable = True),
-      "_groovystub": attr.label(default = Label("//tools/base/bazel:groovy_stub_gen"), cfg = "host", executable = True),
-      "_formc": attr.label(executable = True, cfg = "host", default = Label("//tools/base/bazel:formc"), allow_files = True),
+        "iml_files": attr.label_list(
+            allow_files = True,
+            allow_empty = False,
+            mandatory = True,
+        ),
+        "java_srcs": attr.label_list(allow_files = True),
+        "kotlin_srcs": attr.label_list(allow_files = True),
+        "groovy_srcs": attr.label_list(allow_files = True),
+        "form_srcs": attr.label_list(allow_files = True),
+        "java_test_srcs": attr.label_list(allow_files = True),
+        "kotlin_test_srcs": attr.label_list(allow_files = True),
+        "groovy_test_srcs": attr.label_list(allow_files = True),
+        "form_test_srcs": attr.label_list(allow_files = True),
+        "javacopts": attr.string_list(),
+        "resources": attr.label_list(allow_files = True),
+        "test_resources": attr.label_list(allow_files = True),
+        "package_prefixes": attr.string_dict(),
+        "test_class": attr.string(),
+        "exports": attr.label_list(),
+        "roots": attr.string_list(),
+        "test_roots": attr.string_list(),
+        "deps": attr.label_list(),
+        "test_deps": attr.label_list(),
+        "data": attr.label_list(allow_files = True),
+        "test_data": attr.label_list(allow_files = True),
+        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:toolchain")),
+        "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_singlejar": attr.label(
+            default = Label("//tools/base/bazel:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_kotlinc": attr.label(
+            default = Label("//tools/base/bazel:kotlinc"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_kotlin": attr.label(
+            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
+            allow_files = True,
+        ),
+        "_groovyc": attr.label(
+            default = Label("//tools/base/bazel:groovyc"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_groovystub": attr.label(
+            default = Label("//tools/base/bazel:groovy_stub_gen"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_formc": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:formc"),
+            allow_files = True,
+        ),
     },
     fragments = ["java"],
     outputs = {
@@ -328,8 +356,8 @@ def _iml_runtime_impl(ctx):
 
 _iml_runtime = rule(
     attrs = {
-      "iml_module": attr.label(),
-      "runtime_deps": attr.label_list(),
+        "iml_module": attr.label(),
+        "runtime_deps": attr.label_list(),
     },
     fragments = ["java"],
     implementation = _iml_runtime_impl,
@@ -349,8 +377,8 @@ def _iml_test_module_impl(ctx):
 
 _iml_test_module_ = rule(
     attrs = {
-      "iml_module": attr.label(),
-      "runtime_deps": attr.label_list(),
+        "iml_module": attr.label(),
+        "runtime_deps": attr.label_list(),
     },
     fragments = ["java"],
     implementation = _iml_test_module_impl,
@@ -595,17 +623,17 @@ _iml_project = rule(
         "libraries": attr.label_list(
         ),
         "data": attr.label_list(
-          allow_files = True,
+            allow_files = True,
         ),
         "deps": attr.label_list(
         ),
         "ant": attr.label(
-          executable = True,
-          cfg = "host",
+            executable = True,
+            cfg = "host",
         ),
         "build": attr.label(
-          allow_files = True,
-          single_file = True,
+            allow_files = True,
+            single_file = True,
         ),
     },
     outputs = {
@@ -618,12 +646,10 @@ _iml_project = rule(
     implementation = _iml_project_impl,
 )
 
-
 def normalize_label(label):
   if ':' not in label:
     label = label + ":" + label[label.rfind('/') + 1:]
   return label
-
 
 def iml_project(name,modules=[], **kwargs):
   normalized_modules = [normalize_label(module) for module in modules]
@@ -666,14 +692,21 @@ def _iml_artifact_impl(ctx):
   )
   return struct(artifact = ctx.outputs.artifact)
 
-
 _iml_artifact = rule(
     attrs = {
         "dirs": attr.string_list(),
         "files": attr.label_list(allow_files = True),
         "modules": attr.label_list(),
-        "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
-        "_singlejar": attr.label(default = Label("//tools/base/bazel:singlejar"), cfg = "host", executable=True),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_singlejar": attr.label(
+            default = Label("//tools/base/bazel:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
     },
     outputs = {
         "artifact": "%{name}.jar",

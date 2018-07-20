@@ -2,7 +2,6 @@ load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "lab
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 
-
 def kotlin_impl(ctx, name, roots,java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar, friends):
   merged = []
   for root in roots:
