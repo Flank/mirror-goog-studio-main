@@ -377,6 +377,7 @@ class ProGuardTransformTest {
         Mockito.`when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
+        Mockito.`when`(globalScope.buildDir).thenReturn(outputDir.toFile())
 
         val variantData = Mockito.mock(BaseVariantData::class.java)
         Mockito.`when`(variantData.type).thenReturn(VariantTypeImpl.BASE_APK)
