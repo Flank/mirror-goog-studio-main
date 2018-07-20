@@ -29,7 +29,7 @@ const char* kCMD_EXEC = "/system/bin/cmd";
 CmdCommand::CmdCommand() : ShellCommandRunner(kCMD_EXEC) {}
 
 bool CmdCommand::GetAppApks(const std::string& package_name, Apks* apks,
-                            std::string* error_string) const {
+                            std::string* error_string) const noexcept {
   Trace trace("CmdCommand::GetAppApks");
   std::string parameters;
   parameters.append("package ");
@@ -51,6 +51,28 @@ bool CmdCommand::GetAppApks(const std::string& package_name, Apks* apks,
     if (!strncmp(line.c_str(), "package:", 8)) {
       apks->push_back(std::string(line.c_str() + 8));
     }
+  }
+
+  return true;
+}
+
+bool CmdCommand::AttachAgent(int pid, const std::string& agent,
+                             const std::string& args,
+                             std::string* error_string) const noexcept {
+  Trace trace("CmdCommand::AttachAgent");
+
+  std::string cmd;
+  std::stringstream parameters;
+  parameters << "activity"
+             << " ";
+  parameters << "attach-agent"
+             << " ";
+  parameters << pid << " ";
+  parameters << agent << "=" << args;
+
+  bool success = Run(parameters.str(), error_string);
+  if (!success) {
+    return false;
   }
 
   return true;

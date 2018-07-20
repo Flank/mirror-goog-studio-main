@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-
 #include <getopt.h>
-#include <libgen.h>
 #include <stdlib.h>
-#include <iostream>
+#include <unistd.h>
+#include <string>
 
+#include <algorithm>
+#include <iostream>
 #include <map>
 
 #include "dump.h"
 #include "trace.h"
+#include "workspace.h"
 
 using namespace deployer;
 
-void PrintUsage(char *invokedPath) {
-  std::string binary_name = basename(invokedPath);
+void PrintUsage(char* invoked_path) {
+  std::string binary_name = basename(invoked_path);
   std::cerr
       << "Usages:" << std::endl
       << binary_name << " command [command_parameters]" << std::endl
@@ -37,10 +38,18 @@ void PrintUsage(char *invokedPath) {
       << "Commands available:" << std::endl
       << "   dump   : Extract CDs and Signatures for a given applicationID."
       << std::endl
+      << "   swap   : Perform a hot-swap via JVMTI." << std::endl
       << std::endl;
 }
 
-int main(int argc, char **argv) {
+std::string GetInstallerPath() {
+  char dest[1024];
+  std::fill(dest, dest + 1024, '\0');
+  readlink("/proc/self/exe", dest, 1024);
+  return std::string(dest);
+}
+
+int main(int argc, char** argv) {
   if (argc < 2) {
     PrintUsage(argv[0]);
     return EXIT_FAILURE;
@@ -50,6 +59,9 @@ int main(int argc, char **argv) {
 
   auto binary_name = argv[0];
   auto command_name = argv[1];
+
+  // Create a workspace for filesystem operations.
+  Workspace workspace(GetInstallerPath());
 
   // Retrieve Command to be invoked.
   auto task = GetCommand(command_name);
@@ -63,7 +75,7 @@ int main(int argc, char **argv) {
   if (!task->ReadyToRun()) {
     return EXIT_FAILURE;
   }
-  if (!task->Run()) {
+  if (!task->Run(workspace)) {
     return EXIT_FAILURE;
   }
 

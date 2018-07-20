@@ -16,17 +16,19 @@
 
 #include "shell_command.h"
 
+#include <iostream>
 #include "sys/wait.h"
-
 #include "trace.h"
 
 using std::string;
 namespace deployer {
 
-ShellCommandRunner::ShellCommandRunner(const string &executable_path)
+const string kRunAsExecutable = "/system/bin/run-as";
+
+ShellCommandRunner::ShellCommandRunner(const string& executable_path)
     : executable_path_(executable_path) {}
 
-bool ShellCommandRunner::Run(const string &parameters, string *output) const {
+bool ShellCommandRunner::Run(const string& parameters, string* output) const {
   string cmd;
   cmd.append(executable_path_);
   if (!parameters.empty()) {
@@ -36,11 +38,30 @@ bool ShellCommandRunner::Run(const string &parameters, string *output) const {
   return RunAndReadOutput(cmd, output);
 }
 
-bool ShellCommandRunner::RunAndReadOutput(const string &cmd,
-                                          string *output) const {
+bool ShellCommandRunner::RunAs(const string& parameters,
+                               const string& package_name,
+                               string* output) const {
+  // This assumes "run as" was installed correctly and to the specified
+  // location. We should validate this.
+  string cmd = kRunAsExecutable;
+  cmd.append(" ");
+  cmd.append(package_name);
+  cmd.append(" ");
+  cmd.append(executable_path_);
+  cmd.append(" ");
+  cmd.append(parameters);
+
+  return RunAndReadOutput(cmd, output);
+}
+
+bool ShellCommandRunner::RunAndReadOutput(const string& cmd,
+                                          string* output) const {
   Trace trace(executable_path_);
   char buffer[1024];
-  FILE *pipe = popen(cmd.c_str(), "r");
+
+  // Without this line, stdout is picked up but not stderr.
+  string redirected_cmd = cmd + " 2>&1";
+  FILE* pipe = popen(redirected_cmd.c_str(), "r");
   if (pipe == nullptr) {
     return false;
   }
@@ -54,4 +75,5 @@ bool ShellCommandRunner::RunAndReadOutput(const string &cmd,
   int ret = pclose(pipe);
   return WEXITSTATUS(ret) == 0;
 }
+
 }  // namespace deployer

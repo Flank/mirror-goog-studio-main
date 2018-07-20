@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include "workspace.h"
+
 namespace deployer {
 
 // Base class which all Command object (dump, and future patch, version, agent)
@@ -26,10 +28,10 @@ namespace deployer {
 class Command {
  public:
   // Parse parameters and set readyToRun to true if no error was encountered.
-  virtual void ParseParameters(int argc, char **argv) = 0;
+  virtual void ParseParameters(int argc, char** argv) = 0;
 
   // Execute command.
-  virtual bool Run() = 0;
+  virtual bool Run(const Workspace& workspace) = 0;
 
   bool ReadyToRun() { return ready_to_run_; }
 

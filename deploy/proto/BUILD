@@ -18,3 +18,17 @@ java_proto_library(
     # Seems to be ok here.
     grpc_support = 0,
 )
+
+cc_binary(
+    name = "proto_tool",
+    srcs = [
+        "proto_tool.cc",
+    ],
+    copts = ["-I$(GENDIR)/tools/base/deploy/proto"],
+    tags = [
+        "no_windows",
+    ],
+    deps = [
+        "//tools/base/deploy/proto:cc_proto",
+    ],
+)

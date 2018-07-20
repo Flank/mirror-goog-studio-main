@@ -20,20 +20,19 @@
 #include <unordered_map>
 
 #include "dump.h"
+#include "swap.h"
 
 namespace deployer {
 
-
-
 // Search dispatch table for a Command object matching the command name.
-std::unique_ptr<Command> GetCommand(const char *command_name) {
-
+std::unique_ptr<Command> GetCommand(const char* command_name) {
   // Dispatch table mapping a command string to a Command object.
   static std::unordered_map<std::string, std::function<Command*(void)>>
-          commandsRegister = {
-          {"dump", [](){ return new DumpCommand();}}
+      commandsRegister = {
+          {"dump", []() { return new DumpCommand(); }},
+          {"swap", []() { return new SwapCommand(); }}
           // Add here more commands (e.g: version, install, patch, agent, ...)
-  };
+      };
 
   if (commandsRegister.find(command_name) == commandsRegister.end()) {
     return nullptr;

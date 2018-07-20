@@ -26,18 +26,18 @@ class ShellCommandRunner {
  public:
   // Expected executable_path can be either absolute, relative or even
   // executable name only path.
-  explicit ShellCommandRunner(const std::string &executable_path);
+  explicit ShellCommandRunner(const std::string& executable_path);
   virtual ~ShellCommandRunner() = default;
   // If |output| is not null, it is populated with stdin and stderr from
   // running command.
-  virtual bool Run(const std::string &parameters, std::string *output) const;
-  bool RunAs(const std::string &parameters, const std::string &username,
-             std::string *output) const;
+  virtual bool Run(const std::string& parameters, std::string* output) const;
+  bool RunAs(const std::string& parameters, const std::string& package_name,
+             std::string* output) const;
 
  private:
   const std::string executable_path_;
-  virtual bool RunAndReadOutput(const std::string &cmd,
-                                std::string *output) const;
+  virtual bool RunAndReadOutput(const std::string& cmd,
+                                std::string* output) const;
 };
 
 }  // namespace deployer

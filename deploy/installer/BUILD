@@ -19,13 +19,19 @@ cc_library(
         "package_manager.h",
         "shell_command.cc",
         "shell_command.h",
+        "swap.cc",
+        "swap.h",
         "trace.cc",
         "trace.h",
+        "workspace.h",
     ],
-    copts = ANDROID_COPTS,
+    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/proto"],
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/deploy/proto:cc_proto",
+    ],
 )
 
 cc_binary(

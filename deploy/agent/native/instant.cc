@@ -19,6 +19,7 @@
 #include "jvmti.h"
 
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -44,6 +45,9 @@ namespace swapper {
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
+
+// Watch as I increment between runs!
+static int run_counter = 0;
 
 // Event that fires when the agent loads a class file.
 extern "C" void JNICALL Agent_ClassFileLoadHook(
@@ -189,6 +193,15 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
                                                  void* reserved) {
   jvmtiEnv* jvmti;
   JNIEnv* jni;
+
+  std::cout << "AAAAA" << std::endl;
+
+  Log::V("WHOO");
+  std::ofstream o("/data/local/tmp/magic.txt", std::ios::binary);
+  o << "Hello, world!" << std::endl;
+  o.close();
+
+  Log::V("Prior agent invocations in this VM: %d", run_counter++);
 
   if (!Config::ParseFromFile(input)) {
     Log::E("Could not parse swap request");

@@ -23,12 +23,15 @@
 
 namespace deployer {
 
-// Wrapper around Android executable "pm" (Android Package Manager).
+// Wrapper around Android executable "service client".
 class CmdCommand : public ShellCommandRunner {
  public:
   CmdCommand();
-  bool GetAppApks(const std::string &package_name, Apks *apks,
-                  std::string *error_string) const;
+  bool GetAppApks(const std::string& package_name, Apks* apks,
+                  std::string* error_string) const noexcept;
+
+  bool AttachAgent(int pid, const std::string& agent, const std::string& args,
+                   std::string* error_string) const noexcept;
 };
 
 }  // namespace deployer
