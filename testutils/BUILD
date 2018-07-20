@@ -18,6 +18,7 @@ iml_module(
         "//tools/idea/.idea/libraries:dexlib2[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:asm-tools[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
     ],
 )
 
