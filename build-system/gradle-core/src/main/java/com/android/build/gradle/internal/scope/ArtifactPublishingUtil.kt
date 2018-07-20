@@ -44,16 +44,19 @@ fun publishArtifactToConfiguration(
     configuration
         .outgoing
         .variants { variants: NamedDomainObjectContainer<ConfigurationVariant> ->
-            val configurationVariant =
-                variants.maybeCreate(getConfigurationVariantName(artifactType, attributeMap))
-
-            configurationVariant.artifact(file) { artifact ->
-                artifact.type = type
-                artifact.builtBy(builtBy)
-            }
-            configurationVariant.attributes.let { container ->
-                attributeMap?.keys?.forEach { key ->
-                    attributeMap[key]?.let { container.attribute(key, it) }
+            variants.create(
+                getConfigurationVariantName(artifactType, attributeMap)
+            ) { variant ->
+                variant.artifact(
+                    file
+                ) { artifact ->
+                    artifact.type = type
+                    artifact.builtBy(builtBy)
+                }
+                variant.attributes.let { container ->
+                    attributeMap?.keys?.forEach { key ->
+                        attributeMap[key]?.let { container.attribute(key, it) }
+                    }
                 }
             }
         }

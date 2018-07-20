@@ -971,36 +971,27 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                                             .getVariantConfiguration()
                                                             .getType());
 
-                            ImmutableList.Builder<EarlySyncBuildOutput> list =
-                                    ImmutableList.builder();
-                            // get the OutputPublishingSpec from the ArtifactType for this
-                            // particular variant spec
-                            for (PublishingSpecs.OutputSpec taskOutputSpec :
-                                    testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES)) {
-                                // now get the output type
-                                ArtifactType testedOutputType = taskOutputSpec.getOutputType();
+                            // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
+                            PublishingSpecs.OutputSpec taskOutputSpec =
+                                    testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
+                            // now get the output type
+                            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
 
-                                // We used to call .getSingleFile() but Kotlin projects
-                                // currently have 2 output dirs specified for test classes.
-                                // This supplier is going away in beta3, so this is obsolete
-                                // in any case.
-                                File file =
-                                        variantScope
-                                                .getArtifacts()
-                                                .getFinalArtifactFiles(testedOutputType)
-                                                .iterator()
-                                                .next();
-                                int versionCode =
-                                        variantData.getVariantConfiguration().getVersionCode();
-                                list.add(
-                                        new EarlySyncBuildOutput(
-                                                JAVAC,
-                                                VariantOutput.OutputType.MAIN,
-                                                ImmutableList.of(),
-                                                versionCode,
-                                                file));
-                            }
-                            return list.build();
+                            return ImmutableList.of(
+                                    new EarlySyncBuildOutput(
+                                            JAVAC,
+                                            VariantOutput.OutputType.MAIN,
+                                            ImmutableList.of(),
+                                            variantData.getVariantConfiguration().getVersionCode(),
+                                            variantScope
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(testedOutputType)
+                                                    // We used to call .getSingleFile() but Kotlin projects
+                                                    // currently have 2 output dirs specified for test classes.
+                                                    // This supplier is going away in beta3, so this is obsolete
+                                                    // in any case.
+                                                    .iterator()
+                                                    .next()));
                         };
             case INSTANTAPP:
             default:

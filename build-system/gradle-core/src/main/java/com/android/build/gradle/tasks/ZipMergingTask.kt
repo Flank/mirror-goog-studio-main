@@ -41,14 +41,8 @@ open class ZipMergingTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var classesJar: BuildableArtifact
+    lateinit var libraryInputFiles: BuildableArtifact
         private set
-
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var classesDir: BuildableArtifact
-        private set
-
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -61,12 +55,10 @@ open class ZipMergingTask : AndroidVariantTask() {
 
     @VisibleForTesting
     internal fun init(
-        classesJar: BuildableArtifact,
-        classesDir: BuildableArtifact,
+        libraryInputFiles: BuildableArtifact,
         javaResInputFiles: BuildableArtifact,
         outputFile: File) {
-        this.classesJar = classesJar
-        this.classesDir= classesDir
+        this.libraryInputFiles = libraryInputFiles
         this.javaResInputFiles = javaResInputFiles
         this.outputFile = outputFile
     }
@@ -84,8 +76,7 @@ open class ZipMergingTask : AndroidVariantTask() {
         }
 
         JarMerger(outputFile.toPath(), usedNamesPredicate).use {
-            classesJar.files.forEach { jar -> it.addJar(jar.toPath()) }
-            classesDir.files.forEach { dir -> it.addDirectory(dir.toPath()) }
+            libraryInputFiles.files.forEach { jar -> it.addJar(jar.toPath()) }
             javaResInputFiles.files.forEach { jar -> it.addJar(jar.toPath()) }
         }
     }
@@ -102,8 +93,7 @@ open class ZipMergingTask : AndroidVariantTask() {
             val mainFullJar = buildArtifacts.appendArtifact(InternalArtifactType.FULL_JAR,
                     task, FN_INTERMEDIATE_FULL_JAR)
             task.init(
-                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES_JAR),
-                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES_DIR),
+                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES),
                     buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_JAVA_RES),
                     mainFullJar)
             task.variantName = scope.fullVariantName

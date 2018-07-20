@@ -244,14 +244,11 @@ public class LibraryTaskManager extends TaskManager {
 
         // Now add transforms for intermediate publishing (projects to projects).
         File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
-        File classesMainDir = new File(variantScope.getIntermediateJarOutputFolder(), "classes");
-        File mainClassJar = new File(classesMainDir, FN_CLASSES_JAR);
-        File mainClassDir = new File(classesMainDir, "dir");
+        File mainClassJar = new File(jarOutputFolder, FN_CLASSES_JAR);
         File mainResJar = new File(jarOutputFolder, FN_INTERMEDIATE_RES_JAR);
         LibraryIntermediateJarsTransform intermediateTransform =
                 new LibraryIntermediateJarsTransform(
                         mainClassJar,
-                        mainClassDir,
                         mainResJar,
                         variantConfig::getPackageFromManifest,
                         extension.getPackageBuildConfig());
@@ -265,12 +262,8 @@ public class LibraryTaskManager extends TaskManager {
                 t -> {
                     // publish the intermediate classes.jar
                     artifacts.appendArtifact(
-                            InternalArtifactType.LIBRARY_CLASSES_JAR,
+                            InternalArtifactType.LIBRARY_CLASSES,
                             ImmutableList.of(mainClassJar),
-                            t);
-                    artifacts.appendArtifact(
-                            InternalArtifactType.LIBRARY_CLASSES_DIR,
-                            ImmutableList.of(mainClassDir),
                             t);
                     // publish the res jar
                     artifacts.appendArtifact(
