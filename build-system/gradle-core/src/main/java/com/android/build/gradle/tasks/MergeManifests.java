@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -89,6 +90,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /** A task that processes the manifest */
@@ -491,7 +493,7 @@ public class MergeManifests extends ManifestProcessorTask {
         return apkList;
     }
 
-    public static class ConfigAction extends AnnotationProcessingTaskConfigAction<MergeManifests> {
+    public static class ConfigAction extends TaskConfigAction<MergeManifests> {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
@@ -501,14 +503,38 @@ public class MergeManifests extends ManifestProcessorTask {
                 @NonNull VariantScope scope,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(scope, scope.getTaskName("process", "Manifest"), MergeManifests.class);
             this.variantScope = scope;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
         }
 
+        @NonNull
+        @Override
+        public String getName() {
+            return variantScope.getTaskName("process", "Manifest");
+        }
+
+        @NonNull
+        @Override
+        public Class<MergeManifests> getType() {
+            return MergeManifests.class;
+        }
+
+        @Override
+        public void preConfigure(
+                @NonNull TaskProvider<? extends MergeManifests> taskProvider,
+                @NonNull String taskName) {
+            manifestOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendDirectory(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    taskName,
+                                    taskProvider,
+                                    "");
+        }
+
         @Override
         public void execute(@NonNull MergeManifests processManifestTask) {
-            super.execute(processManifestTask);
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();
@@ -569,6 +595,8 @@ public class MergeManifests extends ManifestProcessorTask {
 
             processManifestTask.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
+
+            processManifestTask.setManifestOutputDirectory(manifestOutputFolder);
 
             processManifestTask.setInstantRunManifestOutputDirectory(
                     artifacts.appendArtifact(
