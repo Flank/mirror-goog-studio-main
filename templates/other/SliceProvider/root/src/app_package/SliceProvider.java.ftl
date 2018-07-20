@@ -11,7 +11,7 @@ import androidx.slice.Slice;
 import androidx.slice.SliceProvider;
 import androidx.slice.builders.ListBuilder;
 import androidx.slice.builders.ListBuilder.RowBuilder;
-
+import androidx.slice.builders.SliceAction;
 
 public class ${className} extends SliceProvider {
     /**
@@ -50,22 +50,46 @@ public class ${className} extends SliceProvider {
      */
     public Slice onBindSlice(Uri sliceUri) {
         Context context = getContext();
-        if (context == null) {
+        SliceAction activityAction = createActivityAction();
+        if (context == null || activityAction == null) {
             return null;
         }
-        if (sliceUri.getPath().equals("${pathPrefix}")) {
+        if ("/".equals(sliceUri.getPath())) {
             // Path recognized. Customize the Slice using the androidx.slice.builders API.
             // Note: ANRs and strict mode is enforced here so don't do any heavy operations.
             // Only bind data that is currently available in memory.
-            return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
-                    .addRow(new RowBuilder(context, sliceUri).setTitle("URI found."))
+            return new ListBuilder(getContext(), sliceUri, ListBuilder.INFINITY)
+                    .addRow(
+                        new RowBuilder()
+                            .setTitle("URI found.")
+                            .setPrimaryAction(activityAction)
+                    )
                     .build();
         } else {
             // Error: Path not found.
-            return new ListBuilder(context, sliceUri, ListBuilder.INFINITY)
-                    .addRow(new RowBuilder(context, sliceUri).setTitle("URI not found."))
+            return new ListBuilder(getContext(), sliceUri, ListBuilder.INFINITY)
+                    .addRow(
+                        new RowBuilder()
+                            .setTitle("URI not found.")
+                            .setPrimaryAction(activityAction)
+                    )
                     .build();
         }
+    }
+
+    private SliceAction createActivityAction() {
+        return null;
+        //Instead of returning null, you should create a SliceAction. Here is an example:
+        /*
+        return SliceAction.create(
+            PendingIntent.getActivity(
+                getContext(), 0, new Intent(getContext(), MainActivity.class), 0
+            ),
+            IconCompat.createWithResource(getContext(), R.drawable.ic_launcher_foreground),
+            ListBuilder.ICON_IMAGE,
+            "Open App"
+        );
+        */
     }
 
     /**

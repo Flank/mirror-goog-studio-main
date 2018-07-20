@@ -3,10 +3,10 @@ package ${escapeKotlinIdentifiers(packageName)}
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
-
 import androidx.slice.Slice
 import androidx.slice.SliceProvider
 import androidx.slice.builders.ListBuilder
+import androidx.slice.builders.SliceAction
 
 class ${className} : SliceProvider() {
     /**
@@ -32,7 +32,7 @@ class ${className} : SliceProvider() {
         }
         val context = context
         if (context != null) {
-            uriBuilder = uriBuilder.authority(context.getPackageName())
+            uriBuilder = uriBuilder.authority(context.packageName))
         }
         return uriBuilder.build()
     }
@@ -41,20 +41,46 @@ class ${className} : SliceProvider() {
      * Construct the Slice and bind data if available.
      */
     override fun onBindSlice(sliceUri: Uri): Slice? {
-        val context = getContext() ?: return null
-        return if (sliceUri.path == "${pathPrefix}") {
+        // Note: you should switch your build.gradle dependency to
+	// slice-builders-ktx for a nicer interface in Kotlin.
+        val context = context ?: return null
+        val activityAction = createActivityAction() ?: return null
+        return if (sliceUri.path == "/") {
             // Path recognized. Customize the Slice using the androidx.slice.builders API.
             // Note: ANR and StrictMode are enforced here so don't do any heavy operations. 
             // Only bind data that is currently available in memory.
             ListBuilder(context, sliceUri, ListBuilder.INFINITY)
-                .addRow { it.setTitle("URI found.") }
+                .addRow(
+                    ListBuilder.RowBuilder()
+                        .setTitle("URI found.")
+                        .setPrimaryAction(activityAction)
+                )
                 .build()
         } else {
             // Error: Path not found.
             ListBuilder(context, sliceUri, ListBuilder.INFINITY)
-                .addRow { it.setTitle("URI not found.") }
+                .addRow(
+                    ListBuilder.RowBuilder()
+                        .setTitle("URI not found.")
+                        .setPrimaryAction(activityAction)
+                )
                 .build()
         }
+    }
+
+    private fun createActivityAction(): SliceAction? {
+        return null
+        /*
+        Instead of returning null, you should create a SliceAction. Here is an example:
+        return SliceAction.create(
+            PendingIntent.getActivity(
+                context, 0, Intent(context, MainActivity::class.java), 0
+            ),
+            IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground),
+            ListBuilder.ICON_IMAGE,
+            "Open App"
+        )
+        */
     }
 
     /**
