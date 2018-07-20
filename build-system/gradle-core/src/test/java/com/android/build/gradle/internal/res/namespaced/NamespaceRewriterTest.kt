@@ -696,6 +696,68 @@ class NamespaceRewriterTest {
         """.xmlFormat())
     }
 
+    @Test
+    fun checkNestedNamespaces() {
+        val original = """
+<levelone xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:app="http://schemas.android.com/apk/res-auto"
+          app:attr1="@bool/value">
+
+    <leveltwo
+        android:attr1="@bool/value"
+        app:attr1="@bool/value"
+        app:attr2="@bool/value">
+
+        <levelthree
+            android:attr3="@bool/value"
+            app:attr3="@bool/value"
+            app:attr4="@bool/value" />
+    </leveltwo>
+
+</levelone>"""
+
+        val namespaced = """
+<levelone xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:com_example_module="http://schemas.android.com/apk/res/com.example.module"
+          xmlns:dependency_one="http://schemas.android.com/apk/res/dependency.one"
+          xmlns:dependency_two="http://schemas.android.com/apk/res/dependency.two"
+          dependency_one:attr1="@com.example.module:bool/value" >
+
+    <leveltwo
+        android:attr1="@com.example.module:bool/value"
+        dependency_one:attr1="@com.example.module:bool/value"
+        dependency_two:attr2="@com.example.module:bool/value" >
+
+        <levelthree
+            android:attr3="@com.example.module:bool/value"
+            dependency_one:attr3="@com.example.module:bool/value"
+            dependency_two:attr4="@com.example.module:bool/value" />
+    </leveltwo>
+
+</levelone>""".xmlFormat()
+
+        val moduleTable = SymbolTable.builder()
+                .tablePackage("com.example.module")
+            .add(symbol("bool", "value"))
+                .build()
+        val depOneTable = SymbolTable.builder()
+                .tablePackage("dependency.one")
+                .add(symbol("attr", "attr1"))
+                .add(symbol("attr", "attr3"))
+                .build()
+        val depTwoTable = SymbolTable.builder()
+                .tablePackage("dependency.two")
+                .add(symbol("attr", "attr2"))
+                .add(symbol("attr", "attr4"))
+                .build()
+
+        val namespaceRewriter =
+                NamespaceRewriter(ImmutableList.of(moduleTable, depOneTable, depTwoTable))
+
+        checkAarRewrite(namespaceRewriter, "drawable/test.xml", original, namespaced)
+
+    }
+
     private fun checkAarRewrite(
         namespaceRewriter: NamespaceRewriter,
         path: String,
