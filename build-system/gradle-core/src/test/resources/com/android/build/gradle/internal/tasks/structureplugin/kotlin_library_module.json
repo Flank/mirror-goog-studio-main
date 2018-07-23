@@ -1,13 +1,13 @@
 {
   "moduleName": "kotlinlib",
   "moduleType": "pure",
-  "javaPackageCount": 0,
-  "javaClassCount": 0,
-  "javaMethodsPerClass": 0,
   "useKotlin": true,
-  "kotlinPackageCount": 10,
-  "kotlinClassCount": 10,
-  "kotlinMethodsPerClass": 10,
+  "kotlin": {
+    "packages": 10,
+    "classesPerPackage": 10,
+    "methodsPerClass": 10,
+    "fieldsPerClass": 5
+  },
   "dependencies": [
     {
       "moduleName": "kotlinlib_javalib",

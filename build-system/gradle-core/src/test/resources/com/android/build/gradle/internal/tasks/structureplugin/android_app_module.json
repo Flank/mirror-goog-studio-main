@@ -1,13 +1,19 @@
 {
   "moduleName": "myapp",
   "moduleType": "android",
-  "javaPackageCount": 5,
-  "javaClassCount": 5,
-  "javaMethodsPerClass": 5,
+  "java": {
+    "packages": 5,
+    "classesPerPackage": 5,
+    "methodsPerClass": 5,
+    "fieldsPerClass": 5
+  },
   "useKotlin": true,
-  "kotlinPackageCount": 5,
-  "kotlinClassCount": 5,
-  "kotlinMethodsPerClass": 5,
+  "kotlin": {
+    "packages": 5,
+    "classesPerPackage": 5,
+    "methodsPerClass": 5,
+    "fieldsPerClass": 5
+  },
   "androidBuildConfig": {
     "minSdkVersion": 21,
     "targetSdkVersion": 27,

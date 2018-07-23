@@ -46,13 +46,9 @@ data class ASPoetInfo(
 data class ModuleInfo(
     var name: String = "",
     var type: ModuleType = ModuleType.PURE,
-    var javaPackageCount: Int = 0,
-    var javaClassCount: Int = 0,
-    var javaMethodsPerClass: Int = 0,
+    var javaSourceInfo: SourceFilesInfo = SourceFilesInfo(),
     var useKotlin: Boolean = false,
-    var kotlinPackageCount: Int = 0,
-    var kotlinClassCount: Int = 0,
-    var kotlinMethodsPerClass: Int = 0,
+    var kotlinSourceInfo: SourceFilesInfo = SourceFilesInfo(),
     var dependencies: MutableList<PoetDependenciesInfo> = mutableListOf(),
     // Android Specific:
     var activityCount: Int = 0,
@@ -91,6 +87,18 @@ data class ModuleInfo(
 
 enum class ModuleType {
     PURE, ANDROID
+}
+
+data class SourceFilesInfo(
+    var packages: Int = 0,
+    var classesPerPackage: Int = 0,
+    var methodsPerClass: Int = 0,
+    var fieldsPerClass: Int = 0) {
+
+    val isEmpty = packages == 0 &&
+            classesPerPackage == 0 &&
+            methodsPerClass == 0 &&
+            fieldsPerClass == 0
 }
 
 enum class DependencyType(val jsonValue: String) {

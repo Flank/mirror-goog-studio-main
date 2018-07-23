@@ -11,9 +11,12 @@
       {
         "moduleName": "Module0_Module1",
         "moduleType": "pure",
-        "javaPackageCount": 10,
-        "javaClassCount": 10,
-        "javaMethodsPerClass": 10,
+        "java": {
+          "packages": 10,
+          "classesPerPackage": 10,
+          "methodsPerClass": 10,
+          "fieldsPerClass": 5
+        },
         "dependencies": [
           {
             "library": "my.org:lib1:1.0",
@@ -28,13 +31,13 @@
       {
         "moduleName": "Module0",
         "moduleType": "pure",
-        "javaPackageCount": 0,
-        "javaClassCount": 0,
-        "javaMethodsPerClass": 0,
         "useKotlin": true,
-        "kotlinPackageCount": 10,
-        "kotlinClassCount": 10,
-        "kotlinMethodsPerClass": 10,
+        "kotlin": {
+          "packages": 10,
+          "classesPerPackage": 10,
+          "methodsPerClass": 10,
+          "fieldsPerClass": 5
+        },
         "dependencies": [
           {
             "moduleName": "Module0_Module1",
@@ -53,13 +56,19 @@
       {
         "moduleName": "Module2",
         "moduleType": "android",
-        "javaPackageCount": 5,
-        "javaClassCount": 5,
-        "javaMethodsPerClass": 5,
+        "java": {
+          "packages": 5,
+          "classesPerPackage": 5,
+          "methodsPerClass": 5,
+          "fieldsPerClass": 5
+        },
         "useKotlin": true,
-        "kotlinPackageCount": 5,
-        "kotlinClassCount": 5,
-        "kotlinMethodsPerClass": 5,
+        "kotlin": {
+          "packages": 5,
+          "classesPerPackage": 5,
+          "methodsPerClass": 5,
+          "fieldsPerClass": 5
+        },
         "androidBuildConfig": {
           "minSdkVersion": 21,
           "targetSdkVersion": 27,

@@ -66,26 +66,25 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
         output.name("moduleName").value(data.name)
         output.name("moduleType").value(data.type.toString().toLowerCase())
 
-        writeJavaCounts(output, data)
-        writeKotlinCounts(output, data)
+        writeSourceFilesInfo(output, "java", data.javaSourceInfo)
+        if (data.useKotlin) output.name("useKotlin").value(data.useKotlin)
+        writeSourceFilesInfo(output, "kotlin", data.kotlinSourceInfo)
+
         writeAndroidFields(output, data)
         writeDependencies(output, data)
 
         output.endObject()
     }
 
-    private fun writeJavaCounts(output: JsonWriter, data: ModuleInfo) {
-        output.name("javaPackageCount").value(data.javaPackageCount)
-        output.name("javaClassCount").value(data.javaClassCount)
-        output.name("javaMethodsPerClass").value(data.javaMethodsPerClass)
-    }
-
-    private fun writeKotlinCounts(output: JsonWriter, data: ModuleInfo) {
-        if (!data.useKotlin) return
-        output.name("useKotlin").value(data.useKotlin)
-        output.name("kotlinPackageCount").value(data.kotlinPackageCount)
-        output.name("kotlinClassCount").value(data.kotlinClassCount)
-        output.name("kotlinMethodsPerClass").value(data.kotlinMethodsPerClass)
+    private fun writeSourceFilesInfo(output: JsonWriter, language: String, data: SourceFilesInfo) {
+        if (data.isEmpty) return
+        output.name(language)
+        output.beginObject()
+        output.name("packages").value(data.packages)
+        output.name("classesPerPackage").value(data.classesPerPackage)
+        output.name("methodsPerClass").value(data.methodsPerClass)
+        output.name("fieldsPerClass").value(data.fieldsPerClass)
+        output.endObject()
     }
 
     private fun writeDependencies(output: JsonWriter, data: ModuleInfo) {
@@ -123,13 +122,9 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
             when (it) {
                 "moduleName" -> data.name = nextString()
                 "moduleType" -> data.type = ModuleType.valueOf(nextString().toUpperCase())
-                "javaPackageCount" -> data.javaPackageCount = nextInt()
-                "javaClassCount" -> data.javaClassCount = nextInt()
-                "javaMethodsPerClass" -> data.javaMethodsPerClass = nextInt()
+                "java" -> data.javaSourceInfo = readSourceFilesInfo(input)
                 "useKotlin" -> data.useKotlin = nextBoolean()
-                "kotlinPackageCount" -> data.kotlinPackageCount = nextInt()
-                "kotlinClassCount" -> data.kotlinClassCount = nextInt()
-                "kotlinMethodsPerClass" -> data.kotlinMethodsPerClass = nextInt()
+                "kotlin" -> data.kotlinSourceInfo = readSourceFilesInfo(input)
                 "dependencies" -> data.dependencies = readDependencies(this)
                 "activityCount" -> data.activityCount = nextInt()
                 "hasLaunchActivity" -> data.hasLaunchActivity = nextBoolean()
@@ -140,6 +135,25 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
         }
 
         return data
+    }
+
+    private fun readSourceFilesInfo(input: JsonReader): SourceFilesInfo {
+        var packages = 0
+        var classesPerPackage = 0
+        var methodsPerClass = 0
+        var fieldsPerClass = 0
+
+        input.readObjectProperties {
+            when (it) {
+                "packages" -> packages = nextInt()
+                "classesPerPackage" -> classesPerPackage = nextInt()
+                "methodsPerClass" -> methodsPerClass = nextInt()
+                "fieldsPerClass" -> fieldsPerClass = nextInt()
+                else -> skipValue()
+            }
+        }
+
+        return SourceFilesInfo(packages, classesPerPackage, methodsPerClass, fieldsPerClass)
     }
 
     private fun readDependencies(input: JsonReader): MutableList<PoetDependenciesInfo> {

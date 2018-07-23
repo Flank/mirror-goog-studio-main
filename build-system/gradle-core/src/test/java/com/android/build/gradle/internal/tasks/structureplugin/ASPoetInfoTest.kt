@@ -72,9 +72,7 @@ private fun getKotlinJavaSubmodule(): ModuleInfo {
     val module = ModuleInfo()
     module.name = "kotlinlib_javalib"
     module.type = ModuleType.PURE
-    module.javaClassCount = 10
-    module.javaPackageCount = 10
-    module.javaMethodsPerClass = 10
+    module.javaSourceInfo = SourceFilesInfo(10, 10, 10, 5)
     module.addDependency(
         PoetDependenciesInfo(DependencyType.EXTERNAL_LIBRARY, "implementation", "my.org:lib1:1.0")
     )
@@ -89,9 +87,7 @@ private fun getBaseKotlinModule(): ModuleInfo {
     module.name = "kotlinlib"
     module.type = ModuleType.PURE
     module.useKotlin = true
-    module.kotlinClassCount = 10
-    module.kotlinPackageCount = 10
-    module.kotlinMethodsPerClass = 10
+    module.kotlinSourceInfo = SourceFilesInfo(10, 10, 10, 5)
     module.addDependency(
         PoetDependenciesInfo(DependencyType.MODULE, "implementation", "kotlinlib_javalib"))
     module.addDependency(
@@ -114,13 +110,9 @@ private fun getBaseAndroidAppModule(): ModuleInfo {
     module.resources.layoutCount = 4
 
 
-    module.javaClassCount = 5
-    module.javaPackageCount = 5
-    module.javaMethodsPerClass = 5
+    module.javaSourceInfo = SourceFilesInfo(5, 5, 5, 5)
     module.useKotlin = true
-    module.kotlinClassCount = 5
-    module.kotlinPackageCount = 5
-    module.kotlinMethodsPerClass = 5
+    module.kotlinSourceInfo = SourceFilesInfo(5, 5, 5, 5)
     module.addDependency(
         PoetDependenciesInfo(DependencyType.MODULE, "implementation", "kotlinlib"))
     module.addDependency(
