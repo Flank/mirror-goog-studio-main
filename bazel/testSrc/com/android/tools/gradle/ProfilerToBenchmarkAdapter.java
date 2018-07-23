@@ -23,8 +23,10 @@ import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,14 @@ public class ProfilerToBenchmarkAdapter {
 
     private static final Logger LOGGER =
             Logger.getLogger(ProfilerToBenchmarkAdapter.class.getName());
+
+    private static final EnumSet<ExecutionType> CONFIGURATION_TYPES =
+            EnumSet.of(
+                    ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
+                    ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
+                    ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION,
+                    ExecutionType.TASK_MANAGER_CREATE_TASKS,
+                    ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS);
 
     @NonNull private final Benchmark benchmark;
     @NonNull private final BenchmarkRun benchmarkRun;
@@ -63,7 +73,8 @@ public class ProfilerToBenchmarkAdapter {
                         iterationStartTime,
                         profile.getBuildTime(),
                         consolidate(profile, isTask, (it) -> it.getTask().getType()),
-                        consolidate(profile, isTransform, (it) -> it.getTransform().getType())));
+                        consolidate(profile, isTransform, (it) -> it.getTransform().getType()),
+                        consolidate(profile, isConfiguration, (it) -> it.getType().getNumber())));
     }
 
     public void commit() {
@@ -106,6 +117,12 @@ public class ProfilerToBenchmarkAdapter {
                                             addMetricSample(
                                                     GradleTransformExecutionType.forNumber(type)
                                                             .name(),
+                                                    consolidatedRunTimings.startTime,
+                                                    timing));
+                            consolidatedRunTimings.timingsForConfiguration.forEach(
+                                    (type, timing) ->
+                                            addMetricSample(
+                                                    ExecutionType.forNumber(type).name(),
                                                     consolidatedRunTimings.startTime,
                                                     timing));
                         });
@@ -155,33 +172,38 @@ public class ProfilerToBenchmarkAdapter {
 
     private static final Predicate<GradleBuildProfileSpan> isTransform =
             gradleBuildProfileSpan ->
-                    gradleBuildProfileSpan.getType()
-                            == GradleBuildProfileSpan.ExecutionType.TASK_TRANSFORM;
+                    gradleBuildProfileSpan.getType() == ExecutionType.TASK_TRANSFORM;
 
     private static final Predicate<GradleBuildProfileSpan> isTask =
             // ignore task type 65 because those are transform tasks, which are accounted for in the
             // transform spans.
             gradleBuildProfileSpan ->
-                    gradleBuildProfileSpan.getType()
-                                    == GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION
+                    gradleBuildProfileSpan.getType() == ExecutionType.TASK_EXECUTION
                             && gradleBuildProfileSpan.getTask() != null
                             && gradleBuildProfileSpan.getTask().getType() != 65;
+
+    private static final Predicate<GradleBuildProfileSpan> isConfiguration =
+            gradleBuildProfileSpan ->
+                    CONFIGURATION_TYPES.contains(gradleBuildProfileSpan.getType());
 
     private static final class ConsolidatedRunTimings {
         final long startTime;
         final long buildTime;
         final Map<Integer, Long> timingsForTasks;
         final Map<Integer, Long> timingsForTransforms;
+        final Map<Integer, Long> timingsForConfiguration;
 
         private ConsolidatedRunTimings(
                 long startTime,
                 long buildTime,
                 Map<Integer, Long> timingsForTasks,
-                Map<Integer, Long> timingsForTransforms) {
+                Map<Integer, Long> timingsForTransforms,
+                Map<Integer, Long> timingsForConfiguration) {
             this.startTime = startTime;
             this.buildTime = buildTime;
             this.timingsForTasks = timingsForTasks;
             this.timingsForTransforms = timingsForTransforms;
+            this.timingsForConfiguration = timingsForConfiguration;
         }
 
         long getBuildTime() {
