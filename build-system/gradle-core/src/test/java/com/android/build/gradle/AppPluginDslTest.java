@@ -50,6 +50,17 @@ public class AppPluginDslTest {
     public static final String R8_DEBUG_ANDROID_TEST =
             "transformClassesAndResourcesWithR8ForDebugAndroidTest";
 
+    private static final String DEFAULT_DEBUG;
+    private static final String DEFAULT_DEBUG_ANDROID_TEST;
+    private static final String DEFAULT_RELEASE;
+
+    static {
+        boolean useR8 = BooleanOption.ENABLE_R8.getDefaultValue();
+        DEFAULT_DEBUG = useR8 ? R8_DEBUG : PROGUARD_DEBUG;
+        DEFAULT_DEBUG_ANDROID_TEST = useR8 ? R8_DEBUG_ANDROID_TEST : PROGUARD_DEBUG_ANDROID_TEST;
+        DEFAULT_RELEASE = useR8 ? R8_RELEASE : PROGUARD_RELEASE;
+    }
+
     @Rule public final TemporaryFolder projectDirectory = new TemporaryFolder();
 
     protected AppPlugin plugin;
@@ -181,13 +192,13 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testPostprocessingBlock_proguard() throws Exception {
+    public void testPostprocessingBlock_default() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setRemoveUnusedCode(true);
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_RELEASE);
+        assertThat(project.getTasks().getNames()).contains(DEFAULT_RELEASE);
     }
 
     @Test
@@ -197,7 +208,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_RELEASE);
+        assertThat(project.getTasks().getNames()).contains(DEFAULT_RELEASE);
     }
 
     @Test
@@ -279,7 +290,6 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(BooleanOption.ENABLE_R8, false)
                         .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .withProperty(
                                 AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
@@ -442,7 +452,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
+        assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
     }
 
     @Test
@@ -466,7 +476,6 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_builtInShrinker").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(BooleanOption.ENABLE_R8, false)
                         .build();
         initFieldsFromProject();
         BuildType debug = android.getBuildTypes().getByName("debug");
@@ -480,19 +489,19 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testApkShrinker_newDsl_proguard_noObfuscation() {
+    public void testApkShrinker_newDsl_noObfuscation() {
         PostprocessingOptions postprocessing =
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG_ANDROID_TEST);
+        assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
+        assertThat(project.getTasks().getNames()).doesNotContain(DEFAULT_DEBUG_ANDROID_TEST);
     }
 
     @Test
-    public void testApkShrinker_newDsl_proguard_obfuscation() throws Exception {
+    public void testApkShrinker_newDsl_obfuscation() throws Exception {
         PostprocessingOptions postprocessing =
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
@@ -500,8 +509,8 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
+        assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
+        assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG_ANDROID_TEST);
     }
 
     @Test

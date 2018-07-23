@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +33,7 @@ class NoMappingTest {
         File(project.testDir, "proguard-rules.pro").appendText("\n-dontobfuscate")
         project.execute("assembleMinified")
 
-        FileSubject.assertThat(FileUtils.join(project.buildDir, "outputs","mapping", "minified", "mapping.txt")).isFile()
+        val mappingFile = FileUtils.find(project.file("build/outputs/mapping"), "mapping.txt").get()
+        assertThat(mappingFile).isFile()
     }
 }

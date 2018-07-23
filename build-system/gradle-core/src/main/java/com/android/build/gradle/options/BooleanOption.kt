@@ -45,7 +45,7 @@ enum class BooleanOption(
 
     ENABLE_R8(
         "android.enableR8",
-        false,
+        true,
         additionalInfo = "Consider disabling R8 by removing 'android.enableR8=true' from your " +
                 "gradle.properties before publishing your app."),
     /** Set to true by default, but has effect only if R8 is enabled. */

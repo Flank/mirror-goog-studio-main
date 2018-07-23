@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -26,7 +28,9 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SyncIssue;
+import com.android.utils.FileUtils;
 import com.google.common.io.Files;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,7 +104,7 @@ public class PostprocessingTest {
     }
 
     @Test
-    public void features_newDsl() throws Exception {
+    public void features_newDsl_removeCode() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.buildTypes.release.postprocessing {\n"
@@ -113,27 +117,57 @@ public class PostprocessingTest {
                 project.file("proguard-rules.pro"),
                 StandardCharsets.UTF_8);
 
+        TestFileUtils.addMethod(
+                project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
+                "public HelloWorld(String s) {\n"
+                        + "    new DataClass();\n"
+                        + "}\n"
+                        + "static class DataClass {}\n"
+                        + "static class OtherClassToRemove {}\n");
+
         project.execute("assembleRelease");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
+                .doesNotContainClass("Lcom/example/helloworld/HelloWorld$OtherDataClassToRemove;");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
+                .containsClass("Lcom/example/helloworld/HelloWorld;");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
+                .containsClass("Lcom/example/helloworld/HelloWorld$DataClass;");
+        assertThat(project.file("build/proguard-config.txt")).contains("-dontoptimize");
+    }
 
-        String proguardConfiguration =
-                Files.toString(project.file("build/proguard-config.txt"), StandardCharsets.UTF_8);
-
-        assertThat(proguardConfiguration).doesNotContain("-dontshrink");
-        assertThat(proguardConfiguration).contains("-dontoptimize");
-        assertThat(proguardConfiguration).contains("-dontobfuscate");
-
+    @Test
+    public void features_newDsl_allOptions() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "android.buildTypes.release.postprocessing.optimizeCode true");
+                "android.buildTypes.release.postprocessing {\n"
+                        + "removeUnusedCode true\n"
+                        + "optimizeCode true\n"
+                        + "obfuscate true\n"
+                        + "proguardFile 'proguard-rules.pro'\n"
+                        + "}\n");
+
+        Files.write(
+                "-printconfiguration build/proguard-config.txt",
+                project.file("proguard-rules.pro"),
+                StandardCharsets.UTF_8);
+
+        TestFileUtils.addMethod(
+                project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
+                "public HelloWorld(String s) {\n"
+                        + "    System.out.println(new DataClass());\n"
+                        + "}\n"
+                        + "static class DataClass {}\n"
+                        + "static class OtherClassToRemove {}\n");
 
         project.execute("assembleRelease");
-
-        proguardConfiguration =
-                Files.toString(project.file("build/proguard-config.txt"), StandardCharsets.UTF_8);
-
-        assertThat(proguardConfiguration).doesNotContain("-dontshrink");
-        assertThat(proguardConfiguration).doesNotContain("-dontoptimize");
-        assertThat(proguardConfiguration).contains("-dontobfuscate");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
+                .containsClass("Lcom/example/helloworld/HelloWorld;");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
+                .doesNotContainClass("Lcom/example/helloworld/HelloWorld$OtherDataClassToRemove;");
+        assertThat(project.file("build/proguard-config.txt")).doesNotContain("-dontoptimize");
+        File mappingFile =
+                FileUtils.find(project.file("build/outputs/mapping"), "mapping.txt").get();
+        assertThat(mappingFile).contains("com.example.helloworld.HelloWorld$DataClass");
     }
 
     @Test
