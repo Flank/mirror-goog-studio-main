@@ -95,6 +95,194 @@ class CmakeLocatorTest {
     }
 
     @Test
+    fun partialVersionNumberMatchWithRc() {
+        /**
+         * In this scenario the user requested "3.12" but only "3.12.0-rc1" is found on the path.
+         * This value is accepted because the prefix "3.12" matches.
+         *
+         * See https://issuetracker.google.com/110693527
+         */
+        val localCmake36 = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
+        val localCmake310 = fakeLocalPackageOf("cmake;3.10.4819442", "3.10.4819442")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = "3.12",
+            environmentPaths = {
+                listOf(
+                    File("/a/b/c/cmake/3.12.0-rc1/bin"),
+                    File("/d/e/f")
+                )
+            },
+            repositoryPackages = { listOf(localCmake36, localCmake310) },
+            cmakeVersion = { folder ->
+                if (folder.toString().replace("\\", "/") == "/a/b/c/cmake/3.12.0-rc1/bin") {
+                    Revision.parseRevision("3.12.0-rc1")
+                } else {
+                    null
+                }
+            })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/a/b/c/cmake/3.12.0-rc1"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
+    fun partialVersionNumberMatchWithRcAndProduction() {
+        /**
+         * In this scenario the user requested "3.12" and both "3.12.0-rc1" and "3.12.0" are found
+         * on the path. The "3.12.0" version is taken because this is the release version of
+         * "3.12.0-rc1".
+         *
+         * See https://issuetracker.google.com/110693527
+         */
+        val localCmake36 = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
+        val localCmake310 = fakeLocalPackageOf("cmake;3.10.4819442", "3.10.4819442")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = "3.12",
+            environmentPaths = {
+                listOf(
+                    File("/a/b/c/cmake/3.12.0-rc1/bin"),
+                    File("/a/b/c/cmake/3.12.0/bin"),
+                    File("/d/e/f")
+                )
+            },
+            repositoryPackages = { listOf(localCmake36, localCmake310) },
+            cmakeVersion = { folder ->
+                when(folder.toString().replace("\\", "/")) {
+                    "/a/b/c/cmake/3.12.0-rc1/bin" -> Revision.parseRevision("3.12.0-rc1")
+                    "/a/b/c/cmake/3.12.0/bin" -> Revision.parseRevision("3.12.0")
+                    else -> null
+                }
+            })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/a/b/c/cmake/3.12.0"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
+    fun exactVersionNumberMatchWithRcAndProduction() {
+        /**
+         * In this scenario the user requested "3.12.0-rc1" and both "3.12.0-rc1" and "3.12.0"
+         * are found on the path. The "3.12.0-rc1" version is taken because the user requested
+         * this exactly.
+         *
+         * See https://issuetracker.google.com/110693527
+         */
+        val localCmake36 = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
+        val localCmake310 = fakeLocalPackageOf("cmake;3.10.4819442", "3.10.4819442")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = "3.12.0-rc1",
+            environmentPaths = {
+                listOf(
+                    File("/a/b/c/cmake/3.12.0-rc1/bin"),
+                    File("/a/b/c/cmake/3.12.0/bin"),
+                    File("/d/e/f")
+                )
+            },
+            repositoryPackages = { listOf(localCmake36, localCmake310) },
+            cmakeVersion = { folder ->
+                when(folder.toString().replace("\\", "/")) {
+                    "/a/b/c/cmake/3.12.0-rc1/bin" -> Revision.parseRevision("3.12.0-rc1")
+                    "/a/b/c/cmake/3.12.0/bin" -> Revision.parseRevision("3.12.0")
+                    else -> null
+                }
+            })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/a/b/c/cmake/3.12.0-rc1"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
+    fun exactVersionMatchesTwoLocations() {
+        /**
+         * In this scenario the user requested "3.12.0" and it is found to match two locations in
+         * the path. In this case, pick first one.
+         *
+         * See https://issuetracker.google.com/110693527
+         */
+        val localCmake36 = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
+        val localCmake310 = fakeLocalPackageOf("cmake;3.10.4819442", "3.10.4819442")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = "3.12.0",
+            environmentPaths = {
+                listOf(
+                    File("/a/b/c/cmake/3.12.0-a/bin"),
+                    File("/a/b/c/cmake/3.12.0-b/bin"),
+                    File("/d/e/f")
+                )
+            },
+            repositoryPackages = { listOf(localCmake36, localCmake310) },
+            cmakeVersion = { folder ->
+                when(folder.toString().replace("\\", "/")) {
+                    "/a/b/c/cmake/3.12.0-a/bin" -> Revision.parseRevision("3.12.0")
+                    "/a/b/c/cmake/3.12.0-b/bin" -> Revision.parseRevision("3.12.0")
+                    else -> null
+                }
+            })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/a/b/c/cmake/3.12.0-a"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+        val infoMessage = encounter.info.joinToString(newline)
+        assertThat(infoMessage).isEqualTo("Trying to locate CMake in local SDK repository.$newline" +
+                "CMake '3.6.4111459' found in SDK was not the requested version '3.12.0'.$newline" +
+                "CMake '3.10.4819442' found in SDK was not the requested version '3.12.0'.$newline" +
+                "Trying to locate CMake in PATH.$newline" +
+                "- CMake found in in PATH at '${slash}a${slash}b${slash}c${slash}cmake${slash}3.12.0-a' had version '3.12.0'$newline" +
+                "- CMake found and skipped in PATH '${slash}a${slash}b${slash}c${slash}cmake${slash}3.12.0-b' which had version '3.12.0' which was lower than or equal to a version found earlier.")
+    }
+
+    @Test
+    fun partialVersionNumberMatchWithTwoRcs() {
+        /**
+         * In this scenario the user requested "3.12" and both "3.12.0-rc1" and "3.12.0-rc2" are
+         * found on the path. The "3.12.0-rc2" version is taken because this is the higher version.
+         *
+         * See https://issuetracker.google.com/110693527
+         */
+        val localCmake36 = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
+        val localCmake310 = fakeLocalPackageOf("cmake;3.10.4819442", "3.10.4819442")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = "3.12",
+            environmentPaths = {
+                listOf(
+                    File("/a/b/c/cmake/3.12.0-rc1/bin"),
+                    File("/a/b/c/cmake/3.12.0-rc2/bin"),
+                    File("/d/e/f")
+                )
+            },
+            repositoryPackages = { listOf(localCmake36, localCmake310) },
+            cmakeVersion = { folder ->
+                when(folder.toString().replace("\\", "/")) {
+                    "/a/b/c/cmake/3.12.0-rc1/bin" -> Revision.parseRevision("3.12.0-rc1")
+                    "/a/b/c/cmake/3.12.0-rc2/bin" -> Revision.parseRevision("3.12.0-rc2")
+                    else -> null
+                }
+            })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/a/b/c/cmake/3.12.0-rc2"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
     fun sdkCmakeExistsLocally() {
         val localCmake = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
         val encounter = findCmakePath(
@@ -230,7 +418,7 @@ class CmakeLocatorTest {
          */
         expectException("CMake '3.6.4111459' is required but has not yet been downloaded " +
                 "from the SDK.$newline" +
-                "- CMake '3.10.4111459' found in SDK was not the requested version '3.6.4111459'.",
+                "- CMake found in SDK at '/sdk/cmake/3.10.4111459' had version '3.10.4111459'.",
             {
                 val localCmake = fakeLocalPackageOf(
                     "cmake;3.10.4111459",
@@ -310,8 +498,8 @@ class CmakeLocatorTest {
         expectException(
             "CMake '3.6.4111459' is required but has not yet been downloaded " +
                     "from the SDK.$newline" +
-                    "- CMake '3.10.4111459' found in SDK was not the requested version " +
-                    "'3.6.4111459'."
+                    "- CMake '3.10.4111459' found in SDK did not satisfy requested version " +
+                    "'3.6.4111459' because MINOR value 10 wasn't exactly 6."
         ) {
             findCmakePath(
                 cmakeVersionFromDsl = "3.6.4111459",
@@ -476,7 +664,10 @@ class CmakeLocatorTest {
          */
         expectException("CMake '3.6.4111459' is required but has not yet been downloaded " +
                 "from the SDK.$newline" +
-                "- CMake found in PATH at '${slash}a${slash}b${slash}c${slash}cmake' had version '3.12'.", {
+                "- CMake found in PATH at '${slash}a${slash}b${slash}c${slash}cmake' " +
+                "had version '3.12.0'.$newline" +
+                "- CMake found in PATH at '${slash}d${slash}e${slash}f${slash}cmake' " +
+                "had version '3.13.0'.", {
             findCmakePath(
                 cmakeVersionFromDsl = null,
                 environmentPaths = {
@@ -488,11 +679,11 @@ class CmakeLocatorTest {
                 repositoryPackages = { listOf() },
                 cmakeVersion = { folder ->
                     var folderPath = folder.toString().replace("\\", "/")
-                    when {
-                        folderPath == "/a/b/c/cmake/bin" ->
-                            Revision.parseRevision("3.12")
-                        folderPath == "/d/e/f/cmake/bin" ->
-                            Revision.parseRevision("3.13")
+                    when (folderPath) {
+                        "/a/b/c/cmake/bin" ->
+                            Revision.parseRevision("3.12.0")
+                        "/d/e/f/cmake/bin" ->
+                            Revision.parseRevision("3.13.0")
                         else -> null
                     }
                 })
@@ -575,6 +766,8 @@ class CmakeLocatorTest {
         val threeTen = fakeLocalPackageOf("cmake;3.10.4111459", "3.10.4111459")
         expectException("CMake '3.12' found via cmake.dir='${slash}a${slash}b${slash}c${slash}cmake' does not match " +
                 "requested version '3.13'.$newline" +
+                "- CMake '3.12' found from cmake.dir did not satisfy requested version" +
+                " '3.13' because MINOR value 12 wasn't exactly 13.$newline" +
                 "- CMake '3.10.4111459' found in SDK was not the requested version " +
                 "'3.13'.$newline" +
                 "- CMake '3.6.4111459' found in SDK was not the requested version '3.13'.", {
