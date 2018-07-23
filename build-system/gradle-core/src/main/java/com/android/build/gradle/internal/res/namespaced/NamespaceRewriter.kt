@@ -422,7 +422,7 @@ class NamespaceRewriter(
         val namespacesToFix: HashSet<String> = HashSet()
         // We need to collect which of the dependencies packages have we used, so that we can define
         // the corresponding XML namespaces.
-        val usedNamespaces: HashSet<String> = HashSet()
+        val usedNamespaces: HashMap<String, String> = HashMap()
         mainNode.attributes?.let {
             for (i in 0 until it.length) {
                 val attr = it.item(i)
@@ -447,10 +447,10 @@ class NamespaceRewriter(
         }
 
         // Finally add the used namespaces.
-        for (namespace in usedNamespaces.sorted()) {
+        for ((pckg, namespace) in usedNamespaces.toSortedMap()) {
             mainNode.setAttribute(
                     "xmlns:${namespace.replace('.', '_')}",
-                    "http://schemas.android.com/apk/res/$namespace")
+                    "http://schemas.android.com/apk/res/$pckg")
         }
     }
 
@@ -473,7 +473,7 @@ class NamespaceRewriter(
 
     private fun rewriteXmlNode(
             node: Node, document: Document,
-            namespacesToFix: HashSet<String>, usedNamespaces: HashSet<String>
+            namespacesToFix: HashSet<String>, usedNamespaces: HashMap<String, String>
     ) {
         if (node.nodeType == Node.TEXT_NODE) {
             // The content could be a resource reference. If it is not, do not update the content.
@@ -493,11 +493,11 @@ class NamespaceRewriter(
                 if (content != namespacedContent) {
                     // Prepend the package to the content
                     val foundPackage = namespacedContent.substring(1, namespacedContent.indexOf(":"))
-                    usedNamespaces.add(foundPackage)
+                    usedNamespaces.computeIfAbsent(foundPackage, {"ns${usedNamespaces.size}"})
                     document.renameNode(
                             node,
                             "http://schemas.android/apk/res/$foundPackage",
-                            "${foundPackage.replace('.', '_')}:$name")
+                            "${usedNamespaces[foundPackage]!!}:$name")
                 }
             }
         }

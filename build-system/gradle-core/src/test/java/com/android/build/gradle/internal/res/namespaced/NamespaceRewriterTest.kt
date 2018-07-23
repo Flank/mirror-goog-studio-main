@@ -467,19 +467,19 @@ class NamespaceRewriterTest {
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    androidx_coordinatorlayout:layout_behavior="@com.example.dependency:string/appbar_scrolling_view_behavior"
-    xmlns:android_support_constraint="http://schemas.android.com/apk/res/android.support.constraint"
-    xmlns:androidx_coordinatorlayout="http://schemas.android.com/apk/res/androidx.coordinatorlayout"
+    ns0:layout_behavior="@com.example.dependency:string/appbar_scrolling_view_behavior"
+    xmlns:ns0="http://schemas.android.com/apk/res/androidx.coordinatorlayout"
+    xmlns:ns1="http://schemas.android.com/apk/res/android.support.constraint"
     tools:context=".MainActivity"
     tools:showIn="@com.example.module:layout/activity_main" >
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android_support_constraint:layout_constraintBottom_toBottomOf="parent"
-        android_support_constraint:layout_constraintLeft_toLeftOf="parent"
-        android_support_constraint:layout_constraintRight_toRightOf="parent"
-        android_support_constraint:layout_constraintTop_toTopOf="parent"
+        ns1:layout_constraintBottom_toBottomOf="parent"
+        ns1:layout_constraintLeft_toLeftOf="parent"
+        ns1:layout_constraintRight_toRightOf="parent"
+        ns1:layout_constraintTop_toTopOf="parent"
         android:text="@com.example.module:string/text" />
 
     <com.example.module.PieChart
@@ -714,19 +714,19 @@ class NamespaceRewriterTest {
 
         val namespaced = """
 <levelone xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:dependency_one="http://schemas.android.com/apk/res/dependency.one"
-          xmlns:dependency_two="http://schemas.android.com/apk/res/dependency.two"
-          dependency_one:attr1="@com.example.module:bool/value" >
+          xmlns:ns0="http://schemas.android.com/apk/res/dependency.one"
+          xmlns:ns1="http://schemas.android.com/apk/res/dependency.two"
+          ns0:attr1="@com.example.module:bool/value" >
 
     <leveltwo
         android:attr1="@com.example.module:bool/value"
-        dependency_one:attr1="@com.example.module:bool/value"
-        dependency_two:attr2="@com.example.module:bool/value" >
+        ns0:attr1="@com.example.module:bool/value"
+        ns1:attr2="@com.example.module:bool/value" >
 
         <levelthree
             android:attr3="@com.example.module:bool/value"
-            dependency_one:attr3="@com.example.module:bool/value"
-            dependency_two:attr4="@com.example.module:bool/value" />
+            ns0:attr3="@com.example.module:bool/value"
+            ns1:attr4="@com.example.module:bool/value" />
     </leveltwo>
 
 </levelone>""".xmlFormat()
@@ -769,14 +769,14 @@ class NamespaceRewriterTest {
         val rewritten = """
 <?xml version="1.0" encoding="utf-8"?>
 <node1
-    xmlns:dep_a="http://schemas.android.com/apk/res/dep.a"
-    xmlns:dep_b="http://schemas.android.com/apk/res/dep.b"
-    xmlns:dep_c="http://schemas.android.com/apk/res/dep.c"
-    dep_a:attr1="@com.module:bool/value"
-    dep_b:attr2="@com.module:bool/value" >
+    xmlns:ns0="http://schemas.android.com/apk/res/dep.a"
+    xmlns:ns1="http://schemas.android.com/apk/res/dep.b"
+    xmlns:ns2="http://schemas.android.com/apk/res/dep.c"
+    ns0:attr1="@com.module:bool/value"
+    ns1:attr2="@com.module:bool/value" >
 
-    <node2 dep_a:attr1="@com.module:bool/value" >
-        <node3 dep_c:attr3="@com.module:bool/value" />
+    <node2 ns0:attr1="@com.module:bool/value" >
+        <node3 ns2:attr3="@com.module:bool/value" />
     </node2>
 
 </node1>"""
