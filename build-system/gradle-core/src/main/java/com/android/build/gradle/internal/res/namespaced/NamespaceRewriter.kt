@@ -419,7 +419,10 @@ class NamespaceRewriter(
         // TODO(b/110036551): can 'res-auto' be declared anywhere deeper than the main node?
         // First, find any namespaces we need to fix - any pointing to 'res-auto'. Usually it is
         // only "xmlns:app", but let's be safe here.
-        val namespacesToFix: ArrayList<String> = ArrayList()
+        val namespacesToFix: HashSet<String> = HashSet()
+        // We need to collect which of the dependencies packages have we used, so that we can define
+        // the corresponding XML namespaces.
+        val usedNamespaces: HashSet<String> = HashSet()
         mainNode.attributes?.let {
             for (i in 0 until it.length) {
                 val attr = it.item(i)
@@ -431,24 +434,23 @@ class NamespaceRewriter(
         }
         namespacesToFix.forEach { mainNode.removeAttribute("xmlns:$it") }
 
-        // Add namespaces, we might not need all of them (if any), but it's safer and cheaper to add
-        // all.
-        for (table in symbolTables) {
-            mainNode.setAttribute(
-                    "xmlns:${table.tablePackage.replace('.', '_')}",
-                    "http://schemas.android.com/apk/res/${table.tablePackage}")
-        }
-
         // First fix the attributes.
         mainNode.attributes?.forEach {
             if (!it.nodeName.startsWith("xmlns:")){
-                rewriteXmlNode(it, document, namespacesToFix)
+                rewriteXmlNode(it, document, namespacesToFix, usedNamespaces)
             }
         }
 
         // Now fix the children.
         mainNode.childNodes?.forEach {
-            rewriteXmlNode(it, document, namespacesToFix)
+            rewriteXmlNode(it, document, namespacesToFix, usedNamespaces)
+        }
+
+        // Finally add the used namespaces.
+        for (namespace in usedNamespaces.sorted()) {
+            mainNode.setAttribute(
+                    "xmlns:${namespace.replace('.', '_')}",
+                    "http://schemas.android.com/apk/res/$namespace")
         }
     }
 
@@ -469,7 +471,10 @@ class NamespaceRewriter(
         return candidateMainNode ?: error("Invalid XML file - missing main node.")
     }
 
-    private fun rewriteXmlNode(node: Node, document: Document, namespacesToFix: List<String>) {
+    private fun rewriteXmlNode(
+            node: Node, document: Document,
+            namespacesToFix: HashSet<String>, usedNamespaces: HashSet<String>
+    ) {
         if (node.nodeType == Node.TEXT_NODE) {
             // The content could be a resource reference. If it is not, do not update the content.
             val content = node.nodeValue
@@ -488,6 +493,7 @@ class NamespaceRewriter(
                 if (content != namespacedContent) {
                     // Prepend the package to the content
                     val foundPackage = namespacedContent.substring(1, namespacedContent.indexOf(":"))
+                    usedNamespaces.add(foundPackage)
                     document.renameNode(
                             node,
                             "http://schemas.android/apk/res/$foundPackage",
@@ -498,12 +504,12 @@ class NamespaceRewriter(
 
         // First fix the attributes.
         node.attributes?.forEach {
-            rewriteXmlNode(it, document, namespacesToFix)
+            rewriteXmlNode(it, document, namespacesToFix, usedNamespaces)
         }
 
         // Now fix the children.
         node.childNodes?.forEach {
-            rewriteXmlNode(it, document, namespacesToFix)
+            rewriteXmlNode(it, document, namespacesToFix, usedNamespaces)
         }
     }
 
