@@ -16,7 +16,7 @@
 
 package com.android.tools.apk.analyzer;
 
-import static com.android.SdkConstants.EXT_BUNDLE;
+import static com.android.SdkConstants.EXT_APP_BUNDLE;
 import static com.android.SdkConstants.EXT_ZIP;
 
 import com.android.SdkConstants;
@@ -39,7 +39,7 @@ public class Archives {
         if (hasFileExtension(archive, EXT_ZIP)) {
             // We assume this is an AIA bundle, which we give special handling
             return ZipArtifact.fromZippedBundle(archive);
-        } else if (hasFileExtension(archive, EXT_BUNDLE)) {
+        } else if (hasFileExtension(archive, EXT_APP_BUNDLE)) {
             // Android App Bundle (.aab) archive
             return AppBundleArtifact.fromBundleFile(archive);
         } else {
