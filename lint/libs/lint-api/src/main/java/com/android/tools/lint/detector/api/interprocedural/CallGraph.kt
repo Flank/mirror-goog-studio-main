@@ -23,21 +23,12 @@ import com.android.tools.lint.detector.api.interprocedural.CallTarget.Method
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
-import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.cache.TypeInfo
 import com.intellij.psi.impl.java.stubs.impl.PsiParameterStubImpl
 import com.intellij.psi.impl.source.PsiParameterImpl
-import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.UClass
-import org.jetbrains.uast.UElement
-import org.jetbrains.uast.ULambdaExpression
-import org.jetbrains.uast.UMethod
-import org.jetbrains.uast.UThisExpression
-import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.getContainingUClass
-import org.jetbrains.uast.getContainingUMethod
+import org.jetbrains.uast.*
 import org.jetbrains.uast.java.JavaUParameter
-import org.jetbrains.uast.toUElement
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -137,7 +128,7 @@ val Node?.shortName: String
     }
 
 class MutableCallGraph : CallGraph {
-    private val nodeMap = LinkedHashMap<PsiElement, MutableNode>()
+    private val nodeMap = LinkedHashMap<UElement, MutableNode>()
     override val nodes get() = nodeMap.values
 
     class MutableNode(
@@ -147,23 +138,14 @@ class MutableCallGraph : CallGraph {
         override fun toString() = shortName
     }
 
-    override fun getNode(element: UElement): MutableNode {
-        // TODO(kotlin-uast-cleanup)
-        // We hash Psi rather than Uast because not all Uast nodes implement hashCode/equals
-        // correctly. For example, KotlinULambdaExpression uses pointer equality rather than
-        // comparing the underlying psi. Pointer equality is insufficient because Uast nodes
-        // can be re-parsed. This should be fixed once we have access to Kotlin plugin source code.
-        val psi = element.psi
-        psi ?: throw Error("Expected psi for element $element")
-        return nodeMap.getOrPut(psi) {
-            val caller = when (element) {
-                is UMethod -> Method(element)
-                is ULambdaExpression -> Lambda(element)
-                is UClass -> DefaultCtor(element)
-                else -> throw Error("Unexpected UElement type ${element.javaClass}")
-            }
-            MutableNode(caller)
+    override fun getNode(element: UElement) = nodeMap.getOrPut(element) {
+        val caller = when (element) {
+            is UMethod -> Method(element)
+            is ULambdaExpression -> Lambda(element)
+            is UClass -> DefaultCtor(element)
+            else -> throw Error("Unexpected UElement type ${element.javaClass}")
         }
+        MutableNode(caller)
     }
 
     override fun toString(): String {
@@ -218,23 +200,6 @@ data class ParamContext(
     companion object {
         val EMPTY = ParamContext(emptyList(), /*implicitReceiver*/ null)
     }
-
-    // TODO(kotlin-uast-cleanup)
-    // We hash Psi below rather than Uast because some Kotlin Uast nodes do not implement
-    // equals/hashCode correctly. We should be able to remove the methods below once we can fix
-    // this issue in the Kotlin source code.
-
-    private fun List<Pair<UVariable, DispatchReceiver>>.mapToPsi() = map { (param, receiver) ->
-        Pair(param.psi.navigationElement, receiver)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        val o = other as? ParamContext ?: return false
-        return implicitThis == o.implicitThis && params.mapToPsi() == o.params.mapToPsi()
-    }
-
-    override fun hashCode() = 31 * (implicitThis?.hashCode() ?: 0) + params.mapToPsi().hashCode()
 }
 
 /** A specialization of a call graph node on a parameter context. */
@@ -262,19 +227,7 @@ class ContextualDispatchReceiverEvaluator(
     ): Collection<DispatchReceiver> = when (element) {
         is UThisExpression -> getForImplicitThis() // TODO: Qualified `this` not yet in UAST.
         is UVariable -> listOfNotNull(paramContext[element])
-        else -> {
-            // TODO(kotlin-uast-cleanup)
-            // The Kotlin plugin appears to use two completely separate sets of Psi elements: one
-            // for the compiler frontend, and another for integrating with Lint and other code
-            // that expects Java-like Psi behavior. The parameter context uses the latter, but
-            // sometimes we have to use the former to help with name resolution. Thus here we use
-            // the [navigationElement] to get the original Kotlin Psi while doing equality checks,
-            // in case [element] is a parameter in disguise.
-            paramContext.params
-                .find { (param, _) -> param.psi.navigationElement.toUElement() == element }
-                ?.second
-                ?.let { listOf(it) } ?: emptyList()
-        }
+        else -> emptyList()
     }
 
     override fun getOwnForImplicitThis(): Collection<DispatchReceiver> =

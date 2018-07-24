@@ -113,22 +113,11 @@ sealed class DispatchReceiver {
          * in the virtual method table of this class.
          */
         fun refineToTarget(method: UMethod) =
-            element.findMethodBySignature(method, /*checkBases*/ true)
+            element.findMethodBySignature(method, true)
                 ?.navigationElement?.toUElementOfType<UMethod>()
                 ?.let { CallTarget.Method(it) }
-
-        // TODO(kotlin-uast-cleanup): Remove equals/hashCode once implemented in Kotlin UAST.
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            val o = other as? DispatchReceiver.Class ?: return false
-            return element.psi.navigationElement == o.element.psi.navigationElement
-        }
-
-        override fun hashCode() = element.psi.navigationElement.hashCode()
     }
 
-    // In the next version of Kotlin we will be able to declare subclasses of a sealed class
-    // at the top level of the same file, which would help reduce the nesting here.
     sealed class Functional(override val element: UElement) : DispatchReceiver() {
 
         abstract fun toTarget(): CallTarget?
@@ -139,18 +128,6 @@ sealed class DispatchReceiver {
         ) : Functional(element) {
 
             override fun toTarget() = CallTarget.Lambda(element)
-
-            // TODO(kotlin-uast-cleanup): Remove equals/hashCode once implemented in Kotlin UAST.
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                val o = other as? DispatchReceiver.Functional.Lambda ?: return false
-                return element.psi?.navigationElement == o.element.psi?.navigationElement &&
-                        captureContext == o.captureContext
-            }
-
-            override fun hashCode() =
-                31 * (element.psi?.navigationElement?.hashCode() ?: 0) +
-                        captureContext.hashCode()
         }
 
         data class Reference(
@@ -167,18 +144,6 @@ sealed class DispatchReceiver {
                     receiver.refineToTarget(baseCallee)
                 }
             }
-
-            // TODO(kotlin-uast-cleanup): Remove equals/hashCode once implemented in Kotlin UAST.
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                val o = other as? DispatchReceiver.Functional.Reference ?: return false
-                return element.psi?.navigationElement == o.element.psi?.navigationElement &&
-                        receiver == o.receiver
-            }
-
-            override fun hashCode() =
-                31 * (element.psi?.navigationElement?.hashCode() ?: 0) +
-                        (receiver?.hashCode() ?: 0)
         }
     }
 }

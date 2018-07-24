@@ -53,10 +53,7 @@ fun searchForInterproceduralThreadAnnotationViolations( // public because access
 ): Collection<AnnotatedCallPath> {
 
     fun PsiModifierListOwner.isAnnotatedWith(annotation: String) =
-        AnnotationUtil.isAnnotated(
-            this, annotation,
-            /*inHierarchy*/ true, /*skipExternal*/ false
-        )
+        AnnotationUtil.isAnnotated(this, annotation, AnnotationUtil.CHECK_HIERARCHY xor AnnotationUtil.CHECK_EXTERNAL)
 
     fun CallTarget.isAnnotatedWith(annotation: String) = when (this) {
         is CallTarget.Method -> {
