@@ -96,6 +96,17 @@ public final class ResourceReference implements Serializable {
         return namespace;
     }
 
+    /**
+     * Returns whether the resource is a framework resource ({@code true}) or a project resource
+     * ({@code false}).
+     *
+     * @deprecated all namespaces should be handled not just "android:".
+     */
+    @Deprecated
+    public final boolean isFramework() {
+        return ResourceNamespace.ANDROID.equals(namespace);
+    }
+
     @NonNull
     public ResourceUrl getResourceUrl() {
         return ResourceUrl.create(namespace.getPackageName(), resourceType, name);
