@@ -11,17 +11,24 @@ public class MemoryTaskCategory extends TaskCategory {
     private final int ITERATION_COUNT = 5;
     private final int DELTA_SIZE = (1 << 22);
     private final int DELTA_OBJECT_COUNT = 10000;
+    private final int TEST_OBJECT_SIZE_SMALL = 10;
+    private final int TEST_OBJECT_SIZE_LARGE = 100000;
+    private final int TEST_OBJECT_COUNT_MANY = 1000000;
+    private final int TEST_OBJECT_COUNT_FEW = 100;
 
     private final List<? extends Task> mTasks =
             Arrays.asList(
                     new AllocateJavaMemoryTask(),
                     new AllocateNativeMemoryTask(),
                     new AllocateObjectsTask(),
-                    new JniRefsTask());
+                    new JniRefsTask(),
+                    new AllocateManyObjectsTask(),
+                    new AllocateFewObjectsTask());
 
     static {
         System.loadLibrary("native_memory");
     }
+
     public native void allocateNativeMemory();
 
     public native long allocateJniRef(Object o);
@@ -67,35 +74,79 @@ public class MemoryTaskCategory extends TaskCategory {
         }
     }
 
-    private class AllocationTestObject {
-        int value = 0;
+    private class AllocationTestObjectOfSize {
+        byte[] values;
 
-        AllocationTestObject(int v) {
-            value = v;
+        AllocationTestObjectOfSize(int size) {
+            values = new byte[size];
+            for (int i = 0; i < values.length; ++i) {
+                values[i] = (byte) (i & 0xFF);
+            }
         }
     }
 
     private class AllocateObjectsTask extends MemoryTask {
+        private int myObjectCount;
+        private int myObjectSize;
+
+        AllocateObjectsTask() {
+            this(DELTA_OBJECT_COUNT, 1);
+        }
+
+        AllocateObjectsTask(int objectCount, int objectSize) {
+            myObjectCount = objectCount;
+            myObjectSize = objectSize;
+        }
+
         @Override
         protected String memoryExecute() throws Exception {
             Object[][] objects = new Object[ITERATION_COUNT][];
+            long totalAllocationTiming = 0;
             for (int k = 0; k < ITERATION_COUNT; ++k) {
+                objects[k] = new Object[myObjectCount];
                 long start = System.currentTimeMillis();
-                objects[k] = new Object[DELTA_OBJECT_COUNT];
                 for (int i = 0; i < objects[k].length; ++i) {
-                    objects[k][i] = new AllocationTestObject(k * DELTA_OBJECT_COUNT + i);
+                    objects[k][i] = new AllocationTestObjectOfSize(myObjectSize);
                 }
+                long end = System.currentTimeMillis();
+                totalAllocationTiming += (end - start);
 
                 TimeUnit.MILLISECONDS.sleep(PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
             }
 
-            return null;
+            return String.format(
+                    "Allocation took %d milliseconds on average",
+                    totalAllocationTiming / ITERATION_COUNT);
         }
 
         @NonNull
         @Override
         protected String getTaskDescription() {
             return "Object Allocation";
+        }
+    }
+
+    private class AllocateManyObjectsTask extends AllocateObjectsTask {
+        AllocateManyObjectsTask() {
+            super(TEST_OBJECT_COUNT_MANY, TEST_OBJECT_SIZE_SMALL);
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Many-object Allocation";
+        }
+    }
+
+    private class AllocateFewObjectsTask extends AllocateObjectsTask {
+        AllocateFewObjectsTask() {
+            super(TEST_OBJECT_COUNT_FEW, TEST_OBJECT_SIZE_LARGE);
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Few-object Allocation";
         }
     }
 
@@ -106,7 +157,7 @@ public class MemoryTaskCategory extends TaskCategory {
             for (int k = 0; k < ITERATION_COUNT; ++k) {
                 long start = System.currentTimeMillis();
                 for (int i = 0; i < refs.length; ++i) {
-                    refs[i] = allocateJniRef(new AllocationTestObject(k * DELTA_OBJECT_COUNT + i));
+                    refs[i] = allocateJniRef(new AllocationTestObjectOfSize(4));
                 }
                 Runtime.getRuntime().gc();
                 for (long ref : refs) {
