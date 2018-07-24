@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -49,52 +50,44 @@ public class DexArchiveComparator {
         // Deleted classes are ignored as it is irrelevant to hot swapping.
     }
 
-    /** Compute differences between a set of paths in two APKs. */
-    public Result compare(File oldApk, File newApk, String[] paths) throws Exception {
-        int len = paths.length;
-        List<byte[]> oldDexes = new ArrayList<>(len);
-        List<byte[]> newDexes = new ArrayList<>(len);
+    public Result compare(DexArchive oldApk, DexArchive newApk) throws Exception {
+        Map<String, DexFile> oldDexFiles = oldApk.getDexFiles();
+        Map<String, DexFile> newDexFiles = newApk.getDexFiles();
 
-        for (int i = 0; i < len; i++) {
-            assert paths[i].endsWith(".dex");
-            oldDexes.add(getFileFromApk(oldApk, paths[i]));
-            newDexes.add(getFileFromApk(newApk, paths[i]));
+        List<String> changedDexFiles = new ArrayList<>(newDexFiles.size());
+
+        if (oldDexFiles.size() != newDexFiles.size()) {
+            throw new UnsupportedOperationException("new .dex added. Not supported.");
         }
 
-        return compare(oldDexes, newDexes);
+        for (Map.Entry<String, DexFile> entry : newDexFiles.entrySet()) {
+            String dexFileName = entry.getKey();
+            DexFile newDexFile = entry.getValue();
+            DexFile oldDexFile = oldDexFiles.get(dexFileName);
+            assert oldDexFile != null : "Different dex file naming scheme between APK?";
+            if (oldDexFile.differs(newDexFile)) {
+                changedDexFiles.add(dexFileName);
+            }
+        }
+
+        Map<String, Long> prevDexesChecksum = new HashMap<>();
+        List<byte[]> newDexes = new ArrayList<>(changedDexFiles.size());
+
+        for (String s : changedDexFiles) {
+            prevDexesChecksum.putAll(oldDexFiles.get(s).getClasssesChecksum());
+            newDexes.add(newDexFiles.get(s).getCode());
+        }
+
+        return compare(prevDexesChecksum, newDexes);
     }
 
     /**
      * The core comparision method that invokes D8. This algorithm will be improved but right now it
      * just split all the individual classes and perform a byte code comparison.
      */
-    private Result compare(List<byte[]> prevDexes, List<byte[]> newDexes) {
+    private Result compare(Map<String, Long> prevDexesChecksum, List<byte[]> newDexes) {
         Result result = new Result();
-        PreviousDexConsumer previousDexConsumer = new PreviousDexConsumer();
-        NewDexConsumer newDexConsumer = new NewDexConsumer(previousDexConsumer, result);
-
-        for (byte[] prevDex : prevDexes) {
-            try {
-                D8Command.Builder prevBuilder = D8Command.builder();
-                prevBuilder.addDexProgramData(prevDex, Origin.unknown());
-                prevBuilder.setDisableDesugaring(true);
-                prevBuilder.setProgramConsumer(previousDexConsumer);
-                D8.run(prevBuilder.build());
-            } catch (CompilationFailedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        if (!previousDexConsumer.done) {
-            synchronized (this) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-        }
+        NewDexConsumer newDexConsumer = new NewDexConsumer(prevDexesChecksum, result);
 
         for (byte[] newDex : newDexes) {
             try {
@@ -122,37 +115,17 @@ public class DexArchiveComparator {
         return result;
     }
 
-    /** Dex Consumer that reads a set of old dex archives. */
-    private class PreviousDexConsumer implements DexFilePerClassFileConsumer {
-        private final Map<String, byte[]> dexMap = new LinkedHashMap<>();
-        private boolean done = false;
-
-        @Override
-        public synchronized void accept(
-                String s, byte[] bytes, Set<String> set, DiagnosticsHandler handler) {
-            dexMap.put(s, bytes);
-        }
-
-        @Override
-        public void finished(DiagnosticsHandler handler) {
-            synchronized (DexArchiveComparator.this) {
-                done = true;
-                DexArchiveComparator.this.notify();
-            }
-        }
-    }
-
     /**
      * Dex consumer that reads a set of new dex arhives and compare it to the results from {@link
      * PreviousDexConsumer}.
      */
     private class NewDexConsumer implements DexFilePerClassFileConsumer {
-        private final PreviousDexConsumer previousDexConsumer;
+        private final Map<String, Long> prevDexesChecksum;
         private final Result result;
         private boolean done = false;
 
-        private NewDexConsumer(PreviousDexConsumer previousDexConsumer, Result result) {
-            this.previousDexConsumer = previousDexConsumer;
+        private NewDexConsumer(Map<String, Long> prevDexesChecksum, Result result) {
+            this.prevDexesChecksum = prevDexesChecksum;
             this.result = result;
         }
 
@@ -162,11 +135,13 @@ public class DexArchiveComparator {
                 byte[] newDexData,
                 Set<String> descriptors,
                 DiagnosticsHandler handler) {
-            byte[] oldDexData = previousDexConsumer.dexMap.get(name);
-            if (oldDexData == null) {
+            Long oldDexChecksum = prevDexesChecksum.get(name);
+            if (oldDexChecksum == null) {
                 result.addedClasses.add(new Entry(typeNameToClassName(name), newDexData));
             } else {
-                if (!Arrays.equals(oldDexData, newDexData)) {
+                CRC32 crc = new CRC32();
+                crc.update(newDexData);
+                if (crc.getValue() != oldDexChecksum) {
                     result.changedClasses.add(new Entry(typeNameToClassName(name), newDexData));
                 }
             }
