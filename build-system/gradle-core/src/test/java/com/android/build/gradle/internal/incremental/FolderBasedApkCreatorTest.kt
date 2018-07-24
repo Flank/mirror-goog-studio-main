@@ -202,7 +202,7 @@ class FolderBasedApkCreatorTest {
 
         val firstJar = sourceFolder.newFile("first.zip")
         createJarFile(firstJar, zipEntries)
-        apkCreator.writeZip(firstJar, null, { t -> t.endsWith(".txt")})
+        apkCreator.writeZip(firstJar, null) { t -> t!!.endsWith(".txt")}
         apkCreator.close()
 
         checkFolderContent(destFolder.root, listOf("inFile1.dex", "inFile2.dex", "foo/inFile4.dex"))

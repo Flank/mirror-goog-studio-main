@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.incremental
 
 import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
+import com.google.common.base.Predicate
+import com.google.common.base.Function
 import java.io.File
 import java.io.FileWriter
-import java.util.function.Function
-import java.util.function.Predicate
 
 /**
  * Delegating implementation of [ApkCreator] that records all the operations requested on the

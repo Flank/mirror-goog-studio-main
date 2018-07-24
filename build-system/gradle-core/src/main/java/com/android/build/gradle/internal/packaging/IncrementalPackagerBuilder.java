@@ -432,7 +432,7 @@ public class IncrementalPackagerBuilder {
                         createdBy,
                         minSdk,
                         nativeLibrariesPackagingMode,
-                        noCompressPredicate);
+                        noCompressPredicate::test);
 
         try {
             return new IncrementalPackager(

@@ -20,11 +20,11 @@ import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zip.StoredEntry
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.google.common.base.Predicate
+import com.google.common.base.Function
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.function.Function
-import java.util.function.Predicate
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
