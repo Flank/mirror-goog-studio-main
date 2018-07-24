@@ -116,7 +116,6 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
                             artifacts.appendDirectory(
                                 outputId,
                                 configAction.name,
-                                provider,
                                 replace.out
                             )
                         )

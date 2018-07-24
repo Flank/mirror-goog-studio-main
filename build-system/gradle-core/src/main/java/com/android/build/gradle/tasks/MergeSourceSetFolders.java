@@ -297,7 +297,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 // the order of the artifact is descending order, so we need to reverse it.
                 Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
                 for (ResolvedArtifactResult artifact : libArtifacts) {
-                    AssetSet assetSet = new AssetSet(MergeManifests.getArtifactName(artifact));
+                    AssetSet assetSet =
+                            new AssetSet(ProcessApplicationManifest.getArtifactName(artifact));
                     assetSet.addSource(artifact.getFile());
 
                     // add to 0 always, since we need to reverse the order.

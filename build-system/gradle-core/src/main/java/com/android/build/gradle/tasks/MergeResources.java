@@ -667,7 +667,7 @@ public class MergeResources extends IncrementalTask {
             for (ResolvedArtifactResult artifact : libArtifacts) {
                 ResourceSet resourceSet =
                         new ResourceSet(
-                                MergeManifests.getArtifactName(artifact),
+                                ProcessApplicationManifest.getArtifactName(artifact),
                                 ResourceNamespace.RES_AUTO,
                                 null,
                                 validateEnabled);

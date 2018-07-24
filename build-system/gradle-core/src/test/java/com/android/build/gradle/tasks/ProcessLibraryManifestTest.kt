@@ -49,11 +49,11 @@ import java.io.IOException
 /**
  * Tests for {@link ProcessManifest}
  */
-class ProcessManifestTest {
+class ProcessLibraryManifestTest {
 
     @Rule @JvmField var temporaryFolder = TemporaryFolder()
 
-    internal lateinit var task: ProcessManifest
+    internal lateinit var task: ProcessLibraryManifest
 
     @Mock lateinit var variantScope: VariantScope
     @Mock lateinit var globalScope: GlobalScope
@@ -90,11 +90,11 @@ class ProcessManifestTest {
         `when`(mainSplit.fullName).thenReturn("fooRelease")
 
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        val configAction = ProcessManifest.ConfigAction(variantScope)
-        val taskProvider = project!!.tasks.register<ProcessManifest>("fooRelease", ProcessManifest::class.java)
+        val configAction = ProcessLibraryManifest.ConfigAction(variantScope)
+        val taskProvider = project!!.tasks.register<ProcessLibraryManifest>("fooRelease", ProcessLibraryManifest::class.java)
 
         `when`(buildArtifactsHolder.appendDirectory(
-            InternalArtifactType.MERGED_MANIFESTS, "processManifest", taskProvider, ""))
+            InternalArtifactType.MERGED_MANIFESTS, "processManifest", ""))
             .thenReturn(mergedManifestsProvider)
 
         `when`(mergedManifestsProvider.get()).thenReturn(mergedManifests)
@@ -104,17 +104,6 @@ class ProcessManifestTest {
         configAction.preConfigure(taskProvider, "processManifest")
                 task = taskProvider.get()
                 configAction.execute(task)
-    }
-
-    @Test()
-    fun testBackwardCompatibility() {
-        try {
-            @Suppress("DEPRECATION")
-            task.manifestOutputFile
-            Assert.fail("failed to raise backward incompatible exception")
-        } catch(e: RuntimeException) {
-            Truth.assertThat(e.message).contains("gradle-plugin-3-0-0-migration.html")
-        }
     }
 
     @Test

@@ -93,7 +93,7 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 
 /** A task that processes the manifest */
 @CacheableTask
-public class MergeManifests extends ManifestProcessorTask {
+public class ProcessApplicationManifest extends ManifestProcessorTask {
 
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
@@ -491,7 +491,8 @@ public class MergeManifests extends ManifestProcessorTask {
         return apkList;
     }
 
-    public static class ConfigAction extends AnnotationProcessingTaskConfigAction<MergeManifests> {
+    public static class ConfigAction
+            extends AnnotationProcessingTaskConfigAction<ProcessApplicationManifest> {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
@@ -501,13 +502,16 @@ public class MergeManifests extends ManifestProcessorTask {
                 @NonNull VariantScope scope,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(scope, scope.getTaskName("process", "Manifest"), MergeManifests.class);
+            super(
+                    scope,
+                    scope.getTaskName("process", "Manifest"),
+                    ProcessApplicationManifest.class);
             this.variantScope = scope;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
         }
 
         @Override
-        public void execute(@NonNull MergeManifests processManifestTask) {
+        public void execute(@NonNull ProcessApplicationManifest processManifestTask) {
             super.execute(processManifestTask);
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();

@@ -98,8 +98,7 @@ abstract class BuildArtifactsHolder(
     // associated with the new BuildableArtifact will be recorded here.
     private data class BuildableProducer(
         val fileOrDirProperty: Property<in FileSystemLocation>,
-        // should be Task or TaskProducer<out Task>
-        val task: Task,
+        val name: String,
         val fileName: String)
 
     private class FinalBuildableArtifact(
@@ -344,7 +343,7 @@ abstract class BuildArtifactsHolder(
                     intermediatesOutput,
                     artifactType.name().toLowerCase(),
                     getIdentifier(),
-                    lastProducer.task.name,
+                    lastProducer.name,
                     lastProducer.fileName
                 )
             )
@@ -372,8 +371,78 @@ abstract class BuildArtifactsHolder(
             @Suppress("UNCHECKED_CAST")
             BuildableProducer(
                 fileProperty as Property<in FileSystemLocation>,
-                task,
+                task.name,
                 requestedFileLocation.name))
+        return fileProperty
+    }
+
+    /**
+     * set a new file to a specified artifact type. The new content will be added
+     * after any existing content.
+     *
+     * @param artifactType [ArtifactType] the new file will be classified under.
+     * @oaram taskName name of the task producing the artifact.
+     * @param fileName expected name for the file
+     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
+     * location to write the [task] output to.
+     */
+    fun appendArtifactFile(
+        artifactType: ArtifactType,
+        taskName: String,
+        fileName: String) : Provider<RegularFile> {
+
+        if (artifactType.kind() != ArtifactType.Kind.FILE) {
+            throw RuntimeException(
+                "setArtifactFile called with $artifactType which is an ArtifactType" +
+                        " with kind set to DIRECTORY."
+            )
+        }
+
+        val artifactRecord = artifactRecordMap[artifactType]
+        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
+
+        val lastProducer = artifactRecord?.lastProducer
+        lastProducer?.fileOrDirProperty?.set(
+            project.layout.buildDirectory.file(
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    lastProducer.name,
+                    lastProducer.fileName
+                )
+            )
+        )
+
+        val provider = project.layout.buildDirectory.file(
+            if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    fileName
+                )
+            } else {
+                FileUtils.join(
+                    intermediatesOutput,
+                    artifactType.name().toLowerCase(),
+                    getIdentifier(),
+                    taskName,
+                    fileName
+                )
+            }
+        )
+
+        val fileProperty = project.layout.fileProperty(provider)
+        createOutput(artifactType,
+            BuildableArtifactImpl(
+                project.files(fileProperty).builtBy(taskName),
+                dslScope),
+            @Suppress("UNCHECKED_CAST")
+            BuildableProducer(
+                fileProperty as Property<in FileSystemLocation>,
+                taskName,
+                fileName))
         return fileProperty
     }
 
@@ -383,7 +452,6 @@ abstract class BuildArtifactsHolder(
      */
     fun appendDirectory(artifactType: ArtifactType,
         taskName: String,
-        taskProvider: TaskProvider<out Task>,
         fileName: String = "out"): Provider<Directory> {
          if (artifactType.kind() != ArtifactType.Kind.DIRECTORY) {
                 throw RuntimeException("appendDirectory called with $artifactType which is an " +
@@ -399,7 +467,7 @@ abstract class BuildArtifactsHolder(
                     intermediatesOutput,
                     artifactType.name().toLowerCase(),
                     getIdentifier(),
-                    lastProducer.task.name,
+                    lastProducer.name,
                     lastProducer.fileName)
             ))
 
@@ -420,7 +488,7 @@ abstract class BuildArtifactsHolder(
             })
 
         val fileCollection =
-            createFileCollection(artifactRecord, provider).builtBy(taskProvider)
+            createFileCollection(artifactRecord, provider).builtBy(taskName)
         val output= project.layout.directoryProperty(provider)
 
         doAppendArtifact(
@@ -429,7 +497,7 @@ abstract class BuildArtifactsHolder(
             @Suppress("UNCHECKED_CAST")
             BuildableProducer(
                 output as Property<in FileSystemLocation>,
-                taskProvider.get(),
+                taskName,
                 fileName))
         return output
     }

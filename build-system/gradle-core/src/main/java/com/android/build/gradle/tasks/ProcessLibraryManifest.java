@@ -44,18 +44,22 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.apache.tools.ant.BuildException;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
-public class ProcessManifest extends ManifestProcessorTask {
+public class ProcessLibraryManifest extends ManifestProcessorTask {
 
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
@@ -65,11 +69,12 @@ public class ProcessManifest extends ManifestProcessorTask {
             variantConfiguration;
     private OutputScope outputScope;
 
-    /**
-     * There is no necessity to explicitly declare this as an Output of the task since the file is
-     * located within the manifest output folder which is declared as an output directory.
-     */
-    private RegularFile manifestOutputFile;
+    private Provider<RegularFile> manifestOutputFile;
+
+    @OutputFile
+    public Provider<RegularFile> getManifestOutputFile() {
+        return manifestOutputFile;
+    }
 
     @Override
     protected void doFullTaskAction() {
@@ -88,7 +93,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 getMinSdkVersion(),
                                 getTargetSdkVersion(),
                                 getMaxSdkVersion(),
-                                manifestOutputFile.getAsFile().getAbsolutePath(),
+                                manifestOutputFile.get().getAsFile().getAbsolutePath(),
                                 aaptFriendlyManifestOutputFile.getAbsolutePath(),
                                 null /* outInstantRunManifestLocation */,
                                 ManifestMerger2.MergeType.LIBRARY,
@@ -110,7 +115,7 @@ public class ProcessManifest extends ManifestProcessorTask {
             new BuildOutput(
                             InternalArtifactType.MERGED_MANIFESTS,
                             outputScope.getMainSplit(),
-                            manifestOutputFile.getAsFile(),
+                            manifestOutputFile.get().getAsFile(),
                             properties)
                     .save(getManifestOutputDirectory().get().getAsFile());
 
@@ -219,7 +224,11 @@ public class ProcessManifest extends ManifestProcessorTask {
         return outputScope.getMainSplit().getFullName();
     }
 
-    public static class ConfigAction extends AnnotationProcessingTaskConfigAction<ProcessManifest> {
+    public static class ConfigAction
+            extends AnnotationProcessingTaskConfigAction<ProcessLibraryManifest> {
+
+        Provider<RegularFile> manifestOutputFile;
+        VariantScope scope;
 
         /**
          * {@code TaskConfigAction} for the library process manifest task.
@@ -227,11 +236,26 @@ public class ProcessManifest extends ManifestProcessorTask {
          * @param scope The library variant scope.
          */
         public ConfigAction(@NonNull VariantScope scope) {
-            super(scope, scope.getTaskName("process", "Manifest"), ProcessManifest.class);
+            super(scope, scope.getTaskName("process", "Manifest"), ProcessLibraryManifest.class);
+            this.scope = scope;
         }
 
         @Override
-        public void execute(@NonNull ProcessManifest processManifest) {
+        public void preConfigure(
+                @NotNull TaskProvider<? extends ProcessLibraryManifest> taskProvider,
+                @NotNull String taskName) {
+            super.preConfigure(taskProvider, taskName);
+
+            manifestOutputFile =
+                    scope.getArtifacts()
+                            .appendArtifactFile(
+                                    InternalArtifactType.LIBRARY_MANIFEST,
+                                    taskName,
+                                    SdkConstants.ANDROID_MANIFEST_XML);
+        }
+
+        @Override
+        public void execute(@NonNull ProcessLibraryManifest processManifest) {
             super.execute(processManifest);
             VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getScope().getVariantConfiguration();
@@ -274,18 +298,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                     processManifest,
                                     "aapt"));
 
-            processManifest.manifestOutputFile =
-                    processManifest
-                            .getManifestOutputDirectory()
-                            .get()
-                            .file(SdkConstants.FN_ANDROID_MANIFEST_XML);
-
-            getScope()
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.LIBRARY_MANIFEST,
-                            ImmutableList.of(processManifest.manifestOutputFile),
-                            processManifest);
+            processManifest.manifestOutputFile = manifestOutputFile;
 
             processManifest.outputScope = getScope().getOutputScope();
 

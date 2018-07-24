@@ -31,7 +31,7 @@ import org.gradle.api.tasks.TaskProvider
  * are transferred to the relevant input and output fields of the task instance.
  */
 open class AnnotationProcessingTaskConfigAction<T: Task>(
-    val scope: VariantScope,
+    protected val scope: VariantScope,
     override val name: String,
     override val type: Class<T>): TaskConfigAction<T>() {
 

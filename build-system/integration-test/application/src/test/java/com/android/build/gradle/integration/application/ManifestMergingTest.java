@@ -71,7 +71,7 @@ public class ManifestMergingTest {
                 libsTest.file(
                         "libapp/build/"
                                 + FD_INTERMEDIATES
-                                + "/merged_manifests/debug/AndroidManifest.xml");
+                                + "/library_manifest/debug/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 
@@ -79,7 +79,7 @@ public class ManifestMergingTest {
                 libsTest.file(
                         "libapp/build/"
                                 + FD_INTERMEDIATES
-                                + "/merged_manifests/release/AndroidManifest.xml");
+                                + "/library_manifest/release/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 

@@ -175,7 +175,6 @@ import com.android.build.gradle.tasks.LintGlobalTask;
 import com.android.build.gradle.tasks.LintPerVariantTask;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
-import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
@@ -184,7 +183,8 @@ import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.ProcessManifest;
+import com.android.build.gradle.tasks.ProcessApplicationManifest;
+import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
@@ -797,14 +797,14 @@ public abstract class TaskManager {
     @NonNull
     protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
         return taskFactory.create(
-                new MergeManifests.ConfigAction(
+                new ProcessApplicationManifest.ConfigAction(
                         variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
-    public ProcessManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
+    public ProcessLibraryManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
 
-        ProcessManifest processManifest =
-                taskFactory.create(new ProcessManifest.ConfigAction(scope));
+        ProcessLibraryManifest processManifest =
+                taskFactory.create(new ProcessLibraryManifest.ConfigAction(scope));
 
         processManifest.dependsOn(scope.getTaskContainer().getCheckManifestTask());
 

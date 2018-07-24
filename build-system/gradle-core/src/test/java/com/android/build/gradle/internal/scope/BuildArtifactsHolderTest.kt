@@ -222,7 +222,6 @@ class BuildArtifactsHolderTest {
         Mockito.`when`(taskProvider.get()).thenReturn(task1)
         holder.appendDirectory(InternalArtifactType.MERGED_MANIFESTS,
             task1.name,
-            taskProvider,
             "finalFolder")
         val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
         assertThat(finalArtifactFiles.files).hasSize(1)
@@ -275,11 +274,11 @@ class BuildArtifactsHolderTest {
         val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
 
         val task1Output = holder.appendDirectory(
-            InternalArtifactType.MERGED_MANIFESTS, task1.name, task1Provider, "originalFolder")
+            InternalArtifactType.MERGED_MANIFESTS, task1.name, "originalFolder")
         assertThat(task1Output.get().asFile.path).isEqualTo(finalArtifactFiles.files.elementAt(0).path)
 
         val task2Output = holder.appendDirectory(
-            InternalArtifactType.MERGED_MANIFESTS, task2.name, task2Provider, "addedFolder")
+            InternalArtifactType.MERGED_MANIFESTS, task2.name, "addedFolder")
         assertThat(finalArtifactFiles.files).hasSize(2)
         // check that our output file
         assertThat(task2Output.get().asFile.path).isEqualTo(finalArtifactFiles.files.elementAt(1).path)

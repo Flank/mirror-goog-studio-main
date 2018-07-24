@@ -87,7 +87,6 @@ class TaskArtifactsHolderTest {
                 artifacts.appendDirectory(
                     MockitoKotlinUtils.safeEq(InternalArtifactType.APP_CLASSES),
                     MockitoKotlinUtils.safeAny(String::class.java, ""),
-                    MockitoKotlinUtils.safeEq(taskProvider),
                     MockitoKotlinUtils.safeEq("out")))
                 .thenReturn(provider)
             Unit

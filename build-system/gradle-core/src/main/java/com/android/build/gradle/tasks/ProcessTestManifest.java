@@ -52,9 +52,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -258,9 +256,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
 
         for (ResolvedArtifactResult artifact : artifacts) {
-            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
-                    artifact.getFile(),
-                    MergeManifests.getArtifactName(artifact)));
+            providers.add(
+                    new ProcessApplicationManifest.ConfigAction.ManifestProviderImpl(
+                            artifact.getFile(),
+                            ProcessApplicationManifest.getArtifactName(artifact)));
         }
 
         return providers;
@@ -278,7 +277,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         private final VariantScope scope;
 
         @Nullable private final BuildableArtifact testTargetMetadata;
-        @Nullable private Provider<Directory> manifestOutputFolder;
 
         public ConfigAction(
                 @NonNull VariantScope scope, @Nullable BuildableArtifact testTargetMetadata) {
