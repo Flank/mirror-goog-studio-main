@@ -27,8 +27,13 @@ dex_library(
 )
 
 java_library(
-    name = "tests",
-    srcs = glob(["**/*.java"]),
+    name = "test_lib",
+    # This is a common library used by the integration tests, so we exclude the
+    # the actual test files.
+    srcs = glob(
+        ["**/*.java"],
+        exclude = ["**/*Test.java"],
+    ),
     deps = [
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
@@ -43,6 +48,30 @@ java_library(
     ],
 )
 
+java_test(
+    name = "NativeBinarySizeTest",
+    srcs = ["testSrcs/com/android/tools/profiler/performance/NativeBinarySizeTest.java"],
+    data = [
+        "//tools/base/profiler/native/perfa:android/arm64-v8a/libperfa.so",
+        "//tools/base/profiler/native/perfa:android/armeabi-v7a/libperfa.so",
+        "//tools/base/profiler/native/perfa:android/x86/libperfa.so",
+        "//tools/base/profiler/native/perfa:android/x86_64/libperfa.so",
+        "//tools/base/profiler/native/perfd:android/arm64-v8a/perfd",
+        "//tools/base/profiler/native/perfd:android/armeabi-v7a/perfd",
+        "//tools/base/profiler/native/perfd:android/x86/perfd",
+        "//tools/base/profiler/native/perfd:android/x86_64/perfd",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=NativeBinarySizeTest.jar"],
+    tags = ["no_windows"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        "//tools/base/perf-logger:studio.perf-logger_testlib",
+        "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/idea/.idea/libraries:JUnit4",
+    ],
+)
+
 perf_test(
     name = "BasicTest",
     size = "medium",
@@ -51,7 +80,7 @@ perf_test(
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
-        ":tests",
+        ":test_lib",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
         "//tools/base/profiler/tests/test-app:libjni.so",
@@ -68,7 +97,7 @@ perf_test(
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
-        ":tests",
+        ":test_lib",
         "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
@@ -84,7 +113,7 @@ perf_test(
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
-        ":tests",
+        ":test_lib",
         "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/base/profiler/tests/test-app:libmemorynativetest.so",
@@ -100,7 +129,7 @@ perf_test(
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
-        ":tests",
+        ":test_lib",
         "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
@@ -118,7 +147,7 @@ perf_test(
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
-        ":tests",
+        ":test_lib",
         "//tools/base/fakeandroid",
         "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
