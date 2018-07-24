@@ -21,10 +21,10 @@ import com.android.tools.profiler.proto.MemoryProfiler;
 import com.android.tools.profiler.proto.MemoryServiceGrpc.MemoryServiceBlockingStub;
 
 /** Wrapper of stub calls that is shared among tests. */
-final class MemoryStubWrapper {
+public final class MemoryStubWrapper {
     private final MemoryServiceBlockingStub myMemoryStub;
 
-    MemoryStubWrapper(MemoryServiceBlockingStub memoryStub) {
+    public MemoryStubWrapper(MemoryServiceBlockingStub memoryStub) {
         myMemoryStub = memoryStub;
     }
 
@@ -42,7 +42,7 @@ final class MemoryStubWrapper {
                 MemoryProfiler.TrackAllocationsRequest.newBuilder().setSession(session).build());
     }
 
-    MemoryProfiler.TrackAllocationsResponse startAllocationTracking(Session session) {
+    public MemoryProfiler.TrackAllocationsResponse startAllocationTracking(Session session) {
         return myMemoryStub.trackAllocations(
                 MemoryProfiler.TrackAllocationsRequest.newBuilder()
                         .setSession(session)

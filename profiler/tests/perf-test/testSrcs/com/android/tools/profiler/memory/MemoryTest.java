@@ -105,9 +105,9 @@ public class MemoryTest {
         // Create several instances of MemTestEntity and when done free and collect them.
         androidDriver.setProperty("allocation.count", Integer.toString(allocationCount));
         androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
-        assertThat(androidDriver.waitForInput("size " + allocationCount)).isTrue();
+        assertThat(androidDriver.waitForInput("allocation_count=" + allocationCount)).isTrue();
         androidDriver.triggerMethod(ACTIVITY_CLASS, "free");
-        assertThat(androidDriver.waitForInput("size 0")).isTrue();
+        assertThat(androidDriver.waitForInput("free_count=0")).isTrue();
         // Make some allocation noise here to emulate how real apps work.
         androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
 

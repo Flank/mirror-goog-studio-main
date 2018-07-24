@@ -16,11 +16,20 @@
 
 package com.activity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MemoryActivity extends PerfdTestActivity {
+    static class MemTestEntity {
+        private byte[] values;
 
-    public static class MemTestEntity {};
+        MemTestEntity(int size) {
+            values = new byte[size];
+            for (int i = 0; i < size; ++i) {
+                values[i] = (byte) (i & 0xFF);
+            }
+        }
+    }
 
     public MemoryActivity() {
         super("MemoryActivity");
@@ -32,7 +41,7 @@ public class MemoryActivity extends PerfdTestActivity {
     private MemTestEntity makeSureTestEntityClassLoaded(MemTestEntity o)
     {
         if (o != null) {
-            return new MemTestEntity();
+            return new MemTestEntity(1);
         }
         return o;
     }
@@ -50,17 +59,24 @@ public class MemoryActivity extends PerfdTestActivity {
 
     public void allocate() {
         final int count = Integer.parseInt(System.getProperty("allocation.count"));
+        final int size = Integer.parseInt(System.getProperty("allocation.size", "1"));
+        long start = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            entities.add(new MemTestEntity());
+            entities.add(new MemTestEntity(size));
         }
+        long end = System.currentTimeMillis();
         System.out.println("MemoryActivity.allocate");
-        System.out.println("MemoryActivity.size " + entities.size());
+        System.out.printf("allocation_count=%d", entities.size());
+        System.out.println();
+        System.out.printf("allocation_timing=%d", end - start);
+        System.out.println();
     }
 
     public void free() {
         entities.clear();
         System.out.println("MemoryActivity.free");
-        System.out.println("MemoryActivity.size " + entities.size());
+        System.out.printf("free_count=%d", entities.size());
+        System.out.println();
     }
 
     public void gc() {

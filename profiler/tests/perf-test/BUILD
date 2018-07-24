@@ -153,3 +153,19 @@ perf_test(
         "//tools/idea/.idea/libraries:truth",
     ],
 )
+
+perf_test(
+    name = "PerformanceTest",
+    size = "medium",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java",
+    ],
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":test_lib",
+        "//tools/base/fakeandroid",
+        "//tools/base/perf-logger:studio.perf-logger_testlib",
+        "//tools/base/profiler/tests/test-app:libjni.so",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)

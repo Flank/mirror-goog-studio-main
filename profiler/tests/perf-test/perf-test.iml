@@ -18,8 +18,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="fakeandroid" />
-    <orderEntry type="module-library">
+    <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
+    <orderEntry type="module-library" scope="TEST">
       <library name="studio-profiler-grpc-1.0-jarjar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../../../bazel-genfiles/tools/base/profiler/studio-profiler-grpc-1.0-jarjar.jar!/" />
@@ -28,5 +28,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="perf-logger" scope="TEST" />
   </component>
 </module>
