@@ -21,6 +21,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.SecondaryFile
 import com.android.build.api.transform.TransformInvocation
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_WITH_RESOURCES
@@ -146,6 +147,15 @@ class R8Transform(
     }
 
     override fun transform(transformInvocation: TransformInvocation) {
+        LoggerWrapper.getLogger(R8Transform::class.java)
+            .lifecycle(
+                """
+                |R8 is an experimental feature. If you experience any issues, please file a bug at
+                |https://issuetracker.google.com, using 'Shrinker (R8)' as component name. You can
+                |disable R8 by updating gradle.properties with 'android.enableR8=false'.
+                |""".trimMargin()
+            )
+
         val outputProvider = requireNotNull(
                 transformInvocation.outputProvider,
                 { "No output provider set" }

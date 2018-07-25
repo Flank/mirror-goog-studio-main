@@ -42,12 +42,8 @@ enum class BooleanOption(
 
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", true),
-
-    ENABLE_R8(
-        "android.enableR8",
-        true,
-        additionalInfo = "Consider disabling R8 by removing 'android.enableR8=true' from your " +
-                "gradle.properties before publishing your app."),
+    
+    ENABLE_R8("android.enableR8", true, status = Option.Status.STABLE),
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
 
