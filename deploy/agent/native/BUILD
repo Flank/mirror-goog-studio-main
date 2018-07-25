@@ -12,7 +12,6 @@ cc_binary(
         "android_wrapper.cc",
         "android_wrapper.h",
         "capabilities.h",
-        "config.h",
         "hotswap.cc",
         "hotswap.h",
         "instant.cc",

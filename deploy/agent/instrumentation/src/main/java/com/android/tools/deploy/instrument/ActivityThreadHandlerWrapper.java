@@ -29,9 +29,6 @@ public final class ActivityThreadHandlerWrapper {
     // Whether or not the handler is hot swapping.
     private static boolean isHotSwapping = true;
 
-    // The directory to retrieve dex from.
-    private static String dexDirectory = "";
-
     public static void entryHook(Object handler, Message msg) {
         synchronized (ActivityThreadHandlerWrapper.class) {
             boolean isRestarting = msg.what == appInfoChanged;
@@ -39,7 +36,7 @@ public final class ActivityThreadHandlerWrapper {
                 return;
             }
 
-            if (!tryRedefineClasses(dexDirectory)) {
+            if (!tryRedefineClasses()) {
                 Log.w(TAG, "Redefine classes failed!");
                 msg.what = -1;
             } else {
@@ -52,13 +49,10 @@ public final class ActivityThreadHandlerWrapper {
     }
 
     // Gating the entry hook behind a boolean prevents the instrumentation from attempting to
-    // redefine classes every time a non-instrumentation change occurs. In addition, this
-    // provides a hook into native code, so that the directory containing the dex files to
-    // be swapped can be provided without requiring a global variable on the native side.
-    public static void prepareForHotSwap(String dexDir) {
+    // redefine classes every time a non-instrumentation change occurs.
+    public static void prepareForHotSwap() {
         synchronized (ActivityThreadHandlerWrapper.class) {
             isHotSwapping = true;
-            dexDirectory = dexDir;
         }
     }
 
@@ -70,5 +64,5 @@ public final class ActivityThreadHandlerWrapper {
     // but do not.
     public static native int getApplicationInfoChangedValue();
 
-    public static native boolean tryRedefineClasses(String dexDir);
+    public static native boolean tryRedefineClasses();
 }

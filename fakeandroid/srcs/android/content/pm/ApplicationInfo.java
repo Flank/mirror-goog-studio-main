@@ -13,10 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package android.content.pm;
 
-package android.os;
-
-public class Message {
-    public Object obj;
-    public int what;
-}
+public class ApplicationInfo {}

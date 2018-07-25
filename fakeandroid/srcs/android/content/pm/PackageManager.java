@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package android.content.pm;
 
-package android.os;
+public class PackageManager implements IPackageManager {
+    public int GET_SHARED_LIBRARY_FILES = 0;
 
-public class Message {
-    public Object obj;
-    public int what;
+    @Override
+    public ApplicationInfo getApplicationInfo(String s, int i, int j) {
+        return new ApplicationInfo();
+    }
 }

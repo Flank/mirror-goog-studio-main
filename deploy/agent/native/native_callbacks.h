@@ -26,7 +26,7 @@ struct NativeBinding {
 bool RegisterNatives(JNIEnv* jni, const vector<NativeBinding>& bindings);
 
 int Native_GetAppInfoChanged(JNIEnv* jni, jobject object);
-bool Native_TryRedefineClasses(JNIEnv* jni, jobject object, jstring dex_dir);
+bool Native_TryRedefineClasses(JNIEnv* jni, jobject object);
 
 }  // namespace swapper
 

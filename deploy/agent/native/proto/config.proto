@@ -1,6 +1,9 @@
 syntax = "proto3";
 package swapper.proto;
 
+option java_package = "com.android.tools.deploy.proto";
+option java_outer_classname = "Common";
+
 message Config {
 
   // The path to the jar containing instrumentation data.
@@ -13,5 +16,14 @@ message Config {
   bool restart_activity = 3;
 
   // The classes to be hot-swapped.
-  string dex_dir = 4;
+  repeated ClassDef classes = 4;
+}
+
+message ClassDef {
+
+  // JVM class name for the class that is to be swapped.
+  string name = 1;
+
+  // Dex code of the class to be swapped.
+  bytes dex = 2;
 }

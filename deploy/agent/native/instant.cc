@@ -18,21 +18,21 @@
 #include "jni.h"
 #include "jvmti.h"
 
+#include <fstream>
 #include <memory>
 #include <vector>
 
 #include "android_wrapper.h"
 #include "capabilities.h"
-#include "config.h"
 #include "hotswap.h"
 #include "instrumenter.h"
 #include "native_callbacks.h"
+#include "proto/config.pb.h"
 
 #include "jni/jni_class.h"
 #include "jni/jni_object.h"
 #include "jni/jni_util.h"
 
-#include "proto/config.pb.h"
 #include "utils/log.h"
 
 using std::string;
@@ -43,10 +43,15 @@ using swapper::proto::Config;
 
 namespace swapper {
 
+// We keep a global (for now) reference to the PB that contains of the all
+// the info we need to swapping.
+extern const Config* config;
+const Config* config;
+
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
-    
+
 // Event that fires when the agent loads a class file.
 extern "C" void JNICALL Agent_ClassFileLoadHook(
     jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined, jobject loader,
@@ -110,8 +115,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni,
                                  (void*)&Native_GetAppInfoChanged);
 
     native_bindings.emplace_back(kHandlerWrapperClass, "tryRedefineClasses",
-                                 "(Ljava/lang/String;)Z",
-                                 (void*)&Native_TryRedefineClasses);
+                                 "()Z", (void*)&Native_TryRedefineClasses);
 
     RegisterNatives(jni, native_bindings);
 
@@ -145,18 +149,17 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni,
   return true;
 }
 
-jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
+jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni) {
   HotSwap code_swap(jvmti, jni);
-  if (!code_swap.DoHotSwap(config.dex_dir())) {
+  if (!code_swap.DoHotSwap(config)) {
     // TODO: Log meaningful error.
     Log::E("Hot swap failed.");
     return JNI_ERR;
   }
-
   return JNI_OK;
 }
 
-jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
+jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni) {
   jvmtiEventCallbacks callbacks;
   callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
 
@@ -167,27 +170,34 @@ jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
   }
 
   if (!LoadInstrumentationJar(jvmti, jni,
-                              config.instrumentation_jar().c_str())) {
+                              config->instrumentation_jar().c_str())) {
     Log::E("Error loading instrumentation jar.");
     return JNI_ERR;
   }
 
-  if (!Instrument(jvmti, jni, config.instrumentation_jar().c_str())) {
+  if (!Instrument(jvmti, jni, config->instrumentation_jar().c_str())) {
     Log::E("Error instrumenting application.");
     return JNI_ERR;
   }
 
   // Enable hot-swapping via the callback.
   JniClass handlerWrapper(jni, kHandlerWrapperClass);
-  jvalue dex_path = {.l = jni->NewStringUTF(config.dex_dir().c_str())};
-  handlerWrapper.CallStaticMethod<void>(
-      {"prepareForHotSwap", "(Ljava/lang/String;)V"}, &dex_path);
+  handlerWrapper.CallStaticMethod<void>({"prepareForHotSwap", "()V"});
 
   // Perform hot swap through the activity restart callback path.
   AndroidWrapper wrapper(jni);
-  wrapper.RestartActivity(config.package_name().c_str());
+  wrapper.RestartActivity(config->package_name().c_str());
 
   return JNI_OK;
+}
+
+void ParseConfig(char* file_location) {
+  Config* cfg = new Config();
+  std::fstream stream(file_location, std::ios::in | std::ios::binary);
+  if (!cfg->ParseFromIstream(&stream)) {
+    Log::E("Could not parse config in %s", file_location);
+  }
+  config = cfg;
 }
 
 // Event that fires when the agent hooks onto a running VM.
@@ -196,7 +206,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
-  auto config = unique_ptr<Config>(ParseConfig(input));
+  ParseConfig(input);
   if (!config) {
     Log::E("Could not parse config");
     return JNI_ERR;
@@ -219,13 +229,13 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
 
   jint ret = JNI_ERR;
   if (config->restart_activity()) {
-    ret = DoHotSwapAndRestart(jvmti, jni, *config);
+    ret = DoHotSwapAndRestart(jvmti, jni);
   } else {
-    ret = DoHotSwap(jvmti, jni, *config);
+    ret = DoHotSwap(jvmti, jni);
+    delete config;
+    jvmti->RelinquishCapabilities(&REQUIRED_CAPABILITIES);
+    Log::V("Finished.");
   }
-
-  jvmti->RelinquishCapabilities(&REQUIRED_CAPABILITIES);
-  Log::V("Finished.");
   return ret;
 }
 

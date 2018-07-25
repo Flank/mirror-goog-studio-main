@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package android.os;
 
-public class Message {
-    public Object obj;
-    public int what;
+public class UserHandle {
+    public static int myUserId() {
+        return 1234;
+    }
 }

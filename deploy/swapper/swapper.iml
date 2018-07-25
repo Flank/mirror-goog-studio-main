@@ -8,18 +8,28 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../../prebuilts/r8/r8-master.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-       </library>
-     </orderEntry>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="agent-pb">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/deploy/agent/native/proto/libagent_java_proto.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android-mock" />
+    <orderEntry type="library" name="protobuf" level="project" />
   </component>
 </module>

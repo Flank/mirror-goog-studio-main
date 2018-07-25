@@ -19,6 +19,7 @@
 
 #include "jni.h"
 #include "jvmti.h"
+#include "proto/config.pb.h"
 
 #include <string>
 
@@ -28,15 +29,10 @@ class HotSwap {
  public:
   HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
 
-  // Invokes JVMTI RedefineClasses with on all .dex files in the 'dir' and
-  // delete them afterward.
-  bool DoHotSwap(const std::string& dir) const;
+  // Invokes JVMTI RedefineClasses with class definitions in the message.
+  bool DoHotSwap(const swapper::proto::Config* message) const;
 
  private:
-  // Invoke JVMTI RedefineClasses on the class with the given 'name' using the
-  // content from 'location'
-  bool RedefineClass(const std::string& name,
-                     const std::string& location) const;
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
 };

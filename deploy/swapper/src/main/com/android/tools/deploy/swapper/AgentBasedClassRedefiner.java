@@ -15,18 +15,80 @@
  */
 package com.android.tools.deploy.swapper;
 
+import com.android.tools.deploy.proto.Common;
+import com.google.protobuf.ByteString;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 class AgentBasedClassRedefiner extends ClassRedefiner {
+    private final String deviceID;
+    private final String packageName;
+    private final boolean shouldRestart;
+    private final String instrumentationLocation;
 
-    protected String pushToDevice(Map<String, byte[]> classesToRedefine) {
-        // TODO(acleung): Pushes dex files to device via ADB.
-        return "/data/tmp";
+    AgentBasedClassRedefiner(
+            String deviceID,
+            String packageName,
+            boolean shouldRestart,
+            String instrumentationLocation) {
+        this.deviceID = deviceID;
+        this.packageName = packageName;
+        this.shouldRestart = shouldRestart;
+        this.instrumentationLocation = instrumentationLocation;
+    }
+
+    protected String pushToDevice(Common.Config message) {
+        String tmpLoc =
+                System.getProperty("java.io.tmpdir")
+                        + File.pathSeparator
+                        + "instant_run_agent_cfg.pb";
+        try {
+            File pb = new File(tmpLoc);
+            if (pb.exists()) {
+                pb.delete();
+            }
+            pb.createNewFile();
+            message.writeTo(new FileOutputStream(pb));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // TODO(acleung): Use com.android.tools.deployer.ADB* to actually do these.
+        System.out.println(
+                "adb -s "
+                        + deviceID
+                        + " push instant_run_agent_cfg /data/data/"
+                        + packageName
+                        + "/instant_run_agent_cfg.pb");
+        System.out.println(
+                "adb -s "
+                        + deviceID
+                        + " shell am attach-agent <PID> /data/local/tmp/.ir2/libswap.so="
+                        + "/data/data/"
+                        + packageName
+                        + "/instant_run_agent_cfg.pb");
+        return tmpLoc;
+    }
+
+    private Common.Config createMessage(Map<String, byte[]> classesToRedefine) {
+        Common.Config.Builder cfg = Common.Config.newBuilder();
+        for (Map.Entry<String, byte[]> entry : classesToRedefine.entrySet()) {
+            cfg.addClasses(
+                    Common.ClassDef.newBuilder()
+                            .setName(entry.getKey())
+                            .setDex(ByteString.copyFrom(entry.getValue()))
+                            .build());
+        }
+        cfg.setPackageName(packageName);
+        cfg.setRestartActivity(shouldRestart);
+        cfg.setInstrumentationJar(instrumentationLocation);
+        return cfg.build();
     }
 
     @Override
     public void commit() {
-        pushToDevice(classesToRedefine);
+        pushToDevice(createMessage(classesToRedefine));
         super.commit();
     }
 }

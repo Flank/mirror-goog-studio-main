@@ -1,10 +1,15 @@
 #include "native_callbacks.h"
 
+#include "capabilities.h"
 #include "hotswap.h"
 #include "jni/jni_class.h"
 #include "jni/jni_util.h"
+#include "proto/config.pb.h"
+
+using swapper::proto::Config;
 
 namespace swapper {
+extern const Config* config;
 
 bool RegisterNatives(JNIEnv* jni, const vector<NativeBinding>& bindings) {
   for (auto& binding : bindings) {
@@ -28,7 +33,7 @@ int Native_GetAppInfoChanged(JNIEnv* jni, jobject object) {
       {"APPLICATION_INFO_CHANGED", "I"});
 }
 
-bool Native_TryRedefineClasses(JNIEnv* jni, jobject object, jstring dex_dir) {
+bool Native_TryRedefineClasses(JNIEnv* jni, jobject object) {
   JavaVM* vm;
   if (jni->GetJavaVM(&vm) != 0) {
     return false;
@@ -40,12 +45,17 @@ bool Native_TryRedefineClasses(JNIEnv* jni, jobject object, jstring dex_dir) {
   }
 
   HotSwap code_swap(jvmti, jni);
-  if (!code_swap.DoHotSwap(JStringToString(jni, dex_dir))) {
-    // TODO: Log meaningful error.
+
+  // TODO(acleung): I don't know why we need to redo this but I was getting
+  // JVMTI_ERROR_MUST_POSSESS_CAPABILITY without it.
+  if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
     return false;
   }
 
-  return true;
+  bool success = code_swap.DoHotSwap(swapper::config);
+  delete swapper::config;
+  jvmti->RelinquishCapabilities(&REQUIRED_CAPABILITIES);
+  return success;
 }
 
 }  // namespace swapper

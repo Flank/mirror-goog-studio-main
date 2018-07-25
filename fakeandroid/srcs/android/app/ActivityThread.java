@@ -15,6 +15,10 @@
  */
 package android.app;
 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.IPackageManager;
+import android.content.pm.PackageManager;
+import android.os.Message;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +49,10 @@ public class ActivityThread {
         return sActivityThread;
     }
 
+    public ApplicationThread getApplicationThread() {
+        return new ApplicationThread();
+    }
+
     public ActivityThread() {
         System.out.println("ActivityThread Created");
     }
@@ -63,5 +71,33 @@ public class ActivityThread {
             }
         }
         return null;
+    }
+
+    public static IPackageManager getPackageManager() {
+        return new PackageManager();
+    }
+
+    public static class ApplicationThread {
+        private H h = new H();
+
+        public void scheduleApplicationInfoChanged(ApplicationInfo info) {
+            Message msg = new Message();
+            msg.what = H.APPLICATION_INFO_CHANGED;
+            h.handleMessage(msg);
+        }
+    }
+
+    public static class H {
+        public static final int APPLICATION_INFO_CHANGED = 156;
+
+        public void handleMessage(Message msg) {
+            if (msg.what == APPLICATION_INFO_CHANGED) {
+                System.out.println("APPLICATION_INFO_CHANGED triggered");
+            }
+
+            if (msg.what == -1) {
+                System.out.println("APPLICATION_INFO_CHANGED aborted");
+            }
+        }
     }
 }

@@ -13,4 +13,5 @@ java_library(
 dex_library(
     name = "instrumentation",
     jars = [":instrumentation_java"],
+    visibility = ["//tools/base/deploy/swapper:__pkg__"],
 )
