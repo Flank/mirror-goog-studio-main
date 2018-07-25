@@ -160,8 +160,10 @@ class NamespaceRewriter(
     private fun rewriteManifestNode(node: Node) {
         if (node.nodeType == Node.ATTRIBUTE_NODE) {
             // The content could be a resource reference. If it is not, do not update the content.
+            // Even if it resolves the resource to it's own package, we need to keep the full
+            // namespace reference since the manifests get merged at app level.
             val content = node.nodeValue
-            val namespacedContent = rewritePossibleReference(content)
+            val namespacedContent = rewritePossibleReference(content, true)
             if (content != namespacedContent) {
                 node.nodeValue = namespacedContent
             }
@@ -492,7 +494,8 @@ class NamespaceRewriter(
             if (namespacesToFix.any { node.nodeName.startsWith("$it:")}) {
                 val name = node.nodeName.substringAfter(':')
                 val content = "@attr/$name"
-                val namespacedContent = rewritePossibleReference(content)
+                // We need to keep the XML namespace, even if it's local.
+                val namespacedContent = rewritePossibleReference(content, true)
                 if (content != namespacedContent) {
                     // Prepend the package to the content
                     Preconditions.checkState(namespacedContent.startsWith("@*"))
@@ -517,7 +520,10 @@ class NamespaceRewriter(
         }
     }
 
-    private fun rewritePossibleReference(content: String): String {
+    private fun rewritePossibleReference(
+            content: String,
+            writeLocalPackage: Boolean = false
+    ): String {
         if (!content.startsWith("@") && !content.startsWith("?")) {
             // Not a reference, don't rewrite it.
             return content
@@ -542,6 +548,12 @@ class NamespaceRewriter(
         val name = trimmedContent.substringAfter('/')
 
         val pckg = findPackage(type, name, logger, symbolTables)
+
+        // Normally we don't want to add the local package to the resource reference (unless we're
+        // rewriting the Manifest or it's an XML namespace) since it increases the size of the file.
+        if (!writeLocalPackage && pckg == symbolTables[0].tablePackage) {
+            return content
+        }
 
         // Rewrite the reference using the package and the un-canonicalized name.
         return "$prefixChar$pckg:$type/$name"

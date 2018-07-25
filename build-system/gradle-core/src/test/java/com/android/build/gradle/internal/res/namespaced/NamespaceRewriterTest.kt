@@ -343,6 +343,9 @@ class NamespaceRewriterTest {
 </resources>"""
         )
         val namespaced = File(temporaryFolder.newFolder("namespaced", "values"), "values.xml")
+        val localTable = SymbolTable.builder()
+                .tablePackage("com.example.local")
+                .build()
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
             .add(symbol("integer", "version_code"))
@@ -362,7 +365,7 @@ class NamespaceRewriterTest {
             .add(symbol("styleable", "StyleableParent"))
             .build()
 
-        NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
+        NamespaceRewriter(ImmutableList.of(localTable, moduleTable, dependencyTable))
             .rewriteValuesFile(original.toPath(), namespaced.toPath())
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).isEqualTo(
@@ -471,7 +474,7 @@ class NamespaceRewriterTest {
     xmlns:ns0="http://schemas.android.com/apk/res/androidx.coordinatorlayout"
     xmlns:ns1="http://schemas.android.com/apk/res/android.support.constraint"
     tools:context=".MainActivity"
-    tools:showIn="@*com.example.module:layout/activity_main" >
+    tools:showIn="@layout/activity_main" >
 
     <TextView
         android:layout_width="wrap_content"
@@ -480,7 +483,7 @@ class NamespaceRewriterTest {
         ns1:layout_constraintLeft_toLeftOf="parent"
         ns1:layout_constraintRight_toRightOf="parent"
         ns1:layout_constraintTop_toTopOf="parent"
-        android:text="@*com.example.module:string/text" />
+        android:text="@string/text" />
 
     <com.example.module.PieChart
         custom:labelPosition="left"
@@ -508,10 +511,13 @@ class NamespaceRewriterTest {
     fun checkAarValueRewrite() {
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
-            .add(symbol("string", "text"))
             .build()
+        val dependencyTable = SymbolTable.builder()
+                .tablePackage("com.example.dependency")
+                .add(symbol("string", "text"))
+                .build()
 
-        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
 
         val from = """<?xml version="1.0" encoding="utf-8"?>
             <resources>
@@ -519,7 +525,7 @@ class NamespaceRewriterTest {
             </resources>"""
         val to = """<?xml version="1.0" encoding="utf-8"?>
             <resources>
-                <string name="app_name">@*com.example.module:string/text</string>
+                <string name="app_name">@*com.example.dependency:string/text</string>
             </resources>""".xmlFormat()
         checkAarRewrite(namespaceRewriter, "values/strings.xml", from, to)
         checkAarRewrite(namespaceRewriter, "values-en/strings.xml", from, to)
@@ -527,9 +533,12 @@ class NamespaceRewriterTest {
 
     @Test
     fun checkAarStyleAttrReferenceRewrite() {
+        val localTable = SymbolTable.builder()
+                .tablePackage("com.example.local")
+                .add(symbol("attr", "tabMaxWidth"))
+                .build()
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
-            .add(symbol("attr", "tabMaxWidth"))
             .add(symbol("attr", "tabIndicatorColor"))
             .build()
         val depTable = SymbolTable.builder()
@@ -539,7 +548,8 @@ class NamespaceRewriterTest {
             .add(symbol("dimen", "design_tab_max_width"))
             .build()
 
-        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable, depTable))
+        val namespaceRewriter =
+                NamespaceRewriter(ImmutableList.of(localTable, moduleTable, depTable))
 
         val from = """<?xml version="1.0" encoding="utf-8"?>
                 <resources>
@@ -551,7 +561,7 @@ class NamespaceRewriterTest {
         val to = """<?xml version="1.0" encoding="utf-8"?>
                 <resources>
                     <style name="Base.Widget.Design.TabLayout" parent="@*com.example.foo:style/Base.Widget.Design">
-                        <item name="*com.example.module:tabMaxWidth">@*com.example.foo:dimen/design_tab_max_width</item>
+                        <item name="tabMaxWidth">@*com.example.foo:dimen/design_tab_max_width</item>
                         <item name="*com.example.module:tabIndicatorColor">?com.example.foo:attr/colorAccent</item>
                     </style>
                 </resources>""".xmlFormat()
@@ -575,12 +585,15 @@ class NamespaceRewriterTest {
 
     @Test
     fun checkAarDrawableProcessCopy() {
+        val localTable = SymbolTable.builder()
+                .tablePackage("com.example.local")
+                .build()
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
             .add(symbol("color", "dotfill"))
             .build()
 
-        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(localTable, moduleTable))
 
         val vector = """<vector xmlns:android="http://schemas.android.com/apk/res/android"
             android:width="24dp"
@@ -652,12 +665,15 @@ class NamespaceRewriterTest {
                     android:radius="20dp" />
             """.xmlFormat()
 
+        val localTable = SymbolTable.builder()
+                .tablePackage("com.example.local")
+                .build()
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
             .add(symbol("color", "abc_color_highlight_material"))
             .build()
 
-        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(localTable, moduleTable))
 
         checkAarRewrite(namespaceRewriter, "drawable-v23/ripple.xml", commentFirst, expected)
     }
@@ -723,24 +739,23 @@ class NamespaceRewriterTest {
 <levelone xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:ns0="http://schemas.android.com/apk/res/dependency.one"
           xmlns:ns1="http://schemas.android.com/apk/res/dependency.two"
-          ns0:attr1="@*com.example.module:bool/value" >
+          ns0:attr1="@*dependency.three:bool/value" >
 
     <leveltwo
-        android:attr1="@*com.example.module:bool/value"
-        ns0:attr1="@*com.example.module:bool/value"
-        ns1:attr2="@*com.example.module:bool/value" >
+        android:attr1="@*dependency.three:bool/value"
+        ns0:attr1="@*dependency.three:bool/value"
+        ns1:attr2="@*dependency.three:bool/value" >
 
         <levelthree
-            android:attr3="@*com.example.module:bool/value"
-            ns0:attr3="@*com.example.module:bool/value"
-            ns1:attr4="@*com.example.module:bool/value" />
+            android:attr3="@*dependency.three:bool/value"
+            ns0:attr3="@*dependency.three:bool/value"
+            ns1:attr4="@*dependency.three:bool/value" />
     </leveltwo>
 
 </levelone>""".xmlFormat()
 
         val moduleTable = SymbolTable.builder()
                 .tablePackage("com.example.module")
-            .add(symbol("bool", "value"))
                 .build()
         val depOneTable = SymbolTable.builder()
                 .tablePackage("dependency.one")
@@ -752,9 +767,14 @@ class NamespaceRewriterTest {
                 .add(symbol("attr", "attr2"))
                 .add(symbol("attr", "attr4"))
                 .build()
+        val depThreeTable = SymbolTable.builder()
+                .tablePackage("dependency.three")
+                .add(symbol("bool", "value"))
+                .build()
 
         val namespaceRewriter =
-                NamespaceRewriter(ImmutableList.of(moduleTable, depOneTable, depTwoTable))
+                NamespaceRewriter(
+                        ImmutableList.of(moduleTable, depOneTable, depTwoTable,depThreeTable))
 
         checkAarRewrite(namespaceRewriter, "drawable/test.xml", original, namespaced)
     }
@@ -788,6 +808,9 @@ class NamespaceRewriterTest {
 
 </node1>"""
 
+        val local = SymbolTable.builder()
+                .tablePackage("com.local")
+                .build()
         val moduleTable = SymbolTable.builder()
                 .tablePackage("com.module")
                 .add(symbol("bool", "value"))
@@ -818,7 +841,8 @@ class NamespaceRewriterTest {
 
         val namespaceRewriter =
                 NamespaceRewriter(
-                        ImmutableList.of(moduleTable, depA, depB, depC, unused1, unused2, unused3))
+                        ImmutableList.of(
+                                local, moduleTable, depA, depB, depC, unused1, unused2, unused3))
 
         checkAarRewrite(namespaceRewriter, "drawable/test.xml", original, rewritten)
     }
