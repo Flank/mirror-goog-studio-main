@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.AppBundleProjectBuildOutput
@@ -43,6 +44,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.fail
 
+private const val MAIN_DEX_LIST_PATH = "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt"
+
 class DynamicAppTest {
 
     @get:Rule
@@ -55,7 +58,7 @@ class DynamicAppTest {
         .create()
 
     private val bundleContent: Array<String> = arrayOf(
-        "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt",
+        MAIN_DEX_LIST_PATH,
         "/BundleConfig.pb",
         "/base/dex/classes.dex",
         "/base/manifest/AndroidManifest.xml",
@@ -81,7 +84,7 @@ class DynamicAppTest {
         "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"
     ))
 
-    private val mainDexClasses: List<String> = listOf(
+    private val multiDexSuppotLibClasses = listOf(
         "Landroid/support/multidex/MultiDex;",
         "Landroid/support/multidex/MultiDexApplication;",
         "Landroid/support/multidex/MultiDexExtractor;",
@@ -91,8 +94,11 @@ class DynamicAppTest {
         "Landroid/support/multidex/MultiDex\$V19;",
         "Landroid/support/multidex/MultiDex\$V4;",
         "Landroid/support/multidex/ZipUtil;",
-        "Landroid/support/multidex/ZipUtil\$CentralDirectory;",
-        "Lcom/example/app/AppClassNeededInMainDexList;")
+        "Landroid/support/multidex/ZipUtil\$CentralDirectory;"
+    )
+
+    private val mainDexClasses: List<String> =
+        multiDexSuppotLibClasses.plus("Lcom/example/app/AppClassNeededInMainDexList;")
 
     private val mainDexListClassesInBundle: List<String> =
         mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
@@ -134,7 +140,7 @@ class DynamicAppTest {
 
             // The main dex list must also analyze the classes from features.
             val mainDexListInBundle =
-                Files.readAllLines(it.getEntry("/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt")).map { "L" + it.removeSuffix(".class") + ";" }
+                Files.readAllLines(it.getEntry(MAIN_DEX_LIST_PATH)).map { "L" + it.removeSuffix(".class") + ";" }
 
             assertThat(mainDexListInBundle).containsExactlyElementsIn(mainDexListClassesInBundle)
 
@@ -174,15 +180,52 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test unsigned bundleRelease task`() {
+    fun `test unsigned bundleRelease task with proguard`() {
         val bundleTaskName = getBundleTaskName("release")
-        project.execute("app:$bundleTaskName")
+        project.executor().with(BooleanOption.ENABLE_R8, false).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
+            assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
+            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
+            assertThat(dex).containsClass("Landroid/support/multidex/MultiDexApplication;")
+        }
+    }
+
+    @Test
+    fun `test unsigned bundleRelease task with r8`() {
+        val bundleTaskName = getBundleTaskName("release")
+        project.executor().with(BooleanOption.ENABLE_R8, true).run("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        Zip(bundleFile).use {
+            assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
+            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
+            assertThat(dex).containsClass("Landroid/support/multidex/MultiDexApplication;")
+        }
+    }
+
+    @Test
+    fun `test unsigned bundleRelease task with r8 dontminify`() {
+        project.getSubproject("app").testDir.resolve("proguard-rules.pro")
+            .writeText("-dontobfuscate")
+        val bundleTaskName = getBundleTaskName("release")
+        project.executor().with(BooleanOption.ENABLE_R8, true).run("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        Zip(bundleFile).use {
+            assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
+
+            val mainDexList = Files.readAllLines(it.getEntry(MAIN_DEX_LIST_PATH))
+            val expectedMainDexList =
+                multiDexSuppotLibClasses.map { it.substring(1, it.length - 1) + ".class" }
+            assertThat(mainDexList).containsExactlyElementsIn(expectedMainDexList)
         }
     }
 

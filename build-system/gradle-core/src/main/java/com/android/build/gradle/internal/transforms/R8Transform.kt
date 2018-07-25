@@ -70,6 +70,8 @@ class R8Transform(
     // This is a huge sledgehammer, but it is necessary until http://b/72683872 is fixed.
     private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
 
+    var mainDexListOutput: File? = null
+
     constructor(
         scope: VariantScope,
         mainDexListFiles: FileCollection,
@@ -121,7 +123,7 @@ class R8Transform(
         )
 
     override fun getSecondaryFileOutputs(): MutableCollection<File> =
-        mutableListOf(outputProguardMapping)
+        listOfNotNull(outputProguardMapping, mainDexListOutput).toMutableList()
 
     override fun keep(keep: String) {
         proguardConfigurations.add("-keep $keep")
@@ -178,9 +180,10 @@ class R8Transform(
         )
 
         val mainDexListConfig = MainDexListConfig(
-                mainDexRulesFiles.files.map { it.toPath() },
-                mainDexListFiles.files.map { it.toPath() },
-                getPlatformRules()
+            mainDexRulesFiles.files.map { it.toPath() },
+            mainDexListFiles.files.map { it.toPath() },
+            getPlatformRules(),
+            mainDexListOutput?.toPath()
         )
 
         val output = outputProvider.getContentLocation(

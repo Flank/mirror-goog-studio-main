@@ -32,6 +32,7 @@ import com.android.tools.r8.DexIndexedConsumer
 import com.android.tools.r8.ProgramResource
 import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.R8
+import com.android.tools.r8.StringConsumer
 import com.android.tools.r8.origin.Origin
 import java.io.IOException
 import java.nio.file.Files
@@ -65,6 +66,9 @@ fun runR8(
 
         if (mainDexListConfig.mainDexRules.isNotEmpty()) {
             r8CommandBuilder.addMainDexRules(mainDexListConfig.mainDexRules, Origin.unknown())
+        }
+        mainDexListConfig.mainDexListOutput?.let {
+            r8CommandBuilder.setMainDexListConsumer(StringConsumer.FileConsumer(it))
         }
     }
 
@@ -181,7 +185,8 @@ enum class R8OutputType {
 data class MainDexListConfig(
     val mainDexRulesFiles: Collection<Path> = listOf(),
     val mainDexListFiles: Collection<Path> = listOf(),
-    val mainDexRules: List<String> = listOf()
+    val mainDexRules: List<String> = listOf(),
+    val mainDexListOutput: Path? = null
 )
 
 /** Proguard-related parameters for the R8 tool. */

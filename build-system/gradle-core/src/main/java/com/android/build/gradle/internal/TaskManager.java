@@ -3040,6 +3040,21 @@ public abstract class TaskManager {
                     createdShrinker = CodeShrinker.PROGUARD;
                 } else {
                     transformTask = createR8Transform(variantScope, mappingFileCollection);
+                    transformTask.ifPresent(
+                            task -> {
+                                if (variantScope.getNeedsMainDexListForBundle()) {
+                                    File mainDexListFile =
+                                            variantScope
+                                                    .getArtifacts()
+                                                    .appendArtifact(
+                                                            InternalArtifactType
+                                                                    .MAIN_DEX_LIST_FOR_BUNDLE,
+                                                            task,
+                                                            "mainDexList.txt");
+                                    ((R8Transform) task.getTransform())
+                                            .setMainDexListOutput(mainDexListFile);
+                                }
+                            });
                 }
                 break;
             default:
