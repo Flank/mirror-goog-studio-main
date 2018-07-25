@@ -1379,6 +1379,7 @@ public final class SdkConstants {
     public static final String ATTR_AUTO_VERIFY = "autoVerify";
     public static final String ATTR_DEFAULT_NAV_HOST = "defaultNavHost";
     public static final String ATTR_START_DESTINATION = "startDestination";
+    public static final String ATTR_ARG_TYPE = "argType";
 
     // TextView attributes
     public static final String ATTR_TEXT_APPEARANCE = "textAppearance"; //$NON-NLS-1$
