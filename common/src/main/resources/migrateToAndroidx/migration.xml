@@ -36,6 +36,8 @@
   <migrate old-name="android.support.design.expandable.ExpandableWidget" new-name="com.google.android.material.expandable.ExpandableWidget" type="CLASS"/>
   <migrate old-name="android.support.design.expandable.ExpandableWidgetHelper" new-name="com.google.android.material.expandable.ExpandableWidgetHelper" type="CLASS"/>
   <migrate old-name="android.support.design.internal.BaselineLayout" new-name="com.google.android.material.internal.BaselineLayout" type="CLASS"/>
+  <migrate old-name="android.support.design.internal.BottomNavigationItemView" new-name="com.google.android.material.bottomnavigation.BottomNavigationItemView" type="CLASS"/>
+  <migrate old-name="android.support.design.internal.BottomNavigationMenuView" new-name="com.google.android.material.bottomnavigation.BottomNavigationMenuView" type="CLASS"/>
   <migrate old-name="android.support.design.math.MathUtils" new-name="com.google.android.material.math.MathUtils" type="CLASS"/>
   <migrate old-name="android.support.design.resources.TextAppearance" new-name="com.google.android.material.resources.TextAppearance" type="CLASS"/>
   <migrate old-name="android.support.design.snackbar.ContentViewCallback" new-name="com.google.android.material.snackbar.ContentViewCallback" type="CLASS"/>
