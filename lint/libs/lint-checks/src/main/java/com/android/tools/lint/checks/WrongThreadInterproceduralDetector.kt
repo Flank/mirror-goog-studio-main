@@ -66,14 +66,12 @@ fun searchForInterproceduralThreadAnnotationViolations( // public because access
 
     val contextualGraph = callGraph.buildContextualCallGraph(receiverEval)
     val uiSearchNodes = contextualGraph.contextualNodes.filter {
-        it.node.target.isAnnotatedWith(AnnotationDetector.UI_THREAD_ANNOTATION.oldName()) || it.node.target.isAnnotatedWith(
-            AnnotationDetector.UI_THREAD_ANNOTATION.newName()
-        )
+        it.node.target.isAnnotatedWith(UI_THREAD_ANNOTATION.oldName()) ||
+                it.node.target.isAnnotatedWith(UI_THREAD_ANNOTATION.newName())
     }
     val workerSearchNodes = contextualGraph.contextualNodes.filter {
-        it.node.target.isAnnotatedWith(AnnotationDetector.WORKER_THREAD_ANNOTATION.oldName()) || it.node.target.isAnnotatedWith(
-            AnnotationDetector.WORKER_THREAD_ANNOTATION.newName()
-        )
+        it.node.target.isAnnotatedWith(WORKER_THREAD_ANNOTATION.oldName()) ||
+                it.node.target.isAnnotatedWith(WORKER_THREAD_ANNOTATION.newName())
     }
 
     // Some methods take in a lambda (say) and run it on a different thread.
@@ -103,36 +101,31 @@ fun searchForInterproceduralThreadAnnotationViolations( // public because access
             }
         }
 
-    val allUiSearchNodes =
-        uiSearchNodes + paramSearchNodes(UI_THREAD_ANNOTATION.oldName()) + paramSearchNodes(
-            UI_THREAD_ANNOTATION.newName()
-        )
-    val allWorkerSearchNodes =
-        workerSearchNodes + paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName()) + paramSearchNodes(
-            WORKER_THREAD_ANNOTATION.oldName()
-        )
+    val allUiSearchNodes = uiSearchNodes +
+            paramSearchNodes(UI_THREAD_ANNOTATION.oldName()) +
+            paramSearchNodes(UI_THREAD_ANNOTATION.newName())
+
+    val allWorkerSearchNodes = workerSearchNodes +
+            paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName()) +
+            paramSearchNodes(WORKER_THREAD_ANNOTATION.newName())
+
+    val uiThreadAnnotationName = UI_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
     val workerThreadAnnotationName = WORKER_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
+
     val uiPaths = contextualGraph.searchForContextualPaths(
         allUiSearchNodes,
         allWorkerSearchNodes
     )
         .map {
-            AnnotatedCallPath(
-                it,
-                UI_THREAD_ANNOTATION.defaultName().substringAfterLast("."),
-                workerThreadAnnotationName
-            )
+            AnnotatedCallPath(it, uiThreadAnnotationName, workerThreadAnnotationName)
         }
+
     val workerPaths = contextualGraph.searchForContextualPaths(
         allWorkerSearchNodes,
         allUiSearchNodes
     )
         .map {
-            AnnotatedCallPath(
-                it,
-                workerThreadAnnotationName,
-                UI_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
-            )
+            AnnotatedCallPath(it, workerThreadAnnotationName, uiThreadAnnotationName)
         }
 
     return uiPaths + workerPaths
