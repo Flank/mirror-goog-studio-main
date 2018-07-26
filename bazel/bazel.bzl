@@ -23,12 +23,18 @@ def _get_label_and_tags(label):
 # paths of directories relative to the package
 # If a file is not found to be inside any of the given roots, it is ignored.
 def relative_paths(ctx, files, roots):
+  package_prefixes = ctx.attr.package_prefixes
+  translated_package_prefixes = {root: prefix.replace(".", "/") for (root, prefix) in package_prefixes.items()}
+
   paths = []
   for file in files:
     for root in roots:
       path = label_workspace_path(ctx.label) + "/" + root
       if file.path.startswith(path):
-        paths += [(file.path[len(path) + 1:], file)]
+        relpath = file.path[len(path) + 1:]
+        if root in translated_package_prefixes:
+          relpath = translated_package_prefixes[root] + "/" + relpath
+        paths.append((relpath, file))
   return paths
 
 def resources_impl(ctx, name, roots, resources, resources_jar):
